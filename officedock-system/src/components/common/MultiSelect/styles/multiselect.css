@@ -1,0 +1,20 @@
+.css-b62m3t-container {
+  height: 100%;
+}
+.css-czlyiw-control {
+  height: 100%;
+}
+.css-1kmpks3-control {
+  height: 100%;
+}
+.css-1kmpks3-control input {
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+.css-19bb58m::after {
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  display: none;
+}

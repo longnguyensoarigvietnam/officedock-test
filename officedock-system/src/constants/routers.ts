@@ -1,0 +1,402 @@
+export const pageRouters = {
+  // Auth
+  LOGIN: {
+    name: 'ログイン',
+    href: '/',
+  },
+  REGISTER: {
+    name: '新規登録',
+    href: '/register',
+  },
+  VERIFY_REGISTER: {
+    name: '登録情報を確認',
+    href: '/register/verify',
+  },
+  FILL_INFO_REGISTER: {
+    name: '必要事項の入力',
+    href: '/register/information',
+  },
+  FORGOT_PASSWORD: {
+    name: 'パスワードの再設定',
+    href: '/forgot-password',
+  },
+  RESET_PASSWORD: {
+    name: 'パスワード再設定',
+    href: '/reset-password',
+  },
+  CHANGE_PASSWORD: {
+    name: 'パスワード変更',
+    href: '/profile/change-password',
+  },
+  LOGIN_2FA: {
+    name: 'ログイン認証',
+    href: '/login/2fa',
+  },
+  // User
+  USERS_MANAGEMENT: {
+    name: 'ユーザー管理',
+    href: '/users',
+  },
+  CREATE_USER: {
+    name: '新規登録',
+    href: '/users/create',
+  },
+  EDIT_USER: {
+    name: 'ユーザー編集',
+    href: (id: string) => `/users/${id}/edit`,
+  },
+  DETAIL_USER: {
+    name: 'ユーザー詳細',
+    href: (id: string) => `/users/${id}`,
+  },
+
+  // ROLE
+  ROLES_MANAGEMENT: {
+    name: 'ロール管理',
+    href: '/roles',
+  },
+  CREATE_ROLE: {
+    name: '新規登録',
+    href: '/roles/create',
+  },
+  EDIT_ROLE: {
+    name: 'ロール編集',
+    href: (id: string) => `/roles/${id}/edit`,
+  },
+  DETAIL_ROLE: {
+    name: 'ロール詳細',
+    href: (id: string) => `/roles/${id}`,
+  },
+
+  // ORGANIZATION
+  ORGANIZATION_MANAGEMENT: {
+    name: '組織管理',
+    href: '/organizations',
+  },
+  CREATE_ORGANIZATION: {
+    name: '新規登録',
+    href: '/organizations/create',
+  },
+  EDIT_ORGANIZATION: {
+    name: '組織編集',
+    href: (id: string) => `/organizations/${id}/edit`,
+  },
+  DETAIL_ORGANIZATION: {
+    name: '組織詳細',
+    href: (id: string) => `/organizations/${id}`,
+  },
+
+  // TAG
+  TAGS_MANAGEMENT: {
+    name: '集計タグ管理',
+    href: '/tags',
+  },
+  CREATE_TAG: {
+    name: '新規登録',
+    href: '/tags/create',
+  },
+  EDIT_TAG: {
+    name: '集計タグ編集',
+    href: (id: string) => `/tags/${id}/edit`,
+  },
+  DETAIL_TAG: {
+    name: '集計タグ詳細',
+    href: (id: string) => `/tags/${id}`,
+  },
+  // TASK / EVENT
+  SCHEDULES_MANAGEMENT: {
+    name: 'スケジュール管理',
+    href: '/schedules',
+  },
+  DEFAULT: {
+    name: '',
+    href: '/default',
+  },
+  TASKS_MANAGEMENT: {
+    name: 'マイタスク',
+    href: '/tasks',
+  },
+  CALENDAR_MANAGEMENT: {
+    name: 'カレンダー',
+    href: '/calendar',
+  },
+
+  // CHAT
+  CHAT_MANAGEMENT: {
+    name: 'チャット',
+    href: '/chat',
+  },
+  DETAIL_CHAT: {
+    name: 'チャット詳細',
+    href: (code: string) => `/chat/${code}`,
+  },
+
+  // STATISTIC
+  STATISTICS_MANAGEMENT: {
+    name: '集計',
+    href: '/statistics',
+  },
+  // CATEGORY
+  CATEGORY_MANAGEMENT: {
+    name: '集計カテゴリ',
+    href: '/categories',
+  },
+  EDIT_CATEGORY: {
+    name: '集計カテゴリ編集',
+    href: (id: string) => `/categories/${id}/edit`,
+  },
+  DETAIL_CATEGORY: {
+    name: '集計カテゴリ詳細',
+    href: (id: string) => `/categories/${id}`,
+  },
+  CREATE_CATEGORY: {
+    name: '集計カテゴリ作成',
+    href: '/categories/create',
+  },
+
+  // SKILL MAP
+  SKILLS_MANAGEMENT: {
+    name: 'スキル',
+    href: '/skills',
+  },
+  CREATE_SKILLS: {
+    name: 'スキル作成',
+    href: '/skills/create',
+  },
+  EDIT_SKILLS: {
+    name: 'スキル編集',
+    href: (id: string) => `/skills/${id}/edit`,
+  },
+  DETAIL_SKILLS: {
+    name: 'スキル詳細',
+    href: (id: string) => `/skills/${id}`,
+  },
+
+  // SKILL MAP
+  SKILL_MAP: {
+    name: 'スキルマップ',
+    href: '/skill-map',
+  },
+  // SKILL MAPS
+  SKILL_MAPS_MANAGEMENT: {
+    name: 'スキルマップ',
+    href: '/skill-maps',
+  },
+  EDIT_SKILL_MAPS: {
+    name: 'スキルマップ編集',
+    href: (skillId: string | null, organizationId: string, staffId: string) =>
+      `/skill-maps/${skillId ? skillId : ' '}/edit?organizationId=${organizationId}&&staffId=${staffId}`,
+  },
+  CREATE_SKILL_MAPS: {
+    name: 'スキルマップ作成',
+    href: (organizationId: string, staffId: string) =>
+      `/skill-maps/create?organizationId=${organizationId}&&staffId=${staffId}`,
+  },
+  DETAIL_SKILL_MAPS: {
+    name: 'スキルマップ詳細',
+    href: (skillId: string | null, organizationId: string, staffId: string) =>
+      `/skill-maps/${skillId ? skillId : ' '}?organizationId=${organizationId}&&staffId=${staffId}`,
+  },
+  ORGANIZATION_SKILLS_MANAGEMENT: {
+    name: '組織_スキル',
+    href: '/organization-skills',
+  },
+  EDIT_ORGANIZATION_SKILL: {
+    name: '組織_スキル編集',
+    href: (organizationId: string) =>
+      `/organization-skills/${organizationId}/edit`,
+  },
+  CREATE_ORGANIZATION_SKILL: {
+    name: '組織_スキル作成',
+    href: (organizationId: string) =>
+      `/organization-skills/${organizationId}/create`,
+  },
+  DETAIL_ORGANIZATION_SKILL: {
+    name: '組織_スキル詳細',
+    href: (organizationId: string) => `/organization-skills/${organizationId}`,
+  },
+  // LEVEL_UP
+  SUBMIT_LEVELS: {
+    name: 'レベルアップ申請確認',
+    href: '/submit-levels',
+  },
+  EDIT_SUBMIT_LEVELS: {
+    name: 'レベルアップ申請確認',
+    href: (organizationId: string) => `/submit-levels/${organizationId}/edit`,
+  },
+  DETAIL_SUBMIT_LEVELS: {
+    name: 'レベルアップ申請確認',
+    href: (organizationId: string) => `/submit-levels/${organizationId}`,
+  },
+
+  // HIERARCHY
+  HIERARCHY_MANAGEMENT: {
+    name: '集計カテゴリ階層',
+    href: '/hierarchies',
+  },
+  EDIT_HIERARCHY: {
+    name: '集計カテゴリ階層編集',
+    href: (id: string) => `/hierarchies/${id}/edit`,
+  },
+  CREATE_HIERARCHY: {
+    name: '集計カテゴリ階層作成',
+    href: (id: string) => `/hierarchies/${id}/create`,
+  },
+  DETAIL_HIERARCHY: {
+    name: '集計カテゴリ階層詳細',
+    href: (id: string) => `/hierarchies/${id}`,
+  },
+
+  // ACTUAL_DURATIONS MANAGEMENT
+  ACTUAL_DURATIONS_MANAGEMENT: {
+    name: '実績管理',
+    href: '/actual-durations',
+  },
+  EDIT_ACTUAL_DURATIONS: {
+    name: '実績管理編集',
+    href: (id: string, type: string) =>
+      `/actual-durations/${id}/edit?type=${type}`,
+  },
+  CREATE_ACTUAL_DURATIONS: {
+    name: '実績管理作成',
+    href: (id: string, type: string) =>
+      `/actual-durations/${id}/create?type=${type}`,
+  },
+  DETAIL_ACTUAL_DURATIONS: {
+    name: '実績管理詳細',
+    href: (id: string) => `/actual-durations/${id}`,
+  },
+};
+
+// For the API routers
+export const apiRouters = {
+  // AUTH
+  LOGIN: '/auth/login/',
+  CHECK_LOGIN: '/auth/verify-2fa/',
+  VERIFY_TOKEN: '/auth/verify-token/',
+  LOGIN_RESEND_OTP: '/auth/resend-otp/',
+  LOGIN_OTP: '/auth/verify-login/',
+  LOGIN_GOOGLE: '/auth/login/google/',
+  LOGIN_GOOGLE_VERIFY: '/auth/login/google/verify/',
+  FORGOT_PASSWORD: '/auth/forgot-password/',
+  REGISTER: '/auth/register/',
+  REGISTER_VERIFY_EMAIL: '/auth/verify-email/',
+  REGISTER_VERIFY_OTP: '/auth/verify-otp/',
+  RESET_PASSWORD: '/auth/reset-password/',
+  CHANGE_PASSWORD: '/auth/change-password/',
+
+  // ORGANIZATION
+  ORGANIZATION_LIST: '/organizations/',
+  ORGANIZATION_LIST_OPTIONS: '/creation-data/organization/',
+  ORGANIZATION_DETAIL: (id: string) => `/organizations/${id}/`,
+  ORGANIZATION_RESET_INDEX: (id: string) =>
+    `/organizations/${id}/statistic-categories/reset-index/`,
+  ORGANIZATION_SKILLS: '/organization-skills',
+  ORGANIZATION_SKILL_DELETE: (id: string) => `/organization-skills/${id}/`,
+  ORGANIZATION_SKILL_DETAIL: (id: string) => `/organizations/${id}/skills/`,
+
+  // CREATE DATA
+  ORGANIZATION_CREATION: '/creation-data/organization/',
+  ROLE_CREATION: '/creation-data/role/',
+  TASK_CREATION: '/creation-data/task/',
+  SCHEDULE_CREATION: '/creation-data/schedule/',
+  PEOPLE_IN_CHARGE_CREATION: '/creation-data/people-in-charge/',
+  STATISTIC_ORGANIZATION_CREATION: '/creation-data/statistic-categories/',
+  SKILL_CREATION: '/creation-data/organization-skills/',
+  TAG_CREATION: '/creation-data/tags/',
+  CATEGORY_FILTER_CREATION: '/creation-data/category-filters/',
+
+  // USER
+  USER_LIST: '/users/',
+  USER_DETAIL: (id: string) => `/users/${id}/`,
+  TAG_LIST: '/tags/',
+  TAG_DETAIL: (id: string) => `/tags/${id}/`,
+  DASHBOARD_MEMBER_LIST: '/dashboard/members/',
+  MEMO_DETAIL: '/users/memo/',
+  AUTHENTICATED_USER: '/auth/me',
+
+  // CATEGORY
+  CATEGORY_LIST: '/statistic-categories/',
+  CATEGORY_DETAIL: (id: string) => `/statistic-categories/${id}/`,
+
+  // TASK
+  TASK_BOARD_LIST: '/tasks/board/',
+  TASK_ME_LIST: '/tasks/me/',
+  FREQUENT_TASKS: '/tasks/frequent/',
+  DASHBOARD_HEADER_TASK_LIST: '/dashboard/cards/',
+  DASHBOARD_TAG_LIST: '/dashboard/tags/',
+  DASHBOARD_UNREAD_MESSAGES: '/dashboard/unread-messages/',
+  TASK_CALENDAR_LIST: '/tasks/calendar/',
+  TASK_SCHEDULE_UPDATE: '/tasks/schedules/',
+  CREATE_TASK: '/tasks/',
+  UPDATE_TASK_INDEX: '/tasks/index/',
+  TASK_DETAIL: (id: string) => `/tasks/${id}/`,
+  TASK_SCHEDULE_DETAIL: (id: string) => `/tasks/schedules/${id}/`,
+  TASK_PLAN_SCHEDULE_DETAIL: (uuid: string) => `/tasks/schedules/${uuid}/`,
+
+  TASK_COPY: (id: string) => `/tasks/${id}/copy/`,
+  TASK_PIN: (id: string) => `/tasks/${id}/pin/`,
+
+  // DURATION
+  TASK_DURATION: `/durations/`,
+  TASK_CHECK_START: () => `/durations/another-started/`,
+  TASK_DURATION_DETAIL: () => `/durations/running/`,
+  TASK_HEADER_START: '/durations/running/',
+  TASK_CALCULATE_DURATION: () => `/durations/calculate/`,
+  UPDATE_TASK_ACTUAL: (uuid: string) => `/durations/${uuid}/`,
+
+  // CHAT
+  CHAT_MESSAGES: (code: string) => `/chat/${code}/messages/`,
+  CHAT_MESSAGES_DETAIL: (id: string) => `/messages/${id}/`,
+  CHAT_DETAIL: (code: string) => `/chat/${code}/`,
+  CHAT_LIST: '/chat/',
+  CHAT_PIN: (code: string) => `/chat/${code}/pin/`,
+  CHAT_HIDE: (code: string) => `/chat/${code}/hide/`,
+  SOCKET_ACTION: (token: string) => `/system/ws/chat/?token=${token}`,
+  CHAT_SETTING: '/users/chat-setting/',
+
+  // SCHEDULE
+  SCHEDULES: '/schedules/',
+  SCHEDULE_DETAIL: (id: string) => `/schedules/${id}/`,
+  TASK_CALENDAR: '/calendars/',
+  USER_SETTING: '/users/setting/',
+
+  // TERM
+  READ_TERM: (id: string) => `/terms/${id}/read/`,
+  TERM_LIST: '/terms/',
+
+  // STATISTIC
+  DATA_DAILY_STATISTIC: '/stat-data/daily-report/',
+  DATA_REMARK_DAILY: '/users/daily-report/',
+
+  // SKILL
+  SKILL_LIST: '/skills/',
+  SKILL_DETAIL: (id: string) => `/skills/${id}/`,
+
+  // SKILLS MAP
+  SKILL_MAPS_LIST: '/skill-maps/',
+  SKILL_MAPS_DESTROY: '/skill-maps/destroy',
+  SKILL_MAPS_DETAIL: (id: string) => `/skill-maps/${id}/`,
+  SKILL_MAPS_DETAIL_CATEGORIES: '/skill-maps/detail',
+  SKILL_MAPS_RESET_INDEX: '/skill-maps/reset-index/',
+
+  // SUBMIT LEVELS
+  SUBMIT_LEVELS_LIST: '/submit-levels/',
+  SUBMIT_LEVELS_DETAIL: (id: string) => `/submit-levels/${id}/`,
+
+  // STATISTIC ORGANIZATION
+  ACTION_STATISTIC_ORGANIZATION: (id: string) =>
+    `/organizations/${id}/statistic-categories/`,
+
+  // ROLES
+  ROLE_LIST: '/roles/',
+  ROLE_DETAIL: (id: number) => `/roles/${id}/`,
+
+  // ACTUAL DURATIONS
+  ACTUAL_DURATIONS_LIST: '/actual-durations/',
+  ACTUAL_DURATION_DETAIL: (id: number) => `/actual-durations/${id}/`,
+  TASKS_SCHEDULES_LIST: '/actual-durations/tasks-schedules/',
+
+  // TEMPLATES
+  TEMPLATE_LIST: '/tasks/template/',
+};

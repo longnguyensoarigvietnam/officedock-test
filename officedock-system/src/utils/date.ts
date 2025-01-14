@@ -1,0 +1,757 @@
+import { format, formatISO, parseISO, startOfDay } from 'date-fns';
+
+import {
+  DATE_FORMAT_SERVER,
+  DATE_TIME_FORMAT,
+  DATE_TIME_LOCAL,
+} from '@constants';
+import { OptionDropdownType } from '@interfaces/common';
+
+export const getFormattedDateTime = (dateInput?: string | Date): string => {
+  const date: Date = dateInput ? new Date(dateInput) : new Date();
+  const year: number = date.getFullYear();
+  const month: string = String(date.getMonth() + 1).padStart(2, '0');
+  const day: string = String(date.getDate()).padStart(2, '0');
+  const hours24: string = String(date.getHours()).padStart(2, '0');
+  const minutes: string = String(date.getMinutes()).padStart(2, '0');
+  return `${year}/${month}/${day} ${hours24}:${minutes}`;
+};
+
+//  Format date sever
+export const formatDateServer = (
+  date: Date | string | undefined | null,
+): string => {
+  if (!date) return '';
+  return format(new Date(date), DATE_FORMAT_SERVER);
+};
+
+// Add time to date
+export const addTimeToDate = (date: Date, time: string | null) => {
+  if (!time) {
+    return date.toISOString().split('T')[0] + ' ' + '00:00';
+  }
+  const [hours, minutes] = time.trim().split(':').map(Number);
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const hourStr = hours.toString().padStart(2, '0');
+  const minuteStr = minutes.toString().padStart(2, '0');
+  return `${year}-${month}-${day} ${hourStr}:${minuteStr}`;
+};
+
+// Format start date for calendar
+export const formatQueryStartDateForCalendar = (inputDate: Date) => {
+  const year = inputDate.getFullYear();
+  const month = (inputDate.getMonth() + 1).toString().padStart(2, '0');
+  const day = inputDate.getDate().toString().padStart(2, '0');
+  const hours = inputDate.getHours().toString().padStart(2, '0');
+  const minutes = inputDate.getMinutes().toString().padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
+
+// Format end date for calendar
+export const formatQueryEndDateForCalendar = (inputDate: Date) => {
+  const adjustedDate = new Date(inputDate.getTime() - 60000);
+
+  const year = adjustedDate.getFullYear();
+  const month = (adjustedDate.getMonth() + 1).toString().padStart(2, '0');
+  const day = adjustedDate.getDate().toString().padStart(2, '0');
+  const hours = adjustedDate.getHours().toString().padStart(2, '0');
+  const minutes = adjustedDate.getMinutes().toString().padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
+
+// Get Time to date
+export const convertToTimeString = (date: string): string => {
+  const dateObj = new Date(date);
+  const hours = String(dateObj.getHours()).padStart(2, '0');
+  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+
+  return `${hours}:${minutes}`;
+};
+//  Format time
+export const formatTimeInput = (value: string): string => {
+  let hours: number, minutes: number;
+  if (value.length === 3) {
+    hours = parseInt(value.substring(0, 1), 10);
+    minutes = parseInt(value.substring(1, 3), 10);
+  } else {
+    hours = parseInt(value.substring(0, 2), 10);
+    minutes = parseInt(value.substring(2, 4) || '00', 10);
+  }
+  if (value.length < 2) {
+    hours = parseInt(value.substring(0, 1), 10) || 0;
+  }
+  if (hours >= 24 || minutes >= 60) {
+    const now = new Date();
+    hours = now.getHours();
+    minutes = now.getMinutes();
+  }
+  const formattedHours = String(hours).padStart(2, '0');
+  const formattedMinutes = String(minutes).padStart(2, '0');
+  return `${formattedHours}:${formattedMinutes}`;
+};
+
+// Format date time
+export const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return format(date, DATE_TIME_FORMAT);
+};
+// Format time
+export const formatTime = (seconds: number) => {
+  const hrs = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, '0');
+  const mins = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, '0');
+  const secs = (seconds % 60).toString().padStart(2, '0');
+  return `${hrs}:${mins}:${secs}`;
+};
+//Convert date to 00:00
+export const convertDateToStartDate = (dateString: string): string => {
+  const date = parseISO(dateString);
+  const startOfDayDate = startOfDay(date);
+  return format(startOfDayDate, DATE_TIME_LOCAL);
+};
+//Convert time to minutes
+export function convertToMinutes(time: string): number {
+  const [hoursStr, minutesStr, period] = time.trim().split(/[: ]+/);
+  let hours = parseInt(hoursStr, 10);
+  const minutes = parseInt(minutesStr, 10);
+
+  if (isNaN(hours) || isNaN(minutes) || !['AM', 'PM'].includes(period)) {
+    // TODO  : Show error message
+    // throw new Error(`Error: ${time}`);
+  }
+
+  if (period === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return hours * 60 + minutes;
+}
+
+export const encodeFormatDateISO = (date: Date) => {
+  return encodeURIComponent(formatISO(date));
+};
+
+// Handle format check date
+export const formatCheckDate = (dateString: string): string => {
+  if (!dateString) {
+    return '';
+  }
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return '';
+  }
+
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const isToday = date.toDateString() === now.toDateString();
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+  const isThisWeek =
+    date > new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+
+  if (isToday) {
+    return date.toLocaleTimeString('ja-JP', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } else if (isYesterday) {
+    return '昨日';
+  } else if (isThisWeek) {
+    return date.toLocaleDateString('ja-JP', { weekday: 'long' });
+  } else {
+    return date.toLocaleDateString('ja-JP');
+  }
+};
+
+export function isMoreThanSixtyMinutes(timeRange: string): boolean {
+  if (!timeRange || typeof timeRange !== 'string') {
+    return false;
+  }
+
+  const [start, end] = timeRange.split(' - ');
+
+  if (!start || !end) {
+    return false;
+  }
+
+  const [startHour, startMinute] = start.split(':').map(Number);
+  const [endHour, endMinute] = end.split(':').map(Number);
+
+  if (
+    isNaN(startHour) ||
+    isNaN(startMinute) ||
+    isNaN(endHour) ||
+    isNaN(endMinute)
+  ) {
+    return false;
+  }
+
+  const startTimeInMinutes = startHour * 60 + startMinute;
+  const endTimeInMinutes = endHour * 60 + endMinute;
+
+  const differenceInMinutes = endTimeInMinutes - startTimeInMinutes;
+
+  return differenceInMinutes > 60;
+}
+
+export function isMoreThanThirtyMinutes(timeRange: string): boolean {
+  if (!timeRange || typeof timeRange !== 'string') {
+    return false;
+  }
+
+  const [start, end] = timeRange.split(' - ');
+
+  if (!start || !end) {
+    return false;
+  }
+
+  const [startHour, startMinute] = start.split(':').map(Number);
+  const [endHour, endMinute] = end.split(':').map(Number);
+
+  if (
+    isNaN(startHour) ||
+    isNaN(startMinute) ||
+    isNaN(endHour) ||
+    isNaN(endMinute)
+  ) {
+    return false;
+  }
+
+  const startTimeInMinutes = startHour * 60 + startMinute;
+  const endTimeInMinutes = endHour * 60 + endMinute;
+
+  const differenceInMinutes = endTimeInMinutes - startTimeInMinutes;
+
+  return differenceInMinutes >= 30;
+}
+
+export function addTimeDifference(
+  planStartDate: string,
+  planEndDate: string,
+  total: Date,
+  additionalDays: number = 0,
+): Date {
+  const startDate = new Date(planStartDate);
+  const endDate = new Date(planEndDate);
+
+  let timeDifference = endDate.getTime() - startDate.getTime();
+
+  timeDifference = Math.max(timeDifference, 60000);
+
+  const newTotal = new Date(total.getTime() + timeDifference);
+
+  newTotal.setDate(newTotal.getDate() + additionalDays);
+
+  return newTotal;
+}
+export function areDatesDifferent(
+  planStartDate: string,
+  planEndDate: string,
+): boolean {
+  const startDate = new Date(planStartDate);
+  const endDate = new Date(planEndDate);
+
+  const isDifferent =
+    startDate.getFullYear() !== endDate.getFullYear() ||
+    startDate.getMonth() !== endDate.getMonth() ||
+    startDate.getDate() !== endDate.getDate();
+
+  return isDifferent;
+}
+// Add hours in time
+export function addHoursToDate(dateString: string, hours: number = 1): string {
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) {
+    return '';
+  }
+
+  date.setHours(date.getHours() + hours);
+
+  return date.toISOString();
+}
+
+// Check start & end with minutes
+export function adjustEndDate(
+  start: Date,
+  end: Date,
+  minutes: number = 15,
+): Date {
+  const differenceInMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+
+  if (differenceInMinutes >= minutes) {
+    return end;
+  }
+
+  const adjustedEnd = new Date(start);
+  adjustedEnd.setMinutes(start.getMinutes() + minutes);
+  return adjustedEnd;
+}
+// Check mid night
+export function isMidnight(date: Date): boolean {
+  return date.getHours() === 0 && date.getMinutes() === 0;
+}
+
+// Get Japanese day name
+export function getJapaneseDayName(isoDateStr: string) {
+  const date = new Date(isoDateStr);
+
+  const weekdayNames: string[] = ['日', '月', '火', '水', '木', '金', '土'];
+
+  const weekdayNumber: number = date.getDay();
+
+  return weekdayNames[weekdayNumber];
+}
+
+export function convertDateString(dateStr: string | Date): string {
+  const date = new Date(dateStr);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+
+  const hourStr = String(hour).padStart(2, '0');
+  const minuteStr = String(minute).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hourStr}:${minuteStr}`;
+}
+
+export function convertDateStringFull(dateStr: string | Date): string {
+  const date = new Date(dateStr);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+  const second = date.getSeconds();
+  const millisecond = date.getMilliseconds();
+
+  const hourStr = String(hour).padStart(2, '0');
+  const minuteStr = String(minute).padStart(2, '0');
+  const secondStr = String(second).padStart(2, '0');
+  const millisecondStr = String(millisecond).padStart(3, '0');
+
+  return `${year}-${month}-${day} ${hourStr}:${minuteStr}:${secondStr}.${millisecondStr}`;
+}
+
+export function convertToCurrentTimezone(dateString: Date | string) {
+  const tokyoTimeString = dateString + '+09:00';
+
+  return `${new Date(tokyoTimeString)}`;
+}
+
+export function getCurrentTimeInJapan() {
+  const currentDate = new Date();
+
+  const japanTime = currentDate.toLocaleString('en-CA', {
+    timeZone: 'Asia/Tokyo',
+    hour12: false,
+  });
+
+  return japanTime.replace(',', '');
+}
+export const isDateInFutureOrToday = (inputDate: Date | string): boolean => {
+  const currentDate = new Date();
+
+  const dateToCompare =
+    typeof inputDate === 'string' ? new Date(inputDate) : inputDate;
+
+  if (isNaN(dateToCompare.getTime())) {
+    // Handle error
+  }
+
+  return dateToCompare >= currentDate;
+};
+export function formatShowDateJapanese(date: Date | string): string {
+  const newDate = new Date(date);
+  const year = newDate.getFullYear();
+  const month = String(newDate.getMonth() + 1).padStart(2, '0');
+  const day = String(newDate.getDate()).padStart(2, '0');
+
+  return `${year}年${month}月${day}日`;
+}
+
+export function formatShowDeadline(date: string | Date): string {
+  const inputDate = new Date(date);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  inputDate.setHours(0, 0, 0, 0);
+
+  if (inputDate.getTime() === today.getTime()) {
+    return '今日';
+  } else if (inputDate.getTime() === tomorrow.getTime()) {
+    return '明日';
+  } else {
+    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+    const day = String(inputDate.getDate()).padStart(2, '0');
+    return `${month}月${day}日`;
+  }
+}
+
+export const compareWithCurrentTime = (inputDate: Date | string): boolean => {
+  const currentTime = new Date();
+
+  const compareDate =
+    typeof inputDate === 'string' ? new Date(inputDate) : inputDate;
+
+  return compareDate.getTime() >= currentTime.getTime();
+};
+
+export function getRandomDateTimeBetween(
+  startDateTimeStr: string | null | undefined,
+  endDateTimeStr: string | null | undefined,
+): string {
+  // Check if both values are null or undefined
+  if (!startDateTimeStr && !endDateTimeStr) {
+    // Handle error 'At least one of start or end dateTime must be provided.';
+  }
+
+  let startDatetime: Date;
+  let endDatetime: Date;
+  let newDate: Date;
+
+  // If startDateTimeStr is null or undefined, set startDatetime to the current time (now)
+  if (!startDateTimeStr) {
+    endDatetime = new Date(endDateTimeStr as string);
+    if (isNaN(endDatetime.getTime())) {
+      // Handle error invalid end dateTime format.
+    }
+
+    newDate = new Date(new Date(endDatetime.getTime() - 1000).getTime());
+  }
+  // If endDateTimeStr is null or undefined, add 1 second to startDatetime
+  else if (!endDateTimeStr) {
+    startDatetime = new Date(startDateTimeStr);
+    if (isNaN(startDatetime.getTime())) {
+      // Handle error invalid start dateTime format.
+    }
+
+    newDate = new Date(new Date(startDatetime.getTime() + 1000).getTime());
+  } else {
+    startDatetime = new Date(startDateTimeStr);
+    endDatetime = new Date(endDateTimeStr);
+
+    if (isNaN(startDatetime.getTime()) || isNaN(endDatetime.getTime())) {
+      // Handle error invalid date format. Please provide valid ISO dateTime strings.
+    }
+
+    if (startDatetime >= endDatetime) {
+      // Handle error the start dateTime must be earlier than the end dateTime.
+    }
+
+    const randomMilliseconds = Math.floor(
+      Math.random() * (endDatetime.getTime() - startDatetime.getTime()),
+    );
+    newDate = new Date(startDatetime.getTime() + randomMilliseconds);
+  }
+
+  return convertDateStringFull(newDate);
+}
+
+// Get date info
+export function getDateInfo(date: Date) {
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const weekdayNames: string[] = ['日', '月', '火', '水', '木', '金', '土'];
+  const dayOfWeek = weekdayNames[date.getDay()];
+  return { month, day, dayOfWeek };
+}
+
+// Remove time and compare between days
+export function removeTimeAndCompareDates(
+  firstDateStr: string,
+  secondDateStr: string,
+  targetDateStr: string,
+): boolean {
+  const firstDate = new Date(firstDateStr);
+  const secondDate = new Date(secondDateStr);
+  const targetDate = new Date(targetDateStr);
+  const firstDateOnly = new Date(
+    firstDate.getFullYear(),
+    firstDate.getMonth(),
+    firstDate.getDate(),
+  );
+  const secondDateOnly = new Date(
+    secondDate.getFullYear(),
+    secondDate.getMonth(),
+    secondDate.getDate(),
+  );
+  const targetDateOnly = new Date(
+    targetDate.getFullYear(),
+    targetDate.getMonth(),
+    targetDate.getDate(),
+  );
+  return firstDateOnly <= targetDateOnly && targetDateOnly <= secondDateOnly;
+}
+// Subtract one day from a specific day
+export function subtractOneDay(dateStr: string): Date {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() - 1);
+  return date;
+}
+
+// convert duration to time
+export function convertToJapaneseTime(timeString: string) {
+  const [hours, minutes] = timeString.split(':').map(Number);
+
+  const hourString = hours > 0 ? `${hours}時間` : '';
+  const minuteString = minutes > 0 ? `${minutes}分` : '';
+
+  return hourString || minuteString ? `${hourString}${minuteString}` : '0分';
+}
+export function convertToJapaneseValue(timeString: string): {
+  hoursConvert: number;
+  minutesConvert: number;
+} {
+  const [hours, minutes] = timeString.split(':').map(Number);
+
+  return {
+    hoursConvert: hours > 0 ? hours : 0,
+    minutesConvert: minutes > 0 ? minutes : 0,
+  };
+}
+// format time range
+export function formatTime24h(dateString: string): string {
+  const date = new Date(dateString);
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${hours} : ${minutes}`;
+}
+// combine Date and time
+export const combineDateAndTime = (currentDate: Date, time: string): string => {
+  const cleanedTime = time.replace(/\s*:\s*/g, ':').trim();
+
+  const [hourStr = '0', minuteStr = '0'] = cleanedTime.split(':');
+
+  const hour = parseInt(hourStr, 10) || 0;
+  const minute = parseInt(minuteStr, 10) || 0;
+
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+  const day = String(currentDate.getDate()).padStart(2, '0');
+
+  const formattedDate = `${year}-${month}-${day} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+
+  return formattedDate;
+};
+
+export const isTimeEarlier = (startTime: string, EndTime: string): boolean => {
+  const parseTime = (time: string): number => {
+    const cleanedTime = time
+      .replace(/\s*:\s*/g, ':')
+      .replace(/\s*(AM|PM)\s*/i, ' $1')
+      .trim();
+
+    const [timePart, meridiem = ''] = cleanedTime.split(' ');
+    const [hourStr, minuteStr = '0'] = timePart.split(':');
+
+    let hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+
+    if (isNaN(hour) || isNaN(minute)) {
+      // handle Error
+    }
+
+    const upperMeridiem = meridiem.toUpperCase();
+    if (upperMeridiem === 'PM' && hour !== 12) hour += 12;
+    if (upperMeridiem === 'AM' && hour === 12) hour = 0;
+
+    return hour * 60 + minute;
+  };
+
+  const minuteStart = parseTime(startTime);
+  const minutesEnd = parseTime(EndTime);
+
+  return minuteStart < minutesEnd;
+};
+export function formatCurrentDay() {
+  const currentDay = new Date();
+
+  let hours = currentDay.getHours();
+  const minutes = String(currentDay.getMinutes()).padStart(2, '0');
+
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  const formattedHours = String(hours).padStart(2, '0');
+
+  return `${formattedHours}:${minutes}${ampm}`;
+}
+
+// Convert date to Japanese format
+export function convertDateToJapaneseFormat(date: Date): string {
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  return `${month}月${day}日 ${hours}:${minutes}`;
+}
+
+// Get time range for click date
+export function getTimeRangeForClickDate(
+  eventStart: Date,
+  eventEnd: Date,
+): string {
+  const startDateStr = `${eventStart.getFullYear()}/${eventStart.getMonth() + 1}/${eventStart.getDate()}`;
+  const endDateStr = `${eventEnd.getFullYear()}/${eventEnd.getMonth() + 1}/${eventEnd.getDate()}`;
+
+  if (startDateStr == endDateStr) {
+    const startHours = eventStart.getHours().toString().padStart(2, '0');
+    const startMinutes = eventStart.getMinutes().toString().padStart(2, '0');
+    const endHours = eventEnd.getHours().toString().padStart(2, '0');
+    const endMinutes = eventEnd.getMinutes().toString().padStart(2, '0');
+    return `${startHours}:${startMinutes} ~ ${endHours}:${endMinutes}`;
+  }
+
+  return `${convertDateToJapaneseFormat(eventStart)} ${
+    eventEnd && `~ ${convertDateToJapaneseFormat(eventEnd)}`
+  }`;
+}
+
+// Convert edit input type time
+export const convertToMinutesNumber = (data: string | number): number => {
+  if (typeof data === 'number') {
+    return data;
+  }
+
+  const cleanedData = data.replace(/\s*:\s*/, ':').trim();
+
+  if (/^\d{1,2}$/.test(cleanedData)) {
+    return parseInt(cleanedData, 10) * 100;
+  }
+
+  if (/^\d{3,4}$/.test(cleanedData)) {
+    const length = cleanedData.length;
+    const hour = parseInt(cleanedData.slice(0, length - 2), 10);
+    const minute = parseInt(cleanedData.slice(length - 2), 10);
+    return hour * 100 + minute;
+  }
+  const timePattern = /^(\d{1,2}):(\d{2})\s?(AM|PM)?$/i;
+  const match = cleanedData.match(timePattern);
+
+  if (!match) {
+    // Handle Error
+    return 0;
+  }
+
+  const [_, hours, minutes, period] = match;
+  let hour = parseInt(hours, 10);
+  const minute = parseInt(minutes, 10);
+
+  if (period) {
+    if (period.toUpperCase() === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (period.toUpperCase() === 'AM' && hour === 12) {
+      hour = 0;
+    }
+  }
+
+  return hour * 100 + minute;
+};
+
+// Get submit level formatted date
+export const getSubmitLevelFormattedDate = (date: Date) => {
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+};
+
+// Calculate task and event's duration
+export function calculateActualDuration(
+  startedAt: string,
+  pausedAt: string,
+): number | string {
+  const start = new Date(startedAt);
+  const pause = pausedAt ? new Date(pausedAt) : new Date();
+
+  const durationMs = pause.getTime() - start.getTime();
+
+  const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
+  const hours = Math.floor(durationMs / (1000 * 60 * 60));
+  return `${hours}時間 ${minutes}分`;
+}
+
+export function getNext30MinuteSlot(inputDate: Date): Date {
+  const now = new Date();
+
+  const diffInMinutes = Math.ceil(
+    (now.getTime() - inputDate.getTime()) / 60000,
+  );
+
+  let addedMinutes = Math.ceil(diffInMinutes / 30) * 30;
+
+  if (addedMinutes === diffInMinutes) {
+    addedMinutes += 30;
+  }
+
+  const adjustedDate = new Date(inputDate);
+  adjustedDate.setMinutes(adjustedDate.getMinutes() + addedMinutes);
+
+  return adjustedDate;
+}
+
+export function isDateLessThanToday(date: Date): boolean {
+  const currentDate = new Date();
+  const inputDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  );
+  const today = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    currentDate.getDate(),
+  );
+
+  return inputDate < today;
+}
+
+export const generateTimeOptionsAsObjects = (): OptionDropdownType[] => {
+  const options: OptionDropdownType[] = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      options.push({ label: time, value: time });
+    }
+  }
+  options.push({ label: '23:59', value: '23:59' });
+  return options;
+};
+
+export const isTodaySchedule = (date: Date) => {
+  const today = new Date();
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
+};
+
+export const isYesterdaySchedule = (date: Date) => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  return (
+    date.getFullYear() === yesterday.getFullYear() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getDate() === yesterday.getDate()
+  );
+};

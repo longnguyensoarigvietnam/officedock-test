@@ -1,0 +1,111 @@
+import { AuthenticationTypes, PermissionsSystem } from '@constants/enums';
+import { OptionDropdownType } from './common';
+import { Company } from './company';
+import { Organizations } from './organization';
+import { ReactNode } from 'react';
+
+export interface TermsStep {
+  id?: number;
+  periodStart?: string;
+  periodEnd?: string;
+  status?: string;
+  title?: string;
+  type?: string;
+  description?: ReactNode;
+  isAccepted?: boolean;
+}
+export interface UserAuth {
+  id: number;
+  email: string;
+  password: string;
+  authenticationType: AuthenticationTypes;
+  profile: Profile;
+  roles: UserRoleType[];
+  permissions: PermissionsSystem[];
+  accessToken?: string;
+  refreshToken?: string;
+  sessionId?: string;
+  organizations?: Organizations[];
+  unreadTerms?: TermsStep[] | [];
+}
+
+export interface UserRoleType {
+  id: number;
+  name: string;
+  systemRole: boolean;
+}
+
+export interface User {
+  id: number;
+  loginType: string;
+  username: string;
+  email: string;
+  twoFactorAuthEmail: string;
+  roles: UserRoleType[];
+  profile: Profile;
+  fullName: string;
+  company: Company;
+  organizations: Organizations[];
+  isTwoFactorAuth: boolean;
+  isEnterSendMessage?: boolean;
+  setting?: {
+    isCheckSelfTask?: boolean;
+    isCheckSelfSchedule?: boolean;
+    isCheckCompanySchedule?: boolean;
+    isEnterSendMessage?: boolean;
+  };
+  actions?: {
+    update: boolean;
+    delete: boolean;
+  };
+}
+
+export interface Profile {
+  id: number;
+  fullName: string;
+  birthday: string;
+  gender: string;
+}
+
+export interface CreateUserFormRequest {
+  username?: string;
+  email?: string;
+  twoFactorAuthEmail?: string;
+  loginType: string;
+  profile: {
+    fullName: string;
+  };
+  organizationIds: { organizationId: number | string; isMain: boolean }[];
+  roleIds: number[];
+  isTwoFactorAuth: boolean;
+  password?: string | null;
+}
+
+export interface CreateUserFormData {
+  username: string;
+  name: string;
+  email: string;
+  twoFactorAuthEmailRequired: string;
+  twoFactorAuthEmail: string;
+  password: string;
+  organizations: OptionDropdownType[];
+  mainOrganization?: OptionDropdownType;
+  roles: OptionDropdownType[];
+  isTwoFactorAuth: boolean;
+}
+
+export interface RoleUser {
+  id: number;
+  name: string;
+}
+
+export interface UserFilterFormData {
+  companyName?: string;
+  fullName?: string;
+  organizationName?: string;
+  role?: OptionDropdownType;
+}
+export interface MemoDetailData {
+  content: string;
+  isOpen: boolean;
+}
