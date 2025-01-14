@@ -1,0 +1,65 @@
+from base.constants import EnumChoices
+
+
+class ChatMessageTypes(EnumChoices):
+    """
+    ChatMessageTypes constants.
+    """
+
+    MESSAGE = "MESSAGE"
+    CREATION_TASK = "CREATION_TASK"
+    EDIT_TASK = "EDIT_TASK"
+    SUBMIT_LEVEL_SKILL = "SUBMIT_LEVEL_SKILL"
+    ADD_MEMBER_TASK = "ADD_MEMBER_TASK"
+    REMOVE_MEMBER_TASK = "REMOVE_MEMBER_TASK"
+    CREATION_SCHEDULE = "CREATION_SCHEDULE"
+    EDIT_SCHEDULE = "EDIT_SCHEDULE"
+    REMOVE_SCHEDULE = "REMOVE_SCHEDULE"
+
+
+class ChatRoomTypes(EnumChoices):
+    """
+    ChatRoomTypes constants.
+    """
+
+    SELF = "SELF"
+    PRIVATE = "PRIVATE"
+    GROUP = "GROUP"
+    TASK = "TASK"
+    SKILL = "SKILL"
+
+
+class ChatRoomNames(EnumChoices):
+    """
+    ChatRoomNames constants.
+    """
+
+    TASK_CARD = "タスクカード"
+    SKILL_UP = "スキルアップ"
+
+
+class WebSocketEventType(EnumChoices):
+    """
+    WebSocket event types constants.
+    """
+
+    ERROR = "ERROR"
+    MESSAGE = "MESSAGE"
+    CREATION_TASK = "CREATION_TASK"
+    HIDE_ROOM = "HIDE_ROOM"
+    SHOW_ROOM = "SHOW_ROOM"
+    PIN_ROOM = "PIN_ROOM"
+    UNPIN_ROOM = "UNPIN_ROOM"
+    ADD_PARTICIPANT = "ADD_PARTICIPANT"
+    REMOVE_PARTICIPANT = "REMOVE_PARTICIPANT"
+    EDIT_MESSAGE = "EDIT_MESSAGE"
+    DELETE_MESSAGE = "DELETE_MESSAGE"
+    CREATE_CHAT_ROOM = "CREATE_CHAT_ROOM"
+    UPDATE_CHAT_ROOM = "UPDATE_CHAT_ROOM"
+    DELETE_TASK = "DELETE_TASK"
+    TOTAL_UNREAD_MESSAGE = "TOTAL_UNREAD_MESSAGE"
+    CHANGE_TASK_STATUS = "CHANGE_TASK_STATUS"
+    CHANGE_ROLE = "CHANGE_ROLE"
+
+
+USER_ACTION_GROUP = "{}_user_action_group"

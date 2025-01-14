@@ -1,0 +1,480 @@
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.db import models
+from django.db.models import Q
+
+from rest_framework.exceptions import ValidationError
+from base.models import BaseModel
+from base.exceptions import LockedError
+from base.messages import ERROR_MESSAGES
+from utils.jwt import JWTService
+
+from .constants import GenderTypes, LoginTypes, RoleTypes
+from .managers import ActiveUsersOnlyManager
+
+
+class Permission(BaseModel):
+    """
+    Permission model.
+    """
+
+    name = models.CharField(max_length=255)
+
+
+class RoleDetail(BaseModel):
+    """
+    Role detail with permissions.
+    """
+
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="role_details",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    role = models.ForeignKey(
+        "Role",
+        related_name="role_details",
+        on_delete=models.CASCADE,
+    )
+    permission = models.ForeignKey(
+        "Permission",
+        related_name="role_details",
+        on_delete=models.CASCADE,
+    )
+    selection_result = models.CharField(null=True, blank=True)
+
+
+class UserRole(BaseModel):
+    """
+    User role model.
+    """
+
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="user_roles",
+        on_delete=models.CASCADE,
+    )
+    role = models.ForeignKey(
+        "Role",
+        related_name="user_roles",
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        "User",
+        related_name="user_roles",
+        on_delete=models.CASCADE,
+    )
+
+
+class Role(BaseModel):
+    """
+    Role model.
+    """
+
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="roles",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    name = models.CharField(max_length=255)
+    system_role = models.BooleanField(null=True, blank=True)
+    permissions = models.ManyToManyField(
+        "Permission",
+        through="RoleDetail",
+        related_name="roles",
+    )
+
+    def __str__(self) -> str:
+        return str(self.name)
+
+    @staticmethod
+    def get_role(role_name):
+        """
+        Get role by name.
+        """
+
+        return Role.objects.filter(name=role_name).first()
+
+
+class User(AbstractBaseUser, BaseModel, PermissionsMixin):
+    """
+    User model.
+    """
+
+    objects = ActiveUsersOnlyManager()
+
+    USERNAME_FIELD = "username_alias"
+
+    is_active = models.BooleanField(default=True)
+    is_two_factor_auth = models.BooleanField(default=True)
+    username = models.CharField(max_length=255, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    two_factor_auth_email = models.EmailField(null=True, blank=True)
+    username_alias = models.TextField(unique=True, max_length=265)
+    login_type = models.CharField(
+        choices=LoginTypes.choices(),
+        max_length=255,
+        default=LoginTypes.EMAIL.value,
+    )
+    password = models.CharField(max_length=255)
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="users",
+        on_delete=models.CASCADE,
+    )
+    terms = models.ManyToManyField(
+        "terms.Term", through="ReadTerm", related_name="users"
+    )
+    roles = models.ManyToManyField(
+        "Role",
+        through="UserRole",
+        related_name="users",
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Custom to set the password and username field
+        """
+        # Make sure the password is hashed if create new normal user
+        # The password of superuser is hashed when creating use
+        # createsuperuser script
+        if self.id is None and self.password and not self.is_superuser:
+            self.set_password(self.password)
+
+        # Default two_factor_auth_email is email when creation.
+        if (
+            self.id is None
+            and self.two_factor_auth_email is None
+            and self.is_two_factor_auth
+            and self.login_type == LoginTypes.EMAIL.value
+            and self.email
+        ):
+            self.two_factor_auth_email = self.email
+
+        # Validator two factor auth email when is 2FA
+        if self.is_two_factor_auth and self.two_factor_auth_email is None:
+            raise ValidationError(
+                {"two_factor_auth_email": ERROR_MESSAGES["field_required"]}
+            )
+
+        super().save(*args, **kwargs)
+
+    def set_profile(self, profile_data):
+        """
+        Set profile data.
+        """
+
+        if not hasattr(self, "profile"):
+            Profile.objects.create(
+                user=self,
+                company=self.company,
+            )
+
+        for attr, value in profile_data.items():
+            setattr(self.profile, attr, value)
+        self.profile.save()
+
+    def set_setting(self, setting_data):
+        """
+        Set setting data.
+        """
+
+        if not hasattr(self, "setting"):
+            Setting.objects.create(
+                user=self,
+                company=self.company,
+            )
+
+        for attr, value in setting_data.items():
+            setattr(self.setting, attr, value)
+        self.setting.save()
+
+    def verify_login_token(self, token):
+        """
+        Verify the logged in user's token if the role has been changed.
+        """
+        if LoginToken.objects.filter(
+            user=self, token=token, is_block=True
+        ).exists():
+            raise LockedError()
+
+        return True
+
+    def login_token(self, token):
+        """
+        Save the token when the user login.
+        """
+        return LoginToken.objects.create(user=self, token=token)
+
+    def validate_unique_email(instance, email, is_admin_site=False):
+        """
+        Validate unique email for Admin site and System site
+        """
+
+        # Define the query filter for email
+        query_filter = User.objects.filter(Q(email=email) | Q(username=email))
+
+        if instance and isinstance(instance, User):
+            # Exclude the current instance from the query if it's an update
+            query_filter = query_filter.exclude(id=instance.id)
+
+        if is_admin_site:
+            # Filter for admin users
+            query_filter = query_filter.filter(
+                roles__name=RoleTypes.OPERATION_ADMIN.value
+            )
+        else:
+            # Exclude admin users for system site
+            query_filter = query_filter.exclude(
+                roles__name=RoleTypes.OPERATION_ADMIN.value
+            )
+
+        if email and query_filter.exists():
+            raise ValidationError(ERROR_MESSAGES["email_exists"])
+
+    def validate_unique_username(instance, username, is_admin_site=False):
+        """
+        Validate unique username for Admin site and System site
+        """
+
+        # Define the query filter for username
+        query_filter = User.objects.filter(
+            Q(email=username) | Q(username=username)
+        )
+
+        if instance and isinstance(instance, User):
+            # Exclude the current instance from the query if it's an update
+            query_filter = query_filter.exclude(id=instance.id)
+
+        if is_admin_site:
+            # Filter for admin users
+            query_filter = query_filter.filter(
+                roles__name=RoleTypes.OPERATION_ADMIN.value
+            )
+        else:
+            # Exclude admin users for system site
+            query_filter = query_filter.exclude(
+                roles__name=RoleTypes.OPERATION_ADMIN.value
+            )
+
+        if username and query_filter.exists():
+            raise ValidationError(ERROR_MESSAGES["username_exists"])
+
+    def check_roles(self, roles, exclude=False):
+        """
+        Checks if the user has (or does not have, based on `exclude`) at least one role
+        from the provided list or a single role.
+        """
+        # Ensure roles is always iterable (convert string to list if necessary)
+        if isinstance(roles, str):
+            roles = [roles]
+
+        # Apply exclude or filter logic
+        return (
+            self.roles.exclude(name__in=roles).exists()
+            if exclude
+            else self.roles.filter(name__in=roles).exists()
+        )
+
+
+class Setting(BaseModel):
+    """
+    User settings model.
+    """
+
+    is_check_self_task = models.BooleanField(default=False)
+    is_check_self_schedule = models.BooleanField(default=False)
+    is_check_company_schedule = models.BooleanField(default=False)
+    is_enter_send_message = models.BooleanField(default=False)
+    user = models.OneToOneField(
+        "User", related_name="setting", on_delete=models.CASCADE
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="setting",
+        on_delete=models.CASCADE,
+    )
+
+
+class Profile(BaseModel):
+    """
+    Profile model.
+    """
+
+    full_name = models.CharField(max_length=255)
+    birthday = models.DateField(null=True, blank=True)
+    gender = models.CharField(
+        max_length=20, choices=GenderTypes.choices(), null=True, blank=True
+    )
+    user = models.OneToOneField(
+        "User", related_name="profile", on_delete=models.CASCADE
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="profiles",
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self) -> str:
+        return self.full_name
+
+
+class Memo(BaseModel):
+    """ """
+
+    user = models.OneToOneField(
+        "User", related_name="memo", on_delete=models.CASCADE
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="memos",
+        on_delete=models.CASCADE,
+    )
+    content = models.TextField(null=True, blank=True)
+    is_open = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        """
+        Custom save method
+        """
+        self.company = self.user.company
+        super().save(*args, **kwargs)
+
+
+class LoginToken(BaseModel):
+    """
+    Login token model
+    """
+
+    user = models.ForeignKey(
+        "User", related_name="tokens", on_delete=models.CASCADE
+    )
+    token = models.TextField()
+    is_block = models.BooleanField(default=False)
+
+
+class UserVerification(BaseModel):
+    """
+    User verification model.
+    """
+
+    token = models.CharField(max_length=255, blank=True, null=True)
+    otp_code = models.CharField(max_length=6, blank=True, null=True)
+    otp_attempts = models.IntegerField(blank=True, null=True)
+    steps = models.IntegerField(blank=True, null=True)
+    user = models.OneToOneField(
+        "User",
+        related_name="user_verification",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+
+
+class ResetPassword(BaseModel):
+    """
+    Reset password model.
+    """
+
+    user = models.ForeignKey(
+        "User", related_name="reset_password", on_delete=models.CASCADE
+    )
+    token = models.CharField(max_length=255)
+
+    @staticmethod
+    def create(user):
+        """
+        Create a new reset password.
+        """
+
+        # Remove old token if any
+        ResetPassword.objects.filter(user=user).delete()
+        jwt_service = JWTService()
+        token = jwt_service.encode_token(user.id, user.email)
+        return ResetPassword.objects.create(user=user, token=token)
+
+    @staticmethod
+    def verify(token):
+        """
+        Verify a reset password.
+        """
+
+        jwt_service = JWTService()
+        token_decode = jwt_service.decode_token(token)
+        user = User.objects.filter(pk=token_decode.get("id")).first()
+        if not user:
+            return None
+
+        token_obj = ResetPassword.objects.filter(user=user, token=token)
+        return user if token_obj.exists() else None
+
+
+class ReadTerm(BaseModel):
+    """
+    Read term of user model.
+    """
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="read_terms",
+    )
+    term = models.ForeignKey(
+        "terms.Term",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="read_terms",
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="read_terms",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Set default company
+        """
+        if self.user:
+            self.company = self.user.company
+
+        super().save(*args, **kwargs)
+
+
+class DailyReport(BaseModel):
+    """
+    Daily report of user
+    """
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="daily_reports",
+    )
+    date = models.DateField(auto_now=False, auto_now_add=False)
+    remark = models.TextField(null=True, blank=True)
+    is_submit = models.BooleanField(default=False)
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="daily_reports",
+        on_delete=models.CASCADE,
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Set default company
+        """
+        if self.user:
+            self.company = self.user.company
+
+        super().save(*args, **kwargs)
