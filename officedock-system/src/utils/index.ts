@@ -517,7 +517,7 @@ export const getPermissionOptionDropdown = (
 
 export const showBackgroundColorByTime = (hour: number) => {
   let colorClassName = '';
-
+  
   switch (true) {
     case hour >= 6 && hour < 11:
       colorClassName =
@@ -553,25 +553,6 @@ export const showToggleButtonColorByTime = () => {
       break;
     default:
       colorClassName = '#5972AB';
-  }
-  return colorClassName;
-};
-
-export const showModalHeaderBackgroundColorByTime = (hour: number) => {
-  let colorClassName = '';
-
-  switch (true) {
-    case hour >= 6 && hour < 11:
-      colorClassName = 'rgba(149, 200, 233, 1)';
-      break;
-    case hour >= 11 && hour < 15:
-      colorClassName = 'rgba(105, 182, 220, 1)';
-      break;
-    case hour >= 15 && hour < 18:
-      colorClassName = 'rgba(204, 193, 215, 1)';
-      break;
-    default:
-      colorClassName = 'rgba(121, 136, 174, 1)';
   }
   return colorClassName;
 };

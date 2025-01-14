@@ -153,6 +153,14 @@ const LoginForm = () => {
         />
         <Button type="submit">ログイン</Button>
       </form>
+      <div className="flex gap-4 items-center">
+        <div className="flex-grow h-[1px] bg-gray-200"></div>
+        <p className="text-sm">または</p>
+        <div className="flex-grow h-[1px] bg-gray-200"></div>
+      </div>
+      <div className="flex flex-col w-full gap-2 -mt-2">
+        <ButtonSSO provider="google" text="Googleでログイン" />
+      </div>
       <div className="flex flex-col justify-center items-center gap-2">
         <div className="flex items-center text-gray-500">
           <p>パスワードを忘れた方は</p>
