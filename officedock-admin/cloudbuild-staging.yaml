@@ -1,0 +1,56 @@
+steps:
+  # Get ENV from SecretManager and write to .env
+  - id: 'Write ENV'
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: 'bash'
+    secretEnv: ['_ADMIN_ENV']
+    args: ['-c', 'echo "$$_ADMIN_ENV" > officedock-admin/.env']
+
+  # Build Docker Image on Cloud Build
+  - id: 'Build Docker Image'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    secretEnv: ['_ADMIN_ARTIFACT_REGISTORY_PATH']
+    args:
+      [
+        '-c',
+        'docker build --platform linux/amd64 -t $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA -f Dockerfile.staging .',
+      ]
+    dir: 'officedock-admin'
+
+  # Push built Docker Image on Artifact Registry
+  - id: 'Push Docker Image'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    secretEnv: ['_ADMIN_ARTIFACT_REGISTORY_PATH']
+    args: ['-c', 'docker push $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA']
+
+  # Run built Docker Image on Cloud Run
+  - id: 'Run Docker Image'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    secretEnv:
+      ['_ADMIN_ARTIFACT_REGISTORY_PATH', '_ADMIN_REGION', '_ADMIN_SERVICE_NAME']
+    args: [
+        '-c',
+        "gcloud run deploy $$_ADMIN_SERVICE_NAME \
+        --image $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA \
+        --region $$_ADMIN_REGION \
+        --port 3000 \
+        --allow-unauthenticated",
+      ]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+# Settings SecretManager
+availableSecrets:
+  secretManager:
+    - versionName: projects/${PROJECT_NUMBER}/secrets/STG_ADMIN_ARTIFACT_REGISTRY_PATH/versions/latest
+      env: _ADMIN_ARTIFACT_REGISTORY_PATH
+    - versionName: projects/${PROJECT_NUMBER}/secrets/STG_ADMIN_REGION/versions/latest
+      env: _ADMIN_REGION
+    - versionName: projects/${PROJECT_NUMBER}/secrets/STG_ADMIN_SERVICE_NAME/versions/latest
+      env: _ADMIN_SERVICE_NAME
+    - versionName: projects/${PROJECT_NUMBER}/secrets/STG_ADMIN_ENV/versions/latest
+      env: _ADMIN_ENV
