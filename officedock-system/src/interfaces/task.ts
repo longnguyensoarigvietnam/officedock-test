@@ -1,0 +1,259 @@
+import { EventCalendarType } from '@constants/enums';
+import { OptionDropdownType } from './common';
+import { PeopleInCharge, TagId, Tags } from './tag';
+import { Organizations } from './organization';
+
+export interface TaskRequest {
+  id?: number | string;
+  title?: string;
+  type?: string;
+  statusId?: number | null;
+  priority?: string | null;
+  deadline?: string | null;
+  description?: string;
+  tagIds?: TagId[] | null;
+  peopleInChargeIds?: PeopleInCharge[] | null;
+  statusName?: string;
+  isStart?: boolean;
+  categoryIds?:
+    | {
+        categoryId: string | null;
+        type: string;
+      }[]
+    | null;
+  pinAt?: string | null;
+  index?: number;
+  isImportant?: boolean;
+  todoList?: TodoItem[];
+  taskSchedules?:
+    | {
+        scheduleId?: number | null;
+        planStartDate?: string | null;
+        planEndDate?: string | null;
+      }[]
+    | null;
+  sendToChat?: boolean;
+  chatRoomCode?: string;
+  oldIdStatus?: string;
+  action?: string;
+  copyTaskId?: string | null;
+  organizationId?: number | null;
+}
+export interface TaskFormData {
+  id?: string;
+  title?: string;
+  type?: OptionDropdownType;
+  statusId?: OptionDropdownType | null;
+  priority?: OptionDropdownType;
+  deadlineDate?: Date | null;
+  deadlineTime?: string | null;
+  planStartDate?: Date | null;
+  planStartTime?: string | null;
+  planEndDate?: Date | null;
+  planEndTime?: string | null;
+  actualStartDate?: Date | null;
+  actualStartTime?: string | null;
+  actualEndDate?: Date | null;
+  actualEndTime?: string | null;
+  description?: string;
+  tagIds?: OptionDropdownType[] | null;
+  peopleInChargeIds?: OptionDropdownType[];
+  isStart?: boolean;
+  isMyTask?: boolean;
+  isAnotherTaskStarted?: boolean;
+  createdAt?: Date;
+  index?: number;
+  taskDuration?: string;
+  categories: {
+    LARGE: OptionDropdownType;
+    MEDIUM: OptionDropdownType;
+    SMALL: OptionDropdownType;
+  };
+  isImportant: boolean;
+  todoList?: TodoItem[];
+  plans: PlanItem[] | null;
+  oldIdStatus?: string;
+  organization?: OptionDropdownType;
+}
+
+export interface StatusTask {
+  id: number | null;
+  name: string;
+  index?: number;
+}
+export interface TodoItem {
+  id?: number;
+  customId?: string;
+  content: string;
+  isChecked: boolean;
+  checkedAt?: string | null;
+  index: number;
+}
+
+interface PlanItem {
+  scheduleId?: number | null;
+  planStartDate: Date | null;
+  planStartTime: string | null;
+  planEndDate: Date | null;
+  planEndTime: string | null;
+}
+
+export interface Task {
+  id: number;
+  title: string;
+  type: string;
+  status?: StatusTask;
+  priority?: string;
+  deadline: string;
+  description: string;
+  taskDuration: string;
+  isStart: boolean;
+  isMyTask: boolean;
+  tags: Omit<Tags, 'peopleInCharge' | 'responsiblePerson'>[];
+  peopleInCharge: peopleInChargeType[];
+  createdAt: Date;
+  index: number;
+  action?: string;
+  isDrag?: boolean;
+  isScheduleInToday?: boolean;
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+  }[];
+  resourceId?: string;
+  isImportant?: boolean;
+  todoList?: TodoItem[];
+  plans?: PlanItem[] | null;
+  pinAt?: string | null;
+  taskSchedules: {
+    id?: number | null;
+    uuid?: string;
+    planStartDate: string | null;
+    planEndDate?: string | null;
+  }[];
+  organization?: Organizations;
+}
+
+export interface TaskActualType {
+  id: number;
+  taskId: number;
+  scheduleId?: number;
+  title: string;
+  deadline: string;
+  isStart: boolean;
+  uuid: string;
+  planStartDate: string | null;
+  planEndDate?: string | null;
+  type?: string;
+}
+export interface peopleInChargeType {
+  id: number | string;
+  fullName: string;
+}
+
+export interface ColumnType {
+  id: string | number;
+  title: string;
+  items: Task[];
+}
+export interface Columns {
+  [key: string]: ColumnType;
+}
+
+export interface CreationDataTask {
+  tags: Omit<Tags, 'responsiblePerson'>[];
+  status: StatusTask[];
+  types: string[];
+  priorities: string[];
+  categories: {
+    LARGE: string[];
+    MEDIUM: string[];
+    SMALL: string[];
+  };
+  organizations: {
+    id: number;
+    name: string;
+    superior: { id: number; name: string } | null;
+  }[];
+}
+
+export interface UpdateTaskKanbanRequest {
+  index?: number;
+  task: number;
+  status: number | string;
+  tag?: number | string | null;
+  user?: number | string | null;
+  pinAt?: string | null;
+  isBeginUnpin?: boolean;
+}
+
+export interface TaskDuration {
+  taskDuration: string;
+  isStart: boolean;
+}
+export interface KanbanDataResponse {
+  count: number;
+  numPages: number;
+  results: Task[];
+  hasNext: boolean;
+}
+
+export interface EventSchedule {
+  isAllDay?: boolean;
+  idEvent?: number;
+  endDate?: Date | null;
+  startDate?: Date | null;
+  typeEvent?: EventCalendarType;
+}
+export interface TaskTimeSchedule {
+  id: string;
+  uuid?: string;
+  taskId?: number;
+  scheduleId?: number;
+  title: string;
+  type: string;
+  isStart: boolean;
+  start: Date;
+  end: Date;
+  allDay?: boolean;
+  endDate?: Date | null;
+  startDate?: Date | null;
+  resourceId?: string;
+  startEditable?: boolean;
+  planStartDate: string | null;
+  planEndDate: string | null;
+  isCalculation?: boolean;
+}
+export interface TaskErrorPerson {
+  id: string;
+  message: string;
+}
+export interface TaskFieldStart {
+  id: number | string;
+  title: string;
+  type: string;
+}
+export interface TaskFieldActionStart extends Omit<TaskFieldStart, 'title'> {
+  isStart: boolean;
+  title?: string;
+}
+
+export interface TaskPinResponse {
+  index: number;
+  user: number;
+  task: number;
+  pinAt: string | null;
+}
+
+export interface TaskActualCalculationType {
+  id: number;
+  isStart: boolean;
+  planEndDate: string;
+  planStartDate: string;
+  taskId: number;
+  scheduleId: number;
+  title: string;
+  uuid: string;
+  type: string;
+}

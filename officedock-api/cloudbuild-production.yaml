@@ -1,0 +1,51 @@
+steps:
+  # Build Docker Image on Cloud Build
+  - id: "Build Docker Image"
+    name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    secretEnv: ["_API_ARTIFACT_REGISTRY_PATH"]
+    args:
+      [
+        "-c",
+        "docker build --platform linux/amd64 -t $$_API_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA -f Dockerfile.production .",
+      ]
+    dir: "officedock-api"
+
+  # Push built Docker Image on Artifact Registry
+  - id: "Push Docker Image"
+    name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    secretEnv: ["_API_ARTIFACT_REGISTRY_PATH"]
+    args: ["-c", "docker push $$_API_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA"]
+
+  # Deploy built Docker Image on Cloud Run
+  - id: "Deploy Docker Image"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    secretEnv:
+      ["_API_ARTIFACT_REGISTRY_PATH", "_API_REGION", "_API_SERVICE_NAME", "_API_CLOUD_SQL_INSTANCE"]
+    args: [
+        "-c",
+        "gcloud run deploy $$_API_SERVICE_NAME \
+        --image $$_API_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
+        --region $$_API_REGION \
+        --port 8080 \
+        --add-cloudsql-instances $$_API_CLOUD_SQL_INSTANCE \
+        --set-env-vars SECRET_PREFIX=PROD \
+        --allow-unauthenticated",
+      ]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+# Setting SecretManger
+availableSecrets:
+  secretManager:
+    - versionName: projects/${PROJECT_NUMBER}/secrets/PROD_API_ARTIFACT_REGISTRY_PATH/versions/latest
+      env: _API_ARTIFACT_REGISTRY_PATH
+    - versionName: projects/${PROJECT_NUMBER}/secrets/PROD_API_REGION/versions/latest
+      env: _API_REGION
+    - versionName: projects/${PROJECT_NUMBER}/secrets/PROD_API_SERVICE_NAME/versions/latest
+      env: _API_SERVICE_NAME
+    - versionName: projects/${PROJECT_NUMBER}/secrets/PROD_API_CLOUD_SQL_INSTANCE/versions/latest
+      env: _API_CLOUD_SQL_INSTANCE

@@ -1,0 +1,176 @@
+import { ItemStartType, PermissionType, WorkItemType } from './enums';
+
+// Define app name here for CSR
+export const APP_NAME_METADATA = 'Office Dock';
+export const PROVIDER_GOOGLE = 'google';
+
+export const TOAST_DURATION = 3000;
+
+export const PASSWORD_MIN_LENGTH = 8;
+
+export const DATE_FORMAT = 'yyyy/MM/dd';
+export const DATE_TEXT_FORMAT = 'yyyy年 MM月 dd日';
+export const DATE_FORMAT_SERVER = 'yyyy-MM-dd';
+export const DATE_TIME_FORMAT = 'yyyy/MM/dd/HH:mm';
+export const TIME_COUNTER_FORMAT = 'HH:mm:ss';
+
+export const DATE_TIME_LOCAL = 'yyyy-MM-dd HH:mm';
+export const DATE_SCHEDULE_FORMAT = 'yyyy年 M月 d日 (E)';
+
+export const NO_DATA_AVAILABLE = 'データが見つかりません。';
+export const UNREGISTERED = '未設定';
+export const NO_OPTIONS = 'データが見つかりません。';
+export const NO_OPTIONS_CUSTOM = 'データがありません';
+
+export const PAGINATION_PAGE_SIZE_DEFAULT = 5;
+
+export const PAGINATION_PAGE_SIZE_MEDIUM = 20;
+
+export const PAGINATION_PAGE_SIZE_HIGHT = 50;
+
+export const PAGINATION_PAGE_SIZE_KANBAN = 30;
+
+export const INITIAL_INDEX_VALUE = 0.01;
+
+export const COUNTDOWN_FOR_RESEND_OTP = 60;
+
+export const TOTAL_SKILL_LEVELS = 3;
+
+export const MESSAGE_DELETED = 'このメッセージが削除されました';
+
+export const TASK_DELETED = 'タスクが削除されました';
+
+export const EVENT_DELETED = 'この予定は削除されました。';
+
+export const EVENT_CREATED = 'が予定を作成しました。';
+
+export const EVENT_EDITED = 'この予定は更新されました。';
+
+export const EVENT_BEFORE_EDITED = '変更前の実施予定日時：';
+
+export const CREATION_TASK_MESSAGE = 'タスクを追加しました。';
+
+export const REMOVE_MEMBER_TASK_MESSAGE = '実施担当者から外れました。';
+
+export const ADD_MEMBER_TASK_MESSAGE = 'タスクを追加しました。';
+
+export const SKILL_UP_MESSAGE = 'さんが評価しました。';
+
+export const DELETED_SKILL_UP_MESSAGE = '申請が削除されました。';
+
+export const COPY_MESSAGE = 'コピー';
+
+export const NO_SETTING = '未設定';
+
+export const REIWA_START_YEAR = 2019;
+
+export const DAY_NAMES_JAPANESE = ['日', '月', '火', '水', '木', '金', '土'];
+
+export const MAX_HEX_COLOR_VALUE = 16777215;
+
+export const DEFAULT_START_TIME = '00 : 00';
+
+export const DEFAULT_END_TIME = '23 : 59';
+
+export const SCREEN_LIST = [
+  {
+    name: 'マイタスク画面',
+    value: 'myTask',
+  },
+  {
+    name: 'カレンダー画面',
+    value: 'calendar',
+  },
+  {
+    name: 'チャット画面',
+    value: 'chat',
+  },
+  {
+    name: '組織画面',
+    value: 'organization',
+  },
+  {
+    name: '集計カテゴリ画面',
+    value: 'category',
+  },
+  {
+    name: 'スキル画面',
+    value: 'skill',
+  },
+  {
+    name: '集計タグ画面',
+    value: 'tag',
+  },
+  {
+    name: 'ユーザー画面',
+    value: 'user',
+  },
+  {
+    name: '集計カテゴリ階層画面',
+    value: 'categoryHierarchy',
+  },
+  {
+    name: 'スキルマップ画面',
+    value: 'skillMap',
+  },
+  {
+    name: '組織_スキル画面',
+    value: 'organizationSkill',
+  },
+  {
+    name: '集計画面',
+    value: 'statistic',
+  },
+  {
+    name: 'レベルアップ申請確認画面',
+    value: 'submitLevel',
+  },
+  {
+    name: 'ロール画面',
+    value: 'role',
+  },
+];
+
+export const PERMISSION_OPTIONS = [
+  {
+    label: PermissionType.ALLOWED_WITHOUT_OWN_DATA,
+    value: PermissionType.ALLOWED_WITHOUT_OWN_DATA,
+  },
+  {
+    label: PermissionType.ALLOWED,
+    value: PermissionType.ALLOWED,
+  },
+  {
+    label: PermissionType.NOT_ALLOWED,
+    value: PermissionType.NOT_ALLOWED,
+  },
+  {
+    label: PermissionType.ONLY_DATA_OWN,
+    value: PermissionType.ONLY_DATA_OWN,
+  },
+  {
+    label: PermissionType.ONLY_DATA_ORGANIZATION,
+    value: PermissionType.ONLY_DATA_ORGANIZATION,
+  },
+  {
+    label: PermissionType.ONLY_DATA_ORGANIZATION_WITHOUT_OWN_DATA,
+    value: PermissionType.ONLY_DATA_ORGANIZATION_WITHOUT_OWN_DATA,
+  },
+];
+
+export const TASK_AND_EVENT_OPTIONS = [
+  {
+    label: WorkItemType.Task,
+    value: ItemStartType.TASK,
+  },
+  {
+    label: WorkItemType.Event,
+    value: ItemStartType.SCHEDULE,
+  },
+];
+
+export const DEFAULT_TASK_SCHEDULE_DURATION = '0時間 0分';
+
+export const NO_OPTION_CATEGORY = '未選択';
+
+export const MY_TEMPLATE = 'マイテンプレート';

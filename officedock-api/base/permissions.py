@@ -1,0 +1,211 @@
+from rest_framework import permissions
+
+from roles.constants import Actions, Screens
+from users.constants import RoleTypes
+from users.models import User
+from common.utils import to_camel_case, check_permission_exists
+
+
+class BasePermission(permissions.BasePermission):
+    """
+    Custom base permission class
+    """
+
+    def is_authenticated(self, request):
+        """
+        Check is authenticated
+        """
+
+        user = request.user
+        token = request.auth
+
+        return user and user.is_authenticated and user.verify_login_token(token)
+
+    def is_role(self, request, role):
+        """
+        Check is role
+        """
+
+        return self.is_authenticated(request) and (
+            request.user.check_roles(role)
+        )
+
+
+class ActionPermission(BasePermission):
+    """
+    Custom permission class to check if a user has the necessary permissions
+    for a given action based on their role.
+    """
+
+    def has_permission(self, request, view):
+        """
+        Check if the request has the required permissions based on the current screen and API's screen_name.
+        """
+        if not self.is_authenticated(request):
+            return False
+
+        current_screen = request.query_params.get("current_screen")
+        screen_name = getattr(view, "screen_name", None)
+
+        if not screen_name:
+            return False  # Deny access if `screen_name` is not defined
+
+        # Allow `GET` requests if fetching data for a screen different from the current screen
+        if (
+            current_screen
+            and request.method == "GET"
+            and to_camel_case(current_screen) != to_camel_case(screen_name)
+        ):
+            return True
+
+        # Allow `PATCH` requests to update MY_TASK from the STATISTIC screen
+        if (
+            current_screen
+            and request.method == "PATCH"
+            and to_camel_case(current_screen)
+            == to_camel_case(Screens.STATISTIC.value)
+            and to_camel_case(screen_name)
+            == to_camel_case(Screens.MY_TASK.value)
+        ):
+            return True
+
+        method_action = {
+            "GET": Actions.VIEW.value,
+            "POST": Actions.ADD.value,
+            "PATCH": Actions.UPDATE.value,
+            "PUT": Actions.UPDATE.value,
+            "DELETE": Actions.DELETE.value,
+        }
+
+        action = method_action.get(request.method)
+        if not action:
+            return False  # Deny access for unsupported HTTP methods
+
+        permission_name = f"{screen_name}_{action}"
+
+        # Check if logged user has permission view skill map, allow create submit level
+        if (
+            permission_name
+            == f"{Screens.SUBMIT_LEVEL.value}_{Actions.ADD.value}"
+        ):
+            skill_map_view = f"{Screens.SKILL_MAP.value}_{Actions.VIEW.value}"
+            return check_permission_exists(request, skill_map_view)
+
+        # FIXME: Make new hierarchy category screen later
+        # Check if logged user has permission add hierarchies category, allow update hierarchies category
+        if (
+            permission_name
+            == f"{Screens.CATEGORY_HIERARCHY.value}_{Actions.ADD.value}"
+        ):
+            category_hierarchy_add = (
+                f"{Screens.CATEGORY_HIERARCHY.value}_{Actions.ADD.value}"
+            )
+            category_hierarchy_update = (
+                f"{Screens.CATEGORY_HIERARCHY.value}_{Actions.UPDATE.value}"
+            )
+            return check_permission_exists(
+                request, category_hierarchy_add
+            ) or check_permission_exists(request, category_hierarchy_update)
+
+        # Check if permission is add skill map, allow update skill map
+        if permission_name == f"{Screens.SKILL_MAP.value}_{Actions.ADD.value}":
+            skill_map_add = f"{Screens.SKILL_MAP.value}_{Actions.ADD.value}"
+            skill_map_update = (
+                f"{Screens.SKILL_MAP.value}_{Actions.UPDATE.value}"
+            )
+            return check_permission_exists(
+                request, skill_map_add
+            ) or check_permission_exists(request, skill_map_update)
+
+        return check_permission_exists(request, permission_name)
+
+
+class IsOperationAdminOnly(BasePermission):
+    """
+    The permission for only Operation Admin can access resources
+    """
+
+    def has_permission(self, request, view):
+        return self.is_role(request, RoleTypes.OPERATION_ADMIN.value)
+
+
+class IsSystemAdminOnly(BasePermission):
+    """
+    The permission for only System Admin can access resources
+    """
+
+    def has_permission(self, request, view):
+        return self.is_role(request, RoleTypes.SYSTEM_ADMIN.value)
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+
+        # Don't allow System Admin delete itself
+        if (
+            view.action == "destroy"
+            and isinstance(obj, User)
+            and user.id == obj.id
+        ):
+            return False
+
+        return user.company.id == obj.company.id
+
+
+class IsManagerOnly(BasePermission):
+    """
+    The permission for only Manager can access resources
+    """
+
+    def has_permission(self, request, view):
+        return self.is_role(request, RoleTypes.MANAGER.value)
+
+
+class IsManagerReadOnly(BasePermission):
+    """
+    The permission for only Manager can access resources for read-only.
+    """
+
+    def has_permission(self, request, view):
+        return self.is_role(
+            request, RoleTypes.MANAGER.value
+        ) and view.action in ["list", "retrieve"]
+
+
+class IsDepartmentManagerOnly(BasePermission):
+    """
+    The permission for only Department Manager can access resources
+    """
+
+    def has_permission(self, request, view):
+        return self.is_role(request, RoleTypes.DEPARTMENT_MANAGER.value)
+
+
+class IsDepartmentManagerReadOnly(BasePermission):
+    """
+    The permission for only Department Manager can access resources for read-only.
+    """
+
+    def has_permission(self, request, view):
+        return self.is_role(
+            request, RoleTypes.DEPARTMENT_MANAGER.value
+        ) and view.action in ["list", "retrieve"]
+
+
+class IsGeneralOnly(BasePermission):
+    """
+    The permission for only General can access resources
+    """
+
+    def has_permission(self, request, view):
+        return self.is_role(request, RoleTypes.GENERAL.value)
+
+
+class IsGeneralReadOnly(BasePermission):
+    """
+    The permission for only General can access resources for read-only.
+    """
+
+    def has_permission(self, request, view):
+        return self.is_role(
+            request, RoleTypes.GENERAL.value
+        ) and view.action in ["list", "retrieve"]
