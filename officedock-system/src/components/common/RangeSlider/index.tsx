@@ -1,9 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 import '../../common/RangeSlider/ranger.css';
-
 import ImageRound from '../ImageRound';
 
 interface RangeSliderProps {
@@ -88,28 +85,19 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
 
   return (
     <div className="flex w-full items-center gap-2 justify-between">
-      <Tippy
-        content="縮小"
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 3]}>
-        <div>
-          <button
-            onClick={() => {
-              const newValue = Math.max(value - 1, min);
-              setValue(newValue);
-              if (onChange) onChange(newValue);
-            }}
-            className="text-2xl h-[18px] rounded-full bg-[#ECF0F2] w-[18px] flex items-center justify-center cursor-pointer  border-none">
-            <ImageRound
-              className="w-[10px] h-[10px] opacity-80"
-              src="/icons/zoom-out.svg"
-              name="remove icon"
-            />
-          </button>
-        </div>
-      </Tippy>
+      <button
+        onClick={() => {
+          const newValue = Math.max(value - 1, min);
+          setValue(newValue);
+          if (onChange) onChange(newValue);
+        }}
+        className="text-2xl h-[18px] rounded-full bg-[#ECF0F2] w-[18px] flex items-center justify-center cursor-pointer  border-none">
+        <ImageRound
+          className="w-[10px] h-1 opacity-40"
+          src="/icons/zoom-out.svg"
+          name="remove icon"
+        />
+      </button>
 
       <div
         ref={sliderRef}
@@ -151,28 +139,19 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
         />
       </div>
 
-      <Tippy
-        content="拡大"
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 3]}>
-        <div>
-          <button
-            onClick={() => {
-              const newValue = Math.min(value + 1, max);
-              setValue(newValue);
-              if (onChange) onChange(newValue);
-            }}
-            className="text-2xl cursor-pointer h-[18px] rounded-full bg-[#ECF0F2] w-[18px] border-none">
-            <ImageRound
-              className="w-[10px] h-[10px] relative left-1 opacity-80"
-              src="/icons/add.svg"
-              name="remove icon"
-            />
-          </button>
-        </div>
-      </Tippy>
+      <button
+        onClick={() => {
+          const newValue = Math.min(value + 1, max);
+          setValue(newValue);
+          if (onChange) onChange(newValue);
+        }}
+        className="text-2xl cursor-pointer h-[18px] rounded-full bg-[#ECF0F2] w-[18px] border-none">
+        <ImageRound
+          className="w-[10px] h-[10px] relative left-1"
+          src="/icons/add.svg"
+          name="remove icon"
+        />
+      </button>
     </div>
   );
 };

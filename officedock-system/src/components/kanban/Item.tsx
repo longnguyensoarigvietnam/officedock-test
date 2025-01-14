@@ -6,8 +6,6 @@ import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
@@ -332,39 +330,31 @@ const Item = ({
             {...provided.dragHandleProps}
             className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
             <div className="relative w-[100%]   h-full">
-              <Tippy
-                content="ピン留め"
-                arrow={false}
-                delay={1000}
-                placement="right"
-                offset={[0, 8]}>
-                <div
-                  onClick={() => {
-                    if (isPermissionUpdate) {
-                      handlePinItem(`${content.id}`);
-                    }
-                  }}
+              <div
+                onClick={() => {
+                  if (isPermissionUpdate) {
+                    handlePinItem(`${content.id}`);
+                  }
+                }}
+                style={{
+                  top: `${(columnWidth / 247) * 6}px`,
+                  left: `${(columnWidth / 247) * 5}px`,
+                }}
+                className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
+                <ImageRound
+                  src={
+                    content.pinAt
+                      ? `/icons/pin-task.svg`
+                      : `/icons/unpin-task.svg`
+                  }
+                  name="Pin icon"
                   style={{
-                    top: `${(columnWidth / 247) * 6}px`,
-                    left: `${(columnWidth / 247) * 5}px`,
+                    width: `${(columnWidth / 247) * 10}px`,
+                    height: `${(columnWidth / 247) * 14}px`,
                   }}
-                  className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
-                  <ImageRound
-                    src={
-                      content.pinAt
-                        ? `/icons/pin-task.svg`
-                        : `/icons/unpin-task.svg`
-                    }
-                    name="Pin icon"
-                    style={{
-                      width: `${(columnWidth / 247) * 10}px`,
-                      height: `${(columnWidth / 247) * 14}px`,
-                    }}
-                    className=" text-gray-400 cursor-pointer"
-                  />
-                </div>
-              </Tippy>
-
+                  className=" text-gray-400 cursor-pointer"
+                />
+              </div>
               {isPermissionUpdate && (
                 <>
                   <div
@@ -387,32 +377,25 @@ const Item = ({
                 </>
               )}
               {isPermissionAdd && (
-                <Tippy
-                  content="タスクを複製"
-                  arrow={false}
-                  delay={1000}
-                  placement="right"
-                  offset={[0, 8]}>
-                  <div
+                <div
+                  style={{
+                    top: `${(columnWidth / 247) * 32}px`,
+                    right: `${(columnWidth / 247) * 12}px`,
+                  }}
+                  className="absolute opacity-0 group-hover:opacity-100">
+                  <ImageRound
+                    src="/icons/copy.svg"
+                    name="Copy icon"
                     style={{
-                      top: `${(columnWidth / 247) * 32}px`,
-                      right: `${(columnWidth / 247) * 12}px`,
+                      width: `${(columnWidth / 247) * 16}px`,
+                      height: `${(columnWidth / 247) * 16}px`,
                     }}
-                    className="absolute opacity-0 group-hover:opacity-100">
-                    <ImageRound
-                      src="/icons/copy.svg"
-                      name="Copy icon"
-                      style={{
-                        width: `${(columnWidth / 247) * 16}px`,
-                        height: `${(columnWidth / 247) * 16}px`,
-                      }}
-                      className="text-gray-400 cursor-pointer"
-                      onClick={() => {
-                        handleConfirmCopyTask(parseInt(`${content.id}`));
-                      }}
-                    />
-                  </div>
-                </Tippy>
+                    className="text-gray-400 cursor-pointer"
+                    onClick={() => {
+                      handleConfirmCopyTask(parseInt(`${content.id}`));
+                    }}
+                  />
+                </div>
               )}
             </div>
             <div
@@ -479,72 +462,65 @@ const Item = ({
                 </div>
               )}
               <div className="flex justify-between items-center mt-[2px]">
-                <Tippy
-                  content="ステータスを変更"
-                  arrow={false}
-                  delay={1000}
-                  placement="top"
-                  offset={[0, 8]}>
-                  <div
-                    className="w-20 max-w-20 h-[21px] rounded"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}>
-                    <Controller
-                      control={control}
-                      name={'statusId'}
-                      render={({ field: { value, onChange } }) => (
-                        <Dropdown
-                          openByDefault
-                          disabled={
-                            !isPermissionUpdate ||
+                <div
+                  className="w-20 max-w-20 h-[21px] rounded"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}>
+                  <Controller
+                    control={control}
+                    name={'statusId'}
+                    render={({ field: { value, onChange } }) => (
+                      <Dropdown
+                        openByDefault
+                        disabled={
+                          !isPermissionUpdate ||
+                          content.status?.id === StatusValueTask.MY_ROUTINE
+                        }
+                        className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
+                        styleClass={{
+                          fontSize: calculateFontSizeContent(),
+                          lineHeight: `${calculateFontSizeContent() * 1.5}px`,
+                          width:
                             content.status?.id === StatusValueTask.MY_ROUTINE
-                          }
-                          className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
-                          styleClass={{
-                            fontSize: calculateFontSizeContent(),
-                            lineHeight: `${calculateFontSizeContent() * 1.5}px`,
-                            width:
-                              content.status?.id === StatusValueTask.MY_ROUTINE
-                                ? `${(columnWidth / 247) * 90}px`
-                                : `${(columnWidth / 247) * 80}px`,
-                            height: `${(columnWidth / 247) * 21}px`,
-                            padding: `${(columnWidth / 247) * 6}px`,
-                            gap: `${(columnWidth / 247) * 10}px`,
-                            borderRadius: `${(columnWidth / 247) * 4}px`,
-                          }}
-                          classNameTextData={`!text-[${calculateFontSizeContent()}px]`}
-                          classNameOption={`!text-[${calculateFontSizeContent()}px]`}
-                          classNameError={`!text-[${calculateFontSizeContent()}px]`}
-                          styleClassOption={{
-                            fontSize: calculateFontSizeContent(),
-                            lineHeight: `${calculateFontSizeContent() * 1.5}px`,
-                          }}
-                          options={
-                            content.status?.id === StatusValueTask.MY_ROUTINE
-                              ? dataOptionsStatus
-                              : dataOptionsStatus.filter(
-                                  (item) =>
-                                    item.value !== StatusValueTask.MY_ROUTINE,
-                                )
-                          }
-                          selectedOption={dataOptionsStatus.find(
-                            (element) => element.value === value?.value,
-                          )}
-                          onChange={(e) => {
-                            onChange(e);
-                            editTask({
-                              id: `${content.id}`,
-                              oldIdStatus: `${content.status?.id}`,
-                              statusId: watch('statusId')?.value as number,
-                            });
-                          }}
-                          error={errors.statusId?.message}
-                        />
-                      )}
-                    />
-                  </div>
-                </Tippy>
+                              ? `${(columnWidth / 247) * 90}px`
+                              : `${(columnWidth / 247) * 80}px`,
+                          height: `${(columnWidth / 247) * 21}px`,
+                          padding: `${(columnWidth / 247) * 6}px`,
+                          gap: `${(columnWidth / 247) * 10}px`,
+                          borderRadius: `${(columnWidth / 247) * 4}px`,
+                        }}
+                        classNameTextData={`!text-[${calculateFontSizeContent()}px]`}
+                        classNameOption={`!text-[${calculateFontSizeContent()}px]`}
+                        classNameError={`!text-[${calculateFontSizeContent()}px]`}
+                        styleClassOption={{
+                          fontSize: calculateFontSizeContent(),
+                          lineHeight: `${calculateFontSizeContent() * 1.5}px`,
+                        }}
+                        options={
+                          content.status?.id === StatusValueTask.MY_ROUTINE
+                            ? dataOptionsStatus
+                            : dataOptionsStatus.filter(
+                                (item) =>
+                                  item.value !== StatusValueTask.MY_ROUTINE,
+                              )
+                        }
+                        selectedOption={dataOptionsStatus.find(
+                          (element) => element.value === value?.value,
+                        )}
+                        onChange={(e) => {
+                          onChange(e);
+                          editTask({
+                            id: `${content.id}`,
+                            oldIdStatus: `${content.status?.id}`,
+                            statusId: watch('statusId')?.value as number,
+                          });
+                        }}
+                        error={errors.statusId?.message}
+                      />
+                    )}
+                  />
+                </div>
                 {content.isImportant ? (
                   <div
                     style={{
