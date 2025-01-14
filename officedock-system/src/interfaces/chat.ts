@@ -1,0 +1,107 @@
+import { MessageType, SubmitLevelStatus } from '@constants/enums';
+import { Organizations } from './organization';
+
+export interface ChatMessageResponse {
+  id?: number;
+  uuid: string;
+  message: string;
+  sender: {
+    id: number;
+    fullName: string;
+    organizations?: Organizations[];
+  };
+  task: {
+    id: number;
+    deadline: string;
+    title: string;
+    tags: {
+      id: number;
+      name: string;
+    }[];
+  } | null;
+  scheduleChanges?: {
+    new?: {
+      endDate?: Date | string;
+      startDate?: Date | string;
+    };
+    old?: {
+      endDate?: Date | string;
+      startDate?: Date | string;
+    };
+    participants?: {
+      id: number;
+      name: string;
+      isCreator?: boolean;
+    }[];
+    fieldChanges?: string[];
+  };
+  submitLevel?: {
+    comment: string | null;
+    id: number;
+    organization: number;
+    skill: number;
+    staff: number;
+    status: SubmitLevelStatus;
+  };
+  scheduleId?: number;
+  isEdited: boolean;
+  createdAt: Date | string;
+  deletedAt: Date | null;
+  type: MessageType;
+}
+
+export interface OrganizationDetail {
+  id: number;
+  name: string;
+  superior: {
+    id: number;
+    name: string;
+  } | null;
+}
+
+export interface ChatParticipant {
+  id: number;
+  fullName: string;
+}
+
+export interface ChatRoomDetail {
+  id: number;
+  name: string;
+  code: string;
+  participants: ChatParticipant[];
+  type: string;
+  unreadMessages: number;
+}
+
+export interface ChatRoomItem {
+  code: string;
+  name: string;
+  type: string;
+  unreadMessages: number;
+  hiddenAt: string | null;
+  pinAt: string | null;
+  lastMessageAt: string | null;
+  participants: ChatParticipant[];
+  isExisted?: boolean;
+}
+
+export interface WebSocketMessageData {
+  action: string;
+  clientId: string | null;
+  chatRoom: ChatRoomItem;
+  chatMessage: ChatMessageResponse;
+  total?: number;
+  isChangeRole?: boolean;
+  task?: {
+    id: number;
+    status: {
+      id: number;
+      name: string;
+    };
+  };
+}
+
+export interface DataChatRoomSocket {
+  code: string;
+  lastMessageAt: string | null;
+}

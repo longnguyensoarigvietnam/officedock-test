@@ -1,5 +1,62 @@
-# README #
-This repository stores the code for the Office Dock System.
+# Office Dock System
+
+The Office Dock uses TypeScript, React, NextJS, Tailwind CSS and more.
+
+## Prerequisite
+
+- NodeJS 20.X
+- Npm 10.x
+
+## Tech Stacks
+
+- ⚡️ Next.js 14 (App router)
+- ⚛️ React 18
+- ✨ TypeScript 5
+- 💨 Tailwind CSS 3 — Configured with CSS Variables to extend the primary color
+- 📈 Absolute Import and Path Alias — Import components using @ prefix
+- 📏 ESLint — Find and fix problems in your code, also will auto sort your imports
+- 💖 Prettier — Format your code consistently
+- 🐶 Husky & Lint Staged — Run scripts on your staged files before they are committed
+
+## Getting Started
+
+### Installation
+
+```bash
+npm install
+```
+
+### Configuration
+
+Create `.env` refer from `.env.sample` to config local environments.
+
+### Running
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Building
+
+```bash
+npm run build
+```
+
+### Start build mode with Docker
+
+- Build the Docker image
+
+```
+docker compose build
+```
+
+- Run the server
+
+```
+docker compose up
+```
 
 ## Note for GIT
 * Please help apply GitFlow for this repository (https://danielkummer.github.io/git-flow-cheatsheet)

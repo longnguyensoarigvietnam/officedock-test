@@ -1,0 +1,90 @@
+import { Pie } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  ChartData,
+  ChartOptions,
+} from 'chart.js';
+import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
+
+ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
+
+interface PieChartProps {
+  data: number[];
+  labels: string[];
+  colors?: string[];
+  actualValues: string[];
+  className?: string;
+  showLegend?: boolean;
+  showTooltip?: boolean;
+}
+
+const PieChart = ({
+  data,
+  labels,
+  colors,
+  className,
+  actualValues,
+  showLegend = false,
+  showTooltip = true,
+}: PieChartProps) => {
+  const defaultColors = [
+    'rgba(255, 99, 132, 0.8)',
+    'rgba(54, 162, 235, 0.8)',
+    'rgba(255, 206, 86, 0.8)',
+    'rgba(75, 192, 192, 0.8)',
+  ];
+
+  const chartData: ChartData<'pie', number[], string> = {
+    labels,
+    datasets: [
+      {
+        data,
+        backgroundColor: colors || defaultColors,
+        borderColor:
+          colors?.map((color) => color.replace('1', '1')) ||
+          defaultColors.map((color) => color.replace('1', '1')),
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const options: ChartOptions<'pie'> = {
+    plugins: {
+      legend: {
+        display: showLegend,
+      },
+      tooltip: {
+        enabled: showTooltip,
+        callbacks: {
+          label: (tooltipItem) => {
+            const value = tooltipItem.raw as number;
+            const actualValue = actualValues[tooltipItem.dataIndex];
+            return [`${tooltipItem.label} : ${value}%`, `${actualValue}`];
+          },
+        },
+      },
+      datalabels: {
+        formatter: (value, context: Context) => {
+          const label = context.chart.data.labels?.[context.dataIndex];
+          return label ? `${label}\n${value}%` : `${value}%`;
+        },
+        color: '#fff',
+        font: {
+          weight: 'bold',
+          size: 10,
+        },
+      },
+    },
+  };
+
+  return (
+    <div className={`w-96 h-96 my-0 mx-auto ${className}`}>
+      <Pie data={chartData} options={options} />
+    </div>
+  );
+};
+
+export default PieChart;

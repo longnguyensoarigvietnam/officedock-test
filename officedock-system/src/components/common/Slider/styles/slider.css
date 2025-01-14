@@ -1,0 +1,23 @@
+.custom-handle:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.rc-slider-handle-dragging:focus,
+.rc-slider-handle-dragging:focus,
+.rc-slider-handle-dragging:focus {
+  box-shadow: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.rc-slider-handle {
+  box-shadow: none !important;
+  outline: none !important;
+  border: none !important;
+  margin-left: 0px !important;
+  position: relative;
+  opacity: 1;
+}

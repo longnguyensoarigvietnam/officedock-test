@@ -1,0 +1,168 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  overflow: auto !important;
+}
+body {
+  height: 100vh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-gutter-stable {
+    scrollbar-gutter: stable;
+  }
+}
+
+/* Hide arrows from input number
+/* Works for Chrome, Safari, Edge, Opera */
+.no-number-arrows::-webkit-outer-spin-button,
+.no-number-arrows::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Change the color of element when using autofill*/
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+}
+
+/* Works for Firefox */
+.no-number-arrows {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Scrollbar custom UI */
+html *::-webkit-scrollbar {
+  border-radius: 0;
+  width: 8px;
+  height: 8px;
+}
+
+html *::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+html *::-webkit-scrollbar-track {
+  border-radius: 0;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.infinite-scroll-component__outerdiv {
+  height: 100%;
+  overflow-y: hidden;
+}
+
+/* Chat */
+.text-chat-box p {
+  width: 100%;
+  display: block;
+  word-break: break-all;
+}
+.no-show {
+  visibility: inherit !important;
+}
+.wavy-line {
+  --s: 4.5px;
+  --b: 1.5px;
+  --m: 1.9;
+
+  background: #0068b7;
+  --R: calc(var(--s) * sqrt(var(--m) * var(--m) + 1) + var(--b) / 2);
+  height: calc(2 * var(--R));
+  width: 44%;
+  --_g: #0000 calc(99% - var(--b)), #000 calc(101% - var(--b)) 99%, #0000 101%;
+  mask:
+    radial-gradient(
+        var(--R) at left 50% bottom calc(-1 * var(--m) * var(--s)),
+        var(--_g)
+      )
+      calc(50% - 2 * var(--s)) calc(50% - var(--s) / 2 - var(--b) / 2) /
+      calc(4 * var(--s)) calc(var(--s) + var(--b)) repeat-x,
+    radial-gradient(
+        var(--R) at left 50% top calc(-1 * var(--m) * var(--s)),
+        var(--_g)
+      )
+      50% calc(50% + var(--s) / 2 + var(--b) / 2) / calc(4 * var(--s))
+      calc(var(--s) + var(--b)) repeat-x;
+}
+@media (max-width: 1440px) {
+  .wavy-line {
+    --s: 5px;
+    --b: 1.5px;
+    --m: 1.5;
+    width: 41%;
+  }
+}
+.fc-license-message {
+  display: none !important;
+}
+.custom-quill-text h1 {
+  font-size: 2em;
+}
+
+.custom-quill-text h2 {
+  font-size: 1.7em;
+}
+
+.custom-quill-text h3 {
+  font-size: 1.4em;
+}
+
+.custom-quill-text h4 {
+  font-size: 1em;
+}
+
+.custom-quill-text h5 {
+  font-size: 0.9em;
+}
+
+.custom-quill-text h6 {
+  font-size: 0.75em;
+}
+
+.menu-item::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  right: 0;
+  height: 15px;
+  width: 15px;
+  border-bottom-right-radius: 50%;
+  background-color: transparent;
+  box-shadow: 0 8px 0 0 #ebf1f7;
+}
+
+.menu-item::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  right: 0;
+  height: 15px;
+  width: 15px;
+  border-top-right-radius: 50%;
+  background-color: transparent;
+  box-shadow: 0 -8px 0 0 #ebf1f7;
+}
+
+.tippy-box {
+  background-color: #5B6770 !important;
+  border-radius: 6px !important;
+}
