@@ -11,8 +11,6 @@ import {
 } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useSession } from 'next-auth/react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import Item from './Item';
 import ImageRound from '@components/common/ImageRound';
@@ -273,36 +271,29 @@ const Column = ({
           <span>{title}</span>
           <span className="text-[#77858F]">{count}</span>
         </div>
-        <Tippy
-          content="タスクを新規作成"
-          arrow={false}
-          delay={1000}
-          placement="top"
-          offset={[0, 2]}>
-          <div className="flex items-center gap-3">
-            {session?.user.permissions &&
-              hasPermissionInArray(
-                session?.user.permissions,
-                PermissionsSystem.MY_TASK_ADD,
-              ) && (
-                <div
+        <div className="flex items-center gap-3">
+          {session?.user.permissions &&
+            hasPermissionInArray(
+              session?.user.permissions,
+              PermissionsSystem.MY_TASK_ADD,
+            ) && (
+              <div
+                style={{
+                  padding: `${(columnWidth / 247) * 6}px`,
+                }}
+                className={`rounded-full  cursor-pointer w-fit bg-gray-200`}
+                onClick={() => addTask(columnId)}>
+                <ImageRound
+                  src={`/icons/add.svg`}
+                  name="Add"
                   style={{
-                    padding: `${(columnWidth / 247) * 6}px`,
+                    width: `${(columnWidth / 247) * 12}px`,
+                    height: `${(columnWidth / 247) * 12}px`,
                   }}
-                  className={`rounded-full  cursor-pointer w-fit bg-gray-200`}
-                  onClick={() => addTask(columnId)}>
-                  <ImageRound
-                    src={`/icons/add.svg`}
-                    name="Add"
-                    style={{
-                      width: `${(columnWidth / 247) * 12}px`,
-                      height: `${(columnWidth / 247) * 12}px`,
-                    }}
-                  />
-                </div>
-              )}
-          </div>
-        </Tippy>
+                />
+              </div>
+            )}
+        </div>
       </div>
       <Droppable
         isDropDisabled={!visibleColumns}

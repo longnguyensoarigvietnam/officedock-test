@@ -1,8 +1,6 @@
 'use client';
 import { Dispatch, SetStateAction, useContext } from 'react';
 import { UseMutateFunction } from 'react-query';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 
@@ -109,21 +107,12 @@ const FrequentlyTask = ({
       <div className={`${isExtendCalendar && 'overflow-y-hidden'} `}>
         <div className="flex gap-2">
           <p className="text-gray-500 text-xs">マイテンプレート</p>
-          <Tippy
-            content="閉じる"
-            arrow={false}
-            delay={1000}
-            placement="top"
-            offset={[3, 0]}>
-            <div>
-              <ImageRound
-                name="Filter extend icon"
-                src={'/icons/arrow-down.svg'}
-                className={`w-4 h-4 hover:cursor-pointer ${showFrequentlyTasks && 'rotate-180'}`}
-                onClick={() => setShowFrequentlyTasks(!showFrequentlyTasks)}
-              />
-            </div>
-          </Tippy>
+          <ImageRound
+            name="Filter extend icon"
+            src={'/icons/arrow-down.svg'}
+            className={`w-4 h-4 hover:cursor-pointer ${showFrequentlyTasks && 'rotate-180'}`}
+            onClick={() => setShowFrequentlyTasks(!showFrequentlyTasks)}
+          />
         </div>
         <Transition
           show={showFrequentlyTasks}
