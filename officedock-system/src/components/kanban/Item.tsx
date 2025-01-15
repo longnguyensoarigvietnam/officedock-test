@@ -6,6 +6,8 @@ import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
@@ -330,31 +332,39 @@ const Item = ({
             {...provided.dragHandleProps}
             className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
             <div className="relative w-[100%]   h-full">
-              <div
-                onClick={() => {
-                  if (isPermissionUpdate) {
-                    handlePinItem(`${content.id}`);
-                  }
-                }}
-                style={{
-                  top: `${(columnWidth / 247) * 6}px`,
-                  left: `${(columnWidth / 247) * 5}px`,
-                }}
-                className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
-                <ImageRound
-                  src={
-                    content.pinAt
-                      ? `/icons/pin-task.svg`
-                      : `/icons/unpin-task.svg`
-                  }
-                  name="Pin icon"
-                  style={{
-                    width: `${(columnWidth / 247) * 10}px`,
-                    height: `${(columnWidth / 247) * 14}px`,
+              <Tippy
+                content="ピン留め"
+                arrow={false}
+                delay={1000}
+                placement="right"
+                offset={[0, 5]}>
+                <div
+                  onClick={() => {
+                    if (isPermissionUpdate) {
+                      handlePinItem(`${content.id}`);
+                    }
                   }}
-                  className=" text-gray-400 cursor-pointer"
-                />
-              </div>
+                  style={{
+                    top: `${(columnWidth / 247) * 6}px`,
+                    left: `${(columnWidth / 247) * 5}px`,
+                  }}
+                  className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
+                  <ImageRound
+                    src={
+                      content.pinAt
+                        ? `/icons/pin-task.svg`
+                        : `/icons/unpin-task.svg`
+                    }
+                    name="Pin icon"
+                    style={{
+                      width: `${(columnWidth / 247) * 10}px`,
+                      height: `${(columnWidth / 247) * 14}px`,
+                    }}
+                    className=" text-gray-400 cursor-pointer"
+                  />
+                </div>
+              </Tippy>
+
               {isPermissionUpdate && (
                 <>
                   <div
@@ -377,25 +387,32 @@ const Item = ({
                 </>
               )}
               {isPermissionAdd && (
-                <div
-                  style={{
-                    top: `${(columnWidth / 247) * 32}px`,
-                    right: `${(columnWidth / 247) * 12}px`,
-                  }}
-                  className="absolute opacity-0 group-hover:opacity-100">
-                  <ImageRound
-                    src="/icons/copy.svg"
-                    name="Copy icon"
+                <Tippy
+                  content="タスクを複製"
+                  arrow={false}
+                  delay={1000}
+                  placement="right"
+                  offset={[0, 5]}>
+                  <div
                     style={{
-                      width: `${(columnWidth / 247) * 16}px`,
-                      height: `${(columnWidth / 247) * 16}px`,
+                      top: `${(columnWidth / 247) * 32}px`,
+                      right: `${(columnWidth / 247) * 12}px`,
                     }}
-                    className="text-gray-400 cursor-pointer"
-                    onClick={() => {
-                      handleConfirmCopyTask(parseInt(`${content.id}`));
-                    }}
-                  />
-                </div>
+                    className="absolute opacity-0 group-hover:opacity-100">
+                    <ImageRound
+                      src="/icons/copy.svg"
+                      name="Copy icon"
+                      style={{
+                        width: `${(columnWidth / 247) * 16}px`,
+                        height: `${(columnWidth / 247) * 16}px`,
+                      }}
+                      className="text-gray-400 cursor-pointer"
+                      onClick={() => {
+                        handleConfirmCopyTask(parseInt(`${content.id}`));
+                      }}
+                    />
+                  </div>
+                </Tippy>
               )}
             </div>
             <div

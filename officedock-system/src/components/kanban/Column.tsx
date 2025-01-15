@@ -11,6 +11,8 @@ import {
 } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useSession } from 'next-auth/react';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import Item from './Item';
 import ImageRound from '@components/common/ImageRound';
@@ -340,36 +342,50 @@ const Column = ({
               session?.user.permissions,
               PermissionsSystem.MY_TASK_ADD,
             ) && (
-              <div
-                style={{
-                  padding: `${(columnWidth / 247) * 6}px`,
-                }}
-                className={`rounded-full  cursor-pointer w-fit bg-gray-200`}
-                onClick={() => addTask(columnId)}>
-                <ImageRound
-                  src={`/icons/add.svg`}
-                  name="Add"
+              <Tippy
+                content="タスクを新規作成"
+                arrow={false}
+                delay={1000}
+                placement="top"
+                offset={[0, 5]}>
+                <div
                   style={{
-                    width: `${(columnWidth / 247) * 12}px`,
-                    height: `${(columnWidth / 247) * 12}px`,
+                    padding: `${(columnWidth / 247) * 6}px`,
                   }}
-                />
-              </div>
+                  className={`rounded-full  cursor-pointer w-fit bg-gray-200`}
+                  onClick={() => addTask(columnId)}>
+                  <ImageRound
+                    src={`/icons/add.svg`}
+                    name="Add"
+                    style={{
+                      width: `${(columnWidth / 247) * 12}px`,
+                      height: `${(columnWidth / 247) * 12}px`,
+                    }}
+                  />
+                </div>
+              </Tippy>
             )}
-          <div
-            style={{
-              padding: `${(columnWidth / 247) * 5}px`,
-            }}>
-            <ImageRound
-              src={`/icons/extend-column.svg`}
-              className=""
-              name="Add"
+          <Tippy
+            content="タブを縮小"
+            arrow={false}
+            delay={1000}
+            placement="top"
+            offset={[0, 5]}>
+            <div
               style={{
-                width: `${(columnWidth / 247) * 8}px`,
-                height: `${(columnWidth / 247) * 12}px`,
-              }}
-            />
-          </div>
+                padding: `${(columnWidth / 247) * 5}px`,
+              }}>
+              <ImageRound
+                src={`/icons/extend-column.svg`}
+                className=""
+                name="Add"
+                style={{
+                  width: `${(columnWidth / 247) * 8}px`,
+                  height: `${(columnWidth / 247) * 12}px`,
+                }}
+              />
+            </div>
+          </Tippy>
         </div>
       </div>
       <Droppable

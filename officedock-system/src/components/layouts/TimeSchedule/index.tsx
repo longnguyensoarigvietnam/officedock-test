@@ -17,6 +17,8 @@ import moment from 'moment';
 import { useMutation, useQueryClient } from 'react-query';
 import { v4 as uuidv4 } from 'uuid';
 import { debounce, throttle } from 'lodash';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import { format, addDays, isSameDay, parseISO } from 'date-fns';
 import interactionPlugin, {
@@ -2223,12 +2225,22 @@ const TimeSchedule = memo(
                 {!isExtendCalendar ? (
                   <div className="flex relative">
                     <div className="w-[260px] ml-6 z-20 flex gap-[18px] items-center">
-                      <ImageRound
-                        onClick={() => debouncedFunction(handlePreviousDay)}
-                        className=" !w-2 !h-3 cursor-pointer"
-                        src="/icons/left-schedule.svg"
-                        name="left"
-                      />
+                      <Tippy
+                        content="前日"
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 5]}>
+                        <div>
+                          <ImageRound
+                            onClick={() => debouncedFunction(handlePreviousDay)}
+                            className=" !w-2 !h-3 cursor-pointer"
+                            src="/icons/left-schedule.svg"
+                            name="left"
+                          />
+                        </div>
+                      </Tippy>
+
                       <div className="flex items-end text-xl gap-1 text-[#5B6770] font-medium">
                         <p>{dataDate.month}月</p>
                         <p>{dataDate.day}日</p>
@@ -2237,23 +2249,39 @@ const TimeSchedule = memo(
                         </p>
                       </div>
 
-                      <ImageRound
-                        onClick={() => debouncedFunction(handleNextDay)}
-                        className=" !w-2 !h-3 cursor-pointer"
-                        src="/icons/right-schedule.svg"
-                        name="right"
-                      />
+                      <Tippy
+                        content="翌日"
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 5]}>
+                        <div>
+                          <ImageRound
+                            onClick={() => debouncedFunction(handleNextDay)}
+                            className=" !w-2 !h-3 cursor-pointer"
+                            src="/icons/right-schedule.svg"
+                            name="right"
+                          />
+                        </div>
+                      </Tippy>
                     </div>
-                    <div className="absolute w-7 z-50 right-[54px] top-[3px]">
-                      <DatePicker
-                        className="h-10 z-50 "
-                        isShowInput={false}
-                        selected={displayHederDateStart}
-                        onChange={(e) => {
-                          handleChooseDay(e as Date);
-                        }}
-                      />
-                    </div>
+                    <Tippy
+                      content="カレンダーから日付を選択"
+                      arrow={false}
+                      delay={1000}
+                      placement="top"
+                      offset={[0, 5]}>
+                      <div className="absolute w-7 z-50 right-[54px] top-[3px]">
+                        <DatePicker
+                          className="h-10 z-50 "
+                          isShowInput={false}
+                          selected={displayHederDateStart}
+                          onChange={(e) => {
+                            handleChooseDay(e as Date);
+                          }}
+                        />
+                      </div>
+                    </Tippy>
                   </div>
                 ) : (
                   <>
@@ -2393,28 +2421,35 @@ const TimeSchedule = memo(
               }}
             />
           </div>
-          <div
-            className="p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer "
-            onClick={() => {
-              if (!isExtendCalendar) {
-                setIsScroll(true);
-                handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-              } else {
-                if (calendarRef.current) {
-                  const calendarApi = calendarRef.current.getApi();
-                  calendarApi.gotoDate(new Date());
+          <Tippy
+            content="スケジュールを週表示"
+            arrow={false}
+            delay={1000}
+            placement="top"
+            offset={[0, 5]}>
+            <div
+              className="p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer "
+              onClick={() => {
+                if (!isExtendCalendar) {
                   setIsScroll(true);
-                  handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
+                  handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
+                } else {
+                  if (calendarRef.current) {
+                    const calendarApi = calendarRef.current.getApi();
+                    calendarApi.gotoDate(new Date());
+                    setIsScroll(true);
+                    handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
+                  }
                 }
-              }
-              setIsExtendCalendar(!isExtendCalendar);
-            }}>
-            <ImageRound
-              src="/icons/extend-calendar.svg"
-              name="Extend calendar"
-              className={`!w-2 !h-2 min-w-2 ${isExtendCalendar ? 'rotate-180' : ''}`}
-            />
-          </div>
+                setIsExtendCalendar(!isExtendCalendar);
+              }}>
+              <ImageRound
+                src="/icons/extend-calendar.svg"
+                name="Extend calendar"
+                className={`!w-2 !h-2 min-w-2 ${isExtendCalendar ? 'rotate-180' : ''}`}
+              />
+            </div>
+          </Tippy>
         </div>
         {openCreateEventModal && (
           <ActionsEventModal
