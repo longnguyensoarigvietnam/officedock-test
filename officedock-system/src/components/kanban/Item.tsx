@@ -3,7 +3,7 @@ import { Draggable } from '@hello-pangea/dnd';
 import { Controller, useForm } from 'react-hook-form';
 import { formatISO } from 'date-fns';
 import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -401,7 +401,7 @@ const Item = ({
             <div
               style={{
                 paddingTop: `${(columnWidth / 247) * 12}px`,
-                paddingBottom: `${(columnWidth / 247) * 20}px`,
+                paddingBottom: `${(columnWidth / 247) * 12}px`,
                 paddingLeft: `${(columnWidth / 247) * 18}px`,
                 paddingRight: `${(columnWidth / 247) * 12}px`,
               }}
@@ -434,11 +434,12 @@ const Item = ({
                 )}
                 <p
                   style={{
-                    width: columnWidth - 30,
+                    width: `${(columnWidth / 247) * 186}px`,
                     fontSize: calculateFontSizeTitle(),
                     lineHeight: `${calculateFontSizeTitle() * 1.5}px`,
+                    marginRight: `${(columnWidth / 247) * 12}px`,
                   }}
-                  className={`!border-none break-words cursor-pointer rounded-none bg-white !p-0 font-semibold !mr-3 resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                  className={`!border-none break-words cursor-pointer rounded-none bg-white !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                   {content.title}
                 </p>
               </div>
@@ -452,6 +453,17 @@ const Item = ({
                     gap: `${(columnWidth / 247) * 10}px`,
                   }}
                   className="flex items-center">
+                  {content.isImportant ? (
+                    <div
+                      style={{
+                        width: `${(columnWidth / 247) * 36}px`,
+                        height: `${(columnWidth / 247) * 21}px`,
+                        fontSize: calculateFontSizeContent(),
+                      }}
+                      className="flex items-center justify-center font-medium text-[#0068B6] bg-[#DFE6EA] rounded">
+                      重要
+                    </div>
+                  ) : null}
                   <p className="flex gap-2 items-center">
                     締切
                     <span
@@ -521,17 +533,7 @@ const Item = ({
                     )}
                   />
                 </div>
-                {content.isImportant ? (
-                  <div
-                    style={{
-                      width: `${(columnWidth / 247) * 36}px`,
-                      height: `${(columnWidth / 247) * 21}px`,
-                      fontSize: calculateFontSizeContent(),
-                    }}
-                    className="flex items-center justify-center font-medium text-[#0068B6] bg-[#DFE6EA] rounded">
-                    重要
-                  </div>
-                ) : null}
+
                 <div
                   className=""
                   onClick={(e) => {

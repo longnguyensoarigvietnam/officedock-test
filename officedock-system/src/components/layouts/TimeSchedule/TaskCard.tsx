@@ -372,7 +372,7 @@ const TaskCard = ({
           paddingTop: `${(slotHeight / baseHeight) * 8}px`,
           paddingBottom: `${(slotHeight / baseHeight) * 8}px`,
         }}
-        className={`h-full flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && '!bg-[#A7B9C2] !text-white'}  ${isEvent && '!bg-yellow-400'}  text-black rounded-md   justify-between overflow-hidden  px-2 border`}
+        className={`h-full flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && '!bg-[#A7B9C2] !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between overflow-hidden  px-2 border`}
         onClick={() => {
           if (event.event.extendedProps.type === ItemStartType.SCHEDULE) {
             const newId = event.event.id.replace('event', '');
@@ -429,17 +429,34 @@ const TaskCard = ({
           )}
         </div>
         {resourcePlan ? (
-          <ImageRound
-            src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
-            name="Start task"
-            style={{
-              width: `${(slotHeight / baseHeight) * 24}px`,
-              height: `${(slotHeight / baseHeight) * 24}px`,
-              bottom: `${(slotHeight / baseHeight) * 8}px`,
-            }}
-            className="absolute bottom-2 right-2  hover:cursor-pointer"
-            onClick={handleStartStopTask}
-          />
+          isEvent ? (
+            <>
+              <ImageRound
+                src={`/icons/lock.svg`}
+                name="icon lock"
+                style={{
+                  width: `${(slotHeight / baseHeight) * 12}px`,
+                  height: `${(slotHeight / baseHeight) * 12}px`,
+                  bottom: `${(slotHeight / baseHeight) * 8}px`,
+                }}
+                className="absolute bottom-2 right-2 "
+              />
+            </>
+          ) : (
+            <>
+              <ImageRound
+                src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
+                name="Start task"
+                style={{
+                  width: `${(slotHeight / baseHeight) * 24}px`,
+                  height: `${(slotHeight / baseHeight) * 24}px`,
+                  bottom: `${(slotHeight / baseHeight) * 8}px`,
+                }}
+                className="absolute bottom-2 right-2  hover:cursor-pointer"
+                onClick={handleStartStopTask}
+              />
+            </>
+          )
         ) : (
           <ImageRound
             src={`/icons/edit.svg`}

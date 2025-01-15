@@ -24,6 +24,7 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   placeholder?: string;
   autoFocus?: boolean;
   size?: string;
+  isShowInput?: boolean;
   onChange?: (date: Date | null) => void;
 };
 
@@ -41,6 +42,7 @@ const DatePicker = ({
   placeholder,
   selected,
   size,
+  isShowInput = true,
   autoFocus = false,
   onChange,
   ...props
@@ -118,26 +120,50 @@ const DatePicker = ({
           placeholderText={placeholder}
           todayButton="今日"
           wrapperClassName="w-full"
-          customInput={<CustomInput />}
+          customInput={
+            isShowInput ? (
+              <CustomInput />
+            ) : (
+              <div className="!w-4 h-4 absolute right-0 top-[-16px] !border-none cursor-pointer"></div>
+            )
+          }
           dayClassName={dayClassName}
           {...props}
         />
 
-        <ImageRound
-          className={`absolute w-4 h-4 top-1/2 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${className?.includes('hidden') && 'hidden'}`}
-          name="Calendar icon"
-          src="/icons/calendar.svg"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (isOpen) {
-              datePickerRef.current?.setOpen(false);
-              setIsOpen(false);
-            } else {
-              datePickerRef.current?.setOpen(true);
-              setIsOpen(true);
-            }
-          }}
-        />
+        {isShowInput ? (
+          <ImageRound
+            className={`absolute w-4 h-4 top-1/2 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${className?.includes('hidden') && 'hidden'}`}
+            name="Calendar icon"
+            src="/icons/calendar.svg"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isOpen) {
+                datePickerRef.current?.setOpen(false);
+                setIsOpen(false);
+              } else {
+                datePickerRef.current?.setOpen(true);
+                setIsOpen(true);
+              }
+            }}
+          />
+        ) : (
+          <ImageRound
+            className={`absolute w-4 h-4 top-1/2 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${className?.includes('hidden') && 'hidden'}`}
+            name="Calendar icon"
+            src="/icons/calendar-time.svg"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isOpen) {
+                datePickerRef.current?.setOpen(false);
+                setIsOpen(false);
+              } else {
+                datePickerRef.current?.setOpen(true);
+                setIsOpen(true);
+              }
+            }}
+          />
+        )}
       </div>
       {error && <ErrorMessage error={error} className="mt-[6px]" />}
     </div>
