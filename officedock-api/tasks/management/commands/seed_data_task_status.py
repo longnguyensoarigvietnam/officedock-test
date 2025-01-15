@@ -9,9 +9,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # TODO: Remove condition later
-        if TaskStatus.objects.filter(name="先方確認中").exists():
-            TaskStatus.objects.filter(name="先方確認中").update(
-                name=TaskStatusConstants.CONFIRMING.value
+        if TaskStatus.objects.filter(name="マイルーティン").exists():
+            TaskStatus.objects.filter(name="マイルーティン").update(
+                name=TaskStatusConstants.MY_ROUTINE.value
             )
 
         for status in TaskStatusConstants:
