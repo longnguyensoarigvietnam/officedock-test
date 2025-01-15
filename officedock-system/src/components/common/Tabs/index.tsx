@@ -1,6 +1,8 @@
 'use client';
 import { ReactNode, useState } from 'react';
 import { Tab, TabGroup, TabList, TabPanels } from '@headlessui/react';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import Switch from '../Switch';
 import { OptionTabType } from '@interfaces/common';
@@ -90,16 +92,22 @@ const Tabs = ({
             ))
           ) : (
             <div className="flex flex-col justify-center items-center gap-2">
-              <div>
-                <Switch
-                  className="!gap-0 ml-1"
-                  customTranslate="!translate-x-[115%]"
-                  enableColor={showToggleButtonColorByTime()}
-                  disableColor="#182A4B33"
-                  enable={isTeamDockMenu}
-                  onChange={handleSwitchToggle}
-                />
-              </div>
+              <Tippy
+                content="チームドック"
+                arrow={false}
+                delay={1000}
+                placement="top">
+                <div>
+                  <Switch
+                    className="!gap-0 ml-1"
+                    customTranslate="!translate-x-[115%]"
+                    enableColor={showToggleButtonColorByTime()}
+                    disableColor="#182A4B33"
+                    enable={isTeamDockMenu}
+                    onChange={handleSwitchToggle}
+                  />
+                </div>
+              </Tippy>
               <div className="flex flex-col items-center text-white text-xs">
                 {!isTeamDockMenu ? (
                   <>
