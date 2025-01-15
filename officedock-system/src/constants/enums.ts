@@ -95,7 +95,7 @@ export enum StatusTask {
   IN_PROGRESS = '対応中',
   CONFIRMING = '確認中',
   COMPLETED = '完了',
-  MY_ROUTINE = 'マイルーティン',
+  MY_ROUTINE = '固定タスク',
 }
 export enum StatusValueTask {
   NOT_STARTED = 1,

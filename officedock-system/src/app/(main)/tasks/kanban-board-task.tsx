@@ -17,21 +17,14 @@ import {
 } from '@headlessui/react';
 import { useMutation, useQueryClient } from 'react-query';
 import { useSession } from 'next-auth/react';
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  DropResult,
-} from '@hello-pangea/dnd';
+import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import ImageRound from '@components/common/ImageRound';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
 import FrequentlyTask from './frequently-task';
 import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
-import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
 import TimeSchedule from '@components/layouts/TimeSchedule';
-import Column from '@components/kanban/Column';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import Dropdown from '@components/common/Dropdown';
 import ActionsTemplateModal from '@components/modals/ActionsTemplateModal';
@@ -102,6 +95,7 @@ import FixedTaskData from './fixed-task';
 import { AxiosError } from 'axios';
 import { useErrorToast } from '@hooks/useErrorToast';
 import { OptionDropdownType } from '@interfaces/common';
+import BoardKanban from '@components/kanban/Board';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -2523,112 +2517,6 @@ const KanbanBoardTask = () => {
     return (baseWidth * percentage) / 100;
   };
 
-  const renderKanbanBoard = () => {
-    const filteredData =
-      columnsKanbanData &&
-      Object.fromEntries(
-        Object.entries(columnsKanbanData).filter(
-          ([key]) => key !== `${StatusValueTask.MY_ROUTINE}`,
-        ),
-      );
-    return columnsKanbanData && !isLoadingDataTask ? (
-      <Droppable
-        droppableId="columns"
-        direction="horizontal"
-        type={KanbanType.COLUMN}>
-        {(provided) => (
-          <div
-            {...provided.droppableProps}
-            ref={provided.innerRef}
-            className="w-full  ">
-            <div
-              style={{
-                gap: `${(columnWidth / 247) * 12}px`,
-              }}
-              className={`flex w-fit relative ${showFrequentlyTasks ? 'h-[calc(100vh_-_270px)]' : showFrequentlyTasks ? 'h-[calc(100vh_-_330px)]' : `${isExtendCalendar ? 'h-[calc(100vh_-_277px)]' : 'h-[calc(100vh_-_210px)]'}`} overflow-y-hidden`}>
-              {filteredData &&
-                Object.entries(filteredData).map(
-                  ([columnId, column], index) => {
-                    const count = numberPagesData.find(
-                      (page) => page.id === `${column.id}`,
-                    )?.count;
-                    const hasNext = numberPagesData.find(
-                      (page) => page.id === `${column.id}`,
-                    )?.hasMores;
-                    const matchingTaskIds = orderTaskSave
-                      .filter((task) => task.status?.id === column.id)
-                      .map((task) => task.id);
-
-                    return (
-                      <Draggable
-                        draggableId={`${column.id}`}
-                        index={index}
-                        key={columnId}
-                        // Remove below prop to enable drag column
-                        isDragDisabled={true}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={{
-                              width: columnWidth,
-                              maxWidth: columnWidth,
-                              paddingLeft: `${(columnWidth / 247) * 8}px`,
-                              paddingRight: `${(columnWidth / 247) * 8}px`,
-                            }}
-                            className={` flex flex-col flex-grow ${snapshot.isDragging && 'opacity-25'}`}>
-                            <Column
-                              columnId={`${column.id}`}
-                              title={column.title}
-                              items={column.items}
-                              index={index}
-                              showFrequentlyTasks={showFrequentlyTasks}
-                              totalCount={count || 0}
-                              userId={
-                                `${memberSelected}` ||
-                                `${userIdTask ? userIdTask : ''}`
-                              }
-                              hasNext={hasNext}
-                              tagSelected={tagSelected}
-                              orderingRequest={orderingRequest}
-                              matchingTaskIds={matchingTaskIds}
-                              searchValue={searchValue}
-                              columnsKanbanData={columnsKanbanData}
-                              creationDataTaskData={creationDataTaskData}
-                              editTask={editTaskInline}
-                              handleActionEditTask={handleActionEditTask}
-                              handleConfirmCopyTask={handleActionCopyTask}
-                              handleUpdateItemInline={handleUpdateItemInline}
-                              setColumnsKanbanData={setColumnsKanbanData}
-                              pinItemToTop={pinItemToTop}
-                              addTask={(id: string) => {
-                                setColumnId(id);
-                                setShowEditTaskModal(true);
-                                handleSetParam({
-                                  id: null,
-                                  action: ActionTask.CREATE,
-                                });
-                              }}
-                              setNumberPagesData={setNumberPagesData}
-                            />
-                          </div>
-                        )}
-                      </Draggable>
-                    );
-                  },
-                )}
-            </div>
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    ) : (
-      <div className="h-[calc(100vh_-_297px)] w-full">
-        <ColumnsSkeleton numberOfColumns={4} />
-      </div>
-    );
-  };
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -2642,7 +2530,7 @@ const KanbanBoardTask = () => {
   }, []);
 
   return (
-    <div className="flex flex-row flex-grow h-[calc(100vh_-_76px)] ">
+    <div className="flex flex-row flex-grow h-[calc(100vh_-_76px)] gap-0 bg-[#F8FAFC] ">
       <TimeSchedule
         exEvents={exEvents}
         idTaskDelete={parseInt(idTaskDeleteKanban)}
@@ -2657,17 +2545,17 @@ const KanbanBoardTask = () => {
         setDataItemChangeInline={setDataItemChangeInline}
         handleEditShowClockItem={handleEditShowClockItem}
       />
-      <div className="w-full">
+      <div className="w-full pl-10">
         <DragDropContext onDragStart={() => {}} onDragEnd={onDragEnd}>
           <div
             ref={exEvents}
             style={{
               width: expanded
                 ? isExtendCalendar
-                  ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 240}px)`
+                  ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 280}px)`
                   : `calc(${Math.max(viewportWidth, 1280)}px - 700px)`
                 : isExtendCalendar
-                  ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 140}px)`
+                  ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 180}px)`
                   : `100%`,
               maxWidth: ` calc(${Math.max(viewportWidth, 1280)}px - 500px) `,
             }}
@@ -2703,7 +2591,7 @@ const KanbanBoardTask = () => {
               pinItemToTop={pinItemToTop}
             />
             <div className="w-full h-[1px] bg-gray-200" />
-            <div className="flex-grow flex flex-col gap-5">
+            <div className="flex-grow flex flex-col gap-2">
               <div className={`flex gap-7 h-4 w-fit min-w-[300px]`}>
                 <Popover className="relative">
                   {() => (
@@ -2825,9 +2713,35 @@ const KanbanBoardTask = () => {
                       handleConfirmCopyTask={handleActionCopyTask}
                       handleUpdateItemInline={handleUpdateItemInline}
                       creationDataTaskData={creationDataTaskData}
+                      selectedOptionZoom={selectedOptionZoom}
                     />
                   )}
-                <div className="flex-grow">{renderKanbanBoard()}</div>
+                <div className="flex-grow">
+                  <BoardKanban
+                    columnsKanbanData={columnsKanbanData}
+                    isLoadingDataTask={isLoadingDataTask}
+                    showFrequentlyTasks={showFrequentlyTasks}
+                    numberPagesData={numberPagesData}
+                    orderTaskSave={orderTaskSave}
+                    creationDataTaskData={creationDataTaskData}
+                    setColumnsKanbanData={setColumnsKanbanData}
+                    setNumberPagesData={setNumberPagesData}
+                    editTaskInline={editTaskInline}
+                    pinItemToTop={pinItemToTop}
+                    handleActionEditTask={handleActionEditTask}
+                    handleConfirmCopyTask={handleActionCopyTask}
+                    handleUpdateItemInline={handleUpdateItemInline}
+                    addTask={(id: string) => {
+                      setColumnId(id);
+                      setShowEditTaskModal(true);
+                      handleSetParam({
+                        id: null,
+                        action: ActionTask.CREATE,
+                      });
+                    }}
+                    selectedOptionZoom={selectedOptionZoom}
+                  />
+                </div>
               </div>
             </div>
 

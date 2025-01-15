@@ -31,6 +31,7 @@ import resourcePlugin from '@fullcalendar/resource';
 import jaLocale from '@fullcalendar/core/locales/ja';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import scrollGridPlugin from '@fullcalendar/scrollgrid';
 
 import {
   DateSpanApi,
@@ -46,14 +47,12 @@ import Heading from '@components/common/Heading';
 import ImageRound from '@components/common/ImageRound';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
-import Button from '@components/common/Button';
 import DatePicker from '@components/common/DatePicker';
 
 import TaskCard from './TaskCard';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
-import scrollGridPlugin from '@fullcalendar/scrollgrid';
 
 import {
   DATE_SCHEDULE_FORMAT,
@@ -109,6 +108,7 @@ import {
   convertToCurrentTimezone,
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
+  getDateInfo,
   getNext30MinuteSlot,
   isDateInFutureOrToday,
   isDateLessThanToday,
@@ -324,26 +324,6 @@ const TimeSchedule = memo(
         }
       }
     };
-    // Return currentDay
-    const handleCurrentDay = () => {
-      const newDate = new Date();
-      newDate.setDate(new Date().getDate());
-      // Programmatically navigate the calendar
-      if (calendarRef.current) {
-        const calendarApi = calendarRef.current.getApi();
-        calendarApi.gotoDate(newDate); // Navigate to the new date
-        const startDateISOString = formatQueryStartDateForCalendar(
-          calendarApi.view.activeStart,
-        );
-        const endDateISOString = formatQueryEndDateForCalendar(
-          calendarApi.view.activeEnd,
-        );
-        setDisplayHeaderDayStart(new Date());
-
-        handleCallApiAllData(startDateISOString, endDateISOString);
-      }
-    };
-
     const handleGetEventCalendarByUsers = async ({
       userId,
       startDate,
@@ -2213,6 +2193,7 @@ const TimeSchedule = memo(
         setHeighSkeleton(calendarHeight);
       }
     }, [slotHeight]);
+    const dataDate = getDateInfo(displayHederDateStart);
 
     return (
       <>
@@ -2236,45 +2217,44 @@ const TimeSchedule = memo(
             onMouseDown={handleMouseDown}
           />
           <div
-            className={`overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#ECF0F2] pt-1 pb-6 px-4 `}>
-            <div className="overflow-y-hidden flex flex-col gap-4 h-full">
+            className={`overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 px-4 `}>
+            <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
               <div className={`items-center gap-4 flex h-12 sticky z-20`}>
                 {!isExtendCalendar ? (
-                  <>
-                    <div className="w-[260px] ml-6 z-20 flex gap-0 items-center">
-                      <Button
+                  <div className="flex relative">
+                    <div className="w-[260px] ml-6 z-20 flex gap-[18px] items-center">
+                      <ImageRound
                         onClick={() => debouncedFunction(handlePreviousDay)}
-                        className="h-10 bg-white !px-2">
-                        <ImageRound
-                          className=" w-7 h-7 "
-                          src="/icons/chevron-left.svg"
-                          name="left"
-                        />
-                      </Button>
+                        className=" !w-2 !h-3 cursor-pointer"
+                        src="/icons/left-schedule.svg"
+                        name="left"
+                      />
+                      <div className="flex items-end text-xl gap-1 text-[#5B6770] font-medium">
+                        <p>{dataDate.month}月</p>
+                        <p>{dataDate.day}日</p>
+                        <p className="text-[15px] relative top-[2px]">
+                          ({dataDate.dayOfWeek})
+                        </p>
+                      </div>
+
+                      <ImageRound
+                        onClick={() => debouncedFunction(handleNextDay)}
+                        className=" !w-2 !h-3 cursor-pointer"
+                        src="/icons/right-schedule.svg"
+                        name="right"
+                      />
+                    </div>
+                    <div className="absolute w-7 z-50 right-[54px] top-[3px]">
                       <DatePicker
-                        className="h-10 z-50 left-[80%]"
+                        className="h-10 z-50 "
+                        isShowInput={false}
                         selected={displayHederDateStart}
                         onChange={(e) => {
                           handleChooseDay(e as Date);
                         }}
                       />
-                      <Button
-                        onClick={() => debouncedFunction(handleNextDay)}
-                        className="h-10 bg-white !px-2">
-                        <ImageRound
-                          className=" w-7 h-7 "
-                          src="/icons/chevron-right.svg"
-                          name="right"
-                        />
-                      </Button>
                     </div>
-                    <Button
-                      type="button"
-                      className="h-10 self-center w-16"
-                      onClick={handleCurrentDay}>
-                      今日
-                    </Button>
-                  </>
+                  </div>
                 ) : (
                   <>
                     <div className="flex items-center gap-3">
@@ -2413,28 +2393,28 @@ const TimeSchedule = memo(
               }}
             />
           </div>
-        </div>
-        <div
-          className="bg-[#ECF0F2] p-2 -right-6 h-fit mt-5 rounded-e-full hover:cursor-pointer "
-          onClick={() => {
-            if (!isExtendCalendar) {
-              setIsScroll(true);
-              handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-            } else {
-              if (calendarRef.current) {
-                const calendarApi = calendarRef.current.getApi();
-                calendarApi.gotoDate(new Date());
+          <div
+            className="p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer "
+            onClick={() => {
+              if (!isExtendCalendar) {
                 setIsScroll(true);
-                handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
+                handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
+              } else {
+                if (calendarRef.current) {
+                  const calendarApi = calendarRef.current.getApi();
+                  calendarApi.gotoDate(new Date());
+                  setIsScroll(true);
+                  handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
+                }
               }
-            }
-            setIsExtendCalendar(!isExtendCalendar);
-          }}>
-          <ImageRound
-            src="/icons/extend-calendar.svg"
-            name="Extend calendar"
-            className={`!w-2 !h-2 min-w-2 ${isExtendCalendar ? 'rotate-180' : ''}`}
-          />
+              setIsExtendCalendar(!isExtendCalendar);
+            }}>
+            <ImageRound
+              src="/icons/extend-calendar.svg"
+              name="Extend calendar"
+              className={`!w-2 !h-2 min-w-2 ${isExtendCalendar ? 'rotate-180' : ''}`}
+            />
+          </div>
         </div>
         {openCreateEventModal && (
           <ActionsEventModal
