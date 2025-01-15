@@ -92,8 +92,11 @@ class DashboardViewSet(BaseAPIViewSet):
             {"total": get_total_unread_messages(request.user)}
         )
 
-    def _append_data_to_cards(self, data, list):
+    def _append_data_to_cards(self, data, list, request):
         """Handle append data to cards"""
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+
         for ele in list:
             if isinstance(ele, Schedule):
                 model = ele
@@ -106,19 +109,35 @@ class DashboardViewSet(BaseAPIViewSet):
                     else CalendarTypes.SCHEDULE.value
                 )
             if any(
-                item
-                for item in data
-                if item["id"] == model.id and item["type"] == model_type
+                    item
+                    for item in data
+                    if item["id"] == model.id and item["type"] == model_type
             ):
                 continue
+
+            is_running = model.task_durations.filter(paused_at__isnull=True).exists()
+            durations = model.task_durations.filter(started_at__gte=start_date,
+                                                    paused_at__lte=end_date).all()
+
             data.append(
                 {
                     "id": model.id,
                     "title": model.title,
                     "type": model_type,
+                    "is_running": is_running,
+                    "total_duration": self._get_total_duration(timedelta(0), durations)
                 }
             )
         return data
+
+    def _get_total_duration(self, total_duration, durations):
+        """ Handle get total duration """
+        # total_duration = time_to_timedelta(total_duration)
+        for duration in durations:
+            if duration.paused_at is not None:
+                total_duration += duration.paused_at - duration.started_at
+
+        return format_duration(total_duration)
 
     @extend_schema(
         parameters=[
@@ -139,7 +158,7 @@ class DashboardViewSet(BaseAPIViewSet):
             plan_end_date__lte=end_date,
             task__people_in_charge_tasks__user=request.user,
         ).all()
-        data = self._append_data_to_cards([], task_schedules)
+        data = self._append_data_to_cards([], task_schedules, request)
 
         # Get actual duration of task
         task_durations = (
@@ -155,7 +174,7 @@ class DashboardViewSet(BaseAPIViewSet):
             )
             .all()
         )
-        data = self._append_data_to_cards(data, task_durations)
+        data = self._append_data_to_cards(data, task_durations, request)
 
         # Get data event in schedule
         events = Schedule.objects.filter(
@@ -163,7 +182,7 @@ class DashboardViewSet(BaseAPIViewSet):
             end_date__lte=end_date,
             participants_schedules__user=request.user,
         ).all()
-        data = self._append_data_to_cards(data, events)
+        data = self._append_data_to_cards(data, events, request)
 
         # Get actual duration of event
         event_durations = (
@@ -175,7 +194,7 @@ class DashboardViewSet(BaseAPIViewSet):
             .exclude(schedule__in=[event for event in events])
             .all()
         )
-        data = self._append_data_to_cards(data, event_durations)
+        data = self._append_data_to_cards(data, event_durations, request)
 
         return self.response_ok(data)
 
