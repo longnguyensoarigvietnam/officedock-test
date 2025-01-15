@@ -10,6 +10,8 @@ import {
   Transition,
 } from '@headlessui/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 
@@ -576,6 +578,15 @@ const Header = ({ className }: HeaderProps) => {
     },
   );
 
+  const hoverItems = [
+    'ユーザー管理',
+    '組織管理',
+    'スキル',
+    '集計タグ管理',
+  ].filter((hoverItem) =>
+    companyItems.some((item) => item.companyMenu && item.name === hoverItem),
+  );
+
   return (
     <>
       <header
@@ -593,19 +604,33 @@ const Header = ({ className }: HeaderProps) => {
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <div className="flex gap-2 items-center">
-                    <PopoverButton
-                      className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
+                  <Tippy
+                    content={
+                      <div className="p-2 w-[150px]">
+                        <p className="mb-2">プロフィール</p>
+                        <p className="mb-2">設定</p>
+                        <p>ログアウト</p>
+                      </div>
+                    }
+                    arrow={false}
+                    delay={1000}
+                    placement="bottom"
+                    offset={[0, 3]}>
+                    <div className="flex gap-2 items-center">
+                      <PopoverButton
+                        className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
                 ${open ? 'text-primary ' : ''}
                 `}>
-                      <ImageRound
-                        className="w-10 h-10"
-                        src="/images/avatar-default.svg"
-                        border="full"
-                        name="Avatar user"
-                      />
-                    </PopoverButton>
-                  </div>
+                        <ImageRound
+                          className="w-10 h-10"
+                          src="/images/avatar-default.svg"
+                          border="full"
+                          name="Avatar user"
+                        />
+                      </PopoverButton>
+                    </div>
+                  </Tippy>
+
                   <Transition
                     as={Fragment}
                     enter="transition ease-out duration-200"
@@ -656,19 +681,36 @@ const Header = ({ className }: HeaderProps) => {
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <div className="flex gap-2 items-center">
-                    <PopoverButton
-                      className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
+                  <Tippy
+                    content={
+                      <div className="p-2 w-[150px]">
+                        {hoverItems.map((hoverItem, index) => (
+                          <p className="mb-2" key={index}>
+                            {hoverItem}
+                          </p>
+                        ))}
+                      </div>
+                    }
+                    arrow={false}
+                    delay={1000}
+                    placement="bottom"
+                    offset={[0, 3]}
+                    disabled={hoverItems.length == 0}>
+                    <div className="flex gap-2 items-center">
+                      <PopoverButton
+                        className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
                 ${open ? 'text-primary ' : ''}
                 `}>
-                      <ImageRound
-                        className="w-10 h-10"
-                        src="/icons/company.svg"
-                        border="full"
-                        name="Company"
-                      />
-                    </PopoverButton>
-                  </div>
+                        <ImageRound
+                          className="w-10 h-10"
+                          src="/icons/company.svg"
+                          border="full"
+                          name="Company"
+                        />
+                      </PopoverButton>
+                    </div>
+                  </Tippy>
+
                   {companyItems.filter((item) => item.companyMenu == true)
                     .length > 0 && (
                     <Transition
