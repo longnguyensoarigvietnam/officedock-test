@@ -110,7 +110,7 @@ const FrequentlyTask = ({
         <div className="flex gap-2">
           <p className="text-gray-500 text-xs">マイテンプレート</p>
           <Tippy
-            content="閉じる"
+            content={showFrequentlyTasks ? '閉じる' : '開く'}
             arrow={false}
             delay={1000}
             placement="top"

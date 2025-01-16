@@ -294,7 +294,7 @@ const Sidebar = ({ className }: Props) => {
         </TabPanel>
         <TabPanel key={1}></TabPanel>
         <Tippy
-          content="メニューバーを拡大"
+          content={expanded ? 'メニューバーを縮小' : 'メニューバーを拡大'}
           arrow={false}
           delay={1000}
           placement="right"

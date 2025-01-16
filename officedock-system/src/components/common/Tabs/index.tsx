@@ -93,7 +93,7 @@ const Tabs = ({
           ) : (
             <div className="flex flex-col justify-center items-center gap-2">
               <Tippy
-                content="チームドック"
+                content={`${isTeamDockMenu ? 'マイドック' : 'チームドック'}`}
                 arrow={false}
                 delay={1000}
                 placement="top">
