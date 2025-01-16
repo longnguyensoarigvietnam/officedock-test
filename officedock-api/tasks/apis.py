@@ -1026,6 +1026,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         DjangoFilterBackend,
     ]
     ordering_fields = {
+        "is_important": "is_important",
         "deadline": "deadline",
         "priority": "priority_number",
         "id": "id",
@@ -1164,6 +1165,42 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if exclude_ids:
                 queryset = queryset.exclude(id__in=exclude_ids)
 
+        if tag_ids := self.request.query_params.get("tag_ids"):
+            ids = []
+            for id in tag_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                queryset = queryset.filter(tags_tasks__tag__id__in=ids)
+
+        if category_ids := self.request.query_params.get("category_ids"):
+            ids = []
+            for id in category_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                queryset = queryset.filter(
+                    Q(categories__large_statistic_category__in=ids)
+                    | Q(categories__medium_statistic_category__in=ids)
+                    | Q(categories__small_statistic_category__in=ids)
+                )
+
+        if organization_ids := self.request.query_params.get(
+            "organization_ids"
+        ):
+            ids = []
+            for id in organization_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                queryset = queryset.filter(Q(organization__in=ids))
+
         return queryset
 
     @extend_schema(
@@ -1174,6 +1211,9 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             OpenApiParameter("task_id", type=int),
             OpenApiParameter("index", type=float),
             OpenApiParameter("ids", type=str),
+            OpenApiParameter("tag_ids", type=str),
+            OpenApiParameter("category_ids", type=str),
+            OpenApiParameter("organization_ids", type=str),
         ],
     )
     def list(self, request, *args, **kwargs):
