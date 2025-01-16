@@ -2271,7 +2271,7 @@ const TimeSchedule = memo(
                       delay={1000}
                       placement="top"
                       offset={[0, 5]}>
-                      <div className="absolute w-7 z-50 right-[54px] top-[3px]">
+                      <div className="absolute w-7 z-50 right-[54px] top-[3px] time-schedule">
                         <DatePicker
                           className="h-10 z-50 "
                           isShowInput={false}
