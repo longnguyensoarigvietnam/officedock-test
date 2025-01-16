@@ -42,15 +42,19 @@
 
 .time-schedule .react-datepicker {
   border: none !important;
-  scale: 0.81;
+  scale: 0.9;
   margin-top: -3.8rem;
-  margin-right: 3rem;
 }
 
 .react-datepicker-popper {
   top: 55px !important;
   left: 50% !important;
   transform: translate(-50%, 0) !important;
+}
+
+.time-schedule .react-datepicker-popper {
+  margin-left: -4.8rem;
+  scale: 0.9;
 }
 
 .react-datepicker__month-container {
