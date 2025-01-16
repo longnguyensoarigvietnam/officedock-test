@@ -24,6 +24,7 @@ type Props = {
   error?: ReactNode;
   isLoading?: boolean;
   required?: boolean;
+  isStatusDropdown?: boolean;
   disabled?: boolean;
   className?: string;
   classNameOption?: string;
@@ -50,6 +51,7 @@ const Dropdown = ({
   isLoading,
   options,
   labelClass,
+  isStatusDropdown,
   labelOptionClass,
   placeholder,
   disabled = false,
@@ -93,19 +95,19 @@ const Dropdown = ({
   const statusStyles = [
     {
       label: StatusTask.NOT_STARTED,
-      color: 'hover:bg-[#A3EBF0]',
+      color: 'bg-[#A3EBF0]',
     },
     {
       label: StatusTask.IN_PROGRESS,
-      color: 'hover:bg-[#92E9AF]',
+      color: 'bg-[#92E9AF]',
     },
     {
       label: StatusTask.CONFIRMING,
-      color: 'hover:bg-[#FCCF79]',
+      color: 'bg-[#FCCF79]',
     },
     {
       label: StatusTask.COMPLETED,
-      color: 'hover:bg-[#F58383]',
+      color: 'bg-[#F58383]',
     },
   ];
 
@@ -239,7 +241,7 @@ const Dropdown = ({
                           key={option.value}
                           style={styleClassOption}
                           className={({ focus }) =>
-                            `relative ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} ${openByDefault && statusStyles.find((item) => item.label === option.label)?.color} cursor-default select-none ${!openByDefault && 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass}`
+                            `relative ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} cursor-default border-b-[1px] border-[#EBF1F7] select-none ${!openByDefault && 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass}`
                           }
                           value={option}
                           onClick={() => handleOptionClick(option)}>
@@ -253,10 +255,18 @@ const Dropdown = ({
                                     className="!w-4 !h-4"
                                   />
                                 )}
-                                <span
-                                  className={` ${!openByDefault ? 'ml-3' : 'text-center w-full'}  block truncate  ${selected?.value === option.value ? 'text-blue-500' : ''} ${labelOptionClass}`}>
+                                {isStatusDropdown && (
+                                  <div
+                                    className={`${statusStyles.find((item) => item.label == option.label)?.color} w-3 h-3 ml-2 rounded-full`}
+                                  />
+                                )}
+                                <p
+                                  className={` ${!openByDefault ? 'ml-3' : 'text-center w-full'}  block truncate  ${!isStatusDropdown && selected?.value === option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'}`}>
                                   {option.label}
-                                </span>
+                                </p>
+                                {isStatusDropdown && (
+                                  <p className='w-[40px] text-[#A7B7C2]'>{selected?.value === option.value && '選択中'}</p>
+                                )}
                               </div>
                             </>
                           )}

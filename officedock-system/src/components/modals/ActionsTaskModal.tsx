@@ -3,7 +3,6 @@ import React, {
   ChangeEvent,
   Dispatch,
   SetStateAction,
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -34,9 +33,9 @@ import TextArea from '@components/common/TextArea';
 import ImageRound from '@components/common/ImageRound';
 import ErrorMessage from '@components/common/ErrorMessage';
 import Switch from '@components/common/Switch';
-import Checkbox from '@components/common/Checkbox';
 import Drawer from '@components/common/Drawers';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import {
   DEFAULT_VALUE_TODO_LIST,
@@ -46,7 +45,7 @@ import {
   START_DATE_REQUIRED_SELECTED,
   STATUS_REQUIRED_MESSAGE,
 } from '@constants/message';
-import { COPY_MESSAGE, NO_OPTION_CATEGORY } from '@constants';
+import { COPY_MESSAGE, NO_OPTION_CATEGORY, UNREGISTERED } from '@constants';
 import {
   ActionTask,
   EventWorkCategory,
@@ -73,8 +72,9 @@ import {
   formatTimeInput,
   generateTimeOptionsAsObjects,
 } from '@utils/date';
-import { hasPermissionInArray } from '@utils';
+import { hasPermissionInArray, showModalHeaderBackgroundColorByTime } from '@utils';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { CategoryStructure } from '@interfaces/skills';
 
 export type ActionTaskModalProps = {
@@ -115,6 +115,7 @@ const ActionsTaskModal = ({
     [key: number]: Date | null;
   }>({});
   const { data: session } = useSession();
+  const { authenticatedUser } = useAuthenticatedUser();
 
   const modalRef = useRef<HTMLFormElement | null>(null);
 
@@ -167,15 +168,12 @@ const ActionsTaskModal = ({
     useState<OptionDropdownType[]>([]);
   const [_unSelectedPersonInChargeOptions, setUnSelectedPersonInChargeOptions] =
     useState<OptionDropdownType[]>([]);
+  const [showDescriptionSection, setShowDescriptionSection] =
+    useState<boolean>(false);
+
+  const [showTodoSection, setShowTodoSection] = useState<boolean>(false);
 
   const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
-    OptionDropdownType[]
-  >([]);
-
-  const [selectedTagIdsOptions, setSelectedTagIdsOptions] = useState<
-    OptionDropdownType[]
-  >([]);
-  const [unSelectedTagIdsOptions, setUnSelectedTagIdsOptions] = useState<
     OptionDropdownType[]
   >([]);
 
@@ -329,6 +327,16 @@ const ActionsTaskModal = ({
       },
       isImportant: false,
       plans: [],
+      organization: {
+        label:
+          authenticatedUser?.organizations.find(
+            (organization) => organization.isMain,
+          )?.name || '',
+        value:
+          authenticatedUser?.organizations.find(
+            (organization) => organization.isMain,
+          )?.id || '',
+      },
     };
     if (dataTask) {
       (value.id = `${dataTask.id}`),
@@ -363,6 +371,15 @@ const ActionsTaskModal = ({
           ? convertToTimeString(dataTask.deadline)
           : null);
       value.description = dataTask.description || '';
+
+      if (dataTask.tags) {
+        value.tagIds = dataTask.tags.map((tag) => {
+          return {
+            value: tag.id,
+            label: tag.name,
+          };
+        });
+      }
 
       if (dataTask.categories) {
         const firstLargeCategory = dataTask.categories.find(
@@ -525,14 +542,6 @@ const ActionsTaskModal = ({
     name: 'peopleInChargeIds',
   });
   const {
-    fields: projectFields,
-    append: appendProject,
-    remove: removeProject,
-  } = useFieldArray({
-    control,
-    name: 'tagIds',
-  });
-  const {
     fields: planFields,
     append: appendPlanField,
     remove: removePlanField,
@@ -551,22 +560,6 @@ const ActionsTaskModal = ({
     );
     setUnSelectedPersonInChargeOptions(unSelectedOptions);
   }, [dataOptionsPeopleInCharge, selectedPersonInChargeOptions]);
-
-  // If have option selected or remove option selected, update option for unselected options tagId
-  useEffect(() => {
-    const selectedValues = selectedTagIdsOptions.map(
-      (element) => element.value,
-    );
-    const unSelectedOptions = dataOptionsTagIds.filter(
-      (option) => !selectedValues.includes(option.value),
-    );
-    setUnSelectedTagIdsOptions(unSelectedOptions);
-  }, [
-    dataOptionsPeopleInCharge,
-    dataOptionsTagIds,
-    selectedPersonInChargeOptions,
-    selectedTagIdsOptions,
-  ]);
 
   // Save data people in charge from list member
 
@@ -654,19 +647,6 @@ const ActionsTaskModal = ({
           planStartTime: '',
         });
       }
-      if (dataTask.tags && dataTask.tags.length) {
-        dataTask.tags.map((element) =>
-          appendProject({
-            label: element.name,
-            value: element.id,
-          }),
-        );
-      } else {
-        appendProject({
-          label: '',
-          value: '',
-        });
-      }
     } else {
       appendPlanField({
         planStartDate: null,
@@ -675,7 +655,7 @@ const ActionsTaskModal = ({
         planStartTime: '',
       });
     }
-  }, [append, appendPlanField, appendProject, dataTask, peopleDefaultId]);
+  }, [append, appendPlanField, dataTask, peopleDefaultId]);
   useEffect(() => {
     if (peopleDefaultId && session) {
       setSelectedPersonInChargeOptions([
@@ -689,14 +669,6 @@ const ActionsTaskModal = ({
 
   //Update option data people in charge when default data
   useEffect(() => {
-    if (dataTask && dataTask.tags) {
-      setSelectedTagIdsOptions(
-        dataTask.tags.map((org) => ({
-          label: org.name,
-          value: org.id,
-        })),
-      );
-    }
     if (dataTask?.peopleInCharge) {
       setSelectedPersonInChargeOptions(
         dataTask.peopleInCharge.map((org) => ({
@@ -735,31 +707,6 @@ const ActionsTaskModal = ({
       }
     }, 0);
   }, [open]);
-
-  // Function handle selected option tagId
-  const handleSelectedTagIds = useCallback(
-    (index: number, option: OptionDropdownType) => {
-      setSelectedTagIdsOptions((prevState) => {
-        const existingElement = prevState?.[index];
-        if (existingElement) {
-          prevState.splice(index, 1);
-        }
-        return [...prevState, option];
-      });
-    },
-    [],
-  );
-
-  // Function handle remove selected option Tag id
-  const handleRemoveSelectedTagId = useCallback(
-    (option: OptionDropdownType, index: number) => {
-      setSelectedTagIdsOptions((prevState) =>
-        prevState.filter((item) => item.value !== option.value),
-      );
-      removeProject(index);
-    },
-    [removeProject],
-  );
 
   //Update error when error person
   useEffect(() => {
@@ -966,20 +913,37 @@ const ActionsTaskModal = ({
     ]);
   };
 
+  const hour = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date());
+
   return (
     <Drawer
       open={open}
       className="font-primary  bg-white h-screen w-[700px] !rounded-tl-xl !p-0"
-      onClose={() => {}}>
-      <header className="px-8 rounded-tl-xl h-[50px] bg-[#EBF1F4] flex items-center justify-between">
-        <div className="flex text-sm items-center gap-4 text-[#A3B3BE]">
+      onClose={() => {
+        resetDataCategoryOptions();
+        reset();
+        onClose();
+      }}>
+      <header
+        className="px-8 rounded-tl-xl h-[50px] flex items-center justify-between"
+        style={{
+          background:
+            showModalHeaderBackgroundColorByTime(
+              Number(hour.substring(0, hour.length - 1)),
+            ),
+        }}>
+        <div className="flex text-sm items-center gap-4 text-white">
           <p className="">
             登録日{' '}
             {action === ActionTask.EDIT && dataTask?.createdAt
               ? formatShowDateJapanese(dataTask.createdAt)
               : formatShowDateJapanese(new Date())}
           </p>
-          <div className=" h-3 mt-[2px] border-solid  border border-[#A3B3BE]"></div>
+          <div className=" h-3 mt-[2px] border-solid  border border-white"></div>
           <p className="">
             実施時間{' '}
             {action === 'EDIT' && dataTask?.taskDuration
@@ -989,19 +953,30 @@ const ActionsTaskModal = ({
         </div>
         <div className="flex gap-5 items-center ">
           <ImageRound
-            className="mt-1 w-[13px] h-[15px] hover:cursor-pointer"
-            src="/icons/share.svg"
-            name="Close modal"
+            className="scale-[0.5] rotate-90 mt-1 text-xs mr-[-10px] hover:cursor-pointer"
+            src="/icons/three-dots-white.svg"
+            border="full"
+            name="Three dots white"
           />
-          <ImageRound
-            className="mt-1 h-[3px] w-[17px] hover:cursor-pointer"
-            src="/icons/more.svg"
-            name="Close modal"
-          />
+          {!disableDeleteAction &&
+            action === 'EDIT' &&
+            session?.user.permissions &&
+            hasPermissionInArray(
+              session?.user.permissions,
+              PermissionsSystem.MY_TASK_DELETE,
+            ) && (
+              <ImageRound
+                className="mt-1 w-[14px] h-[17px] hover:cursor-pointer"
+                src="/icons/delete-event.svg"
+                name="Delete icon"
+                onClick={onDelete}
+              />
+            )}
+
           <ImageRound
             className="mt-1 w-3 h-[14px] hover:cursor-pointer"
-            src="/icons/drawer-close.svg"
-            name="Close modal"
+            src="/icons/drawer-close-white.svg"
+            name="Close icon"
             onClick={() => {
               resetDataCategoryOptions();
               reset();
@@ -1034,103 +1009,44 @@ const ActionsTaskModal = ({
             />
           </div>
           <div className="flex gap-2 items-center">
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={onClose}
-              className="w-[82px] !rounded-md  h-[34px] !text-[10px] !px-2">
-              キャンセル
-            </Button>
             {isPermissionAdd &&
               (action === ActionTask.COPY || action === ActionTask.CREATE) && (
                 <Button
                   type="submit"
-                  className="w-[48px] h-[34px] !text-[10px] !px-2">
+                  className="w-[82px] h-[36px] !text-[12px] !px-2">
                   保存
                 </Button>
               )}
             {isPermissionUpdate && action === ActionTask.EDIT && (
               <Button
                 type="submit"
-                className="w-[48px] h-[34px] !text-[10px] !px-2">
+                className="w-[82px] h-[36px] !text-[12px] !px-2">
                 保存
               </Button>
             )}
-
-            {!disableDeleteAction &&
-              action === 'EDIT' &&
-              session?.user.permissions &&
-              hasPermissionInArray(
-                session?.user.permissions,
-                PermissionsSystem.MY_TASK_DELETE,
-              ) && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onDelete}
-                  className="w-[48px] h-8 !text-[10px] !px-2">
-                  削除
-                </Button>
-              )}
+            <Button
+              variant="outline"
+              type="button"
+              onClick={onClose}
+              className="w-[82px] !rounded-md  h-[34px] !text-[12px] !px-2">
+              キャンセル
+            </Button>
           </div>
         </header>
         <div className="text-xs font-normal flex flex-col gap-4">
-          {/* Status */}
-          <div className="flex gap-[10px] items-center">
-            <div className="w-full max-w-[100px]">ステータス</div>
-            <div className="w-full max-w-48">
-              <Controller
-                control={control}
-                name={'statusId'}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md"
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
-                    classNameError="!text-xs"
-                    disabled={
-                      isCheckActionPermission ||
-                      (dataTask
-                        ? dataTask.status?.id === StatusValueTask.MY_ROUTINE
-                        : false)
-                    }
-                    options={
-                      action === ActionTask.CREATE
-                        ? dataOptionsStatus
-                        : dataOptionsStatus.filter(
-                            (item) => item.value !== StatusValueTask.MY_ROUTINE,
-                          )
-                    }
-                    selectedOption={dataOptionsStatus.find(
-                      (element) => element.value === value?.value,
-                    )}
-                    onChange={(e) => {
-                      onChange(e);
-                      if (e.value === StatusValueTask.MY_ROUTINE) {
-                        setValue('deadlineDate', null);
-                        setValue('deadlineTime', '');
-                      }
-                    }}
-                    error={errors.statusId?.message}
-                  />
-                )}
-                rules={{ required: STATUS_REQUIRED_MESSAGE }}
-              />
-            </div>
-          </div>
           {/* Organization */}
           <div className="flex gap-[10px] items-center">
-            <div className="w-full max-w-[100px]">組織</div>
+            <div className="w-full max-w-[100px]"></div>
             <div className="w-full max-w-[515px]">
               <Controller
                 control={control}
                 name={'organization'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md"
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
-                    classNameError="!text-xs"
+                    className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md !border-none !shadow-none !w-fit !pl-0"
+                    classNameTextData="!text-xs !w-fit"
+                    classNameOption="!text-xs !w-fit"
+                    classNameError="!text-xs !w-fit"
                     placeholder="選択してください"
                     disabled={isCheckActionPermission}
                     options={dataOptionsOrganizations}
@@ -1256,72 +1172,128 @@ const ActionsTaskModal = ({
           </div>
           {/* Tag */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2">集計タグ</div>
+            <div className="w-full max-w-[100px] mt-2">タグ</div>
             <div className="w-full max-w-[518px]">
-              {projectFields.map((field, index) => (
-                <div className="flex gap-2 max-w-[518px]" key={field.id}>
-                  <div className="w-[461px]">
-                    <Controller
-                      control={control}
-                      name={`tagIds.${index}`}
-                      render={({ field: { value, onChange } }) => {
-                        return (
-                          <Dropdown
-                            placeholder="選択してください"
-                            className="h-[34px] !py-1 text-xs border-[#77858F] rounded-mds"
-                            classNameOption="!text-xs"
-                            classNameTextData="!text-xs"
-                            options={unSelectedTagIdsOptions}
-                            disabled={isCheckActionPermission}
-                            selectedOption={dataOptionsTagIds.find(
-                              (element) => element.value === value?.value,
-                            )}
-                            onChange={(option: OptionDropdownType) => {
-                              onChange(option);
-                              handleSelectedTagIds(index, option);
-                            }}
-                            error={errors.tagIds?.[index]?.value?.message}
-                          />
-                        );
-                      }}
-                    />
-                  </div>
-                  <div className="mb-[2.5px] w-12">
-                    {!isCheckActionPermission && (
-                      <Button
-                        sz="sm"
-                        variant="outline"
-                        className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#DFE6EA]"
-                        type="button"
-                        name="Remove TagId"
-                        onClick={() => {
-                          handleRemoveSelectedTagId(
-                            watch(`tagIds.${index}`),
-                            index,
+              <div className="flex gap-2 max-w-[518px]">
+                <div className="w-[461px]">
+                  <MultiSelectDropdown
+                    className="!h-[34px]"
+                    disabled={isCheckActionPermission}
+                    options={dataOptionsTagIds}
+                    customLabel={
+                      (watch('tagIds') ?? []).filter((tag) => tag.value)
+                        .length > 0
+                        ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
+                        : UNREGISTERED
+                    }
+                    selectedOptions={watch('tagIds') ?? []}
+                    onChange={(selected) => {
+                      const selectedArray = Array.isArray(selected)
+                        ? selected
+                        : [selected];
+
+                      const currentTagIds = getValues('tagIds') || [];
+
+                      const updatedTagIds = [
+                        ...currentTagIds,
+                        ...selectedArray,
+                      ];
+
+                      setValue('tagIds', updatedTagIds);
+                    }}
+                  />
+                  <div className="flex flex-wrap  gap-2 mt-2">
+                    {watch('tagIds')?.filter((tag) => tag.value) &&
+                      watch('tagIds')
+                        ?.filter((tag) => !!tag.value)
+                        ?.map((tag) => {
+                          return (
+                            <div
+                              key={tag.value}
+                              className="rounded-xl bg-[#EBF2F7] px-2.5 py-1.5 flex gap-2">
+                              <p>{tag.label}</p>
+                              <button
+                                type="button"
+                                className="text-gray-700 hover:text-gray-900"
+                                onClick={() => {
+                                  const currentTagIds =
+                                    getValues('tagIds') || [];
+
+                                  const updatedTagIds = [
+                                    ...currentTagIds,
+                                  ].filter(
+                                    (item) =>
+                                      Number(item.value) != Number(tag.value),
+                                  );
+
+                                  setValue('tagIds', updatedTagIds);
+                                }}>
+                                ✕
+                              </button>
+                            </div>
                           );
-                        }}>
-                        削除
-                      </Button>
-                    )}
+                        })}
                   </div>
                 </div>
-              ))}
-              {!isCheckActionPermission && (
-                <div className="text-right mt-4 flex justify-center">
-                  <Button
-                    sz="sm"
-                    variant="outline"
-                    className="w-6 h-6 text-xs mr-[54px] !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
-                    type="button"
-                    onClick={() => appendProject({ label: '', value: '' })}>
-                    <ImageRound
-                      src="/icons/plus.svg"
-                      name="Add organization"
-                      className=" h-3 w-3"
-                    />
-                  </Button>
+                <div className="mb-[2.5px] w-12">
+                  {!isCheckActionPermission && (
+                    <Button
+                      sz="sm"
+                      variant="outline"
+                      className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                      type="button"
+                      name="Remove TagId"
+                      onClick={() => {
+                        setValue('tagIds', []);
+                      }}>
+                      削除
+                    </Button>
+                  )}
                 </div>
-              )}
+              </div>
+            </div>
+          </div>
+          {/* Status */}
+          <div className="flex gap-[10px] items-center">
+            <div className="w-full max-w-[100px]">ステータス</div>
+            <div className="w-full max-w-40">
+              <Controller
+                control={control}
+                name={'statusId'}
+                render={({ field: { value, onChange } }) => (
+                  <Dropdown
+                    className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md"
+                    classNameTextData="!text-xs"
+                    classNameOption="!text-xs"
+                    classNameError="!text-xs"
+                    disabled={
+                      isCheckActionPermission ||
+                      (dataTask
+                        ? dataTask.status?.id === StatusValueTask.MY_ROUTINE
+                        : false)
+                    }
+                    options={
+                      action === ActionTask.CREATE
+                        ? dataOptionsStatus
+                        : dataOptionsStatus.filter(
+                            (item) => item.value !== StatusValueTask.MY_ROUTINE,
+                          )
+                    }
+                    selectedOption={dataOptionsStatus.find(
+                      (element) => element.value === value?.value,
+                    )}
+                    onChange={(e) => {
+                      onChange(e);
+                      if (e.value === StatusValueTask.MY_ROUTINE) {
+                        setValue('deadlineDate', null);
+                        setValue('deadlineTime', '');
+                      }
+                    }}
+                    error={errors.statusId?.message}
+                  />
+                )}
+                rules={{ required: STATUS_REQUIRED_MESSAGE }}
+              />
             </div>
           </div>
           {/* isImportant */}
@@ -1351,9 +1323,9 @@ const ActionsTaskModal = ({
             style={{ zIndex: planFields.length + 1 }}
             className="flex  gap-[10px] items-center">
             <div className="w-full max-w-[100px]">締切日時</div>
-            <div className="w-full max-w-[515px] items-start flex gap-1">
-              <div className="max-w-[220px]">
-                <div className="flex gap-1">
+            <div className="w-full max-w-[515px] items-start flex gap-1 justify-between">
+              <div className="max-w-[250px]">
+                <div className="flex gap-1 items-center">
                   <div className="w-[140px]">
                     <Controller
                       control={control}
@@ -1427,11 +1399,34 @@ const ActionsTaskModal = ({
                       className="h-[34px] !text-xs !pr-1 !pl-7 border-[#77858F] rounded-md"
                     />
                   </div>
+                  <div>
+                    <ImageRound
+                      src="/icons/bell.svg"
+                      name="Bell icon"
+                      className="h-4 w-4"
+                    />
+                  </div>
                 </div>
                 <ErrorMessage
                   error={errors.deadlineTime?.message}
                   className="mt-[6px] text-xs"
                 />
+              </div>
+              <div>
+                {!isCheckActionPermission && (
+                  <Button
+                    sz="sm"
+                    variant="outline"
+                    className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                    type="button"
+                    name="Remove deadline"
+                    onClick={() => {
+                      setValue('deadlineTime', '');
+                      setValue('deadlineDate', null);
+                    }}>
+                    削除
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -1766,7 +1761,7 @@ const ActionsTaskModal = ({
                         <Button
                           sz="sm"
                           variant="outline"
-                          className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#DFE6EA]"
+                          className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
                           type="button"
                           name="Remove plan"
                           onClick={() => {
@@ -1806,131 +1801,200 @@ const ActionsTaskModal = ({
           </div>
           {/* Description */}
           <div>
-            <TextArea
-              disabled={isCheckActionPermission}
-              register={register('description')}
-              label="タスクについての詳細"
-            />
+            {showDescriptionSection ? (
+              <>
+                <div
+                  className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                  onClick={() => setShowDescriptionSection(false)}>
+                  <ImageRound
+                    className="w-[17px] h-[17px] hover:cursor-pointer"
+                    src="/icons/collapse-description.svg"
+                    name="Collapse description icon"
+                  />
+                  <p className="text-[#0068B6]">タスクについての詳細</p>
+                </div>
+                <TextArea
+                  disabled={isCheckActionPermission}
+                  register={register('description')}
+                  className="resize-none"
+                />
+              </>
+            ) : (
+              <div
+                className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                onClick={() => setShowDescriptionSection(true)}>
+                <ImageRound
+                  className="w-[17px] h-[17px] hover:cursor-pointer"
+                  src="/icons/open-description.svg"
+                  name="Open description icon"
+                />
+                <p className="text-[#0068B6]">タスクについての詳細</p>
+              </div>
+            )}
           </div>
           {/* Todo list */}
-          <div>
-            <div className="mb-4">
-              <Button
-                disabled={isCheckActionPermission}
-                type="button"
-                variant="outline"
-                onClick={handleAddItem}>
-                To Do リストを作成
-              </Button>
-            </div>
-            <DragDropContext onDragEnd={handleOnDragEnd}>
-              <Droppable droppableId="todo-list">
-                {(provided) => (
-                  <ul
-                    className="flex flex-col "
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}>
-                    {todoList.map((todo, index) => (
-                      <Draggable
-                        isDragDisabled={isCheckActionPermission}
-                        key={todo.id ? todo.id : todo.customId}
-                        draggableId={
-                          todo.id ? `${todo.id}` : `${todo.customId}`
-                        }
-                        index={index}>
-                        {(provided, snapshot) => {
-                          const draggableElement = (
-                            <>
-                              <li
-                                className={`mb-2 gap-3 flex items-start ${snapshot.isDragging ? 'dragging' : ''}`}
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}>
-                                <div
-                                  className="w-4 h-[42px] flex items-center justify-center"
-                                  {...provided.dragHandleProps}>
-                                  <ImageRound
-                                    className="w-[6px] h-[10px] cursor-grab hover:cursor-pointer"
-                                    src="/icons/drag.svg"
-                                    name="drag item"
-                                  />
-                                </div>
-                                <div className="w-3 h-3 mt-2">
-                                  <Checkbox
-                                    isChecked={todo.isChecked}
-                                    disable={isCheckActionPermission}
-                                    onChange={() => {
-                                      handleCheck(index);
-                                    }}
-                                  />
-                                </div>
-                                <TextareaAutosize
-                                  defaultValue={todo.content}
-                                  ref={(el) => {
-                                    textareaRefs.current[index] = el;
-                                  }}
-                                  disabled={isCheckActionPermission}
-                                  placeholder={DEFAULT_VALUE_TODO_LIST}
-                                  onBlur={(
-                                    e: React.ChangeEvent<HTMLTextAreaElement>,
-                                  ) => {
-                                    if (todo.id) {
-                                      handleBlur({
-                                        id: todo.id,
-                                        content: e.target.value,
-                                      });
-                                    } else {
-                                      handleBlur({
-                                        customId: todo.customId,
-                                        content: e.target.value,
-                                      });
-                                    }
-                                  }}
-                                  rows={3}
-                                  className="resize-none focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 placeholder-gray-300 border-gray-200 w-full rounded-md"
-                                />
-                                <div className="mt-[2.5px] ml-2 flex items-center">
-                                  <Button
-                                    sz="sm"
-                                    variant="outline"
-                                    className="w-20 h-[34px] text-xs ml-2"
-                                    type="button"
-                                    disabled={isCheckActionPermission}
-                                    name="Remove organization"
-                                    onClick={() => {
-                                      if (todo.customId) {
-                                        const listData = todoList.filter(
-                                          (item) =>
-                                            item.customId !== todo.customId,
-                                        );
-                                        setTodoList([...listData]);
-                                      } else if (todo.id) {
-                                        const listData = todoList.filter(
-                                          (item) => item.id !== todo.id,
-                                        );
-                                        setTodoList([...listData]);
-                                      }
-                                    }}>
-                                    削除
-                                  </Button>
-                                </div>
-                              </li>
-                            </>
-                          );
-                          return snapshot.isDragging
-                            ? ReactDOM.createPortal(
-                                draggableElement,
-                                document.body,
-                              )
-                            : draggableElement;
-                        }}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </ul>
-                )}
-              </Droppable>
-            </DragDropContext>
+          <div className="mb-3">
+            {showTodoSection ? (
+              <>
+                <div
+                  className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                  onClick={() => setShowTodoSection(false)}>
+                  <ImageRound
+                    className="w-[17px] h-[17px] hover:cursor-pointer"
+                    src="/icons/collapse-description.svg"
+                    name="Collapse description icon"
+                  />
+                  <p className="text-[#0068B6]">To Do リストを作成</p>
+                </div>
+                <div>
+                  <div className="mb-4">
+                    <Button
+                      disabled={isCheckActionPermission}
+                      type="button"
+                      variant="outline"
+                      className="!px-2 !py-1 !text-sm"
+                      onClick={handleAddItem}>
+                      To Do リストを作成
+                    </Button>
+                  </div>
+                  <DragDropContext onDragEnd={handleOnDragEnd}>
+                    <Droppable droppableId="todo-list">
+                      {(provided) => (
+                        <ul
+                          className="flex flex-col "
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}>
+                          {todoList.map((todo, index) => (
+                            <Draggable
+                              isDragDisabled={isCheckActionPermission}
+                              key={todo.id ? todo.id : todo.customId}
+                              draggableId={
+                                todo.id ? `${todo.id}` : `${todo.customId}`
+                              }
+                              index={index}>
+                              {(provided, snapshot) => {
+                                const draggableElement = (
+                                  <>
+                                    <li
+                                      className={`mb-2 gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}>
+                                      <div
+                                        className="w-4 h-[42px] flex items-center justify-center"
+                                        {...provided.dragHandleProps}>
+                                        <ImageRound
+                                          className="w-[6px] h-[10px] cursor-grab hover:cursor-pointer"
+                                          src="/icons/drag.svg"
+                                          name="drag item"
+                                        />
+                                      </div>
+                                      <div className="w-5">
+                                        {!isCheckActionPermission &&
+                                        todo.isChecked ? (
+                                          <ImageRound
+                                            className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
+                                            src="/icons/complete-blue.svg"
+                                            name="complete item"
+                                            onClick={() => {
+                                              handleCheck(index);
+                                            }}
+                                          />
+                                        ) : (
+                                          <ImageRound
+                                            className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
+                                            src="/icons/complete.svg"
+                                            name="complete item"
+                                            onClick={() => {
+                                              handleCheck(index);
+                                            }}
+                                          />
+                                        )}
+                                      </div>
+                                      <TextareaAutosize
+                                        defaultValue={todo.content}
+                                        ref={(el) => {
+                                          textareaRefs.current[index] = el;
+                                        }}
+                                        disabled={isCheckActionPermission}
+                                        placeholder={DEFAULT_VALUE_TODO_LIST}
+                                        onBlur={(
+                                          e: React.ChangeEvent<HTMLTextAreaElement>,
+                                        ) => {
+                                          if (todo.id) {
+                                            handleBlur({
+                                              id: todo.id,
+                                              content: e.target.value,
+                                            });
+                                          } else {
+                                            handleBlur({
+                                              customId: todo.customId,
+                                              content: e.target.value,
+                                            });
+                                          }
+                                        }}
+                                        rows={3}
+                                        className="resize-none focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md"
+                                      />
+                                      <div className="mt-[2.5px] ml-2 flex items-center">
+                                        {!isCheckActionPermission && (
+                                          <ImageRound
+                                            className="w-[16px] h-[10px] opacity-40 hover:cursor-pointer"
+                                            src="/icons/zoom-out.svg"
+                                            name="remove icon"
+                                            onClick={() => {
+                                              if (todo.customId) {
+                                                const listData =
+                                                  todoList.filter(
+                                                    (item) =>
+                                                      item.customId !==
+                                                      todo.customId,
+                                                  );
+                                                setTodoList([...listData]);
+                                              } else if (todo.id) {
+                                                const listData =
+                                                  todoList.filter(
+                                                    (item) =>
+                                                      item.id !== todo.id,
+                                                  );
+                                                setTodoList([...listData]);
+                                              }
+                                            }}
+                                          />
+                                        )}
+                                      </div>
+                                    </li>
+                                  </>
+                                );
+                                return snapshot.isDragging
+                                  ? ReactDOM.createPortal(
+                                      draggableElement,
+                                      document.body,
+                                    )
+                                  : draggableElement;
+                              }}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </ul>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
+                </div>
+              </>
+            ) : (
+              <div
+                className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                onClick={() => setShowTodoSection(true)}>
+                <ImageRound
+                  className="w-[17px] h-[17px] hover:cursor-pointer"
+                  src="/icons/open-description.svg"
+                  name="Open description icon"
+                />
+                <p className="text-[#0068B6]">To Do リストを作成</p>
+              </div>
+            )}
           </div>
+
           {isPermissionAdd &&
             (action === ActionTask.COPY || action === ActionTask.CREATE) && (
               <div className="flex justify-center">

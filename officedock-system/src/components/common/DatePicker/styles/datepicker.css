@@ -40,6 +40,13 @@
   margin-left: 0rem;
 }
 
+.time-schedule .react-datepicker {
+  border: none !important;
+  scale: 0.81;
+  margin-top: -3.8rem;
+  margin-right: 3rem;
+}
+
 .react-datepicker-popper {
   top: 55px !important;
   left: 50% !important;

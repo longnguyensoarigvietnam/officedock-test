@@ -8,8 +8,8 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 
 import Input from '@components/common/Input';
 import Button from '@components/common/Button';
-import ButtonSSO from '@components/common/ButtonSSO';
 import Checkbox from '@components/common/Checkbox';
+import ButtonSSO from '@components/common/ButtonSSO';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -44,7 +44,6 @@ const LoginForm = () => {
   } = useForm<LoginFormInputs>({
     mode: 'onSubmit',
   });
-
   // We call login
   const { mutate: loginUser } = useMutation(
     (data: LoginFormInputs) =>

@@ -24,6 +24,7 @@ import {
   TaskRequest,
 } from '@interfaces/task';
 import { TaskContext } from '@providers/TaskProvider';
+import { OptionDropdownType } from '@interfaces/common';
 
 interface PropsDataFixedTask {
   data: ColumnType;
@@ -65,6 +66,7 @@ interface PropsDataFixedTask {
   >;
   creationDataTaskData: CreationDataTask | undefined;
   handleConfirmDrop: (result: DropResult) => void;
+  selectedOptionZoom: OptionDropdownType;
 }
 
 const FixedTaskData = ({
@@ -76,6 +78,7 @@ const FixedTaskData = ({
   orderingRequest,
   columnsKanbanData,
   showFrequentlyTasks,
+  selectedOptionZoom,
   setNumberPagesData,
   setColumnsKanbanData,
   pinItemToTop,
@@ -219,13 +222,13 @@ const FixedTaskData = ({
   return (
     <div
       style={{
-        width: `${(columnWidth / 247) * 231}px`,
+        width: `${(columnWidth / 247) * 247}px`,
       }}>
       {column && (
         <DragDropContext onDragEnd={onDragEnd}>
           <div
             style={{
-              minWidth: `${(columnWidth / 247) * 231}px`,
+              minWidth: `${(columnWidth / 247) * 247}px`,
             }}>
             <Column
               columnId={`${column?.id}`}
@@ -250,6 +253,7 @@ const FixedTaskData = ({
               setNumberPagesData={setNumberPagesData}
               pinItemToTop={pinItemToTop}
               creationDataTaskData={creationDataTaskData}
+              selectedOptionZoom={selectedOptionZoom}
             />
           </div>
         </DragDropContext>

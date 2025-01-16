@@ -605,7 +605,7 @@
   border: none;
 }
 .schedule-custom .fc .fc-scrollgrid-section-sticky > * {
-  background-color: #ecf0f2 !important;
+  background-color: #EBF1F7 !important;
   z-index: 2;
 }
 .schedule-custom .fc-theme-standard th {

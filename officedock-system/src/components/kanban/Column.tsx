@@ -11,11 +11,17 @@ import {
 } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useSession } from 'next-auth/react';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import Item from './Item';
 import ImageRound from '@components/common/ImageRound';
 import Spinner from '@components/common/Spinner';
-import { KanbanType, PermissionsSystem } from '@constants/enums';
+import {
+  KanbanType,
+  PermissionsSystem,
+  StatusValueTask,
+} from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import {
@@ -31,6 +37,7 @@ import api from '@base/api';
 import { encodeFormatDateISO } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import { TaskContext } from '@providers/TaskProvider';
+import { OptionDropdownType } from '@interfaces/common';
 interface ColumnProps {
   columnId: string;
   title: string;
@@ -38,6 +45,7 @@ interface ColumnProps {
   index: number;
   userId: string;
   searchValue: string;
+  selectedOptionZoom: OptionDropdownType;
   tagSelected: string | number;
   hasNext: boolean | undefined;
   totalCount: number;
@@ -87,6 +95,7 @@ const Column = ({
   pinItemToTop,
   addTask,
   editTask,
+  selectedOptionZoom,
   setColumnsKanbanData,
   handleActionEditTask,
   handleConfirmCopyTask,
@@ -94,6 +103,7 @@ const Column = ({
   setNumberPagesData,
 }: ColumnProps) => {
   const { data: session } = useSession();
+  const isMyRoutine = columnId === `${StatusValueTask.MY_ROUTINE}`;
 
   const { columnWidth } = useContext(TaskContext);
 
@@ -108,6 +118,32 @@ const Column = ({
     threshold: 0.2,
   });
   const [initialLoad, setInitialLoad] = useState<boolean>(false);
+
+  let statusStyle = '';
+
+  // TODO: Because the number of states can change.
+  // So, determining the color code from the enum is unreasonable.
+  // This is a temporary solution as there is no defined color code, this will be changed and updated
+  switch (columnId && parseInt(columnId)) {
+    case StatusValueTask.NOT_STARTED:
+      statusStyle = '!bg-[#A3EBF0]';
+      break;
+    case StatusValueTask.IN_PROGRESS:
+      statusStyle = '!bg-[#92E9AF]';
+      break;
+    case StatusValueTask.CONFIRMING:
+      statusStyle = '!bg-[#FCCF79]';
+      break;
+    case StatusValueTask.COMPLETED:
+      statusStyle = '!bg-[#F58383]';
+      break;
+    case StatusValueTask.MY_ROUTINE:
+      statusStyle = '!bg-[#EBF1F7]';
+      break;
+    default:
+      break;
+  }
+
   // Handle get list and more data task
   const handleGetDataTaskMore = async (pageNumber: number) => {
     setInitialLoad(true);
@@ -255,19 +291,48 @@ const Column = ({
     pinItemToTop(id);
   };
 
+  let paddingRight;
+  switch (selectedOptionZoom.value) {
+    case 25:
+    case 50:
+      paddingRight = `${(columnWidth / 247) * 17}px`;
+      break;
+    case 75:
+      paddingRight = `${(columnWidth / 247) * 19}px`;
+      break;
+    case 90:
+      paddingRight = `${(columnWidth / 247) * 20}px`;
+      break;
+    case 100:
+      paddingRight = `${(columnWidth / 247) * 22}px`;
+      break;
+    default:
+      paddingRight = `${(columnWidth / 247) * 17}px`;
+  }
+
   return (
-    <div ref={columnRef} className="h-full">
+    <div ref={columnRef} className={`h-full ${isMyRoutine && 'mt-1'} `}>
       <div
         style={{
           height: `${(columnWidth / 247) * 32}px`,
+          paddingLeft: isMyRoutine
+            ? `${(columnWidth / 247) * 14}px`
+            : `${(columnWidth / 247) * 6}px`,
+          paddingRight: isMyRoutine
+            ? `${(columnWidth / 247) * 14}px`
+            : `${(columnWidth / 247) * 16}px`,
         }}
-        className="flex justify-between ">
+        className={`flex justify-between ${isMyRoutine && 'bg-[#DAE2EB] rounded-tl-lg rounded-tr-lg'} `}>
         <div
           style={{
             fontSize: `${(columnWidth / 247) * 14}px`,
             gap: `${(columnWidth / 247) * 8}px`,
           }}
           className="flex items-center font-medium ">
+          {!isMyRoutine && (
+            <span
+              className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></span>
+          )}
           <span>{title}</span>
           <span className="text-[#77858F]">{count}</span>
         </div>
@@ -277,22 +342,50 @@ const Column = ({
               session?.user.permissions,
               PermissionsSystem.MY_TASK_ADD,
             ) && (
-              <div
-                style={{
-                  padding: `${(columnWidth / 247) * 6}px`,
-                }}
-                className={`rounded-full  cursor-pointer w-fit bg-gray-200`}
-                onClick={() => addTask(columnId)}>
-                <ImageRound
-                  src={`/icons/add.svg`}
-                  name="Add"
+              <Tippy
+                content="タスクを新規作成"
+                arrow={false}
+                delay={1000}
+                placement="top"
+                offset={[0, 5]}>
+                <div
                   style={{
-                    width: `${(columnWidth / 247) * 12}px`,
-                    height: `${(columnWidth / 247) * 12}px`,
+                    padding: `${(columnWidth / 247) * 6}px`,
                   }}
-                />
-              </div>
+                  className={`rounded-full  cursor-pointer w-fit bg-gray-200`}
+                  onClick={() => addTask(columnId)}>
+                  <ImageRound
+                    src={`/icons/add.svg`}
+                    name="Add"
+                    style={{
+                      width: `${(columnWidth / 247) * 12}px`,
+                      height: `${(columnWidth / 247) * 12}px`,
+                    }}
+                  />
+                </div>
+              </Tippy>
             )}
+          <Tippy
+            content="タブを縮小"
+            arrow={false}
+            delay={1000}
+            placement="top"
+            offset={[0, 5]}>
+            <div
+              style={{
+                padding: `${(columnWidth / 247) * 5}px`,
+              }}>
+              <ImageRound
+                src={`/icons/extend-column.svg`}
+                className=""
+                name="Add"
+                style={{
+                  width: `${(columnWidth / 247) * 8}px`,
+                  height: `${(columnWidth / 247) * 12}px`,
+                }}
+              />
+            </div>
+          </Tippy>
         </div>
       </div>
       <Droppable
@@ -304,15 +397,22 @@ const Column = ({
             ref={provided.innerRef}
             {...provided.droppableProps}
             style={{
-              paddingLeft: `${(columnWidth / 247) * 8}px`,
-              marginTop: `${(columnWidth / 247) * 14}px`,
+              paddingLeft: isMyRoutine
+                ? `${(columnWidth / 247) * 14}px`
+                : `${(columnWidth / 247) * 8}px`,
+              paddingTop: `${(columnWidth / 247) * 14}px`,
+              marginRight: isMyRoutine ? `-${(columnWidth / 247) * 16}px` : 0,
+              paddingRight: isMyRoutine ? paddingRight : '10px',
+              boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 #f8fafc`,
               minHeight: showFrequentlyTasks
                 ? 'calc(100vh - 350px)'
-                : 'calc(100vh - 260px)',
+                : 'calc(100vh - 240px)',
             }}
-            className={`flex-grow overflow-y-auto  rounded-md overflow-x-hidden scrollbar-gutter-stable ${
-              snapshot.isDraggingOver ? 'bg-gray-200' : ''
-            }`}>
+            className={`flex-grow overflow-y-auto
+                ${isMyRoutine && 'bg-[#EBF1F7] '}
+                 overflow-x-hidden scrollbar-gutter-stable ${
+                   snapshot.isDraggingOver ? 'bg-gray-200' : ''
+                 }`}>
             <div
               className={`flex flex-col ${
                 showFrequentlyTasks === true

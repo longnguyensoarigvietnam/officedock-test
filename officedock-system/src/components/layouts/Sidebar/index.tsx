@@ -10,6 +10,8 @@ import {
 } from '@headlessui/react';
 import { useSession } from 'next-auth/react';
 import lodash from 'lodash';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import Tabs from '@components/common/Tabs';
@@ -123,7 +125,9 @@ const Sidebar = ({ className }: Props) => {
     <aside
       className={`overflow-x-hidden ${hour} overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px]' : 'w-20 min-w-[70px]'} flex flex-col ${className}`}
       style={{
-        background: today && showBackgroundColorByTime(Number(hour.substring(0, hour.length - 1))),
+        background:
+          today &&
+          showBackgroundColorByTime(Number(hour.substring(0, hour.length - 1))),
       }}>
       <Tabs
         tabs={expanded ? tabSidebar : [tabSidebar[0]]}
@@ -140,100 +144,111 @@ const Sidebar = ({ className }: Props) => {
                   {menuItems
                     .filter((item) => item.companyMenu == false)
                     .map((item) => (
-                      <li key={item.name} className={`text-sm relative`}>
-                        {!item.children ? (
-                          <div
-                            className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
-                            onClick={() => {
-                              if (
-                                item.href === pageRouters.TASKS_MANAGEMENT.href
-                              ) {
-                                setTagSelected('');
-                                setMemberSelected('');
-                                router.push(`${item.href}?view=day`);
-                              } else {
+                      <Tippy
+                        content={`${item.name}`}
+                        disabled={expanded}
+                        arrow={false}
+                        delay={1000}
+                        key={item.name}
+                        placement="right"
+                        offset={[0, 0]}>
+                        <li key={item.name} className={`text-sm relative`}>
+                          {!item.children ? (
+                            <div
+                              className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
+                              onClick={() => {
                                 if (
-                                  pathname ===
-                                    pageRouters.CHAT_MANAGEMENT.href &&
-                                  item.href === pageRouters.CHAT_MANAGEMENT.href
+                                  item.href ===
+                                  pageRouters.TASKS_MANAGEMENT.href
                                 ) {
-                                  return;
+                                  setTagSelected('');
+                                  setMemberSelected('');
+                                  router.push(`${item.href}?view=day`);
+                                } else {
+                                  if (
+                                    pathname ===
+                                      pageRouters.CHAT_MANAGEMENT.href &&
+                                    item.href ===
+                                      pageRouters.CHAT_MANAGEMENT.href
+                                  ) {
+                                    return;
+                                  }
+                                  {
+                                    router.push(item.href);
+                                  }
                                 }
-                                {
-                                  router.push(item.href);
-                                }
-                              }
-                            }}>
-                            {item.iconUrl && (
-                              <ImageRound
-                                className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
-                                src={item.iconUrl(item.current)}
-                                name={`Icon ${item.name} menu`}
-                              />
-                            )}
-                            {!expanded &&
-                              item.iconUrl &&
-                              item.iconUrl(true).includes('chat') &&
-                              totalNotifications > 0 && (
-                                <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                              }}>
+                              {item.iconUrl && (
+                                <ImageRound
+                                  className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
+                                  src={item.iconUrl(item.current)}
+                                  name={`Icon ${item.name} menu`}
+                                />
                               )}
-                            {expanded && (
-                              <>
-                                <p className="opacity-100 text-left font-medium w-fit">
-                                  {item.name}
-                                </p>
-                              </>
-                            )}
-                            {expanded &&
-                              item.hasNotification &&
-                              totalNotifications != undefined &&
-                              totalNotifications > 0 && (
-                                <p className="rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4">
-                                  {totalNotifications}
-                                </p>
-                              )}
-                          </div>
-                        ) : (
-                          <Disclosure as="div" defaultOpen={item.current}>
-                            {({ open }) => (
-                              <>
-                                <DisclosureButton
-                                  className={`flex items-center w-full gap-4 py-4 px-3 hover:bg-gray-50`}>
-                                  {item.iconUrl && (
-                                    <ImageRound
-                                      className="w-4 h-4"
-                                      src={item.iconUrl(item.current)}
-                                      name={`Icon ${item.name} menu`}
-                                    />
-                                  )}
-                                  <p
-                                    className={`flex-1 text-left ${item.current ? 'font-medium text-primary' : ''}`}>
+                              {!expanded &&
+                                item.iconUrl &&
+                                item.iconUrl(true).includes('chat') &&
+                                totalNotifications > 0 && (
+                                  <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                                )}
+                              {expanded && (
+                                <>
+                                  <p className="opacity-100 text-left font-medium w-fit">
                                     {item.name}
                                   </p>
-                                  <ImageRound
-                                    className={`w-4 h-4 ${open ? 'rotate-180' : ''}`}
-                                    src={`/icons/arrow-down${item.current ? '-active' : ''}.svg`}
-                                    name="Arrow menu icon"
-                                  />
-                                </DisclosureButton>
-                                <DisclosurePanel
-                                  as="ul"
-                                  className="list-none mt-1 px-2 last:pb-2">
-                                  {item.children?.map((subItem) => (
-                                    <li key={subItem.name}>
-                                      <Link
-                                        href={subItem.href}
-                                        className={`block py-2 pr-2 pl-9 ${subItem.current ? 'font-medium text-primary' : 'hover:bg-gray-50'}`}>
-                                        {subItem.name}
-                                      </Link>
-                                    </li>
-                                  ))}
-                                </DisclosurePanel>
-                              </>
-                            )}
-                          </Disclosure>
-                        )}
-                      </li>
+                                </>
+                              )}
+                              {expanded &&
+                                item.hasNotification &&
+                                totalNotifications != undefined &&
+                                totalNotifications > 0 && (
+                                  <p className="rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4">
+                                    {totalNotifications}
+                                  </p>
+                                )}
+                            </div>
+                          ) : (
+                            <Disclosure as="div" defaultOpen={item.current}>
+                              {({ open }) => (
+                                <>
+                                  <DisclosureButton
+                                    className={`flex items-center w-full gap-4 py-4 px-3 hover:bg-gray-50`}>
+                                    {item.iconUrl && (
+                                      <ImageRound
+                                        className="w-4 h-4"
+                                        src={item.iconUrl(item.current)}
+                                        name={`Icon ${item.name} menu`}
+                                      />
+                                    )}
+                                    <p
+                                      className={`flex-1 text-left ${item.current ? 'font-medium text-primary' : ''}`}>
+                                      {item.name}
+                                    </p>
+                                    <ImageRound
+                                      className={`w-4 h-4 ${open ? 'rotate-180' : ''}`}
+                                      src={`/icons/arrow-down${item.current ? '-active' : ''}.svg`}
+                                      name="Arrow menu icon"
+                                    />
+                                  </DisclosureButton>
+                                  <DisclosurePanel
+                                    as="ul"
+                                    className="list-none mt-1 px-2 last:pb-2">
+                                    {item.children?.map((subItem) => (
+                                      <li key={subItem.name}>
+                                        <Link
+                                          href={subItem.href}
+                                          className={`block py-2 pr-2 pl-9 ${subItem.current ? 'font-medium text-primary' : 'hover:bg-gray-50'}`}>
+                                          {subItem.name}
+                                        </Link>
+                                      </li>
+                                    ))}
+                                  </DisclosurePanel>
+                                </>
+                              )}
+                            </Disclosure>
+                          )}
+                        </li>
+                      </Tippy>
                     ))}
                 </ul>
               </li>
@@ -278,15 +293,22 @@ const Sidebar = ({ className }: Props) => {
           </nav>
         </TabPanel>
         <TabPanel key={1}></TabPanel>
-        <div
-          className="shadow-lg absolute bottom-5 right-5 bg-white rounded-full w-[35px] h-[35px] flex items-center justify-center p-[8px] hover:cursor-pointer"
-          onClick={() => setExpanded((prevExpanded) => !prevExpanded)}>
-          <ImageRound
-            src="/icons/extend-calendar.svg"
-            name="Extend calendar"
-            className={`!w-3.5 !h-3.5 min-w-2 ${expanded ? 'rotate-180' : ''}`}
-          />
-        </div>
+        <Tippy
+          content={expanded ? 'メニューバーを縮小' : 'メニューバーを拡大'}
+          arrow={false}
+          delay={1000}
+          placement="right"
+          offset={[0, 19]}>
+          <div
+            className="shadow-lg absolute bottom-5 right-5 bg-white rounded-full w-[35px] h-[35px] flex items-center justify-center p-[8px] hover:cursor-pointer"
+            onClick={() => setExpanded((prevExpanded) => !prevExpanded)}>
+            <ImageRound
+              src="/icons/extend-calendar.svg"
+              name="Extend calendar"
+              className={`!w-3.5 !h-3.5 min-w-2 ${expanded ? 'rotate-180' : ''}`}
+            />
+          </div>
+        </Tippy>
       </Tabs>
     </aside>
   );

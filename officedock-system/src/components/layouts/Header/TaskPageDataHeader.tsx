@@ -2,6 +2,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { memo, useContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useMutation, useQueryClient } from 'react-query';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
@@ -436,27 +438,60 @@ const TaskPageDataHeader = () => {
                   }}
                 />
               </div>
-              <ImageRound
-                src={`/icons/${statusTaskSelected?.isStart && taskSelected.value ? 'pause' : 'play'}.svg`}
-                name="Start task day"
-                className={`!w-9 !h-9 hover:cursor-pointer`}
-                onClick={() => {
-                  const selectedTask = taskSelected.value;
+              <Tippy
+                content={
+                  statusTaskSelected?.isStart && taskSelected.value
+                    ? '計測停止'
+                    : '計測開始'
+                }
+                arrow={false}
+                delay={1000}
+                placement="right"
+                offset={[
+                  0,
+                  statusTaskSelected?.isStart && taskSelected.value ? 27 : 5,
+                ]}>
+                <div
+                  className={`flex justify-center items-center ${statusTaskSelected?.isStart && taskSelected.value && 'mx-5'}`}>
+                  <div
+                    className={`animated-border-box-glow ${
+                      statusTaskSelected?.isStart && taskSelected.value
+                        ? 'animate'
+                        : ''
+                    }`}></div>
+                  <div
+                    className={`animated-border-box ${
+                      statusTaskSelected?.isStart && taskSelected.value
+                        ? 'animate'
+                        : ''
+                    }`}>
+                    <div className="mt-[4px] ml-[4px]">
+                      <ImageRound
+                        src={`/icons/${statusTaskSelected?.isStart && taskSelected.value ? 'pause' : 'play'}.svg`}
+                        name="Start task day"
+                        className={`!w-9 !h-9 hover:cursor-pointer`}
+                        onClick={() => {
+                          const selectedTask = taskSelected.value;
 
-                  if (!selectedTask) return;
+                          if (!selectedTask) return;
 
-                  setTaskSelectedToStart({
-                    title: taskSelected.label,
-                    id: taskSelected.value,
-                    type: taskSelected.type as string,
-                  });
+                          setTaskSelectedToStart({
+                            title: taskSelected.label,
+                            id: taskSelected.value,
+                            type: taskSelected.type as string,
+                          });
 
-                  checkTask({
-                    id: `${selectedTask}`.replace('event', ''),
-                    type: `${taskSelected.type}`,
-                  });
-                }}
-              />
+                          checkTask({
+                            id: `${selectedTask}`.replace('event', ''),
+                            type: `${taskSelected.type}`,
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Tippy>
+
               {taskSelected.value && parseInt(String(taskSelected.value)) ? (
                 <ShowTimeCounter statusTaskSelected={statusTaskSelected} />
               ) : (
