@@ -19,6 +19,8 @@ import { useMutation, useQueryClient } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
@@ -28,6 +30,7 @@ import TimeSchedule from '@components/layouts/TimeSchedule';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import Dropdown from '@components/common/Dropdown';
 import ActionsTemplateModal from '@components/modals/ActionsTemplateModal';
+import CardListView from '@components/kanban/CardListView';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useTaskBoardList from '@hooks/useTaskBoardList';
@@ -201,6 +204,8 @@ const KanbanBoardTask = () => {
     useState(false);
   const [openConfirmDeleteTemplateModal, setOpenConfirmDeleteTemplateModal] =
     useState(false);
+
+  const [isListView, setIsListView] = useState<boolean>(false);
 
   // Data kanban board
   const [dataItemDrop, setDataItemDrop] = useState<DropResult>();
@@ -1354,7 +1359,17 @@ const KanbanBoardTask = () => {
           setColumnsKanbanData(newColumns);
           return;
         } else {
-          // Handle item dragging between columns
+          if (
+            source.droppableId == String(StatusValueTask.MY_ROUTINE) &&
+            destination.droppableId != String(StatusValueTask.MY_ROUTINE)
+          )
+            return;
+
+          if (
+            source.droppableId != String(StatusValueTask.MY_ROUTINE) &&
+            destination.droppableId == String(StatusValueTask.MY_ROUTINE)
+          )
+            return;
           const sourceColumn = columnsKanbanData[source.droppableId];
           const destColumn = columnsKanbanData[destination.droppableId];
           let sourceItems = Array.from(sourceColumn.items);
@@ -2552,14 +2567,14 @@ const KanbanBoardTask = () => {
             style={{
               width: expanded
                 ? isExtendCalendar
-                  ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 280}px)`
+                  ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 250}px)`
                   : `calc(${Math.max(viewportWidth, 1280)}px - 700px)`
                 : isExtendCalendar
-                  ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 180}px)`
+                  ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 120}px)`
                   : `100%`,
               maxWidth: ` calc(${Math.max(viewportWidth, 1280)}px - 500px) `,
             }}
-            className={`h-full overflow-x-auto flex flex-col gap-5 py-7 pr-7 pl-1  overflow-y-hidden`}>
+            className={`h-full overflow-x-auto flex flex-col gap-5 py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}>
             <FrequentlyTask
               setShowModalTask={() => {
                 handleSetParam({
@@ -2672,30 +2687,82 @@ const KanbanBoardTask = () => {
                     className="!w-3 !h-[2px]"
                   />
                 </div>
+                <Tippy
+                  content={isListView ? '' : 'タスクをリスト表示'}
+                  arrow={false}
+                  delay={1000}
+                  placement="top"
+                  disabled={isListView}
+                  offset={[3, 0]}>
+                  <div className="hover:cursor-pointer fixed top-30 right-5 z-20">
+                    <ImageRound
+                      src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
+                      name="List view icon"
+                      className="w-12 h-12 hover:cursor-pointer"
+                      onClick={() => setIsListView((prev) => !prev)}
+                    />
+                  </div>
+                </Tippy>
               </div>
-              <div
-                style={{
-                  gap: `${(columnWidth / 247) * 24}px`,
-                }}
-                className="flex ">
-                {columnsKanbanData &&
-                  !isLoadingDataTask &&
-                  columnsKanbanData[StatusValueTask.MY_ROUTINE] && (
-                    <FixedTaskData
-                      data={
-                        columnsKanbanData &&
-                        columnsKanbanData[StatusValueTask.MY_ROUTINE]
-                      }
+              {!isListView ? (
+                <div
+                  style={{
+                    gap: `${(columnWidth / 247) * 24}px`,
+                  }}
+                  className="flex ">
+                  {columnsKanbanData &&
+                    !isLoadingDataTask &&
+                    columnsKanbanData[StatusValueTask.MY_ROUTINE] && (
+                      <FixedTaskData
+                        data={
+                          columnsKanbanData &&
+                          columnsKanbanData[StatusValueTask.MY_ROUTINE]
+                        }
+                        showFrequentlyTasks={showFrequentlyTasks}
+                        numberPagesData={numberPagesData}
+                        searchValue={searchValue}
+                        orderTaskSave={orderTaskSave}
+                        tagSelected={tagSelected}
+                        columnsKanbanData={columnsKanbanData}
+                        orderingRequest={orderingRequest}
+                        setNumberPagesData={setNumberPagesData}
+                        setColumnsKanbanData={setColumnsKanbanData}
+                        pinItemToTop={pinItemToTop}
+                        addTask={(id: string) => {
+                          setColumnId(id);
+                          setShowEditTaskModal(true);
+                          handleSetParam({
+                            id: null,
+                            action: ActionTask.CREATE,
+                          });
+                        }}
+                        handleConfirmDrop={(result: DropResult) => {
+                          setDataItemDrop(result);
+                          isDragEndExecuteRef.current = true;
+                        }}
+                        editTaskInline={editTaskInline}
+                        handleActionEditTask={handleActionEditTask}
+                        handleConfirmCopyTask={handleActionCopyTask}
+                        handleUpdateItemInline={handleUpdateItemInline}
+                        creationDataTaskData={creationDataTaskData}
+                        selectedOptionZoom={selectedOptionZoom}
+                      />
+                    )}
+                  <div className="flex-grow">
+                    <BoardKanban
+                      columnsKanbanData={columnsKanbanData}
+                      isLoadingDataTask={isLoadingDataTask}
                       showFrequentlyTasks={showFrequentlyTasks}
                       numberPagesData={numberPagesData}
-                      searchValue={searchValue}
                       orderTaskSave={orderTaskSave}
-                      tagSelected={tagSelected}
-                      columnsKanbanData={columnsKanbanData}
-                      orderingRequest={orderingRequest}
-                      setNumberPagesData={setNumberPagesData}
+                      creationDataTaskData={creationDataTaskData}
                       setColumnsKanbanData={setColumnsKanbanData}
+                      setNumberPagesData={setNumberPagesData}
+                      editTaskInline={editTaskInline}
                       pinItemToTop={pinItemToTop}
+                      handleActionEditTask={handleActionEditTask}
+                      handleConfirmCopyTask={handleActionCopyTask}
+                      handleUpdateItemInline={handleUpdateItemInline}
                       addTask={(id: string) => {
                         setColumnId(id);
                         setShowEditTaskModal(true);
@@ -2704,45 +2771,33 @@ const KanbanBoardTask = () => {
                           action: ActionTask.CREATE,
                         });
                       }}
-                      handleConfirmDrop={(result: DropResult) => {
-                        setDataItemDrop(result);
-                        isDragEndExecuteRef.current = true;
-                      }}
-                      editTaskInline={editTaskInline}
-                      handleActionEditTask={handleActionEditTask}
-                      handleConfirmCopyTask={handleActionCopyTask}
-                      handleUpdateItemInline={handleUpdateItemInline}
-                      creationDataTaskData={creationDataTaskData}
                       selectedOptionZoom={selectedOptionZoom}
                     />
-                  )}
-                <div className="flex-grow">
-                  <BoardKanban
-                    columnsKanbanData={columnsKanbanData}
-                    isLoadingDataTask={isLoadingDataTask}
-                    showFrequentlyTasks={showFrequentlyTasks}
-                    numberPagesData={numberPagesData}
-                    orderTaskSave={orderTaskSave}
-                    creationDataTaskData={creationDataTaskData}
-                    setColumnsKanbanData={setColumnsKanbanData}
-                    setNumberPagesData={setNumberPagesData}
-                    editTaskInline={editTaskInline}
-                    pinItemToTop={pinItemToTop}
-                    handleActionEditTask={handleActionEditTask}
-                    handleConfirmCopyTask={handleActionCopyTask}
-                    handleUpdateItemInline={handleUpdateItemInline}
-                    addTask={(id: string) => {
-                      setColumnId(id);
-                      setShowEditTaskModal(true);
-                      handleSetParam({
-                        id: null,
-                        action: ActionTask.CREATE,
-                      });
-                    }}
-                    selectedOptionZoom={selectedOptionZoom}
-                  />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <CardListView
+                  columnsKanbanData={columnsKanbanData}
+                  setColumnsKanbanData={setColumnsKanbanData}
+                  setNumberPagesData={setNumberPagesData}
+                  orderTaskSave={orderTaskSave}
+                  numberPagesData={numberPagesData}
+                  handleActionEditTask={handleActionEditTask}
+                  handleConfirmCopyTask={handleActionCopyTask}
+                  handleUpdateItemInline={handleUpdateItemInline}
+                  creationDataTaskData={creationDataTaskData}
+                  pinItemToTop={pinItemToTop}
+                  editTask={editTaskInline}
+                  addTask={(id: string) => {
+                    setColumnId(id);
+                    setShowEditTaskModal(true);
+                    handleSetParam({
+                      id: null,
+                      action: ActionTask.CREATE,
+                    });
+                  }}
+                />
+              )}
             </div>
 
             {showEditTaskModal && (
@@ -2830,41 +2885,43 @@ const KanbanBoardTask = () => {
           </div>
         </DragDropContext>
       </div>
-      <div className="fixed flex items-center gap-2 bottom-3 right-24 z-20 ">
-        <div className="w-[80px] !h-[30px]">
-          <Dropdown
-            labelOptionClass="!ml-0 !pr-0 !pl-0 flex justify-center w-full "
-            className="text-sm h-8 !py-0 !pl-0 !pr-0 !px-[14px] !rounded-lg"
-            classActive="!pr-[10px] !ml-0 w-full text-center left-[52px]"
-            classNameOption="top-[-150px] !px-0 text-sm"
-            selectedOption={selectedOptionZoom}
-            options={[
-              {
-                label: '100%',
-                value: 100,
-              },
-              {
-                label: '90%',
-                value: 90,
-              },
-              {
-                label: '75%',
-                value: 75,
-              },
-              {
-                label: '50%',
-                value: 50,
-              },
-            ]}
-            onChange={(selectedOption) => {
-              setSelectedOptionZoom(selectedOption);
-              setColumnWidth(
-                calculateWidth(247, selectedOption.value as number),
-              );
-            }}
-          />
+      {!isListView && (
+        <div className="fixed flex items-center gap-2 bottom-3 right-24 z-20 ">
+          <div className="w-[80px] !h-[30px]">
+            <Dropdown
+              labelOptionClass="!ml-0 !pr-0 !pl-0 flex justify-center w-full "
+              className="text-sm h-8 !py-0 !pl-0 !pr-0 !px-[14px] !rounded-lg"
+              classActive="!pr-[10px] !ml-0 w-full text-center left-[52px]"
+              classNameOption="top-[-150px] !px-0 text-sm"
+              selectedOption={selectedOptionZoom}
+              options={[
+                {
+                  label: '100%',
+                  value: 100,
+                },
+                {
+                  label: '90%',
+                  value: 90,
+                },
+                {
+                  label: '75%',
+                  value: 75,
+                },
+                {
+                  label: '50%',
+                  value: 50,
+                },
+              ]}
+              onChange={(selectedOption) => {
+                setSelectedOptionZoom(selectedOption);
+                setColumnWidth(
+                  calculateWidth(247, selectedOption.value as number),
+                );
+              }}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

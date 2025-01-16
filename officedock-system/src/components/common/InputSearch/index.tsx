@@ -16,7 +16,7 @@ const InputSearch = ({
       <ImageRound
         src="/icons/search.svg"
         name="Search input icon"
-        className="absolute w-4 h-4 z-10 ml-3 top-3.5"
+        className="absolute w-4 h-4 z-10 ml-3 top-1/2 -translate-y-1/2"
       />
       <Input
         className={`pl-9 focus:!shadow-none ${inputClassName}`}
