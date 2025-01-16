@@ -166,3 +166,54 @@ html *::-webkit-scrollbar-track {
   background-color: #5B6770 !important;
   border-radius: 6px !important;
 }
+
+.animated-border-box-glow.animate,
+.animated-border-box.animate {
+  max-height: 44px;
+  max-width: 44px;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  overflow: hidden;
+  z-index: 0;
+  border-radius: 50%;
+}
+
+.animated-border-box.animate:before,
+.animated-border-box-glow.animate:before {
+  content: "";
+  z-index: -2;
+  text-align: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(0deg);
+  position: absolute;
+  width: 99999px;
+  height: 99999px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-image: conic-gradient(#0068b6, #0088c3, #0088c300);
+}
+
+.animated-border-box.animate:before,
+.animated-border-box-glow.animate:before {
+  animation: rotate 60s linear infinite;
+}
+
+.animated-border-box.animate:after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 5px;
+  top: 5px;
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  background: #fff;
+  border-radius: 50%;
+}
+
+@keyframes rotate {
+  100% {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}

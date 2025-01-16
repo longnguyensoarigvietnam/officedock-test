@@ -2422,7 +2422,7 @@ const TimeSchedule = memo(
             />
           </div>
           <Tippy
-            content="スケジュールを週表示"
+            content={isExtendCalendar ? 'スケジュールを日表示' : 'スケジュールを週表示'}
             arrow={false}
             delay={1000}
             placement="top"
