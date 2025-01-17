@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  overflow: auto !important;
-}
 body {
   height: 100vh;
 }

@@ -2286,18 +2286,36 @@ const TimeSchedule = memo(
                 ) : (
                   <>
                     <div className="flex items-center gap-3">
-                      <ImageRound
-                        src="/icons/chevron-left-calendar.svg"
-                        name="Previous day"
-                        className="!w-[6px] !h-3  hover:cursor-pointer"
-                        onClick={handlePreviousDay}
-                      />
-                      <ImageRound
-                        src="/icons/chevron-left-calendar.svg"
-                        name="Next day"
-                        className="!w-[6px] !h-3 rotate-180 hover:cursor-pointer"
-                        onClick={handleNextDay}
-                      />
+                      <Tippy
+                        content="前日"
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 5]}>
+                        <div>
+                          <ImageRound
+                            src="/icons/chevron-left-calendar.svg"
+                            name="Previous day"
+                            className="!w-[6px] !h-3  hover:cursor-pointer"
+                            onClick={handlePreviousDay}
+                          />
+                        </div>
+                      </Tippy>
+                      <Tippy
+                        content="翌日"
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 5]}>
+                        <div>
+                          <ImageRound
+                            src="/icons/chevron-left-calendar.svg"
+                            name="Next day"
+                            className="!w-[6px] !h-3 rotate-180 hover:cursor-pointer"
+                            onClick={handleNextDay}
+                          />
+                        </div>
+                      </Tippy>
                     </div>
                     <Heading as="h4" className="text-sm font-medium">
                       {isExtendCalendar
@@ -2422,7 +2440,9 @@ const TimeSchedule = memo(
             />
           </div>
           <Tippy
-            content={isExtendCalendar ? 'スケジュールを日表示' : 'スケジュールを週表示'}
+            content={
+              isExtendCalendar ? 'スケジュールを日表示' : 'スケジュールを週表示'
+            }
             arrow={false}
             delay={1000}
             placement="top"
