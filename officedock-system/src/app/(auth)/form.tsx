@@ -9,7 +9,6 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import Input from '@components/common/Input';
 import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
-import ButtonSSO from '@components/common/ButtonSSO';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -152,27 +151,11 @@ const LoginForm = () => {
         />
         <Button type="submit">ログイン</Button>
       </form>
-      <div className="flex gap-4 items-center">
-        <div className="flex-grow h-[1px] bg-gray-200"></div>
-        <p className="text-sm">または</p>
-        <div className="flex-grow h-[1px] bg-gray-200"></div>
-      </div>
-      <div className="flex flex-col w-full gap-2 -mt-2">
-        <ButtonSSO provider="google" text="Googleでログイン" />
-      </div>
       <div className="flex flex-col justify-center items-center gap-2">
         <div className="flex items-center text-gray-500">
           <p>パスワードを忘れた方は</p>
           <Link
             href={pageRouters.FORGOT_PASSWORD.href}
-            className="text-primary underline">
-            こちら
-          </Link>
-        </div>
-        <div className="flex items-center text-gray-500">
-          <p>初めて利用される法人の場合は、新規登録は</p>
-          <Link
-            href={pageRouters.REGISTER.href}
             className="text-primary underline">
             こちら
           </Link>
