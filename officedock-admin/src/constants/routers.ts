@@ -31,6 +31,10 @@ export const pageRouters = {
     name: '会社情報編集',
     href: (id: string) => `/companies/${id}/edit`,
   },
+  COMPANY_CREATE: {
+    name: '会社新規作成',
+    href: '/companies/create',
+  },
   USERS_MANAGEMENT: {
     name: 'ユーザー管理',
     href: '/users',

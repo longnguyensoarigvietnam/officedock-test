@@ -36,6 +36,8 @@ export const TOKEN_INVALID = 'トークンは無効です。';
 export const FIELD_REQUIRED = 'この項目は必須です。';
 export const END_DATE_MUST_BE_GREATER_THAN_START_DATE =
   '終了日は開始日より後にしてください。';
+export const ERROR_EMAIL_AVAILABLE_MESSAGE =
+  'このメールアドレスは既に存在しています。';
 
 // Toast message
 export const SUCCESS_TITLE_MESSAGE = '成功';

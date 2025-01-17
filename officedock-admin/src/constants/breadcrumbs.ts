@@ -16,6 +16,10 @@ export const breadcrumbsData = {
     current: false,
     removeBefore: true,
   },
+  [pageRouters.COMPANY_CREATE.href]: {
+    ...pageRouters.COMPANY_CREATE,
+    current: false,
+  },
   [pageRouters.USERS_MANAGEMENT.href]: {
     ...pageRouters.USERS_MANAGEMENT,
     current: false,
