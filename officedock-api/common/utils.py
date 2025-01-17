@@ -314,7 +314,7 @@ def create_categories_by_model(model, categories):
     """Handle create or update model categories"""
     if len(categories) > 3:
         raise ValidationError({"messages": ERROR_MESSAGES["cannot_create"]})
-    model.categories.clear()
+    model.categories.all().delete()
     large_cat = None
     medium_cat = None
     small_cat = None

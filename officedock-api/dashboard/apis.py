@@ -109,15 +109,18 @@ class DashboardViewSet(BaseAPIViewSet):
                     else CalendarTypes.SCHEDULE.value
                 )
             if any(
-                    item
-                    for item in data
-                    if item["id"] == model.id and item["type"] == model_type
+                item
+                for item in data
+                if item["id"] == model.id and item["type"] == model_type
             ):
                 continue
 
-            is_running = model.task_durations.filter(paused_at__isnull=True).exists()
-            durations = model.task_durations.filter(started_at__gte=start_date,
-                                                    paused_at__lte=end_date).all()
+            is_running = model.task_durations.filter(
+                paused_at__isnull=True
+            ).exists()
+            durations = model.task_durations.filter(
+                started_at__gte=start_date, paused_at__lte=end_date
+            ).all()
 
             data.append(
                 {
@@ -125,13 +128,15 @@ class DashboardViewSet(BaseAPIViewSet):
                     "title": model.title,
                     "type": model_type,
                     "is_running": is_running,
-                    "total_duration": self._get_total_duration(timedelta(0), durations)
+                    "total_duration": self._get_total_duration(
+                        timedelta(0), durations
+                    ),
                 }
             )
         return data
 
     def _get_total_duration(self, total_duration, durations):
-        """ Handle get total duration """
+        """Handle get total duration"""
         # total_duration = time_to_timedelta(total_duration)
         for duration in durations:
             if duration.paused_at is not None:
@@ -772,7 +777,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if categories is not None:
             create_categories_by_model(model, categories)
         elif categories == []:
-            model.categories.clear()
+            model.categories.all().delete()
 
         if isinstance(model, Task) and is_important is not None:
             model.is_important = is_important
@@ -830,7 +835,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if categories is not None:
             create_categories_by_model(model, categories)
         elif categories == []:
-            model.categories.clear()
+            model.categories.all().delete()
 
         if isinstance(model, Task) and is_important is not None:
             model.is_important = is_important
