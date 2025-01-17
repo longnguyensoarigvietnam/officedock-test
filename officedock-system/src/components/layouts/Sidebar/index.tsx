@@ -193,7 +193,7 @@ const Sidebar = ({ className }: Props) => {
                                 )}
                               {expanded && (
                                 <>
-                                  <p className="opacity-100 text-left font-medium w-fit">
+                                  <p className={`opacity-100 text-left font-medium w-fit text-white ${item.current && !memberSelected && !tagSelected && '!text-black'}`}>
                                     {item.name}
                                   </p>
                                 </>
