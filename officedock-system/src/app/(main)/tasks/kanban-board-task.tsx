@@ -2607,7 +2607,7 @@ const KanbanBoardTask = () => {
             />
             <div className="w-full h-[1px] bg-gray-200" />
             <div className="flex-grow flex flex-col gap-2">
-              <div className={`flex gap-7 h-4 w-fit min-w-[300px]`}>
+              <div className={`flex items-center gap-7 h-4 w-full min-w-[300px] mb-3`}>
                 <Popover className="relative">
                   {() => (
                     <>
@@ -2694,7 +2694,7 @@ const KanbanBoardTask = () => {
                   placement="top"
                   disabled={isListView}
                   offset={[3, 0]}>
-                  <div className="hover:cursor-pointer fixed top-30 right-5 z-20">
+                  <div className="hover:cursor-pointer !ml-auto">
                     <ImageRound
                       src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
                       name="List view icon"

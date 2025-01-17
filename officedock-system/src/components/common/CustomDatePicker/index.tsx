@@ -4,7 +4,7 @@ import DatePickerUI from 'react-datepicker';
 import type { ReactDatePickerProps } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ja } from 'date-fns/locale';
-import { isSaturday, isSunday } from 'date-fns';
+import { format, isSaturday, isSunday } from 'date-fns';
 import { isHoliday } from 'japanese-holidays';
 
 import ImageRound from '../ImageRound';
@@ -105,8 +105,6 @@ const CustomDatePicker = ({
           setIsOpen(true);
         }}>
         <DatePickerUI
-          showYearDropdown
-          showMonthDropdown
           scrollableYearDropdown
           yearDropdownItemNumber={100}
           ref={datePickerRef}
@@ -120,6 +118,29 @@ const CustomDatePicker = ({
           wrapperClassName="w-full"
           customInput={<CustomInput />}
           dayClassName={dayClassName}
+          renderCustomHeader={({ date, decreaseMonth, increaseMonth }) => {
+            const year = format(date, 'yyyy');
+            const month = format(date, 'M');
+            return (
+              <div className="flex items-center justify-between px-2 w-[60%] mb-2">
+                <ImageRound
+                  className=" w-4 h-4 opacity-70 hover:cursor-pointer"
+                  src="/icons/chevron-left.svg"
+                  name="left"
+                  onClick={decreaseMonth}
+                />
+                <p className="text-[#5B6770] text-[17px] font-medium">
+                  {year}年 {month}月
+                </p>
+                <ImageRound
+                  className=" w-4 h-4 opacity-70 hover:cursor-pointer"
+                  src="/icons/chevron-right.svg"
+                  name="right"
+                  onClick={increaseMonth}
+                />
+              </div>
+            );
+          }}
           {...props}
         />
 
