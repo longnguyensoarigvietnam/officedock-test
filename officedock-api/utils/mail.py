@@ -177,3 +177,21 @@ class MailService:
         """
 
         self.send(subject, message, [recipient])
+
+    def send_admin_create_company_by_email(self, recipient, password, company):
+        """
+        Send an invited company email.
+        """
+
+        # FIXME: Replace email template later
+
+        subject = f"【Office Dock】管理者からOfficeDockの{company.name}に招待されました"
+        message = f"""
+            <p>管理者があなたを{company.name}に招待しました。<p>
+            <p>これはアカウント情報です。<br>
+                メールアドレス: {recipient}<br>
+                パスワード: {password}
+            </p>
+        """
+
+        self.send(subject, message, [recipient])

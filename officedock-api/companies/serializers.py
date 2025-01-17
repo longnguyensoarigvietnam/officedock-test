@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from companies.models import Company, Contract
 from base.messages import ERROR_MESSAGES
+from users.models import User
 
 
 class ContractSerializer(serializers.ModelSerializer):
@@ -31,10 +32,25 @@ class CompanySerializer(serializers.ModelSerializer):
     """
 
     contract = ContractSerializer(required=False)
+    fullname = serializers.CharField(
+        write_only=True, max_length=255, required=False
+    )
+    email = serializers.CharField(
+        write_only=True, max_length=255, required=False
+    )
 
     class Meta:
         model = Company
-        fields = ["id", "name", "contract"]
+        fields = ["id", "name", "contract", "fullname", "email"]
+
+    def validate_email(self, value):
+        """
+        Validate unique email for System site.
+        """
+        User.validate_unique_email(
+            instance=self.instance, email=value, is_admin_site=False
+        )
+        return super().validate(value)
 
     @transaction.atomic
     def update(self, instance, validated_data):
