@@ -4,18 +4,6 @@ export const pageRouters = {
     name: 'ログイン',
     href: '/',
   },
-  REGISTER: {
-    name: '新規登録',
-    href: '/register',
-  },
-  VERIFY_REGISTER: {
-    name: '登録情報を確認',
-    href: '/register/verify',
-  },
-  FILL_INFO_REGISTER: {
-    name: '必要事項の入力',
-    href: '/register/information',
-  },
   FORGOT_PASSWORD: {
     name: 'パスワードの再設定',
     href: '/forgot-password',
@@ -279,9 +267,6 @@ export const apiRouters = {
   LOGIN_GOOGLE: '/auth/login/google/',
   LOGIN_GOOGLE_VERIFY: '/auth/login/google/verify/',
   FORGOT_PASSWORD: '/auth/forgot-password/',
-  REGISTER: '/auth/register/',
-  REGISTER_VERIFY_EMAIL: '/auth/verify-email/',
-  REGISTER_VERIFY_OTP: '/auth/verify-otp/',
   RESET_PASSWORD: '/auth/reset-password/',
   CHANGE_PASSWORD: '/auth/change-password/',
 
