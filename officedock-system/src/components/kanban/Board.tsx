@@ -128,12 +128,6 @@ const BoardKanban = ({
                     isDragDisabled={true}>
                     {(provided, snapshot) => (
                       <div
-                        style={{
-                          width: `${(columnWidth / 247) * 271}px`,
-                          maxWidth: `${(columnWidth / 247) * 271}px`,
-                          paddingLeft: `${(columnWidth / 247) * 8}px`,
-                          paddingRight: `${(columnWidth / 247) * 8}px`,
-                        }}
                         className={` overflow-hidden flex flex-col flex-grow ${snapshot.isDragging && 'opacity-25'}`}>
                         <Column
                           columnId={`${column.id}`}

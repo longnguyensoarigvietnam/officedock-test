@@ -1,10 +1,4 @@
-import {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { UseMutateFunction } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
@@ -23,7 +17,6 @@ import {
   TaskErrorPerson,
   TaskRequest,
 } from '@interfaces/task';
-import { TaskContext } from '@providers/TaskProvider';
 import { OptionDropdownType } from '@interfaces/common';
 
 interface PropsDataFixedTask {
@@ -91,7 +84,6 @@ const FixedTaskData = ({
   handleConfirmDrop,
 }: PropsDataFixedTask) => {
   const { data: session } = useSession();
-  const { columnWidth } = useContext(TaskContext);
 
   const [column, setColumn] = useState<ColumnType>(data);
 
@@ -220,16 +212,10 @@ const FixedTaskData = ({
   };
 
   return (
-    <div
-      style={{
-        width: `${(columnWidth / 247) * 247}px`,
-      }}>
+    <div>
       {column && (
         <DragDropContext onDragEnd={onDragEnd}>
-          <div
-            style={{
-              minWidth: `${(columnWidth / 247) * 247}px`,
-            }}>
+          <div>
             <Column
               columnId={`${column?.id}`}
               title={column.title}

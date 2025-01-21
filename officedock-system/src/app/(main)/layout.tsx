@@ -1,5 +1,3 @@
-import React from 'react';
-
 import Header from '@components/layouts/Header';
 import Sidebar from '@components/layouts/Sidebar';
 import TermAgreeModal from '@components/modals/TermAgreeModal';

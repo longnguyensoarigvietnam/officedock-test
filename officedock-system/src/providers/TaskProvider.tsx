@@ -25,6 +25,8 @@ interface ContextValue {
   taskSelected: OptionDropdownType;
   dataEventEdit: OptionDropdownType;
   dataTaskEditKanban: OptionDropdownType;
+  selectedOptionZoom: OptionDropdownType;
+
   taskSelectedToStart: TaskFieldStart | EventCalendarProps | null;
   taskSelectedAction: TaskFieldActionStart | null;
   statusTaskSelected: TaskDuration;
@@ -76,6 +78,8 @@ interface ContextValue {
   setSearchValue: Dispatch<SetStateAction<string>>;
   setTaskSelected: Dispatch<SetStateAction<OptionDropdownType>>;
   setDataEventEdit: Dispatch<SetStateAction<OptionDropdownType>>;
+  setSelectedOptionZoom: Dispatch<SetStateAction<OptionDropdownType>>;
+
   setDataTaskEditKanban: Dispatch<SetStateAction<OptionDropdownType>>;
   setTaskSelectedToStart: Dispatch<
     SetStateAction<TaskFieldStart | EventCalendarProps | null>
@@ -142,6 +146,10 @@ const defaultValue: ContextValue = {
   isLoadingDataTask: false,
   widthCalendar: 0,
   columnWidth: 213,
+  selectedOptionZoom: {
+    label: '100%',
+    value: 100,
+  },
   setColumnWidth: () => {},
   setWidthCalendar: () => {},
   setIsLoadingDataTask: () => {},
@@ -174,6 +182,7 @@ const defaultValue: ContextValue = {
   calculateFontSizeContent: function (): number {
     throw new Error('');
   },
+  setSelectedOptionZoom: () => {},
 };
 
 export const TaskContext = createContext<ContextValue>(defaultValue);
@@ -244,6 +253,11 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     id: '',
     type: '',
   });
+  const [selectedOptionZoom, setSelectedOptionZoom] =
+    useState<OptionDropdownType>({
+      label: '100%',
+      value: 100,
+    });
 
   const [dataActualAddSchedule, setDataActualAddSchedule] =
     useState<TaskActualCalculationType>();
@@ -285,6 +299,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
   const contextValue: ContextValue = {
     columnWidth,
+    selectedOptionZoom,
     dataActualAddSchedule,
     idEventDelete,
     idTaskDelete,
@@ -334,6 +349,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     handleZoomOutKanban,
     calculateFontSizeTitle,
     calculateFontSizeContent,
+    setSelectedOptionZoom,
   };
 
   return (
