@@ -31,6 +31,7 @@ from chat.constants import (
     ChatRoomTypes,
     WebSocketEventType,
     ChatRoomNames,
+    TypeChatGroup,
 )
 from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
 from chat.serializers import (
@@ -289,6 +290,11 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             OpenApiParameter("name", type=str),
             OpenApiParameter("last_message_at", type=str),
             OpenApiParameter("pin_at", type=str),
+            OpenApiParameter(
+                "type",
+                type=str,
+                enum=[TypeChatGroup.CHAT.value, TypeChatGroup.NOTIFY.value],
+            ),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -408,37 +414,53 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             "chat_room__participants",
             "chat_room__chat_messages",
         )
-        updated_chat_rooms = chat_rooms
-        if (
-            task_card_room
-            and request.query_params.get("last_message_at") is None
-            and request.query_params.get("name") is None
-        ):
-            chat_rooms_list = list(
-                chat_rooms.exclude(
-                    chat_room__type__in=[
-                        ChatRoomTypes.TASK.value,
-                        ChatRoomTypes.SKILL.value,
-                    ]
-                )
+        if request.query_params.get("type") == TypeChatGroup.CHAT.value:
+            updated_chat_rooms = chat_rooms.exclude(
+                chat_room__type__in=[
+                    ChatRoomTypes.TASK.value,
+                    ChatRoomTypes.SKILL.value,
+                ]
             )
-            last_pinned_index = None
+        elif request.query_params.get("type") == TypeChatGroup.NOTIFY.value:
+            updated_chat_rooms = chat_rooms.filter(
+                chat_room__type__in=[
+                    ChatRoomTypes.TASK.value,
+                    ChatRoomTypes.SKILL.value,
+                ]
+            )
+        else:
+            updated_chat_rooms = chat_rooms
 
-            for i, room in enumerate(chat_rooms_list):
-                if room.pin_at is not None:
-                    last_pinned_index = i
-
-            if last_pinned_index is None:
-                updated_chat_rooms = [
-                    task_card_room,
-                    skill_card_room,
-                ] + chat_rooms_list
-            else:
-                updated_chat_rooms = (
-                    chat_rooms_list[: last_pinned_index + 1]
-                    + [task_card_room, skill_card_room]
-                    + chat_rooms_list[last_pinned_index + 1 :]
+            if (
+                task_card_room
+                and request.query_params.get("last_message_at") is None
+                and request.query_params.get("name") is None
+            ):
+                chat_rooms_list = list(
+                    chat_rooms.exclude(
+                        chat_room__type__in=[
+                            ChatRoomTypes.TASK.value,
+                            ChatRoomTypes.SKILL.value,
+                        ]
+                    )
                 )
+                last_pinned_index = None
+
+                for i, room in enumerate(chat_rooms_list):
+                    if room.pin_at is not None:
+                        last_pinned_index = i
+
+                if last_pinned_index is None:
+                    updated_chat_rooms = [
+                        task_card_room,
+                        skill_card_room,
+                    ] + chat_rooms_list
+                else:
+                    updated_chat_rooms = (
+                        chat_rooms_list[: last_pinned_index + 1]
+                        + [task_card_room, skill_card_room]
+                        + chat_rooms_list[last_pinned_index + 1 :]
+                    )
 
         # Return the response with the serialized data
         return self.response_pagination(
