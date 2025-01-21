@@ -1,6 +1,6 @@
 'use client';
 import { Draggable } from '@hello-pangea/dnd';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { formatISO } from 'date-fns';
 import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
@@ -10,7 +10,6 @@ import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
-import Dropdown from '@components/common/Dropdown';
 
 import {
   ItemScheduleType,
@@ -27,7 +26,6 @@ import {
   TaskRequest,
 } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
-import { OptionDropdownType } from '@interfaces/common';
 
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 
@@ -61,12 +59,10 @@ interface ItemProps {
   handlePinItem: (id: string) => void;
   disableDraggable?: boolean;
 }
-const Item = ({
+const ItemRoutine = ({
   id,
   index,
   content,
-  creationDataTaskData,
-  editTask,
   handlePinItem,
   handleUpdateItemInline,
   handleConfirmCopyTask,
@@ -88,40 +84,7 @@ const Item = ({
     calculateFontSizeContent,
   } = useContext(TaskContext);
 
-  const [dataOptionsStatus, setDataOptionsStatus] = useState<
-    OptionDropdownType[]
-  >([]);
-
-  let statusStyle = '';
-
-  // TODO: Because the number of states can change.
-  // So, determining the color code from the enum is unreasonable.
-  // This is a temporary solution as there is no defined color code, this will be changed and updated
-  switch (content.status && content.status.id) {
-    case StatusValueTask.NOT_STARTED:
-      statusStyle = '!bg-[#A3EBF0]';
-      break;
-    case StatusValueTask.IN_PROGRESS:
-      statusStyle = '!bg-[#92E9AF]';
-      break;
-    case StatusValueTask.CONFIRMING:
-      statusStyle = '!bg-[#FCCF79]';
-      break;
-    case StatusValueTask.COMPLETED:
-      statusStyle = '!bg-[#F58383]';
-      break;
-    case StatusValueTask.MY_ROUTINE:
-      statusStyle = '!bg-[#EBF1F7]';
-      break;
-    default:
-      break;
-  }
-  const {
-    watch,
-    control,
-    reset,
-    formState: { errors },
-  } = useForm<TaskFormData>({
+  const { reset } = useForm<TaskFormData>({
     mode: 'onSubmit',
   });
 
@@ -182,17 +145,6 @@ const Item = ({
     }
   }, [content]);
 
-  // Save data from create task
-  useEffect(() => {
-    if (creationDataTaskData) {
-      setDataOptionsStatus(
-        creationDataTaskData.status.map((org) => ({
-          label: org.name,
-          value: org.id || '',
-        })),
-      );
-    }
-  }, [creationDataTaskData]);
   //  Handle call api delete task
   const { calculateDurationTask } = useCalculateDurationTask({
     onSuccess: (response) => {
@@ -475,76 +427,15 @@ const Item = ({
                     </p>
                   </div>
                 )}
-                <div className="flex justify-between items-center mt-[2px]">
-                  <Tippy
-                    content="ステータスを変更"
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
-                    <div
-                      className="w-20 max-w-20 h-[21px] rounded"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}>
-                      <Controller
-                        control={control}
-                        name={'statusId'}
-                        render={({ field: { value, onChange } }) => (
-                          <Dropdown
-                            openByDefault
-                            isStatusDropdown={true}
-                            disabled={
-                              !isPermissionUpdate ||
-                              content.status?.id === StatusValueTask.MY_ROUTINE
-                            }
-                            className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
-                            styleClass={{
-                              fontSize: calculateFontSizeContent(),
-                              lineHeight: `${calculateFontSizeContent() * 1.5}px`,
-                              width:
-                                content.status?.id ===
-                                StatusValueTask.MY_ROUTINE
-                                  ? `${(columnWidth / 247) * 90}px`
-                                  : `${(columnWidth / 247) * 80}px`,
-                              height: `${(columnWidth / 247) * 21}px`,
-                              padding: `${(columnWidth / 247) * 6}px`,
-                              gap: `${(columnWidth / 247) * 10}px`,
-                              borderRadius: `${(columnWidth / 247) * 4}px`,
-                            }}
-                            classNameTextData={`!text-[${calculateFontSizeContent()}px]`}
-                            classNameOption={`!text-[${calculateFontSizeContent()}px] !w-[120px]`}
-                            classNameError={`!text-[${calculateFontSizeContent()}px]`}
-                            styleClassOption={{
-                              fontSize: calculateFontSizeContent(),
-                              lineHeight: `${calculateFontSizeContent() * 1.5}px`,
-                            }}
-                            options={
-                              content.status?.id === StatusValueTask.MY_ROUTINE
-                                ? dataOptionsStatus
-                                : dataOptionsStatus.filter(
-                                    (item) =>
-                                      item.value !== StatusValueTask.MY_ROUTINE,
-                                  )
-                            }
-                            selectedOption={dataOptionsStatus.find(
-                              (element) => element.value === value?.value,
-                            )}
-                            onChange={(e) => {
-                              onChange(e);
-                              editTask({
-                                id: `${content.id}`,
-                                oldIdStatus: `${content.status?.id}`,
-                                statusId: watch('statusId')?.value as number,
-                              });
-                            }}
-                            error={errors.statusId?.message}
-                          />
-                        )}
-                      />
-                    </div>
-                  </Tippy>
-
+                <div className="flex justify-between items-center">
+                  <div
+                    style={{
+                      fontSize: calculateFontSizeContent(),
+                      lineHeight: `${calculateFontSizeContent() * 1.5}px`,
+                    }}
+                    className="font-normal ">
+                    毎日9:00~9:15
+                  </div>
                   <Tippy
                     content={content.isStart ? '計測停止' : '計測開始'}
                     arrow={false}
@@ -636,7 +527,9 @@ const Item = ({
                   )}
                   <p
                     style={{
-                      width: `${(columnWidth / 247) * 130}px`,
+                      width: isShowSchedule
+                        ? `${(columnWidth / 247) * 120}px`
+                        : `${(columnWidth / 247) * 150}px`,
                       fontSize: calculateFontSizeTitle(),
                       lineHeight: `${calculateFontSizeTitle() * 1.5}px`,
                       marginRight: `${(columnWidth / 247) * 12}px`,
@@ -685,4 +578,4 @@ const Item = ({
   );
 };
 
-export default Item;
+export default ItemRoutine;
