@@ -563,7 +563,14 @@ export const showToggleButtonColorByTime = () => {
   return colorClassName;
 };
 
-export const showModalHeaderBackgroundColorByTime = (hour: number) => {
+export const showModalHeaderBackgroundColorByTime = () => {
+  const hourStr = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date());
+
+  const hour = Number(hourStr.substring(0, hourStr.length - 1))
   let colorClassName = '';
 
   switch (true) {

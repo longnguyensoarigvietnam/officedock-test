@@ -917,12 +917,6 @@ const ActionsTaskModal = ({
     ]);
   };
 
-  const hour = new Intl.DateTimeFormat('ja-JP', {
-    timeZone: 'Asia/Tokyo',
-    hour: 'numeric',
-    hour12: false,
-  }).format(new Date());
-
   return (
     <Drawer
       open={open}
@@ -935,9 +929,9 @@ const ActionsTaskModal = ({
       <header
         className="px-8 rounded-tl-xl h-[50px] flex items-center justify-between"
         style={{
-          background: showModalHeaderBackgroundColorByTime(
-            Number(hour.substring(0, hour.length - 1)),
-          ),
+          background:
+            showModalHeaderBackgroundColorByTime(
+            ),
         }}>
         <div className="flex text-sm items-center gap-4 text-white">
           <p className="">

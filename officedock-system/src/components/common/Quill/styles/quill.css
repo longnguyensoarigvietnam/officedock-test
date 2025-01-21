@@ -3,10 +3,17 @@
   font-size: 14px;
   box-sizing: border-box;
   padding: 1rem;
+  border: 1px solid #77858F;
+  border-radius: 7px !important;
 }
 
+.ql-editor::before {
+  font-style: normal !important;
+}
+
+
 .ql-container {
-  border-radius: 10px !important;
+  border-radius: 7px !important;
 }
 
 .ql-toolbar.ql-snow {

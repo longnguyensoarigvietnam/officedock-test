@@ -151,27 +151,12 @@ export const formatCheckDate = (dateString: string): string => {
     return '';
   }
 
-  const now = new Date();
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const isToday = date.toDateString() === now.toDateString();
-  const isYesterday = date.toDateString() === yesterday.toDateString();
-  const isThisWeek =
-    date > new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-
-  if (isToday) {
-    return date.toLocaleTimeString('ja-JP', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } else if (isYesterday) {
-    return '昨日';
-  } else if (isThisWeek) {
-    return date.toLocaleDateString('ja-JP', { weekday: 'long' });
-  } else {
-    return date.toLocaleDateString('ja-JP');
-  }
+  const formattedDate = `${date.getMonth() + 1}月${date.getDate()}日 ${date.toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`;
+  
+  return formattedDate;
 };
 
 export function isMoreThanSixtyMinutes(timeRange: string): boolean {

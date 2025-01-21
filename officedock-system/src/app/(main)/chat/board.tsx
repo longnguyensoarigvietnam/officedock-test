@@ -1,11 +1,5 @@
 'use client';
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -14,11 +8,10 @@ import ChatDetail from './detail';
 
 import { ChatRoomType } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
-import { ChatRoomItem } from '@interfaces/chat';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import { ChatDashboardMember, ChatRoomItem } from '@interfaces/chat';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
-import { generateUniqueId } from '@utils';
+import { generateUniqueId, getRandomColor } from '@utils';
 import { APP_NAME_METADATA } from '@constants';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
@@ -38,10 +31,11 @@ const BoardChat = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [dataChatList, setDataChatList] = useState<ChatRoomItem[]>([]);
   const [filteredChatList, setFilteredChatList] = useState<ChatRoomItem[]>([]);
-  const [submitByEnter, setSubmitByEnter] = useState<boolean>();
   const [searchChatMsg, setSearchChatMsg] = useState('');
-  const { authenticatedUser } = useAuthenticatedUser();
   const { data: session } = useSession();
+  const [dashboardMembers, setDashboardMembers] = useState<
+    ChatDashboardMember[]
+  >([]);
 
   const [clientId] = useState(() => generateUniqueId());
 
@@ -55,6 +49,19 @@ const BoardChat = () => {
       setHasMoreDetail(true);
     }
   }, [chatRoomCode]);
+
+  useEffect(() => {
+    if (dashboardMemberList?.length) {
+      const membersWithAvatars = dashboardMemberList.map((member) => {
+        return {
+          id: member.id,
+          fullName: member.fullName,
+          avatarColor: getRandomColor(),
+        };
+      });
+      setDashboardMembers(membersWithAvatars);
+    }
+  }, [dashboardMemberList]);
 
   const handleSetChatRoomParam = (code: string) => {
     if (code) {
@@ -74,11 +81,6 @@ const BoardChat = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataChatList, chatRoomCode]);
-
-  useEffect(() => {
-    if (authenticatedUser)
-      setSubmitByEnter(authenticatedUser?.setting?.isEnterSendMessage);
-  }, [authenticatedUser]);
 
   const handleUpdateLocalByCode = (data: ChatRoomItem) => {
     setDataChatList((prevDataChatList) => {
@@ -405,6 +407,7 @@ const BoardChat = () => {
         filteredChatList={filteredChatList}
         chatRoomCode={chatRoomCode}
         dashboardMemberList={dashboardMemberList}
+        dashboardMembers={dashboardMembers}
         setLastItemId={setLastItemId}
         setDataChatList={setDataChatList}
         setFilteredChatList={setFilteredChatList}
@@ -421,8 +424,8 @@ const BoardChat = () => {
           hasMoreDetail={hasMoreDetail}
           hasMore={hasMore}
           chatRoomCode={chatRoomCode}
-          submitByEnter={submitByEnter}
           dashboardMemberList={dashboardMemberList}
+          dashboardMembers={dashboardMembers}
           creationDataTaskData={creationDataTaskData}
           searchChatMsg={searchChatMsg}
           setSearchChatMsg={setSearchChatMsg}
@@ -432,7 +435,6 @@ const BoardChat = () => {
           handleUpdateLocalByCode={handleUpdateLocalByCode}
           handleUpdateLocalByCodeMsg={handleUpdateLocalByCodeMsg}
           setDataChatList={setDataChatList}
-          setSubmitByEnter={setSubmitByEnter}
           handleRemoveChatRoomParam={handleRemoveChatRoomParam}
         />
       )}
