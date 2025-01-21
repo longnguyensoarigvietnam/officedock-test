@@ -55,7 +55,8 @@ const DatePicker = ({
 
   const dayClassName = (date: Date) => {
     if (isHoliday(date)) return 'holiday';
-    if (isSaturday(date) || isSunday(date)) return 'weekends';
+    else if (isSunday(date)) return 'sunday';
+    else if (isSaturday(date)) return 'saturday';
     return null;
   };
 

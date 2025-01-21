@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html{
+  overflow: auto;
+}
+
 body {
   height: 100vh;
 }

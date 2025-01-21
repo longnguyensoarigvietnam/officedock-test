@@ -122,6 +122,7 @@ export type MessageDetailProps = {
   msgIdUpdated?: string;
   msgEditing?: string;
   roomDetail?: ChatRoomItem;
+  dashboardMembers: ChatDashboardMember[];
   setMsgIdUpdated?: Dispatch<SetStateAction<string | undefined>>;
   setMessageSubmitted?: Dispatch<SetStateAction<boolean>>;
   setOpenConfirmDeleteModal: Dispatch<SetStateAction<boolean>>;
@@ -137,6 +138,7 @@ const MessageDetail = ({
   messageSubmitted,
   msgIdUpdated,
   msgEditing,
+  dashboardMembers,
   setMsgIdUpdated,
   setOpenConfirmDeleteModal,
   setMessageSubmitted,
@@ -162,25 +164,35 @@ const MessageDetail = ({
     }
   };
 
+  const renderAvatar = (senderId: number) => {
+    const avatarColor =
+      dashboardMembers.find((member) => member.id === senderId)?.avatarColor ||
+      '';
+
+    return (
+      <div className="h-6">
+        {AvatarIconWithDynamicColor({
+          color: avatarColor,
+          size: 36,
+        })}
+      </div>
+    );
+  };
+
   return (
     <Fragment>
-      <div className="py-8 group">
+      <div className="group my-6">
         {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
           chatRoomDetail?.type === ChatRoomType.GROUP ||
           chatRoomDetail?.type === ChatRoomType.SELF) && (
           <div
-            className={`flex px-8 !box-border group-hover:bg-[#FFFFFF] py-3 mx-3 group-hover:rounded-md`}>
-            <ImageRound
-              className="w-10 h-10"
-              src="/images/avatar-default.svg"
-              border="full"
-              name="Avatar user"
-            />
-            <div className={`ml-6 w-full`}>
-              <div className="flex justify-between">
-                <p className="font-semibold text-sm pb-2">
-                  {messageDetail.sender.fullName}{' '}
-                  <span className="font-normal text-[10px]">
+            className={`flex !box-border group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
+            {renderAvatar(messageDetail.sender.id)}
+            <div className={`ml-3 w-full pr-5`}>
+              <div className="flex justify-between items-center">
+                <div className="flex gap-2 font-semibold text-sm pb-2">
+                  <p>{messageDetail.sender.fullName} </p>
+                  <p className="font-normal text-[10px] truncate max-w-[400px]">
                     {messageDetail.sender.organizations &&
                       messageDetail.sender.organizations.map(
                         (organization, index) => (
@@ -190,19 +202,17 @@ const MessageDetail = ({
                             }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
                         ),
                       )}
-                  </span>
-                </p>
-                <p className="font-medium text-xs text-[#77858F]">
-                  {messageDetail.createdAt &&
-                    formatCheckDate(
-                      getFormattedDateTime(
-                        convertToCurrentTimezone(messageDetail.createdAt),
-                      ),
-                    )}
-                </p>
-              </div>
-              <div className="relative">
+                  </p>
+                </div>
                 <div className={`flex items-start`}>
+                  <p className="font-medium text-xs text-[#77858F]">
+                    {messageDetail.createdAt &&
+                      formatCheckDate(
+                        getFormattedDateTime(
+                          convertToCurrentTimezone(messageDetail.createdAt),
+                        ),
+                      )}
+                  </p>
                   {messageDetail.isEdited && !messageDetail.deletedAt && (
                     <div className="flex items-center">
                       <ImageRound
@@ -214,7 +224,8 @@ const MessageDetail = ({
                     </div>
                   )}
                 </div>
-
+              </div>
+              <div className="relative">
                 {messageDetail.uuid === msgIdUpdated ? (
                   <div className="!w-full">
                     <Quill
@@ -849,7 +860,7 @@ const MessageDetail = ({
         )}
         {chatRoomDetail?.type === ChatRoomType.TASK && (
           <div
-            className={`flex px-8 !box-border group-hover:bg-[#FFFFFF] py-3 mx-3 group-hover:rounded-md`}>
+            className={`flex !box-border group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
             {messageDetail.type !== MessageType.MESSAGE ? (
               <ImageRound
                 className="w-10 h-10"
@@ -858,21 +869,16 @@ const MessageDetail = ({
                 name="Task"
               />
             ) : (
-              <ImageRound
-                className="w-10 h-10"
-                src="/images/avatar-default.svg"
-                border="full"
-                name="Avatar user"
-              />
+              <div>{renderAvatar(messageDetail.sender.id)}</div>
             )}
-            <div className={`ml-6 !w-[100%]`}>
-              <div className="flex justify-between">
+            <div className={`ml-3 w-full pr-5`}>
+              <div className="flex justify-between items-center">
                 {messageDetail.type !== MessageType.MESSAGE ? (
                   <p className="font-semibold text-sm pb-2">タスクカード</p>
                 ) : (
-                  <p className="font-semibold text-sm pb-2">
-                    {messageDetail.sender.fullName}{' '}
-                    <span className="font-normal text-[10px]">
+                  <div className="flex gap-2 font-semibold text-sm pb-2">
+                    <p>{messageDetail.sender.fullName} </p>
+                    <p className="font-normal text-[10px] truncate max-w-[400px]">
                       {messageDetail.sender.organizations &&
                         messageDetail.sender.organizations.map(
                           (organization, index) => (
@@ -882,20 +888,18 @@ const MessageDetail = ({
                               }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
                           ),
                         )}
-                    </span>
-                  </p>
+                    </p>
+                  </div>
                 )}
-                <p className="font-normal text-xs text-[#77858F]">
-                  {messageDetail.createdAt &&
-                    formatCheckDate(
-                      getFormattedDateTime(
-                        convertToCurrentTimezone(messageDetail.createdAt),
-                      ),
-                    )}
-                </p>
-              </div>
-              <div className="relative">
                 <div className={`flex items-start`}>
+                  <p className="font-medium text-xs text-[#77858F]">
+                    {messageDetail.createdAt &&
+                      formatCheckDate(
+                        getFormattedDateTime(
+                          convertToCurrentTimezone(messageDetail.createdAt),
+                        ),
+                      )}
+                  </p>
                   {messageDetail.isEdited && !messageDetail.deletedAt && (
                     <div className="flex items-center">
                       <ImageRound
@@ -907,7 +911,8 @@ const MessageDetail = ({
                     </div>
                   )}
                 </div>
-
+              </div>
+              <div className="relative">
                 {messageDetail.uuid === msgIdUpdated ? (
                   <div className="!w-full">
                     <Quill
@@ -1145,7 +1150,7 @@ const MessageDetail = ({
         )}
         {chatRoomDetail?.type === ChatRoomType.SKILL && (
           <div
-            className={`flex px-8 !box-border group-hover:bg-[#FFFFFF] py-3 mx-3 group-hover:rounded-md`}>
+            className={`flex !box-border group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
             {messageDetail.type !== MessageType.MESSAGE ? (
               <ImageRound
                 className="w-10 h-10"
@@ -1154,21 +1159,16 @@ const MessageDetail = ({
                 name="Task"
               />
             ) : (
-              <ImageRound
-                className="w-10 h-10"
-                src="/images/avatar-default.svg"
-                border="full"
-                name="Avatar user"
-              />
+              <div>{renderAvatar(messageDetail.sender.id)}</div>
             )}
-            <div className={`ml-6 !w-[100%]`}>
-              <div className="flex justify-between">
+            <div className={`ml-3 w-full pr-5`}>
+              <div className="flex justify-between items-center">
                 {messageDetail.type !== MessageType.MESSAGE ? (
                   <p className="font-semibold text-sm pb-2">スキルアップ</p>
                 ) : (
-                  <p className="font-semibold text-sm pb-2">
-                    {messageDetail.sender.fullName}{' '}
-                    <span className="font-normal text-[10px]">
+                  <div className="flex gap-2 font-semibold text-sm pb-2">
+                    <p>{messageDetail.sender.fullName} </p>
+                    <p className="font-normal text-[10px] truncate max-w-[400px]">
                       {messageDetail.sender.organizations &&
                         messageDetail.sender.organizations.map(
                           (organization, index) => (
@@ -1178,20 +1178,18 @@ const MessageDetail = ({
                               }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
                           ),
                         )}
-                    </span>
-                  </p>
+                    </p>
+                  </div>
                 )}
-                <p className="font-normal text-xs text-[#77858F]">
-                  {messageDetail.createdAt &&
-                    formatCheckDate(
-                      getFormattedDateTime(
-                        convertToCurrentTimezone(messageDetail.createdAt),
-                      ),
-                    )}
-                </p>
-              </div>
-              <div className="relative">
                 <div className={`flex items-start`}>
+                  <p className="font-medium text-xs text-[#77858F]">
+                    {messageDetail.createdAt &&
+                      formatCheckDate(
+                        getFormattedDateTime(
+                          convertToCurrentTimezone(messageDetail.createdAt),
+                        ),
+                      )}
+                  </p>
                   {messageDetail.isEdited && !messageDetail.deletedAt && (
                     <div className="flex items-center">
                       <ImageRound
@@ -1203,7 +1201,8 @@ const MessageDetail = ({
                     </div>
                   )}
                 </div>
-
+              </div>
+              <div className="relative">
                 {messageDetail.uuid === msgIdUpdated ? (
                   <div className="!w-full">
                     <Quill
@@ -2313,7 +2312,7 @@ const ChatDetail = ({
     setShowModalTask(false);
   };
 
-  const renderImageRound = (type = '') => {
+  const renderImageRound = (type = '', participants: ChatParticipant[]) => {
     if (type === ChatRoomType.GROUP) {
       return (
         <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
@@ -2350,14 +2349,28 @@ const ChatDetail = ({
         </div>
       );
     }
+
+    const avatarColor =
+      dashboardMembers.find((member) => {
+        if (type === ChatRoomType.PRIVATE) {
+          return (
+            member.id ===
+            participants.find(
+              (participant) => participant.id !== session?.user.id,
+            )?.id
+          );
+        }
+        return member.id === session?.user.id;
+      })?.avatarColor || '';
+
     return (
       <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-        <ImageRound
-          className="w-14 h-14"
-          src="/images/avatar-default.svg"
-          border="full"
-          name="Avatar user"
-        />
+        <div className="scale-150 mt-[-4px]">
+          {AvatarIconWithDynamicColor({
+            color: avatarColor,
+            size: 36,
+          })}
+        </div>
       </div>
     );
   };
@@ -2454,13 +2467,22 @@ const ChatDetail = ({
             });
           }}>
           <div
-            className="flex justify-between items-center px-4 py-3 !w-full border-b-[2px] text-white"
+            className="flex justify-between items-center px-4 py-2 !w-full border-b-[2px] text-white"
             style={{
               background: showModalHeaderBackgroundColorByTime(),
             }}>
             <div className="flex items-center w-[60%]">
-              {renderImageRound(chatRoomDetail?.type || roomDetail?.type)}
-              <p className="text-[20px] font-bold truncate max-w-[calc(100%_-_370px)] ml-3">
+              {renderImageRound(
+                chatRoomDetail?.type || roomDetail?.type,
+                chatRoomDetail?.participants || roomDetail?.participants || [],
+              )}
+              <p
+                className="text-[20px] font-bold text-ellipsis break-all overflow-hidden max-w-[calc(100%_-_370px)] ml-3"
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                }}>
                 {chatRoomDetail
                   ? chatRoomCode &&
                     chatRoomNameEditing.find(
@@ -2512,13 +2534,22 @@ const ChatDetail = ({
                                 false,
                               )}
                         </div>
-                        <Button
-                          sz="sm"
-                          className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
-                          onClick={() => setOpenAddMembersBox(true)}
-                          type="button">
-                          招待する
-                        </Button>
+                        <Tippy
+                          content={'グループにメンバーを招待する'}
+                          arrow={false}
+                          delay={1000}
+                          placement="top"
+                          offset={[0, 5]}>
+                          <div>
+                            <Button
+                              sz="sm"
+                              className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
+                              onClick={() => setOpenAddMembersBox(true)}
+                              type="button">
+                              招待する
+                            </Button>
+                          </div>
+                        </Tippy>
                       </div>
                     )
                   : chatRoomDetail &&
@@ -2553,13 +2584,22 @@ const ChatDetail = ({
                                 false,
                               )}
                         </div>
-                        <Button
-                          sz="sm"
-                          className="w-fit min-w-[80px] text-xs !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
-                          onClick={() => setOpenAddMembersBox(true)}
-                          type="button">
-                          招待する
-                        </Button>
+                        <Tippy
+                          content={'グループにメンバーを招待する'}
+                          arrow={false}
+                          delay={1000}
+                          placement="top"
+                          offset={[0, 5]}>
+                          <div>
+                            <Button
+                              sz="sm"
+                              className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
+                              onClick={() => setOpenAddMembersBox(true)}
+                              type="button">
+                              招待する
+                            </Button>
+                          </div>
+                        </Tippy>
                       </div>
                     )}
               </div>
@@ -2598,7 +2638,7 @@ const ChatDetail = ({
                             offset={[0, 5]}>
                             <div>
                               <ImageRound
-                                className="w-10 h-10 hover:cursor-pointer"
+                                className="w-8 h-8 hover:cursor-pointer"
                                 src="/icons/setting-chat.svg"
                                 border="full"
                                 name="Setting icon"
@@ -2613,7 +2653,7 @@ const ChatDetail = ({
             </div>
           </div>
           <div
-            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || roomDetail?.type == ChatRoomType.TASK || roomDetail?.type == ChatRoomType.SKILL ? 'h-[calc(100vh_-_200px)]' : 'h-[calc(100vh_-_450px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
+            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || roomDetail?.type == ChatRoomType.TASK || roomDetail?.type == ChatRoomType.SKILL ? 'h-[calc(100vh_-_200px)]' : 'h-[calc(100vh_-_400px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
             {dataMessageDetail &&
               chatRoomNotifications &&
               dataMessageDetail
@@ -2627,6 +2667,7 @@ const ChatDetail = ({
                       msgIdUpdated={msgIdUpdated}
                       msgEditing={msgEditing}
                       roomDetail={roomDetail}
+                      dashboardMembers={dashboardMembers}
                       setMsgEditing={setMsgEditing}
                       setMessageSubmitted={setMessageSubmitted}
                       setMsgIdDeleted={setMsgIdDeleted}
@@ -2664,6 +2705,7 @@ const ChatDetail = ({
                       msgIdUpdated={msgIdUpdated}
                       msgEditing={msgEditing}
                       roomDetail={roomDetail}
+                      dashboardMembers={dashboardMembers}
                       setMsgEditing={setMsgEditing}
                       setMessageSubmitted={setMessageSubmitted}
                       setMsgIdDeleted={setMsgIdDeleted}
@@ -2697,10 +2739,10 @@ const ChatDetail = ({
           </div>
           {[ChatRoomType.GROUP, ChatRoomType.PRIVATE, ChatRoomType.SELF].map(
             (type) =>
-              (chatRoomDetail?.type == type || roomDetail?.type == type) && (
+              chatRoomDetail?.type == type && (
                 <div
                   key={type}
-                  className="px-8 py-3 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
+                  className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
                   <div className="flex justify-between items-center">
                     <div className="flex gap-1 items-center">
                       <Tippy
@@ -2803,13 +2845,15 @@ const ChatDetail = ({
                         )}
                     </div>
                   </div>
-                  <Quill
-                    text={message}
-                    setText={setMessage}
-                    messageSubmitted={messageSubmitted}
-                    setMessageSubmitted={setMessageSubmitted}
-                    placeholder="メッセージを入力"
-                  />
+                  <div className="mt-[-10px]">
+                    <Quill
+                      text={message}
+                      setText={setMessage}
+                      messageSubmitted={messageSubmitted}
+                      setMessageSubmitted={setMessageSubmitted}
+                      placeholder="メッセージを入力"
+                    />
+                  </div>
                 </div>
               ),
           )}

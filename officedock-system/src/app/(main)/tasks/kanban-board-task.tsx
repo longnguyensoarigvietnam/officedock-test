@@ -2570,7 +2570,7 @@ const KanbanBoardTask = () => {
                     : `100%`,
                 maxWidth: ` calc(${Math.max(viewportWidth, 1280)}px - 500px) `,
               }}
-              className={`h-full overflow-x-auto flex flex-col gap-5 py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}>
+              className={`h-full overflow-x-auto flex flex-col gap-2 py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}>
               <FrequentlyTask
                 setShowModalTask={() => {
                   handleSetParam({
@@ -2684,13 +2684,12 @@ const KanbanBoardTask = () => {
                     />
                   </div>
                   <Tippy
-                    content={isListView ? '' : 'タスクをリスト表示'}
+                    content={isListView ? 'タスクを看板表示' : 'タスクをリスト表示'}
                     arrow={false}
                     delay={1000}
                     placement="top"
-                    disabled={isListView}
                     offset={[3, 0]}>
-                    <div className="hover:cursor-pointer fixed top-30 right-5 z-20">
+                    <div className={`hover:cursor-pointer fixed ${showFrequentlyTasks ? 'top-[200px]' : 'top-[125px]'} right-5 z-20`}>
                       <ImageRound
                         src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
                         name="List view icon"
