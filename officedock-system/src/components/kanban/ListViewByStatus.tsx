@@ -312,12 +312,13 @@ const ListViewByStatus = ({
           </div>
         </Tippy>
       </div>
-      {listId == StatusValueTask.MY_ROUTINE && (
-        <div className="flex text-[#77858F] text-[12px] mb-4">
-          <p className="w-[59%] border-r-2">タスク名</p>
-          <p className="w-[20%] border-r-2 text-center">予定日時</p>
-        </div>
-      )}
+      {showListByStatus.find((list) => list.id == listId)?.status &&
+        listId == StatusValueTask.MY_ROUTINE && (
+          <div className="flex text-[#77858F] text-[12px] mb-4">
+            <p className="w-[59%] border-r-2">タスク名</p>
+            <p className="w-[20%] border-r-2 text-center">予定日時</p>
+          </div>
+        )}
       <Droppable droppableId={String(listId)}>
         {(provided, snapshot) => (
           <div

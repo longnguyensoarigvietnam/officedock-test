@@ -16,12 +16,12 @@ import {
 import { useSession } from 'next-auth/react';
 import { useInView } from 'react-intersection-observer';
 import { v4 as uuidv4 } from 'uuid';
-import { throttle } from 'lodash';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Button from '@components/common/Button';
-import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
 import Quill from '@components/common/Quill';
@@ -87,9 +87,11 @@ import {
 import {
   formatWithParagraphTags,
   hasPermissionInArray,
+  showModalHeaderBackgroundColorByTime,
   trimUnnecessaryLineBreaks,
 } from '@utils';
 import {
+  ChatDashboardMember,
   ChatMessageResponse,
   ChatParticipant,
   ChatRoomDetail,
@@ -111,6 +113,7 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
 import { useErrorToast } from '@hooks/useErrorToast';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -161,52 +164,45 @@ const MessageDetail = ({
 
   return (
     <Fragment>
-      <div className="py-8">
+      <div className="py-8 group">
         {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
           chatRoomDetail?.type === ChatRoomType.GROUP ||
           chatRoomDetail?.type === ChatRoomType.SELF) && (
           <div
-            className={`flex ${Number(session?.user.id) === Number(messageDetail.sender.id) && 'flex-row-reverse'} px-8 !box-border`}>
-            {Number(session?.user.id) !== Number(messageDetail.sender.id) && (
-              <ImageRound
-                className="w-10 h-10"
-                src="/images/avatar-default.svg"
-                border="full"
-                name="Avatar user"
-              />
-            )}
-            <div
-              className={`ml-6 ${Number(session?.user.id) !== Number(messageDetail.sender.id) ? 'w-[65%]' : 'max-w-[750px] flex-row-reverse'}`}>
+            className={`flex px-8 !box-border group-hover:bg-[#FFFFFF] py-3 mx-3 group-hover:rounded-md`}>
+            <ImageRound
+              className="w-10 h-10"
+              src="/images/avatar-default.svg"
+              border="full"
+              name="Avatar user"
+            />
+            <div className={`ml-6 w-full`}>
               <div className="flex justify-between">
-                {Number(session?.user.id) !==
-                  Number(messageDetail.sender.id) && (
-                  <p className="font-semibold text-sm pb-2">
-                    {messageDetail.sender.fullName}{' '}
-                    <span className="font-normal text-[10px]">
-                      {messageDetail.sender.organizations &&
-                        messageDetail.sender.organizations.map(
-                          (organization, index) => (
-                            <span
-                              key={
-                                organization.id
-                              }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
-                          ),
-                        )}
-                    </span>
-                  </p>
-                )}
-              </div>
-              <div className="relative">
-                <div
-                  className={`flex ${Number(session?.user.id) === Number(messageDetail.sender.id) && 'flex justify-end'} items-start`}>
-                  <p className="font-normal text-xs">
-                    {messageDetail.createdAt &&
-                      formatCheckDate(
-                        getFormattedDateTime(
-                          convertToCurrentTimezone(messageDetail.createdAt),
+                <p className="font-semibold text-sm pb-2">
+                  {messageDetail.sender.fullName}{' '}
+                  <span className="font-normal text-[10px]">
+                    {messageDetail.sender.organizations &&
+                      messageDetail.sender.organizations.map(
+                        (organization, index) => (
+                          <span
+                            key={
+                              organization.id
+                            }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
                         ),
                       )}
-                  </p>
+                  </span>
+                </p>
+                <p className="font-medium text-xs text-[#77858F]">
+                  {messageDetail.createdAt &&
+                    formatCheckDate(
+                      getFormattedDateTime(
+                        convertToCurrentTimezone(messageDetail.createdAt),
+                      ),
+                    )}
+                </p>
+              </div>
+              <div className="relative">
+                <div className={`flex items-start`}>
                   {messageDetail.isEdited && !messageDetail.deletedAt && (
                     <div className="flex items-center">
                       <ImageRound
@@ -250,31 +246,28 @@ const MessageDetail = ({
                     </div>
                   </div>
                 ) : (
-                  <div
-                    className={`group ${Number(session?.user.id) === Number(messageDetail.sender.id) && 'flex flex-row-reverse max-w-[750px] !min-w-[400px]'}`}>
+                  <div>
                     <div className="flex flex-col">
                       {messageDetail.deletedAt ? (
                         <p
-                          className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px] ${Number(session?.user.id) === Number(messageDetail.sender.id) && 'ml-auto'}`}>
+                          className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
                           {MESSAGE_DELETED}
                         </p>
                       ) : (
                         <div>
                           {messageDetail.type === MessageType.MESSAGE && (
                             <p
-                              className={`text-chat-box font-normal text-sm hover:cursor-pointer group-hover:bg-[#f0f1f1] max-w-[750px] ${Number(session?.user.id) === Number(messageDetail.sender.id) && 'text-right justify-end !min-w-[400px]'} -ml-1 p-1 rounded-[5px]  `}
+                              className={`text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]  `}
                               dangerouslySetInnerHTML={{
                                 __html: messageDetail.message,
                               }}></p>
                           )}
                           {messageDetail.type ===
                             MessageType.REMOVE_SCHEDULE && (
-                            <div
-                              className={`w-full flex ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`w-full flex justify-start`}>
                               <div
-                                className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
-                                <div
-                                  className={`flex flex-col ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'items-end' : 'items-start'}`}>
+                                className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
+                                <div className={`flex flex-col items-start`}>
                                   <p className="w-fit font-semibold text-black">
                                     {EVENT_DELETED}
                                   </p>
@@ -359,7 +352,7 @@ const MessageDetail = ({
                                     messageDetail.scheduleChanges?.participants
                                       ?.length > 4 && <p>その他</p>}
                                   <p
-                                    className={`mt-2 ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'text-right' : 'text-left'}`}
+                                    className={`mt-2 text-left`}
                                     dangerouslySetInnerHTML={{
                                       __html: formatWithParagraphTags(
                                         messageDetail.message,
@@ -370,12 +363,10 @@ const MessageDetail = ({
                             </div>
                           )}
                           {messageDetail.type === MessageType.EDIT_SCHEDULE && (
-                            <div
-                              className={`w-full flex ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`w-full flex justify-start`}>
                               <div
-                                className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
-                                <div
-                                  className={`flex flex-col ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'items-end' : 'items-start'}`}>
+                                className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
+                                <div className={`flex flex-col items-start`}>
                                   <p className="w-fit font-semibold text-black">
                                     {EVENT_EDITED}
                                   </p>
@@ -400,8 +391,7 @@ const MessageDetail = ({
                                     )}
                                   </p>
                                   <p className="font-semibold mt-2">日時</p>
-                                  <div
-                                    className={`${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'text-right' : 'text-left'}`}>
+                                  <div className={`text-left`}>
                                     <p>
                                       {messageDetail.scheduleChanges?.new &&
                                         `${format(
@@ -546,7 +536,7 @@ const MessageDetail = ({
                                     </p>
                                   )}
                                   <p
-                                    className={`mt-2 ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'text-right' : 'text-left'}`}
+                                    className={`mt-2 text-left`}
                                     dangerouslySetInnerHTML={{
                                       __html: formatWithParagraphTags(
                                         messageDetail.message,
@@ -558,12 +548,10 @@ const MessageDetail = ({
                           )}
                           {messageDetail.type ===
                             MessageType.CREATION_SCHEDULE && (
-                            <div
-                              className={`w-full flex ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`w-full flex justify-start`}>
                               <div
-                                className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
-                                <div
-                                  className={`flex flex-col ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'items-end' : 'items-start'}`}>
+                                className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
+                                <div className={`flex flex-col items-start`}>
                                   <p className="w-fit font-semibold text-black">
                                     {messageDetail.sender.fullName}{' '}
                                     {EVENT_CREATED}
@@ -673,12 +661,10 @@ const MessageDetail = ({
                             messageDetail.type ===
                               MessageType.ADD_MEMBER_TASK) &&
                             (messageDetail.task ? (
-                              <div
-                                className={`w-full flex ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`w-full flex justify-start`}>
                                 <div
                                   className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
-                                  <div
-                                    className={`flex flex-col ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'items-end' : 'items-start'}`}>
+                                  <div className={`flex flex-col items-start`}>
                                     <h4 className="text-sm w-fit font-medium text-black h-5">
                                       {messageDetail.type ==
                                       MessageType.CREATION_TASK
@@ -708,14 +694,12 @@ const MessageDetail = ({
                                 </div>
                               </div>
                             ) : (
-                              <div
-                                className={`w-full flex ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`w-full flex justify-start`}>
                                 <div
                                   className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
-                                  <div
-                                    className={`flex flex-col ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'items-end' : 'items-start'}`}>
+                                  <div className={`flex flex-col items-start`}>
                                     <p
-                                      className={`font-normal w-[500px]  text-sm hover:cursor-pointer ${Number(session?.user.id) === Number(messageDetail.sender.id) ? 'text-end' : 'text-start'} -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
+                                      className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
                                       {TASK_DELETED}
                                     </p>
                                   </div>
@@ -726,128 +710,134 @@ const MessageDetail = ({
                       )}
                     </div>
                     <>
-                      {Number(session?.user.id) ===
-                        Number(messageDetail.sender.id) &&
-                        !messageDetail.deletedAt &&
-                        session?.user.permissions &&
-                        ((messageDetail.type == MessageType.MESSAGE &&
-                          hasPermissionInArray(
-                            session?.user.permissions,
-                            PermissionsSystem.CHAT_UPDATE,
-                          )) ||
-                          hasPermissionInArray(
-                            session?.user.permissions,
-                            PermissionsSystem.CHAT_DELETE,
-                          )) && (
-                          <div
-                            className={`hidden group-hover:flex bg-white rounded-md px-3 py-1.5 shadow-md absolute -top-5 -left-5 gap-2`}>
-                            {messageDetail.type == MessageType.MESSAGE &&
-                              session?.user.permissions &&
-                              hasPermissionInArray(
-                                session?.user.permissions,
-                                PermissionsSystem.CHAT_UPDATE,
-                              ) && (
-                                <div
-                                  className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
-                                  onClick={() =>
-                                    handleOpenEditForm(messageDetail.uuid)
-                                  }>
-                                  <ImageRound
-                                    name="Edit"
-                                    src={'/icons/edit.svg'}
-                                    className="w-[18px] h-[18px] hover:cursor-pointer"
-                                  />
-                                </div>
-                              )}
-                            {session?.user.permissions &&
-                              hasPermissionInArray(
-                                session?.user.permissions,
-                                PermissionsSystem.CHAT_DELETE,
-                              ) && (
-                                <div
-                                  className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
-                                  onClick={() => {
-                                    handleOpenDeleteMsgModal(
-                                      messageDetail.uuid,
-                                    );
-                                  }}>
-                                  <ImageRound
-                                    name="Delete"
-                                    src={'/icons/delete.svg'}
-                                    className="w-[19px] h-[19px] hover:cursor-pointer"
-                                  />
-                                </div>
-                              )}
-                          </div>
-                        )}
                       {!messageDetail.deletedAt && (
                         <div
-                          className={`gap-1 bg-white group-hover:flex hidden rounded-md px-3 py-1.5 shadow-md absolute ${Number(session?.user.id) === Number(messageDetail.sender.id) && '-bottom-[37px] right-1'}`}>
-                          <div className="border-r-[1px] flex pr-3 items-center">
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Reaction"
-                                src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer -ml-2.5">
-                              <ImageRound
-                                name="Reaction"
-                                src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer -ml-2.5">
-                              <ImageRound
-                                name="Reaction"
-                                src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                            <ImageRound
-                              src="/icons/add.svg"
-                              name="Add icon"
-                              className="!w-3 !h-3 ml-2 text-gray-400 hover:cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex pl-2 items-center gap-2">
+                          className={`bg-white group-hover:flex hidden rounded-2xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
+                          <Tippy
+                            content={'返信'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
                             <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
                               <ImageRound
                                 name="Reply"
                                 src={'/icons/reply.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
+                                className="w-[17px] h-[15px] hover:cursor-pointer"
                               />
                             </div>
+                          </Tippy>
+                          <Tippy
+                            content={'リアクション'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
                             <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
                               <ImageRound
                                 name="Reaction"
                                 src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
+                                className="w-[15px] h-[15px] hover:cursor-pointer"
                               />
                             </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+                          </Tippy>
+
+                          <Tippy
+                            content={'引用'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
+                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[7px] py-[9px] hover:cursor-pointer">
                               <ImageRound
                                 name="Quotation"
                                 src={'/icons/quotation.svg'}
-                                className="w-[18px] h-[15px] hover:cursor-pointer"
+                                className="w-[15px] h-[10px] hover:cursor-pointer"
                               />
                             </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+                          </Tippy>
+                          <Tippy
+                            content={'ブックマーク'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
+                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[8px] py-[7px] hover:cursor-pointer">
                               <ImageRound
                                 name="Save"
                                 src={'/icons/save.svg'}
-                                className="w-[15px] h-[16px] hover:cursor-pointer"
+                                className="w-[12px] h-[14px] hover:cursor-pointer"
                               />
                             </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Square check"
-                                src={'/icons/square-check.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                          </div>
+                          </Tippy>
+
+                          {Number(session?.user.id) ===
+                            Number(messageDetail.sender.id) &&
+                            !messageDetail.deletedAt &&
+                            session?.user.permissions &&
+                            ((messageDetail.type == MessageType.MESSAGE &&
+                              hasPermissionInArray(
+                                session?.user.permissions,
+                                PermissionsSystem.CHAT_UPDATE,
+                              )) ||
+                              hasPermissionInArray(
+                                session?.user.permissions,
+                                PermissionsSystem.CHAT_DELETE,
+                              )) && (
+                              <>
+                                {messageDetail.type == MessageType.MESSAGE &&
+                                  session?.user.permissions &&
+                                  hasPermissionInArray(
+                                    session?.user.permissions,
+                                    PermissionsSystem.CHAT_UPDATE,
+                                  ) && (
+                                    <Tippy
+                                      content={'編集'}
+                                      arrow={false}
+                                      delay={1000}
+                                      placement="top"
+                                      offset={[0, 5]}>
+                                      <div
+                                        className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
+                                        onClick={() =>
+                                          handleOpenEditForm(messageDetail.uuid)
+                                        }>
+                                        <ImageRound
+                                          name="Edit"
+                                          src={'/icons/edit-chat.svg'}
+                                          className="w-[14px] h-[14px] hover:cursor-pointer"
+                                        />
+                                      </div>
+                                    </Tippy>
+                                  )}
+                                {session?.user.permissions &&
+                                  hasPermissionInArray(
+                                    session?.user.permissions,
+                                    PermissionsSystem.CHAT_DELETE,
+                                  ) && (
+                                    <Tippy
+                                      content={'消去'}
+                                      arrow={false}
+                                      delay={1000}
+                                      placement="top"
+                                      offset={[0, 5]}>
+                                      <div
+                                        className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
+                                        onClick={() => {
+                                          handleOpenDeleteMsgModal(
+                                            messageDetail.uuid,
+                                          );
+                                        }}>
+                                        <ImageRound
+                                          name="Delete"
+                                          src={'/icons/delete-chat.svg'}
+                                          className="w-[15px] h-[15px] hover:cursor-pointer"
+                                        />
+                                      </div>
+                                    </Tippy>
+                                  )}
+                              </>
+                            )}
                         </div>
                       )}
                     </>
@@ -859,33 +849,53 @@ const MessageDetail = ({
         )}
         {chatRoomDetail?.type === ChatRoomType.TASK && (
           <div
-            className={`flex ${messageDetail.type === MessageType.MESSAGE && 'flex-row-reverse'} px-8 !box-border`}>
-            {messageDetail.type !== MessageType.MESSAGE && (
+            className={`flex px-8 !box-border group-hover:bg-[#FFFFFF] py-3 mx-3 group-hover:rounded-md`}>
+            {messageDetail.type !== MessageType.MESSAGE ? (
               <ImageRound
                 className="w-10 h-10"
                 src="/icons/document.svg"
                 border="full"
                 name="Task"
               />
+            ) : (
+              <ImageRound
+                className="w-10 h-10"
+                src="/images/avatar-default.svg"
+                border="full"
+                name="Avatar user"
+              />
             )}
-            <div
-              className={`ml-6 ${messageDetail.type !== MessageType.MESSAGE ? 'w-[65%]' : 'max-w-[750px] flex-row-reverse'}`}>
+            <div className={`ml-6 !w-[100%]`}>
               <div className="flex justify-between">
-                {messageDetail.type !== MessageType.MESSAGE && (
+                {messageDetail.type !== MessageType.MESSAGE ? (
                   <p className="font-semibold text-sm pb-2">タスクカード</p>
+                ) : (
+                  <p className="font-semibold text-sm pb-2">
+                    {messageDetail.sender.fullName}{' '}
+                    <span className="font-normal text-[10px]">
+                      {messageDetail.sender.organizations &&
+                        messageDetail.sender.organizations.map(
+                          (organization, index) => (
+                            <span
+                              key={
+                                organization.id
+                              }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
+                          ),
+                        )}
+                    </span>
+                  </p>
                 )}
+                <p className="font-normal text-xs text-[#77858F]">
+                  {messageDetail.createdAt &&
+                    formatCheckDate(
+                      getFormattedDateTime(
+                        convertToCurrentTimezone(messageDetail.createdAt),
+                      ),
+                    )}
+                </p>
               </div>
               <div className="relative">
-                <div
-                  className={`flex ${messageDetail.type === MessageType.MESSAGE && 'flex justify-end'} items-start`}>
-                  <p className="font-normal text-xs">
-                    {messageDetail.createdAt &&
-                      formatCheckDate(
-                        getFormattedDateTime(
-                          convertToCurrentTimezone(messageDetail.createdAt),
-                        ),
-                      )}
-                  </p>
+                <div className={`flex items-start`}>
                   {messageDetail.isEdited && !messageDetail.deletedAt && (
                     <div className="flex items-center">
                       <ImageRound
@@ -929,19 +939,18 @@ const MessageDetail = ({
                     </div>
                   </div>
                 ) : (
-                  <div
-                    className={`group ${messageDetail.type === MessageType.MESSAGE && 'flex flex-row-reverse max-w-[750px] !min-w-[400px]'}`}>
+                  <div className={`!w-[100%]`}>
                     <div className="flex flex-col">
                       {messageDetail.deletedAt ? (
                         <p
-                          className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px] ${Number(session?.user.id) === Number(messageDetail.sender.id) && 'ml-auto'}`}>
+                          className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
                           {MESSAGE_DELETED}
                         </p>
                       ) : (
                         <div>
                           {messageDetail.type === MessageType.MESSAGE && (
                             <p
-                              className={`text-chat-box font-normal text-sm hover:cursor-pointer group-hover:bg-[#f0f1f1] max-w-[750px] ${messageDetail.type === MessageType.MESSAGE && 'text-right justify-end !min-w-[400px]'} -ml-1 p-1 rounded-[5px]  `}
+                              className={`text-chat-box font-normal text-sm hover:cursor-pointer max-w-[750px] -ml-1 p-1 rounded-[5px]  `}
                               dangerouslySetInnerHTML={{
                                 __html: messageDetail.message,
                               }}></p>
@@ -997,129 +1006,134 @@ const MessageDetail = ({
                       )}
                     </div>
                     <>
-                      {Number(session?.user.id) ===
-                        Number(messageDetail.sender.id) &&
-                        messageDetail.type == MessageType.MESSAGE &&
-                        !messageDetail.deletedAt &&
-                        session?.user.permissions &&
-                        ((messageDetail.type == MessageType.MESSAGE &&
-                          hasPermissionInArray(
-                            session?.user.permissions,
-                            PermissionsSystem.CHAT_UPDATE,
-                          )) ||
-                          hasPermissionInArray(
-                            session?.user.permissions,
-                            PermissionsSystem.CHAT_DELETE,
-                          )) && (
-                          <div
-                            className={`hidden group-hover:flex bg-white rounded-md px-3 py-1.5 shadow-md absolute -top-5 -left-5 gap-2`}>
-                            {messageDetail.type == MessageType.MESSAGE &&
-                              session?.user.permissions &&
-                              hasPermissionInArray(
-                                session?.user.permissions,
-                                PermissionsSystem.CHAT_UPDATE,
-                              ) && (
-                                <div
-                                  className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
-                                  onClick={() =>
-                                    handleOpenEditForm(messageDetail.uuid)
-                                  }>
-                                  <ImageRound
-                                    name="Edit"
-                                    src={'/icons/edit.svg'}
-                                    className="w-[18px] h-[18px] hover:cursor-pointer"
-                                  />
-                                </div>
-                              )}
-                            {session?.user.permissions &&
-                              hasPermissionInArray(
-                                session?.user.permissions,
-                                PermissionsSystem.CHAT_DELETE,
-                              ) && (
-                                <div
-                                  className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
-                                  onClick={() => {
-                                    handleOpenDeleteMsgModal(
-                                      messageDetail.uuid,
-                                    );
-                                  }}>
-                                  <ImageRound
-                                    name="Delete"
-                                    src={'/icons/delete.svg'}
-                                    className="w-[19px] h-[19px] hover:cursor-pointer"
-                                  />
-                                </div>
-                              )}
-                          </div>
-                        )}
                       {!messageDetail.deletedAt && (
                         <div
-                          className={`gap-1 bg-white group-hover:flex hidden rounded-md px-3 py-1.5 shadow-md absolute ${Number(session?.user.id) === Number(messageDetail.sender.id) && '-bottom-[37px] right-1'}`}>
-                          <div className="border-r-[1px] flex pr-3 items-center">
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Reaction"
-                                src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer -ml-2.5">
-                              <ImageRound
-                                name="Reaction"
-                                src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer -ml-2.5">
-                              <ImageRound
-                                name="Reaction"
-                                src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                            <ImageRound
-                              src="/icons/add.svg"
-                              name="Add icon"
-                              className="!w-3 !h-3 ml-2 text-gray-400 hover:cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex pl-2 items-center gap-2">
+                          className={`bg-white group-hover:flex hidden rounded-2xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
+                          <Tippy
+                            content={'返信'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
                             <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
                               <ImageRound
                                 name="Reply"
                                 src={'/icons/reply.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
+                                className="w-[17px] h-[15px] hover:cursor-pointer"
                               />
                             </div>
+                          </Tippy>
+                          <Tippy
+                            content={'リアクション'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
                             <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
                               <ImageRound
                                 name="Reaction"
                                 src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
+                                className="w-[15px] h-[15px] hover:cursor-pointer"
                               />
                             </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+                          </Tippy>
+
+                          <Tippy
+                            content={'引用'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
+                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[7px] py-[9px] hover:cursor-pointer">
                               <ImageRound
                                 name="Quotation"
                                 src={'/icons/quotation.svg'}
-                                className="w-[18px] h-[15px] hover:cursor-pointer"
+                                className="w-[15px] h-[10px] hover:cursor-pointer"
                               />
                             </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+                          </Tippy>
+                          <Tippy
+                            content={'ブックマーク'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
+                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[8px] py-[7px] hover:cursor-pointer">
                               <ImageRound
                                 name="Save"
                                 src={'/icons/save.svg'}
-                                className="w-[15px] h-[16px] hover:cursor-pointer"
+                                className="w-[12px] h-[14px] hover:cursor-pointer"
                               />
                             </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Square check"
-                                src={'/icons/square-check.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                          </div>
+                          </Tippy>
+
+                          {Number(session?.user.id) ===
+                            Number(messageDetail.sender.id) &&
+                            !messageDetail.deletedAt &&
+                            session?.user.permissions &&
+                            ((messageDetail.type == MessageType.MESSAGE &&
+                              hasPermissionInArray(
+                                session?.user.permissions,
+                                PermissionsSystem.CHAT_UPDATE,
+                              )) ||
+                              hasPermissionInArray(
+                                session?.user.permissions,
+                                PermissionsSystem.CHAT_DELETE,
+                              )) && (
+                              <>
+                                {messageDetail.type == MessageType.MESSAGE &&
+                                  session?.user.permissions &&
+                                  hasPermissionInArray(
+                                    session?.user.permissions,
+                                    PermissionsSystem.CHAT_UPDATE,
+                                  ) && (
+                                    <Tippy
+                                      content={'編集'}
+                                      arrow={false}
+                                      delay={1000}
+                                      placement="top"
+                                      offset={[0, 5]}>
+                                      <div
+                                        className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
+                                        onClick={() =>
+                                          handleOpenEditForm(messageDetail.uuid)
+                                        }>
+                                        <ImageRound
+                                          name="Edit"
+                                          src={'/icons/edit-chat.svg'}
+                                          className="w-[14px] h-[14px] hover:cursor-pointer"
+                                        />
+                                      </div>
+                                    </Tippy>
+                                  )}
+                                {session?.user.permissions &&
+                                  hasPermissionInArray(
+                                    session?.user.permissions,
+                                    PermissionsSystem.CHAT_DELETE,
+                                  ) && (
+                                    <Tippy
+                                      content={'消去'}
+                                      arrow={false}
+                                      delay={1000}
+                                      placement="top"
+                                      offset={[0, 5]}>
+                                      <div
+                                        className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
+                                        onClick={() => {
+                                          handleOpenDeleteMsgModal(
+                                            messageDetail.uuid,
+                                          );
+                                        }}>
+                                        <ImageRound
+                                          name="Delete"
+                                          src={'/icons/delete-chat.svg'}
+                                          className="w-[15px] h-[15px] hover:cursor-pointer"
+                                        />
+                                      </div>
+                                    </Tippy>
+                                  )}
+                              </>
+                            )}
                         </div>
                       )}
                     </>
@@ -1131,33 +1145,53 @@ const MessageDetail = ({
         )}
         {chatRoomDetail?.type === ChatRoomType.SKILL && (
           <div
-            className={`flex ${messageDetail.type === MessageType.MESSAGE && 'flex-row-reverse'} px-8 !box-border`}>
-            {messageDetail.type !== MessageType.MESSAGE && (
+            className={`flex px-8 !box-border group-hover:bg-[#FFFFFF] py-3 mx-3 group-hover:rounded-md`}>
+            {messageDetail.type !== MessageType.MESSAGE ? (
               <ImageRound
                 className="w-10 h-10"
                 src="/icons/document.svg"
                 border="full"
                 name="Task"
               />
+            ) : (
+              <ImageRound
+                className="w-10 h-10"
+                src="/images/avatar-default.svg"
+                border="full"
+                name="Avatar user"
+              />
             )}
-            <div
-              className={`ml-6 ${messageDetail.type !== MessageType.MESSAGE ? 'w-[65%]' : 'max-w-[750px] flex-row-reverse'}`}>
+            <div className={`ml-6 !w-[100%]`}>
               <div className="flex justify-between">
-                {messageDetail.type !== MessageType.MESSAGE && (
+                {messageDetail.type !== MessageType.MESSAGE ? (
                   <p className="font-semibold text-sm pb-2">スキルアップ</p>
+                ) : (
+                  <p className="font-semibold text-sm pb-2">
+                    {messageDetail.sender.fullName}{' '}
+                    <span className="font-normal text-[10px]">
+                      {messageDetail.sender.organizations &&
+                        messageDetail.sender.organizations.map(
+                          (organization, index) => (
+                            <span
+                              key={
+                                organization.id
+                              }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
+                          ),
+                        )}
+                    </span>
+                  </p>
                 )}
+                <p className="font-normal text-xs text-[#77858F]">
+                  {messageDetail.createdAt &&
+                    formatCheckDate(
+                      getFormattedDateTime(
+                        convertToCurrentTimezone(messageDetail.createdAt),
+                      ),
+                    )}
+                </p>
               </div>
               <div className="relative">
-                <div
-                  className={`flex ${messageDetail.type === MessageType.MESSAGE && 'flex justify-end'} items-start`}>
-                  <p className="font-normal text-xs">
-                    {messageDetail.createdAt &&
-                      formatCheckDate(
-                        getFormattedDateTime(
-                          convertToCurrentTimezone(messageDetail.createdAt),
-                        ),
-                      )}
-                  </p>
+                <div className={`flex items-start`}>
                   {messageDetail.isEdited && !messageDetail.deletedAt && (
                     <div className="flex items-center">
                       <ImageRound
@@ -1201,8 +1235,7 @@ const MessageDetail = ({
                     </div>
                   </div>
                 ) : (
-                  <div
-                    className={`group ${messageDetail.type === MessageType.MESSAGE && 'flex flex-row-reverse max-w-[750px] !min-w-[400px]'}`}>
+                  <div className={`!w-[100%]`}>
                     <div className="flex flex-col">
                       {messageDetail.deletedAt ||
                       (!messageDetail.submitLevel && !messageDetail.message) ? (
@@ -1216,7 +1249,7 @@ const MessageDetail = ({
                         <div>
                           {messageDetail.type === MessageType.MESSAGE && (
                             <p
-                              className={`text-chat-box font-normal text-sm hover:cursor-pointer group-hover:bg-[#f0f1f1] max-w-[750px] ${messageDetail.type === MessageType.MESSAGE && 'text-right justify-end !min-w-[400px]'} -ml-1 p-1 rounded-[5px]  `}
+                              className={`text-chat-box font-normal text-sm hover:cursor-pointer !w-[100%] -ml-1 p-1 rounded-[5px]  `}
                               dangerouslySetInnerHTML={{
                                 __html: messageDetail.message,
                               }}></p>
@@ -1249,7 +1282,7 @@ const MessageDetail = ({
                                 }
                               }}>
                               <div
-                                className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
+                                className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
                                   <h4 className="text-sm w-fit font-medium text-black h-5">
                                     {messageDetail.sender.fullName}
@@ -1269,13 +1302,7 @@ const MessageDetail = ({
                                       messageDetail.submitLevel?.comment
                                         ?.split('\n')
                                         .map((comment, index) => {
-                                          return (
-                                            <p
-                                              className="max-w-[700px] break-words"
-                                              key={index}>
-                                              {comment}
-                                            </p>
-                                          );
+                                          return <p key={index}>{comment}</p>;
                                         })}
                                   </div>
                                 </div>
@@ -1286,129 +1313,134 @@ const MessageDetail = ({
                       )}
                     </div>
                     <>
-                      {Number(session?.user.id) ===
-                        Number(messageDetail.sender.id) &&
-                        messageDetail.type == MessageType.MESSAGE &&
-                        !messageDetail.deletedAt &&
-                        session?.user.permissions &&
-                        ((messageDetail.type == MessageType.MESSAGE &&
-                          hasPermissionInArray(
-                            session?.user.permissions,
-                            PermissionsSystem.CHAT_UPDATE,
-                          )) ||
-                          hasPermissionInArray(
-                            session?.user.permissions,
-                            PermissionsSystem.CHAT_DELETE,
-                          )) && (
-                          <div
-                            className={`hidden group-hover:flex bg-white rounded-md px-3 py-1.5 shadow-md absolute -top-5 -left-5 gap-2`}>
-                            {messageDetail.type == MessageType.MESSAGE &&
-                              session?.user.permissions &&
-                              hasPermissionInArray(
-                                session?.user.permissions,
-                                PermissionsSystem.CHAT_UPDATE,
-                              ) && (
-                                <div
-                                  className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
-                                  onClick={() =>
-                                    handleOpenEditForm(messageDetail.uuid)
-                                  }>
-                                  <ImageRound
-                                    name="Edit"
-                                    src={'/icons/edit.svg'}
-                                    className="w-[18px] h-[18px] hover:cursor-pointer"
-                                  />
-                                </div>
-                              )}
-                            {session?.user.permissions &&
-                              hasPermissionInArray(
-                                session?.user.permissions,
-                                PermissionsSystem.CHAT_DELETE,
-                              ) && (
-                                <div
-                                  className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
-                                  onClick={() => {
-                                    handleOpenDeleteMsgModal(
-                                      messageDetail.uuid,
-                                    );
-                                  }}>
-                                  <ImageRound
-                                    name="Delete"
-                                    src={'/icons/delete.svg'}
-                                    className="w-[19px] h-[19px] hover:cursor-pointer"
-                                  />
-                                </div>
-                              )}
-                          </div>
-                        )}
                       {!messageDetail.deletedAt && (
                         <div
-                          className={`gap-1 bg-white group-hover:flex hidden rounded-md px-3 py-1.5 shadow-md absolute ${Number(session?.user.id) === Number(messageDetail.sender.id) && '-bottom-[37px] right-1'}`}>
-                          <div className="border-r-[1px] flex pr-3 items-center">
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Reaction"
-                                src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer -ml-2.5">
-                              <ImageRound
-                                name="Reaction"
-                                src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer -ml-2.5">
-                              <ImageRound
-                                name="Reaction"
-                                src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                            <ImageRound
-                              src="/icons/add.svg"
-                              name="Add icon"
-                              className="!w-3 !h-3 ml-2 text-gray-400 hover:cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex pl-2 items-center gap-2">
+                          className={`bg-white group-hover:flex hidden rounded-2xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
+                          <Tippy
+                            content={'返信'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
                             <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
                               <ImageRound
                                 name="Reply"
                                 src={'/icons/reply.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
+                                className="w-[17px] h-[15px] hover:cursor-pointer"
                               />
                             </div>
+                          </Tippy>
+                          <Tippy
+                            content={'リアクション'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
                             <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
                               <ImageRound
                                 name="Reaction"
                                 src={'/icons/reaction.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
+                                className="w-[15px] h-[15px] hover:cursor-pointer"
                               />
                             </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+                          </Tippy>
+
+                          <Tippy
+                            content={'引用'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
+                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[7px] py-[9px] hover:cursor-pointer">
                               <ImageRound
                                 name="Quotation"
                                 src={'/icons/quotation.svg'}
-                                className="w-[18px] h-[15px] hover:cursor-pointer"
+                                className="w-[15px] h-[10px] hover:cursor-pointer"
                               />
                             </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+                          </Tippy>
+                          <Tippy
+                            content={'ブックマーク'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 5]}>
+                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[8px] py-[7px] hover:cursor-pointer">
                               <ImageRound
                                 name="Save"
                                 src={'/icons/save.svg'}
-                                className="w-[15px] h-[16px] hover:cursor-pointer"
+                                className="w-[12px] h-[14px] hover:cursor-pointer"
                               />
                             </div>
-                            <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Square check"
-                                src={'/icons/square-check.svg'}
-                                className="w-[16px] h-[16px] hover:cursor-pointer"
-                              />
-                            </div>
-                          </div>
+                          </Tippy>
+
+                          {Number(session?.user.id) ===
+                            Number(messageDetail.sender.id) &&
+                            !messageDetail.deletedAt &&
+                            session?.user.permissions &&
+                            ((messageDetail.type == MessageType.MESSAGE &&
+                              hasPermissionInArray(
+                                session?.user.permissions,
+                                PermissionsSystem.CHAT_UPDATE,
+                              )) ||
+                              hasPermissionInArray(
+                                session?.user.permissions,
+                                PermissionsSystem.CHAT_DELETE,
+                              )) && (
+                              <>
+                                {messageDetail.type == MessageType.MESSAGE &&
+                                  session?.user.permissions &&
+                                  hasPermissionInArray(
+                                    session?.user.permissions,
+                                    PermissionsSystem.CHAT_UPDATE,
+                                  ) && (
+                                    <Tippy
+                                      content={'編集'}
+                                      arrow={false}
+                                      delay={1000}
+                                      placement="top"
+                                      offset={[0, 5]}>
+                                      <div
+                                        className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
+                                        onClick={() =>
+                                          handleOpenEditForm(messageDetail.uuid)
+                                        }>
+                                        <ImageRound
+                                          name="Edit"
+                                          src={'/icons/edit-chat.svg'}
+                                          className="w-[14px] h-[14px] hover:cursor-pointer"
+                                        />
+                                      </div>
+                                    </Tippy>
+                                  )}
+                                {session?.user.permissions &&
+                                  hasPermissionInArray(
+                                    session?.user.permissions,
+                                    PermissionsSystem.CHAT_DELETE,
+                                  ) && (
+                                    <Tippy
+                                      content={'消去'}
+                                      arrow={false}
+                                      delay={1000}
+                                      placement="top"
+                                      offset={[0, 5]}>
+                                      <div
+                                        className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
+                                        onClick={() => {
+                                          handleOpenDeleteMsgModal(
+                                            messageDetail.uuid,
+                                          );
+                                        }}>
+                                        <ImageRound
+                                          name="Delete"
+                                          src={'/icons/delete-chat.svg'}
+                                          className="w-[15px] h-[15px] hover:cursor-pointer"
+                                        />
+                                      </div>
+                                    </Tippy>
+                                  )}
+                              </>
+                            )}
                         </div>
                       )}
                     </>
@@ -1427,6 +1459,7 @@ interface dataProps {
   lastItemId: number | null | undefined;
   hasMoreDetail: boolean;
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
+  dashboardMembers: ChatDashboardMember[];
   creationDataTaskData: CreationDataTask | undefined;
   handleUpdateLocalByCode: (data: ChatRoomItem) => void;
   handleUpdateLocalByCodeMsg: (data: ChatRoomItem) => void;
@@ -1436,8 +1469,6 @@ interface dataProps {
   setHasMoreDetail: React.Dispatch<React.SetStateAction<boolean>>;
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   hasMore: boolean;
-  submitByEnter: boolean | undefined;
-  setSubmitByEnter: React.Dispatch<React.SetStateAction<boolean | undefined>>;
   handleRemoveChatRoomParam: () => void;
   chatRoomCode: string;
   dataChatList: ChatRoomItem[];
@@ -1451,14 +1482,13 @@ const ChatDetail = ({
   creationDataTaskData,
   hasMoreDetail,
   dashboardMemberList,
+  dashboardMembers,
   setFilteredChatList,
   setHasMoreDetail,
   setLastItemId,
   handleUpdateLocalByCode,
   handleUpdateLocalByCodeMsg,
   setDataChatList,
-  submitByEnter,
-  setSubmitByEnter,
   handleRemoveChatRoomParam,
   chatRoomCode,
   dataChatList,
@@ -1909,51 +1939,6 @@ const ChatDetail = ({
     });
   };
 
-  const [isSendMsg, setIsSenMsg] = useState<boolean>(false);
-
-  const handleSendMessageByEnter = (event: KeyboardEvent) => {
-    if (event.shiftKey) {
-      if (event.key === 'Enter' && submitByEnter) {
-        setMessage(message);
-      }
-    } else {
-      if (
-        event.key === 'Enter' &&
-        submitByEnter &&
-        !messageSubmitted &&
-        trimUnnecessaryLineBreaks(message as string) !== ''
-      ) {
-        setMessageSubmitted(true);
-        const uuidMsg = uuidv4();
-        const newMsg = trimUnnecessaryLineBreaks(message) as string;
-        setDataMessageDetail([
-          {
-            uuid: uuidMsg,
-            message: newMsg,
-            createdAt: getCurrentTimeInJapan(),
-            deletedAt: null,
-            type: MessageType.MESSAGE,
-            isEdited: false,
-            task: null,
-            sender: {
-              fullName: session?.user.profile.fullName || '',
-              id: session?.user.id as number,
-              organizations: [],
-            },
-          },
-          ...dataMessageDetail,
-        ]);
-
-        handleSendMsgChat({
-          data: newMsg,
-          uuid: uuidMsg,
-        });
-      }
-    }
-    setIsSenMsg(false);
-  };
-  const throttledHandleSubmitData = throttle(handleSendMessageByEnter, 1000);
-
   // Delete message
   const postDeleteMsg = async () => {
     const { data: response } = await api.delete(
@@ -2282,26 +2267,6 @@ const ChatDetail = ({
     },
   );
 
-  const handleConfirmUpdateEnterSendMessage = () => {
-    updateEnterSendMessage();
-  };
-
-  const handleUpdateEnterSendMessage = async () => {
-    return await api.post(apiRouters.USER_SETTING, {
-      isEnterSendMessage: !submitByEnter,
-    });
-  };
-
-  const { mutate: updateEnterSendMessage } = useMutation(
-    'postUpdateEnterSendMessage',
-    handleUpdateEnterSendMessage,
-    {
-      onSuccess: () => {
-        setSubmitByEnter(!submitByEnter);
-      },
-    },
-  );
-
   const handleGetChatRoomDetail = async (params: {
     code: string;
     isRead: boolean;
@@ -2351,31 +2316,76 @@ const ChatDetail = ({
   const renderImageRound = (type = '') => {
     if (type === ChatRoomType.GROUP) {
       return (
-        <ImageRound
-          className="w-10 h-10"
-          src="/icons/multi-users.svg"
-          border="full"
-          name="Multi users"
-        />
+        <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <ImageRound
+            className="w-14 h-14 rounded-full"
+            src="/icons/multi-users.svg"
+            border="full"
+            name="Multi users"
+          />
+        </div>
       );
     }
-    if (type === ChatRoomType.TASK || type === ChatRoomType.SKILL) {
+    if (type === ChatRoomType.TASK) {
       return (
-        <ImageRound
-          className="w-10 h-10"
-          src="/icons/document.svg"
-          border="full"
-          name="Task"
-        />
+        <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <ImageRound
+            className="w-14 h-14"
+            src="/icons/document.svg"
+            border="full"
+            name="Task"
+          />
+        </div>
+      );
+    }
+    if (type === ChatRoomType.SKILL) {
+      return (
+        <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <ImageRound
+            className="w-14 h-14"
+            src="/icons/skill-room.svg"
+            border="full"
+            name="Task"
+          />
+        </div>
       );
     }
     return (
-      <ImageRound
-        className="w-10 h-10"
-        src="/images/avatar-default.svg"
-        border="full"
-        name="Avatar user"
-      />
+      <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+        <ImageRound
+          className="w-14 h-14"
+          src="/images/avatar-default.svg"
+          border="full"
+          name="Avatar user"
+        />
+      </div>
+    );
+  };
+
+  const getParticipantAvatars = (participants: any, isEditing: boolean) => {
+    const slicedParticipants = participants.slice(0, 3);
+    const remainingCount =
+      participants.length > 3 ? participants.length - 3 : 0;
+
+    return (
+      <>
+        {slicedParticipants.map((participant: any, index: number) => {
+          const participantId = isEditing ? participant : participant.id;
+          const avatarColor =
+            dashboardMembers.find((member) => member.id == participantId)
+              ?.avatarColor || '';
+          return (
+            <div className="h-6 ml-[-10px]" key={index}>
+              {AvatarIconWithDynamicColor({ color: avatarColor, size: 33 })}
+            </div>
+          );
+        })}
+        {remainingCount > 0 && (
+          <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] rounded-full text-sm text-white w-[30px] h-[30px] mt-[2px]">
+            +{remainingCount}
+          </div>
+        )}
+      </>
     );
   };
 
@@ -2383,7 +2393,7 @@ const ChatDetail = ({
     <Fragment>
       {chatRoomCode && (
         <div
-          className="flex flex-col flex-grow w-[calc(100vw_-_600px)]"
+          className="flex flex-col flex-grow w-[calc(100vw_-_600px)] !bg-[#F8FAFC] !h-[100vh]"
           onClick={() => {
             if (
               chatRoomNotifications &&
@@ -2443,35 +2453,39 @@ const ChatDetail = ({
               roomCode: chatRoomCode,
             });
           }}>
-          <div className="flex justify-between pl-8 py-5 !w-full border-b-[2px]">
-            <div className="flex gap-[23px] items-center">
+          <div
+            className="flex justify-between items-center px-4 py-3 !w-full border-b-[2px] text-white"
+            style={{
+              background: showModalHeaderBackgroundColorByTime(),
+            }}>
+            <div className="flex items-center w-[60%]">
               {renderImageRound(chatRoomDetail?.type || roomDetail?.type)}
-              <div>
-                <p className="text-sm font-bold truncate max-w-[280px]">
-                  {chatRoomDetail
-                    ? chatRoomCode &&
+              <p className="text-[20px] font-bold truncate max-w-[calc(100%_-_370px)] ml-3">
+                {chatRoomDetail
+                  ? chatRoomCode &&
+                    chatRoomNameEditing.find(
+                      (room) => room.roomCode === chatRoomCode,
+                    )
+                    ? chatRoomNameEditing.find(
+                        (room) => room.roomCode === chatRoomCode,
+                      )?.roomName
+                    : chatRoomDetail?.name
+                  : chatRoomCode &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === chatRoomCode,
                       )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === chatRoomCode,
-                        )?.roomName
-                      : chatRoomDetail?.name
-                    : chatRoomCode &&
-                        chatRoomNameEditing.find(
-                          (room) => room.roomCode === chatRoomCode,
-                        )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === chatRoomCode,
-                        )?.roomName
-                      : roomDetail?.name}
-                </p>
+                    ? chatRoomNameEditing.find(
+                        (room) => room.roomCode === chatRoomCode,
+                      )?.roomName
+                    : roomDetail?.name}
+              </p>
+              <div className="max-w-[280px] w-[280px] ml-3">
                 {!chatRoomDetail
                   ? roomDetail &&
                     roomDetail.type === ChatRoomType.GROUP && (
                       <div className="flex gap-2 items-center mt-1">
-                        <span className="text-xs">
-                          メンバー(
+                        <p className="text-[13px] text-[#FFFFFFB2]">
+                          メンバー
                           {roomDetail &&
                           chatRoomParticipantsEditing.find(
                             (room) => room.roomCode === roomDetail.code,
@@ -2480,23 +2494,38 @@ const ChatDetail = ({
                                 (room) => room.roomCode === roomDetail.code,
                               )?.participantsList.length
                             : roomDetail?.participants?.length}
+                          人
+                        </p>
+                        <div className="flex mt-[-3px]">
+                          {roomDetail &&
+                          chatRoomParticipantsEditing.find(
+                            (room) => room.roomCode === roomDetail.code,
                           )
-                        </span>
+                            ? getParticipantAvatars(
+                                chatRoomParticipantsEditing.find(
+                                  (room) => room.roomCode === roomDetail.code,
+                                )?.participantsList || [],
+                                true,
+                              )
+                            : getParticipantAvatars(
+                                roomDetail?.participants || [],
+                                false,
+                              )}
+                        </div>
                         <Button
                           sz="sm"
-                          variant="outline"
-                          className="w-22 h-6 text-xs !px-1 !py-0"
+                          className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
                           onClick={() => setOpenAddMembersBox(true)}
                           type="button">
-                          招待する+
+                          招待する
                         </Button>
                       </div>
                     )
                   : chatRoomDetail &&
                     chatRoomDetail.type === ChatRoomType.GROUP && (
-                      <div className="flex gap-2 items-center mt-1">
-                        <span className="text-xs">
-                          メンバー(
+                      <div className="flex gap-2 items-center">
+                        <p className="text-[13px] mr-3 text-[#FFFFFFB2]">
+                          メンバー
                           {chatRoomDetail &&
                           chatRoomParticipantsEditing.find(
                             (room) => room.roomCode === chatRoomDetail.code,
@@ -2505,25 +2534,42 @@ const ChatDetail = ({
                                 (room) => room.roomCode === chatRoomDetail.code,
                               )?.participantsList.length
                             : chatRoomDetail?.participants?.length}
+                          人
+                        </p>
+                        <div className="flex mt-[-3px]">
+                          {chatRoomDetail &&
+                          chatRoomParticipantsEditing.find(
+                            (room) => room.roomCode === chatRoomDetail.code,
                           )
-                        </span>
+                            ? getParticipantAvatars(
+                                chatRoomParticipantsEditing.find(
+                                  (room) =>
+                                    room.roomCode === chatRoomDetail.code,
+                                )?.participantsList || [],
+                                true,
+                              )
+                            : getParticipantAvatars(
+                                chatRoomDetail?.participants || [],
+                                false,
+                              )}
+                        </div>
                         <Button
                           sz="sm"
-                          variant="outline"
-                          className="w-22 h-6 text-xs !px-1 !py-0"
+                          className="w-fit min-w-[80px] text-xs !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
                           onClick={() => setOpenAddMembersBox(true)}
                           type="button">
-                          招待する+
+                          招待する
                         </Button>
                       </div>
                     )}
               </div>
             </div>
-            <div className="flex gap-8">
+
+            <div className="flex gap-2 items-center">
               <InputSearch
-                placeholder="グループ内での検索"
-                className="w-[400px]"
-                inputClassName="!py-2"
+                placeholder="チャットルーム内のキーワードを検索"
+                customSearchIconUrl="/icons/search-white.svg"
+                inputClassName="!w-[290px] !py-2 rounded-[20px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
                 value={searchChatMsg}
                 onChange={(e) => setSearchChatMsg(e.target.value)}
               />
@@ -2543,14 +2589,23 @@ const ChatDetail = ({
                           chatRoomDetail?.type == type) ||
                           (roomDetail?.code == chatRoomCode &&
                             roomDetail?.type == type)) && (
-                          <ImageRound
+                          <Tippy
+                            content={'設定'}
+                            arrow={false}
+                            delay={1000}
                             key={type}
-                            className="w-10 h-10 hover:cursor-pointer"
-                            src="/icons/setting.svg"
-                            border="full"
-                            name="Setting icon"
-                            onClick={() => setOpenSettingBox(true)}
-                          />
+                            placement="top"
+                            offset={[0, 5]}>
+                            <div>
+                              <ImageRound
+                                className="w-10 h-10 hover:cursor-pointer"
+                                src="/icons/setting-chat.svg"
+                                border="full"
+                                name="Setting icon"
+                                onClick={() => setOpenSettingBox(true)}
+                              />
+                            </div>
+                          </Tippy>
                         ),
                     )}
                   </>
@@ -2558,7 +2613,7 @@ const ChatDetail = ({
             </div>
           </div>
           <div
-            className={`h-[calc(100vh_-_450px)] pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
+            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || roomDetail?.type == ChatRoomType.TASK || roomDetail?.type == ChatRoomType.SKILL ? 'h-[calc(100vh_-_200px)]' : 'h-[calc(100vh_-_450px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
             {dataMessageDetail &&
               chatRoomNotifications &&
               dataMessageDetail
@@ -2589,10 +2644,7 @@ const ChatDetail = ({
             chatRoomNotifications.notifications > 0 ? (
               <div className="flex items-center gap-5 justify-center">
                 <div className="wavy-line"></div>
-                <p className="text-xs">
-                  未読
-                  {chatRoomNotifications.notifications}件
-                </p>
+                <p className="text-[13px] text-[#0068B6]">未読のメッセージ</p>
                 <div className="wavy-line"></div>
               </div>
             ) : null}
@@ -2643,117 +2695,124 @@ const ChatDetail = ({
               </div>
             </div>
           </div>
+          {[ChatRoomType.GROUP, ChatRoomType.PRIVATE, ChatRoomType.SELF].map(
+            (type) =>
+              (chatRoomDetail?.type == type || roomDetail?.type == type) && (
+                <div
+                  key={type}
+                  className="px-8 py-3 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
+                  <div className="flex justify-between items-center">
+                    <div className="flex gap-1 items-center">
+                      <Tippy
+                        content={'メンション'}
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 8]}>
+                        <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                          <ImageRound
+                            name="Mention"
+                            src="/icons/mention.svg"
+                            className="w-[16px] h-[16px]"
+                          />
+                        </div>
+                      </Tippy>
+                      <Tippy
+                        content={'リアクション'}
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 8]}>
+                        <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                          <ImageRound
+                            name="Smile"
+                            src="/icons/smile.svg"
+                            className="w-[16px] h-[16px]"
+                          />
+                        </div>
+                      </Tippy>
+                      <Tippy
+                        content={'ファイルを送信'}
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 8]}>
+                        <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                          <ImageRound
+                            name="Add file"
+                            src="/icons/add-file.svg"
+                            className="w-[16px] h-[16px]"
+                          />
+                        </div>
+                      </Tippy>
 
-          <div className="pl-8 py-3 !box-border max-w-[100%]">
-            <div className="flex justify-between mb-3 items-center">
-              <div className="flex gap-2 items-center">
-                <div className="bg-[#d7d8d8] hover:bg-[#c7c7c7] rounded-full p-[5px] hover:cursor-pointer">
-                  <ImageRound
-                    name="Mention"
-                    src="/icons/mention.svg"
-                    className="w-5 h-5"
-                  />
-                </div>
-                <div className="bg-[#d7d8d8] hover:bg-[#c7c7c7] rounded-full p-[5px] hover:cursor-pointer">
-                  <ImageRound
-                    name="Smile"
-                    src="/icons/smile.svg"
-                    className="w-5 h-5"
-                  />
-                </div>
-
-                <div className="bg-[#d7d8d8] hover:bg-[#c7c7c7] rounded-full p-[5px] hover:cursor-pointer">
-                  <ImageRound
-                    name="Add file"
-                    src="/icons/add-file.svg"
-                    className="w-5 h-5"
-                  />
-                </div>
-                {session?.user.permissions &&
-                  hasPermissionInArray(
-                    session?.user.permissions,
-                    PermissionsSystem.MY_TASK_ADD,
-                  ) && (
-                    <div
-                      onClick={() => {
-                        // Create task when click
-                        handleSetParam({
-                          id: null,
-                          action: ActionTask.CREATE,
-                        });
-                      }}
-                      className="bg-[#d7d8d8] hover:bg-[#c7c7c7] rounded-full p-[4px] hover:cursor-pointer">
-                      <ImageRound
-                        name="Quote checker"
-                        src="/icons/quote-checker.svg"
-                        className="w-6 h-6 scale-75"
-                      />
+                      {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.MY_TASK_ADD,
+                        ) && (
+                          <Tippy
+                            content={'タスクを引用'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 8]}>
+                            <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                              <ImageRound
+                                name="Quote checker"
+                                src="/icons/quote-checker.svg"
+                                className="w-[18px] h-[18px]"
+                                onClick={() => {
+                                  handleSetParam({
+                                    id: null,
+                                    action: ActionTask.CREATE,
+                                  });
+                                }}
+                              />
+                            </div>
+                          </Tippy>
+                        )}
+                      <Tippy
+                        content={'書式設定'}
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 8]}>
+                        <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
+                          <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
+                        </p>
+                      </Tippy>
                     </div>
-                  )}
-                <div className="text-[12px] !rounded-full flex justify-between items-center bg-[#d7d8d8] hover:bg-[#c7c7c7] p-2 w-8 h-8 hover:cursor-pointer">
-                  <span className="ml-[1.5px] font-medium">Aa</span>
-                </div>
-                <div id="toolbar">
-                  <span className="ql-formats">
-                    <div className="text-[12px] !rounded-full flex justify-between items-center bg-[#d7d8d8] hover:bg-[#c7c7c7] p-1 w-8 h-8 hover:cursor-pointer">
-                      <button className="ql-bold !w-5 !h-5" />
-                    </div>
-                  </span>
-                </div>
-              </div>
 
-              <div className="flex items-center">
-                <div className="w-[130px]">
-                  <Checkbox
-                    label="Enterで送信"
-                    isChecked={submitByEnter}
-                    onChange={handleConfirmUpdateEnterSendMessage}
+                    <div className="flex items-center">
+                      {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.CHAT_ADD,
+                        ) && (
+                          <Button
+                            className="w-[100px]"
+                            type="submit"
+                            onClick={handleConfirmSendMessage}
+                            disabled={
+                              trimUnnecessaryLineBreaks(message as string) ===
+                              ''
+                            }>
+                            送信
+                          </Button>
+                        )}
+                    </div>
+                  </div>
+                  <Quill
+                    text={message}
+                    setText={setMessage}
+                    messageSubmitted={messageSubmitted}
+                    setMessageSubmitted={setMessageSubmitted}
+                    placeholder="メッセージを入力"
                   />
                 </div>
-                {session?.user.permissions &&
-                  hasPermissionInArray(
-                    session?.user.permissions,
-                    PermissionsSystem.CHAT_ADD,
-                  ) && (
-                    <Button
-                      className="w-[150px]"
-                      type="submit"
-                      onClick={handleConfirmSendMessage}
-                      onKeyDown={(e) => {
-                        if (e.altKey && e.key === 'Enter') {
-                          e.preventDefault();
-                        }
-                      }}
-                      disabled={
-                        trimUnnecessaryLineBreaks(message as string) === '' ||
-                        isSendMsg
-                      }>
-                      送信
-                    </Button>
-                  )}
-              </div>
-            </div>
-            <Quill
-              text={message}
-              setText={setMessage}
-              messageSubmitted={messageSubmitted}
-              setMessageSubmitted={setMessageSubmitted}
-              handleSendMessageByEnter={(e) => {
-                if (
-                  session?.user.permissions &&
-                  hasPermissionInArray(
-                    session?.user.permissions,
-                    PermissionsSystem.CHAT_ADD,
-                  )
-                ) {
-                  if (e.keyCode == 13) {
-                    if (isSendMsg) return;
-                    throttledHandleSubmitData(e);
-                  }
-                }
-              }}
-            />
-          </div>
+              ),
+          )}
         </div>
       )}
       {openSettingBox && (

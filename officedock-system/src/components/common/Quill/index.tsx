@@ -7,22 +7,22 @@ export type QuillProps = {
   text?: string;
   msgEditing?: string;
   className?: string;
+  placeholder?: string;
   setText?: Dispatch<SetStateAction<string>>;
   setMsgEditing?: Dispatch<SetStateAction<string | undefined>>;
   messageSubmitted?: boolean;
   setMessageSubmitted?: Dispatch<SetStateAction<boolean>>;
-  handleSendMessageByEnter?: (event: KeyboardEvent) => void;
 };
 
 const Quill = ({
   text,
   setText,
   className,
+  placeholder = '',
   setMsgEditing,
   msgEditing,
   messageSubmitted,
   setMessageSubmitted,
-  handleSendMessageByEnter,
 }: QuillProps) => {
   const ReactQuill = useMemo(
     () => dynamic(() => import('react-quill'), { ssr: false }),
@@ -30,9 +30,7 @@ const Quill = ({
   );
 
   const modules = {
-    toolbar: {
-      container: '#toolbar',
-    },
+    toolbar: []
   };
 
   const handleChange = (content: string) => {
@@ -51,18 +49,16 @@ const Quill = ({
     }
   }, [messageSubmitted, setText]);
 
-  const formats = ['bold'];
 
   return (
     <>
       <ReactQuill
         theme="snow"
         modules={modules}
-        formats={formats}
         onChange={(content: string) => handleChange(content)}
         value={msgEditing || text}
         className={className}
-        onKeyDown={handleSendMessageByEnter}
+        placeholder={placeholder}
       />
     </>
   );
