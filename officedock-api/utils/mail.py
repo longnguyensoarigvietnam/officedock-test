@@ -12,12 +12,15 @@ class MailService:
     MailService class is used to send mail messages.
     """
 
-    def __init__(self, from_email=settings.EMAIL_SENDER):
+    def __init__(
+        self, from_email=settings.EMAIL_SENDER, name_sender=settings.NAME_SENDER
+    ):
         """
         MailService constructor.
         """
 
         self.from_email = from_email
+        self.name_sender = name_sender
 
     def send(self, subject, message, recipient_list):
         """
@@ -27,7 +30,7 @@ class MailService:
         send_mail(
             subject=subject,
             message="",
-            from_email=f"Office Dock <{self.from_email}>",
+            from_email=f"{self.name_sender} <{self.from_email}>",
             recipient_list=recipient_list,
             html_message=message,
         )
