@@ -21,13 +21,15 @@
 }
 
 .holiday,
-.react-datepicker__day--keyboard-selected.holiday {
-  color: #C32E2E !important;
+.sunday,
+.react-datepicker__day--keyboard-selected.holiday,
+.react-datepicker__day--keyboard-selected.sunday {
+  color: #c32e2e !important;
 }
 
-.weekends,
-.react-datepicker__day--keyboard-selected.weekends {
-  color: #0068B6 !important;
+.saturday,
+.react-datepicker__day--keyboard-selected.saturday {
+  color: #0068b6 !important;
 }
 
 .small .react-datepicker {
@@ -63,7 +65,7 @@
   font-size: 14px !important;
   font-weight: 400 !important;
   line-height: 20px !important;
-  color: #77858F !important;
+  color: #77858f !important;
   text-align: center;
 }
 
@@ -81,7 +83,7 @@
   border-bottom: none !important;
 }
 
-.react-datepicker__day--keyboard-selected:hover{
+.react-datepicker__day--keyboard-selected:hover {
   background-color: #f0f0f0 !important;
 }
 

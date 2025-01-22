@@ -107,14 +107,13 @@ const Column = ({
   const isMyRoutine = columnId === `${StatusValueTask.MY_ROUTINE}`;
 
   const { columnWidth } = useContext(TaskContext);
+  const { extendByStatus, setExtendByStatus } = useContext(TaskContext);
 
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
   const [taskLast, setTaskLast] = useState<number | null>(null);
   const [deadlineLast, setDeadlineLast] = useState<string | null>(null);
   const [pinAtLast, setPinAtLast] = useState<string | null>(null);
-
-  const [isExtendColumn, setIsExtendColumn] = useState(true);
 
   const [page, setPage] = useState<number>(1);
   const { ref: listTaskRef, inView: inViewListTask } = useInView({
@@ -313,7 +312,8 @@ const Column = ({
       paddingRight = `${(columnWidth / 247) * 17}px`;
   }
 
-  return isExtendColumn ? (
+  return extendByStatus.find((item) => String(item.id) == String(columnId))
+    ?.status ? (
     <div
       style={{
         width: `${(columnWidth / 247) * 271}px`,
@@ -352,7 +352,9 @@ const Column = ({
                 className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></span>
             )}
             <span>{title}</span>
-            <span className="text-[#77858F]">{count}</span>
+            <span className="text-[#77858F]">
+              {Number(columnId) != StatusValueTask.MY_ROUTINE && count}
+            </span>
           </div>
           <div className="flex items-center gap-3">
             {session?.user.permissions &&
@@ -395,9 +397,21 @@ const Column = ({
                 }}>
                 <ImageRound
                   src={`/icons/extend-column.svg`}
-                  className=""
+                  className={`${
+                    extendByStatus.find(
+                      (list) => String(list.id) == String(columnId),
+                    )?.status && 'rotate-180'
+                  }`}
                   name="extend"
-                  onClick={() => setIsExtendColumn(!isExtendColumn)}
+                  onClick={() => {
+                    setExtendByStatus((prev) =>
+                      prev.map((item) =>
+                        String(item.id) == String(columnId)
+                          ? { ...item, status: !item.status }
+                          : item,
+                      ),
+                    );
+                  }}
                   style={{
                     width: `${(columnWidth / 247) * 8}px`,
                     height: `${(columnWidth / 247) * 12}px`,
@@ -508,9 +522,21 @@ const Column = ({
             }}>
             <ImageRound
               src={`/icons/extend-column.svg`}
-              className="cursor-pointer"
+              className={`${
+                extendByStatus.find(
+                  (list) => String(list.id) == String(columnId),
+                )?.status && 'rotate-180'
+              } cursor-pointer`}
               name="extend"
-              onClick={() => setIsExtendColumn(!isExtendColumn)}
+              onClick={() => {
+                setExtendByStatus((prev) =>
+                  prev.map((item) =>
+                    String(item.id) == String(columnId)
+                      ? { ...item, status: !item.status }
+                      : item,
+                  ),
+                );
+              }}
               style={{
                 width: `${(columnWidth / 247) * 8}px`,
                 height: `${(columnWidth / 247) * 12}px`,
@@ -524,16 +550,24 @@ const Column = ({
           marginBottom: `${(columnWidth / 247) * 14}px`,
           marginTop: `${(columnWidth / 247) * 14}px`,
         }}>
-        <p
-          style={{
-            fontSize: `${(columnWidth / 247) * 14}px`,
-          }}
-          className="text-[#77858F] w-full text-center text-sm">
-          {count}
-        </p>
+        {Number(columnId) != StatusValueTask.MY_ROUTINE ? (
+          <p
+            style={{
+              fontSize: `${(columnWidth / 247) * 14}px`,
+            }}
+            className="text-[#77858F] w-full text-center text-sm">
+            {count}
+          </p>
+        ) : (
+          <p
+            style={{
+              fontSize: `${(columnWidth / 247) * 14}px`,
+            }}
+            className="text-[#77858F] w-full text-center text-sm h-5"></p>
+        )}
       </div>
       <div className="w-full flex justify-center">
-        <div className="w-2 h-[calc(100vh_-_280px)] bg-[#EBF1F7]"></div>
+        <div className={`w-2 ${showFrequentlyTasks ? 'h-[calc(100vh_-_400px)]' : 'h-[calc(100vh_-_280px)]'} bg-[#EBF1F7]`}></div>
       </div>
     </div>
   );

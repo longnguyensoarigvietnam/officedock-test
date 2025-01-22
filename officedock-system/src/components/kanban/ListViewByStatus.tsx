@@ -1,6 +1,12 @@
 'use client';
 import { UseMutateFunction, useMutation } from 'react-query';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { useInView } from 'react-intersection-observer';
 import Tippy from '@tippyjs/react';
@@ -27,6 +33,7 @@ import { StatusTask, StatusValueTask } from '@constants/enums';
 
 import { encodeFormatDateISO } from '@utils/date';
 import api from '@base/api';
+import { TaskContext } from '@providers/TaskProvider';
 
 interface ListViewByStatusProps {
   listItems: Task[];
@@ -97,28 +104,7 @@ const ListViewByStatus = ({
   const { ref: listTaskRef, inView: inViewListTask } = useInView({
     threshold: 0.2,
   });
-  const [showListByStatus, setShowListByStatus] = useState([
-    {
-      id: StatusValueTask.NOT_STARTED,
-      status: false,
-    },
-    {
-      id: StatusValueTask.IN_PROGRESS,
-      status: false,
-    },
-    {
-      id: StatusValueTask.CONFIRMING,
-      status: false,
-    },
-    {
-      id: StatusValueTask.COMPLETED,
-      status: false,
-    },
-    {
-      id: StatusValueTask.MY_ROUTINE,
-      status: false,
-    },
-  ]);
+  const { extendByStatus, setExtendByStatus } = useContext(TaskContext);
   const colorByStatus = [
     {
       name: StatusTask.NOT_STARTED,
@@ -263,7 +249,7 @@ const ListViewByStatus = ({
       <div className="flex items-center gap-3 mb-3">
         <Tippy
           content={
-            showListByStatus.find((list) => list.id == listId)?.status
+            extendByStatus.find((list) => list.id == listId)?.status
               ? '閉じる'
               : '開く'
           }
@@ -276,11 +262,11 @@ const ListViewByStatus = ({
               src="/icons/extend-calendar.svg"
               name="Extend calendar"
               className={`!w-3 !h-3 hover:cursor-pointer ${
-                showListByStatus.find((list) => list.id == listId)?.status &&
+                extendByStatus.find((list) => list.id == listId)?.status &&
                 'rotate-90'
               }`}
               onClick={() => {
-                setShowListByStatus((prev) =>
+                setExtendByStatus((prev) =>
                   prev.map((item) =>
                     item.id == listId
                       ? { ...item, status: !item.status }
@@ -292,13 +278,14 @@ const ListViewByStatus = ({
           </div>
         </Tippy>
 
-        {listTitle != 'マイルーティン' && (
+        {listId != StatusValueTask.MY_ROUTINE && (
           <div
             className={`bg-[${colorByStatus.find((status) => status.name == listTitle)?.color}] w-3 h-3 rounded-full right-1.5 top-2`}
           />
         )}
         <p className="font-medium text-[14px]">{listTitle}</p>
-        <p className="text-[#77858F] text-[14px]">{count}</p>
+        {listId != StatusValueTask.MY_ROUTINE && <p className="text-[#77858F] text-[14px]">{count}</p>}
+        
         <Tippy
           content="タスクを新規作成"
           arrow={false}
@@ -312,7 +299,7 @@ const ListViewByStatus = ({
           </div>
         </Tippy>
       </div>
-      {showListByStatus.find((list) => list.id == listId)?.status &&
+      {extendByStatus.find((list) => list.id == listId)?.status &&
         listId == StatusValueTask.MY_ROUTINE && (
           <div className="flex text-[#77858F] text-[12px] mb-4">
             <p className="w-[59%] border-r-2">タスク名</p>
@@ -327,7 +314,7 @@ const ListViewByStatus = ({
             className={`flex-grow overflow-y-auto rounded-md max-h-[500px] mb-3 overflow-x-hidden scrollbar-gutter-stable ${
               snapshot.isDraggingOver ? 'bg-gray-200' : ''
             }`}>
-            {showListByStatus.find((list) => list.id == listId)?.status &&
+            {extendByStatus.find((list) => list.id == listId)?.status &&
               listItems.map((item, index) => (
                 <ListViewItem
                   key={item.id}
@@ -343,7 +330,7 @@ const ListViewByStatus = ({
                 />
               ))}
             {provided.placeholder}
-            {showListByStatus.find((list) => list.id == listId)?.status &&
+            {extendByStatus.find((list) => list.id == listId)?.status &&
             listItems.length &&
             isChange ? (
               <div ref={listTaskRef} className="h-7">

@@ -17,6 +17,7 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 import { EventCalendarProps } from '@interfaces/calendar';
 import { usePathname } from 'next/navigation';
+import { StatusValueTask } from '@constants/enums';
 interface ContextValue {
   dataActualAddSchedule: TaskActualCalculationType | undefined;
   tagSelected: string | number;
@@ -52,6 +53,10 @@ interface ContextValue {
   isLoadingDataTask: boolean;
   widthCalendar: number;
   columnWidth: number;
+  extendByStatus: {
+    id: StatusValueTask;
+    status: boolean;
+  }[];
   setColumnWidth: Dispatch<SetStateAction<number>>;
   setWidthCalendar: Dispatch<SetStateAction<number>>;
   setIsLoadingDataTask: (isLoading: boolean) => void;
@@ -96,6 +101,14 @@ interface ContextValue {
   setDataActualAddSchedule: Dispatch<
     SetStateAction<TaskActualCalculationType | undefined>
   >;
+  setExtendByStatus: Dispatch<
+    SetStateAction<
+      {
+        id: StatusValueTask;
+        status: boolean;
+      }[]
+    >
+  >;
   handleZoomInKanban: () => void;
   handleZoomOutKanban: () => void;
   calculateFontSizeTitle: () => number;
@@ -132,6 +145,28 @@ const defaultValue: ContextValue = {
     id: '',
     type: '',
   },
+  extendByStatus: [
+    {
+      id: StatusValueTask.NOT_STARTED,
+      status: false,
+    },
+    {
+      id: StatusValueTask.IN_PROGRESS,
+      status: false,
+    },
+    {
+      id: StatusValueTask.CONFIRMING,
+      status: false,
+    },
+    {
+      id: StatusValueTask.COMPLETED,
+      status: false,
+    },
+    {
+      id: StatusValueTask.MY_ROUTINE,
+      status: false,
+    },
+  ],
   taskSelectedToStart: null,
   taskSelectedAction: null,
   statusTaskSelected: {
@@ -172,6 +207,7 @@ const defaultValue: ContextValue = {
   setDataClickTask: () => {},
   setIdEventDelete: () => {},
   setIdTaskDelete: () => {},
+  setExtendByStatus: () => {},
   dataActualAddSchedule: undefined,
   setDataActualAddSchedule: () => {},
   handleZoomInKanban: () => {},
@@ -213,6 +249,28 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     id: '',
     type: '',
   });
+  const [extendByStatus, setExtendByStatus] = useState([
+    {
+      id: StatusValueTask.NOT_STARTED,
+      status: false,
+    },
+    {
+      id: StatusValueTask.IN_PROGRESS,
+      status: false,
+    },
+    {
+      id: StatusValueTask.CONFIRMING,
+      status: false,
+    },
+    {
+      id: StatusValueTask.COMPLETED,
+      status: false,
+    },
+    {
+      id: StatusValueTask.MY_ROUTINE,
+      status: false,
+    },
+  ]);
 
   const [searchValue, setSearchValue] = useState<string>('');
   const [taskSelected, setTaskSelected] = useState<OptionDropdownType>({
@@ -322,6 +380,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     dataClickTask,
     isLoadingDataTask,
     widthCalendar,
+    extendByStatus,
+    setExtendByStatus,
     setWidthCalendar,
     setIsLoadingDataTask,
     setTagSelected,
