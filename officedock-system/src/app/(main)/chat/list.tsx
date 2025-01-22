@@ -90,7 +90,6 @@ const ListChatUsers = ({
   const [lastMsgItemRoom, setLastMsItemRoom] = useState<string>('');
   const [lastPinAtSearch, setLastPinAtSearch] = useState<string | null>();
   const [lastMsgItemRoomSearch, setLastMsItemRoomSearch] = useState<string>('');
-  const [participantsList, setParticipantsList] = useState<number[]>([]);
 
   const {
     setChatList,
@@ -399,7 +398,6 @@ const ListChatUsers = ({
             }
           });
         }
-        setParticipantsList([]);
         if (data.action === SocketActions.SHOW_ROOM) {
           setChatRoomNotifications({
             roomCode: data.chatRoom.code,
@@ -554,7 +552,6 @@ const ListChatUsers = ({
             `${!data.chatMessage ? data.chatRoom.code : ''}`,
           );
         }
-        setParticipantsList([]);
       }
       setIsModalOpen(false);
       setIsReload(true);
@@ -1164,9 +1161,8 @@ const ListChatUsers = ({
         <ActionsAddMembersModal
           open={isModalOpen}
           dashboardMemberList={dashboardMemberList}
+          dashboardMembers={dashboardMembers}
           onClose={() => setIsModalOpen(false)}
-          participantsList={participantsList}
-          setParticipantsList={setParticipantsList}
           createChatMutation={createChatMutation}
         />
       )}

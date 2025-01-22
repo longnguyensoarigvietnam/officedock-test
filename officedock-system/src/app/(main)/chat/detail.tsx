@@ -114,6 +114,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
 import { useErrorToast } from '@hooks/useErrorToast';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMemberModal';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -1506,7 +1507,11 @@ const ChatDetail = ({
   const showErrorToast = useErrorToast();
 
   const [openSettingBox, setOpenSettingBox] = useState<boolean>(false);
+  const [openConfirmRemoveMemberModal, setOpenConfirmRemoveMemberModal] =
+    useState<boolean>(false);
   const [openAddMembersBox, setOpenAddMembersBox] = useState<boolean>(false);
+  const [openAddMembersBoxFromSetting, setOpenAddMembersBoxFromSetting] =
+    useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
   const [messageSubmitted, setMessageSubmitted] = useState<boolean>(false);
   const [page, _setPage] = useState<number>(1);
@@ -1516,6 +1521,8 @@ const ChatDetail = ({
     ChatMessageResponse[]
   >([]);
   const [roomDetail, setRoomDetail] = useState<ChatRoomItem>();
+  const [selectedRemoveMemberId, setSelectedRemoveMemberId] =
+    useState<number>();
   const {
     chatList,
     chatRoomNameEditing,
@@ -2402,6 +2409,35 @@ const ChatDetail = ({
     );
   };
 
+  const handleRemoveChatMember = async (editedParticipantList: number[]) => {
+    setIsLoading(true);
+    const response = await api.patch(apiRouters.CHAT_DETAIL(chatRoomCode), {
+      participantIds: editedParticipantList,
+    });
+    return response;
+  };
+
+  const { mutate: removeChatMember } = useMutation(
+    'removeChatMember',
+    handleRemoveChatMember,
+    {
+      onSuccess: () => {
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {
+        setSelectedRemoveMemberId(undefined);
+        setIsLoading(false);
+        setOpenConfirmRemoveMemberModal(false);
+        setOpenSettingBox(true);
+      },
+    },
+  );
+
   return (
     <Fragment>
       {chatRoomCode && (
@@ -2871,12 +2907,45 @@ const ChatDetail = ({
           open={true}
           onClose={() => setOpenSettingBox(false)}
           code={`${chatRoomCode}`}
+          dashboardMembers={dashboardMembers}
+          openAddMemberModal={() => {
+            setOpenSettingBox(false);
+            setOpenAddMembersBox(true);
+            setOpenAddMembersBoxFromSetting(true);
+          }}
+          openConfirmRemoveModal={(id: number) => {
+            setOpenSettingBox(false);
+            setOpenConfirmRemoveMemberModal(true);
+            setSelectedRemoveMemberId(id);
+          }}
+        />
+      )}
+      {openConfirmRemoveMemberModal && (
+        <ConfirmRemoveChatMemberModal
+          open={true}
+          code={`${chatRoomCode}`}
+          onClose={() => {
+            setOpenConfirmRemoveMemberModal(false);
+            setOpenSettingBox(true);
+          }}
+          dashboardMembers={dashboardMembers}
+          selectedRemoveMemberId={selectedRemoveMemberId}
+          onConfirm={(memberIds: number[]) => {
+            removeChatMember(memberIds);
+          }}
         />
       )}
       {openAddMembersBox && (
         <ActionsChatMembersModal
           open={true}
-          onClose={() => setOpenAddMembersBox(false)}
+          onClose={() => {
+            setOpenAddMembersBox(false);
+            if (openAddMembersBoxFromSetting) {
+              setOpenSettingBox(true);
+              setOpenAddMembersBoxFromSetting(false);
+            }
+          }}
+          dashboardMembers={dashboardMembers}
           participantsList={
             chatRoomCode &&
             chatRoomParticipantsEditing.find(
