@@ -16,6 +16,7 @@ import ErrorMessage from '@components/common/ErrorMessage';
 import {
   END_DATE_MUST_BE_GREATER_THAN_START_DATE,
   ERROR_COMMON_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
   FIELD_REQUIRED,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
@@ -27,6 +28,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import useDetailTerm from '@hooks/useDetailTerm';
+import { useErrorToast } from '@hooks/useErrorToast';
 import { CreateTermFormData, TermFormDataRequest } from '@interfaces/term';
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDate } from '@utils/date';
@@ -41,6 +43,7 @@ const EditPolicyForm = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const { showToast } = useToast();
   const [minDatePlan, setMinDatePlan] = useState<Date | null>();
+  const showErrorToast = useErrorToast();
 
   const { termDetail } = useDetailTerm({
     termId: params.id,
@@ -132,12 +135,7 @@ const EditPolicyForm = () => {
         router.push(pageRouters.POLICIES_MANAGEMENT.href);
       },
       onError: (error: AxiosError) => {
-        if (error.response && typeof error.response.data === 'object') {
-          showToast({
-            variant: 'error',
-            description: (error.response.data as { message: string }).message,
-          });
-        }
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
       onSettled: () => {
         setIsLoading(false);

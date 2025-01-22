@@ -16,6 +16,7 @@ import ErrorMessage from '@components/common/ErrorMessage';
 import {
   END_DATE_MUST_BE_GREATER_THAN_START_DATE,
   ERROR_COMMON_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
   FIELD_REQUIRED,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
@@ -32,6 +33,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { formatDate } from '@utils/date';
 import { isContentEmpty } from '@utils';
 import api from '@base/api';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -41,6 +43,7 @@ const EditTermForm = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const { showToast } = useToast();
   const [minDatePlan, setMinDatePlan] = useState<Date | null>();
+  const showErrorToast = useErrorToast();
 
   const { termDetail } = useDetailTerm({
     termId: params.id,
@@ -129,12 +132,7 @@ const EditTermForm = () => {
       router.push(pageRouters.TERMS_MANAGEMENT.href);
     },
     onError: (error: AxiosError) => {
-      if (error.response && typeof error.response.data === 'object') {
-        showToast({
-          variant: 'error',
-          description: (error.response.data as { message: string }).message,
-        });
-      }
+      showErrorToast(error, ERROR_UPDATE_MESSAGE);
     },
     onSettled: () => {
       setIsLoading(false);
