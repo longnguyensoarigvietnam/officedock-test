@@ -12,12 +12,15 @@ class MailService:
     MailService class is used to send mail messages.
     """
 
-    def __init__(self, from_email=settings.EMAIL_SENDER):
+    def __init__(
+        self, from_email=settings.EMAIL_SENDER, name_sender=settings.NAME_SENDER
+    ):
         """
         MailService constructor.
         """
 
         self.from_email = from_email
+        self.name_sender = name_sender
 
     def send(self, subject, message, recipient_list):
         """
@@ -27,7 +30,7 @@ class MailService:
         send_mail(
             subject=subject,
             message="",
-            from_email=f"Office Dock <{self.from_email}>",
+            from_email=f"{self.name_sender} <{self.from_email}>",
             recipient_list=recipient_list,
             html_message=message,
         )
@@ -170,6 +173,24 @@ class MailService:
 
         message = f"""
             <p>{title_message}<p>
+            <p>これはアカウント情報です。<br>
+                メールアドレス: {recipient}<br>
+                パスワード: {password}
+            </p>
+        """
+
+        self.send(subject, message, [recipient])
+
+    def send_admin_create_company_by_email(self, recipient, password, company):
+        """
+        Send an invited company email.
+        """
+
+        # FIXME: Replace email template later
+
+        subject = f"【Office Dock】管理者からOfficeDockの{company.name}に招待されました"
+        message = f"""
+            <p>管理者があなたを{company.name}に招待しました。<p>
             <p>これはアカウント情報です。<br>
                 メールアドレス: {recipient}<br>
                 パスワード: {password}

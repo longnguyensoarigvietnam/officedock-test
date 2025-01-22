@@ -1,7 +1,7 @@
 'use client';
 import { useMutation } from 'react-query';
 import { Transition } from '@headlessui/react';
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 
 import ImageRound from '@components/common/ImageRound';
@@ -247,6 +247,11 @@ const CompanyList = () => {
             </div>
           </form>
         </Transition>
+      </div>
+      <div className="flex justify-end">
+        <Link href={pageRouters.COMPANY_CREATE.href}>
+          <Button className="w-44">新規作成</Button>
+        </Link>
       </div>
       <div className="w-full">
         <Table className="bg-white !rounded-lg ">

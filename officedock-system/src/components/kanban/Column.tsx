@@ -38,6 +38,7 @@ import { encodeFormatDateISO } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import { TaskContext } from '@providers/TaskProvider';
 import { OptionDropdownType } from '@interfaces/common';
+import ItemRoutine from './ItemRoutine';
 interface ColumnProps {
   columnId: string;
   title: string;
@@ -106,6 +107,7 @@ const Column = ({
   const isMyRoutine = columnId === `${StatusValueTask.MY_ROUTINE}`;
 
   const { columnWidth } = useContext(TaskContext);
+  const { extendByStatus, setExtendByStatus } = useContext(TaskContext);
 
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
@@ -310,147 +312,263 @@ const Column = ({
       paddingRight = `${(columnWidth / 247) * 17}px`;
   }
 
-  return (
-    <div ref={columnRef} className={`h-full ${isMyRoutine && 'mt-1'} `}>
+  return extendByStatus.find((item) => String(item.id) == String(columnId))
+    ?.status ? (
+    <div
+      style={{
+        width: `${(columnWidth / 247) * 271}px`,
+        maxWidth: `${(columnWidth / 247) * 271}px`,
+        paddingLeft: isMyRoutine ? 0 : `${(columnWidth / 247) * 8}px`,
+        paddingRight: isMyRoutine ? 0 : `${(columnWidth / 247) * 8}px`,
+      }}
+      ref={columnRef}
+      className={`h-full ${isMyRoutine && 'mt-1'} `}>
       <div
         style={{
-          height: `${(columnWidth / 247) * 32}px`,
-          paddingLeft: isMyRoutine
-            ? `${(columnWidth / 247) * 14}px`
-            : `${(columnWidth / 247) * 6}px`,
-          paddingRight: isMyRoutine
-            ? `${(columnWidth / 247) * 14}px`
-            : `${(columnWidth / 247) * 16}px`,
-        }}
-        className={`flex justify-between ${isMyRoutine && 'bg-[#DAE2EB] rounded-tl-lg rounded-tr-lg'} `}>
+          width: `${(columnWidth / 247) * 271}px`,
+          maxWidth: `${(columnWidth / 247) * 271}px`,
+          paddingLeft: `${(columnWidth / 247) * 8}px`,
+          paddingRight: `${(columnWidth / 247) * 8}px`,
+        }}>
         <div
           style={{
-            fontSize: `${(columnWidth / 247) * 14}px`,
-            gap: `${(columnWidth / 247) * 8}px`,
+            height: `${(columnWidth / 247) * 36}px`,
+            paddingLeft: isMyRoutine
+              ? `${(columnWidth / 247) * 14}px`
+              : `${(columnWidth / 247) * 6}px`,
+            paddingRight: isMyRoutine
+              ? `${(columnWidth / 247) * 14}px`
+              : `${(columnWidth / 247) * 16}px`,
           }}
-          className="flex items-center font-medium ">
-          {!isMyRoutine && (
-            <span
-              className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></span>
-          )}
-          <span>{title}</span>
-          <span className="text-[#77858F]">{count}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          {session?.user.permissions &&
-            hasPermissionInArray(
-              session?.user.permissions,
-              PermissionsSystem.MY_TASK_ADD,
-            ) && (
-              <Tippy
-                content="タスクを新規作成"
-                arrow={false}
-                delay={1000}
-                placement="top"
-                offset={[0, 5]}>
-                <div
-                  style={{
-                    padding: `${(columnWidth / 247) * 6}px`,
-                  }}
-                  className={`rounded-full  cursor-pointer w-fit bg-gray-200`}
-                  onClick={() => addTask(columnId)}>
-                  <ImageRound
-                    src={`/icons/add.svg`}
-                    name="Add"
-                    style={{
-                      width: `${(columnWidth / 247) * 12}px`,
-                      height: `${(columnWidth / 247) * 12}px`,
-                    }}
-                  />
-                </div>
-              </Tippy>
-            )}
-          <Tippy
-            content="タブを縮小"
-            arrow={false}
-            delay={1000}
-            placement="top"
-            offset={[0, 5]}>
-            <div
-              style={{
-                padding: `${(columnWidth / 247) * 5}px`,
-              }}>
-              <ImageRound
-                src={`/icons/extend-column.svg`}
-                className=""
-                name="Add"
-                style={{
-                  width: `${(columnWidth / 247) * 8}px`,
-                  height: `${(columnWidth / 247) * 12}px`,
-                }}
-              />
-            </div>
-          </Tippy>
-        </div>
-      </div>
-      <Droppable
-        isDropDisabled={!visibleColumns}
-        droppableId={columnId}
-        type={KanbanType.CARD}>
-        {(provided, snapshot) => (
+          className={`flex justify-between ${isMyRoutine && 'bg-[#DAE2EB] rounded-tl-lg rounded-tr-lg'} `}>
           <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
             style={{
-              paddingLeft: isMyRoutine
-                ? `${(columnWidth / 247) * 14}px`
-                : `${(columnWidth / 247) * 8}px`,
-              paddingTop: `${(columnWidth / 247) * 14}px`,
-              marginRight: isMyRoutine ? `-${(columnWidth / 247) * 16}px` : 0,
-              paddingRight: isMyRoutine ? paddingRight : '10px',
-              boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 #f8fafc`,
-              minHeight: showFrequentlyTasks
-                ? 'calc(100vh - 350px)'
-                : 'calc(100vh - 240px)',
+              fontSize: `${(columnWidth / 247) * 14}px`,
+              gap: `${(columnWidth / 247) * 8}px`,
             }}
-            className={`flex-grow overflow-y-auto
+            className="flex items-center font-medium ">
+            {!isMyRoutine && (
+              <span
+                className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></span>
+            )}
+            <span>{title}</span>
+            <span className="text-[#77858F]">
+              {Number(columnId) != StatusValueTask.MY_ROUTINE && count}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            {session?.user.permissions &&
+              hasPermissionInArray(
+                session?.user.permissions,
+                PermissionsSystem.MY_TASK_ADD,
+              ) && (
+                <Tippy
+                  content="タスクを新規作成"
+                  arrow={false}
+                  delay={1000}
+                  placement="top"
+                  offset={[0, 5]}>
+                  <div
+                    style={{
+                      padding: `${(columnWidth / 247) * 6}px`,
+                    }}
+                    className={`rounded-full  cursor-pointer w-fit bg-gray-200`}
+                    onClick={() => addTask(columnId)}>
+                    <ImageRound
+                      src={`/icons/add.svg`}
+                      name="Add"
+                      style={{
+                        width: `${(columnWidth / 247) * 12}px`,
+                        height: `${(columnWidth / 247) * 12}px`,
+                      }}
+                    />
+                  </div>
+                </Tippy>
+              )}
+            <Tippy
+              content="タブを縮小"
+              arrow={false}
+              delay={1000}
+              placement="top"
+              offset={[0, 5]}>
+              <div
+                style={{
+                  padding: `${(columnWidth / 247) * 5}px`,
+                }}>
+                <ImageRound
+                  src={`/icons/extend-column.svg`}
+                  className={`${
+                    extendByStatus.find(
+                      (list) => String(list.id) == String(columnId),
+                    )?.status && 'rotate-180'
+                  }`}
+                  name="extend"
+                  onClick={() => {
+                    setExtendByStatus((prev) =>
+                      prev.map((item) =>
+                        String(item.id) == String(columnId)
+                          ? { ...item, status: !item.status }
+                          : item,
+                      ),
+                    );
+                  }}
+                  style={{
+                    width: `${(columnWidth / 247) * 8}px`,
+                    height: `${(columnWidth / 247) * 12}px`,
+                  }}
+                />
+              </div>
+            </Tippy>
+          </div>
+        </div>
+        <Droppable
+          isDropDisabled={!visibleColumns}
+          droppableId={columnId}
+          type={KanbanType.CARD}>
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              style={{
+                paddingLeft: isMyRoutine
+                  ? `${(columnWidth / 247) * 14}px`
+                  : `${(columnWidth / 247) * 8}px`,
+                paddingTop: `${(columnWidth / 247) * 14}px`,
+                marginRight: isMyRoutine ? `-${(columnWidth / 247) * 16}px` : 0,
+                paddingRight: isMyRoutine ? paddingRight : '10px',
+                boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 #f8fafc`,
+                minHeight: showFrequentlyTasks
+                  ? 'calc(100vh - 350px)'
+                  : 'calc(100vh - 240px)',
+              }}
+              className={`flex-grow overflow-y-auto
                 ${isMyRoutine && 'bg-[#EBF1F7] '}
                  overflow-x-hidden scrollbar-gutter-stable ${
                    snapshot.isDraggingOver ? 'bg-gray-200' : ''
                  }`}>
-            <div
-              className={`flex flex-col ${
-                showFrequentlyTasks === true
-                  ? 'h-[calc(100vh_-_350px)]'
-                  : 'h-[calc(100vh_-_350px)]'
-              }`}>
-              {items.map((item, index) => (
-                <Item
-                  key={item.id}
-                  id={`${item.id}`}
-                  index={index}
-                  content={item}
-                  editTask={editTask}
-                  handlePinItem={handlePinItem}
-                  creationDataTaskData={creationDataTaskData}
-                  handleActionEditTask={handleActionEditTask}
-                  handleConfirmCopyTask={handleConfirmCopyTask}
-                  handleUpdateItemInline={handleUpdateItemInline}
-                />
-              ))}
-              {/* Make sure the placeholder is rendered here */}
-              {provided.placeholder}
-              {/* Loading spinner logic */}
-              {items.length && isChange ? (
-                <div ref={listTaskRef} className="h-7">
-                  {initialLoad ? (
-                    <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
-                  ) : (
-                    <div className="w-full h-6"></div>
-                  )}
-                </div>
-              ) : (
-                <div></div>
-              )}
+              <div
+                className={`flex flex-col ${
+                  showFrequentlyTasks === true
+                    ? 'h-[calc(100vh_-_350px)]'
+                    : 'h-[calc(100vh_-_350px)]'
+                }`}>
+                {items.map((item, index) => (
+                  <>
+                    {isMyRoutine ? (
+                      <ItemRoutine
+                        key={item.id}
+                        id={`${item.id}`}
+                        index={index}
+                        content={item}
+                        editTask={editTask}
+                        handlePinItem={handlePinItem}
+                        creationDataTaskData={creationDataTaskData}
+                        handleActionEditTask={handleActionEditTask}
+                        handleConfirmCopyTask={handleConfirmCopyTask}
+                        handleUpdateItemInline={handleUpdateItemInline}
+                      />
+                    ) : (
+                      <Item
+                        key={item.id}
+                        id={`${item.id}`}
+                        index={index}
+                        content={item}
+                        editTask={editTask}
+                        handlePinItem={handlePinItem}
+                        creationDataTaskData={creationDataTaskData}
+                        handleActionEditTask={handleActionEditTask}
+                        handleConfirmCopyTask={handleConfirmCopyTask}
+                        handleUpdateItemInline={handleUpdateItemInline}
+                      />
+                    )}
+                  </>
+                ))}
+                {/* Make sure the placeholder is rendered here */}
+                {provided.placeholder}
+                {/* Loading spinner logic */}
+                {items.length && isChange ? (
+                  <div ref={listTaskRef} className="h-7">
+                    {initialLoad ? (
+                      <Spinner
+                        className="!h-fit py-3"
+                        iconClassName="h-6 w-6"
+                      />
+                    ) : (
+                      <div className="w-full h-6"></div>
+                    )}
+                  </div>
+                ) : (
+                  <div></div>
+                )}
+              </div>
             </div>
+          )}
+        </Droppable>
+      </div>
+    </div>
+  ) : (
+    <div className="w-[40px] pt-[6px]">
+      <div className="flex gap-[6px] items-center justify-center">
+        <div className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></div>
+        <Tippy
+          content="タブを縮小"
+          arrow={false}
+          delay={1000}
+          placement="top"
+          offset={[0, 5]}>
+          <div
+            style={{
+              padding: `${(columnWidth / 247) * 5}px`,
+            }}>
+            <ImageRound
+              src={`/icons/extend-column.svg`}
+              className={`${
+                extendByStatus.find(
+                  (list) => String(list.id) == String(columnId),
+                )?.status && 'rotate-180'
+              } cursor-pointer`}
+              name="extend"
+              onClick={() => {
+                setExtendByStatus((prev) =>
+                  prev.map((item) =>
+                    String(item.id) == String(columnId)
+                      ? { ...item, status: !item.status }
+                      : item,
+                  ),
+                );
+              }}
+              style={{
+                width: `${(columnWidth / 247) * 8}px`,
+                height: `${(columnWidth / 247) * 12}px`,
+              }}
+            />
           </div>
+        </Tippy>
+      </div>
+      <div
+        style={{
+          marginBottom: `${(columnWidth / 247) * 14}px`,
+          marginTop: `${(columnWidth / 247) * 14}px`,
+        }}>
+        {Number(columnId) != StatusValueTask.MY_ROUTINE ? (
+          <p
+            style={{
+              fontSize: `${(columnWidth / 247) * 14}px`,
+            }}
+            className="text-[#77858F] w-full text-center text-sm">
+            {count}
+          </p>
+        ) : (
+          <p
+            style={{
+              fontSize: `${(columnWidth / 247) * 14}px`,
+            }}
+            className="text-[#77858F] w-full text-center text-sm h-5"></p>
         )}
-      </Droppable>
+      </div>
+      <div className="w-full flex justify-center">
+        <div className={`w-2 ${showFrequentlyTasks ? 'h-[calc(100vh_-_400px)]' : 'h-[calc(100vh_-_280px)]'} bg-[#EBF1F7]`}></div>
+      </div>
     </div>
   );
 };

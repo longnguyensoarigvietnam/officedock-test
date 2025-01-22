@@ -17,6 +17,7 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 import { EventCalendarProps } from '@interfaces/calendar';
 import { usePathname } from 'next/navigation';
+import { StatusValueTask } from '@constants/enums';
 interface ContextValue {
   dataActualAddSchedule: TaskActualCalculationType | undefined;
   tagSelected: string | number;
@@ -25,6 +26,8 @@ interface ContextValue {
   taskSelected: OptionDropdownType;
   dataEventEdit: OptionDropdownType;
   dataTaskEditKanban: OptionDropdownType;
+  selectedOptionZoom: OptionDropdownType;
+
   taskSelectedToStart: TaskFieldStart | EventCalendarProps | null;
   taskSelectedAction: TaskFieldActionStart | null;
   statusTaskSelected: TaskDuration;
@@ -50,6 +53,10 @@ interface ContextValue {
   isLoadingDataTask: boolean;
   widthCalendar: number;
   columnWidth: number;
+  extendByStatus: {
+    id: StatusValueTask;
+    status: boolean;
+  }[];
   setColumnWidth: Dispatch<SetStateAction<number>>;
   setWidthCalendar: Dispatch<SetStateAction<number>>;
   setIsLoadingDataTask: (isLoading: boolean) => void;
@@ -76,6 +83,8 @@ interface ContextValue {
   setSearchValue: Dispatch<SetStateAction<string>>;
   setTaskSelected: Dispatch<SetStateAction<OptionDropdownType>>;
   setDataEventEdit: Dispatch<SetStateAction<OptionDropdownType>>;
+  setSelectedOptionZoom: Dispatch<SetStateAction<OptionDropdownType>>;
+
   setDataTaskEditKanban: Dispatch<SetStateAction<OptionDropdownType>>;
   setTaskSelectedToStart: Dispatch<
     SetStateAction<TaskFieldStart | EventCalendarProps | null>
@@ -91,6 +100,14 @@ interface ContextValue {
   setIdTaskDelete: Dispatch<SetStateAction<string>>;
   setDataActualAddSchedule: Dispatch<
     SetStateAction<TaskActualCalculationType | undefined>
+  >;
+  setExtendByStatus: Dispatch<
+    SetStateAction<
+      {
+        id: StatusValueTask;
+        status: boolean;
+      }[]
+    >
   >;
   handleZoomInKanban: () => void;
   handleZoomOutKanban: () => void;
@@ -128,6 +145,28 @@ const defaultValue: ContextValue = {
     id: '',
     type: '',
   },
+  extendByStatus: [
+    {
+      id: StatusValueTask.NOT_STARTED,
+      status: false,
+    },
+    {
+      id: StatusValueTask.IN_PROGRESS,
+      status: false,
+    },
+    {
+      id: StatusValueTask.CONFIRMING,
+      status: false,
+    },
+    {
+      id: StatusValueTask.COMPLETED,
+      status: false,
+    },
+    {
+      id: StatusValueTask.MY_ROUTINE,
+      status: false,
+    },
+  ],
   taskSelectedToStart: null,
   taskSelectedAction: null,
   statusTaskSelected: {
@@ -142,6 +181,10 @@ const defaultValue: ContextValue = {
   isLoadingDataTask: false,
   widthCalendar: 0,
   columnWidth: 213,
+  selectedOptionZoom: {
+    label: '100%',
+    value: 100,
+  },
   setColumnWidth: () => {},
   setWidthCalendar: () => {},
   setIsLoadingDataTask: () => {},
@@ -164,6 +207,7 @@ const defaultValue: ContextValue = {
   setDataClickTask: () => {},
   setIdEventDelete: () => {},
   setIdTaskDelete: () => {},
+  setExtendByStatus: () => {},
   dataActualAddSchedule: undefined,
   setDataActualAddSchedule: () => {},
   handleZoomInKanban: () => {},
@@ -174,6 +218,7 @@ const defaultValue: ContextValue = {
   calculateFontSizeContent: function (): number {
     throw new Error('');
   },
+  setSelectedOptionZoom: () => {},
 };
 
 export const TaskContext = createContext<ContextValue>(defaultValue);
@@ -204,6 +249,28 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     id: '',
     type: '',
   });
+  const [extendByStatus, setExtendByStatus] = useState([
+    {
+      id: StatusValueTask.NOT_STARTED,
+      status: false,
+    },
+    {
+      id: StatusValueTask.IN_PROGRESS,
+      status: false,
+    },
+    {
+      id: StatusValueTask.CONFIRMING,
+      status: false,
+    },
+    {
+      id: StatusValueTask.COMPLETED,
+      status: false,
+    },
+    {
+      id: StatusValueTask.MY_ROUTINE,
+      status: false,
+    },
+  ]);
 
   const [searchValue, setSearchValue] = useState<string>('');
   const [taskSelected, setTaskSelected] = useState<OptionDropdownType>({
@@ -244,6 +311,11 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     id: '',
     type: '',
   });
+  const [selectedOptionZoom, setSelectedOptionZoom] =
+    useState<OptionDropdownType>({
+      label: '100%',
+      value: 100,
+    });
 
   const [dataActualAddSchedule, setDataActualAddSchedule] =
     useState<TaskActualCalculationType>();
@@ -285,6 +357,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
   const contextValue: ContextValue = {
     columnWidth,
+    selectedOptionZoom,
     dataActualAddSchedule,
     idEventDelete,
     idTaskDelete,
@@ -307,6 +380,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     dataClickTask,
     isLoadingDataTask,
     widthCalendar,
+    extendByStatus,
+    setExtendByStatus,
     setWidthCalendar,
     setIsLoadingDataTask,
     setTagSelected,
@@ -334,6 +409,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     handleZoomOutKanban,
     calculateFontSizeTitle,
     calculateFontSizeContent,
+    setSelectedOptionZoom,
   };
 
   return (

@@ -897,6 +897,21 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         for key in keys_to_remove:
             serializer_data.pop(key, None)
 
+        # Check if user is the last system admin and change role
+        system_admin_of_company_count = User.objects.filter(
+            company=instance.company, roles__name=RoleTypes.SYSTEM_ADMIN.value
+        ).count()
+        if (
+            roles_data is not None
+            and RoleTypes.SYSTEM_ADMIN.value
+            not in [role.name for role in roles_data]
+            and instance.check_roles(RoleTypes.SYSTEM_ADMIN.value)
+            and system_admin_of_company_count <= 1
+        ):
+            raise ValidationError(
+                {"detail": [ERROR_MESSAGES["last_system_admin_role_change"]]}
+            )
+
         # Block logged in users when their role is changed.
         if roles_data is not None:
             # Get the list of role IDs for comparison
@@ -916,21 +931,6 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     },
                     user=instance,
                 )
-
-        # Check if user is the last system admin and change role
-        system_admin_of_company_count = User.objects.filter(
-            company=instance.company, roles__name=RoleTypes.SYSTEM_ADMIN.value
-        ).count()
-        if (
-            roles_data is not None
-            and RoleTypes.SYSTEM_ADMIN.value
-            not in [role.name for role in roles_data]
-            and instance.check_roles(RoleTypes.SYSTEM_ADMIN.value)
-            and system_admin_of_company_count <= 1
-        ):
-            raise ValidationError(
-                {"detail": [ERROR_MESSAGES["last_system_admin_role_change"]]}
-            )
 
         # Update data to User and Profile
         user = serializer.save()

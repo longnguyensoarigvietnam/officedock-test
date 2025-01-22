@@ -1,5 +1,5 @@
 'use client';
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -121,6 +121,27 @@ const Sidebar = ({ className }: Props) => {
     hour12: false,
   }).format(new Date());
 
+  const [isHasTerm, setHasTerm] = useState(false);
+  useEffect(() => {
+    if (session) {
+      if (
+        session?.user.unreadTerms?.length &&
+        session?.user.unreadTerms?.length > 0
+      ) {
+        const hasFalse = session?.user.unreadTerms.some(
+          (item) => item.isAccepted === false,
+        );
+        if (hasFalse) {
+          setHasTerm(true);
+        } else {
+          setHasTerm(false);
+        }
+      } else {
+        setHasTerm(false);
+      }
+    }
+  }, [session]);
+
   return (
     <aside
       className={`overflow-x-hidden ${hour} overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px]' : 'w-20 min-w-[70px]'} flex flex-col ${className}`}
@@ -157,6 +178,7 @@ const Sidebar = ({ className }: Props) => {
                             <div
                               className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                               onClick={() => {
+                                if (isHasTerm) return;
                                 if (
                                   item.href ===
                                   pageRouters.TASKS_MANAGEMENT.href
@@ -193,7 +215,8 @@ const Sidebar = ({ className }: Props) => {
                                 )}
                               {expanded && (
                                 <>
-                                  <p className={`opacity-100 text-left font-medium w-fit text-white ${item.current && !memberSelected && !tagSelected && '!text-black'}`}>
+                                  <p
+                                    className={`opacity-100 text-left font-medium w-fit text-white ${item.current && !memberSelected && !tagSelected && '!text-black'}`}>
                                     {item.name}
                                   </p>
                                 </>

@@ -1,21 +1,15 @@
 'use client';
-import { Fragment, useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { useMutation } from 'react-query';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
 import { useInView } from 'react-intersection-observer';
 import { useSession } from 'next-auth/react';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
-import Button from '@components/common/Button';
 import ActionsAddMembersModal from '@components/modals/ActionsAddMembersModal';
-import Input from '@components/common/Input';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
@@ -30,18 +24,19 @@ import {
 } from '@constants/enums';
 import { PAGINATION_PAGE_SIZE_MEDIUM } from '@constants';
 
-import {
-  convertToCurrentTimezone,
-  encodeFormatDateISO,
-  formatCheckDate,
-} from '@utils/date';
+import { encodeFormatDateISO } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import { ChatContext } from '@providers/ChatProvider';
-import { ChatRoomItem, WebSocketMessageData } from '@interfaces/chat';
+import {
+  ChatDashboardMember,
+  ChatRoomItem,
+  WebSocketMessageData,
+} from '@interfaces/chat';
 import { BasePagination } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
 import api from '@base/api';
 import { useWebSocket } from '@providers/WebSocketProvider';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 interface dataProps {
   dataChatList: ChatRoomItem[];
@@ -49,6 +44,7 @@ interface dataProps {
   chatRoomCode: string | null;
   filteredChatList: ChatRoomItem[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
+  dashboardMembers: ChatDashboardMember[];
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
@@ -65,6 +61,7 @@ const ListChatUsers = ({
   dataChatList,
   filteredChatList,
   dashboardMemberList,
+  dashboardMembers,
   setLastItemId,
   setDataChatList,
   setFilteredChatList,
@@ -84,9 +81,9 @@ const ListChatUsers = ({
 
   const [hasMoreSearch, setHasMoreSearch] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isSettingOpen, setIsSettingOpen] = useState<number | null>(null);
   const [initialLoad, setInitialLoad] = useState<boolean>(false);
   const [initialLoadSearch, setInitialLoadSearch] = useState<boolean>(false);
+  const [notifyRoomList, setNotifyRoomList] = useState<ChatRoomItem[]>([]);
 
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastPinAt, setLastPinAt] = useState<string | null>();
@@ -95,8 +92,6 @@ const ListChatUsers = ({
   const [lastMsgItemRoomSearch, setLastMsItemRoomSearch] = useState<string>('');
   const [participantsList, setParticipantsList] = useState<number[]>([]);
 
-  const [selectedNotificationOption, setSelectedNotificationOption] =
-    useState('all');
   const {
     setChatList,
     chatRoomNameEditing,
@@ -108,7 +103,14 @@ const ListChatUsers = ({
   // Handle get list and more data room chat
   const handleGetDataRoomChat = async (pageNumber: number) => {
     setInitialLoad(true);
-    const apiUrl = `${apiRouters.CHAT_LIST}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${lastMsgItemRoom ? `&last_message_at=${lastMsgItemRoom}` : ''}${lastPinAt ? `&pin_at=${encodeFormatDateISO(new Date(lastPinAt))}` : ''}`;
+    const apiUrl = `${apiRouters.CHAT_LIST}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${lastMsgItemRoom ? `&last_message_at=${lastMsgItemRoom}` : ''}${lastPinAt ? `&pin_at=${encodeFormatDateISO(new Date(lastPinAt))}` : ''}&type=CHAT`;
+    return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
+  };
+
+  // Handle get list and more data room chat
+  const handleGetDataNotifyRooms = async () => {
+    setInitialLoad(true);
+    const apiUrl = `${apiRouters.CHAT_LIST}?type=NOTIFY`;
     return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
   };
 
@@ -160,6 +162,20 @@ const ListChatUsers = ({
     },
   );
 
+  const { mutate: getDataNotifyRooms } = useMutation(
+    'getDataNotifyRooms',
+    handleGetDataNotifyRooms,
+    {
+      onSuccess: ({ data }) => {
+        setNotifyRoomList(data.results);
+      },
+      onError: () => {},
+      onSettled: () => {
+        setInitialLoad(false);
+      },
+    },
+  );
+
   // Action load more list room
   useEffect(() => {
     if (inViewListRoom && hasMore) {
@@ -168,84 +184,71 @@ const ListChatUsers = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inViewListRoom]);
 
+  useEffect(() => {
+    if (!notifyRoomList.length) {
+      getDataNotifyRooms();
+    }
+  }, [getDataNotifyRooms, notifyRoomList.length]);
+
   const handleUpdateDatePin = useCallback(
     (data: ChatRoomItem) => {
       if (data.pinAt) {
-        setDataChatList((prevDataChatList) => {
-          const filteredList = prevDataChatList.filter(
-            (item) => item.code !== data.code,
-          );
-          return [data, ...filteredList];
-        });
-        if (searchTerm) {
-          setFilteredChatList((prevDataChatList) => {
+        if (data.type == ChatRoomType.TASK || data.type == ChatRoomType.SKILL) {
+          setNotifyRoomList((prevDataChatList) => {
             const filteredList = prevDataChatList.filter(
               (item) => item.code !== data.code,
             );
             return [data, ...filteredList];
           });
+        } else {
+          setDataChatList((prevDataChatList) => {
+            const filteredList = prevDataChatList.filter(
+              (item) => item.code !== data.code,
+            );
+            return [data, ...filteredList];
+          });
+          if (searchTerm) {
+            setFilteredChatList((prevDataChatList) => {
+              const filteredList = prevDataChatList.filter(
+                (item) => item.code !== data.code,
+              );
+              return [data, ...filteredList];
+            });
+          }
         }
       } else {
-        setDataChatList((prevDataChatList) => {
-          const filteredList = prevDataChatList.filter(
-            (item) => item.code !== data.code,
-          );
-          const lastItem = filteredList[filteredList.length - 1];
-          if (
-            lastItem &&
-            new Date(data.lastMessageAt as string) <
-              new Date(lastItem.lastMessageAt as string)
-          ) {
-            if (hasMore) {
-              return filteredList;
-            } else {
-              return [...filteredList, data];
-            }
-          }
-          const items = [...filteredList, data];
-          items.sort((currentItem, nextItem) => {
-            if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
-              return 0;
-            } else if (currentItem.pinAt !== null && nextItem.pinAt === null) {
-              return -1;
-            } else if (currentItem.pinAt === null && nextItem.pinAt !== null) {
-              return 1;
-            } else {
-              if (
-                currentItem.type === ChatRoomType.TASK &&
-                nextItem.type !== ChatRoomType.TASK
+        if (data.type == ChatRoomType.TASK || data.type == ChatRoomType.SKILL) {
+          setNotifyRoomList((prevDataChatList) => {
+            const filteredList = prevDataChatList.filter(
+              (item) => item.code !== data.code,
+            );
+            const items = [...filteredList, data];
+            items.sort((currentItem, nextItem) => {
+              if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
+                return 0;
+              } else if (
+                currentItem.pinAt !== null &&
+                nextItem.pinAt === null
               ) {
                 return -1;
-              } else if (
-                currentItem.type !== ChatRoomType.TASK &&
-                nextItem.type === ChatRoomType.TASK
-              ) {
+              } else {
                 return 1;
               }
-              const currentItemDate = currentItem.lastMessageAt
-                ? new Date(currentItem.lastMessageAt)
-                : new Date(0);
-              const nextItemDate = nextItem.lastMessageAt
-                ? new Date(nextItem.lastMessageAt)
-                : new Date(0);
-              return nextItemDate.getTime() - currentItemDate.getTime();
-            }
+            });
+            return items;
           });
-          return items;
-        });
-        if (searchTerm) {
-          setFilteredChatList((prevDataChatList) => {
+        } else {
+          setDataChatList((prevDataChatList) => {
             const filteredList = prevDataChatList.filter(
               (item) => item.code !== data.code,
             );
             const lastItem = filteredList[filteredList.length - 1];
-
             if (
               lastItem &&
               new Date(data.lastMessageAt as string) <
                 new Date(lastItem.lastMessageAt as string)
             ) {
-              if (hasMoreSearch) {
+              if (hasMore) {
                 return filteredList;
               } else {
                 return [...filteredList, data];
@@ -266,6 +269,17 @@ const ListChatUsers = ({
               ) {
                 return 1;
               } else {
+                if (
+                  currentItem.type === ChatRoomType.TASK &&
+                  nextItem.type !== ChatRoomType.TASK
+                ) {
+                  return -1;
+                } else if (
+                  currentItem.type !== ChatRoomType.TASK &&
+                  nextItem.type === ChatRoomType.TASK
+                ) {
+                  return 1;
+                }
                 const currentItemDate = currentItem.lastMessageAt
                   ? new Date(currentItem.lastMessageAt)
                   : new Date(0);
@@ -277,6 +291,51 @@ const ListChatUsers = ({
             });
             return items;
           });
+          if (searchTerm) {
+            setFilteredChatList((prevDataChatList) => {
+              const filteredList = prevDataChatList.filter(
+                (item) => item.code !== data.code,
+              );
+              const lastItem = filteredList[filteredList.length - 1];
+
+              if (
+                lastItem &&
+                new Date(data.lastMessageAt as string) <
+                  new Date(lastItem.lastMessageAt as string)
+              ) {
+                if (hasMoreSearch) {
+                  return filteredList;
+                } else {
+                  return [...filteredList, data];
+                }
+              }
+              const items = [...filteredList, data];
+              items.sort((currentItem, nextItem) => {
+                if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
+                  return 0;
+                } else if (
+                  currentItem.pinAt !== null &&
+                  nextItem.pinAt === null
+                ) {
+                  return -1;
+                } else if (
+                  currentItem.pinAt === null &&
+                  nextItem.pinAt !== null
+                ) {
+                  return 1;
+                } else {
+                  const currentItemDate = currentItem.lastMessageAt
+                    ? new Date(currentItem.lastMessageAt)
+                    : new Date(0);
+                  const nextItemDate = nextItem.lastMessageAt
+                    ? new Date(nextItem.lastMessageAt)
+                    : new Date(0);
+                  return nextItemDate.getTime() - currentItemDate.getTime();
+                }
+              });
+              return items;
+            });
+          }
         }
       }
     },
@@ -650,25 +709,7 @@ const ListChatUsers = ({
     }
   };
 
-  const postHideRoomChat = async (code: string) => {
-    const { data: response } = await api.put(apiRouters.CHAT_HIDE(`${code}`));
-    return response;
-  };
-
-  const { mutate: hideRoomChat } = useMutation(postHideRoomChat, {
-    onSuccess: async () => {},
-    onError: () => {},
-  });
-  // Action hide
-  const handleHideClick = (code: string) => {
-    hideRoomChat(code);
-  };
-
   const searchTermDebounce = useDebounceText(searchTerm, 1000);
-
-  const toggleSetting = (index: number) => {
-    setIsSettingOpen(isSettingOpen === index ? null : index);
-  };
 
   // Handle create chat
   const createChat = async (data: {
@@ -694,7 +735,7 @@ const ListChatUsers = ({
     name: string;
   }) => {
     setInitialLoadSearch(true);
-    const apiUrl = `${apiRouters.CHAT_LIST}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${name ? `&name=${encodeURIComponent(name)}` : ''}${lastMsgItemRoomSearch ? `&last_message_at=${lastMsgItemRoomSearch}` : ''}${lastPinAtSearch ? `pin_at=${lastPinAtSearch}` : ''}`;
+    const apiUrl = `${apiRouters.CHAT_LIST}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${name ? `&name=${encodeURIComponent(name)}` : ''}${lastMsgItemRoomSearch ? `&last_message_at=${lastMsgItemRoomSearch}` : ''}${lastPinAtSearch ? `pin_at=${lastPinAtSearch}` : ''}&type=CHAT`;
     return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
   };
 
@@ -765,12 +806,71 @@ const ListChatUsers = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inViewListSearchRoom]);
 
+  const renderAvatar = (item: ChatRoomItem) => {
+    if (!item) return null;
+
+    if (item.type === AvatarChat.GROUP) {
+      return (
+        <ImageRound
+          className="w-8 h-8"
+          src="/icons/multi-users.svg"
+          border="full"
+          name="Avatar user"
+        />
+      );
+    }
+
+    if (item.type === AvatarChat.TASK) {
+      return (
+        <ImageRound
+          className="w-8 h-8"
+          src="/icons/document.svg"
+          border="full"
+          name="Task"
+        />
+      );
+    }
+
+    if (item.type === AvatarChat.SKILL) {
+      return (
+        <ImageRound
+          className="w-8 h-8"
+          src="/icons/skill-room.svg"
+          border="full"
+          name="Skill"
+        />
+      );
+    }
+
+    const avatarColor =
+      dashboardMembers.find((member) => {
+        if (item.type === AvatarChat.PRIVATE) {
+          return (
+            member.id ===
+            item.participants.find(
+              (participant) => participant.id !== session?.user.id,
+            )?.id
+          );
+        }
+        return member.id === item.participants[0].id;
+      })?.avatarColor || '';
+
+    return (
+      <div className="h-6">
+        {AvatarIconWithDynamicColor({
+          color: avatarColor,
+          size: 33,
+        })}
+      </div>
+    );
+  };
+
   return (
-    <aside className="w-[350px] max-w-[350px] min-w-[350px] border-r-[2px] pr-3">
-      <div className="flex items-center justify-between">
+    <aside className="w-[350px] max-w-[350px] min-w-[350px] border-r-[2px] pr-3 pt-5">
+      <div className="flex items-center justify-between mb-5">
         <InputSearch
-          placeholder="グループやメッセージの検索"
-          className="w-[280px]"
+          placeholder="全体のキーワードを検索"
+          className="w-full"
           inputClassName="!py-2"
           onChange={(e) => {
             setHasMoreSearch(true);
@@ -779,541 +879,285 @@ const ListChatUsers = ({
             setSearchTerm(e.target.value);
           }}
         />
-        <ImageRound
-          src="/icons/filter.svg"
-          name="Filter icon"
-          className="!w-4 !h-4 text-gray-400 cursor-pointer"
-        />
-        {session?.user.permissions &&
-          hasPermissionInArray(
-            session?.user.permissions,
-            PermissionsSystem.CHAT_ADD,
-          ) && (
-            <ImageRound
-              src="/icons/add.svg"
-              name="Add icon"
-              className="!w-4 !h-4 text-gray-400 hover:cursor-pointer cursor-pointer"
-              onClick={() => setIsModalOpen(true)}
-            />
-          )}
       </div>
-      {!searchTerm && (
-        <div
-          className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_166px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
-          {dataChatList && dataChatList.length > 0 ? (
-            dataChatList.map((item, index) => (
-              <div
-                key={item?.code}
-                className={`flex items-center border-b-[1.5px] hover:cursor-pointer hover:bg-[#eaf8ff] ${chatRoomCode === item.code && 'bg-[#eaf8ff]'}`}
-                onClick={() => {
-                  setLastItemId(null);
-                  handleSetChatRoomParam(`${item?.code}`);
-                  handleResetChatRoomUnreadMessages(item);
-                  setSearchChatMsg('');
-                  setIsReload(false);
-                }}>
-                <div className="relative">
-                  <ImageRound
-                    className="w-8 h-8"
-                    src={
-                      item?.type === AvatarChat.GROUP
-                        ? '/icons/multi-users.svg'
-                        : item?.type === AvatarChat.TASK ||
-                            item?.type === AvatarChat.SKILL
-                          ? '/icons/document.svg'
-                          : '/images/avatar-default.svg'
-                    }
-                    border="full"
-                    name={
-                      item?.type === AvatarChat.GROUP
-                        ? 'Avatar user'
-                        : item?.type === AvatarChat.TASK ||
-                            item?.type === AvatarChat.SKILL
-                          ? 'Task'
-                          : 'Avatar user'
-                    }
-                  />
-
-                  {item?.pinAt && (
-                    <div className="absolute -top-1 -right-2">
-                      <ImageRound
-                        className="w-5 h-5"
-                        src="/icons/pin-round.svg"
-                        border="full"
-                        name="Pin round"
-                      />
-                    </div>
-                  )}
-                </div>
-                <div className="ml-3 flex flex-grow justify-between">
-                  <p className="text-sm max-w-[190px] font-medium truncate">
-                    {item.code &&
-                    chatRoomNameEditing.find(
-                      (room) => room.roomCode === item.code,
-                    )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === item.code,
-                        )?.roomName
-                      : item?.name || ''}
-                  </p>
-                </div>
-                <div
-                  className="relative flex flex-col items-center ml-auto"
-                  onClick={(e) => e.stopPropagation()}>
-                  <p className="text-[11px] absolute top-0">
-                    {item?.lastMessageAt
-                      ? formatCheckDate(
-                          convertToCurrentTimezone(item?.lastMessageAt),
-                        )
-                      : ''}
-                  </p>
-                  <Popover className="relative">
-                    {({ open: outerOpen, close }) => (
-                      <>
-                        {item?.unreadMessages > 0 && (
-                          <p className="absolute top-[20px] left-2 rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4">
-                            {item?.unreadMessages}
-                          </p>
-                        )}
-                        <PopoverButton
-                          className={`flex w-full px-3 py-2 items-center rounded-full hover:cursor-pointer focus:outline-none ${outerOpen ? 'text-primary' : ''}`}>
-                          <ImageRound
-                            className="scale-[0.5] text-xs ml-auto hover:cursor-pointer"
-                            src="/icons/three-dots-vertical.svg"
-                            border="full"
-                            name="Three dots vertical"
-                          />
-                        </PopoverButton>
-                        <Transition
-                          as={Fragment}
-                          enter="transition ease-out duration-200"
-                          enterFrom="opacity-0 translate-y-1"
-                          enterTo="opacity-100 translate-y-0"
-                          leave="transition ease-in duration-150"
-                          leaveFrom="opacity-100 translate-y-0"
-                          leaveTo="opacity-0 translate-y-1">
-                          <PopoverPanel
-                            className={`absolute ${
-                              index >= dataChatList.length - 3 &&
-                              dataChatList.length > 5
-                                ? 'bottom-full mb-1'
-                                : 'top-full mt-1'
-                            }  right-1  z-[10] min-w-[146px]`}>
-                            <div className="px-2 py-2 bg-white border rounded-lg shadow-lg">
-                              <Popover className="relative">
-                                {({ open: innerOpen, close: innerClose }) => (
-                                  <>
-                                    <PopoverButton
-                                      className={`flex w-full items-center rounded focus:outline-none hover:bg-gray-100 ${innerOpen ? 'text-primary' : ''}`}
-                                      onClick={() => toggleSetting(index)}>
-                                      <p className="p-2 text-sm">通知設定</p>
-                                    </PopoverButton>
-                                    <PopoverPanel className="absolute right-[100px] top-32 bg-white border rounded-lg shadow-lg mt-1 z-[20] w-[219px]">
-                                      <div className=" px-4 py-2">
-                                        <div className="flex items-center">
-                                          <p className="text-base font-semibold">
-                                            通知設定
-                                          </p>
-                                          <p className="text-xs relative top-[1px]">
-                                            （通知するトーク）
-                                          </p>
-                                        </div>
-                                        <div className="mt-2">
-                                          <label className="flex gap-x-2 text-xs items-end cursor-pointer">
-                                            <div className="w-4">
-                                              <Input
-                                                type="radio"
-                                                name={`notification-${index}`}
-                                                className="!px-0 !py-0"
-                                                checked={
-                                                  selectedNotificationOption ===
-                                                  'all'
-                                                }
-                                                onChange={() =>
-                                                  setSelectedNotificationOption(
-                                                    'all',
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                            すべてのトークを通知
-                                          </label>
-                                          <label className="flex gap-x-2 text-xs items-center cursor-pointer mt-2">
-                                            <div className="w-4 h-4">
-                                              <Input
-                                                type="radio"
-                                                name={`notification-${index}`}
-                                                className="!px-0 !py-0 h-4"
-                                                checked={
-                                                  selectedNotificationOption ===
-                                                  'mentions'
-                                                }
-                                                onChange={() =>
-                                                  setSelectedNotificationOption(
-                                                    'mentions',
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                            <span className="block w-[140px]">
-                                              自分がメンションされたトークのみ通知
-                                            </span>
-                                          </label>
-                                          <label className="flex gap-x-2 text-xs items-center cursor-pointer mt-2">
-                                            <div className="w-4">
-                                              <Input
-                                                type="radio"
-                                                name={`notification-${index}`}
-                                                className="!px-0 !py-0 h-4"
-                                                checked={
-                                                  selectedNotificationOption ===
-                                                  'none'
-                                                }
-                                                onChange={() =>
-                                                  setSelectedNotificationOption(
-                                                    'none',
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                            通知しない
-                                          </label>
-                                        </div>
-                                        <div className="flex justify-end mt-4">
-                                          <Button
-                                            variant="secondary"
-                                            className="px-4 py-2 mr-2 text-xs bg-gray-200 rounded"
-                                            onClick={() => {
-                                              innerClose();
-                                              close();
-                                            }}>
-                                            キャンセル
-                                          </Button>
-                                          <Button
-                                            variant="primary"
-                                            onClick={() => {
-                                              innerClose();
-                                              close();
-                                            }}
-                                            className="px-4 py-2 text-xs text-white rounded">
-                                            OK
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    </PopoverPanel>
-                                  </>
-                                )}
-                              </Popover>
-                              {item.type != AvatarChat.TASK &&
-                                item.type != AvatarChat.SKILL && (
-                                  <p
-                                    className="py-2 px-2 text-sm whitespace-nowrap rounded cursor-pointer hover:bg-gray-100"
-                                    onClick={() => {
-                                      handlePinClick({
-                                        code: item.code,
-                                        isPin: item.pinAt !== null,
-                                      });
-                                      close();
-                                    }}>
-                                    {item?.pinAt === null
-                                      ? 'ピン留め'
-                                      : '固定を解除'}
-                                  </p>
-                                )}
-                              {(item.type == AvatarChat.PRIVATE ||
-                                item.type == AvatarChat.SELF) && (
-                                <p
-                                  className="py-2 text-sm px-2 rounded cursor-pointer hover:bg-gray-100"
-                                  onClick={() => {
-                                    setLastItemId(null)!;
-                                    handleHideClick(item?.code);
-                                    close();
-                                  }}>
-                                  非表示
-                                </p>
-                              )}
-                            </div>
-                          </PopoverPanel>
-                        </Transition>
-                      </>
-                    )}
-                  </Popover>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-500 mt-4">
-              {!initialLoad && 'チャットがありません'}
-            </p>
-          )}
-          <div ref={listRoomRef} className="h-7">
+      <div className="flex items-center mb-5 px-3">
+        <div className="flex items-center gap-1 w-5/6">
+          <ImageRound
+            src="/icons/save-chat.svg"
+            name="Save chat icon"
+            className="!w-3 !h-3.5 text-gray-400 cursor-pointer"
+          />
+          <p className="text-[#77858F] text-[14px] font-medium">ブックマーク</p>
+        </div>
+        <div className="flex items-center w-1/6 justify-between">
+          <Tippy
+            content={'チャットルームの絞り込み'}
+            arrow={false}
+            delay={1000}
+            placement="top"
+            offset={[0, 5]}>
             <div>
-              {initialLoad ? (
-                <RowSkeleton numberOfRows={20} className="!h-[50px]" />
-              ) : (
-                <div className="w-full h-6"></div>
-              )}
+              <ImageRound
+                src="/icons/filter.svg"
+                name="Filter icon"
+                className="!w-4 !h-4 text-gray-400 cursor-pointer"
+              />
             </div>
-          </div>
+          </Tippy>
+
+          {session?.user.permissions &&
+            hasPermissionInArray(
+              session?.user.permissions,
+              PermissionsSystem.CHAT_ADD,
+            ) && (
+              <Tippy
+                content={'チャットルームの新規作成'}
+                arrow={false}
+                delay={1000}
+                placement="top"
+                offset={[0, 5]}>
+                <div>
+                  <ImageRound
+                    src="/icons/add-chat.svg"
+                    name="Add icon"
+                    className="!w-[17px] !h-[17px] text-gray-400 hover:cursor-pointer cursor-pointer"
+                    onClick={() => setIsModalOpen(true)}
+                  />
+                </div>
+              </Tippy>
+            )}
+        </div>
+      </div>
+      {notifyRoomList && notifyRoomList.length > 0 && (
+        <div className="flex w-full gap-2 items-center">
+          <p className="font-medium text-[#77858F] w-[40px] mt-[-3px]">通知</p>
+          <div className="border-t-[1px] border-[#C2CFD7] w-full h-1"></div>
         </div>
       )}
-      {searchTerm && searchTermDebounce === searchTerm && (
-        <div
-          className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_166px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
-          {filteredChatList && filteredChatList.length > 0 ? (
-            filteredChatList.map((item, index) => (
+
+      {notifyRoomList &&
+        notifyRoomList.length > 0 &&
+        notifyRoomList.map((item) => (
+          <div
+            key={item?.code}
+            className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
+            onClick={() => {
+              setLastItemId(null);
+              handleSetChatRoomParam(`${item?.code}`);
+              handleResetChatRoomUnreadMessages(item);
+              setSearchChatMsg('');
+              setIsReload(false);
+            }}>
+            <Tippy
+              content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
+              arrow={false}
+              delay={1000}
+              placement="top"
+              offset={[0, 5]}>
               <div
-                key={item?.code}
-                className={`flex items-center border-b-[1.5px] hover:cursor-pointer hover:bg-[#eaf8ff] ${chatRoomCode === item.code && 'bg-[#eaf8ff]'}`}
-                onClick={() => {
-                  setLastItemId(null);
-                  handleSetChatRoomParam(`${item?.code}`);
-                  handleResetChatRoomUnreadMessages(item);
-                  setIsReload(false);
+                className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePinClick({
+                    code: item.code,
+                    isPin: item.pinAt !== null,
+                  });
+                  close();
                 }}>
-                <div className="relative">
-                  {item?.type === AvatarChat.GROUP ? (
-                    <ImageRound
-                      className="w-8 h-8"
-                      src="/icons/multi-users.svg"
-                      border="full"
-                      name="Avatar user"
-                    />
-                  ) : item?.type === AvatarChat.TASK ? (
-                    <ImageRound
-                      className="w-8 h-8"
-                      src="/icons/document.svg"
-                      border="full"
-                      name="Task"
-                    />
-                  ) : (
-                    <ImageRound
-                      className="w-8 h-8"
-                      src="/images/avatar-default.svg"
-                      border="full"
-                      name="Avatar user"
-                    />
-                  )}
-                  {item?.pinAt && (
-                    <div className="absolute -top-1 -right-2">
+                <ImageRound
+                  className="w-[14px] h-[16px] hover:cursor-pointer"
+                  src="/icons/pin-chat.svg"
+                  border="full"
+                  name="Pin chat"
+                />
+              </div>
+            </Tippy>
+
+            <div className="relative">{renderAvatar(item)}</div>
+            <div className="ml-3 flex flex-grow justify-between">
+              <p className="text-sm max-w-[260px] font-medium truncate">
+                {item.code &&
+                chatRoomNameEditing.find((room) => room.roomCode === item.code)
+                  ? chatRoomNameEditing.find(
+                      (room) => room.roomCode === item.code,
+                    )?.roomName
+                  : item?.name || ''}
+              </p>
+            </div>
+            {item?.unreadMessages > 0 && (
+              <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
+                {item?.unreadMessages}
+              </p>
+            )}
+          </div>
+        ))}
+
+      {!searchTerm && (
+        <>
+          {' '}
+          {dataChatList && dataChatList.length > 0 && (
+            <div className="flex w-full gap-2 items-center mt-3">
+              <p className="font-medium text-[#77858F] w-[90px] mt-[-3px]">
+                チャット
+              </p>
+              <div className="border-t-[1px] border-[#C2CFD7] w-full h-1"></div>
+            </div>
+          )}
+          <div
+            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_400px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
+            {dataChatList && dataChatList.length > 0 ? (
+              dataChatList.map((item) => (
+                <div
+                  key={item?.code}
+                  className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
+                  onClick={() => {
+                    setLastItemId(null);
+                    handleSetChatRoomParam(`${item?.code}`);
+                    handleResetChatRoomUnreadMessages(item);
+                    setSearchChatMsg('');
+                    setIsReload(false);
+                  }}>
+                  <Tippy
+                    content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    offset={[0, 5]}>
+                    <div
+                      className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePinClick({
+                          code: item.code,
+                          isPin: item.pinAt !== null,
+                        });
+                        close();
+                      }}>
                       <ImageRound
-                        className="w-5 h-5"
-                        src="/icons/pin-round.svg"
+                        className="w-[14px] h-[16px] hover:cursor-pointer"
+                        src="/icons/pin-chat.svg"
                         border="full"
-                        name="Pin round"
+                        name="Pin chat"
                       />
                     </div>
+                  </Tippy>
+
+                  <div className="relative">{renderAvatar(item)}</div>
+                  <div className="ml-3 flex flex-grow justify-between">
+                    <p className="text-sm max-w-[260px] font-medium truncate">
+                      {item.code &&
+                      chatRoomNameEditing.find(
+                        (room) => room.roomCode === item.code,
+                      )
+                        ? chatRoomNameEditing.find(
+                            (room) => room.roomCode === item.code,
+                          )?.roomName
+                        : item?.name || ''}
+                    </p>
+                  </div>
+                  {item?.unreadMessages > 0 && (
+                    <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
+                      {item?.unreadMessages}
+                    </p>
                   )}
                 </div>
-                <div className="ml-3 flex flex-grow justify-between">
-                  <p className="text-sm max-w-[190px] font-medium truncate">
-                    {item.code &&
-                    chatRoomNameEditing.find(
-                      (room) => room.roomCode === item.code,
-                    )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === item.code,
-                        )?.roomName
-                      : item?.name || ''}
-                  </p>
-                </div>
-                <div
-                  className="relative flex flex-col items-center ml-auto"
-                  onClick={(e) => e.stopPropagation()}>
-                  <p className="text-[11px] absolute top-0">
-                    {item?.lastMessageAt
-                      ? formatCheckDate(
-                          convertToCurrentTimezone(item?.lastMessageAt),
-                        )
-                      : ''}
-                  </p>
-                  <Popover className="relative">
-                    {({ open: outerOpen, close }) => (
-                      <>
-                        {item?.unreadMessages > 0 && (
-                          <p className="absolute top-[20px] left-2 rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4">
-                            {item?.unreadMessages}
-                          </p>
-                        )}
-                        <PopoverButton
-                          className={`flex w-full px-3 py-2 items-center rounded-full hover:cursor-pointer focus:outline-none ${outerOpen ? 'text-primary' : ''}`}>
-                          <ImageRound
-                            className="scale-[0.5] text-xs ml-auto hover:cursor-pointer"
-                            src="/icons/three-dots-vertical.svg"
-                            border="full"
-                            name="Three dots vertical"
-                          />
-                        </PopoverButton>
-                        <Transition
-                          as={Fragment}
-                          enter="transition ease-out duration-200"
-                          enterFrom="opacity-0 translate-y-1"
-                          enterTo="opacity-100 translate-y-0"
-                          leave="transition ease-in duration-150"
-                          leaveFrom="opacity-100 translate-y-0"
-                          leaveTo="opacity-0 translate-y-1">
-                          <PopoverPanel className="absolute top-full right-1 bg-white border rounded-lg shadow-lg mt-1 z-[10] min-w-[146px]">
-                            <div className="px-2 py-2">
-                              <Popover className="relative">
-                                {({ open: innerOpen, close: innerClose }) => (
-                                  <>
-                                    <PopoverButton
-                                      className={`flex w-full items-center rounded focus:outline-none hover:bg-gray-100 ${innerOpen ? 'text-primary' : ''}`}
-                                      onClick={() => toggleSetting(index)}>
-                                      <p className="p-2 text-sm">通知設定</p>
-                                    </PopoverButton>
-                                    <PopoverPanel className="absolute right-[100px] top-32 bg-white border rounded-lg shadow-lg mt-1 z-[20] w-[219px]">
-                                      <div className=" px-4 py-2">
-                                        <div className="flex items-center">
-                                          <p className="text-base font-semibold">
-                                            通知設定
-                                          </p>
-                                          <p className="text-xs relative top-[1px]">
-                                            （通知するトーク）
-                                          </p>
-                                        </div>
-                                        <div className="mt-2">
-                                          <label className="flex gap-x-2 text-xs items-end cursor-pointer">
-                                            <div className="w-4">
-                                              <Input
-                                                type="radio"
-                                                name={`notification-${index}`}
-                                                className="!px-0 !py-0"
-                                                checked={
-                                                  selectedNotificationOption ===
-                                                  'all'
-                                                }
-                                                onChange={() =>
-                                                  setSelectedNotificationOption(
-                                                    'all',
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                            すべてのトークを通知
-                                          </label>
-                                          <label className="flex gap-x-2 text-xs items-center cursor-pointer mt-2">
-                                            <div className="w-4 h-4">
-                                              <Input
-                                                type="radio"
-                                                name={`notification-${index}`}
-                                                className="!px-0 !py-0 h-4"
-                                                checked={
-                                                  selectedNotificationOption ===
-                                                  'mentions'
-                                                }
-                                                onChange={() =>
-                                                  setSelectedNotificationOption(
-                                                    'mentions',
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                            <span className="block w-[140px]">
-                                              自分がメンションされたトークのみ通知
-                                            </span>
-                                          </label>
-                                          <label className="flex gap-x-2 text-xs items-center cursor-pointer mt-2">
-                                            <div className="w-4">
-                                              <Input
-                                                type="radio"
-                                                name={`notification-${index}`}
-                                                className="!px-0 !py-0 h-4"
-                                                checked={
-                                                  selectedNotificationOption ===
-                                                  'none'
-                                                }
-                                                onChange={() =>
-                                                  setSelectedNotificationOption(
-                                                    'none',
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                            通知しない
-                                          </label>
-                                        </div>
-                                        <div className="flex justify-end mt-4">
-                                          <Button
-                                            variant="secondary"
-                                            className="px-4 py-2 mr-2 text-xs bg-gray-200 rounded"
-                                            onClick={() => {
-                                              innerClose();
-                                              close();
-                                            }}>
-                                            キャンセル
-                                          </Button>
-                                          <Button
-                                            variant="primary"
-                                            onClick={() => {
-                                              innerClose();
-                                              close();
-                                            }}
-                                            className="px-4 py-2 text-xs text-white rounded">
-                                            OK
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    </PopoverPanel>
-                                  </>
-                                )}
-                              </Popover>
-                              {item.type != AvatarChat.TASK &&
-                                item.type != AvatarChat.SKILL && (
-                                  <p
-                                    className="py-2 px-2 text-sm whitespace-nowrap rounded cursor-pointer hover:bg-gray-100"
-                                    onClick={() => {
-                                      handlePinClick({
-                                        code: item.code,
-                                        isPin: item.pinAt !== null,
-                                      });
-                                      close();
-                                    }}>
-                                    {item?.pinAt === null
-                                      ? 'ピン留め'
-                                      : '固定を解除'}
-                                  </p>
-                                )}
-                              {(item.type == AvatarChat.PRIVATE ||
-                                item.type == AvatarChat.SELF) && (
-                                <p
-                                  className="py-2 text-sm px-2 rounded cursor-pointer hover:bg-gray-100"
-                                  onClick={() => {
-                                    setLastItemId(null)!;
-                                    handleHideClick(item?.code);
-                                    close();
-                                  }}>
-                                  非表示
-                                </p>
-                              )}
-                            </div>
-                          </PopoverPanel>
-                        </Transition>
-                      </>
-                    )}
-                  </Popover>
-                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 mt-4">
+                {!initialLoad && 'チャットがありません'}
+              </p>
+            )}
+            <div ref={listRoomRef} className="h-7">
+              <div>
+                {initialLoad ? (
+                  <RowSkeleton numberOfRows={20} className="!h-[50px]" />
+                ) : (
+                  <div className="w-full h-6"></div>
+                )}
               </div>
-            ))
-          ) : (
-            <>
-              {!initialLoadSearch && (
-                <p className="text-center text-gray-500 mt-4">
-                  {!initialLoadSearch && 'チャットがありません'}
-                </p>
-              )}
-            </>
-          )}
-          <div ref={listSearchRoomRef} className="h-7">
-            <div>
-              {initialLoadSearch ? (
-                <RowSkeleton numberOfRows={20} className="!h-[50px]" />
-              ) : (
-                <div className="w-full h-6"></div>
-              )}
             </div>
           </div>
-        </div>
+        </>
+      )}
+      {searchTerm && searchTermDebounce === searchTerm && (
+        <>
+          {filteredChatList && filteredChatList.length > 0 && (
+            <div className="flex w-full gap-2 items-center mt-3">
+              <p className="font-medium text-[#77858F] w-[90px] mt-[-3px]">
+                チャット
+              </p>
+              <div className="border-t-[1px] border-[#C2CFD7] w-full h-1"></div>
+            </div>
+          )}
+          <div
+            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_400px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
+            {filteredChatList && filteredChatList.length > 0 ? (
+              filteredChatList.map((item) => (
+                <div
+                  key={item?.code}
+                  className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
+                  onClick={() => {
+                    setLastItemId(null);
+                    handleSetChatRoomParam(`${item?.code}`);
+                    handleResetChatRoomUnreadMessages(item);
+                    setIsReload(false);
+                  }}>
+                  <div
+                    className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
+                    onClick={() => {
+                      handlePinClick({
+                        code: item.code,
+                        isPin: item.pinAt !== null,
+                      });
+                      close();
+                    }}>
+                    <ImageRound
+                      className="w-[14px] h-[16px] hover:cursor-pointer"
+                      src="/icons/pin-chat.svg"
+                      border="full"
+                      name="Pin chat"
+                    />
+                  </div>
+                  <div className="relative">{renderAvatar(item)}</div>
+                  <div className="ml-3 flex flex-grow justify-between">
+                    <p className="text-sm max-w-[260px] font-medium truncate">
+                      {item.code &&
+                      chatRoomNameEditing.find(
+                        (room) => room.roomCode === item.code,
+                      )
+                        ? chatRoomNameEditing.find(
+                            (room) => room.roomCode === item.code,
+                          )?.roomName
+                        : item?.name || ''}
+                    </p>
+                  </div>
+                  {item?.unreadMessages > 0 && (
+                    <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full pt-[2px] w-[20px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
+                      {item?.unreadMessages}
+                    </p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <>
+                {!initialLoadSearch && (
+                  <p className="text-center text-gray-500 mt-4">
+                    {!initialLoadSearch && 'チャットがありません'}
+                  </p>
+                )}
+              </>
+            )}
+            <div ref={listSearchRoomRef} className="h-7">
+              <div>
+                {initialLoadSearch ? (
+                  <RowSkeleton numberOfRows={20} className="!h-[50px]" />
+                ) : (
+                  <div className="w-full h-6"></div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {isModalOpen && (

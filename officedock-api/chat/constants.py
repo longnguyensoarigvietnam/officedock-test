@@ -62,4 +62,13 @@ class WebSocketEventType(EnumChoices):
     CHANGE_ROLE = "CHANGE_ROLE"
 
 
+class TypeChatGroup(EnumChoices):
+    """
+    TypeChatGroup constants.
+    """
+
+    NOTIFY = "NOTIFY"
+    CHAT = "CHAT"
+
+
 USER_ACTION_GROUP = "{}_user_action_group"

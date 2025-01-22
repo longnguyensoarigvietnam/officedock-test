@@ -539,7 +539,13 @@ export const showBackgroundColorByTime = (hour: number) => {
 };
 
 export const showToggleButtonColorByTime = () => {
-  const hour = new Date().getHours();
+  const hourStr = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date());
+
+  const hour = Number(hourStr.substring(0, hourStr.length - 1))
   let colorClassName = '';
   switch (true) {
     case hour >= 6 && hour < 11:
@@ -557,21 +563,28 @@ export const showToggleButtonColorByTime = () => {
   return colorClassName;
 };
 
-export const showModalHeaderBackgroundColorByTime = (hour: number) => {
+export const showModalHeaderBackgroundColorByTime = () => {
+  const hourStr = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date());
+
+  const hour = Number(hourStr.substring(0, hourStr.length - 1))
   let colorClassName = '';
 
   switch (true) {
     case hour >= 6 && hour < 11:
-      colorClassName = 'rgba(149, 200, 233, 1)';
+      colorClassName = '#95c8e9';
       break;
     case hour >= 11 && hour < 15:
-      colorClassName = 'rgba(105, 182, 220, 1)';
+      colorClassName = '#68b6dc';
       break;
     case hour >= 15 && hour < 18:
-      colorClassName = 'rgba(204, 193, 215, 1)';
+      colorClassName = '#ccc1d7';
       break;
     default:
-      colorClassName = 'rgba(121, 136, 174, 1)';
+      colorClassName = '#7988ae';
   }
   return colorClassName;
 };

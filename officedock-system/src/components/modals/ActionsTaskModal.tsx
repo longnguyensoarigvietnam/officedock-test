@@ -72,7 +72,10 @@ import {
   formatTimeInput,
   generateTimeOptionsAsObjects,
 } from '@utils/date';
-import { hasPermissionInArray, showModalHeaderBackgroundColorByTime } from '@utils';
+import {
+  hasPermissionInArray,
+  showModalHeaderBackgroundColorByTime,
+} from '@utils';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { CategoryStructure } from '@interfaces/skills';
@@ -606,21 +609,6 @@ const ActionsTaskModal = ({
 
   useEffect(() => {
     if (dataTask) {
-      if (dataTask.peopleInCharge.length) {
-        dataTask.peopleInCharge.map((element) =>
-          append({
-            label: element.fullName,
-            value: element.id,
-          }),
-        );
-      } else {
-        if (!peopleDefaultId) {
-          append({
-            label: '',
-            value: '',
-          });
-        }
-      }
       if (dataTask.taskSchedules?.length) {
         dataTask.taskSchedules.map((plan) =>
           appendPlanField({
@@ -646,6 +634,22 @@ const ActionsTaskModal = ({
           planEndDate: null,
           planStartTime: '',
         });
+      }
+      // Default focus input fake
+      if (dataTask.peopleInCharge.length) {
+        dataTask.peopleInCharge.map((element) =>
+          append({
+            label: element.fullName,
+            value: element.id,
+          }),
+        );
+      } else {
+        if (!peopleDefaultId) {
+          append({
+            label: '',
+            value: '',
+          });
+        }
       }
     } else {
       appendPlanField({
@@ -913,12 +917,6 @@ const ActionsTaskModal = ({
     ]);
   };
 
-  const hour = new Intl.DateTimeFormat('ja-JP', {
-    timeZone: 'Asia/Tokyo',
-    hour: 'numeric',
-    hour12: false,
-  }).format(new Date());
-
   return (
     <Drawer
       open={open}
@@ -933,7 +931,6 @@ const ActionsTaskModal = ({
         style={{
           background:
             showModalHeaderBackgroundColorByTime(
-              Number(hour.substring(0, hour.length - 1)),
             ),
         }}>
         <div className="flex text-sm items-center gap-4 text-white">
@@ -1254,7 +1251,9 @@ const ActionsTaskModal = ({
             </div>
           </div>
           {/* Status */}
-          <div className="flex gap-[10px] items-center">
+          <div
+            style={{ zIndex: planFields.length + 2 }}
+            className="flex gap-[10px] items-center">
             <div className="w-full max-w-[100px]">ステータス</div>
             <div className="w-full max-w-40">
               <Controller

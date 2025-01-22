@@ -50,6 +50,12 @@ export interface ChatMessageResponse {
   type: MessageType;
 }
 
+export interface ChatDashboardMember {
+  fullName: string;
+  id: number | string;
+  avatarColor: string;
+}
+
 export interface OrganizationDetail {
   id: number;
   name: string;
