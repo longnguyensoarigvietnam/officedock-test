@@ -13,7 +13,11 @@ import DatePicker from '@components/common/DatePicker';
 import Dropdown from '@components/common/Dropdown';
 import ErrorMessage from '@components/common/ErrorMessage';
 
-import { FIELD_REQUIRED, SUCCESS_CREATE_MESSAGE } from '@constants/message';
+import {
+  ERROR_CREATE_MESSAGE,
+  FIELD_REQUIRED,
+  SUCCESS_CREATE_MESSAGE,
+} from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { STATUS_TERM } from '@constants/term';
 import { StatusTerm, TermType } from '@constants/enums';
@@ -26,6 +30,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { formatDate } from '@utils/date';
 import { isContentEmpty } from '@utils';
 import api from '@base/api';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -36,6 +41,7 @@ const CreateTermForm = () => {
   const [minDatePlan, setMinDatePlan] = useState<Date | null>();
 
   const statusFilter: OptionDropdownType[] = [...STATUS_TERM];
+  const showErrorToast = useErrorToast();
 
   const {
     control,
@@ -81,12 +87,7 @@ const CreateTermForm = () => {
         router.push(pageRouters.TERMS_MANAGEMENT.href);
       },
       onError: (error: AxiosError) => {
-        if (error.response && typeof error.response.data === 'object') {
-          showToast({
-            variant: 'error',
-            description: (error.response.data as { message: string }).message,
-          });
-        }
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
       },
       onSettled: () => {
         setIsLoading(false);
