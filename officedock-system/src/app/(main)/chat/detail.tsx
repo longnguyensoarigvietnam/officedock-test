@@ -2611,7 +2611,7 @@ const ChatDetail = ({
               <InputSearch
                 placeholder="チャットルーム内のキーワードを検索"
                 customSearchIconUrl="/icons/search-white.svg"
-                inputClassName="!w-[290px] !py-2 rounded-[30px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
+                inputClassName="!w-[290px] !py-2 !rounded-[30px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
                 value={searchChatMsg}
                 onChange={(e) => setSearchChatMsg(e.target.value)}
               />

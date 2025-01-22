@@ -2,10 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-html{
+html {
   overflow: auto;
 }
-
 body {
   height: 100vh;
 }
@@ -164,7 +163,7 @@ html *::-webkit-scrollbar-track {
 }
 
 .tippy-box {
-  background-color: #5B6770 !important;
+  background-color: #5b6770 !important;
   border-radius: 6px !important;
 }
 
@@ -182,7 +181,7 @@ html *::-webkit-scrollbar-track {
 
 .animated-border-box.animate:before,
 .animated-border-box-glow.animate:before {
-  content: "";
+  content: '';
   z-index: -2;
   text-align: center;
   top: 50%;
@@ -202,7 +201,7 @@ html *::-webkit-scrollbar-track {
 }
 
 .animated-border-box.animate:after {
-  content: "";
+  content: '';
   position: absolute;
   z-index: -1;
   left: 5px;

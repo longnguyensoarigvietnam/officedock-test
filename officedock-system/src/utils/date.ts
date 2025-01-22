@@ -151,11 +151,14 @@ export const formatCheckDate = (dateString: string): string => {
     return '';
   }
 
-  const formattedDate = `${date.getMonth() + 1}月${date.getDate()}日 ${date.toLocaleTimeString('ja-JP', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })}`;
-  
+  const formattedDate = `${date.getMonth() + 1}月${date.getDate()}日 ${date.toLocaleTimeString(
+    'ja-JP',
+    {
+      hour: '2-digit',
+      minute: '2-digit',
+    },
+  )}`;
+
   return formattedDate;
 };
 
@@ -240,6 +243,25 @@ export function addTimeDifference(
 
   return newTotal;
 }
+
+export function isMoreThanFifteenMinutes(start: string, end: string): boolean {
+  if (!start || !end || typeof start !== 'string' || typeof end !== 'string') {
+    return false;
+  }
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    return false;
+  }
+
+  const differenceInMinutes =
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60);
+
+  return differenceInMinutes > 15;
+}
+
 export function areDatesDifferent(
   planStartDate: string,
   planEndDate: string,

@@ -248,8 +248,7 @@ const KanbanBoardTask = () => {
   const { dashboardMemberList } = useDashboardMemberList();
   const { frequentlyTasks: frequentlyTasksList } = useFrequentlyTasks();
   const { templates: templateList } = useTemplateList();
-  const { authenticatedUser, refetchAuthenticatedUser } =
-    useAuthenticatedUser();
+  const { authenticatedUser } = useAuthenticatedUser();
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [openWarningCloseModal, setOpenWarningCloseModal] =
     useState<boolean>(false);
@@ -1906,32 +1905,19 @@ const KanbanBoardTask = () => {
   };
 
   useEffect(() => {
-    const fetchAndSetUser = async () => {
-      if (actionType && typeDetail === ItemStartType.TASK) {
-        if (taskDetailId) {
-          setShowEditTaskModal(true);
-          getDataDetailTask(parseInt(taskDetailId));
-        } else {
-          const { data } = await refetchAuthenticatedUser();
-          if (data) {
-            setLoggedInUser(data);
-          }
-          setShowEditTaskModal(true);
-        }
+    if (actionType && typeDetail === ItemStartType.TASK) {
+      if (taskDetailId) {
+        setShowEditTaskModal(true);
+        getDataDetailTask(parseInt(taskDetailId));
       } else {
-        setShowEditTaskModal(false);
+        setShowEditTaskModal(true);
       }
-    };
+    } else {
+      setShowEditTaskModal(false);
+    }
 
-    fetchAndSetUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    getDataDetailTask,
-    setShowEditTaskModal,
-    taskDetailId,
-    actionType,
-    typeDetail,
-  ]);
+  }, [getDataDetailTask, taskDetailId, actionType, typeDetail]);
 
   useEffect(() => {
     if (actionType && typeDetail === ItemStartType.TEMPLATE) {

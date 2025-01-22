@@ -115,7 +115,7 @@ const ActionsTaskModal = ({
   onClose,
   onCopy,
   onDelete,
-  onWarning
+  onWarning,
 }: ActionTaskModalProps) => {
   const [minDatePlans, setMinDatePlans] = useState<{
     [key: number]: Date | null;
@@ -424,13 +424,32 @@ const ActionsTaskModal = ({
           });
       }
     }
+    if (authenticatedUser) {
+      value.organization = {
+        label:
+          authenticatedUser?.organizations.find(
+            (organization) => organization.isMain,
+          )?.name || '',
+        value:
+          authenticatedUser?.organizations.find(
+            (organization) => organization.isMain,
+          )?.id || '',
+      };
+    }
     return value;
-  }, [action, dataTask, session?.user.id, session?.user.profile.fullName]);
+  }, [
+    action,
+    dataTask,
+    session?.user.id,
+    session?.user.profile.fullName,
+    authenticatedUser,
+  ]);
 
   useEffect(() => {
     reset(defaultValues);
   }, [defaultValues, reset]);
   // Update columnId when create in column
+
   useEffect(() => {
     if (columnId) {
       const valueColumn = dataOptionsStatus.find(
@@ -926,12 +945,12 @@ const ActionsTaskModal = ({
       open={open}
       className="font-primary  bg-white h-screen w-[700px] !rounded-tl-xl !p-0"
       onClose={() => {
-        if(!isFormTouched){
+        if (!isFormTouched) {
           resetDataCategoryOptions();
           reset();
           onClose();
-        } else{
-          onWarning && onWarning({reset, resetDataCategoryOptions})
+        } else {
+          onWarning && onWarning({ reset, resetDataCategoryOptions });
         }
       }}>
       <header
