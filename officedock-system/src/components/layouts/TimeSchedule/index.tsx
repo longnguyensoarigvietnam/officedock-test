@@ -322,6 +322,8 @@ const TimeSchedule = memo(
           const endDateISOString = formatQueryEndDateForCalendar(
             calendarApi.view.activeEnd,
           );
+          setDisplayHeaderDayStart(new Date(startDateISOString));
+
           handleCallApiAllData(startDateISOString, endDateISOString);
         }
       }
