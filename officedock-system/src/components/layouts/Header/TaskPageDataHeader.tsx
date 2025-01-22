@@ -438,7 +438,7 @@ const TaskPageDataHeader = () => {
                   }}
                 />
               </div>
-              <Tippy
+              {taskSelected.value && statusTaskSelected && <Tippy
                 content={
                   statusTaskSelected?.isStart && taskSelected.value
                     ? '計測停止'
@@ -490,7 +490,8 @@ const TaskPageDataHeader = () => {
                     </div>
                   </div>
                 </div>
-              </Tippy>
+              </Tippy>}
+              
 
               {taskSelected.value && parseInt(String(taskSelected.value)) ? (
                 <ShowTimeCounter statusTaskSelected={statusTaskSelected} />
