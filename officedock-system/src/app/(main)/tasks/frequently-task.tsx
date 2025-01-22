@@ -107,8 +107,8 @@ const FrequentlyTask = ({
   return (
     <div className={`w-fit`}>
       <div className={`${isExtendCalendar && 'overflow-y-hidden'} `}>
-        <div className="flex gap-2">
-          <p className="text-gray-500 text-xs break-all">マイテンプレート</p>
+        <div className="flex gap-2 min-w-[130px]">
+          <p className="text-gray-500 text-xs break-all min-w-[110px]">マイテンプレート</p>
           <Tippy
             content={showFrequentlyTasks ? '閉じる' : '開く'}
             arrow={false}

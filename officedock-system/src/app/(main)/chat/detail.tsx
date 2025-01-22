@@ -2471,13 +2471,18 @@ const ChatDetail = ({
             style={{
               background: showModalHeaderBackgroundColorByTime(),
             }}>
-            <div className="flex items-center w-[60%]">
-              {renderImageRound(
-                chatRoomDetail?.type || roomDetail?.type,
-                chatRoomDetail?.participants || roomDetail?.participants || [],
-              )}
+            <div className={`flex items-center w-[60%]`}>
+              <div className="!min-w-[70px]">
+                {renderImageRound(
+                  chatRoomDetail?.type || roomDetail?.type,
+                  chatRoomDetail?.participants ||
+                    roomDetail?.participants ||
+                    [],
+                )}
+              </div>
+
               <p
-                className="text-[20px] font-bold text-ellipsis break-all overflow-hidden max-w-[calc(100%_-_370px)] ml-3"
+                className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'min-w-[400px]' : 'max-w-[calc(100%_-_370px)]'}  ml-3`}
                 style={{
                   display: '-webkit-box',
                   WebkitLineClamp: 2,
