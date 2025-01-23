@@ -89,9 +89,10 @@ export type ActionTaskModalProps = {
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[] | undefined;
   creationDataTaskData: CreationDataTask | undefined;
   disableDeleteAction?: boolean;
-  authenticatedUser?: User | undefined
+  authenticatedUser?: User | undefined;
   onDelete?: () => void;
   onClose: () => void;
+  onWarning?: any;
   onSubmit?: (values: TaskFormData) => void;
   onEdit?: (values: TaskFormData) => void;
   onCopy?: (values: TaskFormData) => void;
@@ -114,6 +115,7 @@ const ActionsTaskModal = ({
   onClose,
   onCopy,
   onDelete,
+  onWarning
 }: ActionTaskModalProps) => {
   const [minDatePlans, setMinDatePlans] = useState<{
     [key: number]: Date | null;
@@ -175,6 +177,7 @@ const ActionsTaskModal = ({
     useState<boolean>(false);
 
   const [showTodoSection, setShowTodoSection] = useState<boolean>(false);
+  const [isFormTouched, setIsFormTouched] = useState<boolean>(false);
 
   const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
     OptionDropdownType[]
@@ -758,6 +761,7 @@ const ActionsTaskModal = ({
   }, [todoList, newlyAddedId]);
 
   const handleAddItem = () => {
+    setIsFormTouched(true);
     const newId = uuidv4();
     setTodoList((prevTodoList) => {
       const newData = [
@@ -922,16 +926,18 @@ const ActionsTaskModal = ({
       open={open}
       className="font-primary  bg-white h-screen w-[700px] !rounded-tl-xl !p-0"
       onClose={() => {
-        resetDataCategoryOptions();
-        reset();
-        onClose();
+        if(!isFormTouched){
+          resetDataCategoryOptions();
+          reset();
+          onClose();
+        } else{
+          onWarning && onWarning({reset, resetDataCategoryOptions})
+        }
       }}>
       <header
         className="px-8 rounded-tl-xl h-[50px] flex items-center justify-between"
         style={{
-          background:
-            showModalHeaderBackgroundColorByTime(
-            ),
+          background: showModalHeaderBackgroundColorByTime(),
         }}>
         <div className="flex text-sm items-center gap-4 text-white">
           <p className="">
@@ -1001,6 +1007,9 @@ const ActionsTaskModal = ({
               className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-centers !py-0 h-[46px] focus:!shadow-none focus:border border-[#77858F] rounded-md"
               register={register('title', {
                 required: watch('title') !== null ? true : false,
+                onChange: () => {
+                  setIsFormTouched(true);
+                },
               })}
               error={errors.title?.message}
             />
@@ -1059,6 +1068,7 @@ const ActionsTaskModal = ({
                         setDataOptionsCategorySmall([]);
                         setDataOptionsCategoryMedium([]);
                       }
+                      setIsFormTouched(true);
                       onChange(e);
                     }}
                   />
@@ -1103,6 +1113,7 @@ const ActionsTaskModal = ({
                             value: '',
                           });
                         }
+                        setIsFormTouched(true);
                         onChange(e);
                       }}
                       error={errors.categories?.LARGE?.message}
@@ -1134,6 +1145,7 @@ const ActionsTaskModal = ({
                             value: '',
                           });
                         }
+                        setIsFormTouched(true);
                         onChange(e);
                       }}
                       error={errors.categories?.MEDIUM?.message}
@@ -1159,6 +1171,7 @@ const ActionsTaskModal = ({
                     )}
                     placeholder="小カテゴリ"
                     onChange={(e) => {
+                      setIsFormTouched(true);
                       onChange(e);
                     }}
                     error={errors.categories?.SMALL?.message}
@@ -1195,6 +1208,7 @@ const ActionsTaskModal = ({
                         ...currentTagIds,
                         ...selectedArray,
                       ];
+                      setIsFormTouched(true);
 
                       setValue('tagIds', updatedTagIds);
                     }}
@@ -1222,6 +1236,7 @@ const ActionsTaskModal = ({
                                     (item) =>
                                       Number(item.value) != Number(tag.value),
                                   );
+                                  setIsFormTouched(true);
 
                                   setValue('tagIds', updatedTagIds);
                                 }}>
@@ -1241,6 +1256,7 @@ const ActionsTaskModal = ({
                       type="button"
                       name="Remove TagId"
                       onClick={() => {
+                        setIsFormTouched(true);
                         setValue('tagIds', []);
                       }}>
                       削除
@@ -1282,6 +1298,7 @@ const ActionsTaskModal = ({
                       (element) => element.value === value?.value,
                     )}
                     onChange={(e) => {
+                      setIsFormTouched(true);
                       onChange(e);
                       if (e.value === StatusValueTask.MY_ROUTINE) {
                         setValue('deadlineDate', null);
@@ -1309,6 +1326,7 @@ const ActionsTaskModal = ({
                       customTranslate="!translate-x-[115%]"
                       enable={value}
                       onChange={(e) => {
+                        setIsFormTouched(true);
                         onChange(e);
                       }}
                     />
@@ -1339,6 +1357,7 @@ const ActionsTaskModal = ({
                           className="h-[34px] !px-2 !pl-[30px] border-[#77858F] rounded-md !text-xs !pt-2 text-center"
                           selected={value ? new Date(value) : null}
                           onChange={(e) => {
+                            setIsFormTouched(true);
                             onChange(e);
                             if (!getValues('deadlineTime')) {
                               setValue(
@@ -1362,6 +1381,7 @@ const ActionsTaskModal = ({
                       register={register('deadlineTime', {
                         required: watch('deadlineDate') !== null ? true : false,
                         onChange: (e) => {
+                          setIsFormTouched(true);
                           handleChange(e, 'deadlineTime');
                           if (getValues('deadlineDate') === null) {
                             setValue(
@@ -1420,6 +1440,7 @@ const ActionsTaskModal = ({
                     type="button"
                     name="Remove deadline"
                     onClick={() => {
+                      setIsFormTouched(true);
                       setValue('deadlineTime', '');
                       setValue('deadlineDate', null);
                     }}>
@@ -1461,6 +1482,7 @@ const ActionsTaskModal = ({
                                   }
                                   disabled={isCheckActionPermission}
                                   onChange={(e) => {
+                                    setIsFormTouched(true);
                                     onChange(e);
                                     if (e !== null) {
                                       const newDate = new Date(e.getTime());
@@ -1498,6 +1520,7 @@ const ActionsTaskModal = ({
                                   ? true
                                   : false,
                               onChange: (e) => {
+                                setIsFormTouched(true);
                                 handleChange(e, `plans.${index}.planStartTime`);
                                 if (
                                   getValues(`plans.${index}.planStartDate`) ===
@@ -1581,6 +1604,7 @@ const ActionsTaskModal = ({
                                   minDatePlans[index]
                                 }
                                 onChange={(e) => {
+                                  setIsFormTouched(true);
                                   onChange(e);
                                   if (
                                     !getValues(`plans.${index}.planEndTime`)
@@ -1627,6 +1651,7 @@ const ActionsTaskModal = ({
                                 return true;
                               },
                               onChange: (e) => {
+                                setIsFormTouched(true);
                                 handleChange(e, `plans.${index}.planEndTime`);
                                 if (
                                   getValues(`plans.${index}.planEndDate`) ===
@@ -1764,6 +1789,7 @@ const ActionsTaskModal = ({
                           type="button"
                           name="Remove plan"
                           onClick={() => {
+                            setIsFormTouched(true);
                             removePlanField(index);
                           }}>
                           削除
@@ -1781,6 +1807,7 @@ const ActionsTaskModal = ({
                     className="w-6 h-6 mr-[54px] text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
                     type="button"
                     onClick={async () => {
+                      setIsFormTouched(true);
                       await appendPlanField({
                         planStartDate: null,
                         planStartTime: '',
@@ -1814,7 +1841,11 @@ const ActionsTaskModal = ({
                 </div>
                 <TextArea
                   disabled={isCheckActionPermission}
-                  register={register('description')}
+                  register={Object.assign(register('description'), {
+                    onChange: () => {
+                      setIsFormTouched(true);
+                    },
+                  })}
                   className="resize-none"
                 />
               </>
