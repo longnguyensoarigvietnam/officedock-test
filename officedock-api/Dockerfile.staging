@@ -14,4 +14,5 @@ RUN pip install -r requirements.txt
 
 ADD . /code/
 RUN chmod +x /code/entrypoint-staging.sh
+RUN chmod +x /code/migrate-staging.sh
 ENTRYPOINT ["/code/entrypoint-staging.sh"]
