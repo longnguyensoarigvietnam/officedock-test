@@ -18,6 +18,10 @@ export type ModalProps = {
   isOutSideAction?: boolean;
   className?: string;
   overlayClassName?: string;
+  headerClassName?: string;
+  titleClassName?: string;
+  closeIconClassName?: string;
+  closeClassName?: string;
   children?: React.ReactNode;
   showIconClose?: boolean;
   onClose: () => void;
@@ -30,6 +34,10 @@ const Modal = ({
   isOutSideAction = true,
   className,
   overlayClassName,
+  headerClassName,
+  titleClassName,
+  closeIconClassName,
+  closeClassName,
   children,
   showIconClose = true,
   onClose,
@@ -86,19 +94,22 @@ const Modal = ({
                 <div
                   className={` ${sizePadding} px-4 font-primary ${className}`}>
                   {title && (
-                    <header className="flex  border-b pb-4  border-solid border-gray-100 justify-between items-center mb-4">
+                    <header
+                      className={`flex  border-b pb-4  border-solid border-gray-100 justify-between items-center mb-4 ${headerClassName}`}>
                       <Heading
-                        className="leading-10 !text-[#374151] text-lg truncate"
+                        className={`leading-10 !text-[#374151] text-lg truncate ${titleClassName}`}
                         as="h1">
                         {title}
                       </Heading>
                       {showIconClose && (
-                        <ImageRound
-                          className="mt-1 w-5 h-5 hover:cursor-pointer"
-                          src="/icons/close.svg"
-                          name="Close modal"
-                          onClick={onClose}
-                        />
+                        <div className={`${closeIconClassName}`}>
+                          <ImageRound
+                            className={`mt-1 w-5 h-5 hover:cursor-pointer ${closeClassName}`}
+                            src="/icons/close.svg"
+                            name="Close modal"
+                            onClick={onClose}
+                          />
+                        </div>
                       )}
                     </header>
                   )}

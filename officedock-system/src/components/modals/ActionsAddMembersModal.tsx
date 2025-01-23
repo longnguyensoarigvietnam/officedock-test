@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, memo, SetStateAction, useState } from 'react';
+import { memo, useState } from 'react';
 import { UseMutationResult } from 'react-query';
 import { useSession } from 'next-auth/react';
 
@@ -12,14 +12,16 @@ import Input from '@components/common/Input';
 
 import { NO_OPTIONS } from '@constants';
 import { Profile } from '@interfaces/user';
-import { ChatRoomItem } from '@interfaces/chat';
+import { ChatDashboardMember, ChatRoomItem } from '@interfaces/chat';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import { Controller, useForm } from 'react-hook-form';
+import Checkbox from '@components/common/Checkbox';
 
 export type ActionsAddMembersModalProps = {
   open: boolean;
   onClose: () => void;
-  participantsList: number[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
-  setParticipantsList: Dispatch<SetStateAction<number[]>>;
+  dashboardMembers: ChatDashboardMember[];
   createChatMutation: UseMutationResult<
     ChatRoomItem,
     unknown,
@@ -35,27 +37,22 @@ const ActionsAddMembersModal = memo(
   ({
     open,
     onClose,
-    participantsList,
     dashboardMemberList,
-    setParticipantsList,
+    dashboardMembers,
     createChatMutation,
   }: ActionsAddMembersModalProps) => {
     const { data: session } = useSession();
 
     const [searchName, setSearchName] = useState<string>('');
-    const [groupName, setGroupName] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Handle confirm update member list
-    const handleConfirmUpdateMemberList = (type: string, id: number) => {
-      let newList = [...participantsList];
-      if (type === 'remove') {
-        newList = newList.filter((member) => member !== id);
-      } else {
-        newList = [...participantsList, id];
-      }
-      setParticipantsList(newList);
-    };
+    const { register, setValue, watch, control } = useForm<{
+      groupParticipant: number[];
+      groupName: string;
+    }>({
+      defaultValues: {
+        groupParticipant: [],
+      },
+    });
 
     // Handle save
     const handleSave = async () => {
@@ -63,10 +60,10 @@ const ActionsAddMembersModal = memo(
       setIsSubmitting(true);
       try {
         if (
-          participantsList.length === 1 &&
-          participantsList[0] === session?.user.id
+          watch('groupParticipant').length === 1 &&
+          watch('groupParticipant')[0] === session?.user.id
         ) {
-          const participantId = participantsList[0];
+          const participantId = watch('groupParticipant')[0];
           const participant = dashboardMemberList.find(
             (user) => user.id === participantId,
           );
@@ -76,14 +73,14 @@ const ActionsAddMembersModal = memo(
             participantIds: [participantId],
           });
         } else {
-          if (participantsList.length >= 2) {
-            if (!groupName.trim()) return;
+          if (watch('groupParticipant').length >= 2) {
+            if (!watch('groupName').trim()) return;
             await createChatMutation.mutateAsync({
-              name: groupName,
-              participantIds: participantsList,
+              name: watch('groupName'),
+              participantIds: watch('groupParticipant'),
             });
-          } else if (participantsList.length === 1) {
-            const participantId = participantsList[0];
+          } else if (watch('groupParticipant').length === 1) {
+            const participantId = watch('groupParticipant')[0];
             const participant = dashboardMemberList.find(
               (user) => user.id === participantId,
             );
@@ -100,150 +97,199 @@ const ActionsAddMembersModal = memo(
     };
 
     const isSaveButtonDisabled =
-      participantsList.length >= 2 && !groupName.trim();
+      watch('groupParticipant').length >= 2 && ((watch('groupName') && !watch('groupName').trim() )|| !watch('groupName'));
+
+    const renderAvatar = (memberId: number) => {
+      const avatarColor =
+        dashboardMembers.find((member) => {
+          return member.id == memberId;
+        })?.avatarColor || '';
+
+      return (
+        <div>
+          {AvatarIconWithDynamicColor({
+            color: avatarColor,
+            size: 33,
+          })}
+        </div>
+      );
+    };
     return (
       <Modal
         open={open}
         isOutSideAction={false}
-        className="font-primary bg-white text-gray-700 !rounded-2xl !p-7 w-[450px] !mr-0"
+        className="font-primary !rounded-xl text-gray-700 !p-0 w-[500px]"
+        titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
+        headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-6 py-4"
+        closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
+        closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
         onClose={() => {
           onClose();
-          setParticipantsList([]);
         }}
-        title="新規トークルーム作成">
-        <div className="mt-2">
-          {participantsList.length >= 2 && (
-            <div className="mt-4">
-              <label className="block text-sm font-semibold">グループ名</label>
-              <Input
-                type="text"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                className="w-full mt-1 p-2 border rounded"
-                placeholder="グループ名を入力してください"
-              />
+        title="グループチャットを新規作成">
+        <div className="mt-2 px-6">
+          {watch('groupParticipant').length >= 2 && (
+            <div className="text-sm text-gray-700">
+              <div className="flex gap-4 items-center pb-3">
+                <ImageRound
+                  className="w-20 h-20"
+                  src="/icons/multi-users.svg"
+                  border="full"
+                  name="Multi users"
+                />
+                <div className="!w-full">
+                  <p className="text-[#77858F] font-medium text-[12px] mb-1.5">
+                    グループ名
+                  </p>
+                  <Input
+                    className="!py-1.5 !pl-1.5 !w-full !border-[#77858F] text-sm"
+                    placeholder="グループ名を入力してください"
+                    register={register('groupName', {
+                      onBlur: (e) => {
+                        if (e.target.value === '') {
+                          setValue('groupName', '');
+                        }
+                      },
+                    })}
+                  />
+                </div>
+              </div>
             </div>
           )}
-          <p className="text-sm font-bold text-gray-700 mt-3">
-            トークルームのメンバー
+        </div>
+        <div className="px-6">
+          <p className="text-[12px] text-[#77858F] font-medium mb-3">
+            メンバーを選択
           </p>
-          <div className="pt-3 mb-3 max-h-[170px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
-            {Array.isArray(participantsList) &&
-              dashboardMemberList
-                ?.filter((member) =>
-                  participantsList.find((item) => item === member.id),
-                )
-                .map((member) => {
-                  return (
-                    <div
-                      className={`flex gap-5 items-center p-1.5 hover:cursor-pointer`}
-                      key={member.id}>
-                      <ImageRound
-                        className="w-8 h-8"
-                        src="/images/avatar-default.svg"
-                        border="full"
-                        name="Avatar user"
-                      />
-                      <p className="font-normal truncate  text-black max-w-[220px] text-sm">
-                        {member?.fullName}
-                      </p>
-
-                      <Button
-                        sz="sm"
-                        variant="outline"
-                        className="w-20 h-8 text-xs ml-auto !border-[#EF4444] !text-[#EF4444]"
-                        type="button"
-                        name="Remove"
-                        onClick={() =>
-                          handleConfirmUpdateMemberList('remove', member?.id)
-                        }>
-                        削除
-                      </Button>
-                    </div>
+          <InputSearch
+            placeholder="名前を検索"
+            className="w-full"
+            inputClassName="!py-2 text-[14px]"
+            onChange={(e) => setSearchName(e.target.value)}
+          />
+        </div>
+        <div className="px-6 mb-7">
+          <div className="flex gap-4 my-3">
+            <p
+              className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
+              onClick={() => {
+                const updatedParticipantList = dashboardMemberList?.filter(
+                  (member) =>
+                    member.fullName
+                      .toLowerCase()
+                      .includes(searchName.toLowerCase()),
+                );
+                let newParticipantList: number[] = [];
+                if (updatedParticipantList) {
+                  newParticipantList = updatedParticipantList.map(
+                    (participant) => participant.id,
                   );
-                })}
+                }
+                setValue('groupParticipant', newParticipantList);
+              }}>
+              全てをチェック
+            </p>
+            <p
+              className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
+              onClick={() => {
+                setValue('groupParticipant', []);
+              }}>
+              全てのチェックをクリア
+            </p>
+            <p className="ml-auto text-[#0068B6] font-medium text-[12px]">
+              {watch('groupParticipant') && watch('groupParticipant').length
+                ? watch('groupParticipant').length
+                : 0}
+              人を選択中
+            </p>
+          </div>
+          <div className="pt-3 max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+            {dashboardMemberList?.filter((member) =>
+              member.fullName.toLowerCase().includes(searchName.toLowerCase()),
+            ).length === 0 && (
+              <p className="text-gray-500 text-center text-sm">{NO_OPTIONS}</p>
+            )}
+            {dashboardMemberList
+              ?.filter((member) =>
+                member.fullName
+                  .toLowerCase()
+                  .includes(searchName.toLowerCase()),
+              )
+              .map((member) => {
+                return (
+                  <div
+                    className={`flex gap-2 items-center p-1.5 hover:cursor-pointer ${
+                      watch('groupParticipant') &&
+                      watch('groupParticipant').find(
+                        (participant) => participant == member.id,
+                      ) &&
+                      'bg-[#EBF1F7]'
+                    }`}
+                    key={member.id}>
+                    <div>
+                      <Controller
+                        control={control}
+                        name="groupParticipant"
+                        render={() => (
+                          <Checkbox
+                            isChecked={
+                              watch('groupParticipant') &&
+                              watch('groupParticipant').find(
+                                (participant) => participant == member.id,
+                              )
+                                ? true
+                                : false
+                            }
+                            onChange={() => {
+                              const currentParticipantList =
+                                watch('groupParticipant') || [];
+                              const foundParticipantIndex =
+                                currentParticipantList.findIndex(
+                                  (participant) => participant == member.id,
+                                );
+                              let updatedParticipantList = [];
+                              if (foundParticipantIndex == -1) {
+                                updatedParticipantList = [
+                                  ...currentParticipantList,
+                                  member.id,
+                                ];
+                              } else {
+                                updatedParticipantList = [
+                                  ...currentParticipantList,
+                                ].filter(
+                                  (participant) => participant != member.id,
+                                );
+                              }
+
+                              setValue(
+                                'groupParticipant',
+                                updatedParticipantList,
+                              );
+                            }}
+                          />
+                        )}
+                      />
+                    </div>
+
+                    {renderAvatar(member.id)}
+                    <p className="font-normal text-sm truncate max-w-[350px] text-black">
+                      {member.fullName}
+                    </p>
+                  </div>
+                );
+              })}
           </div>
         </div>
-        <InputSearch
-          placeholder="メンバー検索"
-          className="w-[100%]"
-          inputClassName="!py-2 mb-3"
-          onChange={(e) => setSearchName(e.target.value)}
-        />
-        <div className="">
-          <p className="text-sm font-bold">ユーザー</p>
-          <div className="pt-3 max-h-[170px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
-            {Array.isArray(participantsList) &&
-              dashboardMemberList
-                ?.filter(
-                  (member) =>
-                    participantsList?.findIndex(
-                      (item) => item === member.id,
-                    ) === -1,
-                )
-                ?.filter((member) =>
-                  member?.fullName
-                    .toLowerCase()
-                    .includes(searchName.toLowerCase()),
-                ).length === 0 && (
-                <p className="text-gray-500 text-center text-sm">
-                  {NO_OPTIONS}
-                </p>
-              )}
-            {Array.isArray(participantsList) &&
-              dashboardMemberList
-                ?.filter(
-                  (member) =>
-                    participantsList?.findIndex(
-                      (item) => item === member?.id,
-                    ) === -1,
-                )
-                ?.filter((member) =>
-                  member?.fullName
-                    .toLowerCase()
-                    .includes(searchName.toLowerCase()),
-                )
-                .map((member) => {
-                  return (
-                    <div
-                      className={`flex gap-5 items-center p-1.5 hover:cursor-pointer`}
-                      key={member?.id}
-                      onClick={() =>
-                        handleConfirmUpdateMemberList('add', member?.id)
-                      }>
-                      <ImageRound
-                        className="w-8 h-8"
-                        src="/images/avatar-default.svg"
-                        border="full"
-                        name="Avatar user"
-                      />
-                      <p className="font-normal truncate max-w-[220px] text-sm">
-                        {member?.fullName}
-                      </p>
-                      <Button
-                        sz="sm"
-                        variant="outline"
-                        className="w-20 h-8 text-xs ml-auto"
-                        type="button">
-                        <ImageRound
-                          src="/icons/plus.svg"
-                          name="Add organization"
-                          className="mr-3 h-2 w-2"
-                        />
-                        追加
-                      </Button>
-                    </div>
-                  );
-                })}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end mt-4">
+        <div className="flex justify-center gap-3 my-7 items-center">
           <Button
             variant="primary"
+            className="w-[110px]"
             onClick={handleSave}
             disabled={isSaveButtonDisabled}>
-            保存
+            作成する
+          </Button>
+          <Button variant="outline" onClick={onClose} className="w-[110px]">
+            キャンセル
           </Button>
         </div>
       </Modal>
