@@ -77,14 +77,12 @@ const ListViewItem = ({
   const queryClient = useQueryClient();
 
   const {
-    columnWidth,
     setDataClickTask,
     setDataRunning,
     setIdTaskStarting,
     setTaskSelectedToStart,
     setShowWarningStartTaskModal,
     setDataActualAddSchedule,
-    calculateFontSizeContent,
   } = useContext(TaskContext);
 
   const [dataOptionsStatus, setDataOptionsStatus] = useState<
@@ -418,11 +416,7 @@ const ListViewItem = ({
                         <ImageRound
                           src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
                           name="Start task"
-                          style={{
-                            width: `${(columnWidth / 247) * 24}px`,
-                            height: `${(columnWidth / 247) * 24}px`,
-                          }}
-                          className={`hover:cursor-pointer `}
+                          className={`hover:cursor-pointer w-[24px] h-[24px]`}
                           onClick={async () => {
                             await new Promise<void>((resolve) => {
                               setTaskSelectedToStart(content);
@@ -471,24 +465,20 @@ const ListViewItem = ({
                             }
                             className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
                             styleClass={{
-                              fontSize: calculateFontSizeContent(),
-                              lineHeight: `${calculateFontSizeContent() * 1.5}px`,
-                              width:
-                                content.status?.id ===
-                                StatusValueTask.MY_ROUTINE
-                                  ? `${(columnWidth / 247) * 90}px`
-                                  : `${(columnWidth / 247) * 80}px`,
-                              height: `${(columnWidth / 247) * 21}px`,
-                              padding: `${(columnWidth / 247) * 6}px`,
-                              gap: `${(columnWidth / 247) * 10}px`,
-                              borderRadius: `${(columnWidth / 247) * 4}px`,
+                              fontSize: '12px',
+                              lineHeight: '18px',
+                              width: '80px',
+                              height: '21px',
+                              padding: '6px',
+                              gap: '10px',
+                              borderRadius: '4px',
                             }}
-                            classNameTextData={`!text-[${calculateFontSizeContent()}px]`}
-                            classNameOption={`!text-[${calculateFontSizeContent()}px] !w-[120px]`}
-                            classNameError={`!text-[${calculateFontSizeContent()}px]`}
+                            classNameTextData={`!text-[12px]`}
+                            classNameOption={`!text-[12px] !w-[120px]`}
+                            classNameError={`!text-[12px]`}
                             styleClassOption={{
-                              fontSize: calculateFontSizeContent(),
-                              lineHeight: `${calculateFontSizeContent() * 1.5}px`,
+                              fontSize: '12px',
+                              lineHeight: '18px',
                             }}
                             options={
                               content.status?.id === StatusValueTask.MY_ROUTINE

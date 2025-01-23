@@ -868,7 +868,7 @@ const ListChatUsers = ({
         <InputSearch
           placeholder="全体のキーワードを検索"
           className="w-full"
-          inputClassName="!py-2"
+          inputClassName="!py-2 !border-[#77858F]"
           onChange={(e) => {
             setHasMoreSearch(true);
             setLastPinAtSearch(null);

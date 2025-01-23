@@ -828,7 +828,7 @@ const MessageDetail = ({
                                     PermissionsSystem.CHAT_DELETE,
                                   ) && (
                                     <Tippy
-                                      content={'消去'}
+                                      content={'削除'}
                                       arrow={false}
                                       delay={1000}
                                       placement="top"
@@ -1118,7 +1118,7 @@ const MessageDetail = ({
                                     PermissionsSystem.CHAT_DELETE,
                                   ) && (
                                     <Tippy
-                                      content={'消去'}
+                                      content={'削除'}
                                       arrow={false}
                                       delay={1000}
                                       placement="top"
@@ -1419,7 +1419,7 @@ const MessageDetail = ({
                                     PermissionsSystem.CHAT_DELETE,
                                   ) && (
                                     <Tippy
-                                      content={'消去'}
+                                      content={'削除'}
                                       arrow={false}
                                       delay={1000}
                                       placement="top"
@@ -2611,7 +2611,7 @@ const ChatDetail = ({
               <InputSearch
                 placeholder="チャットルーム内のキーワードを検索"
                 customSearchIconUrl="/icons/search-white.svg"
-                inputClassName="!w-[290px] !py-2 rounded-[20px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
+                inputClassName="!w-[290px] !py-2 rounded-[30px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
                 value={searchChatMsg}
                 onChange={(e) => setSearchChatMsg(e.target.value)}
               />
@@ -2638,7 +2638,7 @@ const ChatDetail = ({
                             offset={[0, 5]}>
                             <div>
                               <ImageRound
-                                className="w-8 h-8 hover:cursor-pointer"
+                                className="w-[26px] h-[26px] hover:cursor-pointer"
                                 src="/icons/setting-chat.svg"
                                 border="full"
                                 name="Setting icon"
