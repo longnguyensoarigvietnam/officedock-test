@@ -98,6 +98,8 @@ import FixedTaskData from './fixed-task';
 import { AxiosError } from 'axios';
 import { useErrorToast } from '@hooks/useErrorToast';
 import BoardKanban from '@components/kanban/Board';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import { User } from '@interfaces/user';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -245,6 +247,9 @@ const KanbanBoardTask = () => {
   const { dashboardMemberList } = useDashboardMemberList();
   const { frequentlyTasks: frequentlyTasksList } = useFrequentlyTasks();
   const { templates: templateList } = useTemplateList();
+  const { authenticatedUser, refetchAuthenticatedUser } =
+    useAuthenticatedUser();
+  const [loggedInUser, setLoggedInUser] = useState<User>();
 
   const [numberPagesData, setNumberPagesData] = useState<
     { id: string; count: number; numPages: number; hasMores: boolean }[]
@@ -270,6 +275,12 @@ const KanbanBoardTask = () => {
       setNumberPagesData(numberPages);
     }
   }, [numberPages]);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      setLoggedInUser(authenticatedUser);
+    }
+  }, [authenticatedUser]);
 
   // Call api (hook) get creation data task. Data such as: tags, status, types, priorities
   const { creationDataTaskData } = useCreationDataTask({});
@@ -1888,16 +1899,24 @@ const KanbanBoardTask = () => {
   };
 
   useEffect(() => {
-    if (actionType && typeDetail === ItemStartType.TASK) {
-      if (taskDetailId) {
-        setShowEditTaskModal(true);
-        getDataDetailTask(parseInt(taskDetailId));
+    const fetchAndSetUser = async () => {
+      if (actionType && typeDetail === ItemStartType.TASK) {
+        if (taskDetailId) {
+          setShowEditTaskModal(true);
+          getDataDetailTask(parseInt(taskDetailId));
+        } else {
+          const { data } = await refetchAuthenticatedUser();
+          if (data) {
+            setLoggedInUser(data);
+          }
+          setShowEditTaskModal(true);
+        }
       } else {
-        setShowEditTaskModal(true);
+        setShowEditTaskModal(false);
       }
-    } else {
-      setShowEditTaskModal(false);
-    }
+    };
+
+    fetchAndSetUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     getDataDetailTask,
@@ -2684,12 +2703,15 @@ const KanbanBoardTask = () => {
                     />
                   </div>
                   <Tippy
-                    content={isListView ? 'タスクを看板表示' : 'タスクをリスト表示'}
+                    content={
+                      isListView ? 'タスクを看板表示' : 'タスクをリスト表示'
+                    }
                     arrow={false}
                     delay={1000}
                     placement="top"
                     offset={[3, 0]}>
-                    <div className={`hover:cursor-pointer fixed ${showFrequentlyTasks ? 'top-[200px]' : 'top-[125px]'} right-5 z-20`}>
+                    <div
+                      className={`hover:cursor-pointer fixed ${showFrequentlyTasks ? 'top-[200px]' : 'top-[125px]'} right-5 z-20`}>
                       <ImageRound
                         src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
                         name="List view icon"
@@ -2803,6 +2825,7 @@ const KanbanBoardTask = () => {
                   action={actionType || ActionTask.CREATE}
                   peopleDefaultId={peopleDefaultId || `${session?.user.id}`}
                   setDataErrorTask={setDataErrorTask}
+                  authenticatedUser={loggedInUser}
                   errorPerson={dataErrorTask}
                   dashboardMemberList={dashboardMemberList}
                   creationDataTaskData={creationDataTaskData}

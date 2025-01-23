@@ -1001,7 +1001,7 @@ const ListChatUsers = ({
             </div>
           )}
           <div
-            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_400px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
+            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_400px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
             {dataChatList && dataChatList.length > 0 ? (
               dataChatList.map((item) => (
                 <div

@@ -61,7 +61,7 @@ import {
   TaskFormData,
   TodoItem,
 } from '@interfaces/task';
-import { Profile } from '@interfaces/user';
+import { Profile, User } from '@interfaces/user';
 
 import {
   convertDateToStartDate,
@@ -77,7 +77,6 @@ import {
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { CategoryStructure } from '@interfaces/skills';
 
 export type ActionTaskModalProps = {
@@ -90,6 +89,7 @@ export type ActionTaskModalProps = {
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[] | undefined;
   creationDataTaskData: CreationDataTask | undefined;
   disableDeleteAction?: boolean;
+  authenticatedUser?: User | undefined
   onDelete?: () => void;
   onClose: () => void;
   onSubmit?: (values: TaskFormData) => void;
@@ -101,6 +101,7 @@ export type ActionTaskModalProps = {
 const ActionsTaskModal = ({
   open,
   action = ActionTask.CREATE,
+  authenticatedUser,
   dataTask,
   errorPerson,
   columnId,
@@ -118,7 +119,6 @@ const ActionsTaskModal = ({
     [key: number]: Date | null;
   }>({});
   const { data: session } = useSession();
-  const { authenticatedUser } = useAuthenticatedUser();
 
   const modalRef = useRef<HTMLFormElement | null>(null);
 
@@ -1255,7 +1255,7 @@ const ActionsTaskModal = ({
             style={{ zIndex: planFields.length + 2 }}
             className="flex gap-[10px] items-center">
             <div className="w-full max-w-[100px]">ステータス</div>
-            <div className="w-full max-w-40">
+            <div className="w-full max-w-[180px]">
               <Controller
                 control={control}
                 name={'statusId'}

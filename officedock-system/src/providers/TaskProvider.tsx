@@ -252,23 +252,23 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const [extendByStatus, setExtendByStatus] = useState([
     {
       id: StatusValueTask.NOT_STARTED,
-      status: false,
+      status: true,
     },
     {
       id: StatusValueTask.IN_PROGRESS,
-      status: false,
+      status: true,
     },
     {
       id: StatusValueTask.CONFIRMING,
-      status: false,
+      status: true,
     },
     {
       id: StatusValueTask.COMPLETED,
-      status: false,
+      status: true,
     },
     {
       id: StatusValueTask.MY_ROUTINE,
-      status: false,
+      status: true,
     },
   ]);
 

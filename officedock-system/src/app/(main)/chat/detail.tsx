@@ -100,7 +100,7 @@ import {
 } from '@interfaces/chat';
 import { BasePagination, OptionDropdownType } from '@interfaces/common';
 import { EventEditFormData, EventRequest } from '@interfaces/calendar';
-import { Profile } from '@interfaces/user';
+import { Profile, User } from '@interfaces/user';
 import {
   CreationDataTask,
   Task,
@@ -115,6 +115,7 @@ import api from '@base/api';
 import { useErrorToast } from '@hooks/useErrorToast';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMemberModal';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -235,7 +236,7 @@ const MessageDetail = ({
                       msgEditing={msgEditing}
                       messageSubmitted={messageSubmitted}
                       setMessageSubmitted={setMessageSubmitted}
-                      className="min-w-[700px] w-[700px]"
+                      className="w-[100%]"
                     />
                     <div className="flex justify-end gap-2 mt-2">
                       <Button
@@ -724,7 +725,7 @@ const MessageDetail = ({
                     <>
                       {!messageDetail.deletedAt && (
                         <div
-                          className={`bg-white group-hover:flex hidden rounded-2xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
+                          className={`bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
                           <Tippy
                             content={'返信'}
                             arrow={false}
@@ -1014,7 +1015,7 @@ const MessageDetail = ({
                     <>
                       {!messageDetail.deletedAt && (
                         <div
-                          className={`bg-white group-hover:flex hidden rounded-2xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
+                          className={`bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
                           <Tippy
                             content={'返信'}
                             arrow={false}
@@ -1155,9 +1156,9 @@ const MessageDetail = ({
             {messageDetail.type !== MessageType.MESSAGE ? (
               <ImageRound
                 className="w-10 h-10"
-                src="/icons/document.svg"
+                src="/icons/skill-room.svg"
                 border="full"
-                name="Task"
+                name="Skill"
               />
             ) : (
               <div>{renderAvatar(messageDetail.sender.id)}</div>
@@ -1315,7 +1316,7 @@ const MessageDetail = ({
                     <>
                       {!messageDetail.deletedAt && (
                         <div
-                          className={`bg-white group-hover:flex hidden rounded-2xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
+                          className={`bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
                           <Tippy
                             content={'返信'}
                             arrow={false}
@@ -1557,6 +1558,8 @@ const ChatDetail = ({
     conditions: [isReload || !!roomDetail],
   });
   const activeRoomRef = useRef<string | null>(null);
+  const { authenticatedUser } = useAuthenticatedUser();
+  const [loggedInUser, setLoggedInUser] = useState<User>();
 
   //Task
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
@@ -1621,6 +1624,12 @@ const ChatDetail = ({
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inView, chatRoomCode, hasMoreDetail]);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      setLoggedInUser(authenticatedUser);
+    }
+  }, [authenticatedUser]);
 
   useEffect(() => {
     if (!chatRoomNotifications) {
@@ -2395,7 +2404,7 @@ const ChatDetail = ({
             dashboardMembers.find((member) => member.id == participantId)
               ?.avatarColor || '';
           return (
-            <div className="h-6 ml-[-10px]" key={index}>
+            <div className="ml-[-10px]" key={index}>
               {AvatarIconWithDynamicColor({ color: avatarColor, size: 33 })}
             </div>
           );
@@ -2507,8 +2516,8 @@ const ChatDetail = ({
             style={{
               background: showModalHeaderBackgroundColorByTime(),
             }}>
-            <div className={`flex items-center w-[60%]`}>
-              <div className="!min-w-[70px]">
+            <div className={`flex items-center w-[60%] gap-2`}>
+              <div className="!min-w-[50px]">
                 {renderImageRound(
                   chatRoomDetail?.type || roomDetail?.type,
                   chatRoomDetail?.participants ||
@@ -2516,32 +2525,33 @@ const ChatDetail = ({
                     [],
                 )}
               </div>
-
-              <p
-                className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'min-w-[400px]' : 'max-w-[calc(100%_-_370px)]'}  ml-3`}
-                style={{
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                }}>
-                {chatRoomDetail
-                  ? chatRoomCode &&
-                    chatRoomNameEditing.find(
-                      (room) => room.roomCode === chatRoomCode,
-                    )
-                    ? chatRoomNameEditing.find(
-                        (room) => room.roomCode === chatRoomCode,
-                      )?.roomName
-                    : chatRoomDetail?.name
-                  : chatRoomCode &&
+              {chatRoomDetail && (
+                <p
+                  className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_370px)]'}   ml-3`}
+                  style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                  }}>
+                  {chatRoomDetail
+                    ? chatRoomCode &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === chatRoomCode,
                       )
-                    ? chatRoomNameEditing.find(
-                        (room) => room.roomCode === chatRoomCode,
-                      )?.roomName
-                    : roomDetail?.name}
-              </p>
+                      ? chatRoomNameEditing.find(
+                          (room) => room.roomCode === chatRoomCode,
+                        )?.roomName
+                      : chatRoomDetail?.name
+                    : chatRoomCode &&
+                        chatRoomNameEditing.find(
+                          (room) => room.roomCode === chatRoomCode,
+                        )
+                      ? chatRoomNameEditing.find(
+                          (room) => room.roomCode === chatRoomCode,
+                        )?.roomName
+                      : roomDetail?.name}
+                </p>
+              )}
               <div className="max-w-[280px] w-[280px] ml-3">
                 {!chatRoomDetail
                   ? roomDetail &&
@@ -2608,7 +2618,7 @@ const ChatDetail = ({
                             : chatRoomDetail?.participants?.length}
                           人
                         </p>
-                        <div className="flex mt-[-3px]">
+                        <div className="flex">
                           {chatRoomDetail &&
                           chatRoomParticipantsEditing.find(
                             (room) => room.roomCode === chatRoomDetail.code,
@@ -2694,7 +2704,7 @@ const ChatDetail = ({
             </div>
           </div>
           <div
-            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || roomDetail?.type == ChatRoomType.TASK || roomDetail?.type == ChatRoomType.SKILL ? 'h-[calc(100vh_-_200px)]' : 'h-[calc(100vh_-_400px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
+            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || roomDetail?.type == ChatRoomType.TASK || roomDetail?.type == ChatRoomType.SKILL ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
             {dataMessageDetail &&
               chatRoomNotifications &&
               dataMessageDetail
@@ -2763,15 +2773,15 @@ const ChatDetail = ({
                 ))}
             <div
               ref={ref}
-              className="h-[calc(100vh_-_450px)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
+              className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
               <div>
                 {initialLoad ? (
-                  <div className="flex flex-col items-end">
-                    <RowSkeleton className="!h-[100px] w-[300px] mb-2" />
-                    <RowSkeleton className="!h-[200px] w-[400px] mb-2" />
+                  <div className="flex flex-col items-start ml-3">
+                    <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
+                    <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
                     <RowSkeleton
-                      numberOfRows={2}
-                      className="!h-[50px] w-[500px]"
+                      numberOfRows={4}
+                      className="!h-[50px] w-[700px]"
                     />
                   </div>
                 ) : (
@@ -2780,125 +2790,142 @@ const ChatDetail = ({
               </div>
             </div>
           </div>
-          {[ChatRoomType.GROUP, ChatRoomType.PRIVATE, ChatRoomType.SELF].map(
-            (type) =>
-              chatRoomDetail?.type == type && (
-                <div
-                  key={type}
-                  className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
-                  <div className="flex justify-between items-center">
-                    <div className="flex gap-1 items-center">
-                      <Tippy
-                        content={'メンション'}
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 8]}>
-                        <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                          <ImageRound
-                            name="Mention"
-                            src="/icons/mention.svg"
-                            className="w-[16px] h-[16px]"
-                          />
-                        </div>
-                      </Tippy>
-                      <Tippy
-                        content={'リアクション'}
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 8]}>
-                        <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                          <ImageRound
-                            name="Smile"
-                            src="/icons/smile.svg"
-                            className="w-[16px] h-[16px]"
-                          />
-                        </div>
-                      </Tippy>
-                      <Tippy
-                        content={'ファイルを送信'}
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 8]}>
-                        <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                          <ImageRound
-                            name="Add file"
-                            src="/icons/add-file.svg"
-                            className="w-[16px] h-[16px]"
-                          />
-                        </div>
-                      </Tippy>
-
-                      {session?.user.permissions &&
-                        hasPermissionInArray(
-                          session?.user.permissions,
-                          PermissionsSystem.MY_TASK_ADD,
-                        ) && (
+          {chatRoomDetail ? (
+            <>
+              {[
+                ChatRoomType.GROUP,
+                ChatRoomType.PRIVATE,
+                ChatRoomType.SELF,
+              ].map(
+                (type) =>
+                  chatRoomDetail?.type == type && (
+                    <div
+                      key={type}
+                      className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-1 items-center">
                           <Tippy
-                            content={'タスクを引用'}
+                            content={'メンション'}
                             arrow={false}
                             delay={1000}
                             placement="top"
                             offset={[0, 8]}>
                             <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
                               <ImageRound
-                                name="Quote checker"
-                                src="/icons/quote-checker.svg"
-                                className="w-[18px] h-[18px]"
-                                onClick={() => {
-                                  handleSetParam({
-                                    id: null,
-                                    action: ActionTask.CREATE,
-                                  });
-                                }}
+                                name="Mention"
+                                src="/icons/mention.svg"
+                                className="w-[16px] h-[16px]"
                               />
                             </div>
                           </Tippy>
-                        )}
-                      <Tippy
-                        content={'書式設定'}
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 8]}>
-                        <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
-                          <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
-                        </p>
-                      </Tippy>
-                    </div>
+                          <Tippy
+                            content={'ファイルを送信'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 8]}>
+                            <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                              <ImageRound
+                                name="Add file"
+                                src="/icons/add-file.svg"
+                                className="w-[16px] h-[16px]"
+                              />
+                            </div>
+                          </Tippy>
+                          <Tippy
+                            content={'リアクション'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 8]}>
+                            <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                              <ImageRound
+                                name="Smile"
+                                src="/icons/smile.svg"
+                                className="w-[16px] h-[16px]"
+                              />
+                            </div>
+                          </Tippy>
 
-                    <div className="flex items-center">
-                      {session?.user.permissions &&
-                        hasPermissionInArray(
-                          session?.user.permissions,
-                          PermissionsSystem.CHAT_ADD,
-                        ) && (
-                          <Button
-                            className="w-[100px]"
-                            type="submit"
-                            onClick={handleConfirmSendMessage}
-                            disabled={
-                              trimUnnecessaryLineBreaks(message as string) ===
-                              ''
-                            }>
-                            送信
-                          </Button>
-                        )}
+                          {session?.user.permissions &&
+                            hasPermissionInArray(
+                              session?.user.permissions,
+                              PermissionsSystem.MY_TASK_ADD,
+                            ) && (
+                              <Tippy
+                                content={'タスクを引用'}
+                                arrow={false}
+                                delay={1000}
+                                placement="top"
+                                offset={[0, 8]}>
+                                <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                                  <ImageRound
+                                    name="Quote checker"
+                                    src="/icons/quote-checker.svg"
+                                    className="w-[18px] h-[18px]"
+                                    onClick={() => {
+                                      handleSetParam({
+                                        id: null,
+                                        action: ActionTask.CREATE,
+                                      });
+                                    }}
+                                  />
+                                </div>
+                              </Tippy>
+                            )}
+                          <Tippy
+                            content={'書式設定'}
+                            arrow={false}
+                            delay={1000}
+                            placement="top"
+                            offset={[0, 8]}>
+                            <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
+                              <span className="w-[20px] ml-1 mt-[-3px]">
+                                Aa
+                              </span>
+                            </p>
+                          </Tippy>
+                        </div>
+
+                        <div className="flex items-center">
+                          {session?.user.permissions &&
+                            hasPermissionInArray(
+                              session?.user.permissions,
+                              PermissionsSystem.CHAT_ADD,
+                            ) && (
+                              <Button
+                                className="w-[100px]"
+                                type="submit"
+                                onClick={handleConfirmSendMessage}
+                                disabled={
+                                  trimUnnecessaryLineBreaks(
+                                    message as string,
+                                  ) === ''
+                                }>
+                                送信
+                              </Button>
+                            )}
+                        </div>
+                      </div>
+                      <div className="mt-[-10px]">
+                        <Quill
+                          text={message}
+                          setText={setMessage}
+                          messageSubmitted={messageSubmitted}
+                          setMessageSubmitted={setMessageSubmitted}
+                          placeholder="メッセージを入力"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-[-10px]">
-                    <Quill
-                      text={message}
-                      setText={setMessage}
-                      messageSubmitted={messageSubmitted}
-                      setMessageSubmitted={setMessageSubmitted}
-                      placeholder="メッセージを入力"
-                    />
-                  </div>
-                </div>
-              ),
+                  ),
+              )}
+            </>
+          ) : (
+            <div className="flex flex-col items-start ml-3">
+              <RowSkeleton className="!h-[50px] w-[700px] mb-2" />
+              <RowSkeleton className="!h-[80] w-[600px] mb-2" />
+              <RowSkeleton className="!h-[100px] w-[720px] mb-2" />
+            </div>
           )}
         </div>
       )}
@@ -3065,6 +3092,7 @@ const ChatDetail = ({
           columnId={`${StatusValueTask.NOT_STARTED}`}
           action={ActionTask.CREATE}
           dataTask={dataTaskEdit}
+          authenticatedUser={loggedInUser}
           peopleDefaultId={`${session?.user.id}`}
           disableDeleteAction={true}
           onClose={() => {
