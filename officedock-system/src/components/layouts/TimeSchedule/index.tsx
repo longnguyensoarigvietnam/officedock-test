@@ -226,21 +226,39 @@ const TimeSchedule = memo(
 
     const typeDetail = searchParams.get('type');
 
-    // ZOOM state
-    const baseHeight = 43;
+    const screenHeight = window.innerHeight;
+
+    const baseHeight = Math.round(43 * (screenHeight / 890));
+    const baseSlider = Math.round(43 * (screenHeight / 890));
+
+    const [sliderValue, setSliderValue] = useState(baseSlider);
     const [slotHeight, setSlotHeight] = useState(baseHeight);
     const [resetTrigger, setResetTrigger] = useState(0);
 
     const baseFontSizeSm = 14;
     const baseFontSizeXs = 14;
+    const [isOptionZoomSchedule, setIsOptionZoomSchedule] =
+      useState('00:15:00');
 
     const calculateFontSizeTitle = () => {
-      return (slotHeight / baseHeight) * baseFontSizeSm;
+      if (isOptionZoomSchedule === '00:05:00') {
+        return (slotHeight / 20) * baseFontSizeSm;
+      }
+      if (isOptionZoomSchedule === '01:00:00') {
+        return (slotHeight / 90) * baseFontSizeSm;
+      }
+      return (slotHeight / baseSlider) * baseFontSizeSm;
     };
     const calculateFontSizeContent = () => {
-      return (slotHeight / baseHeight) * baseFontSizeXs;
-    };
+      if (isOptionZoomSchedule === '00:05:00') {
+        return (slotHeight / 20) * baseFontSizeXs;
+      }
+      if (isOptionZoomSchedule === '01:00:00') {
+        return (slotHeight / 90) * baseFontSizeXs;
+      }
 
+      return (slotHeight / baseSlider) * baseFontSizeXs;
+    };
     const formattedCurrentDate = formatDateJp(new Date());
     const formattedStartDate = formatDateJp(displayHederDateStart);
     const formattedEndDate = formatDateJp(displayHederDateEnd);
@@ -978,6 +996,7 @@ const TimeSchedule = memo(
             <TaskCard
               event={eventInfo}
               slotHeight={slotHeight}
+              isOptionZoomSchedule={isOptionZoomSchedule}
               titleSize={calculateFontSizeTitle()}
               contentSize={calculateFontSizeContent()}
               handleSetEventParam={handleSetEventParam}
@@ -2199,6 +2218,23 @@ const TimeSchedule = memo(
     }, [slotHeight]);
     const dataDate = getDateInfo(displayHederDateStart);
 
+    const calculateSlotHeight = (value: number): number => {
+      if (value < 40) {
+        return 93 - (40 - value);
+      } else if (value < 94) {
+        return value;
+      }
+      return 24 + (value - 94);
+    };
+    const calculateSlotDuration = (value: number): string => {
+      if (value < 40) {
+        return '01:00:00';
+      } else if (value >= 94) {
+        return '00:05:00';
+      }
+      return '00:15:00';
+    };
+
     return (
       <>
         <div
@@ -2377,7 +2413,7 @@ const TimeSchedule = memo(
                     omitZeroMinute: false,
                     hour12: false,
                   }}
-                  slotDuration={'00:15:00'}
+                  slotDuration={isOptionZoomSchedule}
                   initialDate={new Date()}
                   eventResizableFromStart={true}
                   eventDrop={handleEventDrop}
@@ -2432,12 +2468,17 @@ const TimeSchedule = memo(
           <div
             className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-md ${isExtendCalendar ? 'right-32 bottom-[13px]' : 'right-[10px] bottom-[5px]'} bg-white flex items-center `}>
             <RangeSlider
-              min={23}
+              min={18}
               max={100}
-              initialValue={slotHeight}
+              initialValue={sliderValue}
               resetTrigger={resetTrigger}
               onChange={(value) => {
-                setSlotHeight(value);
+                setSliderValue(value);
+                const calculatedHeight = calculateSlotHeight(value);
+                const calculatedDuration = calculateSlotDuration(value);
+
+                setSlotHeight(calculatedHeight);
+                setIsOptionZoomSchedule(calculatedDuration);
               }}
             />
           </div>

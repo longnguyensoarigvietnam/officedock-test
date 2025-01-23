@@ -84,8 +84,6 @@ const Item = ({
     setTaskSelectedToStart,
     setShowWarningStartTaskModal,
     setDataActualAddSchedule,
-    calculateFontSizeTitle,
-    calculateFontSizeContent,
   } = useContext(TaskContext);
 
   const [dataOptionsStatus, setDataOptionsStatus] = useState<
@@ -332,7 +330,7 @@ const Item = ({
               })}
               {...provided.draggableProps}
               {...provided.dragHandleProps}
-              className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              className={`relative ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
               <div className="relative w-[100%]   h-full">
                 {isPermissionUpdate && (
                   <>
@@ -361,8 +359,18 @@ const Item = ({
                           }
                           name="Pin icon"
                           style={{
-                            width: `${(columnWidth / 247) * 14}px`,
-                            height: `${(columnWidth / 247) * 14}px`,
+                            width:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '14px'
+                                : (selectedOptionZoom.value as number) === 75
+                                  ? '12px'
+                                  : `10px`,
+                            height:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '14px'
+                                : (selectedOptionZoom.value as number) === 75
+                                  ? '12px'
+                                  : `10px`,
                           }}
                           className=" text-gray-400 cursor-pointer"
                         />
@@ -379,7 +387,10 @@ const Item = ({
                     offset={[0, 5]}>
                     <div
                       style={{
-                        top: `${(columnWidth / 247) * 32}px`,
+                        top:
+                          (selectedOptionZoom.value as number) > 75
+                            ? `${(columnWidth / 247) * 32}px`
+                            : `${(columnWidth / 247) * 38}px`,
                         right: `${(columnWidth / 247) * 12}px`,
                       }}
                       className="absolute opacity-0 group-hover:opacity-100">
@@ -387,8 +398,18 @@ const Item = ({
                         src="/icons/copy.svg"
                         name="Copy icon"
                         style={{
-                          width: `${(columnWidth / 247) * 14}px`,
-                          height: `${(columnWidth / 247) * 14}px`,
+                          width:
+                            (selectedOptionZoom.value as number) > 75
+                              ? '14px'
+                              : (selectedOptionZoom.value as number) === 75
+                                ? '12px'
+                                : `10px`,
+                          height:
+                            (selectedOptionZoom.value as number) > 75
+                              ? '14px'
+                              : (selectedOptionZoom.value as number) === 75
+                                ? '12px'
+                                : `10px`,
                         }}
                         className="text-gray-400 cursor-pointer"
                         onClick={() => {
@@ -418,14 +439,19 @@ const Item = ({
                       style={{
                         width: `${(columnWidth / 247) * 20}px`,
                       }}
-                      className="h-full">
+                      className="h-full flex items-center">
                       <ImageRound
                         src="/icons/clock.svg"
                         name="Clock icon"
                         style={{
-                          width: `${(columnWidth / 247) * 14}px`,
-                          height: `${(columnWidth / 247) * 14}px`,
-                          marginTop: `${(columnWidth / 247) * 5}px`,
+                          width:
+                            (selectedOptionZoom.value as number) > 75
+                              ? `14px`
+                              : '10px',
+                          height:
+                            (selectedOptionZoom.value as number) > 75
+                              ? `14px`
+                              : '10px',
                         }}
                         className="text-gray-400"
                       />
@@ -435,9 +461,20 @@ const Item = ({
                   )}
                   <p
                     style={{
-                      width: `${(columnWidth / 247) * 186}px`,
-                      fontSize: calculateFontSizeTitle(),
-                      lineHeight: `${calculateFontSizeTitle() * 1.5}px`,
+                      width:
+                        selectedOptionZoom.value !== 50
+                          ? `${(columnWidth / 247) * 175}px`
+                          : '85px',
+                      fontSize:
+                        (selectedOptionZoom.value as number) > 75
+                          ? (selectedOptionZoom.value as number) == 90
+                            ? '15px'
+                            : '16px'
+                          : '12px',
+                      minHeight:
+                        (selectedOptionZoom.value as number) > 75
+                          ? '20px'
+                          : '18px',
                       marginRight: `${(columnWidth / 247) * 12}px`,
                     }}
                     className={`!border-none break-words cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
@@ -446,137 +483,217 @@ const Item = ({
                 </div>
 
                 {content.status?.id !== StatusValueTask.MY_ROUTINE && (
-                  <div
-                    style={{
-                      fontSize: calculateFontSizeContent(),
-                      lineHeight: `${calculateFontSizeContent() * 1.5}px`,
-                      paddingTop: `${(columnWidth / 247) * 10}px`,
-                      gap: `${(columnWidth / 247) * 10}px`,
-                    }}
-                    className="flex items-center">
-                    {content.isImportant ? (
-                      <div
+                  <div className="flex items-center justify-between">
+                    <div
+                      style={{
+                        paddingTop:
+                          selectedOptionZoom.value !== 50
+                            ? `${(columnWidth / 247) * 10}px`
+                            : 0,
+                        gap: `${(columnWidth / 247) * 10}px`,
+                      }}
+                      className="flex items-center">
+                      {content.isImportant ? (
+                        <div
+                          style={{
+                            width:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '36px'
+                                : '26px',
+                            height:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '20px'
+                                : '15px',
+                            fontSize:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '12px'
+                                : '9px',
+                          }}
+                          className="flex items-center justify-center font-medium text-[#0068B6] bg-[#DFE6EA] rounded">
+                          重要
+                        </div>
+                      ) : null}
+                      <p
                         style={{
-                          width: `${(columnWidth / 247) * 36}px`,
-                          height: `${(columnWidth / 247) * 21}px`,
-                          fontSize: calculateFontSizeContent(),
+                          fontSize:
+                            (selectedOptionZoom.value as number) > 75
+                              ? '13px'
+                              : '10px',
                         }}
-                        className="flex items-center justify-center font-medium text-[#0068B6] bg-[#DFE6EA] rounded">
-                        重要
-                      </div>
-                    ) : null}
-                    <p className="flex gap-2 items-center">
-                      締切
-                      <span
-                        className={`hover:cursor-pointer ${!checkDeadline && 'text-red-600'}`}>
-                        {content.deadline &&
-                          formatShowDeadline(content.deadline)}
-                      </span>
-                    </p>
+                        className="flex gap-2 items-center">
+                        締切
+                        <span
+                          className={`hover:cursor-pointer ${!checkDeadline && 'text-red-600'}`}>
+                          {content.deadline &&
+                            formatShowDeadline(content.deadline)}
+                        </span>
+                      </p>
+                    </div>
+                    {selectedOptionZoom.value === 50 && (
+                      <Tippy
+                        content={content.isStart ? '計測停止' : '計測開始'}
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 5]}>
+                        <div
+                          className=""
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}>
+                          {content.isMyTask && (
+                            <ImageRound
+                              src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
+                              name="Start task"
+                              style={{
+                                width:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '26px'
+                                    : (selectedOptionZoom.value as number) == 75
+                                      ? '20px'
+                                      : '16px',
+                                height:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '26px'
+                                    : (selectedOptionZoom.value as number) == 75
+                                      ? '20px'
+                                      : '16px',
+                              }}
+                              className={`hover:cursor-pointer `}
+                              onClick={async () => {
+                                await new Promise<void>((resolve) => {
+                                  setTaskSelectedToStart(content);
+                                  resolve();
+                                });
+                                handleConfirmCheckStartTask(`${content.id}`);
+                              }}
+                            />
+                          )}
+                        </div>
+                      </Tippy>
+                    )}
                   </div>
                 )}
-                <div className="flex justify-between items-center mt-[2px]">
-                  <Tippy
-                    content="ステータスを変更"
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
-                    <div
-                      className="w-20 max-w-20 h-[21px] rounded"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}>
-                      <Controller
-                        control={control}
-                        name={'statusId'}
-                        render={({ field: { value, onChange } }) => (
-                          <Dropdown
-                            openByDefault
-                            isStatusDropdown={true}
-                            disabled={
-                              !isPermissionUpdate ||
-                              content.status?.id === StatusValueTask.MY_ROUTINE
-                            }
-                            className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
-                            styleClass={{
-                              fontSize: calculateFontSizeContent(),
-                              lineHeight: `${calculateFontSizeContent() * 1.5}px`,
-                              width:
+                {selectedOptionZoom.value !== 50 && (
+                  <div className="flex justify-between items-center mt-[2px]">
+                    <Tippy
+                      content="ステータスを変更"
+                      arrow={false}
+                      delay={1000}
+                      placement="top"
+                      offset={[0, 5]}>
+                      <div
+                        className="w-20 max-w-20 h-[21px] rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}>
+                        <Controller
+                          control={control}
+                          name={'statusId'}
+                          render={({ field: { value, onChange } }) => (
+                            <Dropdown
+                              openByDefault
+                              isStatusDropdown={true}
+                              disabled={
+                                !isPermissionUpdate ||
+                                content.status?.id ===
+                                  StatusValueTask.MY_ROUTINE
+                              }
+                              className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
+                              styleClass={{
+                                fontSize:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '12px'
+                                    : '9px',
+                                width:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '70px'
+                                    : '50px',
+                                height:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '22px'
+                                    : '16px',
+                                padding: `${(columnWidth / 247) * 6}px`,
+                                gap: `${(columnWidth / 247) * 10}px`,
+                                borderRadius: `${(columnWidth / 247) * 4}px`,
+                              }}
+                              classNameTextData={`!text-xs`}
+                              classNameOption={`!text-xs !w-[120px]`}
+                              classNameError={`!text-xs`}
+                              styleClassOption={{
+                                fontSize: '12px',
+                              }}
+                              options={
                                 content.status?.id ===
                                 StatusValueTask.MY_ROUTINE
-                                  ? `${(columnWidth / 247) * 90}px`
-                                  : `${(columnWidth / 247) * 80}px`,
-                              height: `${(columnWidth / 247) * 21}px`,
-                              padding: `${(columnWidth / 247) * 6}px`,
-                              gap: `${(columnWidth / 247) * 10}px`,
-                              borderRadius: `${(columnWidth / 247) * 4}px`,
+                                  ? dataOptionsStatus
+                                  : dataOptionsStatus.filter(
+                                      (item) =>
+                                        item.value !==
+                                        StatusValueTask.MY_ROUTINE,
+                                    )
+                              }
+                              selectedOption={dataOptionsStatus.find(
+                                (element) => element.value === value?.value,
+                              )}
+                              onChange={(e) => {
+                                onChange(e);
+                                editTask({
+                                  id: `${content.id}`,
+                                  oldIdStatus: `${content.status?.id}`,
+                                  statusId: watch('statusId')?.value as number,
+                                });
+                              }}
+                              error={errors.statusId?.message}
+                            />
+                          )}
+                        />
+                      </div>
+                    </Tippy>
+
+                    <Tippy
+                      content={content.isStart ? '計測停止' : '計測開始'}
+                      arrow={false}
+                      delay={1000}
+                      placement="top"
+                      offset={[0, 5]}>
+                      <div
+                        className=""
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}>
+                        {content.isMyTask && (
+                          <ImageRound
+                            src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
+                            name="Start task"
+                            style={{
+                              width:
+                                (selectedOptionZoom.value as number) > 75
+                                  ? '26px'
+                                  : (selectedOptionZoom.value as number) == 75
+                                    ? '20px'
+                                    : '16px',
+                              height:
+                                (selectedOptionZoom.value as number) > 75
+                                  ? '26px'
+                                  : (selectedOptionZoom.value as number) == 75
+                                    ? '20px'
+                                    : '16px',
                             }}
-                            classNameTextData={`!text-[${calculateFontSizeContent()}px]`}
-                            classNameOption={`!text-[${calculateFontSizeContent()}px] !w-[120px]`}
-                            classNameError={`!text-[${calculateFontSizeContent()}px]`}
-                            styleClassOption={{
-                              fontSize: calculateFontSizeContent(),
-                              lineHeight: `${calculateFontSizeContent() * 1.5}px`,
-                            }}
-                            options={
-                              content.status?.id === StatusValueTask.MY_ROUTINE
-                                ? dataOptionsStatus
-                                : dataOptionsStatus.filter(
-                                    (item) =>
-                                      item.value !== StatusValueTask.MY_ROUTINE,
-                                  )
-                            }
-                            selectedOption={dataOptionsStatus.find(
-                              (element) => element.value === value?.value,
-                            )}
-                            onChange={(e) => {
-                              onChange(e);
-                              editTask({
-                                id: `${content.id}`,
-                                oldIdStatus: `${content.status?.id}`,
-                                statusId: watch('statusId')?.value as number,
+                            className={`hover:cursor-pointer `}
+                            onClick={async () => {
+                              await new Promise<void>((resolve) => {
+                                setTaskSelectedToStart(content);
+                                resolve();
                               });
+                              handleConfirmCheckStartTask(`${content.id}`);
                             }}
-                            error={errors.statusId?.message}
                           />
                         )}
-                      />
-                    </div>
-                  </Tippy>
-
-                  <Tippy
-                    content={content.isStart ? '計測停止' : '計測開始'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
-                    <div
-                      className=""
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}>
-                      {content.isMyTask && (
-                        <ImageRound
-                          src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
-                          name="Start task"
-                          style={{
-                            width: `${(columnWidth / 247) * 24}px`,
-                            height: `${(columnWidth / 247) * 24}px`,
-                          }}
-                          className={`hover:cursor-pointer `}
-                          onClick={async () => {
-                            await new Promise<void>((resolve) => {
-                              setTaskSelectedToStart(content);
-                              resolve();
-                            });
-                            handleConfirmCheckStartTask(`${content.id}`);
-                          }}
-                        />
-                      )}
-                    </div>
-                  </Tippy>
-                </div>
+                      </div>
+                    </Tippy>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -624,8 +741,8 @@ const Item = ({
                         src="/icons/clock.svg"
                         name="Clock icon"
                         style={{
-                          width: `${(columnWidth / 247) * 14}px`,
-                          height: `${(columnWidth / 247) * 14}px`,
+                          width: `10px`,
+                          height: `10px`,
                           marginTop: `${(columnWidth / 247) * 5}px`,
                         }}
                         className="text-gray-400"
@@ -636,9 +753,10 @@ const Item = ({
                   )}
                   <p
                     style={{
-                      width: `${(columnWidth / 247) * 130}px`,
-                      fontSize: calculateFontSizeTitle(),
-                      lineHeight: `${calculateFontSizeTitle() * 1.5}px`,
+                      width: isShowSchedule
+                        ? `${(columnWidth / 247) * 130}px`
+                        : `${(columnWidth / 247) * 160}px`,
+                      fontSize: '12px',
                       marginRight: `${(columnWidth / 247) * 12}px`,
                     }}
                     className={`!border-none break-words cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
@@ -660,8 +778,8 @@ const Item = ({
                           src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
                           name="Start task"
                           style={{
-                            width: `${(columnWidth / 247) * 24}px`,
-                            height: `${(columnWidth / 247) * 24}px`,
+                            width: `16px`,
+                            height: `16px`,
                           }}
                           className={`hover:cursor-pointer `}
                           onClick={async () => {

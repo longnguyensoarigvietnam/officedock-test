@@ -1,5 +1,5 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import React, { memo, useContext, useEffect, useState } from 'react';
+import { memo, useContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useMutation, useQueryClient } from 'react-query';
 import Tippy from '@tippyjs/react';
@@ -422,8 +422,14 @@ const TaskPageDataHeader = () => {
               <div className="w-fit h-10">
                 <Dropdown
                   options={optionsTaskMe.filter((item) => item.type)}
-                  className="!w-[220px] h-full !p-2"
+                  className={`!w-[220px] h-full !p-2  !text-sm !font-semibold`}
                   placeholder="打ち合わせ"
+                  styleClass={{
+                    borderColor:
+                      statusTaskSelected?.isStart && taskSelected.value
+                        ? '#0068B6'
+                        : '#D2DBE1',
+                  }}
                   disabled={!isTaskPage}
                   searchOption
                   selectedOption={
@@ -500,7 +506,7 @@ const TaskPageDataHeader = () => {
               )}
               <Button
                 variant="secondary"
-                className="whitespace-nowrap !text-[#77858F] !px-2 !py-1 !rounded-sm"
+                className="whitespace-nowrap  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"
                 onClick={() => {
                   if (
                     taskSelected.value &&
@@ -519,7 +525,15 @@ const TaskPageDataHeader = () => {
                     }
                   }
                 }}>
-                詳細
+                <ImageRound
+                  src="/icons/detail-task.svg"
+                  name="right"
+                  style={{
+                    height: '22px',
+                    width: '22px',
+                  }}
+                  className="!text-transparent cursor-pointer"
+                />
               </Button>
             </div>
           )}
