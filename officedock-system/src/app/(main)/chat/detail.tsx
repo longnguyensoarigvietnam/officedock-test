@@ -123,7 +123,6 @@ export type MessageDetailProps = {
   messageSubmitted?: boolean;
   msgIdUpdated?: string;
   msgEditing?: string;
-  roomDetail?: ChatRoomItem;
   dashboardMembers: ChatDashboardMember[];
   setMsgIdUpdated?: Dispatch<SetStateAction<string | undefined>>;
   setMessageSubmitted?: Dispatch<SetStateAction<boolean>>;
@@ -1521,14 +1520,12 @@ const ChatDetail = ({
   const [dataMessageDetail, setDataMessageDetail] = useState<
     ChatMessageResponse[]
   >([]);
-  const [roomDetail, setRoomDetail] = useState<ChatRoomItem>();
   const [selectedRemoveMemberId, setSelectedRemoveMemberId] =
     useState<number>();
   const {
     chatList,
     chatRoomNameEditing,
     chatRoomParticipantsEditing,
-    isReload,
     chatRoomNotifications,
     setChatRoomParticipantsEditing,
     setChatRoomNameEditing,
@@ -1555,7 +1552,6 @@ const ChatDetail = ({
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const { chatRoomDetail } = useChatRoomDetail({
     code: `${chatRoomCode}`,
-    conditions: [isReload || !!roomDetail],
   });
   const activeRoomRef = useRef<string | null>(null);
   const { authenticatedUser } = useAuthenticatedUser();
@@ -1662,7 +1658,6 @@ const ChatDetail = ({
         (room) => room.code === chatRoomCode,
       );
       if (initialRoomDetail) {
-        setRoomDetail(initialRoomDetail);
         setMessageSubmitted(true);
       }
     }
@@ -2519,10 +2514,8 @@ const ChatDetail = ({
             <div className={`flex items-center w-[60%] gap-2`}>
               <div className="!min-w-[50px]">
                 {renderImageRound(
-                  chatRoomDetail?.type || roomDetail?.type,
-                  chatRoomDetail?.participants ||
-                    roomDetail?.participants ||
-                    [],
+                  chatRoomDetail?.type,
+                  chatRoomDetail?.participants || [],
                 )}
               </div>
               {chatRoomDetail && (
@@ -2549,75 +2542,31 @@ const ChatDetail = ({
                       ? chatRoomNameEditing.find(
                           (room) => room.roomCode === chatRoomCode,
                         )?.roomName
-                      : roomDetail?.name}
+                      : ''}
                 </p>
               )}
               <div className="max-w-[280px] w-[280px] ml-3">
-                {!chatRoomDetail
-                  ? roomDetail &&
-                    roomDetail.type === ChatRoomType.GROUP && (
-                      <div className="flex gap-2 items-center mt-1">
-                        <p className="text-[13px] text-[#FFFFFFB2]">
-                          メンバー
-                          {roomDetail &&
-                          chatRoomParticipantsEditing.find(
-                            (room) => room.roomCode === roomDetail.code,
-                          )
-                            ? chatRoomParticipantsEditing.find(
-                                (room) => room.roomCode === roomDetail.code,
-                              )?.participantsList.length
-                            : roomDetail?.participants?.length}
-                          人
-                        </p>
-                        <div className="flex mt-[-3px]">
-                          {roomDetail &&
-                          chatRoomParticipantsEditing.find(
-                            (room) => room.roomCode === roomDetail.code,
-                          )
-                            ? getParticipantAvatars(
-                                chatRoomParticipantsEditing.find(
-                                  (room) => room.roomCode === roomDetail.code,
-                                )?.participantsList || [],
-                                true,
-                              )
-                            : getParticipantAvatars(
-                                roomDetail?.participants || [],
-                                false,
-                              )}
-                        </div>
-                        <Tippy
-                          content={'グループにメンバーを招待する'}
-                          arrow={false}
-                          delay={1000}
-                          placement="top"
-                          offset={[0, 5]}>
-                          <div>
-                            <Button
-                              sz="sm"
-                              className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
-                              onClick={() => setOpenAddMembersBox(true)}
-                              type="button">
-                              招待する
-                            </Button>
-                          </div>
-                        </Tippy>
-                      </div>
-                    )
-                  : chatRoomDetail &&
-                    chatRoomDetail.type === ChatRoomType.GROUP && (
-                      <div className="flex gap-2 items-center">
-                        <p className="text-[13px] mr-3 text-[#FFFFFFB2]">
-                          メンバー
-                          {chatRoomDetail &&
-                          chatRoomParticipantsEditing.find(
-                            (room) => room.roomCode === chatRoomDetail.code,
-                          )
-                            ? chatRoomParticipantsEditing.find(
-                                (room) => room.roomCode === chatRoomDetail.code,
-                              )?.participantsList.length
-                            : chatRoomDetail?.participants?.length}
-                          人
-                        </p>
+                {chatRoomDetail &&
+                  chatRoomDetail.type === ChatRoomType.GROUP && (
+                    <div className="flex gap-2 items-center">
+                      <p className="text-[13px] mr-3 text-[#FFFFFFB2]">
+                        メンバー
+                        {chatRoomDetail &&
+                        chatRoomParticipantsEditing.find(
+                          (room) => room.roomCode === chatRoomDetail.code,
+                        )
+                          ? chatRoomParticipantsEditing.find(
+                              (room) => room.roomCode === chatRoomDetail.code,
+                            )?.participantsList.length
+                          : chatRoomDetail?.participants?.length}
+                        人
+                      </p>
+                      <Tippy
+                        content={'グループのメンバーを見る'}
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 5]}>
                         <div className="flex">
                           {chatRoomDetail &&
                           chatRoomParticipantsEditing.find(
@@ -2635,24 +2584,26 @@ const ChatDetail = ({
                                 false,
                               )}
                         </div>
-                        <Tippy
-                          content={'グループにメンバーを招待する'}
-                          arrow={false}
-                          delay={1000}
-                          placement="top"
-                          offset={[0, 5]}>
-                          <div>
-                            <Button
-                              sz="sm"
-                              className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
-                              onClick={() => setOpenAddMembersBox(true)}
-                              type="button">
-                              招待する
-                            </Button>
-                          </div>
-                        </Tippy>
-                      </div>
-                    )}
+                      </Tippy>
+
+                      <Tippy
+                        content={'グループにメンバーを招待する'}
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 5]}>
+                        <div>
+                          <Button
+                            sz="sm"
+                            className="w-fit text-xs min-w-[80px] !px-[10px] !py-[8px] !bg-[#FFFFFF4D] !border-none"
+                            onClick={() => setOpenAddMembersBox(true)}
+                            type="button">
+                            招待する
+                          </Button>
+                        </div>
+                      </Tippy>
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -2676,10 +2627,8 @@ const ChatDetail = ({
                       ChatRoomType.SKILL,
                     ].map(
                       (type) =>
-                        ((chatRoomDetail?.code == chatRoomCode &&
-                          chatRoomDetail?.type == type) ||
-                          (roomDetail?.code == chatRoomCode &&
-                            roomDetail?.type == type)) && (
+                        chatRoomDetail?.code == chatRoomCode &&
+                        chatRoomDetail?.type == type && (
                           <Tippy
                             content={'設定'}
                             arrow={false}
@@ -2704,7 +2653,7 @@ const ChatDetail = ({
             </div>
           </div>
           <div
-            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || roomDetail?.type == ChatRoomType.TASK || roomDetail?.type == ChatRoomType.SKILL ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
+            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
             {dataMessageDetail &&
               chatRoomNotifications &&
               dataMessageDetail
@@ -2717,7 +2666,6 @@ const ChatDetail = ({
                       messageSubmitted={messageSubmitted}
                       msgIdUpdated={msgIdUpdated}
                       msgEditing={msgEditing}
-                      roomDetail={roomDetail}
                       dashboardMembers={dashboardMembers}
                       setMsgEditing={setMsgEditing}
                       setMessageSubmitted={setMessageSubmitted}
@@ -2757,7 +2705,6 @@ const ChatDetail = ({
                       messageSubmitted={messageSubmitted}
                       msgIdUpdated={msgIdUpdated}
                       msgEditing={msgEditing}
-                      roomDetail={roomDetail}
                       dashboardMembers={dashboardMembers}
                       setMsgEditing={setMsgEditing}
                       setMessageSubmitted={setMessageSubmitted}
@@ -2982,9 +2929,7 @@ const ChatDetail = ({
                   (room) => room.roomCode === chatRoomCode,
                 )?.participantsList
               : getChatParticipantIds(
-                  chatRoomDetail
-                    ? chatRoomDetail.participants
-                    : roomDetail?.participants,
+                  chatRoomDetail ? chatRoomDetail.participants : [],
                 )
           }
           code={`${chatRoomCode}`}
