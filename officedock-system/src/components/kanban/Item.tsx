@@ -335,7 +335,7 @@ const Item = ({
                 {isPermissionUpdate && (
                   <>
                     <Tippy
-                      content={content.pinAt ? 'ピン留めを外す' : 'ピン留め'}
+                      content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
                       arrow={false}
                       delay={1000}
                       placement="right"

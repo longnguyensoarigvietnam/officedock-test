@@ -2701,7 +2701,7 @@ const ChatDetail = ({
             chatRoomNotifications.notifications > 0 ? (
               <div className="flex items-center gap-5 justify-center">
                 <div className="wavy-line"></div>
-                <p className="text-[13px] text-[#0068B6] break-all">
+                <p className="text-[13px] text-[#0068B6] break-all min-w-[105px]">
                   未読のメッセージ
                 </p>
                 <div className="wavy-line"></div>

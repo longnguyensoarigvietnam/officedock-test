@@ -286,6 +286,7 @@ const ActionsChatMembersModal = memo(
                 <Button
                   variant="primary"
                   className="w-[110px]"
+                  disabled={watch('groupParticipant').length == 0}
                   onClick={handleConfirmUpdateMemberList}>
                   招待する
                 </Button>
