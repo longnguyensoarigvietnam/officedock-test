@@ -400,7 +400,9 @@ const Column = ({
                   className={`${
                     extendByStatus.find(
                       (list) => String(list.id) == String(columnId),
-                    )?.status && 'rotate-180'
+                    )?.status
+                      ? 'rotate-0'
+                      : 'rotate-180'
                   }`}
                   name="extend"
                   onClick={() => {
@@ -511,7 +513,7 @@ const Column = ({
       <div className="flex gap-[6px] items-center justify-center">
         <div className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></div>
         <Tippy
-          content="タブを縮小"
+          content="タブを拡大"
           arrow={false}
           delay={1000}
           placement="top"
@@ -522,10 +524,12 @@ const Column = ({
             }}>
             <ImageRound
               src={`/icons/extend-column.svg`}
-              className={`${
+              className={` ${
                 extendByStatus.find(
                   (list) => String(list.id) == String(columnId),
-                )?.status && 'rotate-180'
+                )?.status
+                  ? 'rotate-0'
+                  : 'rotate-180'
               } cursor-pointer`}
               name="extend"
               onClick={() => {
@@ -567,7 +571,8 @@ const Column = ({
         )}
       </div>
       <div className="w-full flex justify-center">
-        <div className={`w-2 ${showFrequentlyTasks ? 'h-[calc(100vh_-_400px)]' : 'h-[calc(100vh_-_280px)]'} bg-[#EBF1F7]`}></div>
+        <div
+          className={`w-2 ${showFrequentlyTasks ? 'h-[calc(100vh_-_400px)]' : 'h-[calc(100vh_-_280px)]'} bg-[#EBF1F7]`}></div>
       </div>
     </div>
   );
