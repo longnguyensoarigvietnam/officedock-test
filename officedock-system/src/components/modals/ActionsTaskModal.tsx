@@ -344,6 +344,18 @@ const ActionsTaskModal = ({
           )?.id || '',
       },
     };
+    if (authenticatedUser) {
+      value.organization = {
+        label:
+          authenticatedUser?.organizations.find(
+            (organization) => organization.isMain,
+          )?.name || '',
+        value:
+          authenticatedUser?.organizations.find(
+            (organization) => organization.isMain,
+          )?.id || '',
+      };
+    }
     if (dataTask) {
       (value.id = `${dataTask.id}`),
         (value.title =
@@ -423,18 +435,6 @@ const ActionsTaskModal = ({
               : NO_OPTION_CATEGORY,
           });
       }
-    }
-    if (authenticatedUser) {
-      value.organization = {
-        label:
-          authenticatedUser?.organizations.find(
-            (organization) => organization.isMain,
-          )?.name || '',
-        value:
-          authenticatedUser?.organizations.find(
-            (organization) => organization.isMain,
-          )?.id || '',
-      };
     }
     return value;
   }, [
