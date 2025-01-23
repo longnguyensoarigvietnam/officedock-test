@@ -15,7 +15,6 @@ import {
   ItemScheduleType,
   ItemStartType,
   PermissionsSystem,
-  StatusValueTask,
 } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import {
@@ -32,12 +31,7 @@ import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
 
 import api from '@base/api';
-import {
-  addHoursToDate,
-  compareWithCurrentTime,
-  convertToCurrentTimezone,
-  formatShowDeadline,
-} from '@utils/date';
+import { addHoursToDate, convertToCurrentTimezone } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 
 interface ItemProps {
@@ -80,8 +74,6 @@ const ItemRoutine = ({
     setTaskSelectedToStart,
     setShowWarningStartTaskModal,
     setDataActualAddSchedule,
-    calculateFontSizeTitle,
-    calculateFontSizeContent,
   } = useContext(TaskContext);
 
   const { reset } = useForm<TaskFormData>({
@@ -93,8 +85,6 @@ const ItemRoutine = ({
   const searchParams = useSearchParams();
 
   const taskDetailId = searchParams.get('task');
-
-  const [checkDeadline, setCheckDeadline] = useState<boolean>(false);
 
   const defaultValues = useMemo<TaskFormData>(() => {
     const value: TaskFormData = {
@@ -138,12 +128,6 @@ const ItemRoutine = ({
   useEffect(() => {
     reset(defaultValues);
   }, [defaultValues, reset]);
-
-  useEffect(() => {
-    if (content && content.deadline) {
-      setCheckDeadline(compareWithCurrentTime(content.deadline));
-    }
-  }, [content]);
 
   //  Handle call api delete task
   const { calculateDurationTask } = useCalculateDurationTask({
@@ -313,8 +297,18 @@ const ItemRoutine = ({
                           }
                           name="Pin icon"
                           style={{
-                            width: `${(columnWidth / 247) * 14}px`,
-                            height: `${(columnWidth / 247) * 14}px`,
+                            width:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '14px'
+                                : (selectedOptionZoom.value as number) === 75
+                                  ? '12px'
+                                  : `10px`,
+                            height:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '14px'
+                                : (selectedOptionZoom.value as number) === 75
+                                  ? '12px'
+                                  : `10px`,
                           }}
                           className=" text-gray-400 cursor-pointer"
                         />
@@ -331,7 +325,10 @@ const ItemRoutine = ({
                     offset={[0, 5]}>
                     <div
                       style={{
-                        top: `${(columnWidth / 247) * 32}px`,
+                        top:
+                          (selectedOptionZoom.value as number) > 75
+                            ? `${(columnWidth / 247) * 32}px`
+                            : `${(columnWidth / 247) * 38}px`,
                         right: `${(columnWidth / 247) * 12}px`,
                       }}
                       className="absolute opacity-0 group-hover:opacity-100">
@@ -339,8 +336,18 @@ const ItemRoutine = ({
                         src="/icons/copy.svg"
                         name="Copy icon"
                         style={{
-                          width: `${(columnWidth / 247) * 14}px`,
-                          height: `${(columnWidth / 247) * 14}px`,
+                          width:
+                            (selectedOptionZoom.value as number) > 75
+                              ? '14px'
+                              : (selectedOptionZoom.value as number) === 75
+                                ? '12px'
+                                : `10px`,
+                          height:
+                            (selectedOptionZoom.value as number) > 75
+                              ? '14px'
+                              : (selectedOptionZoom.value as number) === 75
+                                ? '12px'
+                                : `10px`,
                         }}
                         className="text-gray-400 cursor-pointer"
                         onClick={() => {
@@ -358,7 +365,7 @@ const ItemRoutine = ({
                   paddingLeft: `${(columnWidth / 247) * 18}px`,
                   paddingRight: `${(columnWidth / 247) * 12}px`,
                 }}
-                className={`flex flex-col gap-2`}
+                className={`flex flex-col gap-3`}
                 onClick={() => {
                   if (!taskDetailId) {
                     handleClick();
@@ -370,14 +377,19 @@ const ItemRoutine = ({
                       style={{
                         width: `${(columnWidth / 247) * 20}px`,
                       }}
-                      className="h-full">
+                      className="h-full flex items-center">
                       <ImageRound
                         src="/icons/clock.svg"
                         name="Clock icon"
                         style={{
-                          width: `${(columnWidth / 247) * 14}px`,
-                          height: `${(columnWidth / 247) * 14}px`,
-                          marginTop: `${(columnWidth / 247) * 5}px`,
+                          width:
+                            (selectedOptionZoom.value as number) > 75
+                              ? `14px`
+                              : '10px',
+                          height:
+                            (selectedOptionZoom.value as number) > 75
+                              ? `14px`
+                              : '10px',
                         }}
                         className="text-gray-400"
                       />
@@ -388,8 +400,10 @@ const ItemRoutine = ({
                   <p
                     style={{
                       width: `${(columnWidth / 247) * 186}px`,
-                      fontSize: calculateFontSizeTitle(),
-                      lineHeight: `${calculateFontSizeTitle() * 1.5}px`,
+                      fontSize:
+                        (selectedOptionZoom.value as number) > 75
+                          ? '16px'
+                          : '12px',
                       marginRight: `${(columnWidth / 247) * 12}px`,
                     }}
                     className={`!border-none break-words cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
@@ -397,41 +411,15 @@ const ItemRoutine = ({
                   </p>
                 </div>
 
-                {content.status?.id !== StatusValueTask.MY_ROUTINE && (
-                  <div
-                    style={{
-                      fontSize: calculateFontSizeContent(),
-                      lineHeight: `${calculateFontSizeContent() * 1.5}px`,
-                      paddingTop: `${(columnWidth / 247) * 10}px`,
-                      gap: `${(columnWidth / 247) * 10}px`,
-                    }}
-                    className="flex items-center">
-                    {content.isImportant ? (
-                      <div
-                        style={{
-                          width: `${(columnWidth / 247) * 36}px`,
-                          height: `${(columnWidth / 247) * 21}px`,
-                          fontSize: calculateFontSizeContent(),
-                        }}
-                        className="flex items-center justify-center font-medium text-[#0068B6] bg-[#DFE6EA] rounded">
-                        重要
-                      </div>
-                    ) : null}
-                    <p className="flex gap-2 items-center">
-                      締切
-                      <span
-                        className={`hover:cursor-pointer ${!checkDeadline && 'text-red-600'}`}>
-                        {content.deadline &&
-                          formatShowDeadline(content.deadline)}
-                      </span>
-                    </p>
-                  </div>
-                )}
                 <div className="flex justify-between items-center">
                   <div
                     style={{
-                      fontSize: calculateFontSizeContent(),
-                      lineHeight: `${calculateFontSizeContent() * 1.5}px`,
+                      fontSize:
+                        (selectedOptionZoom.value as number) !== 100
+                          ? (selectedOptionZoom.value as number) === 90
+                            ? '12px'
+                            : '10px'
+                          : '13px',
                     }}
                     className="font-normal ">
                     毎日9:00~9:15
@@ -452,8 +440,18 @@ const ItemRoutine = ({
                           src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
                           name="Start task"
                           style={{
-                            width: `${(columnWidth / 247) * 24}px`,
-                            height: `${(columnWidth / 247) * 24}px`,
+                            width:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '26px'
+                                : (selectedOptionZoom.value as number) == 75
+                                  ? '20px'
+                                  : '16px',
+                            height:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '26px'
+                                : (selectedOptionZoom.value as number) == 75
+                                  ? '20px'
+                                  : '16px',
                           }}
                           className={`hover:cursor-pointer `}
                           onClick={async () => {
@@ -515,8 +513,8 @@ const ItemRoutine = ({
                         src="/icons/clock.svg"
                         name="Clock icon"
                         style={{
-                          width: `${(columnWidth / 247) * 14}px`,
-                          height: `${(columnWidth / 247) * 14}px`,
+                          width: `10px`,
+                          height: `10px`,
                           marginTop: `${(columnWidth / 247) * 5}px`,
                         }}
                         className="text-gray-400"
@@ -528,10 +526,9 @@ const ItemRoutine = ({
                   <p
                     style={{
                       width: isShowSchedule
-                        ? `${(columnWidth / 247) * 120}px`
-                        : `${(columnWidth / 247) * 150}px`,
-                      fontSize: calculateFontSizeTitle(),
-                      lineHeight: `${calculateFontSizeTitle() * 1.5}px`,
+                        ? `${(columnWidth / 247) * 150}px`
+                        : `${(columnWidth / 247) * 180}px`,
+                      fontSize: '12px',
                       marginRight: `${(columnWidth / 247) * 12}px`,
                     }}
                     className={`!border-none break-words cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
@@ -553,8 +550,8 @@ const ItemRoutine = ({
                           src={`/icons/${content.isStart ? 'pause' : 'play'}.svg`}
                           name="Start task"
                           style={{
-                            width: `${(columnWidth / 247) * 24}px`,
-                            height: `${(columnWidth / 247) * 24}px`,
+                            width: `16px`,
+                            height: `16px`,
                           }}
                           className={`hover:cursor-pointer `}
                           onClick={async () => {

@@ -389,6 +389,7 @@ class SkillViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         check_exists = (
             instance.organizations_skills.exists()
             or instance.skill_maps.exists()
+            or instance.submit_level_histories.exists()
         )
 
         if check_exists:

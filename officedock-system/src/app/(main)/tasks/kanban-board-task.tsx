@@ -100,6 +100,7 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import BoardKanban from '@components/kanban/Board';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { User } from '@interfaces/user';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -247,9 +248,14 @@ const KanbanBoardTask = () => {
   const { dashboardMemberList } = useDashboardMemberList();
   const { frequentlyTasks: frequentlyTasksList } = useFrequentlyTasks();
   const { templates: templateList } = useTemplateList();
-  const { authenticatedUser, refetchAuthenticatedUser } =
-    useAuthenticatedUser();
+  const { authenticatedUser } = useAuthenticatedUser();
   const [loggedInUser, setLoggedInUser] = useState<User>();
+  const [openWarningCloseModal, setOpenWarningCloseModal] =
+    useState<boolean>(false);
+  const [resetFunctions, setResetFunctions] = useState<{
+    resetDataCategoryOptions?: () => void;
+    reset?: () => void;
+  }>({});
 
   const [numberPagesData, setNumberPagesData] = useState<
     { id: string; count: number; numPages: number; hasMores: boolean }[]
@@ -1899,32 +1905,19 @@ const KanbanBoardTask = () => {
   };
 
   useEffect(() => {
-    const fetchAndSetUser = async () => {
-      if (actionType && typeDetail === ItemStartType.TASK) {
-        if (taskDetailId) {
-          setShowEditTaskModal(true);
-          getDataDetailTask(parseInt(taskDetailId));
-        } else {
-          const { data } = await refetchAuthenticatedUser();
-          if (data) {
-            setLoggedInUser(data);
-          }
-          setShowEditTaskModal(true);
-        }
+    if (actionType && typeDetail === ItemStartType.TASK) {
+      if (taskDetailId) {
+        setShowEditTaskModal(true);
+        getDataDetailTask(parseInt(taskDetailId));
       } else {
-        setShowEditTaskModal(false);
+        setShowEditTaskModal(true);
       }
-    };
+    } else {
+      setShowEditTaskModal(false);
+    }
 
-    fetchAndSetUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    getDataDetailTask,
-    setShowEditTaskModal,
-    taskDetailId,
-    actionType,
-    typeDetail,
-  ]);
+  }, [getDataDetailTask, taskDetailId, actionType, typeDetail]);
 
   useEffect(() => {
     if (actionType && typeDetail === ItemStartType.TEMPLATE) {
@@ -2830,9 +2823,9 @@ const KanbanBoardTask = () => {
                   dashboardMemberList={dashboardMemberList}
                   creationDataTaskData={creationDataTaskData}
                   onClose={() => {
+                    setShowEditTaskModal(false);
                     setColumnId('');
                     handleRemoveParam();
-                    setShowEditTaskModal(false);
                     setDataTaskEdit(null);
                     setIsLoading(false);
                   }}
@@ -2841,6 +2834,38 @@ const KanbanBoardTask = () => {
                   onCopy={handleConfirmCreateTask}
                   onDelete={() => {
                     setOpenConfirmDeleteTaskModal(true);
+                  }}
+                  onWarning={({
+                    reset,
+                    resetDataCategoryOptions,
+                  }: {
+                    reset: () => void;
+                    resetDataCategoryOptions: () => void;
+                  }) => {
+                    setResetFunctions({
+                      resetDataCategoryOptions,
+                      reset,
+                    });
+                    setOpenWarningCloseModal(true);
+                  }}
+                />
+              )}
+
+              {openWarningCloseModal && (
+                <WarningCloseTaskModal
+                  open={openWarningCloseModal}
+                  onClose={() => {
+                    setOpenWarningCloseModal(false);
+                  }}
+                  onConfirm={() => {
+                    setShowEditTaskModal(false);
+                    setOpenWarningCloseModal(false);
+                    setColumnId('');
+                    handleRemoveParam();
+                    setDataTaskEdit(null);
+                    setIsLoading(false);
+                    resetFunctions.resetDataCategoryOptions?.();
+                    resetFunctions.reset?.();
                   }}
                 />
               )}

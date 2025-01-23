@@ -76,21 +76,21 @@ class OrganizationsStatisticCategories(BaseModel):
     )
     large_statistic_category = models.ForeignKey(
         "skills.StatisticCategory",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="organizations_large_statistic_categories",
     )
     medium_statistic_category = models.ForeignKey(
         "skills.StatisticCategory",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="organizations_medium_statistic_categories",
     )
     small_statistic_category = models.ForeignKey(
         "skills.StatisticCategory",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="organizations_small_statistic_categories",
@@ -122,7 +122,7 @@ class OrganizationsSkills(BaseModel):
     )
     skill = models.ForeignKey(
         "skills.Skill",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="organizations_skills",

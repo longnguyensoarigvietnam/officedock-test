@@ -317,6 +317,7 @@ const Column = ({
     <div
       style={{
         width: `${(columnWidth / 247) * 271}px`,
+        minWidth: isMyRoutine ? '154px' : '151px',
         maxWidth: `${(columnWidth / 247) * 271}px`,
         paddingLeft: isMyRoutine ? 0 : `${(columnWidth / 247) * 8}px`,
         paddingRight: isMyRoutine ? 0 : `${(columnWidth / 247) * 8}px`,
@@ -326,37 +327,42 @@ const Column = ({
       <div
         style={{
           width: `${(columnWidth / 247) * 271}px`,
+          minWidth: isMyRoutine ? '154px' : '151px',
           maxWidth: `${(columnWidth / 247) * 271}px`,
           paddingLeft: `${(columnWidth / 247) * 8}px`,
           paddingRight: `${(columnWidth / 247) * 8}px`,
         }}>
         <div
           style={{
-            height: `${(columnWidth / 247) * 36}px`,
+            height: `36px`,
             paddingLeft: isMyRoutine
               ? `${(columnWidth / 247) * 14}px`
               : `${(columnWidth / 247) * 6}px`,
             paddingRight: isMyRoutine
               ? `${(columnWidth / 247) * 14}px`
-              : `${(columnWidth / 247) * 16}px`,
+              : (selectedOptionZoom.value as number) > 50
+                ? `${(columnWidth / 247) * 16}px`
+                : '17px',
           }}
           className={`flex justify-between ${isMyRoutine && 'bg-[#DAE2EB] rounded-tl-lg rounded-tr-lg'} `}>
           <div
             style={{
-              fontSize: `${(columnWidth / 247) * 14}px`,
-              gap: `${(columnWidth / 247) * 8}px`,
+              gap: `6px`,
             }}
-            className="flex items-center font-medium ">
+            className="flex items-center text-sm break-all font-medium ">
             {!isMyRoutine && (
               <span
                 className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></span>
             )}
             <span>{title}</span>
-            <span className="text-[#77858F]">
-              {Number(columnId) != StatusValueTask.MY_ROUTINE && count}
-            </span>
+            {!isMyRoutine && (
+              <span
+                className={`text-[#77858F] ${count > 99 && (selectedOptionZoom.value as number) < 75 && '!text-[10px]'}`}>
+                {count}
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {session?.user.permissions &&
               hasPermissionInArray(
                 session?.user.permissions,
@@ -370,7 +376,7 @@ const Column = ({
                   offset={[0, 5]}>
                   <div
                     style={{
-                      padding: `${(columnWidth / 247) * 6}px`,
+                      padding: '5px',
                     }}
                     className={`rounded-full cursor-pointer w-fit ${Number(columnId) != StatusValueTask.MY_ROUTINE ? 'bg-[#E3EAED]' : 'bg-[#EBF2F7]'}`}
                     onClick={() => addTask(columnId)}>
@@ -378,8 +384,8 @@ const Column = ({
                       src={`/icons/add.svg`}
                       name="Add"
                       style={{
-                        width: `${(columnWidth / 247) * 12}px`,
-                        height: `${(columnWidth / 247) * 12}px`,
+                        width: `9px`,
+                        height: `9px`,
                       }}
                     />
                   </div>
@@ -400,7 +406,9 @@ const Column = ({
                   className={`${
                     extendByStatus.find(
                       (list) => String(list.id) == String(columnId),
-                    )?.status && 'rotate-180'
+                    )?.status
+                      ? 'rotate-0'
+                      : 'rotate-180'
                   }`}
                   name="extend"
                   onClick={() => {
@@ -413,8 +421,8 @@ const Column = ({
                     );
                   }}
                   style={{
-                    width: `${(columnWidth / 247) * 8}px`,
-                    height: `${(columnWidth / 247) * 12}px`,
+                    width: `8px`,
+                    height: `12px`,
                   }}
                 />
               </div>
@@ -511,7 +519,7 @@ const Column = ({
       <div className="flex gap-[6px] items-center justify-center">
         <div className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></div>
         <Tippy
-          content="タブを縮小"
+          content="タブを拡大"
           arrow={false}
           delay={1000}
           placement="top"
@@ -522,10 +530,12 @@ const Column = ({
             }}>
             <ImageRound
               src={`/icons/extend-column.svg`}
-              className={`${
+              className={` ${
                 extendByStatus.find(
                   (list) => String(list.id) == String(columnId),
-                )?.status && 'rotate-180'
+                )?.status
+                  ? 'rotate-0'
+                  : 'rotate-180'
               } cursor-pointer`}
               name="extend"
               onClick={() => {
@@ -567,7 +577,8 @@ const Column = ({
         )}
       </div>
       <div className="w-full flex justify-center">
-        <div className={`w-2 ${showFrequentlyTasks ? 'h-[calc(100vh_-_400px)]' : 'h-[calc(100vh_-_280px)]'} bg-[#EBF1F7]`}></div>
+        <div
+          className={`w-2 ${showFrequentlyTasks ? 'h-[calc(100vh_-_400px)]' : 'h-[calc(100vh_-_280px)]'} bg-[#EBF1F7]`}></div>
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ import {
   convertToCurrentTimezone,
   convertToTimeString,
   getNext30MinuteSlot,
+  isMoreThanFifteenMinutes,
   isMoreThanThirtyMinutes,
 } from '@utils/date';
 import { TaskActualType, TaskTimeSchedule } from '@interfaces/task';
@@ -33,6 +34,7 @@ interface TaskCardProps {
   slotHeight: number;
   titleSize: number;
   contentSize: number;
+  isOptionZoomSchedule: string;
   handleSetEventParam: ({
     id,
     action,
@@ -52,8 +54,7 @@ interface TaskCardProps {
 const TaskCard = ({
   event,
   slotHeight,
-  titleSize,
-  contentSize,
+  isOptionZoomSchedule,
   handleSetEventParam,
   handleUpdateItemStart,
   setTaskTimeScheduleList,
@@ -363,7 +364,12 @@ const TaskCard = ({
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
 
-  const baseHeight = 43;
+  const baseHeight =
+    isOptionZoomSchedule === '00:05:00'
+      ? 20
+      : isOptionZoomSchedule === '01:00:00'
+        ? 90
+        : 46;
 
   return (
     <>
@@ -391,13 +397,7 @@ const TaskCard = ({
           }
         }}>
         <div className="flex flex-col gap-2 w-[95%]">
-          <p
-            style={{
-              fontSize: titleSize,
-              lineHeight: `${contentSize * 1.5}px`,
-              minHeight: `${(slotHeight / baseHeight) * 20}px`,
-            }}
-            className="font-bold truncate block w-full  ">
+          <p className="font-bold min-h-[20px] text-sm truncate block w-full  ">
             {event?.event instanceof Error
               ? ''
               : event?.event?.title
@@ -405,26 +405,24 @@ const TaskCard = ({
                 : NO_SETTING}
           </p>
           {!isCalculation && !event.timeText && isEvent ? (
-            `${event.event?.extendedProps && convertToTimeString(`${event.event?.extendedProps.planStartDate}`)}-${event.event.extendedProps && convertToTimeString(`${event.event.extendedProps.planEndDate}`)}`
+            <p className="text-[11px]">
+              {event.event?.extendedProps &&
+                convertToTimeString(
+                  `${event.event?.extendedProps.planStartDate}`,
+                )}
+              ~
+              {event.event.extendedProps &&
+                convertToTimeString(`${event.event.extendedProps.planEndDate}`)}
+            </p>
           ) : !isCalculation && event.timeText ? (
             differentTime && (
-              <p
-                style={{
-                  fontSize: contentSize,
-                  lineHeight: `${contentSize * 1.5}px`,
-                }}
-                className="text-xs h-full">
-                {event.timeText}
+              <p className="text-[11px] h-full">
+                {event.timeText.replace(' - ', ' ~ ')}
               </p>
             )
           ) : (
-            <p
-              style={{
-                fontSize: contentSize,
-                lineHeight: `${contentSize * 1.5}px`,
-              }}
-              className="text-xs h-fit">
-              {convertToTimeString(`${event.event.start}`)}-計測中
+            <p className="text-[11px] h-fit">
+              {convertToTimeString(`${event.event.start}`)} ~ 計測中
             </p>
           )}
         </div>
@@ -435,11 +433,9 @@ const TaskCard = ({
                 src={`/icons/lock.svg`}
                 name="icon lock"
                 style={{
-                  width: `${(slotHeight / baseHeight) * 12}px`,
-                  height: `${(slotHeight / baseHeight) * 12}px`,
                   bottom: `${(slotHeight / baseHeight) * 8}px`,
                 }}
-                className="absolute bottom-2 right-2 "
+                className="absolute w-3 h-3 bottom-2 right-2 "
               />
             </>
           ) : (
@@ -448,11 +444,15 @@ const TaskCard = ({
                 src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
                 name="Start task"
                 style={{
-                  width: `${(slotHeight / baseHeight) * 24}px`,
-                  height: `${(slotHeight / baseHeight) * 24}px`,
                   bottom: `${(slotHeight / baseHeight) * 8}px`,
                 }}
-                className="absolute bottom-2 right-2  hover:cursor-pointer"
+                hidden={
+                  !isMoreThanFifteenMinutes(
+                    `${event.event.start}`,
+                    `${event.event.end}`,
+                  ) && isOptionZoomSchedule === '01:00:00'
+                }
+                className="absolute  w-[20px] h-[20px] bottom-2 right-2  hover:cursor-pointer"
                 onClick={handleStartStopTask}
               />
             </>
@@ -462,11 +462,9 @@ const TaskCard = ({
             src={`/icons/edit.svg`}
             name="Start task"
             style={{
-              width: `${(slotHeight / baseHeight) * 14}px`,
-              height: `${(slotHeight / baseHeight) * 14}px`,
               top: `${(slotHeight / baseHeight) * 8}px`,
             }}
-            className={`absolute  right-2 hover:cursor-pointer ${isCalculation && 'hidden'}`}
+            className={`absolute w-[14px] h-[14px]  right-2 hover:cursor-pointer ${isCalculation && 'hidden'}`}
             onClick={() => {
               setIsShowEditActual(true);
             }}

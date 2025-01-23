@@ -6,6 +6,8 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { ja } from 'date-fns/locale';
 import { format, isSaturday, isSunday } from 'date-fns';
 import { isHoliday } from 'japanese-holidays';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '../ImageRound';
 import ErrorMessage from '../ErrorMessage';
@@ -25,6 +27,7 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   autoFocus?: boolean;
   size?: string;
   isShowInput?: boolean;
+  tooltipMsg?: string;
   onChange?: (date: Date | null) => void;
 };
 
@@ -45,6 +48,7 @@ const DatePicker = ({
   isShowInput = true,
   autoFocus = false,
   onChange,
+  tooltipMsg,
   ...props
 }: DatePickerProps) => {
   const datePickerRef = useRef<DatePickerUI>(null);
@@ -152,40 +156,61 @@ const DatePicker = ({
           }}
           {...props}
         />
-
-        {isShowInput ? (
-          <ImageRound
-            className={`absolute w-4 h-4 top-1/2 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${className?.includes('hidden') && 'hidden'}`}
-            name="Calendar icon"
-            src="/icons/calendar.svg"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isOpen) {
-                datePickerRef.current?.setOpen(false);
-                setIsOpen(false);
-              } else {
-                datePickerRef.current?.setOpen(true);
-                setIsOpen(true);
-              }
-            }}
-          />
-        ) : (
-          <ImageRound
-            className={`absolute w-4 h-4 top-1/2 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${className?.includes('hidden') && 'hidden'}`}
-            name="Calendar icon"
-            src="/icons/calendar-time.svg"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isOpen) {
-                datePickerRef.current?.setOpen(false);
-                setIsOpen(false);
-              } else {
-                datePickerRef.current?.setOpen(true);
-                setIsOpen(true);
-              }
-            }}
-          />
-        )}
+        <div className="absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer">
+          {isShowInput ? (
+            <Tippy
+              content={tooltipMsg}
+              arrow={false}
+              delay={1000}
+              placement="top"
+              disabled={!tooltipMsg}
+              offset={[0, 7]}>
+              <div>
+                <ImageRound
+                  className={`w-4 h-4 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} ${className?.includes('hidden') && 'hidden'}`}
+                  name="Calendar icon"
+                  src="/icons/calendar.svg"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isOpen) {
+                      datePickerRef.current?.setOpen(false);
+                      setIsOpen(false);
+                    } else {
+                      datePickerRef.current?.setOpen(true);
+                      setIsOpen(true);
+                    }
+                  }}
+                />
+              </div>
+            </Tippy>
+          ) : (
+            <Tippy
+              content={tooltipMsg}
+              arrow={false}
+              delay={1000}
+              placement="top"
+              disabled={!tooltipMsg}
+              offset={[0, 15]}>
+              <div>
+                <ImageRound
+                  className={`w-4 h-4 top-1/2 mt-3 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${className?.includes('hidden') && 'hidden'}`}
+                  name="Calendar icon"
+                  src="/icons/calendar-time.svg"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isOpen) {
+                      datePickerRef.current?.setOpen(false);
+                      setIsOpen(false);
+                    } else {
+                      datePickerRef.current?.setOpen(true);
+                      setIsOpen(true);
+                    }
+                  }}
+                />
+              </div>
+            </Tippy>
+          )}
+        </div>
       </div>
       {error && <ErrorMessage error={error} className="mt-[6px]" />}
     </div>

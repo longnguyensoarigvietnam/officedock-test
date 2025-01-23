@@ -62,7 +62,7 @@ class SkillMap(BaseModel):
     skill = models.ForeignKey(
         "skills.Skill",
         related_name="skill_maps",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )

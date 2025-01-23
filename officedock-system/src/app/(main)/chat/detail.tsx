@@ -1475,6 +1475,7 @@ interface dataProps {
   searchChatMsg: string;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
+  setNotifyRoomList: Dispatch<SetStateAction<ChatRoomItem[]>>
 }
 const ChatDetail = ({
   clientId,
@@ -1494,6 +1495,7 @@ const ChatDetail = ({
   dataChatList,
   searchChatMsg,
   setSearchChatMsg,
+  setNotifyRoomList
 }: dataProps) => {
   const { data: session } = useSession();
   const { ref, inView } = useInView({
@@ -2486,6 +2488,21 @@ const ChatDetail = ({
               }
               return newDataChatList;
             });
+            setNotifyRoomList((prevNotifyRoomList) => {
+              const newDataChatList = [...prevNotifyRoomList];
+              const chatRoomIndex = newDataChatList.findIndex(
+                (room) => room.code == chatRoomCode,
+              );
+              if (
+                newDataChatList &&
+                chatRoomIndex != -1 &&
+                newDataChatList[chatRoomIndex] &&
+                newDataChatList[chatRoomIndex].unreadMessages
+              ) {
+                newDataChatList[chatRoomIndex].unreadMessages = 0;
+              }
+              return newDataChatList;
+            });
             setFilteredChatList((prevFilterChatList) => {
               const newFilterChatList = [...prevFilterChatList];
               const chatRoomIndex = newFilterChatList.findIndex(
@@ -2611,7 +2628,7 @@ const ChatDetail = ({
               <InputSearch
                 placeholder="チャットルーム内のキーワードを検索"
                 customSearchIconUrl="/icons/search-white.svg"
-                inputClassName="!w-[290px] !py-2 rounded-[30px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
+                inputClassName="!w-[290px] !py-2 !rounded-[30px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
                 value={searchChatMsg}
                 onChange={(e) => setSearchChatMsg(e.target.value)}
               />
@@ -2684,7 +2701,7 @@ const ChatDetail = ({
             chatRoomNotifications.notifications > 0 ? (
               <div className="flex items-center gap-5 justify-center">
                 <div className="wavy-line"></div>
-                <p className="text-[13px] text-[#0068B6] break-all">
+                <p className="text-[13px] text-[#0068B6] break-all min-w-[105px]">
                   未読のメッセージ
                 </p>
                 <div className="wavy-line"></div>
