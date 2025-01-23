@@ -1198,18 +1198,15 @@ const ActionsTaskModal = ({
                     }
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
-                      const selectedArray = Array.isArray(selected)
-                        ? selected
-                        : [selected];
-
-                      const currentTagIds = getValues('tagIds') || [];
-
-                      const updatedTagIds = [
-                        ...currentTagIds,
-                        ...selectedArray,
-                      ];
+                      let updatedTagIds = []
+                        const currentTagIds = getValues('tagIds') || [];
+                      const foundItemIndex = currentTagIds.findIndex((tag) => tag.value == selected.value)
+                      if(foundItemIndex == -1){
+                        updatedTagIds = [...currentTagIds, selected]
+                      } else{
+                        updatedTagIds = currentTagIds.filter((tag) => tag.value != selected.value)
+                      }
                       setIsFormTouched(true);
-
                       setValue('tagIds', updatedTagIds);
                     }}
                   />

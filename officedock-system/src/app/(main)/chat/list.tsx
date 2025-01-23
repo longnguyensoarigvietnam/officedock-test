@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useContext, useEffect, useState } from 'react';
 
 import { useMutation } from 'react-query';
 import { useInView } from 'react-intersection-observer';
@@ -45,7 +45,9 @@ interface dataProps {
   filteredChatList: ChatRoomItem[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
+  notifyRoomList: ChatRoomItem[]
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
+  setNotifyRoomList: Dispatch<SetStateAction<ChatRoomItem[]>>
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
@@ -62,6 +64,8 @@ const ListChatUsers = ({
   filteredChatList,
   dashboardMemberList,
   dashboardMembers,
+  notifyRoomList,
+  setNotifyRoomList,
   setLastItemId,
   setDataChatList,
   setFilteredChatList,
@@ -83,7 +87,7 @@ const ListChatUsers = ({
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState<boolean>(false);
   const [initialLoadSearch, setInitialLoadSearch] = useState<boolean>(false);
-  const [notifyRoomList, setNotifyRoomList] = useState<ChatRoomItem[]>([]);
+  
 
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastPinAt, setLastPinAt] = useState<string | null>();

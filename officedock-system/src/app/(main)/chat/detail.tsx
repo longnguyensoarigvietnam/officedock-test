@@ -1475,6 +1475,7 @@ interface dataProps {
   searchChatMsg: string;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
+  setNotifyRoomList: Dispatch<SetStateAction<ChatRoomItem[]>>
 }
 const ChatDetail = ({
   clientId,
@@ -1494,6 +1495,7 @@ const ChatDetail = ({
   dataChatList,
   searchChatMsg,
   setSearchChatMsg,
+  setNotifyRoomList
 }: dataProps) => {
   const { data: session } = useSession();
   const { ref, inView } = useInView({
@@ -2473,6 +2475,21 @@ const ChatDetail = ({
             });
             setDataChatList((prevDataChatList) => {
               const newDataChatList = [...prevDataChatList];
+              const chatRoomIndex = newDataChatList.findIndex(
+                (room) => room.code == chatRoomCode,
+              );
+              if (
+                newDataChatList &&
+                chatRoomIndex != -1 &&
+                newDataChatList[chatRoomIndex] &&
+                newDataChatList[chatRoomIndex].unreadMessages
+              ) {
+                newDataChatList[chatRoomIndex].unreadMessages = 0;
+              }
+              return newDataChatList;
+            });
+            setNotifyRoomList((prevNotifyRoomList) => {
+              const newDataChatList = [...prevNotifyRoomList];
               const chatRoomIndex = newDataChatList.findIndex(
                 (room) => room.code == chatRoomCode,
               );
