@@ -4,6 +4,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { useMutation } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import Modal from '../common/Modal';
 import ImageRound from '@components/common/ImageRound';
@@ -23,7 +25,7 @@ import useChatRoomDetail from '@hooks/useChatRoomDetail';
 import { useErrorToast } from '@hooks/useErrorToast';
 
 import { NO_OPTIONS } from '@constants';
-import { PermissionsSystem } from '@constants/enums';
+import { ChatRoomType, PermissionsSystem } from '@constants/enums';
 import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -155,7 +157,7 @@ const ChatSettingModal = memo(
           <div className="flex gap-4 items-center pb-3">
             <ImageRound
               className="w-20 h-20"
-              src="/icons/multi-users.svg"
+              src={`${chatRoomDetail?.type == ChatRoomType.GROUP ? '/icons/multi-users.svg' : chatRoomDetail?.type == ChatRoomType.TASK ? '/icons/document.svg' : '/icons/skill-room.svg'}`}
               border="full"
               name="Multi users"
             />
@@ -238,12 +240,21 @@ const ChatSettingModal = memo(
                           />
                         )}
                       />
-                      <ImageRound
-                        className="w-[18px] h-[18px] opacity-50 hover:cursor-pointer"
-                        src="/icons/close.svg"
-                        name="Close modal"
-                        onClick={() => openConfirmRemoveModal(member.id)}
-                      />
+                      <Tippy
+                        content={'このメンバーを退会させる'}
+                        arrow={false}
+                        delay={1000}
+                        placement="top"
+                        offset={[0, 5]}>
+                        <div>
+                          <ImageRound
+                            className="w-[18px] h-[18px] opacity-50 hover:cursor-pointer"
+                            src="/icons/close.svg"
+                            name="Close modal"
+                            onClick={() => openConfirmRemoveModal(member.id)}
+                          />
+                        </div>
+                      </Tippy>
                     </div>
                   </div>
                 );
@@ -253,7 +264,8 @@ const ChatSettingModal = memo(
           hasPermissionInArray(
             session?.user.permissions,
             PermissionsSystem.CHAT_ADD,
-          ) && (
+          ) &&
+          chatRoomDetail?.type == ChatRoomType.GROUP && (
             <div
               className="flex justify-center gap-2 my-7 items-center hover:cursor-pointer"
               onClick={openAddMemberModal}>
