@@ -45,3 +45,4 @@ export const WARNING_TITLE_MESSAGE = '警告';
 export const ERROR_TITLE_MESSAGE = 'エラー';
 export const NO_DATA_AVAILABLE = 'データが見つかりません';
 export const UNREGISTERED = '未設定';
+export const RESEND_OTP_SUCCESS = '認証コードを再送しました。';

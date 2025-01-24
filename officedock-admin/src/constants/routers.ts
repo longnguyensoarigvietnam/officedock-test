@@ -90,6 +90,7 @@ export const apiRouters = {
   LOGIN: '/auth/login/',
   VERIFY_TOKEN: '/auth/verify-token/',
   LOGIN_OTP: '/auth/verify-login/',
+  LOGIN_RESEND_OTP: '/auth/resend-otp/',
   LOGIN_GOOGLE: '/auth/login/google/',
   LOGIN_GOOGLE_VERIFY: '/auth/login/google/verify/',
   FORGOT_PASSWORD: '/auth/forgot-password/',
