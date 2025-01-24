@@ -302,24 +302,39 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Get a list of chat rooms.
         """
         user = request.user
-        task_room, _ = ChatRoom.objects.get_or_create(
+
+        # Get or create chat room type task
+        task_room = ChatRoom.objects.filter(
             type=ChatRoomTypes.TASK.value,
-            chat_rooms_participants__user=user,
-            defaults={
-                "company": user.company,
-                "type": ChatRoomTypes.TASK.value,
-                "name": ChatRoomNames.TASK_CARD.value,
-            },
-        )
-        skill_room, created = ChatRoom.objects.get_or_create(
+            participants=user,
+            company=user.company,
+            name=ChatRoomNames.TASK_CARD.value,
+        ).first()
+
+        if not task_room:
+            task_room = ChatRoom.objects.create(
+                type=ChatRoomTypes.TASK.value,
+                company=user.company,
+                name=ChatRoomNames.TASK_CARD.value,
+            )
+            task_room.participants.add(user)
+
+        # Get or create chat room type skill
+        skill_room = ChatRoom.objects.filter(
             type=ChatRoomTypes.SKILL.value,
-            chat_rooms_participants__user=user,
-            defaults={
-                "company": user.company,
-                "type": ChatRoomTypes.SKILL.value,
-                "name": ChatRoomNames.SKILL_UP.value,
-            },
-        )
+            participants=user,
+            company=user.company,
+            name=ChatRoomNames.SKILL_UP.value,
+        ).first()
+
+        if not skill_room:
+            skill_room = ChatRoom.objects.filter(
+                type=ChatRoomTypes.SKILL.value,
+                company=user.company,
+                name=ChatRoomNames.SKILL_UP.value,
+            ).first()
+            skill_room.participants.add(user)
+
         # Use select_related to load related ForeignKey relationships
         chat_rooms_participants = user.chat_rooms_participants.select_related(
             "chat_room",
