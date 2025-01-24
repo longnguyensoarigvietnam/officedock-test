@@ -2303,19 +2303,19 @@ const TimeSchedule = memo(
                         </div>
                       </Tippy>
                     </div>
-                    
-                      <div className="absolute w-7 z-50 right-[54px] top-[3px] time-schedule">
-                        <DatePicker
-                          className="h-10 z-50 "
-                          isShowInput={false}
-                          selected={displayHederDateStart}
-                          tooltipMsg='カレンダーから日付を選択'
-                          onChange={(e) => {
-                            handleChooseDay(e as Date);
-                          }}
-                        />
-                      </div>
-                    
+
+                    <div className="absolute w-7 z-50 right-[50px] top-[10px] time-schedule">
+                      <DatePicker
+                        className="h-10 z-50 "
+                        isShowInput={false}
+                        selected={displayHederDateStart}
+                        tooltipMsg="カレンダーから日付を選択"
+                        iconClassName='!static !w-8'
+                        onChange={(e) => {
+                          handleChooseDay(e as Date);
+                        }}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <>
