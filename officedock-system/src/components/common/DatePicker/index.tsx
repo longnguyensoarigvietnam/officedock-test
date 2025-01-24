@@ -28,6 +28,7 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   size?: string;
   isShowInput?: boolean;
   tooltipMsg?: string;
+  iconClassName?: string;
   onChange?: (date: Date | null) => void;
 };
 
@@ -49,6 +50,7 @@ const DatePicker = ({
   autoFocus = false,
   onChange,
   tooltipMsg,
+  iconClassName,
   ...props
 }: DatePickerProps) => {
   const datePickerRef = useRef<DatePickerUI>(null);
@@ -156,61 +158,32 @@ const DatePicker = ({
           }}
           {...props}
         />
-        <div className="absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer">
-          {isShowInput ? (
-            <Tippy
-              content={tooltipMsg}
-              arrow={false}
-              delay={1000}
-              placement="top"
-              disabled={!tooltipMsg}
-              offset={[0, 7]}>
-              <div>
-                <ImageRound
-                  className={`w-4 h-4 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} ${className?.includes('hidden') && 'hidden'}`}
-                  name="Calendar icon"
-                  src="/icons/calendar.svg"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (isOpen) {
-                      datePickerRef.current?.setOpen(false);
-                      setIsOpen(false);
-                    } else {
-                      datePickerRef.current?.setOpen(true);
-                      setIsOpen(true);
-                    }
-                  }}
-                />
-              </div>
-            </Tippy>
-          ) : (
-            <Tippy
-              content={tooltipMsg}
-              arrow={false}
-              delay={1000}
-              placement="top"
-              disabled={!tooltipMsg}
-              offset={[0, 15]}>
-              <div>
-                <ImageRound
-                  className={`w-4 h-4 top-1/2 mt-3 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${className?.includes('hidden') && 'hidden'}`}
-                  name="Calendar icon"
-                  src="/icons/calendar-time.svg"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (isOpen) {
-                      datePickerRef.current?.setOpen(false);
-                      setIsOpen(false);
-                    } else {
-                      datePickerRef.current?.setOpen(true);
-                      setIsOpen(true);
-                    }
-                  }}
-                />
-              </div>
-            </Tippy>
-          )}
-        </div>
+
+        <Tippy
+          content={tooltipMsg}
+          arrow={false}
+          delay={1000}
+          placement="top"
+          disabled={!tooltipMsg}
+          offset={[0, 15]}>
+          <div>
+            <ImageRound
+              className={`w-4 h-4 absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} ${className?.includes('hidden') && 'hidden'} ${iconClassName}`}
+              name="Calendar icon"
+              src={`${isShowInput ? '/icons/calendar.svg' : '/icons/calendar-time.svg'}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isOpen) {
+                  datePickerRef.current?.setOpen(false);
+                  setIsOpen(false);
+                } else {
+                  datePickerRef.current?.setOpen(true);
+                  setIsOpen(true);
+                }
+              }}
+            />
+          </div>
+        </Tippy>
       </div>
       {error && <ErrorMessage error={error} className="mt-[6px]" />}
     </div>
