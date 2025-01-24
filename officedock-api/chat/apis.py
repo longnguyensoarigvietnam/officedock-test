@@ -311,14 +311,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             name=ChatRoomNames.TASK_CARD.value,
         ).first()
 
-        if not task_room:
-            task_room = ChatRoom.objects.create(
-                type=ChatRoomTypes.TASK.value,
-                company=user.company,
-                name=ChatRoomNames.TASK_CARD.value,
-            )
-            task_room.participants.add(user)
-
         # Get or create chat room type skill
         skill_room = ChatRoom.objects.filter(
             type=ChatRoomTypes.SKILL.value,
@@ -327,25 +319,17 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             name=ChatRoomNames.SKILL_UP.value,
         ).first()
 
-        if not skill_room:
-            skill_room = ChatRoom.objects.filter(
-                type=ChatRoomTypes.SKILL.value,
-                company=user.company,
-                name=ChatRoomNames.SKILL_UP.value,
-            ).first()
-            skill_room.participants.add(user)
-
         # Use select_related to load related ForeignKey relationships
         chat_rooms_participants = user.chat_rooms_participants.select_related(
             "chat_room",
         ).filter(hidden_at__isnull=True)
 
-        task_card_room, _ = ChatRoomsParticipants.objects.get_or_create(
+        task_card_room = ChatRoomsParticipants.objects.filter(
             chat_room=task_room, user=user
-        )
-        skill_card_room, _ = ChatRoomsParticipants.objects.get_or_create(
+        ).first()
+        skill_card_room = ChatRoomsParticipants.objects.filter(
             chat_room=skill_room, user=user
-        )
+        ).first()
 
         # Subquery to get the latest message
         latest_message_subquery = Subquery(
