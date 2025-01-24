@@ -246,6 +246,9 @@ const DraggableLayout = () => {
                           }
                         },
                       })}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                      }}
                       className=" !resize-none !h-full !px-0  !py-0 bg-transparent shadow-none border-none !focus:shadow-none !focus:border-none  w-full mt-[11px] text-[13px] font-normal  leading-[19px]"
                     />
                   </div>

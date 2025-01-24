@@ -230,6 +230,8 @@ const StatisticBoard = () => {
     startedAt?: string;
     pausedAt?: string;
     taskId: number;
+    oldStartAt?: string;
+    oldEndAt?: string;
   }) => {
     setIsLoading(true);
     return await api.patch(
@@ -246,7 +248,7 @@ const StatisticBoard = () => {
       },
       onError: (data, variant) => {
         if (variant.pausedAt) {
-          handleResetEndTime(variant.pausedAt.split(' ')[1], variant.id);
+          handleResetEndTime(`${variant.oldEndAt}`, variant.id);
         }
         if (variant.startedAt) {
           handleResetStartTime(variant.startedAt, variant.id);
@@ -371,6 +373,7 @@ const StatisticBoard = () => {
     e: ChangeEvent<HTMLInputElement>,
     id: string,
     taskId: number,
+    startedAt?: string,
   ): void => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 4) {
@@ -407,6 +410,7 @@ const StatisticBoard = () => {
         currentDate,
         `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
       ),
+      oldStartAt: `${startedAt}`,
     });
     setDataTaskDailyList(updatedTasks);
   };
@@ -414,6 +418,7 @@ const StatisticBoard = () => {
     e: ChangeEvent<HTMLInputElement>,
     id: string,
     taskId: number,
+    endTimeAt: string,
   ): void => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 4) {
@@ -450,6 +455,7 @@ const StatisticBoard = () => {
         `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
       ),
       taskId: taskId,
+      oldEndAt: endTimeAt,
     });
     setDataTaskDailyList(updatedTasks);
   };
@@ -942,6 +948,7 @@ const StatisticBoard = () => {
                             e,
                             row.original.idEdit as string,
                             parseInt(row.original.id),
+                            `${rowData.startedAt}`,
                           );
                         } else {
                           handleResetStartTime(
@@ -981,6 +988,7 @@ const StatisticBoard = () => {
                             e,
                             row.original.idEdit as string,
                             parseInt(row.original.id),
+                            `${rowData.pausedAt}`,
                           );
                         } else {
                           handleResetEndTime(

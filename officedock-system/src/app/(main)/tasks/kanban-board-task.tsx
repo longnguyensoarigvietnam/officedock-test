@@ -2579,8 +2579,16 @@ const KanbanBoardTask = () => {
                     : `calc(${Math.max(viewportWidth, 1280)}px - 700px)`
                   : isExtendCalendar
                     ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 120}px)`
-                    : `100%`,
-                maxWidth: ` calc(${Math.max(viewportWidth, 1280)}px - 500px) `,
+                    : `calc(${Math.max(viewportWidth, 1280)}px - 700px)`,
+                maxWidth: expanded
+                  ? widthCalendar < 100
+                    ? '100%'
+                    : isExtendCalendar
+                      ? ` calc(${Math.max(viewportWidth, 1280)}px - ${500 - (656 - widthCalendar)}px) `
+                      : ` calc(${Math.max(viewportWidth, 1280)}px - ${444 + 500 - widthCalendar}px) `
+                  : isExtendCalendar
+                    ? ` calc(${Math.max(viewportWidth, 1280)}px - ${500 - (656 - widthCalendar)}px)`
+                    : `calc(${Math.max(viewportWidth, 1280)}px - 500px) `,
               }}
               className={`h-full overflow-x-auto flex flex-col gap-2 py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}>
               <FrequentlyTask
