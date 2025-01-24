@@ -1,6 +1,6 @@
 'use client';
 
-import React, {
+import {
   useEffect,
   useRef,
   useState,
@@ -34,6 +34,7 @@ import ActionsTaskModal from '@components/modals/ActionsTaskModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import DatePicker from '@components/common/DatePicker';
 import CalendarSkeleton from '@components/skeleton/CalendarSkeleton';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import EventInfoModal from '@components/modals/EventInfoModal';
 import TaskInfoModal from '@components/modals/TaskInfoModal';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
@@ -204,6 +205,12 @@ const EventCalendar = () => {
   >();
   const [popoverInfoLoading, setPopoverInfoLoading] = useState<boolean>(false);
   const showErrorToast = useErrorToast();
+  const [openWarningCloseModal, setOpenWarningCloseModal] =
+    useState<boolean>(false);
+  const [resetFunctions, setResetFunctions] = useState<{
+    resetDataCategoryOptions?: () => void;
+    reset?: () => void;
+  }>({});
 
   const debouncedFetchCalendarData = useRef(
     debounce(
@@ -3149,7 +3156,7 @@ const EventCalendar = () => {
         )}
         <div
           className={`transition-all duration-1000 ${showSidebar ? 'w-[24%] relative p-6 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
-          <div className="flex flex-col mb-10">
+          <div className="flex flex-col mb-7">
             <div
               className="bg-white absolute hover:bg-slate-200 right-3 shadow-lg rounded-full p-[5px] hover:cursor-pointer"
               onClick={() => setShowSidebar(false)}>
@@ -3179,10 +3186,10 @@ const EventCalendar = () => {
             />
             <Checkbox label="会社の予定" />
           </div>
-          <p className="font-normal mb-3 text-sm text-gray-500">
+          <p className="font-normal mb-2 text-sm text-gray-500">
             メンバーの予定を見る
           </p>
-          <div className="p-3 mb-3 rounded-md shadow-md bg-white">
+          <div className="p-3 mb-2 rounded-md shadow-md bg-white">
             <InputSearch
               placeholder="名前で検索"
               className="w-[100%]"
@@ -3450,6 +3457,36 @@ const EventCalendar = () => {
           onDelete={() => {
             setShowEditTaskModal(false);
             setOpenConfirmDeleteTaskModal(true);
+          }}
+          onWarning={({
+            reset,
+            resetDataCategoryOptions,
+          }: {
+            reset: () => void;
+            resetDataCategoryOptions: () => void;
+          }) => {
+            setResetFunctions({
+              resetDataCategoryOptions,
+              reset,
+            });
+            setOpenWarningCloseModal(true);
+          }}
+        />
+      )}
+      {openWarningCloseModal && (
+        <WarningCloseTaskModal
+          open={openWarningCloseModal}
+          onClose={() => {
+            setOpenWarningCloseModal(false);
+          }}
+          onConfirm={() => {
+            setShowEditTaskModal(false);
+            setOpenWarningCloseModal(false);
+            handleRemoveTaskParam();
+            setDataTaskEdit(null);
+            setIsLoading(false);
+            resetFunctions.resetDataCategoryOptions?.();
+            resetFunctions.reset?.();
           }}
         />
       )}

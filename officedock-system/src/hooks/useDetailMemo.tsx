@@ -13,11 +13,12 @@ import { ServerStatusCode } from '@constants/enums';
 import api from '@base/api';
 
 interface UseMemoDetailHooksProps {
+  conditions?: boolean[];
   onSuccess?: (success: MemoDetailData) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
-const useMemoDetail = ({ onSuccess, onSettled }: UseMemoDetailHooksProps) => {
+const useMemoDetail = ({ onSuccess, onSettled, conditions }: UseMemoDetailHooksProps) => {
   const { data: session } = useSession();
   const router = useRouter();
   const token = session?.accessToken;
@@ -39,7 +40,7 @@ const useMemoDetail = ({ onSuccess, onSettled }: UseMemoDetailHooksProps) => {
     queryKey: ['getMemoDetail'],
     queryFn: getMemoDetail,
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && conditions?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (response: MemoDetailData) => {

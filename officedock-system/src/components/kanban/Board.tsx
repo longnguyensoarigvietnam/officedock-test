@@ -107,7 +107,7 @@ const BoardKanban = ({
             style={{
               gap: `${(columnWidth / 247) * 12}px`,
             }}
-            className={`flex w-fit relative ${showFrequentlyTasks ? 'h-[calc(100vh_-_270px)]' : showFrequentlyTasks ? 'h-[calc(100vh_-_330px)]' : `${isExtendCalendar ? 'h-[calc(100vh_-_277px)]' : 'h-[calc(100vh_-_210px)]'}`} overflow-y-hidden`}>
+            className={`flex w-fit relative ${showFrequentlyTasks ? 'h-[calc(100vh_-_270px)]' : showFrequentlyTasks ? 'h-[calc(100vh_-_330px)]' : `${isExtendCalendar ? 'h-[calc(100vh_-_210px)]' : 'h-[calc(100vh_-_210px)]'}`} overflow-y-hidden`}>
             {filteredData &&
               Object.entries(filteredData).map(([columnId, column], index) => {
                 const count = numberPagesData.find(

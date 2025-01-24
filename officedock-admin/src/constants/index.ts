@@ -9,3 +9,5 @@ export const DATE_FORMAT = 'yyyy/MM/dd';
 export const DATE_FORMAT_SERVER = 'yyyy-MM-dd';
 
 export const PAGINATION_PAGE_SIZE_SM = 5;
+
+export const COUNTDOWN_FOR_RESEND_OTP = 60;

@@ -27,7 +27,7 @@ const DraggableLayout = () => {
   const [isShow, setShow] = useState<boolean>(true);
   const [initialContent, setInitialContent] = useState<string>('');
 
-  const { memoDetail } = useMemoDetail({});
+  const { memoDetail } = useMemoDetail({ conditions: [pathname.length > 1] });
 
   const [position, setPosition] = useState<{ x: number; y: number }>({
     x: window.innerWidth - 600,
@@ -166,7 +166,7 @@ const DraggableLayout = () => {
 
   return (
     <>
-      {hasSession && !isResetPasswordPage && (
+      {memoDetail && hasSession && pathname.length > 1 && !isResetPasswordPage && (
         <>
           {!isShow ? (
             <Rnd
@@ -246,6 +246,9 @@ const DraggableLayout = () => {
                           }
                         },
                       })}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                      }}
                       className=" !resize-none !h-full !px-0  !py-0 bg-transparent shadow-none border-none !focus:shadow-none !focus:border-none  w-full mt-[11px] text-[13px] font-normal  leading-[19px]"
                     />
                   </div>

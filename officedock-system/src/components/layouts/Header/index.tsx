@@ -60,6 +60,7 @@ import {
   NO_OPTION_CATEGORY,
 } from '@constants';
 import { useErrorToast } from '@hooks/useErrorToast';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 type HeaderProps = {
   className?: string;
 };
@@ -126,6 +127,12 @@ const Header = ({ className }: HeaderProps) => {
   const { dashboardMemberList = [] } = useDashboardMemberList();
   const { creationDataTaskData } = useCreationDataTask({});
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
+  const [openWarningCloseModal, setOpenWarningCloseModal] =
+    useState<boolean>(false);
+  const [resetFunctions, setResetFunctions] = useState<{
+    resetDataCategoryOptions?: () => void;
+    reset?: () => void;
+  }>({});
 
   const { showToast } = useToast();
 
@@ -774,11 +781,41 @@ const Header = ({ className }: HeaderProps) => {
           onClose={() => {
             handleRemoveParam();
           }}
+          onWarning={({
+            reset,
+            resetDataCategoryOptions,
+          }: {
+            reset: () => void;
+            resetDataCategoryOptions: () => void;
+          }) => {
+            setResetFunctions({
+              resetDataCategoryOptions,
+              reset,
+            });
+            setOpenWarningCloseModal(true);
+          }}
           onEdit={handleConfirmEditTask}
           dashboardMemberList={dashboardMemberList}
           creationDataTaskData={creationDataTaskData}
           onDelete={() => {
             setOpenConfirmDeleteModal(true);
+          }}
+        />
+      )}
+      {openWarningCloseModal && (
+        <WarningCloseTaskModal
+          open={openWarningCloseModal}
+          onClose={() => {
+            setOpenWarningCloseModal(false);
+          }}
+          onConfirm={() => {
+            setShowModalTask(false);
+            setOpenWarningCloseModal(false);
+            setDataTaskEdit(null);
+            handleRemoveParam();
+            setIsLoading(false);
+            resetFunctions.resetDataCategoryOptions?.();
+            resetFunctions.reset?.();
           }}
         />
       )}
