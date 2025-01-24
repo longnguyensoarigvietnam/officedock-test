@@ -135,7 +135,7 @@ const ActionsChatMembersModal = memo(
                 <InputSearch
                   placeholder="名前を検索"
                   className="w-full"
-                  inputClassName="!py-2 text-[14px]"
+                  inputClassName="!py-2 text-[14px] !border-[#77858F]"
                   onChange={(e) => setSearchName(e.target.value)}
                 />
               </div>
