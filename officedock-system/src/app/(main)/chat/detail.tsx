@@ -116,6 +116,7 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMemberModal';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -1475,7 +1476,7 @@ interface dataProps {
   searchChatMsg: string;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
-  setNotifyRoomList: Dispatch<SetStateAction<ChatRoomItem[]>>
+  setNotifyRoomList: Dispatch<SetStateAction<ChatRoomItem[]>>;
 }
 const ChatDetail = ({
   clientId,
@@ -1495,7 +1496,7 @@ const ChatDetail = ({
   dataChatList,
   searchChatMsg,
   setSearchChatMsg,
-  setNotifyRoomList
+  setNotifyRoomList,
 }: dataProps) => {
   const { data: session } = useSession();
   const { ref, inView } = useInView({
@@ -1561,6 +1562,12 @@ const ChatDetail = ({
 
   //Task
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
+  const [openWarningCloseModal, setOpenWarningCloseModal] =
+    useState<boolean>(false);
+  const [resetFunctions, setResetFunctions] = useState<{
+    resetDataCategoryOptions?: () => void;
+    reset?: () => void;
+  }>({});
 
   // Handle get list and more data message
   const handleGetDataMessages = async (pageNumber: number) => {
@@ -3061,9 +3068,39 @@ const ChatDetail = ({
             setDataTaskEdit(null);
             handleRemoveParam();
           }}
+          onWarning={({
+            reset,
+            resetDataCategoryOptions,
+          }: {
+            reset: () => void;
+            resetDataCategoryOptions: () => void;
+          }) => {
+            setResetFunctions({
+              resetDataCategoryOptions,
+              reset,
+            });
+            setOpenWarningCloseModal(true);
+          }}
           onSubmit={handleConfirmCreateTask}
           dashboardMemberList={dashboardMemberList}
           creationDataTaskData={creationDataTaskData}
+        />
+      )}
+      {openWarningCloseModal && (
+        <WarningCloseTaskModal
+          open={openWarningCloseModal}
+          onClose={() => {
+            setOpenWarningCloseModal(false);
+          }}
+          onConfirm={() => {
+            setShowModalTask(false);
+            setOpenWarningCloseModal(false);
+            setDataTaskEdit(null);
+            handleRemoveParam();
+            setIsLoading(false);
+            resetFunctions.resetDataCategoryOptions?.();
+            resetFunctions.reset?.();
+          }}
         />
       )}
     </Fragment>

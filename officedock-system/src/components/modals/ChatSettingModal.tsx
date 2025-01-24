@@ -184,7 +184,7 @@ const ChatSettingModal = memo(
           <InputSearch
             placeholder="名前を検索"
             className="w-full"
-            inputClassName="!py-2 text-[14px]"
+            inputClassName="!py-2 text-[14px] !border-[#77858F]"
             onChange={(e) => setSearchName(e.target.value)}
           />
         </div>
@@ -240,21 +240,25 @@ const ChatSettingModal = memo(
                           />
                         )}
                       />
-                      <Tippy
-                        content={'このメンバーを退会させる'}
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 5]}>
-                        <div>
-                          <ImageRound
-                            className="w-[18px] h-[18px] opacity-50 hover:cursor-pointer"
-                            src="/icons/close.svg"
-                            name="Close modal"
-                            onClick={() => openConfirmRemoveModal(member.id)}
-                          />
-                        </div>
-                      </Tippy>
+                      {session?.user.id != member.id ? (
+                        <Tippy
+                          content={'このメンバーを退会させる'}
+                          arrow={false}
+                          delay={1000}
+                          placement="top"
+                          offset={[0, 5]}>
+                          <div>
+                            <ImageRound
+                              className="w-[18px] h-[18px] opacity-50 hover:cursor-pointer"
+                              src="/icons/close.svg"
+                              name="Close modal"
+                              onClick={() => openConfirmRemoveModal(member.id)}
+                            />
+                          </div>
+                        </Tippy>
+                      ) : (
+                        <div className="w-[18px]"></div>
+                      )}
                     </div>
                   </div>
                 );

@@ -32,7 +32,7 @@ const useTemplateList = () => {
     queryFn: getTemplateList,
     retry: 0,
     enabled: !!token,
-    refetchOnMount: false,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
     onError: ({ response }: ResponseError<any>) => {
       if (response?.status === ServerStatusCode.UNAUTHORIZED) {
