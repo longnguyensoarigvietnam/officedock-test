@@ -444,69 +444,90 @@ const TaskPageDataHeader = () => {
                   }}
                 />
               </div>
-              {taskSelected.value && statusTaskSelected && <Tippy
-                content={
-                  statusTaskSelected?.isStart && taskSelected.value
-                    ? '計測停止'
-                    : '計測開始'
-                }
-                arrow={false}
-                delay={1000}
-                placement="right"
-                offset={[
-                  0,
-                  statusTaskSelected?.isStart && taskSelected.value ? 27 : 5,
-                ]}>
-                <div
-                  className={`flex justify-center items-center ${statusTaskSelected?.isStart && taskSelected.value && 'mx-5'}`}>
+              {taskSelected.value && statusTaskSelected && (
+                <Tippy
+                  content={
+                    statusTaskSelected?.isStart && taskSelected.value
+                      ? '計測停止'
+                      : '計測開始'
+                  }
+                  arrow={false}
+                  delay={1000}
+                  placement="right"
+                  offset={[
+                    0,
+                    statusTaskSelected?.isStart && taskSelected.value ? 27 : 5,
+                  ]}>
                   <div
-                    className={`animated-border-box-glow ${
-                      statusTaskSelected?.isStart && taskSelected.value
-                        ? 'animate'
-                        : ''
-                    }`}></div>
-                  <div
-                    className={`animated-border-box ${
-                      statusTaskSelected?.isStart && taskSelected.value
-                        ? 'animate'
-                        : ''
-                    }`}>
-                    <div className="mt-[4px] ml-[4px]">
-                      <ImageRound
-                        src={`/icons/${statusTaskSelected?.isStart && taskSelected.value ? 'pause' : 'play'}.svg`}
-                        name="Start task day"
-                        className={`!w-9 !h-9 hover:cursor-pointer`}
-                        onClick={() => {
-                          const selectedTask = taskSelected.value;
+                    className={`flex justify-center items-center ${statusTaskSelected?.isStart && taskSelected.value && 'mx-5'}`}>
+                    <div
+                      className={`animated-border-box-glow ${
+                        statusTaskSelected?.isStart && taskSelected.value
+                          ? 'animate'
+                          : ''
+                      }`}></div>
+                    <div
+                      className={`animated-border-box ${
+                        statusTaskSelected?.isStart && taskSelected.value
+                          ? 'animate'
+                          : ''
+                      }`}>
+                      <div className="mt-[4px] ml-[4px]">
+                        <ImageRound
+                          src={`/icons/${statusTaskSelected?.isStart && taskSelected.value ? 'pause' : 'play'}.svg`}
+                          name="Start task day"
+                          className={`!w-9 !h-9 hover:cursor-pointer`}
+                          onClick={() => {
+                            const selectedTask = taskSelected.value;
 
-                          if (!selectedTask) return;
+                            if (!selectedTask) return;
 
-                          setTaskSelectedToStart({
-                            title: taskSelected.label,
-                            id: taskSelected.value,
-                            type: taskSelected.type as string,
-                          });
+                            setTaskSelectedToStart({
+                              title: taskSelected.label,
+                              id: taskSelected.value,
+                              type: taskSelected.type as string,
+                            });
 
-                          checkTask({
-                            id: `${selectedTask}`.replace('event', ''),
-                            type: `${taskSelected.type}`,
-                          });
-                        }}
-                      />
+                            checkTask({
+                              id: `${selectedTask}`.replace('event', ''),
+                              type: `${taskSelected.type}`,
+                            });
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Tippy>}
-              
+                </Tippy>
+              )}
 
               {taskSelected.value && parseInt(String(taskSelected.value)) ? (
-                <ShowTimeCounter statusTaskSelected={statusTaskSelected} />
+                <div className="flex gap-x-4">
+                  <ShowTimeCounter statusTaskSelected={statusTaskSelected} />
+                  <div className="flex items-center justify-center text-xs font-medium text-[#A7B7C2] gap-x-1 min-w-[146px]">
+                    <p>開始</p>
+                    <p className="text-base font-normal text-[#77858F]">9:00</p>
+                    <p className="px-[2px]">~</p>
+
+                    {statusTaskSelected?.isStart && taskSelected.value ? (
+                      <p className="text-xs font-normal text-[#77858F]">
+                        計測中
+                      </p>
+                    ) : (
+                      <>
+                        <p>終了</p>
+                        <p className="text-base font-normal text-[#77858F]">
+                          10:30
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
               ) : (
                 <span className="text-[#77858F]">{'00:00:00'}</span>
               )}
               <Button
                 variant="secondary"
-                className="whitespace-nowrap  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"
+                className="whitespace-nowrap mt-1 min-w-[22px]  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"
                 onClick={() => {
                   if (
                     taskSelected.value &&
