@@ -10,8 +10,6 @@ import {
   Transition,
 } from '@headlessui/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 
@@ -585,15 +583,6 @@ const Header = ({ className }: HeaderProps) => {
     },
   );
 
-  const hoverItems = [
-    'ユーザー管理',
-    '組織管理',
-    'スキル',
-    '集計タグ管理',
-  ].filter((hoverItem) =>
-    companyItems.some((item) => item.companyMenu && item.name === hoverItem),
-  );
-
   return (
     <>
       <header
@@ -611,32 +600,19 @@ const Header = ({ className }: HeaderProps) => {
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <Tippy
-                    content={
-                      <div className="p-2 w-[150px]">
-                        <p className="mb-2">プロフィール</p>
-                        <p className="mb-2">設定</p>
-                        <p>ログアウト</p>
-                      </div>
-                    }
-                    arrow={false}
-                    delay={1000}
-                    placement="bottom"
-                    offset={[0, 3]}>
-                    <div className="flex gap-2 items-center">
-                      <PopoverButton
-                        className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
+                  <div className="flex gap-2 items-center">
+                    <PopoverButton
+                      className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
                 ${open ? 'text-primary ' : ''}
                 `}>
-                        <ImageRound
-                          className="w-10 h-10"
-                          src="/images/avatar-default.svg"
-                          border="full"
-                          name="Avatar user"
-                        />
-                      </PopoverButton>
-                    </div>
-                  </Tippy>
+                      <ImageRound
+                        className="w-10 h-10 hover:opacity-70"
+                        src="/images/avatar-default.svg"
+                        border="full"
+                        name="Avatar user"
+                      />
+                    </PopoverButton>
+                  </div>
 
                   <Transition
                     as={Fragment}
@@ -647,16 +623,15 @@ const Header = ({ className }: HeaderProps) => {
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1">
                     <PopoverPanel className="absolute right-0 z-10 w-fit transform">
-                      <div className="overflow-hidden bg-white rounded-lg shadow-common p-1">
-                        <div className="relative flex flex-col w-40 gap-1 text-gray-700">
+                      <div className="overflow-hidden bg-[#5B6770] rounded-lg shadow-common py-1 w-[180px]">
+                        <div className="relative flex flex-col gap-1 text-white text-[14px] font-medium">
                           {SETTING_MENU.map((item) =>
                             item.href ? (
                               <Link
                                 key={item.name}
                                 href={item.href}
-                                className="flex rounded-md px-3 py-2 hover:bg-gray-50">
-                                <p
-                                  className={`${pathname == item.href && 'text-primary'}`}>
+                                className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}>
+                                <p>
                                   {item.name}
                                 </p>
                               </Link>
@@ -666,15 +641,8 @@ const Header = ({ className }: HeaderProps) => {
                                 onClick={() =>
                                   queryClient.isFetching() == 0 && signOut()
                                 }
-                                className="flex items-center rounded-md justify-between px-3 py-2 hover:bg-gray-50 hover:cursor-pointer">
+                                className="flex items-center justify-between px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer">
                                 <p>{item.name}</p>
-                                {item.iconUrl ? (
-                                  <ImageRound
-                                    className={`w-4 h-4`}
-                                    src={item.iconUrl}
-                                    name="Logout"
-                                  />
-                                ) : null}
                               </div>
                             ),
                           )}
@@ -688,35 +656,19 @@ const Header = ({ className }: HeaderProps) => {
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <Tippy
-                    content={
-                      <div className="p-2 w-[150px]">
-                        {hoverItems.map((hoverItem, index) => (
-                          <p className="mb-2" key={index}>
-                            {hoverItem}
-                          </p>
-                        ))}
-                      </div>
-                    }
-                    arrow={false}
-                    delay={1000}
-                    placement="bottom"
-                    offset={[0, 3]}
-                    disabled={hoverItems.length == 0}>
-                    <div className="flex gap-2 items-center">
-                      <PopoverButton
-                        className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
+                  <div className="flex gap-2 items-center">
+                    <PopoverButton
+                      className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
                 ${open ? 'text-primary ' : ''}
                 `}>
-                        <ImageRound
-                          className="w-10 h-10"
-                          src="/icons/company.svg"
-                          border="full"
-                          name="Company"
-                        />
-                      </PopoverButton>
-                    </div>
-                  </Tippy>
+                      <ImageRound
+                        className="w-10 h-10 hover:opacity-70"
+                        src="/icons/company.svg"
+                        border="full"
+                        name="Company"
+                      />
+                    </PopoverButton>
+                  </div>
 
                   {companyItems.filter((item) => item.companyMenu == true)
                     .length > 0 && (
@@ -729,8 +681,8 @@ const Header = ({ className }: HeaderProps) => {
                       leaveFrom="opacity-100 translate-y-0"
                       leaveTo="opacity-0 translate-y-1">
                       <PopoverPanel className="absolute right-0 z-10 w-fit transform">
-                        <div className="overflow-hidden bg-white rounded-lg shadow-common p-1 w-[200px]">
-                          <div className="relative flex flex-col w-40 gap-1 text-gray-700">
+                        <div className="overflow-hidden bg-[#5B6770] rounded-lg shadow-common py-1 w-[180px]">
+                          <div className="relative flex flex-col gap-1 text-white text-[14px] font-medium">
                             {companyItems
                               .filter((item) => item.companyMenu == true)
                               .map((item) =>
@@ -738,9 +690,8 @@ const Header = ({ className }: HeaderProps) => {
                                   <Link
                                     key={item.name}
                                     href={item.href}
-                                    className="flex rounded-md px-3 py-2 hover:bg-gray-50 !w-[200px]">
-                                    <p
-                                      className={`${pathname == item.href && 'text-primary'}`}>
+                                    className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}>
+                                    <p>
                                       {item.name}
                                     </p>
                                   </Link>
@@ -755,7 +706,7 @@ const Header = ({ className }: HeaderProps) => {
                                       window.location.href =
                                         pageRouters.LOGIN.href;
                                     }}
-                                    className="flex items-center rounded-md justify-between px-3 py-2 hover:bg-gray-50 hover:cursor-pointer">
+                                    className="flex items-center justify-between px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer">
                                     <p>{item.name}</p>
                                   </div>
                                 ),
