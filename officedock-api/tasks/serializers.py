@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework import serializers
@@ -172,11 +173,25 @@ class TaskScheduleSerializer(serializers.ModelSerializer):
             and plan_start_date >= plan_end_date
         ):
             raise serializers.ValidationError(
-                {
-                    "task_schedules": ERROR_MESSAGES[
-                        "start_date_end_date_invalid"
-                    ]
-                }
+                {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
+            )
+
+        check_exists_schedule = TaskSchedule.objects.filter(
+            Q(plan_start_date__lt=plan_end_date)
+            & Q(plan_end_date__gt=plan_start_date)
+            | (
+                Q(plan_start_date__lte=plan_start_date)
+                & Q(plan_end_date__gte=plan_end_date)
+            )
+        )
+        if self.instance:
+            check_exists_schedule = check_exists_schedule.exclude(
+                id=self.instance.id
+            )
+
+        if check_exists_schedule.exists():
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["exists_task_schedule"]}
             )
 
         return attrs
@@ -343,6 +358,42 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
 
         read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
 
+    def validate(self, attrs):
+        """Validation data"""
+        task_schedules = attrs.get("task_schedules")
+
+        # Sort list by plan start date
+        task_schedules.sort(key=lambda x: x["plan_start_date"])
+
+        for i in range(len(task_schedules) - 1):
+            if (
+                task_schedules[i]["plan_end_date"]
+                > task_schedules[i + 1]["plan_start_date"]
+            ):
+                raise serializers.ValidationError(
+                    {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+                )
+        for task_schedule in task_schedules:
+            check_exists_schedule = TaskSchedule.objects.filter(
+                Q(plan_start_date__lt=task_schedule["plan_end_date"])
+                & Q(plan_end_date__gt=task_schedule["plan_start_date"])
+                | (
+                    Q(plan_start_date__lte=task_schedule["plan_start_date"])
+                    & Q(plan_end_date__gte=task_schedule["plan_end_date"])
+                )
+            )
+            if task_schedule.get("schedule_id"):
+                check_exists_schedule = check_exists_schedule.exclude(
+                    id=task_schedule.get("schedule_id").id
+                )
+
+            if check_exists_schedule.exists():
+                raise serializers.ValidationError(
+                    {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+                )
+
+        return attrs
+
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
         if not obj.categories.exists():
@@ -475,6 +526,33 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
             "plan_start_date",
             "plan_end_date",
         ]
+
+    def validate(self, attrs):
+        """Validation"""
+        plan_start_date = attrs.get("plan_start_date")
+        plan_end_date = attrs.get("plan_end_date")
+        if (
+            plan_start_date
+            and plan_end_date
+            and plan_start_date >= plan_end_date
+        ):
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
+            )
+
+        check_exists_schedule = TaskSchedule.objects.filter(
+            Q(plan_start_date__lt=plan_end_date)
+            & Q(plan_end_date__gt=plan_start_date)
+            | (
+                Q(plan_start_date__lte=plan_start_date)
+                & Q(plan_end_date__gte=plan_end_date)
+            )
+        ).exists()
+
+        if check_exists_schedule:
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+            )
 
     def get_task(self, obj):
         return {
