@@ -8,7 +8,6 @@ import 'tippy.js/dist/tippy.css';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import InputSearch from '@components/common/InputSearch';
 
 import {
   ActionTask,
@@ -21,16 +20,16 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import useContinueCounterTime from '@hooks/useContinueCounterTime';
 import useTaskHeaderStart from '@hooks/useTaskHeaderStart';
-import { useDebounce } from '@hooks/useDebounce';
 import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { TaskDuration } from '@interfaces/task';
 import { TaskContext } from '@providers/TaskProvider';
-import { handleSearchRegex, hasPermissionInArray } from '@utils';
+import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
 import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 import {
+  calculateTotalTime,
   convertToCurrentTimezone,
   formatQueryStartDateForCalendar,
 } from '@utils/date';
@@ -75,7 +74,6 @@ const TaskPageDataHeader = () => {
     setTaskSelected,
     setStatusTaskSelected,
     setTaskSelectedAction,
-    setSearchValue,
     setIdTaskStarting,
     setShowWarningStartTaskModal,
     setDataRunning,
@@ -86,7 +84,6 @@ const TaskPageDataHeader = () => {
     setTaskSelectedToStart,
     setDataActualAddSchedule,
   } = useContext(TaskContext);
-  const debouncedSetSearchValue = useDebounce(setSearchValue, 1000);
 
   const [optionsTaskMe, setOptionsTaskMe] = useState<OptionDropdownType[]>([]);
   const today = new Date();
@@ -135,6 +132,7 @@ const TaskPageDataHeader = () => {
           label: item.title,
           value: item.type === ItemStartType.TASK ? item.id : `${item.id}event`,
           type: item.type,
+          totalData: item.totalDuration,
         };
       });
 
@@ -295,6 +293,7 @@ const TaskPageDataHeader = () => {
       if (pathname === pageRouters.STATISTICS_MANAGEMENT.href) {
         queryClient.refetchQueries(['getDataStatistic']);
       }
+
       if (data) {
         const startDateActual = new Date(
           convertToCurrentTimezone(`${data.planStartDate}`),
@@ -312,6 +311,10 @@ const TaskPageDataHeader = () => {
           type: ItemStartType.TASK,
           isMyTask: false,
         });
+
+        if (!data.isStart) {
+          refetchDataHeaderTaskList();
+        }
       }
     },
   });
@@ -559,14 +562,12 @@ const TaskPageDataHeader = () => {
             </div>
           )}
         {isTaskPage && (
-          <InputSearch
-            placeholder="タスク、キーワードを検索"
-            className="w-[360px]"
-            inputClassName="!py-2"
-            onChange={(e) =>
-              debouncedSetSearchValue(handleSearchRegex(e.target.value))
-            }
-          />
+          <div className="flex flex-col gap-1 text-xs font-medium text-[#A7B7C2]">
+            <p>本日の作業時間</p>
+            <p className="text-base font-normal text-[#77858F] w-full text-center">
+              {dataTaskHeaderList ? calculateTotalTime(optionsTaskMe) : ''}
+            </p>
+          </div>
         )}
       </div>
       {showWarningStartTaskModal && !isTaskPage && (
