@@ -3,9 +3,7 @@
 import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 import {
-  Dispatch,
   Fragment,
-  SetStateAction,
   useCallback,
   useContext,
   useEffect,
@@ -65,15 +63,8 @@ import {
 
 import useChatRoomDetail from '@hooks/useChatRoomDetail';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
-import {
-  addTimeToDate,
-  getCurrentTimeInJapan,
-} from '@utils/date';
-import {
-  hasPermissionInArray,
-  showModalHeaderBackgroundColorByTime,
-  trimUnnecessaryLineBreaks,
-} from '@utils';
+import { addTimeToDate, getCurrentTimeInJapan } from '@utils/date';
+import { hasPermissionInArray, trimUnnecessaryLineBreaks } from '@utils';
 import {
   ChatDashboardMember,
   ChatMessageResponse,
@@ -119,7 +110,6 @@ interface dataProps {
   searchChatMsg: string;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
-  setNotifyRoomList: Dispatch<SetStateAction<ChatRoomItem[]>>;
 }
 const ChatDetail = ({
   clientId,
@@ -139,7 +129,6 @@ const ChatDetail = ({
   dataChatList,
   searchChatMsg,
   setSearchChatMsg,
-  setNotifyRoomList,
 }: dataProps) => {
   const { data: session } = useSession();
   const { ref, inView } = useInView({
@@ -1051,13 +1040,13 @@ const ChatDetail = ({
             dashboardMembers.find((member) => member.id == participantId)
               ?.avatarColor || '';
           return (
-            <div className="ml-[-10px]" key={index}>
-              {AvatarIconWithDynamicColor({ color: avatarColor, size: 33 })}
+            <div className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]" key={index}>
+              {AvatarIconWithDynamicColor({ color: avatarColor, size: 33, customClassName: '!mt-0' })}
             </div>
           );
         })}
         {remainingCount > 0 && (
-          <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] rounded-full text-sm text-white w-[30px] h-[30px] mt-[2px]">
+          <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
             +{remainingCount}
           </div>
         )}
@@ -1138,21 +1127,6 @@ const ChatDetail = ({
               }
               return newDataChatList;
             });
-            setNotifyRoomList((prevNotifyRoomList) => {
-              const newDataChatList = [...prevNotifyRoomList];
-              const chatRoomIndex = newDataChatList.findIndex(
-                (room) => room.code == chatRoomCode,
-              );
-              if (
-                newDataChatList &&
-                chatRoomIndex != -1 &&
-                newDataChatList[chatRoomIndex] &&
-                newDataChatList[chatRoomIndex].unreadMessages
-              ) {
-                newDataChatList[chatRoomIndex].unreadMessages = 0;
-              }
-              return newDataChatList;
-            });
             setFilteredChatList((prevFilterChatList) => {
               const newFilterChatList = [...prevFilterChatList];
               const chatRoomIndex = newFilterChatList.findIndex(
@@ -1176,7 +1150,7 @@ const ChatDetail = ({
           <div
             className="flex justify-between items-center px-4 py-2 !w-full border-b-[2px] text-white"
             style={{
-              background: showModalHeaderBackgroundColorByTime(),
+              background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
             }}>
             <div className={`flex items-center w-[60%] gap-2`}>
               <div className="!min-w-[50px]">

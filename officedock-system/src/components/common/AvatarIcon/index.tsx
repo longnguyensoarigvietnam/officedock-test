@@ -1,11 +1,12 @@
 export type AvatarIconProps = {
   color: string;
   size: number;
+  customClassName?: string;
 };
 
-const AvatarIconWithDynamicColor = ({ color, size }: AvatarIconProps) => {
+const AvatarIconWithDynamicColor = ({ color, size, customClassName }: AvatarIconProps) => {
   return (
-    <div className="mt-0.5">
+    <div className={`mt-0.5 ${customClassName}`}>
       <svg
         width={size}
         height={size}
