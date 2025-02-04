@@ -1217,6 +1217,13 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         ],
     )
     def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        ordering = request.query_params.get("ordering", None)
+        if ordering:
+            tasks = queryset.all()
+            for idx, task in enumerate(tasks):
+                task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
+
         return super().list(request, *args, **kwargs)
 
 
