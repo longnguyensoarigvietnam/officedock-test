@@ -23,6 +23,7 @@ import {
   adjustEndDate,
   convertToCurrentTimezone,
   convertToTimeString,
+  getMinuteDifference,
   getNext30MinuteSlot,
   isMoreThanFifteenMinutes,
   isMoreThanThirtyMinutes,
@@ -147,6 +148,9 @@ const TaskCard = ({
           type: ItemStartType.TASK,
           isMyTask: false,
         });
+        if (!data.isStart) {
+          queryClient.refetchQueries(['getDataTaskHeaderList']);
+        }
       }
     },
   });
@@ -370,6 +374,7 @@ const TaskCard = ({
       : isOptionZoomSchedule === '01:00:00'
         ? 90
         : 46;
+  const extendedProps = event.event?.extendedProps;
 
   return (
     <>
@@ -404,27 +409,30 @@ const TaskCard = ({
                 ? event.event.title
                 : NO_SETTING}
           </p>
-          {!isCalculation && !event.timeText && isEvent ? (
-            <p className="text-[11px]">
-              {event.event?.extendedProps &&
-                convertToTimeString(
-                  `${event.event?.extendedProps.planStartDate}`,
-                )}
-              ~
-              {event.event.extendedProps &&
-                convertToTimeString(`${event.event.extendedProps.planEndDate}`)}
+          <div className="text-[11px] flex gap-2">
+            <p className=" h-full">
+              {!isCalculation ? (
+                !event.timeText && isEvent ? (
+                  <>
+                    {extendedProps &&
+                      convertToTimeString(extendedProps.planStartDate)}
+                    ~
+                    {extendedProps &&
+                      convertToTimeString(extendedProps.planEndDate)}{' '}
+                  </>
+                ) : (
+                  event.timeText &&
+                  differentTime &&
+                  event.timeText.replace(' - ', ' ~ ')
+                )
+              ) : (
+                <>{convertToTimeString(`${event.event.start}`)} ~ 計測中</>
+              )}
             </p>
-          ) : !isCalculation && event.timeText ? (
-            differentTime && (
-              <p className="text-[11px] h-full">
-                {event.timeText.replace(' - ', ' ~ ')}
-              </p>
-            )
-          ) : (
-            <p className="text-[11px] h-fit">
-              {convertToTimeString(`${event.event.start}`)} ~ 計測中
-            </p>
-          )}
+            {!resourcePlan && !isCalculation && (
+              <p>{getMinuteDifference(event.timeText)}分</p>
+            )}
+          </div>
         </div>
         {resourcePlan ? (
           isEvent ? (

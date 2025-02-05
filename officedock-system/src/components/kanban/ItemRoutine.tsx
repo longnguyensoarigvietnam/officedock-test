@@ -166,6 +166,9 @@ const ItemRoutine = ({
           type: ItemStartType.TASK,
           isMyTask: false,
         });
+        if (!data.isStart) {
+          queryClient.refetchQueries(['getDataTaskHeaderList']);
+        }
       }
     },
   });

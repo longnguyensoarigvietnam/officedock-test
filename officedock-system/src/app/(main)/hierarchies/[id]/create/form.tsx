@@ -560,7 +560,7 @@ const CreateHierarchyForm = () => {
                               </div>
                               <div className="flex items-center justify-center h-full w-10">
                                 <ImageRound
-                                  className="w-[12px] h-[20px] absolute top-1/2 ss -translate-y-1/2 cursor-grab hover:cursor-pointer hover:opacity-70"
+                                  className="w-[12px] h-[20px] absolute top-1/2  -translate-y-1/2 cursor-grab hover:cursor-pointer hover:opacity-70"
                                   src="/icons/delete.svg"
                                   name="delete item"
                                   onClick={() => handleDeleteRow(row.customId)}

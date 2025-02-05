@@ -3,6 +3,7 @@ export interface OptionDropdownType {
   label: string;
   imgUrl?: string;
   type?: string;
+  totalData?: string;
 }
 
 export interface BasePagination<T> {

@@ -243,7 +243,25 @@ export function addTimeDifference(
 
   return newTotal;
 }
+export const getMinuteDifference = (timeText: string): number => {
+  if (!timeText) return 0;
 
+  const [start, end] = timeText.split(' - ');
+  if (!start || !end) return 0;
+
+  const toMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return 0;
+    return hours * 60 + minutes;
+  };
+
+  const startMinutes = toMinutes(start);
+  const endMinutes = toMinutes(end);
+
+  return endMinutes >= startMinutes
+    ? endMinutes - startMinutes
+    : endMinutes + 1440 - startMinutes;
+};
 export function isMoreThanFifteenMinutes(start: string, end: string): boolean {
   if (!start || !end || typeof start !== 'string' || typeof end !== 'string') {
     return false;
@@ -761,4 +779,26 @@ export const isYesterdaySchedule = (date: Date) => {
     date.getMonth() === yesterday.getMonth() &&
     date.getDate() === yesterday.getDate()
   );
+};
+export const calculateTotalTime = (data: OptionDropdownType[]): string => {
+  const timeToSeconds = (time: string): number => {
+    if (!time) return 0;
+
+    const [hh, mm, ss] = time.split(':').map(Number);
+    return hh * 3600 + mm * 60 + ss;
+  };
+
+  const secondsToTime = (totalSeconds: number): string => {
+    const hh = Math.floor(totalSeconds / 3600);
+    const mm = Math.floor((totalSeconds % 3600) / 60);
+    const ss = totalSeconds % 60;
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+  };
+
+  const totalSeconds = data.reduce((sum, item) => {
+    const timeStr = item.totalData ? item.totalData : '';
+    return sum + timeToSeconds(timeStr);
+  }, 0);
+
+  return secondsToTime(totalSeconds);
 };
