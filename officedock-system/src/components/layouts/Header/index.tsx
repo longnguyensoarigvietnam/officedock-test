@@ -586,7 +586,7 @@ const Header = ({ className }: HeaderProps) => {
   return (
     <>
       <header
-        className={`sticky 2xl:fixed top-0 z-[22] bg-white shadow-lg w-full h-[76px] p-3 flex justify-between item-center ${className}`}>
+        className={`sticky 2xl:fixed top-0 z-[22] bg-white shadow-lg w-full h-[76px]  p-3 flex justify-between item-center ${className}`}>
         <div className="flex gap-8 justify-between w-full">
           <div className="flex flex-grow items-center gap-8">
             <ImageRound
@@ -631,9 +631,7 @@ const Header = ({ className }: HeaderProps) => {
                                 key={item.name}
                                 href={item.href}
                                 className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}>
-                                <p>
-                                  {item.name}
-                                </p>
+                                <p>{item.name}</p>
                               </Link>
                             ) : (
                               <div
@@ -691,9 +689,7 @@ const Header = ({ className }: HeaderProps) => {
                                     key={item.name}
                                     href={item.href}
                                     className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}>
-                                    <p>
-                                      {item.name}
-                                    </p>
+                                    <p>{item.name}</p>
                                   </Link>
                                 ) : (
                                   <div

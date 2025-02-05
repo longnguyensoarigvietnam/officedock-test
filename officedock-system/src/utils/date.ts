@@ -110,6 +110,20 @@ export const formatTime = (seconds: number) => {
   const secs = (seconds % 60).toString().padStart(2, '0');
   return `${hrs}:${mins}:${secs}`;
 };
+export function formatTimeTask(isoString: string): string {
+  if (!isoString || isNaN(Date.parse(isoString))) {
+    return '----';
+  }
+
+  const date: Date = new Date(isoString);
+
+  const hours: number = date.getHours();
+  const minutes: number = date.getMinutes();
+
+  const formattedTime: string = `${hours}:${minutes.toString().padStart(2, '0')}`;
+
+  return formattedTime;
+}
 //Convert date to 00:00
 export const convertDateToStartDate = (dateString: string): string => {
   const date = parseISO(dateString);

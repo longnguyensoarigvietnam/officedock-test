@@ -73,7 +73,7 @@ export interface TaskFormData {
   todoList?: TodoItem[];
   plans: PlanItem[] | null;
   oldIdStatus?: string;
-  organization?: OptionDropdownType;
+  organization?: OptionDropdownType | null;
 }
 
 export interface StatusTask {
@@ -134,7 +134,17 @@ export interface Task {
   }[];
   organization?: Organizations;
 }
-
+export interface TaskRunningType {
+  id: number;
+  isOverEstimate: boolean;
+  isStart: boolean;
+  pausedAt: string | null;
+  startedAt: string;
+  taskDuration: string;
+  taskDurationRunningUuid: string;
+  title: string;
+  type: string;
+}
 export interface TaskActualType {
   id: number;
   taskId: number;

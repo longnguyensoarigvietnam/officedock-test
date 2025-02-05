@@ -446,8 +446,8 @@ const Column = ({
                 paddingRight: isMyRoutine ? paddingRight : '10px',
                 boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 #f8fafc`,
                 minHeight: showFrequentlyTasks
-                  ? 'calc(100vh - 350px)'
-                  : 'calc(100vh - 240px)',
+                  ? 'calc(100vh - 372px)'
+                  : 'calc(100vh - 280px)',
               }}
               className={`flex-grow overflow-y-auto
                 ${isMyRoutine && 'bg-[#EBF1F7] '}
@@ -457,7 +457,7 @@ const Column = ({
               <div
                 className={`flex flex-col ${
                   showFrequentlyTasks === true
-                    ? 'h-[calc(100vh_-_350px)]'
+                    ? 'h-[calc(100vh_-_370px)]'
                     : 'h-[calc(100vh_-_350px)]'
                 }`}>
                 {items.map((item, index) => (

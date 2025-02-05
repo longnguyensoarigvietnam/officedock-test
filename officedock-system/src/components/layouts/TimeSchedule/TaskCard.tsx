@@ -380,10 +380,10 @@ const TaskCard = ({
     <>
       <div
         style={{
-          paddingTop: `${(slotHeight / baseHeight) * 8}px`,
+          paddingTop: `${(slotHeight / baseHeight) * 7}px`,
           paddingBottom: `${(slotHeight / baseHeight) * 8}px`,
         }}
-        className={`h-full flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && '!bg-[#A7B9C2] !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between overflow-hidden  px-2 border`}
+        className={`h-full group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && '!bg-[#A7B9C2] !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}
         onClick={() => {
           if (event.event.extendedProps.type === ItemStartType.SCHEDULE) {
             const newId = event.event.id.replace('event', '');
@@ -401,83 +401,93 @@ const TaskCard = ({
             }
           }
         }}>
-        <div className="flex flex-col gap-2 w-[95%]">
-          <p className="font-bold min-h-[20px] text-sm truncate block w-full  ">
-            {event?.event instanceof Error
-              ? ''
-              : event?.event?.title
-                ? event.event.title
-                : NO_SETTING}
-          </p>
-          <div className="text-[11px] flex gap-2">
-            <p className=" h-full">
-              {!isCalculation ? (
-                !event.timeText && isEvent ? (
-                  <>
-                    {extendedProps &&
-                      convertToTimeString(extendedProps.planStartDate)}
-                    ~
-                    {extendedProps &&
-                      convertToTimeString(extendedProps.planEndDate)}{' '}
-                  </>
-                ) : (
-                  event.timeText &&
-                  differentTime &&
-                  event.timeText.replace(' - ', ' ~ ')
-                )
-              ) : (
-                <>{convertToTimeString(`${event.event.start}`)} ~ 計測中</>
-              )}
+        <div className="flex w-full relative h-full justify-between overflow-hidden">
+          <div className="flex overflow-hidden flex-col gap-2 w-[95%]">
+            <p className="font-bold min-h-[20px] text-sm truncate block w-full  ">
+              {event?.event instanceof Error
+                ? ''
+                : event?.event?.title
+                  ? event.event.title
+                  : NO_SETTING}
             </p>
-            {!resourcePlan && !isCalculation && (
-              <p>{getMinuteDifference(event.timeText)}分</p>
-            )}
+            <div className="text-[11px] flex gap-2">
+              <p className=" h-full">
+                {!isCalculation ? (
+                  !event.timeText && isEvent ? (
+                    <>
+                      {extendedProps &&
+                        convertToTimeString(extendedProps.planStartDate)}
+                      ~
+                      {extendedProps &&
+                        convertToTimeString(extendedProps.planEndDate)}{' '}
+                    </>
+                  ) : (
+                    event.timeText &&
+                    differentTime &&
+                    event.timeText.replace(' - ', ' ~ ')
+                  )
+                ) : (
+                  <>{convertToTimeString(`${event.event.start}`)} ~ 計測中</>
+                )}
+              </p>
+              {!resourcePlan && !isCalculation && (
+                <p>{getMinuteDifference(event.timeText)}分</p>
+              )}
+            </div>
           </div>
-        </div>
-        {resourcePlan ? (
-          isEvent ? (
-            <>
-              <ImageRound
-                src={`/icons/lock.svg`}
-                name="icon lock"
-                style={{
-                  bottom: `${(slotHeight / baseHeight) * 8}px`,
-                }}
-                className="absolute w-3 h-3 bottom-2 right-2 "
-              />
-            </>
+          {resourcePlan ? (
+            isEvent ? (
+              <>
+                <ImageRound
+                  src={`/icons/lock.svg`}
+                  name="icon lock"
+                  style={{
+                    bottom: `${(slotHeight / baseHeight) * 8}px`,
+                  }}
+                  className="absolute w-3 h-3 bottom-2 right-2 "
+                />
+              </>
+            ) : (
+              <>
+                <ImageRound
+                  src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
+                  name="Start task"
+                  style={{
+                    bottom: `${(slotHeight / baseHeight) * 8}px`,
+                  }}
+                  hidden={
+                    !isMoreThanFifteenMinutes(
+                      `${event.event.start}`,
+                      `${event.event.end}`,
+                    ) && isOptionZoomSchedule === '01:00:00'
+                  }
+                  className="absolute  w-[20px] h-[20px] bottom-2 right-2  hover:cursor-pointer"
+                  onClick={handleStartStopTask}
+                />
+              </>
+            )
           ) : (
-            <>
-              <ImageRound
-                src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
-                name="Start task"
-                style={{
-                  bottom: `${(slotHeight / baseHeight) * 8}px`,
-                }}
-                hidden={
-                  !isMoreThanFifteenMinutes(
-                    `${event.event.start}`,
-                    `${event.event.end}`,
-                  ) && isOptionZoomSchedule === '01:00:00'
-                }
-                className="absolute  w-[20px] h-[20px] bottom-2 right-2  hover:cursor-pointer"
-                onClick={handleStartStopTask}
-              />
-            </>
-          )
-        ) : (
+            <ImageRound
+              src={`/icons/edit.svg`}
+              name="Start task"
+              style={{
+                top: `${(slotHeight / baseHeight) * 8}px`,
+              }}
+              className={`absolute resize-icon w-[14px] h-[14px]  right-2 hover:cursor-pointer ${isCalculation && 'hidden'}`}
+              onClick={() => {
+                setIsShowEditActual(true);
+              }}
+            />
+          )}
+        </div>
+
+        <div className="absolute opacity-0 group-hover:opacity-100 bottom-[-20px] left-1/2 -translate-x-1/2 z-50">
           <ImageRound
-            src={`/icons/edit.svg`}
-            name="Start task"
-            style={{
-              top: `${(slotHeight / baseHeight) * 8}px`,
-            }}
-            className={`absolute w-[14px] h-[14px]  right-2 hover:cursor-pointer ${isCalculation && 'hidden'}`}
-            onClick={() => {
-              setIsShowEditActual(true);
-            }}
+            src={`/icons/resize-task.svg`}
+            name="icon resize"
+            className=""
           />
-        )}
+        </div>
       </div>
       {showWarningStartModal && (
         <WarningStartTaskModal
