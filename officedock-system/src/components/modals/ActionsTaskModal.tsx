@@ -333,28 +333,34 @@ const ActionsTaskModal = ({
       },
       isImportant: false,
       plans: [],
-      organization: {
-        label:
-          authenticatedUser?.organizations.find(
-            (organization) => organization.isMain,
-          )?.name || '',
-        value:
-          authenticatedUser?.organizations.find(
-            (organization) => organization.isMain,
-          )?.id || '',
-      },
+      organization: authenticatedUser?.organizations
+        ? {
+            label:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.name || '',
+            value:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.id || '',
+          }
+        : null,
     };
     if (authenticatedUser) {
-      value.organization = {
-        label:
-          authenticatedUser?.organizations.find(
-            (organization) => organization.isMain,
-          )?.name || '',
-        value:
-          authenticatedUser?.organizations.find(
-            (organization) => organization.isMain,
-          )?.id || '',
-      };
+      value.organization = authenticatedUser?.organizations.find(
+        (organization) => organization.isMain,
+      )
+        ? {
+            label:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.name || '',
+            value:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.id || '',
+          }
+        : null;
     }
     if (dataTask) {
       (value.id = `${dataTask.id}`),
@@ -1066,6 +1072,7 @@ const ActionsTaskModal = ({
               <Controller
                 control={control}
                 name={'organization'}
+                rules={{ required: ORGANIZATION_REQUIRED_MESSAGE }}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
                     className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md !border-none !shadow-none !w-fit !pl-0"
@@ -1092,7 +1099,6 @@ const ActionsTaskModal = ({
                     }}
                   />
                 )}
-                rules={{ required: ORGANIZATION_REQUIRED_MESSAGE }}
               />
               <ErrorMessage
                 error={errors.organization?.message}
@@ -1217,13 +1223,17 @@ const ActionsTaskModal = ({
                     }
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
-                      let updatedTagIds = []
-                        const currentTagIds = getValues('tagIds') || [];
-                      const foundItemIndex = currentTagIds.findIndex((tag) => tag.value == selected.value)
-                      if(foundItemIndex == -1){
-                        updatedTagIds = [...currentTagIds, selected]
-                      } else{
-                        updatedTagIds = currentTagIds.filter((tag) => tag.value != selected.value)
+                      let updatedTagIds = [];
+                      const currentTagIds = getValues('tagIds') || [];
+                      const foundItemIndex = currentTagIds.findIndex(
+                        (tag) => tag.value == selected.value,
+                      );
+                      if (foundItemIndex == -1) {
+                        updatedTagIds = [...currentTagIds, selected];
+                      } else {
+                        updatedTagIds = currentTagIds.filter(
+                          (tag) => tag.value != selected.value,
+                        );
                       }
                       setIsFormTouched(true);
                       setValue('tagIds', updatedTagIds);

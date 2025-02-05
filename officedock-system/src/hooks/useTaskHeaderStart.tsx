@@ -5,12 +5,12 @@ import { AxiosError } from 'axios';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
-import { Task } from '@interfaces/task';
+import { TaskRunningType } from '@interfaces/task';
 
 interface UseTaskHeaderStartHooksProps {
   userId: string;
   condition?: boolean[];
-  onSuccess?: (success: Task) => void;
+  onSuccess?: (success: TaskRunningType) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
@@ -28,7 +28,7 @@ const useTaskHeaderStart = ({
   // Handle call API get User detail
   const getTaskHeaderStart = async () => {
     const apiUrl = apiRouters.TASK_HEADER_START;
-    const { data } = await api.get<Task>(apiUrl);
+    const { data } = await api.get<TaskRunningType>(apiUrl);
     return data;
   };
 
@@ -45,7 +45,7 @@ const useTaskHeaderStart = ({
 
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: Task) => {
+    onSuccess: (response: TaskRunningType) => {
       onSuccess && onSuccess(response);
     },
     onError: (error: AxiosError) => {
