@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface CalendarSkeletonProps {
   numberOfResources: number;
 }
@@ -8,8 +6,8 @@ const CalendarSkeleton: React.FC<CalendarSkeletonProps> = ({
   numberOfResources,
 }) => {
   return (
-    <div className="flex flex-col h-[1516px] mt-[37px] ml-9 w-full bg-[#ebf1f4] rounded-md overflow-hidden">
-      <div className="flex-1 grid grid-rows-[repeat(auto-fill,_60px)]">
+    <div className="flex flex-col h-[1516px] mt-[37px] pt-[33px] ml-[38px] w-full bg-[#ebf1f4] rounded-md overflow-hidden">
+      <div className="flex-1 grid grid-rows-[repeat(auto-fill,_87px)]">
         {Array.from({
           length: 26,
         }).map((_, hourIndex) => (

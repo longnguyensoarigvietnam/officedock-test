@@ -1,5 +1,5 @@
 'use client';
-import React, {
+import {
   ChangeEvent,
   Dispatch,
   SetStateAction,
@@ -1023,7 +1023,7 @@ const ActionsTaskModal = ({
               disabled={isCheckActionPermission}
               autoCompleteInput
               placeholder="タスクのタイトル"
-              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-centers !py-0 h-[46px] focus:!shadow-none focus:border border-[#77858F] rounded-md"
+              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md"
               register={register('title', {
                 required: watch('title') !== null ? true : false,
                 onChange: () => {
@@ -1068,7 +1068,7 @@ const ActionsTaskModal = ({
                 name={'organization'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md !border-none !shadow-none !w-fit !pl-0"
+                    className="h-[34px] !py-1 text-xs  rounded-md !border-none !shadow-none !w-fit !pl-0"
                     classNameTextData="!text-xs !w-fit"
                     classNameOption="!text-xs !w-fit"
                     classNameError="!text-xs !w-fit"
@@ -1102,7 +1102,7 @@ const ActionsTaskModal = ({
           </div>
           {/* Category */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2">業務の種類</div>
+            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">業務の種類</div>
             <div className="w-full max-w-[515px] flex flex-col gap-4">
               {/* Category large */}
               <Controller
@@ -1112,7 +1112,7 @@ const ActionsTaskModal = ({
                   return (
                     <Dropdown
                       placeholder="大カテゴリ"
-                      className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md"
+                      className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
@@ -1148,7 +1148,7 @@ const ActionsTaskModal = ({
                   return (
                     <Dropdown
                       placeholder="中カテゴリ"
-                      className="h-[34px] !py-1 text-xs"
+                      className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F]"
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
@@ -1179,7 +1179,7 @@ const ActionsTaskModal = ({
                 name={'categories.SMALL'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs"
+                    className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F]"
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     classNameError="!text-xs"
@@ -1201,12 +1201,14 @@ const ActionsTaskModal = ({
           </div>
           {/* Tag */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2">タグ</div>
+            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">タグ</div>
             <div className="w-full max-w-[518px]">
               <div className="flex gap-2 max-w-[518px]">
                 <div className="w-[461px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
+                    valueClassName="!border-[1px] !border-[#77858F]"
+                    optionClassName="!border-[1px] !border-[#77858F]"
                     disabled={isCheckActionPermission}
                     options={dataOptionsTagIds}
                     customLabel={
@@ -1286,14 +1288,14 @@ const ActionsTaskModal = ({
           <div
             style={{ zIndex: planFields.length + 2 }}
             className="flex gap-[10px] items-center">
-            <div className="w-full max-w-[100px]">ステータス</div>
+            <div className="w-full max-w-[100px] text-[14px] font-medium">ステータス</div>
             <div className="w-full max-w-[180px]">
               <Controller
                 control={control}
                 name={'statusId'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md"
+                    className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     classNameError="!text-xs"
@@ -1330,7 +1332,7 @@ const ActionsTaskModal = ({
           </div>
           {/* isImportant */}
           <div className="flex  gap-[10px] items-center">
-            <div className="w-full max-w-[100px]">重要</div>
+            <div className="w-full max-w-[100px] text-[14px] font-medium">重要</div>
             <div className="w-full max-w-48 ">
               <Controller
                 control={control}
@@ -1355,7 +1357,7 @@ const ActionsTaskModal = ({
           <div
             style={{ zIndex: planFields.length + 1 }}
             className="flex  gap-[10px] items-center">
-            <div className="w-full max-w-[100px]">締切日時</div>
+            <div className="w-full max-w-[100px] text-[14px] font-medium">締切日時</div>
             <div className="w-full max-w-[515px] items-start flex gap-1 justify-between">
               <div className="max-w-[250px]">
                 <div className="flex gap-1 items-center">
@@ -1370,7 +1372,7 @@ const ActionsTaskModal = ({
                             watch('statusId')?.value ===
                               StatusValueTask.MY_ROUTINE
                           }
-                          className="h-[34px] !px-2 !pl-[30px] border-[#77858F] rounded-md !text-xs !pt-2 text-center"
+                          className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
                           selected={value ? new Date(value) : null}
                           onChange={(e) => {
                             setIsFormTouched(true);
@@ -1431,7 +1433,7 @@ const ActionsTaskModal = ({
                           );
                         }
                       }}
-                      className="h-[34px] !text-xs !pr-1 !pl-7 border-[#77858F] rounded-md"
+                      className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                     />
                   </div>
                   <div>
@@ -1468,7 +1470,7 @@ const ActionsTaskModal = ({
           </div>
           {/* Plan date */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2">実施予定日時</div>
+            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">実施予定日時</div>
             <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
               {planFields.map((field, index) => {
                 return (
@@ -1490,7 +1492,7 @@ const ActionsTaskModal = ({
                             render={({ field: { value, onChange } }) => {
                               return (
                                 <DatePickerCustom
-                                  className="h-[34px] border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
+                                  className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
                                   selected={
                                     value
                                       ? new Date(value)
@@ -1585,7 +1587,7 @@ const ActionsTaskModal = ({
                                 updateMinDatePlan(index, new Date());
                               }
                             }}
-                            className="h-[34px] !text-xs !pr-1 !pl-7 border-[#77858F] rounded-md"
+                            className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                           />
                         </div>
                       </div>
@@ -1608,7 +1610,7 @@ const ActionsTaskModal = ({
                             name={`plans.${index}.planEndDate`}
                             render={({ field: { value, onChange } }) => (
                               <DatePickerCustom
-                                className="h-[34px] border-[#77858F] rounded-md !px-2 !pl-[30px] !text-xs !pt-2 text-center"
+                                className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2 !pl-[30px] !text-xs !pt-2 text-center"
                                 selected={
                                   value
                                     ? new Date(value)
@@ -1784,7 +1786,7 @@ const ActionsTaskModal = ({
                               }
                             }}
                             type="text"
-                            className="h-[34px] !text-xs !pr-1 !pl-7 border-[#77858F] rounded-md"
+                            className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                           />
                         </div>
                       </div>
@@ -1862,7 +1864,7 @@ const ActionsTaskModal = ({
                       setIsFormTouched(true);
                     },
                   })}
-                  className="resize-none"
+                  className="resize-none !border-[1px] !border-[#77858F]"
                 />
               </>
             ) : (

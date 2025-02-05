@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  Fragment,
-  useContext,
-} from 'react';
+import { useEffect, useRef, useState, Fragment, useContext } from 'react';
 import { AxiosError } from 'axios';
 import { debounce } from 'lodash';
 import FullCalendar from '@fullcalendar/react';
@@ -27,7 +21,6 @@ import './styles/calendar.css';
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
 import InputSearch from '@components/common/InputSearch';
-import Checkbox from '@components/common/Checkbox';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
@@ -41,7 +34,9 @@ import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Button from '@components/common/Button';
 import Spinner from '@components/common/Spinner';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import { CalendarSidebar } from '@components/calendar/Sidebar';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
@@ -55,6 +50,7 @@ import {
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
   getDateInfo,
+  getJapaneseDayName,
   getTimeRangeForClickDate,
   isMidnight,
   isMoreThanSixtyMinutes,
@@ -114,7 +110,6 @@ import {
   NO_OPTION_CATEGORY,
 } from '@constants';
 import api from '@base/api';
-import { useErrorToast } from '@hooks/useErrorToast';
 
 const EventCalendar = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -154,12 +149,9 @@ const EventCalendar = () => {
   );
   const [searchName, setSearchName] = useState<string>('');
   const [removeMyselfOption, setRemoveMyselfOption] = useState(false);
-  const [displayYear, setDisplayYear] = useState<number>(
-    new Date().getFullYear(),
-  );
-  const [displayMonth, setDisplayMonth] = useState<number>(
-    new Date().getMonth() + 1,
-  );
+  const [displayYear, setDisplayYear] = useState<number>();
+  const [displayMonth, setDisplayMonth] = useState<number>();
+  const [displayDay, setDisplayDay] = useState<number>();
   const [showSidebar, setShowSidebar] = useState(false);
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const { creationDataTaskData } = useCreationDataTask({});
@@ -2680,121 +2672,126 @@ const EventCalendar = () => {
       <div className="flex mb-3 pl-8 overflow-y-hidden" ref={containerRef}>
         <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'} p-4`}>
           <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center ml-[-2rem]">
-              {searchParams.get('view') != ViewOptions.DAY && (
-                <>
-                  <ImageRound
-                    name="Chevron left"
-                    src={'/icons/chevron-left-calendar.svg'}
-                    onClick={handlePrev}
-                    className="!w-[10px] !h-4 hover:cursor-pointer"
-                  />
-                  <ImageRound
-                    name="Chevron right"
-                    src={'/icons/chevron-left-calendar.svg'}
-                    onClick={handleNext}
-                    className="!w-[10px] !h-4 ml-3 rotate-180 hover:cursor-pointer"
-                  />
-                </>
-              )}
-              <div className="flex items-end font-normal ml-3 gap-2">
+            <div className="flex items-center ml-[-1rem] gap-4">
+              <ImageRound
+                name="Chevron left"
+                src={'/icons/chevron-left-calendar.svg'}
+                onClick={handlePrev}
+                className="!w-[8px] !h-[10px] hover:cursor-pointer"
+              />
+              <div className="flex items-end font-normal gap-2">
                 {searchParams.get('view') != ViewOptions.DAY && (
-                  <>
-                    <p
-                      className={`${
-                        searchParams.get('view') == ViewOptions.YEAR
-                          ? 'text-[30px]'
-                          : 'text-[18px]'
-                      }  mb-[7px] text-[#5B6770] font-medium`}>
-                      {displayYear}年
-                    </p>
-                    {searchParams.get('view') !== ViewOptions.YEAR && (
-                      <p className="text-[30px] text-[#5B6770] font-medium">
-                        {displayMonth}月
-                      </p>
-                    )}
-                  </>
+                  <p
+                    className={`${
+                      searchParams.get('view') == ViewOptions.YEAR
+                        ? 'text-[25px]'
+                        : 'text-[18px]'
+                    }  mb-[5px] text-[#5B6770] font-medium`}>
+                    {displayYear}年
+                  </p>
                 )}
-
+                {searchParams.get('view') !== ViewOptions.YEAR && (
+                  <p className="text-[30px] text-[#5B6770] font-medium">
+                    {displayMonth}月
+                  </p>
+                )}
                 {searchParams.get('view') == ViewOptions.DAY && (
                   <>
-                    <div className="w-[260px] ml-6 !z-20 flex gap-0 items-center">
-                      <Button
-                        onClick={() => handlePrev()}
-                        className="h-10 bg-white !px-2">
-                        <ImageRound
-                          className=" w-7 h-7 "
-                          src="/icons/chevron-left.svg"
-                          name="left"
-                        />
-                      </Button>
-                      <DatePicker
-                        className="h-10 !z-20"
-                        selected={
-                          calendarRef.current
-                            ? calendarRef.current.getApi().getDate()
-                            : new Date()
-                        }
-                        onChange={(e) => {
-                          handleNavigateToSpecificDay(e as Date);
-                        }}
-                      />
-                      <Button
-                        onClick={() => handleNext()}
-                        className="h-10 bg-white !px-2">
-                        <ImageRound
-                          className=" w-7 h-7 "
-                          src="/icons/chevron-right.svg"
-                          name="right"
-                        />
-                      </Button>
-                    </div>
+                    <p className="text-[30px] text-[#5B6770] font-medium">
+                      {displayDay}日
+                    </p>
+                    <p className="text-[18px] mb-[5px] text-[#5B6770] font-medium">
+                      (
+                      {getJapaneseDayName(
+                        calendarRef.current
+                          ? String(calendarRef.current.getApi().getDate())
+                          : String(new Date()),
+                      )}
+                      )
+                    </p>
                   </>
                 )}
-                <Button
-                  type="button"
-                  className="h-10 self-center"
-                  onClick={handleNavigateToTodayView}>
-                  今日
-                </Button>
+              </div>
+
+              <ImageRound
+                name="Chevron right"
+                src={'/icons/chevron-left-calendar.svg'}
+                onClick={handleNext}
+                className="!w-[8px] !h-[10px] rotate-180 hover:cursor-pointer"
+              />
+              <div className="mt-5 z-20">
+                <DatePicker
+                  className="z-50"
+                  isShowInput={false}
+                  selected={
+                    calendarRef.current
+                      ? calendarRef.current.getApi().getDate()
+                      : new Date()
+                  }
+                  tooltipMsg="カレンダーから日付を選択"
+                  iconClassName="!static !w-10 !h-5"
+                  onChange={(e) => {
+                    handleNavigateToSpecificDay(e as Date);
+                  }}
+                />
+              </div>
+
+              <Button
+                type="button"
+                className="!self-center !text-[#0068B6] !bg-white !w-[48px] !h-[34px] !rounded-[6px] !text-[14px] !font-medium !p-[8px] !border-none"
+                onClick={handleNavigateToTodayView}>
+                今日
+              </Button>
+            </div>
+            <div
+              className={`flex gap-5 items-center ${!showSidebar && 'mr-14'}`}>
+              <InputSearch
+                placeholder="予定、キーワードを検索"
+                inputClassName="!w-[300px] !py-2 !rounded-[20px] text-sm !bg-white border-none placeholder-[#77858F99]"
+              />
+              <div className="!w-[54px]">
+                <Controller
+                  control={control}
+                  name={'calendarView'}
+                  defaultValue={getDefaultCalendarView()}
+                  render={({ field: { value, onChange } }) => (
+                    <Dropdown
+                      options={calendarViewOptions}
+                      selectedOption={calendarViewOptions.find(
+                        (element) => element.value === value?.value,
+                      )}
+                      className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
+                      classNameTextData="!text-xs "
+                      classNameOption="!text-xs !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
+                      labelOptionClass=" font-medium !pl-0.5 !border-b-[0px]!border-[#77858F]"
+                      onChange={(e) => {
+                        onChange(e);
+                        handleViewChange(e.value as string);
+                        setIsCalendarLoading(true);
+                        setTimeout(() => setIsCalendarLoading(false), 600);
+                      }}
+                    />
+                  )}
+                />
               </div>
             </div>
-            <div className={`flex gap-3 items-center mr-[1rem]`}>
-              <ImageRound
-                src="/icons/search.svg"
-                name="Search input icon"
-                className="w-4 h-4 z-10 ml-3 top-3.5"
-              />
-              <Controller
-                control={control}
-                name={'calendarView'}
-                defaultValue={getDefaultCalendarView()}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    options={calendarViewOptions}
-                    selectedOption={calendarViewOptions.find(
-                      (element) => element.value === value?.value,
-                    )}
-                    className="h-[34px] text-xs !py-1 w-full !shadow-none"
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
-                    onChange={(e) => {
-                      onChange(e);
-                      handleViewChange(e.value as string);
-                      setIsCalendarLoading(true);
-                      setTimeout(() => setIsCalendarLoading(false), 600);
-                    }}
-                  />
-                )}
-              />
-              {!showSidebar && (
-                <Checkbox
-                  className="mr-3"
-                  isChecked={!showSidebar}
-                  onChange={(state) => setShowSidebar(!state)}
+            {!showSidebar && (
+              <div
+                className="bg-white w-[60px] h-[46px] rounded-l-[30px] flex items-center shadow-md hover:cursor-pointer fixed top-[90px] right-0"
+                onClick={() => setShowSidebar((prev) => !prev)}>
+                <ImageRound
+                  className="w-8 h-8 ml-2"
+                  src="/icons/multi-users.svg"
+                  border="full"
+                  name="Avatar user"
                 />
-              )}
-            </div>
+                <ImageRound
+                  className="w-4 h-4 -rotate-90 ml-1"
+                  src={'/icons/arrow-down.svg'}
+                  name="Arrow down"
+                />
+              </div>
+            )}
           </div>
 
           <div
@@ -2846,12 +2843,12 @@ const EventCalendar = () => {
                   )?.avatarColor,
                 );
                 return (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center justify-start gap-1">
                     {AvatarIconWithDynamicColor({
                       color: avatarColor || '',
                       size: 36,
                     })}
-                    <p className="truncate max-w-[100px] text-black">
+                    <p className="truncate max-w-[100px] text-[15px] font-medium text-black">
                       {resource.resource.title}
                     </p>
                   </div>
@@ -2886,6 +2883,30 @@ const EventCalendar = () => {
                 meridiem: false,
                 hour12: false,
               }}
+              dayHeaderContent={(arg) => {
+                const date = new Date(arg.date);
+                let day = date.getDate().toString();
+                if (day.length === 1) {
+                  day = '0' + day;
+                }
+                const weekday = date.toLocaleDateString('ja-JP', {
+                  weekday: 'short',
+                });
+                const viewType = arg.view.type;
+
+                if (viewType === 'timeGridWeek') {
+                  return (
+                    <div className="fc-day-header text-[#5B6770] font-medium">
+                    <span className='text-[18px] mr-1'>{day}日</span>
+                    <span className='text-[12px]'>({weekday})</span>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <span className="fc-day-header">{weekday}</span>
+                  );
+                }
+              }}
               multiMonthMaxColumns={4}
               eventContent={handleEventContent}
               multiMonthMinWidth={200}
@@ -2898,9 +2919,8 @@ const EventCalendar = () => {
                 meridiem: false,
                 hour12: false,
               }}
-              slotLabelInterval={{
-                hour: 1,
-              }}
+              slotDuration="00:30:00"
+              slotLabelInterval="00:30:00"
               slotLabelContent={({ text }) => (
                 <div className="text-[12px] text-[#77858F]">{text}</div>
               )}
@@ -2929,7 +2949,7 @@ const EventCalendar = () => {
 
                     return (
                       <div
-                        className={`text-[14px] ${isSelectedDate && 'bg-[#D1E2FB] text-[#0068b7] ml-[-5px] !w-[29px] !h-[29px] mt-[-4px] mr-[-5px] rounded-full flex items-center justify-center'}`}>
+                        className={`text-[14px] ${isSelectedDate && 'bg-[#E2E9EE] ml-[-5px] !w-[29px] !h-[29px] mt-[-4px] mr-[-5px] rounded-full flex items-center justify-center'}`}>
                         {date.getDate()}
                       </div>
                     );
@@ -2961,7 +2981,7 @@ const EventCalendar = () => {
 
                     return (
                       <div
-                        className={`text-[14px] ${isSelectedDate && 'bg-[#D1E2FB] text-[#0068b7] ml-[-5px] !w-[29px] !h-[29px] mt-[-8px] mr-[-5px] rounded-full flex items-center justify-center'}`}>
+                        className={`text-[14px] ${isSelectedDate && 'bg-[#E2E9EE] ml-[-5px] !w-[29px] !h-[29px] mt-[-8px] mr-[-5px] rounded-full flex items-center justify-center'}`}>
                         {date.getDate()}
                       </div>
                     );
@@ -2975,6 +2995,7 @@ const EventCalendar = () => {
                   titleFormat: (date) => {
                     setDisplayYear(date.date.year);
                     setDisplayMonth(date.date.month + 1);
+                    setDisplayDay(date.date.day);
                     return `${date.date.year}年 ${date.date.month + 1}月 ${date.date.day}日`;
                   },
                 },
@@ -3160,155 +3181,25 @@ const EventCalendar = () => {
           </div>
         )}
         <div
-          className={`transition-all duration-1000 ${showSidebar ? 'w-[24%] relative p-6 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
-          <div className="flex flex-col mb-7">
-            <div
-              className="bg-white absolute hover:bg-slate-200 right-3 shadow-lg rounded-full p-[5px] hover:cursor-pointer"
-              onClick={() => setShowSidebar(false)}>
-              <ImageRound
-                className="w-5 h-5 hover:cursor-pointer"
-                src="/icons/close.svg"
-                name="Close modal"
-              />
-            </div>
-            <p className="font-normal text-gray-500 mb-2 mt-8 text-sm">
-              表示する項目
-            </p>
-            <Checkbox
-              label="マイスケジュール"
-              isChecked={filterMyEvent}
-              onChange={(state) =>
-                handleToggleFilterOptions(state, EventCalendarType.SCHEDULE)
-              }
-            />
-            <Checkbox
-              label="マイタスク"
-              className="mr-3"
-              isChecked={filterMyTask}
-              onChange={(state) =>
-                handleToggleFilterOptions(state, EventCalendarType.TASK)
-              }
-            />
-            <Checkbox label="会社の予定" />
-          </div>
-          <p className="font-normal mb-2 text-sm text-gray-500">
-            メンバーの予定を見る
-          </p>
-          <div className="p-3 mb-2 rounded-md shadow-md bg-white">
-            <InputSearch
-              placeholder="名前で検索"
-              className="w-[100%]"
-              inputClassName="!py-2 mb-3"
-              onChange={(e) => setSearchName(e.target.value)}
-            />
-            <div className="flex justify-between mb-2">
-              <p
-                className="text-gray-500 text-xs hover:cursor-pointer hover:text-gray-700"
-                onClick={() => handleGetAllMemberSchedules()}>
-                全てをチェック
-              </p>
-              <p
-                className="text-gray-500 text-xs hover:cursor-pointer hover:text-gray-700"
-                onClick={() => handleRemoveAllMemberSchedules()}>
-                全てのチェックをクリア
-              </p>
-            </div>
-            <div className="pt-3 mb-3 max-h-[250px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
-              {dashboardMembers &&
-                dashboardMembers
-                  .filter((member) =>
-                    member.fullName
-                      .toLowerCase()
-                      .includes(searchName.toLowerCase()),
-                  )
-                  .filter(
-                    (member) =>
-                      !removeMyselfOption || member.id != session?.user.id,
-                  )
-                  .sort(
-                    (prev: CalendarDashboardMember, next: CalendarDashboardMember) =>
-                      prev.fullName.localeCompare(next.fullName),
-                  )
-                  .map((member) => {
-                    return (
-                      <div key={member.id} className="flex items-center">
-                        <div className="w-5">
-                          <Checkbox
-                            label=""
-                            className="mr-2"
-                            isChecked={
-                              selectedScheduleUserIds.includes(`${member.id}`)
-                                ? true
-                                : false
-                            }
-                            onChange={() =>
-                              handleFilterScheduleByUserIds(Number(member.id))
-                            }
-                          />
-                        </div>
-                        <div
-                          className={`flex gap-5 items-center p-1.5 hover:cursor-pointer`}>
-                          {AvatarIconWithDynamicColor({
-                            color: member.avatarColor,
-                            size: 36,
-                          })}
-                          <p className="font-normal text-sm truncate max-w-[200px] text-black">
-                            {member.fullName}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-            </div>
-          </div>
-          <div className="ml-[13px]">
-            <Checkbox
-              label="自分をメンバーから外す"
-              onChange={(state) => {
-                setRemoveMyselfOption(state);
-                setCurrentResources((prevCurrentResources) => {
-                  if (
-                    !filterMyEvent &&
-                    !filterMyTask &&
-                    prevCurrentResources.find(
-                      (resource) => resource.id == String(session?.user.id),
-                    )
-                  ) {
-                    return prevCurrentResources.filter(
-                      (resource) => resource.id !== String(session?.user.id),
-                    );
-                  }
-                  return [...prevCurrentResources];
-                });
-                if (state) {
-                  let updatedUserIds: string[] = selectedScheduleUserIds
-                    ? selectedScheduleUserIds.split(',').filter(Boolean)
-                    : [];
-                  const userIdStr = String(session?.user.id);
-                  updatedUserIds = updatedUserIds.filter(
-                    (id) => id !== userIdStr,
-                  );
-                  setSelectedScheduleUserIds(updatedUserIds.join(','));
-                  if (filterMyEvent) {
-                    updatedUserIds.push(userIdStr);
-                    getEventCalendarByUsers({
-                      userId:
-                        `${updatedUserIds.join(',')}`.length > 0
-                          ? `${updatedUserIds.join(',')}`
-                          : ``,
-                    });
-                  } else {
-                    getEventCalendarByUsers({
-                      userId:
-                        `${updatedUserIds.join(',')}`.length > 0
-                          ? `${updatedUserIds.join(',')}`
-                          : ``,
-                    });
-                  }
-                }
-              }}
-            />
-          </div>
+          className={`transition-all duration-1000 ${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
+          <CalendarSidebar
+            dashboardMembers={dashboardMembers}
+            filterMyEvent={filterMyEvent}
+            filterMyTask={filterMyTask}
+            getEventCalendarByUsers={getEventCalendarByUsers}
+            handleFilterScheduleByUserIds={handleFilterScheduleByUserIds}
+            handleGetAllMemberSchedules={handleGetAllMemberSchedules}
+            handleRemoveAllMemberSchedules={handleRemoveAllMemberSchedules}
+            handleToggleFilterOptions={handleToggleFilterOptions}
+            removeMyselfOption={removeMyselfOption}
+            searchName={searchName}
+            selectedScheduleUserIds={selectedScheduleUserIds}
+            setCurrentResources={setCurrentResources}
+            setRemoveMyselfOption={setRemoveMyselfOption}
+            setSearchName={setSearchName}
+            setSelectedScheduleUserIds={setSelectedScheduleUserIds}
+            setShowSidebar={setShowSidebar}
+          />
         </div>
       </div>
       {openCreateEventModal && (
