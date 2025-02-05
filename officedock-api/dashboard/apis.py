@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, time
 from uuid import uuid4
 
 from django.db import transaction
@@ -119,7 +119,8 @@ class DashboardViewSet(BaseAPIViewSet):
                 paused_at__isnull=True
             ).exists()
             durations = model.task_durations.filter(
-                started_at__gte=start_date, paused_at__lte=end_date
+                Q(started_at__gte=start_date)
+                & Q(Q(paused_at__lte=end_date) | Q(paused_at__isnull=True))
             ).all()
 
             data.append(
@@ -128,6 +129,12 @@ class DashboardViewSet(BaseAPIViewSet):
                     "title": model.title,
                     "type": model_type,
                     "is_running": is_running,
+                    "started_at": durations.last().started_at
+                    if durations.exists()
+                    else None,
+                    "paused_at": durations.last().paused_at
+                    if durations.exists()
+                    else None,
                     "total_duration": self._get_total_duration(
                         timedelta(0), durations
                     ),
@@ -563,11 +570,55 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
 
         if current_duration_start:
             duration = self._get_duration(current_duration_start)
+            is_over_estimate = False
+            task_running = None
+            if current_duration_start.is_start:
+                # Get current task running
+                task_running = current_duration_start.task_durations.filter(
+                    started_at__gte=datetime.combine(
+                        timezone.now().date(), time.min
+                    ),
+                    paused_at__isnull=True,
+                ).first()
+                if isinstance(current_duration_start, Task):
+                    task_schedules = (
+                        current_duration_start.task_schedules.all().order_by(
+                            "plan_start_date"
+                        )
+                    )
+                    for idx, task_schedule in enumerate(task_schedules):
+                        if idx + 1 < len(
+                            task_schedules
+                        ):  # Ensure next task exists before accessing
+                            next_task_schedule = task_schedules[
+                                idx + 1
+                            ].plan_start_date
+                        else:
+                            next_task_schedule = None  # No next task
+
+                        if (
+                            timezone.now() - task_schedule.plan_end_date
+                            >= timedelta(minutes=30)
+                            and task_running.is_cancel_alert is False
+                            and (
+                                next_task_schedule is None
+                                or timezone.now() <= next_task_schedule
+                            )
+                        ):
+                            is_over_estimate = True
+                            break
+                # TODO: Implement logic check over estimate of Event here (Waiting QA T159)
+                # else isinstance(current_duration_start, Schedule):
+
             data = {
                 "id": current_duration_start.id,
+                "task_duration_running_uuid": task_running.uuid
+                if isinstance(task_running, TaskDuration)
+                else None,
                 "title": current_duration_start.title,
                 "task_duration": duration,
                 "is_start": current_duration_start.is_start,
+                "is_over_estimate": is_over_estimate,
                 "type": obj_type,
             }
 
@@ -577,9 +628,13 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
         """
         Calculate task duration.
         """
-        task_durations = obj.task_durations.all()
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        end_of_today = datetime.combine(timezone.now().date(), time.max)
+        task_durations = obj.task_durations.filter(
+            Q(started_at__gte=start_of_today)
+            & Q(Q(paused_at__lte=end_of_today) | Q(paused_at__isnull=True))
+        ).all()
         total_duration = timedelta()
-
         # Calculate time between started and paused
         for task_duration in task_durations:
             paused_at = (

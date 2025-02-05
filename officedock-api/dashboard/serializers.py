@@ -52,6 +52,7 @@ class DurationSerializer(serializers.ModelSerializer):
             "plan_start_date",
             "plan_end_date",
             "type",
+            "is_cancel_alert",
         ]
         read_only_fields = ["id"]
 
@@ -175,6 +176,7 @@ class UpdateDurationSerializer(serializers.ModelSerializer):
             "uuid",
             "started_at",
             "paused_at",
+            "is_cancel_alert",
         ]
         read_only_fields = ["id"]
 

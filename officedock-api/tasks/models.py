@@ -305,6 +305,7 @@ class TaskDuration(BaseModel):
     )
     started_at = models.DateTimeField(null=True, blank=True)
     paused_at = models.DateTimeField(null=True, blank=True)
+    is_cancel_alert = models.BooleanField(default=False)
     company = models.ForeignKey(
         "companies.Company",
         related_name="task_durations",
