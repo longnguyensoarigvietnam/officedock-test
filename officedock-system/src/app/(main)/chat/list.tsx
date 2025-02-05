@@ -1,5 +1,5 @@
 'use client';
-import { Dispatch, SetStateAction, useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { useMutation } from 'react-query';
 import { useInView } from 'react-intersection-observer';
@@ -45,9 +45,7 @@ interface dataProps {
   filteredChatList: ChatRoomItem[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
-  notifyRoomList: ChatRoomItem[]
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
-  setNotifyRoomList: Dispatch<SetStateAction<ChatRoomItem[]>>
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
@@ -64,8 +62,6 @@ const ListChatUsers = ({
   filteredChatList,
   dashboardMemberList,
   dashboardMembers,
-  notifyRoomList,
-  setNotifyRoomList,
   setLastItemId,
   setDataChatList,
   setFilteredChatList,
@@ -106,14 +102,7 @@ const ListChatUsers = ({
   // Handle get list and more data room chat
   const handleGetDataRoomChat = async (pageNumber: number) => {
     setInitialLoad(true);
-    const apiUrl = `${apiRouters.CHAT_LIST}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${lastMsgItemRoom ? `&last_message_at=${lastMsgItemRoom}` : ''}${lastPinAt ? `&pin_at=${encodeFormatDateISO(new Date(lastPinAt))}` : ''}&type=CHAT`;
-    return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
-  };
-
-  // Handle get list and more data room chat
-  const handleGetDataNotifyRooms = async () => {
-    setInitialLoad(true);
-    const apiUrl = `${apiRouters.CHAT_LIST}?type=NOTIFY`;
+    const apiUrl = `${apiRouters.CHAT_LIST}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${lastMsgItemRoom ? `&last_message_at=${lastMsgItemRoom}` : ''}${lastPinAt ? `&pin_at=${encodeFormatDateISO(new Date(lastPinAt))}` : ''}`;
     return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
   };
 
@@ -165,20 +154,6 @@ const ListChatUsers = ({
     },
   );
 
-  const { mutate: getDataNotifyRooms } = useMutation(
-    'getDataNotifyRooms',
-    handleGetDataNotifyRooms,
-    {
-      onSuccess: ({ data }) => {
-        setNotifyRoomList(data.results);
-      },
-      onError: () => {},
-      onSettled: () => {
-        setInitialLoad(false);
-      },
-    },
-  );
-
   // Action load more list room
   useEffect(() => {
     if (inViewListRoom && hasMore) {
@@ -187,71 +162,79 @@ const ListChatUsers = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inViewListRoom]);
 
-  useEffect(() => {
-    if (!notifyRoomList.length) {
-      getDataNotifyRooms();
-    }
-  }, [getDataNotifyRooms, notifyRoomList.length]);
-
   const handleUpdateDatePin = useCallback(
     (data: ChatRoomItem) => {
       if (data.pinAt) {
-        if (data.type == ChatRoomType.TASK || data.type == ChatRoomType.SKILL) {
-          setNotifyRoomList((prevDataChatList) => {
+        setDataChatList((prevDataChatList) => {
+          const filteredList = prevDataChatList.filter(
+            (item) => item.code !== data.code,
+          );
+          return [data, ...filteredList];
+        });
+        if (searchTerm) {
+          setFilteredChatList((prevDataChatList) => {
             const filteredList = prevDataChatList.filter(
               (item) => item.code !== data.code,
             );
             return [data, ...filteredList];
           });
-        } else {
-          setDataChatList((prevDataChatList) => {
-            const filteredList = prevDataChatList.filter(
-              (item) => item.code !== data.code,
-            );
-            return [data, ...filteredList];
-          });
-          if (searchTerm) {
-            setFilteredChatList((prevDataChatList) => {
-              const filteredList = prevDataChatList.filter(
-                (item) => item.code !== data.code,
-              );
-              return [data, ...filteredList];
-            });
-          }
         }
       } else {
-        if (data.type == ChatRoomType.TASK || data.type == ChatRoomType.SKILL) {
-          setNotifyRoomList((prevDataChatList) => {
-            const filteredList = prevDataChatList.filter(
-              (item) => item.code !== data.code,
-            );
-            const items = [...filteredList, data];
-            items.sort((currentItem, nextItem) => {
-              if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
-                return 0;
-              } else if (
-                currentItem.pinAt !== null &&
-                nextItem.pinAt === null
-              ) {
-                return -1;
-              } else {
-                return 1;
-              }
-            });
-            return items;
+        setDataChatList((prevDataChatList) => {
+          const filteredList = prevDataChatList.filter(
+            (item) => item.code !== data.code,
+          );
+          const lastItem = filteredList[filteredList.length - 1];
+          if (
+            lastItem &&
+            new Date(data.lastMessageAt as string) <
+              new Date(lastItem.lastMessageAt as string)
+          ) {
+            if (hasMore) {
+              return filteredList;
+            } else {
+              return [...filteredList, data];
+            }
+          }
+          const items = [...filteredList, data];
+          items.sort((currentItem, nextItem) => {
+            if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
+              return 0;
+            } else if (
+              currentItem.pinAt !== null &&
+              nextItem.pinAt === null
+            ) {
+              return -1;
+            } else if (
+              currentItem.pinAt === null &&
+              nextItem.pinAt !== null
+            ) {
+              return 1;
+            } else {
+              const currentItemDate = currentItem.lastMessageAt
+                ? new Date(currentItem.lastMessageAt)
+                : new Date(0);
+              const nextItemDate = nextItem.lastMessageAt
+                ? new Date(nextItem.lastMessageAt)
+                : new Date(0);
+              return nextItemDate.getTime() - currentItemDate.getTime();
+            }
           });
-        } else {
-          setDataChatList((prevDataChatList) => {
+          return items;
+        });
+        if (searchTerm) {
+          setFilteredChatList((prevDataChatList) => {
             const filteredList = prevDataChatList.filter(
               (item) => item.code !== data.code,
             );
             const lastItem = filteredList[filteredList.length - 1];
+
             if (
               lastItem &&
               new Date(data.lastMessageAt as string) <
                 new Date(lastItem.lastMessageAt as string)
             ) {
-              if (hasMore) {
+              if (hasMoreSearch) {
                 return filteredList;
               } else {
                 return [...filteredList, data];
@@ -272,17 +255,6 @@ const ListChatUsers = ({
               ) {
                 return 1;
               } else {
-                if (
-                  currentItem.type === ChatRoomType.TASK &&
-                  nextItem.type !== ChatRoomType.TASK
-                ) {
-                  return -1;
-                } else if (
-                  currentItem.type !== ChatRoomType.TASK &&
-                  nextItem.type === ChatRoomType.TASK
-                ) {
-                  return 1;
-                }
                 const currentItemDate = currentItem.lastMessageAt
                   ? new Date(currentItem.lastMessageAt)
                   : new Date(0);
@@ -294,51 +266,6 @@ const ListChatUsers = ({
             });
             return items;
           });
-          if (searchTerm) {
-            setFilteredChatList((prevDataChatList) => {
-              const filteredList = prevDataChatList.filter(
-                (item) => item.code !== data.code,
-              );
-              const lastItem = filteredList[filteredList.length - 1];
-
-              if (
-                lastItem &&
-                new Date(data.lastMessageAt as string) <
-                  new Date(lastItem.lastMessageAt as string)
-              ) {
-                if (hasMoreSearch) {
-                  return filteredList;
-                } else {
-                  return [...filteredList, data];
-                }
-              }
-              const items = [...filteredList, data];
-              items.sort((currentItem, nextItem) => {
-                if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
-                  return 0;
-                } else if (
-                  currentItem.pinAt !== null &&
-                  nextItem.pinAt === null
-                ) {
-                  return -1;
-                } else if (
-                  currentItem.pinAt === null &&
-                  nextItem.pinAt !== null
-                ) {
-                  return 1;
-                } else {
-                  const currentItemDate = currentItem.lastMessageAt
-                    ? new Date(currentItem.lastMessageAt)
-                    : new Date(0);
-                  const nextItemDate = nextItem.lastMessageAt
-                    ? new Date(nextItem.lastMessageAt)
-                    : new Date(0);
-                  return nextItemDate.getTime() - currentItemDate.getTime();
-                }
-              });
-              return items;
-            });
-          }
         }
       }
     },
@@ -736,7 +663,7 @@ const ListChatUsers = ({
     name: string;
   }) => {
     setInitialLoadSearch(true);
-    const apiUrl = `${apiRouters.CHAT_LIST}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${name ? `&name=${encodeURIComponent(name)}` : ''}${lastMsgItemRoomSearch ? `&last_message_at=${lastMsgItemRoomSearch}` : ''}${lastPinAtSearch ? `pin_at=${lastPinAtSearch}` : ''}&type=CHAT`;
+    const apiUrl = `${apiRouters.CHAT_LIST}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${name ? `&name=${encodeURIComponent(name)}` : ''}${lastMsgItemRoomSearch ? `&last_message_at=${lastMsgItemRoomSearch}` : ''}${lastPinAtSearch ? `pin_at=${lastPinAtSearch}` : ''}`;
     return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
   };
 
@@ -929,83 +856,11 @@ const ListChatUsers = ({
             )}
         </div>
       </div>
-      {notifyRoomList && notifyRoomList.length > 0 && (
-        <div className="flex w-full gap-2 items-center">
-          <p className="font-medium text-[#77858F] w-[40px] mt-[-3px]">通知</p>
-          <div className="border-t-[1px] border-[#C2CFD7] w-full h-1"></div>
-        </div>
-      )}
-
-      {notifyRoomList &&
-        notifyRoomList.length > 0 &&
-        notifyRoomList.map((item) => (
-          <div
-            key={item?.code}
-            className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
-            onClick={() => {
-              setLastItemId(null);
-              handleSetChatRoomParam(`${item?.code}`);
-              handleResetChatRoomUnreadMessages(item);
-              setSearchChatMsg('');
-              setIsReload(false);
-            }}>
-            <Tippy
-              content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
-              arrow={false}
-              delay={1000}
-              placement="top"
-              offset={[0, 5]}>
-              <div
-                className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePinClick({
-                    code: item.code,
-                    isPin: item.pinAt !== null,
-                  });
-                  close();
-                }}>
-                <ImageRound
-                  className="w-[14px] h-[16px] hover:cursor-pointer"
-                  src="/icons/pin-chat.svg"
-                  border="full"
-                  name="Pin chat"
-                />
-              </div>
-            </Tippy>
-
-            <div className="relative">{renderAvatar(item)}</div>
-            <div className="ml-3 flex flex-grow justify-between">
-              <p className="text-sm max-w-[260px] font-medium truncate">
-                {item.code &&
-                chatRoomNameEditing.find((room) => room.roomCode === item.code)
-                  ? chatRoomNameEditing.find(
-                      (room) => room.roomCode === item.code,
-                    )?.roomName
-                  : item?.name || ''}
-              </p>
-            </div>
-            {item?.unreadMessages > 0 && (
-              <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
-                {item?.unreadMessages}
-              </p>
-            )}
-          </div>
-        ))}
-
       {!searchTerm && (
         <>
           {' '}
-          {dataChatList && dataChatList.length > 0 && (
-            <div className="flex w-full gap-2 items-center mt-3">
-              <p className="font-medium text-[#77858F] w-[90px] mt-[-3px]">
-                チャット
-              </p>
-              <div className="border-t-[1px] border-[#C2CFD7] w-full h-1"></div>
-            </div>
-          )}
           <div
-            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_400px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
+            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_210px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
             {dataChatList && dataChatList.length > 0 ? (
               dataChatList.map((item) => (
                 <div
@@ -1032,7 +887,6 @@ const ListChatUsers = ({
                           code: item.code,
                           isPin: item.pinAt !== null,
                         });
-                        close();
                       }}>
                       <ImageRound
                         className="w-[14px] h-[16px] hover:cursor-pointer"
@@ -1082,16 +936,8 @@ const ListChatUsers = ({
       )}
       {searchTerm && searchTermDebounce === searchTerm && (
         <>
-          {filteredChatList && filteredChatList.length > 0 && (
-            <div className="flex w-full gap-2 items-center mt-3">
-              <p className="font-medium text-[#77858F] w-[90px] mt-[-3px]">
-                チャット
-              </p>
-              <div className="border-t-[1px] border-[#C2CFD7] w-full h-1"></div>
-            </div>
-          )}
           <div
-            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_400px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
+            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_210px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
             {filteredChatList && filteredChatList.length > 0 ? (
               filteredChatList.map((item) => (
                 <div
@@ -1105,12 +951,12 @@ const ListChatUsers = ({
                   }}>
                   <div
                     className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       handlePinClick({
                         code: item.code,
                         isPin: item.pinAt !== null,
                       });
-                      close();
                     }}>
                     <ImageRound
                       className="w-[14px] h-[16px] hover:cursor-pointer"

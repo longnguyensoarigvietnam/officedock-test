@@ -2834,6 +2834,11 @@ const EventCalendar = () => {
                   : CalendarViewOptions.VIEW_BY_MONTH
               }
               resources={currentResources}
+              resourceOrder={(a: any, b: any) => {
+                if (a.id === String(session?.user.id)) return -1;
+                if (b.id === String(session?.user.id)) return 1;
+                return a.title.localeCompare(b.title);
+              }}
               resourceLabelContent={(resource) => {
                 const avatarColor = String(
                   dashboardMembers.find(
@@ -3219,6 +3224,10 @@ const EventCalendar = () => {
                   .filter(
                     (member) =>
                       !removeMyselfOption || member.id != session?.user.id,
+                  )
+                  .sort(
+                    (prev: CalendarDashboardMember, next: CalendarDashboardMember) =>
+                      prev.fullName.localeCompare(next.fullName),
                   )
                   .map((member) => {
                     return (
