@@ -18,12 +18,37 @@ steps:
     secretEnv: ["_API_ARTIFACT_REGISTRY_PATH"]
     args: ["-c", "docker push $$_API_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA"]
 
+  # Deploy SQL migrate job
+  - id: "Deploy migrate job"
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    args: [
+        "-c",
+        "gcloud run jobs deploy migrate-job \
+        --image $$_API_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
+        --region $$_API_REGION \
+        --set-cloudsql-instances $$_API_CLOUD_SQL_INSTANCE \
+        --set-env-vars SECRET_PREFIX=STG \
+        --max-retries 1 \
+        --command 'bash' \
+        --args '/code/migrate-staging.sh' \
+        --execute-now \
+        --wait",
+      ]
+    entrypoint: bash
+    secretEnv:
+      ["_API_ARTIFACT_REGISTRY_PATH", "_API_REGION", "_API_CLOUD_SQL_INSTANCE"]
+
   # Deploy built Docker Image on Cloud Run
   - id: "Deploy Docker Image"
     name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "bash"
     secretEnv:
-      ["_API_ARTIFACT_REGISTRY_PATH", "_API_REGION", "_API_SERVICE_NAME", "_API_CLOUD_SQL_INSTANCE"]
+      [
+        "_API_ARTIFACT_REGISTRY_PATH",
+        "_API_REGION",
+        "_API_SERVICE_NAME",
+        "_API_CLOUD_SQL_INSTANCE",
+      ]
     args: [
         "-c",
         "gcloud run deploy $$_API_SERVICE_NAME \
@@ -31,12 +56,17 @@ steps:
         --region $$_API_REGION \
         --port 8080 \
         --add-cloudsql-instances $$_API_CLOUD_SQL_INSTANCE \
-        --set-env-vars SECRET_PREFIX=STG \
+        --set-env-vars SECRET_PREFIX=STG,WORKERS_COUNT=$_GUNICORN_WORKERS_COUNT,THREADS_COUNT=$_GUNICORN_THREADS_COUNT \
         --allow-unauthenticated",
       ]
 
 options:
   logging: CLOUD_LOGGING_ONLY
+
+# Please configure these substitutions in Cloud Build trigger.
+substitutions:
+  _GUNICORN_WORKERS_COUNT: "1"
+  _GUNICORN_THREADS_COUNT: "8"
 
 # Setting SecretManger
 availableSecrets:
