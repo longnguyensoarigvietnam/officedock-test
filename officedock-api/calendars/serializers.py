@@ -222,11 +222,7 @@ class TaskScheduleSerializer(serializers.ModelSerializer):
             and plan_start_date >= plan_end_date
         ):
             raise serializers.ValidationError(
-                {
-                    "task_schedules": ERROR_MESSAGES[
-                        "start_date_end_date_invalid"
-                    ]
-                }
+                {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
             )
 
         return attrs
