@@ -59,6 +59,7 @@ export interface EventEditFormData {
   smallCategory?: OptionDropdownType;
   categories?: { id: string; name: string; type: string }[];
   organization?: OptionDropdownType | Organizations;
+  createdAt?: Date;
 }
 
 export interface EventRequest {

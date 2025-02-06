@@ -1,24 +1,12 @@
 'use client';
-import React, {
-  ChangeEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import {
-  Controller,
-  SubmitHandler,
-  useFieldArray,
-  useForm,
-  useWatch,
-} from 'react-hook-form';
+import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
-import CustomDatePicker from '@components/common/CustomDatePicker';
+import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
-import DatePicker from '@components/common/DatePicker';
 import Input from '@components/common/Input';
 import TextArea from '@components/common/TextArea';
 import ImageRound from '@components/common/ImageRound';
@@ -34,6 +22,8 @@ import {
   EventFormData,
   EventParticipant,
 } from '@interfaces/calendar';
+import { CategoryStructure } from '@interfaces/skills';
+import { Organizations } from '@interfaces/organization';
 
 import {
   ActionsEvent,
@@ -48,18 +38,21 @@ import {
   ORGANIZATION_REQUIRED_MESSAGE,
   START_DATE_WRONG_SELECTED,
 } from '@constants/message';
-import { NO_OPTION_CATEGORY } from '@constants';
+import { NO_OPTION_CATEGORY, NO_OPTIONS, UNREGISTERED } from '@constants';
+
 import {
   addHoursToDate,
   convertDateToStartDate,
   convertToMinutes,
   convertToTimeString,
+  formatShowDateJapanese,
   formatTimeInput,
 } from '@utils/date';
-import { hasPermissionInArray } from '@utils';
+import {
+  hasPermissionInArray,
+  showModalHeaderBackgroundColorByTime,
+} from '@utils';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
-import { CategoryStructure } from '@interfaces/skills';
-import { Organizations } from '@interfaces/organization';
 
 export type ActionsEventModalProps = {
   open: boolean;
@@ -112,12 +105,6 @@ const ActionsEventModal = ({
   const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
     EventParticipant[]
   >([]);
-  const [unSelectedTagIdsOptions, setUnSelectedTagIdsOptions] = useState<
-    OptionDropdownType[]
-  >([]);
-  const [selectedTagIdsOptions, setSelectedTagIdsOptions] = useState<
-    OptionDropdownType[]
-  >([]);
   const [searchName, setSearchName] = useState<string>('');
   const [time, setTime] = useState<string>('');
   const [minDatePlan, setMinDatePlan] = useState<Date | null>();
@@ -140,15 +127,6 @@ const ActionsEventModal = ({
       startDate: defaultStartDate,
       endDate: defaultStartDate,
     },
-  });
-
-  const {
-    fields: projectFields,
-    append: appendProject,
-    remove: removeProject,
-  } = useFieldArray({
-    control,
-    name: 'tagIds',
   });
 
   const organizationValue = useWatch({
@@ -246,12 +224,28 @@ const ActionsEventModal = ({
         newParticipantIds = dataEvent.participantIds
           ? dataEvent.participantIds
           : [];
+        value.tagIds = dataEvent.tagIds
+          ? dataEvent.tagIds.map((tag) => {
+              return {
+                value: tag.value,
+                label: tag.label,
+              };
+            })
+          : [];
       } else {
         if (dataEvent.participants) {
           dataEvent.participants
             .filter((item) => item.id !== '')
             .map((item) => newParticipantIds.push(item.id as number));
         }
+        value.tagIds = dataEvent.tags
+          ? dataEvent.tags.map((tag) => {
+              return {
+                value: tag.id,
+                label: tag.name,
+              };
+            })
+          : [];
       }
       let newLargeCategory: OptionDropdownType = { label: '', value: '' };
       let newMediumCategory: OptionDropdownType = { label: '', value: '' };
@@ -443,65 +437,6 @@ const ActionsEventModal = ({
   }, [dataOrganizationCategories, mediumCategoryValue, watch]);
 
   useEffect(() => {
-    if (dataEvent) {
-      if (backToEditing) {
-        if (dataEvent.tagIds) {
-          dataEvent.tagIds.map((element) =>
-            appendProject({
-              label: element.label,
-              value: element.value,
-            }),
-          );
-        } else {
-          appendProject({
-            label: '',
-            value: '',
-          });
-        }
-      } else {
-        if (dataEvent.tags) {
-          dataEvent.tags.map((element) =>
-            appendProject({
-              label: element.name,
-              value: element.id,
-            }),
-          );
-        } else {
-          appendProject({
-            label: '',
-            value: '',
-          });
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appendProject, dataEvent]);
-
-  useEffect(() => {
-    if (backToEditing) {
-      if (dataEvent && dataEvent.tagIds) {
-        setSelectedTagIdsOptions(
-          dataEvent.tagIds.map((org) => ({
-            label: org.label,
-            value: org.value,
-          })),
-        );
-      }
-    } else {
-      if (dataEvent && dataEvent.tags) {
-        setSelectedTagIdsOptions(
-          dataEvent.tags.map((org) => ({
-            label: org.name,
-            value: org.id,
-          })),
-        );
-      }
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataEvent, dataEvent?.tags]);
-
-  useEffect(() => {
     if (creationDataEventCalendar) {
       setDataOptionsOrganizations(
         creationDataEventCalendar.organizations.map((org) => ({
@@ -532,16 +467,6 @@ const ActionsEventModal = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [creationDataEventCalendar]);
 
-  useEffect(() => {
-    const selectedValues = selectedTagIdsOptions.map(
-      (element) => element.value,
-    );
-    const unSelectedOptions = dataOptionsTagIds.filter(
-      (option) => !selectedValues.includes(option.value),
-    );
-    setUnSelectedTagIdsOptions(unSelectedOptions);
-  }, [dataOptionsTagIds, selectedTagIdsOptions]);
-
   const [isCall, setIsCall] = useState<boolean>(false);
 
   const onSubmitData: SubmitHandler<EventFormData | EventEditFormData> = async (
@@ -562,40 +487,6 @@ const ActionsEventModal = ({
     onDelete && onDelete(data as EventEditFormData);
   };
 
-  const handleConfirmUpdateMemberList = (type: string, id: number) => {
-    let newList: number[] = watch('participantIds') || [];
-
-    if (type === 'remove') {
-      newList = newList.filter((memberId) => memberId !== id);
-    } else {
-      newList = [...newList, id];
-    }
-    setValue('participantIds', newList);
-  };
-
-  const handleRemoveSelectedTagId = useCallback(
-    (option: OptionDropdownType, index: number) => {
-      setSelectedTagIdsOptions((prevState) =>
-        prevState.filter((item) => item.value !== option.value),
-      );
-      removeProject(index);
-    },
-    [removeProject],
-  );
-
-  const handleSelectedTagIds = useCallback(
-    (index: number, option: OptionDropdownType) => {
-      setSelectedTagIdsOptions((prevState) => {
-        const existingElement = prevState?.[index];
-        if (existingElement) {
-          prevState.splice(index, 1);
-        }
-        return [...prevState, option];
-      });
-    },
-    [],
-  );
-
   const handleChange = (
     e: ChangeEvent<HTMLInputElement>,
     field: keyof EventFormData,
@@ -609,9 +500,7 @@ const ActionsEventModal = ({
   };
 
   const handleCloseModal = () => {
-    setSelectedTagIdsOptions([]);
     setDataOptionsTagIds([]);
-    setUnSelectedTagIdsOptions([]);
     setIsCall(false);
     onClose();
   };
@@ -632,24 +521,46 @@ const ActionsEventModal = ({
   return (
     <Drawer
       open={open}
-      className="font-primary bg-white w-[640px] !px-0 !rounded-tl-xl"
+      className="font-primary bg-white w-[700px] !px-0 !rounded-tl-xl"
       onClose={handleCloseModal}>
-      <header className="px-8 rounded-tl-xl h-[50px] bg-[#EBF1F4] flex items-center justify-end">
+      <header
+        className="px-8 rounded-tl-xl h-[50px] flex items-center justify-between"
+        style={{
+          background: showModalHeaderBackgroundColorByTime(),
+        }}>
+        <div className="flex text-sm items-center gap-4 text-white">
+          <p className="">
+            登録日{' '}
+            {action === ActionsEvent.EDIT && dataEvent?.createdAt
+              ? formatShowDateJapanese(dataEvent.createdAt)
+              : formatShowDateJapanese(new Date())}
+          </p>
+        </div>
         <div className="flex gap-5 items-center ">
           <ImageRound
-            className="mt-1 w-[13px] h-[15px] hover:cursor-pointer"
-            src="/icons/share.svg"
-            name="Share icon"
+            className="scale-[0.5] rotate-90 mt-1 text-xs mr-[-10px] hover:cursor-pointer"
+            src="/icons/three-dots-white.svg"
+            border="full"
+            name="Three dots white"
           />
-          <ImageRound
-            className="mt-1 h-[3px] w-[17px] hover:cursor-pointer"
-            src="/icons/more.svg"
-            name="More icon"
-          />
+          {action === ActionsEvent.EDIT &&
+            session?.user.permissions &&
+            hasPermissionInArray(
+              session?.user.permissions,
+              PermissionsSystem.CALENDAR_DELETE,
+            ) && (
+              <ImageRound
+                className="mt-1 w-[14px] h-[17px] hover:cursor-pointer"
+                src="/icons/delete-event.svg"
+                name="Delete icon"
+                onClick={handleDeleteEvent}
+              />
+            )}
+
           <ImageRound
             className="mt-1 w-3 h-[14px] hover:cursor-pointer"
-            src="/icons/drawer-close.svg"
-            name="Close modal"
+            src="/icons/drawer-close-white.svg"
+            name="Close icon"
             onClick={() => {
               reset();
               onClose();
@@ -664,7 +575,7 @@ const ActionsEventModal = ({
           <div className="w-full">
             <Input
               autoCompleteInput
-              className="!p-1 !w-full !rounded shadow-none focus:!shadow-none focus:border"
+              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
               register={register('title', {
                 required: watch('title') !== null ? true : false,
               })}
@@ -673,14 +584,7 @@ const ActionsEventModal = ({
               disabled={isDisabled}
             />
           </div>
-          <div className="flex gap-2 justify-end">
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={onClose}
-              className="w-[82px] !rounded-md  h-[34px] !text-[10px] !px-2">
-              キャンセル
-            </Button>
+          <div className="flex gap-2 items-center">
             {session?.user.permissions &&
               ((action === ActionsEvent.EDIT &&
                 hasPermissionInArray(
@@ -694,35 +598,31 @@ const ActionsEventModal = ({
                   ))) && (
                 <Button
                   type="submit"
-                  className="w-[82px] h-8 !text-[10px] !px-2">
+                  className="w-[82px] h-[36px] !text-[12px] !px-2">
                   保存
                 </Button>
               )}
-            {action === ActionsEvent.EDIT &&
-              session?.user.permissions &&
-              hasPermissionInArray(
-                session?.user.permissions,
-                PermissionsSystem.CALENDAR_DELETE,
-              ) && (
-                <Button
-                  type="button"
-                  onClick={handleDeleteEvent}
-                  className="w-[82px] h-8 !text-[10px] !px-2">
-                  削除
-                </Button>
-              )}
+            <Button
+              variant="outline"
+              type="button"
+              onClick={onClose}
+              className="w-[82px] !rounded-md  h-[34px] !text-[12px] !px-2">
+              キャンセル
+            </Button>
           </div>
         </header>
         <div className="text-xs font-normal flex flex-col gap-4 !overflow-y-auto">
           {/* Plan date */}
-          <div className="flex gap-6 items-start">
-            <div className="w-full max-w-[120px]">実施予定日時</div>
+          <div className="flex items-start">
+            <div className="w-full max-w-[116px] font-medium text-[14px] mt-2">
+              実施予定日時
+            </div>
             <div className="flex flex-col">
               <div className="w-full max-w-[424px] flex gap-1 items-start">
                 <div
-                  className={`${watch('isAllDay') ? 'w-[104px]' : 'max-w-[202px]'}`}>
+                  className={`${watch('isAllDay') ? 'w-[140px]' : 'max-w-[220px]'}`}>
                   <div className="flex gap-1">
-                    <div className="w-[104px]">
+                    <div className="w-[140px]">
                       <Controller
                         control={control}
                         name="startDate"
@@ -730,8 +630,8 @@ const ActionsEventModal = ({
                           required: START_DATE_WRONG_SELECTED,
                         }}
                         render={({ field: { value, onChange } }) => (
-                          <DatePicker
-                            className="h-8 !px-2 !text-xs !pt-2"
+                          <DatePickerCustom
+                            className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
                             selected={value ? new Date(value) : null}
                             disabled={isDisabled}
                             onChange={(e) => {
@@ -758,6 +658,7 @@ const ActionsEventModal = ({
                     {watch('isAllDay') === false && (
                       <div className="w-[72px]">
                         <Input
+                          isShowClockIcon={true}
                           register={register('startTime', {
                             required:
                               watch('startDate') !== null ? true : false,
@@ -786,7 +687,7 @@ const ActionsEventModal = ({
                           })}
                           autoComplete="off"
                           type="text"
-                          className="h-8 !text-xs !px-1 text-center"
+                          className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                           disabled={isDisabled}
                         />
                       </div>
@@ -800,9 +701,9 @@ const ActionsEventModal = ({
 
                 <div className="h-8 flex items-center">〜</div>
                 <div
-                  className={`${watch('isAllDay') ? 'min-w-[104px]' : 'max-w-[202px]'}`}>
+                  className={`${watch('isAllDay') ? 'min-w-[140px]' : 'max-w-[220px]'}`}>
                   <div className="flex gap-1">
-                    <div className="w-[104px]">
+                    <div className="w-[140px]">
                       <Controller
                         control={control}
                         name="endDate"
@@ -812,8 +713,8 @@ const ActionsEventModal = ({
                             : false,
                         }}
                         render={({ field: { value, onChange } }) => (
-                          <CustomDatePicker
-                            className="h-8 !px-2 !text-xs !pt-2"
+                          <DatePickerCustom
+                            className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
                             selected={value ? new Date(value) : null}
                             disabled={isDisabled}
                             minDate={minDatePlan}
@@ -833,6 +734,7 @@ const ActionsEventModal = ({
                     {watch('isAllDay') === false && (
                       <div className="w-[72px]">
                         <Input
+                          isShowClockIcon={true}
                           register={register('endTime', {
                             required: watch('endDate') !== null ? true : false,
                             validate: (value) => {
@@ -895,7 +797,7 @@ const ActionsEventModal = ({
                             },
                           })}
                           type="text"
-                          className="h-8 !text-xs !px-1 text-center"
+                          className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                           disabled={isDisabled}
                         />
                       </div>
@@ -924,17 +826,25 @@ const ActionsEventModal = ({
                 </Button>
               </div>
             </div>
+            <Button
+              sz="sm"
+              variant="outline"
+              className="w-[48px] h-[34px] ml-auto hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+              type="button"
+              name="Remove plan">
+              削除
+            </Button>
           </div>
           {/* Event type */}
-          <div className="flex gap-6 items-center">
-            <div className="w-full max-w-[120px]">予定の種類</div>
-            <div className="w-full max-w-48">
+          <div className="flex justify-between items-center">
+            <p className="w-fit font-medium text-[14px]">予定カテゴリ</p>
+            <div className="w-[513px]">
               <Controller
                 control={control}
                 name={'type'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-8 !py-1 text-xs"
+                    className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     options={dataOptionsEventTypes}
@@ -950,15 +860,15 @@ const ActionsEventModal = ({
             </div>
           </div>
           {/* Organization */}
-          <div className="flex gap-[10px] items-center">
-            <div className="w-full max-w-[132px]">組織</div>
-            <div className="w-full max-w-[515px]">
+          <div className="flex justify-between items-center">
+            <p className="w-fit font-medium text-[14px]">組織</p>
+            <div className="w-[513px]">
               <Controller
                 control={control}
                 name={'organization'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-8 !py-1 text-xs border-[#77858F] rounded-md"
+                    className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     classNameError="!text-xs"
@@ -991,16 +901,16 @@ const ActionsEventModal = ({
             </div>
           </div>
           {/* Work type */}
-          <div className="flex gap-6 items-start">
-            <div className="w-full max-w-[120px]">業務の種類</div>
-            <div className="w-full">
+          <div className="flex justify-between items-start">
+            <p className="w-fit font-medium text-[14px]">業務の種類</p>
+            <div className="w-[513px]">
               <div className="mb-2">
                 <Controller
                   control={control}
                   name={'largeCategory'}
                   render={({ field: { value, onChange } }) => (
                     <Dropdown
-                      className="h-8 !py-1 text-xs"
+                      className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
                       options={[
@@ -1044,7 +954,7 @@ const ActionsEventModal = ({
                   render={({ field: { value, onChange } }) => {
                     return (
                       <Dropdown
-                        className="h-8 !py-1 text-xs"
+                        className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
                         classNameTextData="!text-xs"
                         classNameOption="!text-xs"
                         options={[
@@ -1088,7 +998,7 @@ const ActionsEventModal = ({
                   name={'smallCategory'}
                   render={({ field: { value, onChange } }) => (
                     <Dropdown
-                      className="h-8 !py-1 text-xs"
+                      className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
                       options={[
@@ -1125,278 +1035,240 @@ const ActionsEventModal = ({
           </div>
           {/* Tag */}
           <div className="flex gap-6 items-start">
-            <div className="w-full max-w-32">集計タグ</div>
-            <div className="w-full max-w-[424px]">
-              {projectFields.map((field, index) => (
-                <div className="flex gap-3 max-w-[424px]" key={field.id}>
-                  <div className="w-[333px]">
-                    <Controller
-                      control={control}
-                      name={`tagIds.${index}`}
-                      render={({ field: { value, onChange } }) => {
-                        return (
-                          <Dropdown
-                            placeholder="選択してください"
-                            className="h-8 !py-1 text-xs"
-                            classNameOption="!text-xs"
-                            classNameTextData="!text-xs"
-                            options={unSelectedTagIdsOptions}
-                            selectedOption={dataOptionsTagIds.find(
-                              (element) => element.value === value?.value,
-                            )}
-                            onChange={(option: OptionDropdownType) => {
-                              onChange(option);
-                              handleSelectedTagIds(index, option);
-                            }}
-                            error={errors.tagIds?.[index]?.value?.message}
-                            disabled={isDisabled}
-                          />
+            <div className="w-full max-w-32 font-medium text-[14px]">タグ</div>
+            <div className="w-full max-w-[518px]">
+              <div className="flex gap-2 max-w-[518px]">
+                <div className="w-[461px]">
+                  <MultiSelectDropdown
+                    className="!h-[34px]"
+                    disabled={isDisabled}
+                    valueClassName="!border-[1px] !border-[#77858F]"
+                    options={dataOptionsTagIds}
+                    optionClassName="!border-[1px] !border-[#77858F]"
+                    customLabel={
+                      (watch('tagIds') ?? []).filter((tag) => tag.value)
+                        .length > 0
+                        ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
+                        : UNREGISTERED
+                    }
+                    selectedOptions={watch('tagIds') ?? []}
+                    onChange={(selected) => {
+                      let updatedTagIds = [];
+                      const currentTagIds = getValues('tagIds') || [];
+                      const foundItemIndex = currentTagIds.findIndex(
+                        (tag) => tag.value == selected.value,
+                      );
+                      if (foundItemIndex == -1) {
+                        updatedTagIds = [...currentTagIds, selected];
+                      } else {
+                        updatedTagIds = currentTagIds.filter(
+                          (tag) => tag.value != selected.value,
                         );
-                      }}
-                    />
-                  </div>
-                  <div className="mt-[2.5px] w-20">
-                    <Button
-                      sz="sm"
-                      variant="outline"
-                      className="w-20 h-8 text-xs"
-                      type="button"
-                      name="Remove TagId"
-                      disabled={isDisabled}
-                      onClick={() => {
-                        handleRemoveSelectedTagId(
-                          watch(`tagIds.${index}`),
-                          index,
-                        );
-                      }}>
-                      削除
-                    </Button>
+                      }
+                      setValue('tagIds', updatedTagIds);
+                    }}
+                  />
+                  <div className="flex flex-wrap  gap-2 mt-2">
+                    {watch('tagIds')?.filter((tag) => tag.value) &&
+                      watch('tagIds')
+                        ?.filter((tag) => !!tag.value)
+                        ?.map((tag) => {
+                          return (
+                            <div
+                              key={tag.value}
+                              className="rounded-xl bg-[#EBF2F7] px-2.5 py-1.5 flex gap-2">
+                              <p>{tag.label}</p>
+                              <button
+                                type="button"
+                                className="text-gray-700 hover:text-gray-900"
+                                onClick={() => {
+                                  const currentTagIds =
+                                    getValues('tagIds') || [];
+
+                                  const updatedTagIds = [
+                                    ...currentTagIds,
+                                  ].filter(
+                                    (item) =>
+                                      Number(item.value) != Number(tag.value),
+                                  );
+
+                                  setValue('tagIds', updatedTagIds);
+                                }}>
+                                ✕
+                              </button>
+                            </div>
+                          );
+                        })}
                   </div>
                 </div>
-              ))}
-              <div className="text-right mt-4">
-                <Button
-                  sz="sm"
-                  variant="outline"
-                  className="w-20 h-8 text-xs"
-                  type="button"
-                  disabled={isDisabled}
-                  onClick={() => appendProject({ label: '', value: '' })}>
-                  <ImageRound
-                    src="/icons/plus.svg"
-                    name="Add organization"
-                    className="mr-3 h-2 w-2"
-                  />
-                  追加
-                </Button>
+                <div className="mb-[2.5px] w-12">
+                  <Button
+                    sz="sm"
+                    variant="outline"
+                    className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                    type="button"
+                    name="Remove TagId"
+                    disabled={isDisabled}
+                    onClick={() => {
+                      setValue('tagIds', []);
+                    }}>
+                    削除
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
           {/* Address */}
-          <div className="flex gap-6 items-center">
-            <div className="w-full max-w-[120px]">場所</div>
-            <TextArea
-              register={register('address')}
-              className="h-[50px] text-xs"
-              disabled={isDisabled}
-            />
+          <div className="flex justify-between items-center">
+            <p className="w-fit font-medium text-[14px]">場所</p>
+            <div>
+              <TextArea
+                register={register('address')}
+                className="h-[50px] !w-[513px] text-xs !border-[1px] !border-[#77858F]"
+                disabled={isDisabled}
+              />
+            </div>
           </div>
           <div className="flex flex-col">
-            <div className="w-full mb-1">参加者</div>
-            <InputSearch
-              placeholder="名前で検索"
-              className="w-[100%]"
-              inputClassName="!py-2 mb-3"
-              onChange={(e) => setSearchName(e.target.value)}
-              disabled={isDisabled}
-            />
-            <div className="w-full max-h-[130px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
-              {dataOptionsParticipants &&
-                dataOptionsParticipants
-                  .filter((member) =>
+            <div className="flex justify-between items-start mb-3">
+              <p className="w-fit font-medium text-[14px] mt-3">
+                メンバーを追加
+              </p>
+              <div>
+                <InputSearch
+                  placeholder="名前を検索"
+                  className="!w-[513px]"
+                  inputClassName="!py-2 !border-[1px] !border-[#77858F]"
+                  onChange={(e) => setSearchName(e.target.value)}
+                  disabled={isDisabled}
+                />
+                <div className="flex justify-between items-center my-3">
+                  <p
+                    className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
+                    onClick={() => {
+                      const updatedParticipantList =
+                        dataOptionsParticipants?.filter((member) =>
+                          member.fullName
+                            .toLowerCase()
+                            .includes(searchName.toLowerCase()),
+                        );
+                      let newParticipantList: number[] = [];
+                      if (updatedParticipantList) {
+                        newParticipantList = updatedParticipantList.map(
+                          (participant) => Number(participant.id),
+                        );
+                      }
+                      setValue('participantIds', newParticipantList);
+                    }}>
+                    全てをチェック
+                  </p>
+                  <p
+                    className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
+                    onClick={() => {
+                      setValue('participantIds', []);
+                    }}>
+                    全てのチェックをクリア
+                  </p>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+                  {dataOptionsParticipants?.filter((member) =>
                     member.fullName
                       .toLowerCase()
                       .includes(searchName.toLowerCase()),
-                  )
-                  .filter(
-                    (member) =>
-                      !watch('participantIds')?.includes(member.id as number),
-                  )
-                  .map((member) => {
-                    return (
-                      <div
-                        className={`flex gap-5 items-center p-1.5 hover:cursor-pointer`}
-                        key={member.id}>
-                        <ImageRound
-                          className="w-8 h-8"
-                          src="/images/avatar-default.svg"
-                          border="full"
-                          name="Avatar user"
-                        />
-                        <div className="flex gap-2 items-center">
-                          <p className="font-normal text-sm truncate max-w-[250px] text-black">
+                  ).length === 0 && (
+                    <p className="text-gray-500 text-center text-sm">
+                      {NO_OPTIONS}
+                    </p>
+                  )}
+                  {dataOptionsParticipants
+                    ?.filter((member) =>
+                      member.fullName
+                        .toLowerCase()
+                        .includes(searchName.toLowerCase()),
+                    )
+                    .map((member) => {
+                      return (
+                        <div
+                          className={`flex gap-2 items-center px-3 py-2.5 hover:cursor-pointer ${
+                            watch('participantIds') &&
+                            watch('participantIds')?.find(
+                              (participant) => participant == member.id,
+                            ) &&
+                            'bg-[#EBF1F7]'
+                          }`}
+                          key={member.id}>
+                          <div>
+                            <Controller
+                              control={control}
+                              name="participantIds"
+                              render={() => (
+                                <Checkbox
+                                  isChecked={
+                                    watch('participantIds') &&
+                                    watch('participantIds')?.find(
+                                      (participant) => participant == member.id,
+                                    )
+                                      ? true
+                                      : false
+                                  }
+                                  disable={isDisabled}
+                                  onChange={() => {
+                                    const currentParticipantList =
+                                      watch('participantIds') || [];
+                                    const foundParticipantIndex =
+                                      currentParticipantList.findIndex(
+                                        (participant) =>
+                                          participant == member.id,
+                                      );
+                                    let updatedParticipantList = [];
+                                    if (foundParticipantIndex == -1) {
+                                      updatedParticipantList = [
+                                        ...currentParticipantList,
+                                        Number(member.id),
+                                      ];
+                                    } else {
+                                      updatedParticipantList = [
+                                        ...currentParticipantList,
+                                      ].filter(
+                                        (participant) =>
+                                          participant != member.id,
+                                      );
+                                    }
+
+                                    setValue(
+                                      'participantIds',
+                                      updatedParticipantList,
+                                    );
+                                  }}
+                                />
+                              )}
+                            />
+                          </div>
+
+                          <ImageRound
+                            className="w-8 h-8"
+                            src="/images/avatar-default.svg"
+                            border="full"
+                            name="Avatar user"
+                          />
+                          <p className="text-[15px] truncate max-w-[350px] text-black">
                             {member.fullName}
                           </p>
-                          <div className="font-normal text-[10px] max-w-[220px] truncate">
-                            {member.organizations &&
-                              member.organizations.map(
-                                (organization, index) => (
-                                  <span
-                                    key={
-                                      organization.id
-                                    }>{`${organization.name}${member.organizations && member.organizations.length - 1 !== index ? '、' : ''}`}</span>
-                                ),
-                              )}
-                          </div>
                         </div>
-
-                        <Button
-                          sz="sm"
-                          variant="outline"
-                          className="w-20 h-8 text-xs ml-auto"
-                          onClick={() =>
-                            handleConfirmUpdateMemberList(
-                              'add',
-                              member.id as number,
-                            )
-                          }
-                          disabled={isDisabled}
-                          type="button">
-                          <ImageRound
-                            src="/icons/plus.svg"
-                            name="Add member"
-                            className="mr-3 h-2 w-2"
-                          />
-                          追加
-                        </Button>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                </div>
+              </div>
             </div>
-            {watch('participantIds') !== undefined &&
-              watch('participantIds')?.includes(session?.user.id as number) && (
-                <div className="mt-5">
-                  <div className="w-full mb-1">自分</div>
-                  <div className="flex gap-3 items-end">
-                    <div className="border-[1px] w-[175px] flex items-center gap-3 p-1">
-                      <ImageRound
-                        className="w-6 h-6"
-                        src="/images/avatar-default.svg"
-                        border="full"
-                        name="Avatar user"
-                      />
-                      <div className="flex flex-col">
-                        <p className="font-normal text-sm truncate max-w-[120px] text-black">
-                          {session?.user.profile.fullName}
-                        </p>
-                        <div className="font-normal text-[10px] max-w-[100px] truncate">
-                          {session?.user.organizations &&
-                            session?.user.organizations.map(
-                              (organization, index) => (
-                                <span
-                                  key={
-                                    organization.id
-                                  }>{`${organization.name}${session?.user.organizations && session?.user.organizations.length - 1 !== index ? '、' : ''}`}</span>
-                              ),
-                            )}
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <Checkbox
-                        label="自分をメンバーから外す"
-                        onChange={() =>
-                          handleConfirmUpdateMemberList(
-                            'remove',
-                            session?.user.id as number,
-                          )
-                        }
-                        disable={isDisabled}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            {watch('participantIds')?.filter(
-              (participant) => participant != session?.user.id,
-            ).length !== 0 &&
-              dataOptionsParticipants && (
-                <div className="mt-5">
-                  <div className="w-full mb-1">他のメンバー</div>
-                  <div className="grid grid-cols-3 gap-4">
-                    {dataOptionsParticipants
-                      .filter((member) =>
-                        watch('participantIds')?.includes(member.id as number),
-                      )
-                      .filter((member) => member.id !== session?.user.id)
-                      .sort((prev: EventParticipant, next: EventParticipant) =>
-                        prev.fullName.localeCompare(next.fullName),
-                      )
-                      .map((member) => {
-                        return (
-                          <>
-                            <div
-                              key={member.id}
-                              className="border-[1px] w-[175px] flex relative items-center gap-3 p-1">
-                              <ImageRound
-                                className="w-6 h-6"
-                                src="/images/avatar-default.svg"
-                                border="full"
-                                name="Avatar user"
-                              />
-                              {session?.user.permissions &&
-                                ((action === ActionsEvent.EDIT &&
-                                  hasPermissionInArray(
-                                    session?.user.permissions,
-                                    PermissionsSystem.CALENDAR_UPDATE,
-                                  )) ||
-                                  (action === ActionsEvent.CREATE &&
-                                    hasPermissionInArray(
-                                      session?.user.permissions,
-                                      PermissionsSystem.CALENDAR_ADD,
-                                    ))) && (
-                                  <ImageRound
-                                    className="mt-1 absolute top-0 right-1 w-3.5 h-3.5 hover:cursor-pointer"
-                                    src="/icons/close.svg"
-                                    name="Remove participant"
-                                    onClick={() =>
-                                      handleConfirmUpdateMemberList(
-                                        'remove',
-                                        member.id as number,
-                                      )
-                                    }
-                                  />
-                                )}
-                              <div className="flex flex-col">
-                                <p className="font-normal text-sm truncate max-w-[120px] text-black">
-                                  {member.fullName}
-                                </p>
-                                <div className="font-normal text-[10px] max-w-[100px] truncate">
-                                  {member.organizations &&
-                                    member.organizations.map(
-                                      (organization, index) => (
-                                        <span
-                                          key={
-                                            organization.id
-                                          }>{`${organization.name}${member.organizations && member.organizations.length - 1 !== index ? '、' : ''}`}</span>
-                                      ),
-                                    )}
-                                </div>
-                              </div>
-                            </div>
-                          </>
-                        );
-                      })}
-                  </div>
-                </div>
-              )}
           </div>
 
           <div>
             <TextArea
               register={register('memo')}
               label="予定についてのメモ"
+              labelClassName="text-black text-[14px] font-medium mb-2"
               disabled={isDisabled}
+              className="resize-none !border-1 !border-[#77858F] !h-[160px]"
             />
           </div>
         </div>
