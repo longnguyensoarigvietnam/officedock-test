@@ -6,6 +6,13 @@
 .calendar-custom.day .fc-daygrid-day-frame {
   height: 100px !important;
   border-bottom: 1.5px solid #d2dbe1;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.calendar-custom.week .fc-timegrid-cols .fc-timegrid-col,
+.calendar-custom.day .fc-timegrid-cols .fc-timegrid-col {
+  padding-left: 10px;
+  padding-right: 10px;
 }
 .calendar-custom .fc-col-header {
   width: 100% !important;
@@ -49,14 +56,19 @@
   font-weight: 500;
   color: #414142;
 }
-.calendar-custom .fc .fc-daygrid-day-frame, .calendar-custom .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events {
+.calendar-custom .fc .fc-daygrid-day-frame,
+.calendar-custom .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events {
   background-color: #f6f9fa;
 }
-.calendar-custom.week .fc .fc-daygrid-day-frame, .calendar-custom.day .fc .fc-daygrid-day-frame, .calendar-custom.week .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events, .calendar-custom.day .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events {
-  background-color: #EBF1F4;
+.calendar-custom.week .fc .fc-daygrid-day-frame,
+.calendar-custom.day .fc .fc-daygrid-day-frame,
+.calendar-custom.week .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events,
+.calendar-custom.day .fc .fc-scrollgrid-sync-inner .fc-daygrid-day-events {
+  background-color: #ebf1f4;
 }
-.calendar-custom.week .fc-scrollgrid-sync-table .fc-daygrid-day, .calendar-custom.day .fc-scrollgrid-sync-table .fc-daygrid-day{
-  border: none !important
+.calendar-custom.week .fc-scrollgrid-sync-table .fc-daygrid-day,
+.calendar-custom.day .fc-scrollgrid-sync-table .fc-daygrid-day {
+  border: none !important;
 }
 .calendar-custom .fc .fc-daygrid-day-top {
   display: flex;
@@ -259,6 +271,7 @@
 .calendar-custom .fc-timeGridWeek-view .fc-event-main {
   width: 100% !important;
   border-radius: 8px !important;
+  overflow: hidden;
 }
 /* Month */
 .calendar-custom .fc-daygrid-event {
@@ -314,6 +327,9 @@
 /* Year */
 .calendar-custom .fc .fc-multimonth {
   border: 0;
+}
+.calendar-custom.year .fc-day-header{
+  color: #77858F;
 }
 .calendar-custom
   .fc

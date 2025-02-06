@@ -40,7 +40,7 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
   return menuItems.map((item) => {
     const updatedItem = { ...item };
 
-    if (updatedItem.href && pathname.startsWith(updatedItem.href)) {
+    if (updatedItem.href && pathname == updatedItem.href) {
       updatedItem.current = true;
     } else if (updatedItem.children) {
       const childWithMatchingHref = updatedItem.children.find((child) =>
