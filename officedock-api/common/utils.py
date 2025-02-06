@@ -14,6 +14,7 @@ from base.messages import ERROR_MESSAGES
 from calendars.constants import ScheduleCategoryTypes
 from chat.constants import USER_ACTION_GROUP, WebSocketEventType
 from roles.constants import SelectionResultOptions
+from tasks.constants import DatetimeUnitTypes
 from users.models import User, RoleDetail
 
 
@@ -342,3 +343,27 @@ def create_categories_by_model(model, categories):
 def generate_random_color():
     """Generate a random hex color code."""
     return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+
+
+def convert_time_difference(deadline, remind_time):
+    """
+    Convert time difference between deadline and remind time.
+    """
+    delta = deadline - remind_time
+    days = delta.days
+    if days >= 7:
+        return {
+            "remind_countdown": days + 1 // 7,
+            "remind_type": DatetimeUnitTypes.WEEK.value,
+        }
+
+    elif days >= 1:
+        return {
+            "remind_countdown": days,
+            "remind_type": DatetimeUnitTypes.DAY.value,
+        }
+    else:
+        return {
+            "remind_countdown": delta.total_seconds() // 3600,
+            "remind_type": DatetimeUnitTypes.HOURS.value,
+        }

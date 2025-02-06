@@ -62,6 +62,7 @@ class WebSocketEventType(EnumChoices):
     TOTAL_UNREAD_MESSAGE = "TOTAL_UNREAD_MESSAGE"
     CHANGE_TASK_STATUS = "CHANGE_TASK_STATUS"
     CHANGE_ROLE = "CHANGE_ROLE"
+    REMIND_TASK = "REMIND_TASK"
 
 
 class TypeChatGroup(EnumChoices):

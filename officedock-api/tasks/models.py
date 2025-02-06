@@ -54,6 +54,7 @@ class Task(BaseModel):
     status_name = models.CharField(null=True, blank=True)
     is_start = models.BooleanField(default=False)
     is_important = models.BooleanField(default=False)
+    remind_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         """

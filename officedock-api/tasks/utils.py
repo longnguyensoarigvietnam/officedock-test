@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, time
 
+from tasks.constants import DatetimeUnitTypes
 from tasks.models import Task, TaskSchedule, TodoList
 from tasks.serializers import TaskScheduleSerializer, TodoListSerializer
 from calendars.models import Schedule
@@ -127,3 +128,19 @@ def delete_todo_list_for_task(todo_list_ids):
     Delete todo lists based on the given todo_list_ids.
     """
     TodoList.objects.filter(id__in=todo_list_ids).delete()
+
+
+def calculate_new_time(start_time, delta_value, delta_unit):
+    """
+    Calculate new datetime from duration string
+    """
+    delta = None
+    if delta_unit == DatetimeUnitTypes.HOURS.value:
+        delta = timedelta(hours=delta_value)
+    elif delta_unit == DatetimeUnitTypes.DAY.value:
+        delta = timedelta(days=delta_value)
+    elif delta_unit == DatetimeUnitTypes.WEEK.value:
+        delta = timedelta(weeks=delta_value)
+
+    # Calculate new time
+    return start_time - delta

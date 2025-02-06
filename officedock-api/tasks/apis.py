@@ -55,6 +55,7 @@ from tasks.utils import (
     delete_todo_list_for_task,
     update_task_schedule,
     update_todo_list_for_task,
+    calculate_new_time,
 )
 from roles.constants import Screens
 from users.utils import reset_sort_task
@@ -125,6 +126,8 @@ class TaskViewSet(
         company = user.company
         categories = serializer_data.pop("category_ids", None)
         task_type = serializer_data.get("type", None)
+        remind_countdown = serializer_data.pop("remind_countdown", None)
+        remind_type = serializer_data.pop("remind_type", None)
 
         # Implement create task template base on T146
         if task_type == TaskTypes.MY_TEMPLATE.value:
@@ -136,6 +139,11 @@ class TaskViewSet(
 
         if serializer_data["status"] == TaskStatus.MY_ROUTINE.value:
             serializer_data["deadline"] = None
+
+        if serializer_data.get("deadline") and remind_countdown and remind_type:
+            serializer_data["remind_at"] = calculate_new_time(
+                serializer_data["deadline"], remind_countdown, remind_type
+            )
 
         task = serializer.save(company=company)
 
@@ -480,6 +488,8 @@ class TaskViewSet(
         send_to_chat = serializer_data.pop("send_to_chat", None)
         chat_room_code = serializer_data.pop("chat_room_code", None)
         serializer_data.get("type", None)
+        remind_countdown = serializer_data.pop("remind_countdown", None)
+        remind_type = serializer_data.pop("remind_type", None)
 
         # Implement create task template base on T146
         if current_task.type == TaskTypes.MY_TEMPLATE.value:
@@ -516,6 +526,11 @@ class TaskViewSet(
                                 "detail": ERROR_MESSAGES["cannot_updated"],
                             }
                         )
+
+        if serializer_data.get("deadline") and remind_countdown and remind_type:
+            serializer_data["remind_at"] = calculate_new_time(
+                serializer_data["deadline"], remind_countdown, remind_type
+            )
 
         # Update task
         task = serializer.save()

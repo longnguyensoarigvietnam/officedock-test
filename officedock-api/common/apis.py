@@ -1,20 +1,24 @@
+from django.db import transaction
 from django.db.models import Count, Q, F
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from base.apis import BaseAPIViewSet
+from base.permissions import IsCronJob
 from calendars.constants import (
     ScheduleTypes,
     SCHEDULE_CATEGORIES,
 )
+from chat.constants import WebSocketEventType
 from skills.models import StatisticCategory
 from organizations.serializers import StatisticCategorySerializer
 from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
 from users.models import Role, RoleDetail
-from tasks.models import TaskStatus
+from tasks.models import TaskStatus, Task
 from tasks.constants import TASK_WORK_TYPES, TaskPriorities, TaskTypes
 from skills.serializers import SkillSerializer
 from organizations.models import OrganizationsSkills
@@ -28,6 +32,7 @@ from .serializers import (
     CreationDataUserWithOrganizationSerializer,
     OrganizationWithUserNotHaveSkillMapSerializer,
 )
+from .utils import convert_time_difference, send_web_socket_event
 
 
 @extend_schema(tags=["System > Creation Data"])
@@ -318,3 +323,47 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 merged_categories.append({"type": type, "category": category})
 
         return self.response_ok(merged_categories)
+
+
+@extend_schema(tags=["System > Cron Job"])
+class CronJobViewSet(BaseAPIViewSet):
+    """API endpoint of Cron job viewset"""
+
+    permission_classes = [AllowAny, IsCronJob]
+
+    @extend_schema(
+        parameters=[OpenApiParameter("cronjob_key", type=str, required=True)]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="remind",
+    )
+    @transaction.atomic()
+    def remind(self, request):
+        """
+        Get remind notify of task
+        """
+        tasks = Task.objects.filter(remind_at__lte=timezone.now()).all()
+
+        for task in tasks:
+            if task.deadline and task.remind_at:
+                convert_time = convert_time_difference(
+                    task.deadline, task.remind_at
+                )
+                users = task.people_in_charge_tasks.all()
+                for user in users:
+                    send_web_socket_event(
+                        {
+                            "id": task.id,
+                            "title": task.title,
+                            "remind_countdown": convert_time[
+                                "remind_countdown"
+                            ],
+                            "remind_type": convert_time["remind_type"],
+                            "action": WebSocketEventType.REMIND_TASK.value,
+                        },
+                        user=user,
+                    )
+
+        return self.response_ok()

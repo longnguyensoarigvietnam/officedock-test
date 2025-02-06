@@ -18,7 +18,7 @@ from users.apis import (
     SystemUserViewSet,
 )
 from organizations.apis import OrganizationViewSet, OrganizationSkillViewSet
-from common.apis import SystemCreationDataViewSet
+from common.apis import SystemCreationDataViewSet, CronJobViewSet
 from tags.apis import TagViewSet
 from dashboard.apis import (
     ActualDurationViewSet,
@@ -78,6 +78,7 @@ api_router.register(
     "submit-levels", SubmitLevelViewSet, basename="submit-levels"
 )
 api_router.register("roles", RoleViewSet, basename="roles")
+api_router.register("cron-jobs", CronJobViewSet, basename="cron_jobs")
 
 # Add api router urls
 urlpatterns = []
