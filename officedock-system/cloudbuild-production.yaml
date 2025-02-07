@@ -35,18 +35,37 @@ steps:
         '_SYSTEM_REGION',
         '_SYSTEM_SERVICE_NAME',
       ]
-    args: [
-        '-c',
-        "gcloud run deploy $$_SYSTEM_SERVICE_NAME \
-        --image $$_SYSTEM_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA \
-        --region $$_SYSTEM_REGION \
-        --port 3000 \
-        --allow-unauthenticated",
-      ]
+    args:
+      - '-c'
+      - |
+        set -eux
+
+        # Replace dot with hyphen. (e.g. 1.0.0 -> 1-0-0)
+        NORMALIZED_TAG_NAME="$(echo "$TAG_NAME" | sed 's/\./-/g')"
+
+        gcloud run deploy $$_SYSTEM_SERVICE_NAME \
+          --image $$_SYSTEM_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA \
+          --region $$_SYSTEM_REGION \
+          --tag "v$$NORMALIZED_TAG_NAME" \
+          --service-account $_CR_SERVICE_ACCOUNT \
+          --port 3000 \
+          --network $_NETWORK \
+          --subnet $_SUBNET \
+          --ingress $_CR_INGRESS  \
+          --vpc-egress $_CR_VPC_EGRESS \
+          --allow-unauthenticated
 
 options:
   logging: CLOUD_LOGGING_ONLY
 
+# Please configure these substitutions in Cloud Build trigger.
+substitutions:
+  # They should match the name of VPC and subnet
+  _NETWORK: NETWORK_NAME # e.g. my-network
+  _SUBNET: SUBENET_NAME # e.g. my-subnet
+  _CR_INGRESS: internal-and-cloud-load-balancing # all / internal / internal-and-cloud-load-balancing
+  _CR_VPC_EGRESS: private-ranges-only # all / all-trafic / private-ranges-only
+  _CR_SERVICE_ACCOUNT: SERVICE_ACCOUNT_NAME
 # Settings SecretManager
 availableSecrets:
   secretManager:

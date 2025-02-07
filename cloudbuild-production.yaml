@@ -1,0 +1,93 @@
+steps:
+  - id: deploy-api
+    name: gcr.io/cloud-builders/gcloud
+    args: [
+        "-c",
+        "set -eux && \
+        gcloud builds submit \
+        --config ./officedock-api/cloudbuild-production.yaml \
+        --region $LOCATION \
+        --revision $TAG_NAME \
+        --substitutions=\
+        TAG_NAME=$TAG_NAME,\
+        COMMIT_SHA=$COMMIT_SHA,\
+        _NETWORK=$_API_NETWORK,\
+        _SUBNET=$_API_SUBNET,\
+        _CR_INGRESS=$_API_CR_INGRESS,\
+        _CR_VPC_EGRESS=$_API_CR_VPC_EGRESS,\
+        _CR_ALLOW_AUTHENTICATED=$_API_CR_ALLOW_AUTHENTICATED,\
+        _GUNICORN_WORKERS_COUNT=$_API_GUNICORN_WORKERS_COUNT,\
+        _GUNICORN_THREADS_COUNT=$_API_GUNICORN_THREADS_COUNT,\
+        _CR_SERVICE_ACCOUNT=$_API_CR_SERVICE_ACCOUNT",
+      ]
+    entrypoint: bash
+
+  - id: deploy-system
+    waitFor: ["deploy-api"]
+    name: gcr.io/cloud-builders/gcloud
+    args: [
+        "-c",
+        "set -eux && \
+        gcloud builds submit \
+        --config ./officedock-system/cloudbuild-production.yaml \
+        --region $LOCATION \
+        --revision $TAG_NAME \
+        --substitutions=\
+        TAG_NAME=$TAG_NAME,\
+        COMMIT_SHA=$COMMIT_SHA,\
+        _NETWORK=$_SYSTEM_NETWORK,\
+        _SUBNET=$_SYSTEM_SUBNET,\
+        _CR_INGRESS=$_SYSTEM_CR_INGRESS,\
+        _CR_VPC_EGRESS=$_SYSTEM_CR_VPC_EGRESS,\
+        _CR_SERVICE_ACCOUNT=$_SYSTEM_CR_SERVICE_ACCOUNT",
+      ]
+    entrypoint: bash
+
+  - id: deploy-admin
+    waitFor: ["deploy-api"]
+    name: gcr.io/cloud-builders/gcloud
+    args: [
+        "-c",
+        "set -eux && \
+        gcloud builds submit \
+        --config ./officedock-admin/cloudbuild-production.yaml \
+        --region $LOCATION \
+        --revision $TAG_NAME \
+        --substitutions=\
+        TAG_NAME=$TAG_NAME,\
+        COMMIT_SHA=$COMMIT_SHA,\
+        _NETWORK=$_ADMIN_NETWORK,\
+        _SUBNET=$_ADMIN_SUBNET,\
+        _CR_INGRESS=$_ADMIN_CR_INGRESS,\
+        _CR_VPC_EGRESS=$_ADMIN_CR_VPC_EGRESS,\
+        _CR_SERVICE_ACCOUNT=$_ADMIN_CR_SERVICE_ACCOUNT",
+      ]
+    entrypoint: bash
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  # API substitutions
+  _API_NETWORK: NETWORK_NAME # e.g. my-network
+  _API_SUBNET: SUBENET_NAME # e.g. my-subnet
+  _API_CR_INGRESS: internal # all / internal / internal-and-cloud-load-balancing
+  _API_CR_VPC_EGRESS: private-ranges-only # all / all-trafic / private-ranges-only
+  _API_CR_ALLOW_AUTHENTICATED: --no-allow-unauthenticated # or --allow-unauthenticated
+  _API_CR_SERVICE_ACCOUNT: SERVICE_ACCOUNT_NAME
+  _API_GUNICORN_WORKERS_COUNT: "1"
+  _API_GUNICORN_THREADS_COUNT: "8"
+
+  # System substitutions
+  _SYSTEM_NETWORK: NETWORK_NAME # e.g. my-network
+  _SYSTEM_SUBNET: SUBENET_NAME # e.g. my-subnet
+  _SYSTEM_CR_INGRESS: internal-and-cloud-load-balancing # all / internal / internal-and-cloud-load-balancing
+  _SYSTEM_CR_VPC_EGRESS: private-ranges-only # all / all-trafic / private-ranges-only
+  _SYSTEM_CR_SERVICE_ACCOUNT: SERVICE_ACCOUNT_NAME
+
+  # Admin substitutions
+  _ADMIN_NETWORK: NETWORK_NAME # e.g. my-network
+  _ADMIN_SUBNET: SUBENET_NAME # e.g. my-subnet
+  _ADMIN_CR_INGRESS: internal-and-cloud-load-balancing # all / internal / internal-and-cloud-load-balancing
+  _ADMIN_CR_VPC_EGRESS: private-ranges-only # all / all-trafic / private-ranges-only
+  _ADMIN_CR_SERVICE_ACCOUNT: SERVICE_ACCOUNT_NAME
