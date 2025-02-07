@@ -363,34 +363,35 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         task_schedules = attrs.get("task_schedules")
 
         # Sort list by plan start date
-        task_schedules.sort(key=lambda x: x["plan_start_date"])
+        if task_schedules:
+            task_schedules.sort(key=lambda x: x["plan_start_date"])
 
-        for i in range(len(task_schedules) - 1):
-            if (
-                task_schedules[i]["plan_end_date"]
-                > task_schedules[i + 1]["plan_start_date"]
-            ):
-                raise serializers.ValidationError(
-                    {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+            for i in range(len(task_schedules) - 1):
+                if (
+                    task_schedules[i]["plan_end_date"]
+                    > task_schedules[i + 1]["plan_start_date"]
+                ):
+                    raise serializers.ValidationError(
+                        {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+                    )
+            for task_schedule in task_schedules:
+                check_exists_schedule = TaskSchedule.objects.filter(
+                    Q(plan_start_date__lt=task_schedule["plan_end_date"])
+                    & Q(plan_end_date__gt=task_schedule["plan_start_date"])
+                    | (
+                        Q(plan_start_date__lte=task_schedule["plan_start_date"])
+                        & Q(plan_end_date__gte=task_schedule["plan_end_date"])
+                    )
                 )
-        for task_schedule in task_schedules:
-            check_exists_schedule = TaskSchedule.objects.filter(
-                Q(plan_start_date__lt=task_schedule["plan_end_date"])
-                & Q(plan_end_date__gt=task_schedule["plan_start_date"])
-                | (
-                    Q(plan_start_date__lte=task_schedule["plan_start_date"])
-                    & Q(plan_end_date__gte=task_schedule["plan_end_date"])
-                )
-            )
-            if task_schedule.get("schedule_id"):
-                check_exists_schedule = check_exists_schedule.exclude(
-                    id=task_schedule.get("schedule_id").id
-                )
+                if task_schedule.get("schedule_id"):
+                    check_exists_schedule = check_exists_schedule.exclude(
+                        id=task_schedule.get("schedule_id").id
+                    )
 
-            if check_exists_schedule.exists():
-                raise serializers.ValidationError(
-                    {"detail": ERROR_MESSAGES["exists_task_schedule"]}
-                )
+                if check_exists_schedule.exists():
+                    raise serializers.ValidationError(
+                        {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+                    )
 
         return attrs
 
