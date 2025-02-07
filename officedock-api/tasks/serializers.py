@@ -184,9 +184,10 @@ class TaskScheduleSerializer(serializers.ModelSerializer):
                 & Q(plan_end_date__gte=plan_end_date)
             )
         )
-        if self.instance:
+        task_schedule = attrs.get("schedule_id") or self.instance or None
+        if task_schedule:
             check_exists_schedule = check_exists_schedule.exclude(
-                id=self.instance.id
+                id=task_schedule.id
             )
 
         if check_exists_schedule.exists():
@@ -554,6 +555,8 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"detail": ERROR_MESSAGES["exists_task_schedule"]}
             )
+
+        return attrs
 
     def get_task(self, obj):
         return {
