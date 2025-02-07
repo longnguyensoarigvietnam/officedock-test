@@ -158,6 +158,7 @@ class TaskViewSet(
                     user,
                     through_defaults={"company": company},
                 )
+                user.setting.reset_sort_task()
                 if copy_task:
                     current_task_index = copy_task.task_index.filter(
                         user=user
@@ -628,6 +629,7 @@ class TaskViewSet(
                 task_index = TaskIndex.objects.filter(
                     user=user, task=task
                 ).first()
+                user.setting.reset_sort_task()
                 # Reset pin at to now
                 if task_index and task_index.pin_at:
                     task_index.pin_at = timezone.now()
@@ -718,6 +720,7 @@ class TaskViewSet(
                 },
                 chat_room=message.chat_room,
             )
+        request.user.setting.reset_sort_task()
 
         return super().destroy(request, *args, **kwargs)
 
@@ -832,6 +835,7 @@ class TaskViewSet(
                 TaskIndex.objects.update_or_create(
                     task=task, user=user, defaults=item
                 )
+                user.setting.reset_sort_task()
             elif tag:
                 item.pop("user", None)
                 TaskIndex.objects.update_or_create(
@@ -909,6 +913,7 @@ class TaskViewSet(
             )
 
         task_index.save()
+        user.setting.reset_sort_task()
         return self.response_ok(TaskIndexSerializer(task_index).data)
 
 
@@ -1217,9 +1222,22 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         ],
     )
     def list(self, request, *args, **kwargs):
+        """
+        Handle get list tasks
+        """
+        user = request.user
         queryset = self.filter_queryset(self.get_queryset())
         ordering = request.query_params.get("ordering", None)
         if ordering:
+            if "deadline" in ordering:
+                user.setting.is_sorting_task_by_deadline = True
+                user.setting.is_sorting_task_by_important = False
+                user.setting.save()
+            if "is_important" in ordering:
+                user.setting.is_sorting_task_by_deadline = False
+                user.setting.is_sorting_task_by_important = True
+                user.setting.save()
+
             tasks = queryset.all()
             for idx, task in enumerate(tasks):
                 task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
