@@ -569,15 +569,28 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
             self._separate_duration_while_keep_running(duration, now())
 
         if current_duration_start:
-            duration = self._get_duration(current_duration_start)
+            start_of_today = datetime.combine(timezone.now().date(), time.min)
+            end_of_today = datetime.combine(timezone.now().date(), time.max)
+            task_durations = current_duration_start.task_durations.filter(
+                Q(started_at__gte=start_of_today)
+                & Q(Q(paused_at__lte=end_of_today) | Q(paused_at__isnull=True))
+            ).all()
+            total_duration = timedelta()
+            # Calculate time between started and paused
+            for task_duration in task_durations:
+                paused_at = (
+                    task_duration.paused_at
+                    if task_duration.paused_at
+                    else timezone.now()
+                )
+                total_duration += paused_at - task_duration.started_at
+
             is_over_estimate = False
             task_running = None
             if current_duration_start.is_start:
                 # Get current task running
                 task_running = current_duration_start.task_durations.filter(
-                    started_at__gte=datetime.combine(
-                        timezone.now().date(), time.min
-                    ),
+                    started_at__gte=start_of_today,
                     paused_at__isnull=True,
                 ).first()
                 if isinstance(current_duration_start, Task):
@@ -607,16 +620,26 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
                         ):
                             is_over_estimate = True
                             break
-                # TODO: Implement logic check over estimate of Event here (Waiting QA T159)
-                # else isinstance(current_duration_start, Schedule):
-
+                elif isinstance(current_duration_start, Schedule):
+                    if (
+                        timezone.now() - current_duration_start.end_date
+                        >= timedelta(minutes=30)
+                        and task_running.is_cancel_alert is False
+                    ):
+                        is_over_estimate = True
             data = {
                 "id": current_duration_start.id,
                 "task_duration_running_uuid": task_running.uuid
                 if isinstance(task_running, TaskDuration)
                 else None,
                 "title": current_duration_start.title,
-                "task_duration": duration,
+                "task_duration": format_duration(total_duration),
+                "started_at": task_durations.last().started_at
+                if task_durations.exists()
+                else None,
+                "paused_at": task_durations.last().paused_at
+                if task_durations.exists()
+                else None,
                 "is_start": current_duration_start.is_start,
                 "is_over_estimate": is_over_estimate,
                 "type": obj_type,
