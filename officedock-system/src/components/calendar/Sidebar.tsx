@@ -8,6 +8,7 @@ import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
 
 import { EventCalendarType } from '@constants/enums';
+import { NO_DATA_AVAILABLE } from '@constants';
 import { CalendarDashboardMember } from '@interfaces/calendar';
 
 export type CalendarSidebarProps = {
@@ -137,6 +138,14 @@ export const CalendarSidebar = ({
           </p>
         </div>
         <div className="pt-3 mb-3 max-h-[250px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+          {dashboardMembers &&
+            dashboardMembers.filter((member) =>
+              member.fullName.toLowerCase().includes(searchName.toLowerCase()),
+            ).length == 0 && (
+              <p className="text-center text-[#6B7280] text-[14px]">
+                {NO_DATA_AVAILABLE}
+              </p>
+            )}
           {dashboardMembers &&
             dashboardMembers
               .filter((member) =>
