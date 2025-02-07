@@ -208,6 +208,8 @@ class SettingSerializer(serializers.ModelSerializer):
             "is_check_self_schedule",
             "is_check_company_schedule",
             "is_enter_send_message",
+            "is_sorting_task_by_deadline",
+            "is_sorting_task_by_important",
         ]
 
 
