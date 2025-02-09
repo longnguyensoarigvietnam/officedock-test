@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useContext, useEffect, useRef } from 'react';
 import { isSameDay } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import Tippy from '@tippyjs/react';
@@ -8,26 +8,22 @@ import ImageRound from '@components/common/ImageRound';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 import { NO_SETTING } from '@constants';
-import { EventCalendarType, PermissionsSystem } from '@constants/enums';
+import { PermissionsSystem } from '@constants/enums';
+
+import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
 
 import {
-  CalendarDashboardMember,
-  EventEditFormData,
-  EventParticipant,
-} from '@interfaces/calendar';
-
-import { formatShowDeadline, getTimeRangeForClickDate } from '@utils/date';
+  formatHoursAndMinutesForDateTime,
+  formatShowDeadline,
+} from '@utils/date';
 import { hasPermissionInArray } from '@utils';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 export type EventInfoModalProps = {
   top?: number;
   left?: number;
   dataEvent?: EventEditFormData;
-  dashboardMembers?: CalendarDashboardMember[];
-  checkShowUserAvatar: (
-    type?: EventCalendarType,
-    participants?: EventParticipant[],
-  ) => boolean | EventParticipant | undefined;
+  checkShowUserAvatar: (participants?: EventParticipant[]) => boolean
   onClose: () => void;
   onEdit?: (values: EventEditFormData) => void;
   onDelete?: (values: EventEditFormData) => void;
@@ -39,7 +35,6 @@ const EventInfoModal = memo(
     top,
     left,
     dataEvent,
-    dashboardMembers,
     checkShowUserAvatar,
     onEdit,
     onDelete,
@@ -48,6 +43,7 @@ const EventInfoModal = memo(
   }: EventInfoModalProps) => {
     const popoverRef = useRef<HTMLDivElement | null>(null);
     const { data: session } = useSession();
+    const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
     const handleClosePopover = (event: MouseEvent) => {
       if (
@@ -153,20 +149,36 @@ const EventInfoModal = memo(
             <p className="text-white">
               {dataEvent?.startDate &&
                 dataEvent?.endDate &&
-                isSameDay(
+                (isSameDay(
                   new Date(dataEvent?.startDate),
                   new Date(dataEvent?.endDate),
-                ) &&
-                formatShowDeadline(dataEvent?.startDate)}{' '}
+                )
+                  ? formatShowDeadline(dataEvent?.startDate)
+                  : `${formatShowDeadline(dataEvent?.startDate)} ~ ${formatShowDeadline(dataEvent?.endDate)}`)}{' '}
             </p>
           </div>
-          {dataEvent && dataEvent.startDate && dataEvent.endDate && (
-            <p className="text-white text-[14px]">
-              {getTimeRangeForClickDate(
-                new Date(dataEvent.startDate),
-                new Date(dataEvent.endDate),
-              )}
-            </p>
+          {dataEvent && dataEvent.isAllDay ? (
+            <p className="text-white text-[14px]">終日</p>
+          ) : (
+            dataEvent &&
+            dataEvent.startDate &&
+            dataEvent.endDate && (
+              <div className="flex gap-1 items-center text-white text-[14px]">
+                <p className="text-[12px]">開始</p>
+                <p>
+                  {formatHoursAndMinutesForDateTime(
+                    new Date(dataEvent.startDate),
+                  )}
+                </p>
+                <p className="text-[12px]">~</p>
+                <p className="text-[12px]">終了</p>
+                <p>
+                  {formatHoursAndMinutesForDateTime(
+                    new Date(dataEvent.endDate),
+                  )}
+                </p>
+              </div>
+            )
           )}
           <div className="flex gap-3 mt-3">
             <p className="text-white flex-none text-[14px]">場所</p>
@@ -176,7 +188,6 @@ const EventInfoModal = memo(
           </div>
           {dataEvent &&
             checkShowUserAvatar(
-              EventCalendarType.SCHEDULE,
               dataEvent.participants,
             ) && (
               <div className="mt-3">
@@ -198,7 +209,7 @@ const EventInfoModal = memo(
                           {AvatarIconWithDynamicColor({
                             color:
                               (dataEvent.participants?.[0] &&
-                                dashboardMembers?.find(
+                                dashboardMembersWithAvatars?.find(
                                   (member) =>
                                     member.id ===
                                     dataEvent.participants?.[0]?.id,
@@ -230,7 +241,7 @@ const EventInfoModal = memo(
                         return a.fullName.localeCompare(b.fullName);
                       })
                       ?.map((participant, index) => {
-                        const avatarColor = dashboardMembers?.find(
+                        const avatarColor = dashboardMembersWithAvatars?.find(
                           (member) => member.id == participant.id,
                         )?.avatarColor;
                         return (

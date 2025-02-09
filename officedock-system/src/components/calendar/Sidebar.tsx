@@ -1,15 +1,16 @@
 import { UseMutateAsyncFunction } from 'react-query';
 import { useSession } from 'next-auth/react';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useContext } from 'react';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
 
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { CalendarDashboardMember } from '@interfaces/calendar';
 import { EventCalendarType } from '@constants/enums';
 import { NO_DATA_AVAILABLE } from '@constants';
-import { CalendarDashboardMember } from '@interfaces/calendar';
 
 export type CalendarSidebarProps = {
   selectedScheduleUserIds: string;
@@ -29,7 +30,6 @@ export type CalendarSidebarProps = {
       }[]
     >
   >;
-  dashboardMembers: CalendarDashboardMember[];
   handleGetAllMemberSchedules: () => void;
   handleRemoveAllMemberSchedules: () => void;
   handleFilterScheduleByUserIds: (userId: number) => void;
@@ -57,7 +57,6 @@ export const CalendarSidebar = ({
   searchName,
   filterMyEvent,
   filterMyTask,
-  dashboardMembers,
   setSearchName,
   setShowSidebar,
   setRemoveMyselfOption,
@@ -70,6 +69,7 @@ export const CalendarSidebar = ({
   getEventCalendarByUsers,
 }: CalendarSidebarProps) => {
   const { data: session } = useSession();
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
   return (
     <div className="overflow-y-auto">
@@ -138,16 +138,16 @@ export const CalendarSidebar = ({
           </p>
         </div>
         <div className="pt-3 mb-3 max-h-[250px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
-          {dashboardMembers &&
-            dashboardMembers.filter((member) =>
+          {dashboardMembersWithAvatars &&
+            dashboardMembersWithAvatars.filter((member) =>
               member.fullName.toLowerCase().includes(searchName.toLowerCase()),
             ).length == 0 && (
               <p className="text-center text-[#6B7280] text-[14px]">
                 {NO_DATA_AVAILABLE}
               </p>
             )}
-          {dashboardMembers &&
-            dashboardMembers
+          {dashboardMembersWithAvatars &&
+            dashboardMembersWithAvatars
               .filter((member) =>
                 member.fullName
                   .toLowerCase()
@@ -184,10 +184,28 @@ export const CalendarSidebar = ({
                     </div>
                     <div
                       className={`flex gap-3 items-center p-1.5 hover:cursor-pointer`}>
-                      {AvatarIconWithDynamicColor({
-                        color: member.avatarColor,
-                        size: 36,
-                      })}
+                      {dashboardMembersWithAvatars &&
+                      dashboardMembersWithAvatars.find(
+                        (memberWithAvatar) => memberWithAvatar.id == member.id,
+                      ) ? (
+                        <>
+                          {AvatarIconWithDynamicColor({
+                            color:
+                              dashboardMembersWithAvatars?.find(
+                                (memberWithAvatar) =>
+                                  memberWithAvatar.id == member.id,
+                              )?.avatarColor || '#0068B6',
+                            size: 36,
+                          })}
+                        </>
+                      ) : (
+                        <ImageRound
+                          className="w-8 h-8"
+                          src="/images/avatar-default.svg"
+                          border="full"
+                          name="Avatar user"
+                        />
+                      )}
                       <p className="font-medium text-[15px] truncate max-w-[200px] text-black">
                         {member.fullName}
                       </p>
