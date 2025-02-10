@@ -440,6 +440,12 @@ const TaskPageDataHeader = () => {
     },
   );
 
+  const timeTaskSelect = dataTaskHeaderList?.find(
+    (item) =>
+      item.id === parseInt(String(taskSelected.value).replace('event', '')) &&
+      item.type === taskSelected.type,
+  );
+
   return (
     <>
       <div className="flex justify-between flex-grow">
@@ -539,18 +545,7 @@ const TaskPageDataHeader = () => {
                       {statusTaskSelected?.isStart && taskSelected.value
                         ? formatTimeTask(`${dataTaskHeaderStart?.startedAt}`)
                         : formatTimeTask(
-                            `${
-                              dataTaskHeaderList?.find(
-                                (item) =>
-                                  item.id ===
-                                    parseInt(
-                                      String(taskSelected.value).replace(
-                                        'event',
-                                        '',
-                                      ),
-                                    ) && item.type === taskSelected.type,
-                              )?.startedAt
-                            }`,
+                            `${timeTaskSelect ? timeTaskSelect.startedAt : ''}`,
                           )}
                     </p>
                     <p className="px-[2px]">~</p>
@@ -559,7 +554,7 @@ const TaskPageDataHeader = () => {
                       <>
                         <p>終了</p>
                         <p className="text-xs font-normal text-[#77858F]">
-                          ----
+                          計測中
                         </p>
                       </>
                     ) : (

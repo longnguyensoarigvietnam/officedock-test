@@ -29,6 +29,7 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   isShowInput?: boolean;
   tooltipMsg?: string;
   iconClassName?: string;
+  dateFormat?: string;
   onChange?: (date: Date | null) => void;
 };
 
@@ -50,6 +51,7 @@ const DatePicker = ({
   autoFocus = false,
   onChange,
   tooltipMsg,
+  dateFormat = DATE_FORMAT,
   iconClassName,
   ...props
 }: DatePickerProps) => {
@@ -120,7 +122,7 @@ const DatePicker = ({
           selected={selectedDate}
           onChange={(date) => handleChange(date)}
           locale={customLocale}
-          dateFormat={DATE_FORMAT}
+          dateFormat={dateFormat}
           className={`w-full px-3.5 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}
           placeholderText={placeholder}
           todayButton="今日"
@@ -170,7 +172,7 @@ const DatePicker = ({
             <ImageRound
               className={`w-4 h-4 absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} ${className?.includes('hidden') && 'hidden'} ${iconClassName}`}
               name="Calendar icon"
-              src={`${isShowInput ? '/icons/calendar.svg' : '/icons/calendar-time.svg'}`}
+              src={`${isShowInput ? '/icons/calendar-time.svg' : '/icons/calendar-time.svg'}`}
               onClick={(e) => {
                 e.stopPropagation();
                 if (isOpen) {

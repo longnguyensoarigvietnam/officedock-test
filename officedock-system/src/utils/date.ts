@@ -731,6 +731,26 @@ export function calculateActualDuration(
   const hours = Math.floor(durationMs / (1000 * 60 * 60));
   return `${hours}時間 ${minutes}分`;
 }
+export function calculateActualDurationDaily(
+  start: string,
+  end: string,
+): string {
+  const [startHour, startMinute] = start.split(':').map(Number);
+  const [endHour, endMinute] = end.split(':').map(Number);
+
+  const startDate = new Date();
+  startDate.setHours(startHour, startMinute, 0, 0);
+
+  const endDate = new Date();
+  endDate.setHours(endHour, endMinute, 0, 0);
+
+  const durationMs = endDate.getTime() - startDate.getTime();
+
+  const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
+  const hours = Math.floor(durationMs / (1000 * 60 * 60));
+
+  return `${hours}時間 ${minutes}分`;
+}
 
 export function getNext30MinuteSlot(inputDate: Date): Date {
   const now = new Date();

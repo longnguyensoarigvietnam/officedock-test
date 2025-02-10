@@ -111,7 +111,7 @@ const ResizeTextArea = ({
         userSelect: 'none',
         overflow: 'hidden',
       }}
-      className="py-3 pr-3">
+      className="py-3 pr-3 ">
       <TextArea
         value={remarkData}
         disabled={
@@ -133,7 +133,8 @@ const ResizeTextArea = ({
             });
           }
         }}
-        className="h-full resize-none"
+        placeholder="コメントを書く"
+        className="h-full resize-none border !border-[#77858F]"
       />
       {/* Nút resize */}
       <div

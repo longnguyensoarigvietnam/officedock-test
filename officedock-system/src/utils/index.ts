@@ -545,7 +545,7 @@ export const showToggleButtonColorByTime = () => {
     hour12: false,
   }).format(new Date());
 
-  const hour = Number(hourStr.substring(0, hourStr.length - 1))
+  const hour = Number(hourStr.substring(0, hourStr.length - 1));
   let colorClassName = '';
   switch (true) {
     case hour >= 6 && hour < 11:
@@ -570,7 +570,7 @@ export const showModalHeaderBackgroundColorByTime = () => {
     hour12: false,
   }).format(new Date());
 
-  const hour = Number(hourStr.substring(0, hourStr.length - 1))
+  const hour = Number(hourStr.substring(0, hourStr.length - 1));
   let colorClassName = '';
 
   switch (true) {
@@ -588,3 +588,13 @@ export const showModalHeaderBackgroundColorByTime = () => {
   }
   return colorClassName;
 };
+export function generateOptionsCount(
+  inputNumber: number,
+): OptionDropdownType[] {
+  if (inputNumber <= 0) return [];
+
+  return Array.from({ length: inputNumber }, (_, index) => ({
+    label: (index + 1).toString(),
+    value: index + 1,
+  }));
+}

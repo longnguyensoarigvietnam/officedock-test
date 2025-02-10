@@ -1875,6 +1875,12 @@ const KanbanBoardTask = () => {
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
+        : null,
     });
     const isCheckPeopleInCharge =
       data.peopleInChargeIds &&
@@ -2201,6 +2207,12 @@ const KanbanBoardTask = () => {
       copyTaskId: actionType === ActionTask.COPY ? taskDetailId : null,
       organizationId: data.organization
         ? Number(data.organization.value)
+        : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
         : null,
     });
   };

@@ -24,6 +24,7 @@ export type ModalProps = {
   closeClassName?: string;
   children?: React.ReactNode;
   showIconClose?: boolean;
+  contentClass?: string;
   onClose: () => void;
 };
 
@@ -39,6 +40,7 @@ const Modal = ({
   closeIconClassName,
   closeClassName,
   children,
+  contentClass,
   showIconClose = true,
   onClose,
 }: ModalProps) => {
@@ -80,7 +82,7 @@ const Modal = ({
         <div
           className={`fixed inset-0 z-30 overflow-y-auto ${overlayClassName}`}>
           <div
-            className={`flex min-h-full items-center justify-center text-center m-auto ${sizeClass}`}>
+            className={`flex min-h-full items-center justify-center text-center m-auto ${sizeClass} ${contentClass}`}>
             <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
@@ -90,7 +92,7 @@ const Modal = ({
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
               <DialogPanel
-                className={`relative transform rounded-lg ${sizeClass} bg-white text-left shadow-xl transition-all m-24`}>
+                className={`relative transform rounded-lg ${sizeClass} bg-white text-left shadow-xl transition-all m-24 ${contentClass}`}>
                 <div
                   className={` ${sizePadding} px-4 font-primary ${className}`}>
                   {title && (

@@ -38,6 +38,9 @@ export interface TaskRequest {
   action?: string;
   copyTaskId?: string | null;
   organizationId?: number | null;
+  remindCountdown?: string | null;
+  remindType?: string | null;
+  remind_at?: string | null;
 }
 export interface TaskFormData {
   id?: string;
@@ -47,6 +50,8 @@ export interface TaskFormData {
   priority?: OptionDropdownType;
   deadlineDate?: Date | null;
   deadlineTime?: string | null;
+  deadlineRemindCountdown?: OptionDropdownType | null;
+  deadlineRemindType?: OptionDropdownType | null;
   planStartDate?: Date | null;
   planStartTime?: string | null;
   planEndDate?: Date | null;
@@ -133,6 +138,8 @@ export interface Task {
     planEndDate?: string | null;
   }[];
   organization?: Organizations;
+  remindCountdown?: string | null;
+  remindType?: string | null;
 }
 export interface TaskRunningType {
   id: number;

@@ -52,6 +52,7 @@ import {
   PermissionsSystem,
   ScreenName,
   StatusValueTask,
+  TimeType,
 } from '@constants/enums';
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -73,6 +74,7 @@ import {
   generateTimeOptionsAsObjects,
 } from '@utils/date';
 import {
+  generateOptionsCount,
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
@@ -186,6 +188,12 @@ const ActionsTaskModal = ({
   const [isSubmit, setIsSubmit] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const optionsCountType = Object.keys(TimeType).map((key) => ({
+    label: TimeType[key as keyof typeof TimeType],
+    value: key,
+  }));
+  const optionsCountDown = generateOptionsCount(10);
 
   const {
     register,
@@ -308,6 +316,8 @@ const ActionsTaskModal = ({
       tagIds: dataTask ? [] : [{ label: '', value: '' }],
       deadlineDate: null,
       deadlineTime: '',
+      deadlineRemindCountdown: null,
+      deadlineRemindType: null,
       type: {
         label: '',
         value: '',
@@ -388,6 +398,18 @@ const ActionsTaskModal = ({
           label: dataTask.priority || '',
           value: dataTask.priority || '',
         }),
+        (value.deadlineRemindCountdown = dataTask.remindCountdown
+          ? {
+              label: dataTask.remindCountdown,
+              value: dataTask.remindCountdown || '',
+            }
+          : null),
+        (value.deadlineRemindType = dataTask.remindType
+          ? {
+              label: dataTask.remindType,
+              value: dataTask.remindType,
+            }
+          : null),
         (value.deadlineDate = dataTask.deadline
           ? new Date(dataTask.deadline)
           : null),
@@ -1446,7 +1468,7 @@ const ActionsTaskModal = ({
                       className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                     />
                   </div>
-                  <div>
+                  <div className="ml-2">
                     <ImageRound
                       src="/icons/bell.svg"
                       name="Bell icon"
@@ -1459,6 +1481,76 @@ const ActionsTaskModal = ({
                   className="mt-[6px] text-xs"
                 />
               </div>
+              <div className="max-w-[250px]">
+                <div className="flex items-center gap-1">
+                  <div className="w-[56px]">
+                    <Controller
+                      control={control}
+                      name="deadlineRemindCountdown"
+                      render={({ field: { value, onChange } }) => (
+                        <Dropdown
+                          className="h-[34px] !py-1 !px-0 text-xs border-[#77858F] rounded-md"
+                          classNameTextData="!text-xs !ml-0"
+                          labelOptionClass="!ml-0 !px-0 text-center w-full "
+                          classNameOption="!text-xs "
+                          classNameError="!text-xs"
+                          classActive="justify-between"
+                          labelClass="w-[80%]"
+                          disabled={
+                            isCheckActionPermission ||
+                            watch('statusId')?.value ===
+                              StatusValueTask.MY_ROUTINE
+                          }
+                          options={optionsCountDown}
+                          selectedOption={optionsCountDown.find(
+                            (element) => element.value === value?.value,
+                          )}
+                          onChange={(e) => {
+                            onChange(e);
+                          }}
+                          error={errors.statusId?.message}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="w-[82px] ">
+                    <Controller
+                      control={control}
+                      name="deadlineRemindType"
+                      render={({ field: { value, onChange } }) => (
+                        <Dropdown
+                          className="h-[34px] !py-1 !pr-2 text-xs border-[#77858F] rounded-md"
+                          classNameTextData="!text-xs"
+                          classNameOption="!text-xs !ml-0"
+                          classNameError="!text-xs"
+                          labelOptionClass="!ml-0 !px-0 text-center w-full"
+                          classActive=" justify-between"
+                          labelClass="w-[80%]"
+                          disabled={
+                            isCheckActionPermission ||
+                            watch('statusId')?.value ===
+                              StatusValueTask.MY_ROUTINE
+                          }
+                          options={optionsCountType}
+                          selectedOption={optionsCountType.find(
+                            (element) => element.value === value?.value,
+                          )}
+                          onChange={(e) => {
+                            onChange(e);
+                          }}
+                          error={errors.statusId?.message}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="w-[60px]">に通知</div>
+                </div>
+                <ErrorMessage
+                  error={errors.deadlineTime?.message}
+                  className="mt-[6px] text-xs"
+                />
+              </div>
+
               <div>
                 {!isCheckActionPermission && (
                   <Button
@@ -1471,6 +1563,8 @@ const ActionsTaskModal = ({
                       setIsFormTouched(true);
                       setValue('deadlineTime', '');
                       setValue('deadlineDate', null);
+                      setValue('deadlineRemindCountdown', null);
+                      setValue('deadlineRemindType', null);
                     }}>
                     削除
                   </Button>
