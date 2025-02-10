@@ -8,6 +8,10 @@ export const SETTING_MENU: SettingMenuItem[] = [
     href: pageRouters.CHANGE_PASSWORD.href,
   },
   {
+    name: '設定',
+    href: pageRouters.SETTING.href
+  },
+  {
     name: 'ログアウト',
     iconUrl: '/icons/logout.svg',
   },

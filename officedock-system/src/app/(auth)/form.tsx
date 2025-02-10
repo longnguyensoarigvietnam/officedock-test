@@ -9,6 +9,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import Input from '@components/common/Input';
 import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
+import ImageRound from '@components/common/ImageRound';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -16,12 +17,12 @@ import {
   USER_NAME_REQUIRED_MESSAGE,
 } from '@constants/message';
 import { ServerStatusCode } from '@constants/enums';
+import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import { passwordLoginRules } from '@utils/validators';
 import api from '@base/api';
-import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 
 type LoginFormInputs = {
   username: string;
@@ -117,9 +118,9 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="w-[500px] bg-gray-50 rounded-2xl p-6 flex flex-col gap-6">
+    <div className="w-[500px] rounded-2xl p-6 flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold">ログイン</h1>
+        <h1 className="text-3xl font-medium">ログイン</h1>
       </div>
       <form
         className="flex flex-col gap-6"
@@ -130,6 +131,8 @@ const LoginForm = () => {
             label="ID｜メールアドレス"
             placeholder="入力してください"
             error={errors.username?.message}
+            className='!border-[#77858F]'
+            labelClassName="!text-[#77858F]"
             autoCompleteInput
             register={register('username', {
               required: USER_NAME_REQUIRED_MESSAGE,
@@ -140,26 +143,30 @@ const LoginForm = () => {
             label="パスワード"
             autoCompleteInput
             error={errors.password?.message}
+            className='!border-[#77858F]'
+            labelClassName="!text-[#77858F]"
             register={register('password', passwordLoginRules(true))}
             placeholder="入力してください"
           />
         </div>
         <Checkbox
           id="rememberLogin"
-          label="※ログイン状態を30日間維持する"
+          label="ログイン状態を30日間維持する"
           onChange={(state) => setIsRememberMe(state)}
         />
         <Button type="submit">ログイン</Button>
       </form>
-      <div className="flex flex-col justify-center items-center gap-2">
-        <div className="flex items-center text-gray-500">
-          <p>パスワードを忘れた方は</p>
-          <Link
-            href={pageRouters.FORGOT_PASSWORD.href}
-            className="text-primary underline">
-            こちら
-          </Link>
-        </div>
+      <div>
+        <Link
+          href={pageRouters.FORGOT_PASSWORD.href}
+          className="!text-primary font-medium flex items-center gap-1">
+          <p>パスワードを忘れた方はこちら</p>
+          <ImageRound
+            name="Filter extend icon"
+            src={'/icons/chevron-right-blue.svg'}
+            className={`w-[8px] h-3 hover:cursor-pointer mt-0.5`}
+          />
+        </Link>
       </div>
     </div>
   );

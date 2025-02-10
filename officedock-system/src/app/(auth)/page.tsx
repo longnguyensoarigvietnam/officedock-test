@@ -4,7 +4,7 @@ import LoginForm from './form';
 
 export default function LoginPage() {
   return (
-    <AuthenticationLayout title={pageRouters.LOGIN.name}>
+    <AuthenticationLayout title={pageRouters.LOGIN.name} showFooter={false}>
       <LoginForm />
     </AuthenticationLayout>
   );

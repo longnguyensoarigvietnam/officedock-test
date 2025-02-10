@@ -14,12 +14,14 @@ type AuthenticationLayoutProps = {
   children?: ReactNode;
   title?: string;
   className?: string;
+  showFooter?: boolean;
 };
 
 const AuthenticationLayout = ({
   children,
   className,
   title,
+  showFooter = true,
 }: AuthenticationLayoutProps) => {
   const { status, data: session } = useSession();
   const router = useRouter();
@@ -58,7 +60,7 @@ const AuthenticationLayout = ({
           className={`flex-grow flex flex-col justify-center items-center gap-10 ${className}`}>
           {children}
         </main>
-        <Footer />
+        {showFooter && <Footer />}
       </div>
     </>
   );

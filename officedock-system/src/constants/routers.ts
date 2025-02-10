@@ -20,6 +20,11 @@ export const pageRouters = {
     name: 'ログイン認証',
     href: '/login/2fa',
   },
+  // Setting
+  SETTING: {
+    name: '設定',
+    href: '/settings',
+  },
   // User
   USERS_MANAGEMENT: {
     name: 'ユーザー管理',
