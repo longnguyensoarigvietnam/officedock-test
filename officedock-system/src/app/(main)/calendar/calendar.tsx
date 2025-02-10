@@ -42,12 +42,10 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
-import {
-  adjustPositionForViewport,
-  hasPermissionInArray,
-} from '@utils';
+import { adjustPositionForViewport, hasPermissionInArray } from '@utils';
 import {
   addTimeToDate,
+  formatHoursAndMinutesForDateTime,
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
   getJapaneseDayName,
@@ -173,7 +171,7 @@ const EventCalendar = () => {
   const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
   const [openTaskInfoModal, setOpenTaskInfoModal] = useState<boolean>(false);
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
-  
+
   const [infoModalPosition, setInfoModalPosition] = useState<{
     top: number;
     left: number;
@@ -536,10 +534,13 @@ const EventCalendar = () => {
     return () => resizeObserver.disconnect();
   }, [calendarRef, containerRef]);
 
-  const checkShowUserAvatar = (
-    participants?: EventParticipant[],
-  ) => {
-    return !(participants?.length == 1 && participants.find((participant: EventParticipant) => participant.id == session?.user.id))
+  const checkShowUserAvatar = (participants?: EventParticipant[]) => {
+    return !(
+      participants?.length == 1 &&
+      participants.find(
+        (participant: EventParticipant) => participant.id == session?.user.id,
+      )
+    );
   };
 
   const showUserAvatars = (
@@ -547,13 +548,14 @@ const EventCalendar = () => {
     type: string,
     avatarSize: number,
     borderClassName: string,
-    isWeekView?: boolean
+    isWeekView?: boolean,
   ) => {
     if (participantList && participantList.length > 0) {
       if (type == EventCalendarType.TASK) {
         const avatarColor =
-        dashboardMembersWithAvatars.find((member) => member.id == session?.user.id)
-            ?.avatarColor || '';
+          dashboardMembersWithAvatars.find(
+            (member) => member.id == session?.user.id,
+          )?.avatarColor || '';
         return (
           <Tippy
             content={`${session?.user.profile.fullName}`}
@@ -573,7 +575,7 @@ const EventCalendar = () => {
       } else {
         if (participantList.length == 1) {
           const avatarColor =
-          dashboardMembersWithAvatars.find(
+            dashboardMembersWithAvatars.find(
               (member) => member.id == participantList[0].id,
             )?.avatarColor || '';
           return (
@@ -597,7 +599,7 @@ const EventCalendar = () => {
             <div className="mr-1 flex items-center">
               {participantList.map((participant, index) => {
                 const avatarColor =
-                dashboardMembersWithAvatars.find(
+                  dashboardMembersWithAvatars.find(
                     (member) => member.id === participant.id,
                   )?.avatarColor || '';
 
@@ -624,53 +626,61 @@ const EventCalendar = () => {
         } else if (participantList.length > 2) {
           return (
             <div className={`mr-1 flex items-center ${!isWeekView && 'gap-1'}`}>
-              {participantList.slice(0, isWeekView ? 5 : 1).map((participant, index) => {
-                const avatarColor =
-                dashboardMembersWithAvatars.find(
-                    (member) => member.id === participant.id,
-                  )?.avatarColor || '';
+              {participantList
+                .slice(0, isWeekView ? 5 : 1)
+                .map((participant, index) => {
+                  const avatarColor =
+                    dashboardMembersWithAvatars.find(
+                      (member) => member.id === participant.id,
+                    )?.avatarColor || '';
 
-                return (
-                  <Tippy
-                    content={`${participant.fullName}`}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    key={participant.id}
-                    offset={[0, 5]}>
-                    <div
-                      className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
-                      {AvatarIconWithDynamicColor({
-                        color: avatarColor,
-                        size: avatarSize,
-                      })}
-                    </div>
-                  </Tippy>
-                );
-              })}
-              {isWeekView ? participantList && participantList.length > 5 && (
-                <Tippy
-                  content={`他に${participantList.length - 5}人の表示があります`}
-                  arrow={false}
-                  delay={1000}
-                  placement="top"
-                  offset={[0, 5]}>
-                  <div className={`text-white text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
-                    +{participantList.length - 5}
-                  </div>
-                </Tippy>
-              ) : participantList && participantList.length > 1 && (
-                <Tippy
-                  content={`他に${participantList.length - 1}人の表示があります`}
-                  arrow={false}
-                  delay={1000}
-                  placement="top"
-                  offset={[0, 5]}>
-                  <div className={`text-white text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
-                    +{participantList.length - 1}
-                  </div>
-                </Tippy>
-              )}
+                  return (
+                    <Tippy
+                      content={`${participant.fullName}`}
+                      arrow={false}
+                      delay={1000}
+                      placement="top"
+                      key={participant.id}
+                      offset={[0, 5]}>
+                      <div
+                        className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
+                        {AvatarIconWithDynamicColor({
+                          color: avatarColor,
+                          size: avatarSize,
+                        })}
+                      </div>
+                    </Tippy>
+                  );
+                })}
+              {isWeekView
+                ? participantList &&
+                  participantList.length > 5 && (
+                    <Tippy
+                      content={`他に${participantList.length - 5}人の表示があります`}
+                      arrow={false}
+                      delay={1000}
+                      placement="top"
+                      offset={[0, 5]}>
+                      <div
+                        className={`text-white text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
+                        +{participantList.length - 5}
+                      </div>
+                    </Tippy>
+                  )
+                : participantList &&
+                  participantList.length > 1 && (
+                    <Tippy
+                      content={`他に${participantList.length - 1}人の表示があります`}
+                      arrow={false}
+                      delay={1000}
+                      placement="top"
+                      offset={[0, 5]}>
+                      <div
+                        className={`text-white text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
+                        +{participantList.length - 1}
+                      </div>
+                    </Tippy>
+                  )}
             </div>
           );
         }
@@ -728,7 +738,7 @@ const EventCalendar = () => {
                 eventContent.event.extendedProps.type,
                 33,
                 '!w-[32px] !h-[32px]',
-                true
+                true,
               )}
             <div
               className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} text-[14px] font-medium px-1`}>
@@ -740,8 +750,15 @@ const EventCalendar = () => {
             </div>
             <div
               className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} text-[12px] font-normal px-1`}>
-              {isMoreThanSixtyMinutes(eventContent.timeText) && (
-                <p className="whitespace-nowrap">{eventContent.timeText}</p>
+              {new Date(eventContent.event.start).getDate() !=
+              new Date(eventContent.event.end).getDate() ? (
+                <p className="whitespace-nowrap">
+                  {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
+                  ~{' '}
+                  {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
+                </p>
+              ) : (
+                isMoreThanSixtyMinutes(eventContent.timeText)
               )}
             </div>
           </div>
@@ -773,13 +790,25 @@ const EventCalendar = () => {
             </div>{' '}
             <div
               className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} font-normal px-1 text-[12px]`}>
-              {isMoreThanSixtyMinutes(eventContent.timeText) &&
-                eventContent.timeText}
+              {new Date(eventContent.event.start).getDate() !=
+              new Date(eventContent.event.end).getDate() ? (
+                <p className="whitespace-nowrap">
+                  {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
+                  ~{' '}
+                  {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
+                </p>
+              ) : (
+                isMoreThanSixtyMinutes(eventContent.timeText)
+              )}
             </div>{' '}
           </div>
         );
       } else if (currentView === CalendarViewOptions.VIEW_BY_MONTH) {
-        if (eventContent.event.allDay) {
+        if (
+          eventContent.event.allDay ||
+          new Date(eventContent.event.start).getDate() !=
+            new Date(eventContent.event.end).getDate()
+        ) {
           return (
             <div className="fc-daygrid-event mb-1">
               <div
@@ -1156,11 +1185,11 @@ const EventCalendar = () => {
               const end = new Date(event.end);
               if (
                 start.toDateString() !== end.toDateString() &&
-                !isMidnight(end)
+                !isMidnight(end) &&
+                variables.isYearView
               ) {
                 end.setDate(end.getDate() + 1);
                 event.end = end.toISOString();
-                event.allDay = true;
               }
             }
             return event;
@@ -1237,7 +1266,6 @@ const EventCalendar = () => {
               ) {
                 end.setDate(end.getDate() + 1);
                 event.end = end.toISOString();
-                event.allDay = true;
               }
             }
             return event;
@@ -1820,21 +1848,57 @@ const EventCalendar = () => {
   );
 
   const handleEventClick = (clickInfo: EventClickArg) => {
-    setPopoverInfo(null);
-    if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
-      handleSetEventParam({
-        id: `${clickInfo.event.id}`,
-        action: ActionsEvent.EDIT,
+    if (
+      searchParams.get('view') == ViewOptions.DAY ||
+      searchParams.get('view') == ViewOptions.WEEK
+    ) {
+      if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
+        handleConfirmGetDataEventInfo(`${clickInfo.event.id}`);
+      } else if (
+        clickInfo.event.extendedProps.type === EventCalendarType.TASK
+      ) {
+        handleConfirmGetDataTaskInfo({
+          id: `${clickInfo.event.id}`,
+          taskScheduleId: String(clickInfo.event.extendedProps.taskId),
+        });
+      }
+      setInfoModalPosition({
+        left: adjustPositionForViewport(
+          {
+            top: Number(clickInfo.jsEvent.clientY),
+            left: Number(clickInfo.jsEvent.clientX),
+          },
+          5,
+        ).left,
+        top: adjustPositionForViewport(
+          {
+            top: Number(clickInfo.jsEvent.clientY),
+            left: Number(clickInfo.jsEvent.clientX),
+          },
+          5,
+        ).top,
       });
-      handleConfirmGetDataDetailEvent(`${clickInfo.event.id}`);
-    } else if (clickInfo.event.extendedProps.type === EventCalendarType.TASK) {
-      handleSetTaskParam({
-        id: `${clickInfo.event.extendedProps.taskId}`,
-        action: ActionsEvent.EDIT,
-      });
-      handleConfirmGetDataDetailTask(`${clickInfo.event.extendedProps.taskId}`);
+    } else {
+      setPopoverInfo(null);
+      if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
+        handleSetEventParam({
+          id: `${clickInfo.event.id}`,
+          action: ActionsEvent.EDIT,
+        });
+        handleConfirmGetDataDetailEvent(`${clickInfo.event.id}`);
+      } else if (
+        clickInfo.event.extendedProps.type === EventCalendarType.TASK
+      ) {
+        handleSetTaskParam({
+          id: `${clickInfo.event.extendedProps.taskId}`,
+          action: ActionsEvent.EDIT,
+        });
+        handleConfirmGetDataDetailTask(
+          `${clickInfo.event.extendedProps.taskId}`,
+        );
+      }
+      setActionEventClick(ActionsEvent.EDIT);
     }
-    setActionEventClick(ActionsEvent.EDIT);
   };
 
   const handleEventClickInPopup = (
@@ -2085,18 +2149,12 @@ const EventCalendar = () => {
               data.endDate &&
               new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              !isMidnight(new Date(data.endDate))
+              !isMidnight(new Date(data.endDate)) &&
+              data.isAllDay
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
                 : data.endDate;
-            const start = new Date(data.startDate);
-            if (data.endDate) {
-              const end = new Date(data.endDate);
-              if (start.getDate() !== end.getDate()) {
-                data.isAllDay = true;
-              }
-            }
             const newEventData = {
               id: `${data.id}`,
               title: data.title,
@@ -2417,18 +2475,12 @@ const EventCalendar = () => {
               data.endDate &&
               new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              !isMidnight(new Date(data.endDate))
+              !isMidnight(new Date(data.endDate)) &&
+              data.isAllDay
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
                 : data.endDate;
-            const start = new Date(data.startDate);
-            if (data.endDate) {
-              const end = new Date(data.endDate);
-              if (start.getDate() !== end.getDate()) {
-                data.isAllDay = true;
-              }
-            }
             updatedEvents[foundEventIndex] = {
               ...updatedEvents[foundEventIndex],
               title: data.title,
@@ -2590,13 +2642,6 @@ const EventCalendar = () => {
         return [];
       }
       return events.map((event) => {
-        const start = new Date(event.start);
-        if (event.end) {
-          const end = new Date(event.end);
-          if (start.getDate() !== end.getDate()) {
-            event.allDay = true;
-          }
-        }
         let eventClass = '';
         if (event.type === EventCalendarType.TASK) {
           eventClass = 'event-type-task';
