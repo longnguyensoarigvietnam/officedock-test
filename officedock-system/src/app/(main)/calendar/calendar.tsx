@@ -44,7 +44,6 @@ import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import {
   adjustPositionForViewport,
-  getRandomColor,
   hasPermissionInArray,
 } from '@utils';
 import {
@@ -58,7 +57,6 @@ import {
   subtractOneDay,
 } from '@utils/date';
 import {
-  CalendarDashboardMember,
   CalendarPopoverInfo,
   EventCalendarDayRange,
   EventCalendarDetail,
@@ -110,6 +108,7 @@ import {
   NO_OPTION_CATEGORY,
 } from '@constants';
 import api from '@base/api';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const EventCalendar = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -173,10 +172,8 @@ const EventCalendar = () => {
   );
   const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
   const [openTaskInfoModal, setOpenTaskInfoModal] = useState<boolean>(false);
-
-  const [dashboardMembers, setDashboardMembers] = useState<
-    CalendarDashboardMember[]
-  >([]);
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  
   const [infoModalPosition, setInfoModalPosition] = useState<{
     top: number;
     left: number;
@@ -539,42 +536,10 @@ const EventCalendar = () => {
     return () => resizeObserver.disconnect();
   }, [calendarRef, containerRef]);
 
-  useEffect(() => {
-    if (dashboardMemberList?.length) {
-      const membersWithAvatars = dashboardMemberList.map((member) => {
-        return {
-          id: member.id,
-          fullName: member.fullName,
-          avatarColor: getRandomColor(),
-        };
-      });
-      setDashboardMembers(membersWithAvatars);
-    }
-  }, [dashboardMemberList]);
-
   const checkShowUserAvatar = (
-    type?: EventCalendarType,
     participants?: EventParticipant[],
   ) => {
-    const filteredUserIds = selectedScheduleUserIds
-      .split(',')
-      .map((num) => num.trim())
-      .filter(Boolean)
-      .filter((num) => num != String(session?.user.id));
-    if (type == EventCalendarType.TASK) {
-      return filterMyTask && filteredUserIds.length > 0;
-    } else {
-      return (
-        filteredUserIds.length > 0 &&
-        participants &&
-        participants.length > 0 &&
-        participants.find((participant: EventParticipant) =>
-          `${selectedScheduleUserIds},${session?.user.id}`.includes(
-            `${participant.id}`,
-          ),
-        )
-      );
-    }
+    return !(participants?.length == 1 && participants.find((participant: EventParticipant) => participant.id == session?.user.id))
   };
 
   const showUserAvatars = (
@@ -582,11 +547,12 @@ const EventCalendar = () => {
     type: string,
     avatarSize: number,
     borderClassName: string,
+    isWeekView?: boolean
   ) => {
     if (participantList && participantList.length > 0) {
       if (type == EventCalendarType.TASK) {
         const avatarColor =
-          dashboardMembers.find((member) => member.id == session?.user.id)
+        dashboardMembersWithAvatars.find((member) => member.id == session?.user.id)
             ?.avatarColor || '';
         return (
           <Tippy
@@ -607,7 +573,7 @@ const EventCalendar = () => {
       } else {
         if (participantList.length == 1) {
           const avatarColor =
-            dashboardMembers.find(
+          dashboardMembersWithAvatars.find(
               (member) => member.id == participantList[0].id,
             )?.avatarColor || '';
           return (
@@ -631,7 +597,7 @@ const EventCalendar = () => {
             <div className="mr-1 flex items-center">
               {participantList.map((participant, index) => {
                 const avatarColor =
-                  dashboardMembers.find(
+                dashboardMembersWithAvatars.find(
                     (member) => member.id === participant.id,
                   )?.avatarColor || '';
 
@@ -657,10 +623,10 @@ const EventCalendar = () => {
           );
         } else if (participantList.length > 2) {
           return (
-            <div className="mr-1 flex items-center gap-1">
-              {participantList.slice(0, 1).map((participant, index) => {
+            <div className={`mr-1 flex items-center ${!isWeekView && 'gap-1'}`}>
+              {participantList.slice(0, isWeekView ? 5 : 1).map((participant, index) => {
                 const avatarColor =
-                  dashboardMembers.find(
+                dashboardMembersWithAvatars.find(
                     (member) => member.id === participant.id,
                   )?.avatarColor || '';
 
@@ -682,14 +648,25 @@ const EventCalendar = () => {
                   </Tippy>
                 );
               })}
-              {participantList && participantList.length > 1 && (
+              {isWeekView ? participantList && participantList.length > 5 && (
+                <Tippy
+                  content={`他に${participantList.length - 5}人の表示があります`}
+                  arrow={false}
+                  delay={1000}
+                  placement="top"
+                  offset={[0, 5]}>
+                  <div className={`text-white text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
+                    +{participantList.length - 5}
+                  </div>
+                </Tippy>
+              ) : participantList && participantList.length > 1 && (
                 <Tippy
                   content={`他に${participantList.length - 1}人の表示があります`}
                   arrow={false}
                   delay={1000}
                   placement="top"
                   offset={[0, 5]}>
-                  <div className="text-white text-[11px] font-medium">
+                  <div className={`text-white text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
                     +{participantList.length - 1}
                   </div>
                 </Tippy>
@@ -715,7 +692,6 @@ const EventCalendar = () => {
               <div
                 className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7] text-white' : 'text-black bg-white'} overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}>
                 {checkShowUserAvatar(
-                  eventContent.event.extendedProps.type,
                   eventContent.event.extendedProps.participants,
                 ) ? (
                   <div className="flex items-center gap-1">
@@ -745,7 +721,6 @@ const EventCalendar = () => {
         return (
           <div className="overflow-hidden p-1.5">
             {checkShowUserAvatar(
-              eventContent.event.extendedProps.type,
               eventContent.event.extendedProps.participants,
             ) &&
               showUserAvatars(
@@ -753,6 +728,7 @@ const EventCalendar = () => {
                 eventContent.event.extendedProps.type,
                 33,
                 '!w-[32px] !h-[32px]',
+                true
               )}
             <div
               className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} text-[14px] font-medium px-1`}>
@@ -809,7 +785,6 @@ const EventCalendar = () => {
               <div
                 className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7] text-white' : 'text-black bg-white'} overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}>
                 {checkShowUserAvatar(
-                  eventContent.event.extendedProps.type,
                   eventContent.event.extendedProps.participants,
                 ) ? (
                   <div className="flex items-center gap-1">
@@ -2922,7 +2897,7 @@ const EventCalendar = () => {
               }}
               resourceLabelContent={(resource) => {
                 const avatarColor = String(
-                  dashboardMembers.find(
+                  dashboardMembersWithAvatars.find(
                     (member) => member.id == resource.resource.id,
                   )?.avatarColor,
                 );
@@ -3090,7 +3065,6 @@ const EventCalendar = () => {
           <div className="z-30 flex items-center justify-center">
             <TaskAndEventListModal
               checkShowUserAvatar={checkShowUserAvatar}
-              dashboardMembers={dashboardMembers}
               handleCreateNewEventFromPopup={handleCreateNewEventFromPopup}
               handleEventClickInPopup={handleEventClickInPopup}
               handlePopoverClose={handlePopoverClose}
@@ -3104,7 +3078,6 @@ const EventCalendar = () => {
         <div
           className={`transition-all duration-1000 ${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
           <CalendarSidebar
-            dashboardMembers={dashboardMembers}
             filterMyEvent={filterMyEvent}
             filterMyTask={filterMyTask}
             getEventCalendarByUsers={getEventCalendarByUsers}
@@ -3328,7 +3301,6 @@ const EventCalendar = () => {
           dataEvent={dataEventEdit}
           top={infoModalPosition?.top}
           left={infoModalPosition?.left}
-          dashboardMembers={dashboardMembers}
           checkShowUserAvatar={checkShowUserAvatar}
           selectedScheduleUserIds={selectedScheduleUserIds}
           onClose={() => {

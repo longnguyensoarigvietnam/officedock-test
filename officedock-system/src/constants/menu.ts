@@ -163,7 +163,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     ...pageRouters.SKILL_MAP,
     name: pageRouters.SKILL_MAP.name,
     iconUrl: (active: boolean) => {
-      return active ? '/icons/skills-map-active.svg' : '/icons/skills-map.svg';
+      return active ? '/icons/skill-room.svg' : '/icons/skill-map.svg';
     },
     current: false,
     companyMenu: false,

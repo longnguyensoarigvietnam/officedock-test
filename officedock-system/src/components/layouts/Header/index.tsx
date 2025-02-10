@@ -59,6 +59,8 @@ import {
 } from '@constants';
 import { useErrorToast } from '@hooks/useErrorToast';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
+import { getRandomColor } from '@utils';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 type HeaderProps = {
   className?: string;
 };
@@ -123,6 +125,7 @@ const Header = ({ className }: HeaderProps) => {
 
   const { setIsLoading } = useContext(LoadingContext);
   const { dashboardMemberList = [] } = useDashboardMemberList();
+  const {setDashboardMembersWithAvatars} = useContext(GlobalStateContext)
   const { creationDataTaskData } = useCreationDataTask({});
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [openWarningCloseModal, setOpenWarningCloseModal] =
@@ -144,6 +147,19 @@ const Header = ({ className }: HeaderProps) => {
     COMPANY_SETTING_ITEMS,
   );
   const companyItems = updateCurrent(companySettingItemsClone, pathname);
+
+  useEffect(() => {
+      if (dashboardMemberList?.length) {
+        const membersWithAvatars = dashboardMemberList.map((member) => {
+          return {
+            id: member.id,
+            fullName: member.fullName,
+            avatarColor: getRandomColor(),
+          };
+        });
+        setDashboardMembersWithAvatars(membersWithAvatars);
+      }
+    }, [dashboardMemberList, setDashboardMembersWithAvatars]);
 
   // Edit task
   const handleGetDataDetailTask = async (id: number) => {

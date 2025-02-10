@@ -1,5 +1,5 @@
 import { useSession } from 'next-auth/react';
-import { Dispatch, MutableRefObject, SetStateAction } from 'react';
+import { Dispatch, MutableRefObject, SetStateAction, useContext } from 'react';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -9,17 +9,16 @@ import Spinner from '@components/common/Spinner';
 
 import { EventCalendarType, PermissionsSystem } from '@constants/enums';
 import {
-  CalendarDashboardMember,
   CalendarPopoverInfo,
   EventParticipant,
 } from '@interfaces/calendar';
 import { hasPermissionInArray } from '@utils';
 import { getDateInfo, getTimeRangeForClickDate } from '@utils/date';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 interface TaskAndEventListModalProps {
   popoverRef: MutableRefObject<HTMLDivElement | null>;
   popoverInfo: CalendarPopoverInfo | null;
-  dashboardMembers: CalendarDashboardMember[];
   popoverInfoLoading: boolean;
   setDefaultCreateStartDate: Dispatch<SetStateAction<Date | undefined>>;
   handlePopoverClose: () => void;
@@ -29,16 +28,12 @@ interface TaskAndEventListModalProps {
     eventId: string,
     taskScheduleId: string | undefined,
   ) => void;
-  checkShowUserAvatar: (
-    type?: EventCalendarType,
-    participants?: EventParticipant[],
-  ) => boolean | EventParticipant | undefined;
+  checkShowUserAvatar: (participants?: EventParticipant[]) => boolean
 }
 
 export const TaskAndEventListModal = ({
   popoverRef,
   popoverInfo,
-  dashboardMembers,
   popoverInfoLoading,
   setDefaultCreateStartDate,
   handlePopoverClose,
@@ -47,6 +42,7 @@ export const TaskAndEventListModal = ({
   checkShowUserAvatar,
 }: TaskAndEventListModalProps) => {
   const { data: session } = useSession();
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
   const showUserAvatars = (
     participantList: EventParticipant[],
@@ -55,7 +51,7 @@ export const TaskAndEventListModal = ({
     if (participantList && participantList.length > 0) {
       if (type == EventCalendarType.TASK) {
         const avatarColor =
-          dashboardMembers.find((member) => member.id == session?.user.id)
+        dashboardMembersWithAvatars.find((member) => member.id == session?.user.id)
             ?.avatarColor || '';
         return (
           <Tippy
@@ -75,7 +71,7 @@ export const TaskAndEventListModal = ({
       } else {
         if (participantList.length == 1) {
           const avatarColor =
-            dashboardMembers.find(
+          dashboardMembersWithAvatars.find(
               (member) => member.id == participantList[0].id,
             )?.avatarColor || '';
           return (
@@ -98,7 +94,7 @@ export const TaskAndEventListModal = ({
             <div className="mt-[-7px] mr-1 flex items-center">
               {participantList.map((participant, index) => {
                 const avatarColor =
-                  dashboardMembers.find(
+                dashboardMembersWithAvatars.find(
                     (member) => member.id === participant.id,
                   )?.avatarColor || '';
 
@@ -127,7 +123,7 @@ export const TaskAndEventListModal = ({
             <div className="mt-[-7px] mr-1 flex items-center">
               {participantList.slice(0, 1).map((participant, index) => {
                 const avatarColor =
-                  dashboardMembers.find(
+                dashboardMembersWithAvatars.find(
                     (member) => member.id === participant.id,
                   )?.avatarColor || '';
 
@@ -233,7 +229,7 @@ export const TaskAndEventListModal = ({
                     );
                   }}>
                   <div className="flex items-center gap-2">
-                    {checkShowUserAvatar(event.type, event.participants) &&
+                    {checkShowUserAvatar(event.participants) &&
                       showUserAvatars(
                         event.participants || [],
                         event.type as string,
