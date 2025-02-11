@@ -116,7 +116,8 @@ export enum ChatRoomType {
   SELF = 'SELF',
   TASK = 'TASK',
   SKILL = 'SKILL',
-  CALENDAR = 'CALENDAR'
+  CALENDAR = 'CALENDAR',
+  UNREAD = 'UNREAD'
 }
 export enum MessageType {
   MESSAGE = 'MESSAGE',
