@@ -194,6 +194,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         organizations = request.user.company.organizations.order_by(
             "created_at"
         )
+        categories = StatisticCategory.objects.filter(
+            company=request.user.company
+        ).order_by("created_at")
 
         data = {
             "tags": CreationDataTagSerializer(
@@ -204,6 +207,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             "priorities": [item.value for item in TaskPriorities],
             "organizations": CreationDataOrganizationSerializer(
                 organizations, many=True
+            ).data,
+            "categories": StatisticCategorySerializer(
+                categories, many=True
             ).data,
         }
 

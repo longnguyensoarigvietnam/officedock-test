@@ -33,7 +33,6 @@ from chat.constants import (
     WebSocketEventType,
     ChatMessageTypes,
     ChatRoomTypes,
-    ChatRoomNames,
 )
 from chat.models import ChatRoom
 from chat.serializers import (
@@ -224,19 +223,11 @@ class TaskViewSet(
         """
         Handle send to task space
         """
-        task_room, created = ChatRoom.objects.get_or_create(
+        task_room = ChatRoom.objects.filter(
             type=ChatRoomTypes.TASK.value,
             chat_rooms_participants__user=user,
-            defaults={
-                "company": user.company,
-                "type": ChatRoomTypes.TASK.value,
-                "name": ChatRoomNames.TASK_CARD.value,
-            },
-        )
-        if created:
-            task_room.participants.set(
-                {user}, through_defaults={"company": user.company}
-            )
+            company=user.company,
+        ).first()
         task_message = task_room.chat_messages.create(**message)
         chat_room_participant = task_room.chat_rooms_participants.filter(
             user__id=user.id
@@ -1190,8 +1181,6 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if ids:
                 queryset = queryset.filter(
                     Q(categories__large_statistic_category__in=ids)
-                    | Q(categories__medium_statistic_category__in=ids)
-                    | Q(categories__small_statistic_category__in=ids)
                 )
 
         if organization_ids := self.request.query_params.get(
