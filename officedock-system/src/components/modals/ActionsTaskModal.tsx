@@ -1130,7 +1130,9 @@ const ActionsTaskModal = ({
           </div>
           {/* Category */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">業務の種類</div>
+            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+              業務の種類
+            </div>
             <div className="w-full max-w-[515px] flex flex-col gap-4">
               {/* Category large */}
               <Controller
@@ -1229,13 +1231,16 @@ const ActionsTaskModal = ({
           </div>
           {/* Tag */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">タグ</div>
+            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+              タグ
+            </div>
             <div className="w-full max-w-[518px]">
               <div className="flex gap-2 max-w-[518px]">
                 <div className="w-[461px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
-                    valueClassName="!border-[1px] !border-[#77858F]"
+                    labelClass="!min-h-0"
+                    valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
                     optionClassName="!border-[1px] !border-[#77858F]"
                     disabled={isCheckActionPermission}
                     options={dataOptionsTagIds}
@@ -1320,7 +1325,9 @@ const ActionsTaskModal = ({
           <div
             style={{ zIndex: planFields.length + 2 }}
             className="flex gap-[10px] items-center">
-            <div className="w-full max-w-[100px] text-[14px] font-medium">ステータス</div>
+            <div className="w-full max-w-[100px] text-[14px] font-medium">
+              ステータス
+            </div>
             <div className="w-full max-w-[180px]">
               <Controller
                 control={control}
@@ -1364,7 +1371,9 @@ const ActionsTaskModal = ({
           </div>
           {/* isImportant */}
           <div className="flex  gap-[10px] items-center">
-            <div className="w-full max-w-[100px] text-[14px] font-medium">重要</div>
+            <div className="w-full max-w-[100px] text-[14px] font-medium">
+              重要
+            </div>
             <div className="w-full max-w-48 ">
               <Controller
                 control={control}
@@ -1389,7 +1398,9 @@ const ActionsTaskModal = ({
           <div
             style={{ zIndex: planFields.length + 1 }}
             className="flex  gap-[10px] items-center">
-            <div className="w-full max-w-[100px] text-[14px] font-medium">締切日時</div>
+            <div className="w-full max-w-[100px] text-[14px] font-medium">
+              締切日時
+            </div>
             <div className="w-full max-w-[515px] items-start flex gap-1 justify-between">
               <div className="max-w-[250px]">
                 <div className="flex gap-1 items-center">
@@ -1574,7 +1585,9 @@ const ActionsTaskModal = ({
           </div>
           {/* Plan date */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">実施予定日時</div>
+            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+              実施予定日時
+            </div>
             <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
               {planFields.map((field, index) => {
                 return (

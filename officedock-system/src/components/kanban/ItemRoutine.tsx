@@ -12,6 +12,7 @@ import 'tippy.js/dist/tippy.css';
 import ImageRound from '@components/common/ImageRound';
 
 import {
+  EventWorkCategory,
   ItemScheduleType,
   ItemStartType,
   PermissionsSystem,
@@ -251,6 +252,11 @@ const ItemRoutine = ({
       PermissionsSystem.MY_TASK_ADD,
     );
 
+  const largeColor =
+    content.categories &&
+    content.categories.find((item) => item.type === EventWorkCategory.LARGE)
+      ?.color;
+
   return (
     <>
       {selectedOptionZoom.value !== 25 ? (
@@ -268,10 +274,15 @@ const ItemRoutine = ({
                 end: formatISO(addHoursToDate(`${now}`)),
                 startEditable: true,
                 itemKanban: true,
+                largeColor: largeColor,
               })}
               {...provided.draggableProps}
               {...provided.dragHandleProps}
-              className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              style={{
+                borderLeftColor: largeColor,
+                ...provided.draggableProps.style,
+              }}
+              className={`relative ${largeColor && !content.isStart && 'border border-l-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
               <div className="relative w-[100%]   h-full">
                 {isPermissionUpdate && (
                   <>

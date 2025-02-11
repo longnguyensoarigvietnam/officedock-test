@@ -125,6 +125,12 @@ export interface EventCalendarProps {
   isMySchedule: boolean;
   isStart: boolean;
   participants?: EventParticipant[];
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+    color: string;
+  }[];
 }
 
 export interface TaskCalendarProps {

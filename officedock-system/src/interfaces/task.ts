@@ -125,6 +125,7 @@ export interface Task {
     name: string;
     type: string;
     id: number;
+    color: string;
   }[];
   resourceId?: string;
   isImportant?: boolean;
@@ -163,6 +164,12 @@ export interface TaskActualType {
   planStartDate: string | null;
   planEndDate?: string | null;
   type?: string;
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+    color: string;
+  }[];
 }
 export interface peopleInChargeType {
   id: number | string;
@@ -184,10 +191,10 @@ export interface CreationDataTask {
   types: string[];
   priorities: string[];
   categories: {
-    LARGE: string[];
-    MEDIUM: string[];
-    SMALL: string[];
-  };
+    id: number;
+    name: string;
+    uuid: string;
+  }[];
   organizations: {
     id: number;
     name: string;
@@ -241,6 +248,7 @@ export interface TaskTimeSchedule {
   planStartDate: string | null;
   planEndDate: string | null;
   isCalculation?: boolean;
+  largeColor?: string;
 }
 export interface TaskErrorPerson {
   id: string;

@@ -9,7 +9,7 @@ export const SETTING_MENU: SettingMenuItem[] = [
   },
   {
     name: '設定',
-    href: pageRouters.SETTING.href
+    href: pageRouters.SETTING.href,
   },
   {
     name: 'ログアウト',
@@ -154,10 +154,22 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     requiredPermission: PermissionsSystem.CHAT_VIEW,
   },
   {
-    ...pageRouters.STATISTICS_MANAGEMENT,
-    name: pageRouters.STATISTICS_MANAGEMENT.name,
+    ...pageRouters.STATISTIC_MANAGEMENT,
+    name: pageRouters.STATISTIC_MANAGEMENT.name,
     iconUrl: (active: boolean) => {
       return active ? '/icons/statistic-active.svg' : '/icons/statistic.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.STATISTIC_VIEW,
+  },
+  {
+    ...pageRouters.DAILY_REPORT_MANAGEMENT,
+    name: pageRouters.DAILY_REPORT_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active
+        ? '/icons/daily-report-active.svg'
+        : '/icons/daily-report.svg';
     },
     current: false,
     companyMenu: false,

@@ -376,6 +376,11 @@ const TimeSchedule = memo(
                   isSameDay(startDate, endDate) || isMidnight(endDate)
                     ? endDate
                     : addDays(endDate, 1);
+                const largeColor =
+                  event.categories &&
+                  event.categories.find(
+                    (item) => item.type === EventWorkCategory.LARGE,
+                  )?.color;
 
                 return {
                   ...event,
@@ -395,6 +400,7 @@ const TimeSchedule = memo(
                   taskSchedules: [],
                   startEditable: false,
                   resourceId: ItemScheduleType.PLANS,
+                  largeColor: largeColor,
                 };
               });
             setTaskTimeScheduleList((prevEvents) => {
@@ -442,6 +448,11 @@ const TimeSchedule = memo(
                     isSameDay(startDate, endDate) || isMidnight(endDate)
                       ? endDate
                       : addDays(endDate, 1);
+                  const largeColor =
+                    item.categories &&
+                    item.categories.find(
+                      (item) => item.type === EventWorkCategory.LARGE,
+                    )?.color;
                   return {
                     id: `${taskSchedule.id}`,
                     uuid: taskSchedule.uuid,
@@ -454,6 +465,7 @@ const TimeSchedule = memo(
                     planEndDate: taskSchedule.planEndDate as string,
                     end: adjustedEndDate,
                     startEditable: true,
+                    largeColor: largeColor,
                     resourceId: ItemScheduleType.PLANS,
                   };
                 }),
@@ -493,7 +505,7 @@ const TimeSchedule = memo(
         onSuccess: (data) => {
           if (data) {
             const tasksActualSchedule = data
-              .filter((task) => task.planStartDate)
+              .filter((data) => data.planStartDate)
               .map((task) => {
                 const startDateActual = new Date(
                   convertToCurrentTimezone(`${task.planStartDate}`),
@@ -504,6 +516,11 @@ const TimeSchedule = memo(
                 const endTimeCustom = task.planEndDate
                   ? endDateActual
                   : getNext30MinuteSlot(startDateActual);
+                const largeColor =
+                  task.categories &&
+                  task.categories.find(
+                    (item) => item.type === EventWorkCategory.LARGE,
+                  )?.color;
                 if (task.type === ItemStartType.TASK) {
                   return {
                     title: task.title,
@@ -524,6 +541,7 @@ const TimeSchedule = memo(
                     isMyTask: false,
                     isStart: false,
                     isCalculation: task.planEndDate ? false : true,
+                    largeColor: largeColor,
                   };
                 } else {
                   return {
@@ -546,6 +564,7 @@ const TimeSchedule = memo(
                     isMyTask: false,
                     isStart: false,
                     isCalculation: task.planEndDate ? false : true,
+                    largeColor: largeColor,
                   };
                 }
               });
@@ -732,6 +751,11 @@ const TimeSchedule = memo(
               item.resourceId === ItemScheduleType.PLANS
             ),
         );
+        const largeColor =
+          dataItemUpdateSchedule.categories &&
+          dataItemUpdateSchedule.categories.find(
+            (item) => item.type === EventWorkCategory.LARGE,
+          )?.color;
         const dataUpdateTitle = updatedTaskList.map((item) => {
           if (`${item.taskId}` === `${dataItemUpdateSchedule.id}`) {
             return {
@@ -739,6 +763,7 @@ const TimeSchedule = memo(
               title: dataItemUpdateSchedule.title
                 ? dataItemUpdateSchedule.title
                 : '',
+              largeColor: largeColor,
             };
           }
           return item;
@@ -766,6 +791,7 @@ const TimeSchedule = memo(
               start: new Date(`${item.planStartDate}`),
               end: new Date(`${item.planEndDate}`),
               resourceId: ItemScheduleType.PLANS,
+              largeColor: largeColor,
             };
           });
         setTaskTimeScheduleList([...dataUpdateTitle, ...newDataList]);
@@ -819,7 +845,6 @@ const TimeSchedule = memo(
     }, [idTaskDelete, setIdTaskDelete, taskTimeScheduleList]);
 
     // Update data when start item
-
     useEffect(() => {
       if (dataItemChangeInline) {
         const updatedList = taskTimeScheduleList.map((item) => {
@@ -1029,7 +1054,7 @@ const TimeSchedule = memo(
             <ImageRound
               src={`/icons/overlap-task.svg`}
               name="icon lock"
-              className="absolute z-50  left-[-19px] top-1/2 -translate-y-1/2 w-[18px] h-[18px]"
+              className="absolute custom-resize-handle fc-resizer z-50  left-[-19px] top-1/2 -translate-y-1/2 w-[18px] h-[18px]"
             />
           )}
           {!isLoadingSchedule && (
@@ -1044,6 +1069,7 @@ const TimeSchedule = memo(
               setTaskTimeScheduleList={setTaskTimeScheduleList}
             />
           )}
+          <div></div>
         </>
       );
     };
@@ -1185,6 +1211,7 @@ const TimeSchedule = memo(
             startEditable: true,
             planStartDate: convertDateString(`${newEvent.start}`),
             planEndDate: convertDateString(`${newEvent.end}`),
+            largeColor: newEvent.extendedProps.largeColor,
           });
 
           return updatedEvents;
@@ -2008,7 +2035,25 @@ const TimeSchedule = memo(
       'editEventCalendar',
       handleEditEventCalendar,
       {
-        onSuccess: async () => {
+        onSuccess: async ({ data }) => {
+          setTaskTimeScheduleList((prevEvents) =>
+            prevEvents.map((event) => {
+              if (event.id === `${data.id}event`) {
+                const largeColor =
+                  data.categories &&
+                  data.categories.find(
+                    (item: any) => item.type === EventWorkCategory.LARGE,
+                  )?.color;
+                return {
+                  ...event,
+                  largeColor: largeColor,
+                };
+              } else {
+                return event;
+              }
+            }),
+          );
+
           handleRemoveEventParam();
           setOpenConfirmEditEventModal(false);
           setBackToEditing(false);

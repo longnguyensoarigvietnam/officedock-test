@@ -292,7 +292,7 @@ const TaskPageDataHeader = () => {
       });
       refetchTaskDurationDetail();
       refetchTaskHeaderStart();
-      if (pathname === pageRouters.STATISTICS_MANAGEMENT.href) {
+      if (pathname === pageRouters.DAILY_REPORT_MANAGEMENT.href) {
         queryClient.refetchQueries(['getDataStatistic']);
       }
 
@@ -639,14 +639,13 @@ const TaskPageDataHeader = () => {
               </Button>
             </div>
           )}
-        {isTaskPage && (
-          <div className="flex flex-col gap-1 text-xs font-medium text-[#A7B7C2]">
-            <p className="break-keep">本日の作業時間</p>
-            <p className="text-base font-normal text-[#77858F] w-full text-center">
-              {dataTaskHeaderList ? calculateTotalTime(optionsTaskMe) : ''}
-            </p>
-          </div>
-        )}
+
+        <div className="flex flex-col gap-1 text-xs font-medium text-[#A7B7C2]">
+          <p className="break-keep">本日の作業時間</p>
+          <p className="text-base font-normal text-[#77858F] w-full text-center">
+            {dataTaskHeaderList ? calculateTotalTime(optionsTaskMe) : ''}
+          </p>
+        </div>
       </div>
       {showWarningStartTaskModal && !isTaskPage && (
         <WarningStartTaskModal
