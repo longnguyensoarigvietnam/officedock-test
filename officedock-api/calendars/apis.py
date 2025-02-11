@@ -97,7 +97,15 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.CREATION_SCHEDULE.value,
                     )
-
+                if send_to_chat:
+                    self._send_to_calendar_room(
+                        participant,
+                        schedule,
+                        data,
+                        schedule_message,
+                        client_id,
+                        ChatMessageTypes.CREATION_SCHEDULE.value,
+                    )
                 schedule.participants.add(
                     participant, through_defaults={"company": company}
                 )
@@ -248,6 +256,16 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.EDIT_SCHEDULE.value,
                     )
+                if send_to_chat:
+                    self._send_to_calendar_room(
+                        participant,
+                        instance,
+                        data,
+                        schedule_message,
+                        client_id,
+                        ChatMessageTypes.EDIT_SCHEDULE.value,
+                    )
+
                 instance.participants.add(
                     participant, through_defaults={"company": company}
                 )
@@ -295,6 +313,15 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.REMOVE_SCHEDULE.value,
                     )
+                if send_to_chat:
+                    self._send_to_calendar_room(
+                        participant,
+                        instance,
+                        data,
+                        schedule_message,
+                        client_id,
+                        ChatMessageTypes.REMOVE_SCHEDULE.value,
+                    )
 
         self.perform_destroy(instance)
 
@@ -318,6 +345,53 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 for user in users
             ],
         }
+
+    def _send_to_calendar_room(
+        self,
+        user,
+        schedule,
+        chat_data,
+        schedule_message,
+        client_id,
+        type,
+    ):
+        """
+        Send a chat message to participants regarding the schedule change.
+        """
+        calendar_room_participant = user.chat_rooms_participants.filter(
+            chat_room__type=ChatRoomTypes.CALENDAR.value
+        ).first()
+        chat_room = calendar_room_participant.chat_room
+        calendar_room_participant.unread_messages = (
+            calendar_room_participant.unread_messages + 1
+        )
+        calendar_room_participant.save()
+
+        action = WebSocketEventType.MESSAGE.value
+
+        message_data = {
+            "sender": user,
+            "company": user.company,
+            "schedule": schedule,
+            "type": type,
+            "schedule_changes": chat_data,
+        }
+        if schedule_message and schedule_message != "":
+            message_data["message"] = schedule_message
+
+        message_obj = chat_room.chat_messages.create(**message_data)
+        # Send WebSocket event for real-time updates
+        send_web_socket_event(
+            {
+                "client_id": client_id,
+                "action": action,
+                "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                    calendar_room_participant
+                ).data,
+                "chat_message": ChatMessageSerializer(message_obj).data,
+            },
+            user,
+        )
 
     def _send_chat_message(
         self,

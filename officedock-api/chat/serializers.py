@@ -6,7 +6,7 @@ from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
 from chat.constants import ChatRoomTypes
 from common.serializers import (
     CreationDataOrganizationSerializer,
-    CreationDataUserSerializer,
+    CreationDataUserWithMainOrganizationSerializer,
 )
 from submit_levels.models import SubmitLevelHistory
 from tags.serializers import BaseTagSerializer
@@ -170,6 +170,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     """
 
     message = serializers.SerializerMethodField()
+    schedule = serializers.SerializerMethodField(read_only=True)
     sender = CreationDataUserForChatSerializer()
     task = TaskForChatMessageSerializer()
     submit_level = SubmitLevelForChatMessageSerializer()
@@ -187,7 +188,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "task",
             "submit_level",
             "schedule_changes",
-            "schedule_id",
+            "schedule",
             "type",
         ]
         read_only_fields = ["id", "uuid"]
@@ -197,6 +198,19 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         Returns none message when deteled.
         """
         return obj.message if obj.deleted_at is None else None
+
+    def get_schedule(self, obj):
+        """
+        Return schedule object for given chat room.
+        """
+        return (
+            {
+                "id": obj.schedule_id,
+                "title": obj.schedule.title,
+            }
+            if obj.schedule_id
+            else None
+        )
 
 
 class SendMessageSerializer(serializers.ModelSerializer):
@@ -291,7 +305,9 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
         Get participants of chat room for given chat room
         """
         participants = obj.chat_room.participants.all()
-        return CreationDataUserSerializer(participants, many=True).data
+        return CreationDataUserWithMainOrganizationSerializer(
+            participants, many=True
+        ).data
 
 
 class ChatRoomsParticipantsWebSocketSerializer(ChatRoomsParticipantsSerializer):

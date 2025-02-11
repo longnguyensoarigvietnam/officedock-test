@@ -109,6 +109,8 @@ class EmptySerializer(serializers.Serializer):
 
 
 class CreationDataUserWithOrganizationSerializer(CreationDataUserSerializer):
+    """Creation date user with organization"""
+
     organizations = CreationDataOrganizationSerializer(
         many=True, read_only=True
     )
@@ -116,3 +118,27 @@ class CreationDataUserWithOrganizationSerializer(CreationDataUserSerializer):
     class Meta:
         model = User
         fields = ["id", "full_name", "organizations"]
+
+
+class CreationDataUserWithMainOrganizationSerializer(
+    CreationDataUserSerializer
+):
+    """Serializer for creation data user with main organization"""
+
+    organizations = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "full_name", "organizations"]
+
+    def get_organizations(self, obj):
+        """Return main organization of user"""
+        organization = obj.organizations.filter(
+            usersorganizations__is_main=True
+        ).first()
+
+        return (
+            CreationDataOrganizationSerializer(organization).data
+            if organization
+            else None
+        )
