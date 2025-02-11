@@ -43,7 +43,10 @@ export interface ChatMessageResponse {
     staff: number;
     status: SubmitLevelStatus;
   };
-  scheduleId?: number;
+  schedule?: {
+    id: number,
+    title: string
+  };
   isEdited: boolean;
   createdAt: Date | string;
   deletedAt: Date | null;
@@ -68,6 +71,10 @@ export interface OrganizationDetail {
 export interface ChatParticipant {
   id: number;
   fullName: string;
+  organizations?: {
+    id: number,
+    name: string,
+  } | null
 }
 
 export interface ChatRoomDetail {

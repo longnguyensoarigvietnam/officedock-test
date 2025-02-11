@@ -83,7 +83,6 @@ const ListChatUsers = ({
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState<boolean>(false);
   const [initialLoadSearch, setInitialLoadSearch] = useState<boolean>(false);
-  
 
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastPinAt, setLastPinAt] = useState<string | null>();
@@ -200,15 +199,9 @@ const ListChatUsers = ({
           items.sort((currentItem, nextItem) => {
             if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
               return 0;
-            } else if (
-              currentItem.pinAt !== null &&
-              nextItem.pinAt === null
-            ) {
+            } else if (currentItem.pinAt !== null && nextItem.pinAt === null) {
               return -1;
-            } else if (
-              currentItem.pinAt === null &&
-              nextItem.pinAt !== null
-            ) {
+            } else if (currentItem.pinAt === null && nextItem.pinAt !== null) {
               return 1;
             } else {
               const currentItemDate = currentItem.lastMessageAt
@@ -770,6 +763,17 @@ const ListChatUsers = ({
       );
     }
 
+    if (item.type === AvatarChat.CALENDAR) {
+      return (
+        <ImageRound
+          className="w-8 h-8"
+          src="/icons/calendar-room.svg"
+          border="full"
+          name="Calendar"
+        />
+      );
+    }
+
     const avatarColor =
       dashboardMembers.find((member) => {
         if (item.type === AvatarChat.PRIVATE) {
@@ -898,7 +902,7 @@ const ListChatUsers = ({
                   </Tippy>
 
                   <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-3 flex flex-grow justify-between">
+                  <div className="ml-3 flex gap-1 items-center">
                     <p className="text-sm max-w-[260px] font-medium truncate">
                       {item.code &&
                       chatRoomNameEditing.find(
@@ -908,6 +912,16 @@ const ListChatUsers = ({
                             (room) => room.roomCode === item.code,
                           )?.roomName
                         : item?.name || ''}
+                    </p>
+                    <p className="text-[#77858F] text-[12px] font-medium">
+                      {((item.type == ChatRoomType.PRIVATE ||
+                        item.type == ChatRoomType.SELF) &&
+                        item.participants.find((participant) =>
+                          item.type == ChatRoomType.PRIVATE
+                            ? participant.id != session?.user.id
+                            : participant.id == session?.user.id,
+                        )?.organizations?.name) ||
+                        ''}
                     </p>
                   </div>
                   {item?.unreadMessages > 0 && (
@@ -952,7 +966,7 @@ const ListChatUsers = ({
                   <div
                     className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
                     onClick={(e) => {
-                      e.stopPropagation()
+                      e.stopPropagation();
                       handlePinClick({
                         code: item.code,
                         isPin: item.pinAt !== null,
@@ -966,7 +980,7 @@ const ListChatUsers = ({
                     />
                   </div>
                   <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-3 flex flex-grow justify-between">
+                  <div className="ml-3 flex gap-1 items-center">
                     <p className="text-sm max-w-[260px] font-medium truncate">
                       {item.code &&
                       chatRoomNameEditing.find(
@@ -976,6 +990,16 @@ const ListChatUsers = ({
                             (room) => room.roomCode === item.code,
                           )?.roomName
                         : item?.name || ''}
+                    </p>
+                    <p className="text-[#77858F] text-[12px] font-medium">
+                      {((item.type == ChatRoomType.PRIVATE ||
+                        item.type == ChatRoomType.SELF) &&
+                        item.participants.find((participant) =>
+                          item.type == ChatRoomType.PRIVATE
+                            ? participant.id != session?.user.id
+                            : participant.id == session?.user.id,
+                        )?.organizations?.name) ||
+                        ''}
                     </p>
                   </div>
                   {item?.unreadMessages > 0 && (
