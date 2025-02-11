@@ -2218,6 +2218,12 @@ const EventCalendar = () => {
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
+        : null,
     });
   };
   const handleEditTask = async (data: TaskRequest) => {

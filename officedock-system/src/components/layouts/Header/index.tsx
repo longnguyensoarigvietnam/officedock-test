@@ -10,11 +10,6 @@ import {
   Transition,
 } from '@headlessui/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-
-import ImageRound from '@components/common/ImageRound';
-
-import { SETTING_MENU, SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
-import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ActionsEvent,
   ActionTask,
@@ -23,7 +18,9 @@ import {
   PermissionsSystem,
   ScreenName,
   ServerStatusCode,
+  SocketActions,
   StatusValueTask,
+  TimeType,
 } from '@constants/enums';
 import { MenuItem } from '@interfaces/menu';
 import TaskPageDataHeader from './TaskPageDataHeader';
@@ -33,11 +30,24 @@ import { addTimeToDate } from '@utils/date';
 import { EventEditFormData, EventRequest } from '@interfaces/calendar';
 import api from '@base/api';
 import { useMutation, useQueryClient } from 'react-query';
+import { AxiosError } from 'axios';
 
+import ImageRound from '@components/common/ImageRound';
+import ActionsEventModal from '@components/modals/ActionsEventModal';
+import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
+import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import WarningDeadlineTaskModal from '@components/modals/WarningDeadlineTaskModal';
+import socketEventEmitter from '@components/socket/socketEventEmitter';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
-import { LoadingContext } from '@providers/LoadingProvider';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
+
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
+import { useErrorToast } from '@hooks/useErrorToast';
+import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
+
+import { SETTING_MENU, SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
+import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_DELETE_MESSAGE,
   ERROR_NOT_FOUND_EVENT,
@@ -45,22 +55,17 @@ import {
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
-import ActionsEventModal from '@components/modals/ActionsEventModal';
-import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
-import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
-import { OptionDropdownType } from '@interfaces/common';
-import { TaskContext } from '@providers/TaskProvider';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
-import { AxiosError } from 'axios';
 import {
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
   NO_OPTION_CATEGORY,
 } from '@constants';
-import { useErrorToast } from '@hooks/useErrorToast';
-import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
-import { getRandomColor } from '@utils';
+import { OptionDropdownType } from '@interfaces/common';
+import { WebSocketMessageData } from '@interfaces/chat';
+import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { TaskContext } from '@providers/TaskProvider';
+import { getRandomColor } from '@utils';
 type HeaderProps = {
   className?: string;
 };
@@ -108,6 +113,13 @@ const Header = ({ className }: HeaderProps) => {
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
   const [dataEventEdit, setDataEventEditLocal] = useState<EventEditFormData>();
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  const [openWarningDeadlineModal, setOpenWarningDeadlineModal] =
+    useState(false);
+  const [dataRemind, setDataRemind] = useState<{
+    count: number;
+    type: string;
+    id: number;
+  }>();
 
   const [backToEditing, setBackToEditing] = useState(false);
   const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
@@ -125,7 +137,7 @@ const Header = ({ className }: HeaderProps) => {
 
   const { setIsLoading } = useContext(LoadingContext);
   const { dashboardMemberList = [] } = useDashboardMemberList();
-  const {setDashboardMembersWithAvatars} = useContext(GlobalStateContext)
+  const { setDashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const { creationDataTaskData } = useCreationDataTask({});
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [openWarningCloseModal, setOpenWarningCloseModal] =
@@ -149,17 +161,38 @@ const Header = ({ className }: HeaderProps) => {
   const companyItems = updateCurrent(companySettingItemsClone, pathname);
 
   useEffect(() => {
-      if (dashboardMemberList?.length) {
-        const membersWithAvatars = dashboardMemberList.map((member) => {
-          return {
-            id: member.id,
-            fullName: member.fullName,
-            avatarColor: getRandomColor(),
-          };
-        });
-        setDashboardMembersWithAvatars(membersWithAvatars);
+    if (dashboardMemberList?.length) {
+      const membersWithAvatars = dashboardMemberList.map((member) => {
+        return {
+          id: member.id,
+          fullName: member.fullName,
+          avatarColor: getRandomColor(),
+        };
+      });
+      setDashboardMembersWithAvatars(membersWithAvatars);
+    }
+  }, [dashboardMemberList, setDashboardMembersWithAvatars]);
+  // Socket
+  useEffect(() => {
+    const handleSocketMessage = (data: WebSocketMessageData) => {
+      switch (data.action) {
+        case SocketActions.REMIND_TASK:
+          setOpenWarningDeadlineModal(true);
+          setDataRemind({
+            count: data.remindCountdown as number,
+            type: data.remindType as string,
+            id: data.id as number,
+          });
+          break;
       }
-    }, [dashboardMemberList, setDashboardMembersWithAvatars]);
+    };
+
+    socketEventEmitter.on('message', handleSocketMessage);
+
+    return () => {
+      socketEventEmitter.off('message', handleSocketMessage);
+    };
+  }, []);
 
   // Edit task
   const handleGetDataDetailTask = async (id: number) => {
@@ -341,6 +374,12 @@ const Header = ({ className }: HeaderProps) => {
       peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
+        : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
         : null,
     });
   };
@@ -598,6 +637,15 @@ const Header = ({ className }: HeaderProps) => {
       },
     },
   );
+
+  // Handle confirm remind
+  const handleConfirmRemind = () => {
+    setOpenWarningDeadlineModal(false);
+    editTask({
+      remind_at: null,
+      id: dataRemind?.id,
+    });
+  };
 
   return (
     <>
@@ -880,6 +928,16 @@ const Header = ({ className }: HeaderProps) => {
           onConfirm={handleConfirmDeleteTask}
           onClose={() => {
             setOpenConfirmDeleteModal(false);
+          }}
+        />
+      )}
+      {openWarningDeadlineModal && (
+        <WarningDeadlineTaskModal
+          open={openWarningDeadlineModal}
+          time={`${dataRemind?.count}${TimeType[dataRemind?.type as keyof typeof TimeType]}`}
+          onConfirm={handleConfirmRemind}
+          onClose={() => {
+            setOpenWarningDeadlineModal(false);
           }}
         />
       )}

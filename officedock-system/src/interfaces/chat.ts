@@ -92,6 +92,7 @@ export interface ChatRoomItem {
 }
 
 export interface WebSocketMessageData {
+  id?: number;
   action: string;
   clientId: string | null;
   chatRoom: ChatRoomItem;
@@ -105,6 +106,8 @@ export interface WebSocketMessageData {
       name: string;
     };
   };
+  remindCountdown?: number;
+  remindType?: string;
 }
 
 export interface DataChatRoomSocket {

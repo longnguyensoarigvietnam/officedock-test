@@ -69,6 +69,7 @@ import {
 import { WebSocketMessageData } from '@interfaces/chat';
 import { OptionDropdownType } from '@interfaces/common';
 import {
+  calculateActualDurationDaily,
   combineDateAndTime,
   convertToJapaneseTime,
   convertToJapaneseValue,
@@ -93,7 +94,7 @@ import api from '@base/api';
 import SingleSelect from '@components/common/SingleSelect';
 import ResizeTextArea from '@components/custom/resizeTextArea';
 import Dropdown from '@components/common/Dropdown';
-import { NO_OPTION_CATEGORY } from '@constants';
+import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 import { useErrorToast } from '@hooks/useErrorToast';
 
 const StatisticBoard = () => {
@@ -112,8 +113,6 @@ const StatisticBoard = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
   const [remarkData, setRemarkData] = useState<string>('');
-
-  const [isSubmitReport, setIsSubmitReport] = useState<boolean | null>(null);
 
   const { dataStatistic, refetchDataStatistic } = useDataStatistic({
     date: formatDateServer(currentDate),
@@ -213,7 +212,6 @@ const StatisticBoard = () => {
       setRemarkData(
         dataStatistic?.remark.remark ? dataStatistic?.remark.remark : '',
       );
-      setIsSubmitReport(dataStatistic?.remark.isSubmit);
       setChartData({
         colors: generatedColors,
         labels: listLableChart,
@@ -260,27 +258,6 @@ const StatisticBoard = () => {
           description: ERROR_UPDATE_MESSAGE,
         });
         refetchDataStatistic();
-      },
-      onSettled: () => {},
-    },
-  );
-
-  //  Handle call api edit remark
-  const handleEditRemark = async (data: {
-    date: string;
-    remark?: string;
-    isSubmit?: boolean;
-  }) => {
-    return await api.post(apiRouters.DATA_REMARK_DAILY, data);
-  };
-  const { mutate: editRemark } = useMutation(
-    'postEditRemark',
-    handleEditRemark,
-    {
-      onSuccess: () => {},
-      onError: (error: AxiosError<any>) => {
-        setIsLoading(false);
-        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
       onSettled: () => {},
     },
@@ -555,24 +532,13 @@ const StatisticBoard = () => {
 
     return smallCategories;
   }
+
   const columns: ColumnDef<dataTaskDailyTable>[] = [
     {
       id: 'expand',
-      header: 'タスクカード名',
+      header: 'タスク名',
       size: 20,
-      cell: ({ row }: { row: Row<dataTaskDailyTable> }) =>
-        row.getCanExpand() && (
-          <button
-            className="border border-solid rounded-full w-7 h-7 ml-3 text-xs"
-            onClick={() => {
-              row.getToggleExpandedHandler(); // Toggle row expanded state
-              handleExpandChange(row); // Update expanded state
-            }}>
-            {row.getIsExpanded()
-              ? row.original.children?.length
-              : row.original.children?.length}
-          </button>
-        ),
+      cell: () => <></>,
     },
     {
       accessorKey: 'LARGE',
@@ -590,11 +556,18 @@ const StatisticBoard = () => {
           },
           ...getLargeCategories(organizationCategory ?? []),
         ];
+        const isParent = info.row.depth === 0;
+        if (!isParent) return;
+
+        const isHasChild =
+          info.row.original.children && info.row.original.children?.length > 1;
+
         return (
-          <div className="text-left custom-statistic">
-            <div className="flex justify-between h-full relative">
+          <div
+            className={`daily-custom text-left custom-statistic  h-[30px] mt-1 ${isHasChild && 'mt-[15px]  mb-[18px]'}`}>
+            <div className="flex justify-between h-full relative rounded-md gap-1">
               <SingleSelect
-                className="border-none shadow-none min-w-[140px] h-fit"
+                className="border-none shadow-none min-w-[162px] h-[30px] bg-[#EBF1F7] rounded-md"
                 defaultValue={optionData.find(
                   (element) =>
                     element.value ===
@@ -604,6 +577,7 @@ const StatisticBoard = () => {
                 )}
                 isDisabled={!isPermissionAction}
                 placeholder=""
+                showArrow
                 options={optionData}
                 onChange={(e) => {
                   editCategoryInline({
@@ -628,10 +602,10 @@ const StatisticBoard = () => {
                   });
                 }}
               />
-              <div className="flex items-center w-5 h-full absolute -translate-y-1/2 top-1/2 right-0">
+              <div className="flex items-center  w-3 h-[30px]">
                 <ImageRound
-                  className={`w-5 h-5 `}
-                  src="/icons/chevron-right.svg"
+                  className={`w-fit h-fit `}
+                  src="/icons/play-statistic.svg"
                   name="icon chevron right"
                 />
               </div>
@@ -695,13 +669,18 @@ const StatisticBoard = () => {
                     value: NO_OPTION_CATEGORY,
                   },
                 ];
+        const isParent = info.row.depth === 0;
+        if (!isParent) return;
+        const isHasChild =
+          info.row.original.children && info.row.original.children?.length > 1;
 
         return (
-          <div className="text-left custom-statistic ">
-            <div className="flex justify-between h-full relative">
+          <div
+            className={`daily-custom text-left custom-statistic mt-1 ${isHasChild && 'mt-[15px]  mb-[18px]'}`}>
+            <div className="flex justify-between h-full relative  rounded-md gap-1">
               <div className="">
                 <SingleSelect
-                  className="border-none h-6 text-xs min-w-[140px]  !py-0  !pl-0 !shadow-none !text-left !bg-transparent"
+                  className="border-none h-6 text-xs min-w-[162px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
                   defaultValue={optionMedium.find(
                     (element) =>
                       element.value ===
@@ -709,6 +688,7 @@ const StatisticBoard = () => {
                         ? info.row.original.MEDIUM.id
                         : NO_OPTION_CATEGORY),
                   )}
+                  showArrow
                   isDisabled={!isPermissionAction}
                   placeholder=""
                   options={optionMedium}
@@ -739,10 +719,10 @@ const StatisticBoard = () => {
                   }}
                 />
               </div>
-              <div className=" flex items-center absolute -translate-y-1/2 top-1/2 right-0">
+              <div className="flex items-center  w-3 h-[30px]">
                 <ImageRound
-                  className={`w-5 h-5`}
-                  src="/icons/chevron-right.svg"
+                  className={`w-fit h-fit `}
+                  src="/icons/play-statistic.svg"
                   name="icon chevron right"
                 />
               </div>
@@ -823,11 +803,16 @@ const StatisticBoard = () => {
                   },
                   ...getSmallCategories(smallResult),
                 ];
+        const isParent = info.row.depth === 0;
+        if (!isParent) return;
+        const isHasChild =
+          info.row.original.children && info.row.original.children?.length > 1;
 
         return (
-          <div className="text-left  custom-statistic ">
+          <div
+            className={`daily-custom text-left custom-statistic mt-1 ${isHasChild && 'mt-[15px]  mb-[18px]'}`}>
             <SingleSelect
-              className="border-none  text-xs !py-0 !pl-0 !shadow-none !text-left !bg-transparent"
+              className="border-none h-6 text-xs min-w-[162px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
               defaultValue={optionSmall.find(
                 (element) =>
                   element.value ===
@@ -837,6 +822,7 @@ const StatisticBoard = () => {
               )}
               isDisabled={!isPermissionAction}
               placeholder=""
+              showArrow
               options={optionSmall}
               onChange={(e) => {
                 editCategoryInline({
@@ -872,20 +858,6 @@ const StatisticBoard = () => {
       },
     },
     {
-      id: 'actions',
-      header: () => null,
-      size: 80,
-      cell: ({ row }: { row: Row<dataTaskDailyTable> }) => {
-        return (
-          <ActionDetailDaily
-            row={row}
-            dataTagsList={dataTagsList}
-            setDataTaskDailyList={setDataTaskDailyList}
-          />
-        );
-      },
-    },
-    {
       accessorKey: 'totalDuration',
       header: ({ column }) => (
         <div
@@ -899,29 +871,25 @@ const StatisticBoard = () => {
             setSortState(newSortState);
             column.toggleSorting();
           }}>
-          <p>計測時間</p>
-          <div className="ml-1 relative flex flex-col">
+          <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
+          <div className="ml-[60px] relative flex flex-col">
             <Image
-              src="/icons/small-arrow-left.svg"
-              alt="Add"
-              width={15}
-              height={14}
-              className="rotate-90 cursor-pointer justify-self-end w-1.5"
-            />
-            <Image
-              src="/icons/small-arrow-left.svg"
-              alt="Add"
-              width={15}
-              height={14}
-              className="-rotate-90 cursor-pointer justify-self-start w-1.5"
+              src="/icons/sort-down.svg"
+              alt="Sort down"
+              width={9}
+              height={10}
+              className="cursor-pointer justify-self-end "
             />
           </div>
         </div>
       ),
       cell: ({ row, getValue }) => {
         const rowData = row.original as ChildTask;
+        const isParent = row.depth === 0;
+
         return (
-          <div className="font-bold text-xs">
+          <div
+            className={`font-bold text-xs  ${isParent ? 'mb-[18px] mt-[14px]' : 'my-[10px]'}`}>
             {row.subRows?.length > 1 ? (
               ''
             ) : (
@@ -957,16 +925,12 @@ const StatisticBoard = () => {
                           );
                         }
                       }}
-                      className="h-6 !text-xs !px-0 text-center !border-none bg-transparent !opacity-100"
+                      className="!w-[50px] !h-[30px] !py-0 bg-[#EBF1F7] text-black !text-xs !pb-[2px] font-normal rounded-[3px] !px-0 text-center !border-none  !opacity-100"
                     />
                   </div>
                 </div>
-                <div className="h-full flex items-center">
-                  <ImageRound
-                    className=" w-3 h-3 mt-1 "
-                    src="/icons/arrow-right.svg"
-                    name="icon arrow right"
-                  />
+                <div className="h-full flex items-center text-base font-normal text-[#77858F]">
+                  ~
                 </div>
                 <div className="bg-transparent p-1">
                   <div className="w-12">
@@ -997,15 +961,17 @@ const StatisticBoard = () => {
                           );
                         }
                       }}
-                      className={`${row.original.isRunning && 'cursor-not-allowed'} h-6  !text-xs text-center  !px-0 !border-none bg-transparent !opacity-100`}
+                      className={`${row.original.isRunning && 'cursor-not-allowed'} !w-[50px] rounded-[3px] !h-[30px] !py-0 bg-[#EBF1F7] text-black !pb-[2px] !text-xs font-normal text-center  !px-0 !border-none  !opacity-100`}
                     />
                   </div>
                 </div>
               </div>
             )}
-            <div className="text-xs">
-              {convertToJapaneseTime(getValue() as string)}
-            </div>
+            {isParent && (
+              <div className="text-base font-medium text-blacks mt-3 text-end mr-[14px]">
+                {convertToJapaneseTime(getValue() as string)}{' '}
+              </div>
+            )}
           </div>
         );
       },
@@ -1025,33 +991,40 @@ const StatisticBoard = () => {
             setSortState(sortState.length !== 0 ? newSortState : defaultState);
             column.toggleSorting();
           }}>
-          <p>ステータス</p>
+          <p className="!text-xs font-medium !text-[#77858F]">ステータス</p>
           <div className="ml-1 relative flex flex-col">
             <Image
-              src="/icons/small-arrow-left.svg"
-              alt="Add"
-              width={15}
-              height={14}
-              className="rotate-90 cursor-pointer justify-self-end w-1.5"
-            />
-            <Image
-              src="/icons/small-arrow-left.svg"
-              alt="Add"
-              width={15}
-              height={14}
-              className="-rotate-90 cursor-pointer justify-self-start w-1.5"
+              src="/icons/sort-down.svg"
+              alt="Sort down"
+              width={9}
+              height={10}
+              className="cursor-pointer justify-self-end "
             />
           </div>
         </div>
       ),
-      cell: (info) => (
-        <div className="w-full flex justify-center">
-          <div
-            className={`text-xs h-[21px] flex items-center justify-center rounded ${info.row.original.status.id === StatusValueTask.MY_ROUTINE ? 'w-[86px]' : 'w-20'}  ${info.row.original.status.name && statusStyles.find((item) => item.value === info.row.original.status.id)?.color}`}>
-            {info.row.original.status.name}
+      cell: (info) => {
+        const isParent = info.row.depth === 0;
+        return isParent ? (
+          <div className="w-full flex justify-center items-center gap-[6px] pr-4">
+            <div
+              className={`w-[10px] h-[10px] rounded-full ${info.row.original.status && info.row.original.status.name && statusStyles.find((item) => item.value === info.row.original.status.id)?.color}`}></div>
+            <div
+              className={`text-sm font-medium text-black  flex items-center justify-center rounded `}>
+              {info.row.original.status && info.row.original.status.name}
+            </div>
           </div>
-        </div>
-      ),
+        ) : (
+          <div>
+            {info.row.original.startedAt &&
+              info.row.original.pausedAt &&
+              calculateActualDurationDaily(
+                info.row.original.startedAt,
+                info.row.original.pausedAt,
+              )}
+          </div>
+        );
+      },
       sortingFn: sortStatusById,
     },
   ];
@@ -1387,10 +1360,10 @@ const StatisticBoard = () => {
       cell: (info) => (
         <div className="w-full flex justify-center">
           <div
-            className={`text-xs -translate-y-[100%] h-[21px] flex items-center justify-center rounded  ${info.row.original.status.id === StatusValueTask.MY_ROUTINE ? 'w-[86px]' : 'w-20'}  ${info.row.original.status.name && statusStyles.find((item) => item.value === info.row.original.status.id)?.color}`}>
+            className={`text-xs -translate-y-[100%] h-[21px] flex items-center justify-center rounded  ${info.row.original.status && info.row.original.status.id === StatusValueTask.MY_ROUTINE ? 'w-[86px]' : 'w-20'}  ${info.row.original.status && info.row.original.status.name && statusStyles.find((item) => item.value === info.row.original.status.id)?.color}`}>
             <span className="-translate-y-[30%]">
               {' '}
-              {info.row.original.status.name}
+              {info.row.original.status && info.row.original.status.name}
             </span>
           </div>
         </div>
@@ -1630,45 +1603,75 @@ const StatisticBoard = () => {
     return new Date(year, 0, 1);
   }
 
+  const calculateSlotTimes = (events: TaskTimeStatistic[]) => {
+    const defaultMinTime = '09:00:00';
+    const defaultMaxTime = '19:00:00';
+
+    const times = events.reduce(
+      (acc: { min: number | null; max: number | null }, event) => {
+        const start = event.start ? new Date(event.start).getHours() : null;
+        const end = event.end ? new Date(event.end).getHours() : null;
+
+        if (start !== null)
+          acc.min = acc.min !== null ? Math.min(acc.min, start) : start;
+        if (end !== null)
+          acc.max = acc.max !== null ? Math.max(acc.max, end) : end;
+
+        return acc;
+      },
+      { min: null, max: null }, // Initial state with null values
+    );
+
+    const slotMinTime =
+      times.min !== null ? `${Math.min(times.min, 9)}:00:00` : defaultMinTime;
+
+    const adjustedMaxTime =
+      times.max !== null && times.max > 19 ? times.max + 1 : times.max;
+    const slotMaxTime =
+      adjustedMaxTime !== null
+        ? `${Math.max(adjustedMaxTime, 19)}:00:00`
+        : defaultMaxTime;
+
+    return { slotMinTime, slotMaxTime };
+  };
+
   return (
     <div className="flex  flex-col ">
       <div className="h-[calc(100vh_-_83px)] overflow-y-auto ">
-        <header className="flex justify-between   mt-4">
+        <header className="flex justify-between my-[30px] pr-10 ">
           <div className="flex gap-5 items-center">
             <span className="text-2xl font-medium ">日報</span>
-            <div className="w-[260px] z-20 flex gap-0 items-center">
-              <Button
+            <div className="w-fit z-20 flex gap-x-3 items-center">
+              <ImageRound
                 onClick={() => handlePrevDay()}
-                className="h-10 bg-white !px-2">
-                <ImageRound
-                  className=" w-7 h-7 "
-                  src="/icons/chevron-left.svg"
-                  name="left"
-                />
-              </Button>
-              <DatePicker
-                className="h-10"
-                selected={currentDate}
-                maxDate={new Date()}
-                minDate={getMinDateOfYear(2023)}
-                onChange={(e) => {
-                  handleChooseDay(e as Date);
-                }}
+                className="h-fit w-fit cursor-pointer"
+                src="/icons/left-statistic.svg"
+                name="left"
               />
-              <Button
-                disabled={isSameDate(currentDate, new Date())}
-                onClick={() => handleNextDay()}
-                className="h-10 bg-white !px-2">
-                <ImageRound
-                  className=" w-7 h-7 "
-                  src="/icons/chevron-right.svg"
-                  name="right"
+              <div className="w-[159px]">
+                <DatePicker
+                  className="h-[34px] border text-sm font-normal !py-1 !border-[#77858F]"
+                  selected={currentDate}
+                  maxDate={new Date()}
+                  dateFormat={DATE_TEXT_FORMAT}
+                  minDate={getMinDateOfYear(2023)}
+                  onChange={(e) => {
+                    handleChooseDay(e as Date);
+                  }}
                 />
-              </Button>
+              </div>
+
+              <ImageRound
+                onClick={() => handleNextDay()}
+                className=" h-fit w-fit cursor-pointer"
+                src="/icons/right-statistic.svg"
+                name="right"
+              />
             </div>
-            <div className="flex gap-4 h-10">
+            <div className="flex gap-4">
               <Button
-                variant="primary"
+                variant="outline"
+                className="border-none h-[34px] w-[48px] !px-0 !py-0"
                 onClick={() => {
                   if (!isYesterdaySchedule(currentDate)) {
                     handleYesterDay();
@@ -1677,7 +1680,8 @@ const StatisticBoard = () => {
                 昨日
               </Button>
               <Button
-                variant="primary"
+                variant="outline"
+                className="border-none h-[34px] w-[48px] !px-0 !py-0"
                 onClick={() => {
                   if (!isTodaySchedule(currentDate)) {
                     handleCurrentDay();
@@ -1688,46 +1692,28 @@ const StatisticBoard = () => {
             </div>
           </div>
 
-          <div className="flex gap-4 h-10 items-center">
+          <div className="flex gap-4 items-center">
             <div className="flex items-center gap-3">
-              {isSubmitReport ? (
-                <p className="text-primary">提出済</p>
-              ) : isSubmitReport !== null ? (
-                <p className="text-red-500">未提出</p>
-              ) : (
-                ''
-              )}
               {isPermissionAction && (
                 <Button
+                  className="flex gap-2 px-0 py-0 w-[138px] h-[34px]"
                   onClick={() => {
-                    editRemark({
-                      date: formatDateServer(currentDate),
-                      isSubmit: !isSubmitReport,
-                    });
-                    setIsSubmitReport(!isSubmitReport);
+                    handleDownloadPDF();
                   }}>
-                  日報提出
+                  <span className="break-all">PDF書き出し</span>
+                  <ImageRound
+                    className=" w-3 h-3"
+                    src="/icons/upload.svg"
+                    name="upload"
+                  />
                 </Button>
               )}
-            </div>
-            <div
-              onClick={() => {
-                if (isSubmitReport) {
-                  handleDownloadPDF();
-                }
-              }}
-              className={`border border-solid h-9 w-9 flex items-center justify-center   ${isSubmitReport === true ? 'hover:opacity-70 hover:cursor-pointer ' : 'opacity-60 hover:cursor-not-allowed '}`}>
-              <ImageRound
-                className=" w-7 h-7 "
-                src="/icons/upload.svg"
-                name="upload"
-              />
             </div>
           </div>
         </header>
         <div className="mt-4 flex gap-3">
-          <div className="w-[260px] pl-2 bg-[#ECF0F2] daily-custom h-[calc(100vh_-_155px)] overflow-y-auto">
-            <p className="pl-10 pt-3">スケジュール</p>
+          <div className="w-[262px] px-5 bg-[#F8FAFC] rounded-[14px] daily-custom h-fit overflow-y-auto">
+            <p className=" pt-[30px] mb-2">スケジュール実績</p>
             <FullCalendar
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -1746,6 +1732,14 @@ const StatisticBoard = () => {
                 omitZeroMinute: false,
                 hour12: false,
               }}
+              slotMinTime={
+                calculateSlotTimes(modifyEvents(taskTimeStatisticList))
+                  .slotMinTime
+              }
+              slotMaxTime={
+                calculateSlotTimes(modifyEvents(taskTimeStatisticList))
+                  .slotMaxTime
+              }
               initialDate={currentDate}
               eventOverlap={true}
               slotEventOverlap={true}
@@ -1754,39 +1748,10 @@ const StatisticBoard = () => {
               locale="ja"
             />
           </div>
-          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_155px)] overflow-y-auto">
-            <div className="h-[371px] overflow-y-auto">
-              <p>合計時間</p>
-              <div className="flex">
-                <section className="flex-1 flex flex-col items-center gap-4 justify-end">
-                  <div className="w-fit bg-white px-4 h-14 flex items-center justify-center gap-1 text-[36px] border border-solid rounded-md">
-                    {hoursConvert}{' '}
-                    <span className="text-sm pt-6 mr-2">時間</span>
-                    {minutesConvert} <span className="text-sm pt-6">分</span>
-                  </div>
-                  <Table>
-                    <TableBody>
-                      {dataCategory.map((item, index) => {
-                        return (
-                          <tr key={index}>
-                            <td>
-                              <div className="h-full w-full flex items-center justify-center">
-                                <div
-                                  style={{
-                                    backgroundColor: item.color,
-                                  }}
-                                  className={`w-3 h-3`}></div>
-                              </div>
-                            </td>
-                            <td>{item.categoryName}</td>
-                            <td>{convertToJapaneseTime(item.duration)}</td>
-                            <td>{item.percent}%</td>
-                          </tr>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </section>
+          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_177px)] overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
+            <div className="h-[325px] overflow-y-auto">
+              <p>カテゴリーの割合</p>
+              <div className="flex pt-5">
                 <section className="flex-1">
                   {chartData?.data && (
                     <PieChart
@@ -1794,26 +1759,66 @@ const StatisticBoard = () => {
                       data={chartData?.data}
                       labels={chartData?.labels}
                       actualValues={chartData?.actualValue}
-                      className="w-[290px] h-[290px]"
+                      className="w-[280px] h-[280px] ml-5"
                     />
                   )}
                 </section>
+
+                <section className="flex-1 flex flex-col items-start gap-4 justify-start">
+                  <div className="w-fit px-4 h-14 flex items-center font-medium justify-center gap-1 text-[34px]">
+                    <span className="text-sm font-medium pt-6 mr-2">
+                      合計時間
+                    </span>
+                    {hoursConvert}{' '}
+                    <span className="text-[22px] pt-[9px] font-medium mr-2">
+                      時間
+                    </span>
+                    {minutesConvert}{' '}
+                    <span className="text-[22px] pt-[9px] ">分</span>
+                  </div>
+                  <div className="text-xs text-[#77858F] font-medium mt-[30px]">
+                    大カテゴリー
+                  </div>
+
+                  {dataCategory.map((item, index) => {
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-start justify-start gap-5 text-base font-medium">
+                        <div className="flex items-start justify-center gap-1  ">
+                          <div
+                            style={{
+                              backgroundColor: item.color,
+                            }}
+                            className={`w-3 h-3 mt-[7px] `}></div>
+                          <span className="max-w-[200px] break-all">
+                            {item.categoryName}
+                          </span>
+                        </div>
+                        <div className="ml-[30px] flex items-start">
+                          {convertToJapaneseTime(item.duration)}
+                        </div>
+                        <div>{item.percent}%</div>
+                      </div>
+                    );
+                  })}
+                </section>
               </div>
             </div>
-            <div className="mt-5 h-[436px]">
-              <p className="mb-3">タスクカード</p>
-              <Table className=" bg-white h-[384px] !pt-0 overflow-y-auto py-0 mt-2">
+            <div className="mt-5 h-[548px]">
+              <p className="text-base font-medium">タスク一覧</p>
+              <Table className=" border border-[#D2DBE1] !ring-0 bg-white h-[496px] !pt-0 overflow-y-auto py-0 mt-5 rounded-md">
                 <thead className="bg-gray-100 sticky z-10">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
                       key={headerGroup.id}
-                      className="[&>th]:text-gray-700 sticky top-0 bg-gray-100 z-40  [&>th]:font-medium [&>th]:text-base [&>th]:py-3 ">
+                      className="[&>th]:text-gray-700 sticky top-0 bg-[#F8FAFC] z-40 border-b border-[#D2DBE1]  [&>th]:font-medium [&>th]:text-base [&>th]:py-3 ">
                       {headerGroup.headers.map((header, index) =>
                         index === 0 ? (
                           <th
                             key={header.id}
                             colSpan={2}
-                            className=" p-2 text-left ">
+                            className=" p-2 text-left !text-xs font-medium !text-[#77858F]">
                             {flexRender(
                               header.column.columnDef.header,
                               header.getContext(),
@@ -1825,8 +1830,8 @@ const StatisticBoard = () => {
                               key={header.id}
                               style={{ width: header.column.getSize() }}
                               className={`${
-                                index === 4 || index === 5
-                                  ? 'border-r border-gray-200'
+                                index === 3 || index === 4
+                                  ? 'border-r border-[#D2DBE1]'
                                   : ''
                               }`}>
                               {flexRender(
@@ -1840,69 +1845,96 @@ const StatisticBoard = () => {
                     </tr>
                   ))}
                 </thead>
-                <TableBody className="![&>tr>td]:pr-0 ![&>tr>td]:pl-0 ![&>tr>td]:pl-1 ">
-                  {table.getRowModel().rows.map((row, index) => (
-                    <React.Fragment key={row.id}>
-                      <tr
-                        className={`${row.depth > 0 ? 'bg-gray-100' : 'bg-white'}`}>
-                        <td
-                          rowSpan={2}
-                          className={`${index === 4 || index === 5 ? '' : ''} border-b`}>
-                          {row.original.children &&
-                          row.original.children?.length > 1 ? (
-                            <button
-                              className="border border-solid rounded-full w-7 h-7 text-xs cursor-pointer"
-                              onClick={row.getToggleExpandedHandler()}>
-                              {row.original.children?.length}
-                            </button>
-                          ) : (
-                            <div className="w-7 h-7"></div>
-                          )}
-                        </td>
-                        {row
-                          .getVisibleCells()
-                          .slice(1, 5)
-                          .map((cell) => (
-                            <td key={cell.id} className={`!pt-0 !pb-1 !pl-0`}>
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </td>
-                          ))}
+                <TableBody className="![&>tr>td]:pr-0 ![&>tr>td]:pl-0 ![&>tr>td]:pr-0 [&>tr>td]:py-0">
+                  {table.getRowModel().rows.map((row, index) => {
+                    const isHasChild =
+                      row.original.children && row.original.children.length > 1;
+                    const isParent = row.depth === 0;
 
-                        {row
-                          .getVisibleCells()
-                          .slice(5)
-                          .map((cell) => (
-                            <td
-                              key={cell.id}
-                              rowSpan={2}
-                              className="p-2 !pl-2 border-l border-b">
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </td>
-                          ))}
-                      </tr>
-                      {/* The sub row with the title cell takes up 4 columns */}
-                      <tr
-                        className={`${row.depth > 0 ? 'bg-gray-100' : 'bg-white'} !border-none`}>
-                        <td
-                          colSpan={4}
-                          className="text-left border-b !pt-0 !pl-0">
-                          <div className="text-xl w-full break-all">
-                            {row.original.title || '-'}
-                          </div>
-                        </td>
-                      </tr>
-                    </React.Fragment>
-                  ))}
+                    return (
+                      <React.Fragment key={row.id}>
+                        <tr
+                          className={`${row.depth > 0 ? 'bg-[#F8FAFC]' : 'bg-white'} `}>
+                          <td
+                            rowSpan={2}
+                            className={`${index === 3 || index === 4 ? '' : ''} !pr-0 border-b border-[#D2DBE1] w-[18px] !pl-0`}>
+                            <></>
+                          </td>
+                          {row
+                            .getVisibleCells()
+                            .slice(1, 4)
+                            .map((cell, cellIndex) => (
+                              <td
+                                key={cell.id}
+                                className={`!pt-0 !pb-1 !pl-0 ${cellIndex !== 2 ? '!pr-0' : '!pr-[14px]'}`}>
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext(),
+                                )}
+                              </td>
+                            ))}
+
+                          {row
+                            .getVisibleCells()
+                            .slice(4)
+                            .map((cell, cellIndex) => (
+                              <td
+                                key={cell.id}
+                                rowSpan={2}
+                                className={`p-2 !pl-2 border-l  ${!isParent && cellIndex === 1 && 'border-l-0'} border-b !pr-0 border-[#D2DBE1]`}>
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext(),
+                                )}
+                              </td>
+                            ))}
+                        </tr>
+                        {/* The sub row with the title cell takes up 4 columns */}
+                        <tr
+                          className={`${row.depth > 0 ? 'bg-[#F8FAFC]' : 'bg-white'}  !border-none !pr-0`}>
+                          <td
+                            colSpan={3}
+                            className={`text-left !pt-0 !pl-0  !pr-0  border-b border-[#D2DBE1]`}>
+                            <div
+                              className={`flex items-center justify-between  ${isHasChild ? 'pb-[19px]' : 'relative top-[-8px]'} ${!isParent && 'relative top-[-4px]'}`}>
+                              <div className=" w-full break-all text-base font-medium text-black flex items-start gap-[6px]">
+                                {row.getCanExpand() && row.depth === 0 && (
+                                  <button
+                                    className="bg-[#EBF1F7] rounded-full w-6 h-6 text-sm text-[#0068B6] font-normal"
+                                    onClick={() => {
+                                      row.getToggleExpandedHandler(); // Toggle row expanded state
+                                      handleExpandChange(row); // Update expanded state
+                                    }}>
+                                    {row.getIsExpanded()
+                                      ? row.original.children?.length
+                                      : row.original.children?.length}
+                                  </button>
+                                )}{' '}
+                                {row.depth > 0 && (
+                                  <div className=" rounded-full w-6 h-6 text-sm text-[#0068B6] font-normal"></div>
+                                )}
+                                <p
+                                  className={`flex-1 ${row.depth > 0 && 'bg-[#F8FAFC]'}`}>
+                                  {row.original.title || '-'}
+                                </p>
+                              </div>
+                              <div className="text-left !pt-0 !pl-2">
+                                <ActionDetailDaily
+                                  row={row}
+                                  dataTagsList={dataTagsList}
+                                  setDataTaskDailyList={setDataTaskDailyList}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
-            <div className="mt-5 pb-14">
+            <div className="mt-[30px] pb-14">
               <p>備考</p>
               <ResizeTextArea
                 currentDate={currentDate}
@@ -1928,8 +1960,8 @@ const StatisticBoard = () => {
             left: '-9999px',
           }}>
           <div className="flex gap-3">
-            <div className="w-[260px] h-fit pl-2 bg-[#ECF0F2] daily-custom">
-              <p className="pl-10 ">スケジュール</p>
+            <div className="w-[262px] h-fit pl-2 bg-[#F8FAFC] rounded-[14px] daily-custom">
+              <p className="">スケジュール実績</p>
               <FullCalendar
                 ref={calendarDownloadRef}
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -1949,6 +1981,8 @@ const StatisticBoard = () => {
                   omitZeroMinute: false,
                   hour12: false,
                 }}
+                slotMinTime="09:00:00"
+                slotMaxTime="19:00:00"
                 eventOverlap={true}
                 slotEventOverlap={true}
                 selectMirror={true}
@@ -1956,12 +1990,12 @@ const StatisticBoard = () => {
                 locale="ja"
               />
             </div>
-            <div className="w-[calc(100%_-_260px)]  overflow-y-auto">
+            <div className="w-[calc(100%_-_260px)]  overflow-y-auto ">
               <div className="w-full text-center text-[36px]">
                 {formatShowDateJapanese(`${currentDate}`)}
               </div>
               <div className="h-[371px] overflow-y-auto">
-                <p>合計時間</p>
+                <p>カテゴリーの割合</p>
                 <div className="flex">
                   <section className="flex-1 flex flex-col items-center gap-4 justify-end">
                     <div className="w-fit bg-white px-4 h-14 flex items-center justify-center gap-1 text-[36px] border border-solid rounded-md">
@@ -2117,22 +2151,23 @@ const StatisticBoard = () => {
                             </div>
                           </td>
                         </tr>
-                        {row.original.todoList.map((item, index) => {
-                          return (
-                            <tr
-                              key={index}
-                              className={`${row.depth > 0 ? 'bg-gray-100' : 'bg-white'} !border-none`}>
-                              <td
-                                colSpan={7}
-                                className="text-left border-b !pt-0 !pl-0 ">
-                                <div className="text-xl break-all  px-2">
-                                  {item.checkedAt ? '[完了] ' : '[未完了] '}
-                                  {item.content}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                        {row.original.todoList &&
+                          row.original.todoList.map((item, index) => {
+                            return (
+                              <tr
+                                key={index}
+                                className={`${row.depth > 0 ? 'bg-gray-100' : 'bg-white'} !border-none`}>
+                                <td
+                                  colSpan={7}
+                                  className="text-left border-b !pt-0 !pl-0 ">
+                                  <div className="text-xl break-all  px-2">
+                                    {item.checkedAt ? '[完了] ' : '[未完了] '}
+                                    {item.content}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                       </React.Fragment>
                     ))}
                   </TableBody>

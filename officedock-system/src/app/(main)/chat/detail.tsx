@@ -712,6 +712,12 @@ const ChatDetail = ({
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
+        : null,
     });
   };
   //  Handle call api create task
@@ -1040,8 +1046,14 @@ const ChatDetail = ({
             dashboardMembers.find((member) => member.id == participantId)
               ?.avatarColor || '';
           return (
-            <div className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]" key={index}>
-              {AvatarIconWithDynamicColor({ color: avatarColor, size: 33, customClassName: '!mt-0' })}
+            <div
+              className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
+              key={index}>
+              {AvatarIconWithDynamicColor({
+                color: avatarColor,
+                size: 33,
+                customClassName: '!mt-0',
+              })}
             </div>
           );
         })}

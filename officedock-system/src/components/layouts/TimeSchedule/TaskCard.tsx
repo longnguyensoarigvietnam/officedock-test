@@ -436,36 +436,33 @@ const TaskCard = ({
             </div>
           </div>
           {resourcePlan ? (
-            isEvent ? (
-              <>
+            <s>
+              {isEvent && (
                 <ImageRound
                   src={`/icons/lock.svg`}
                   name="icon lock"
                   style={{
-                    bottom: `${(slotHeight / baseHeight) * 8}px`,
+                    bottom: `${(slotHeight / baseHeight) * 13}px`,
                   }}
-                  className="absolute w-3 h-3 bottom-2 right-2 "
+                  className="absolute w-3 h-3 bottom-1 right-9 "
                 />
-              </>
-            ) : (
-              <>
-                <ImageRound
-                  src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
-                  name="Start task"
-                  style={{
-                    bottom: `${(slotHeight / baseHeight) * 8}px`,
-                  }}
-                  hidden={
-                    !isMoreThanFifteenMinutes(
-                      `${event.event.start}`,
-                      `${event.event.end}`,
-                    ) && isOptionZoomSchedule === '01:00:00'
-                  }
-                  className="absolute  w-[20px] h-[20px] bottom-2 right-2  hover:cursor-pointer"
-                  onClick={handleStartStopTask}
-                />
-              </>
-            )
+              )}
+              <ImageRound
+                src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
+                name="Start task"
+                style={{
+                  bottom: `${(slotHeight / baseHeight) * 8}px`,
+                }}
+                hidden={
+                  !isMoreThanFifteenMinutes(
+                    `${event.event.start}`,
+                    `${event.event.end}`,
+                  ) && isOptionZoomSchedule === '01:00:00'
+                }
+                className="absolute  w-[20px] h-[20px] bottom-2 right-2  hover:cursor-pointer"
+                onClick={handleStartStopTask}
+              />
+            </s>
           ) : (
             <ImageRound
               src={`/icons/edit.svg`}
