@@ -86,7 +86,7 @@ const Input = ({
             <Image
               src={'/icons/open-eye.svg'}
               alt="Password"
-              width={20}
+              width={18}
               height={15}
               className="absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 mx-auto cursor-pointer"
               onClick={() => {
@@ -99,7 +99,7 @@ const Input = ({
             <Image
               src={'/icons/close-eye.svg'}
               alt="Password"
-              width={20}
+              width={18}
               height={19}
               className="absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 mx-auto cursor-pointer"
               onClick={() => {
