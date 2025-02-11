@@ -85,6 +85,7 @@ export enum AvatarChat {
   SELF = 'SELF',
   TASK = 'TASK',
   SKILL = 'SKILL',
+  CALENDAR = 'CALENDAR'
 }
 
 // TODO: The state is not fixed, so defining the state using an enum is not appropriate,
@@ -115,6 +116,7 @@ export enum ChatRoomType {
   SELF = 'SELF',
   TASK = 'TASK',
   SKILL = 'SKILL',
+  CALENDAR = 'CALENDAR'
 }
 export enum MessageType {
   MESSAGE = 'MESSAGE',

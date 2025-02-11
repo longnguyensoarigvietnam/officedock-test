@@ -140,6 +140,19 @@ const ChatSettingModal = memo(
       );
     };
 
+    const showRoomAvatar = (type: string) => {
+      switch (type) {
+        case ChatRoomType.GROUP:
+          return '/icons/multi-users.svg';
+        case ChatRoomType.TASK:
+          return '/icons/document.svg';
+        case ChatRoomType.SKILL:
+          return '/icons/skill-room.svg';
+        case ChatRoomType.CALENDAR:
+          return '/icons/calendar-room.svg';
+      }
+    };
+
     return (
       <Modal
         open={open}
@@ -157,7 +170,7 @@ const ChatSettingModal = memo(
           <div className="flex gap-4 items-center pb-3">
             <ImageRound
               className="w-20 h-20"
-              src={`${chatRoomDetail?.type == ChatRoomType.GROUP ? '/icons/multi-users.svg' : chatRoomDetail?.type == ChatRoomType.TASK ? '/icons/document.svg' : '/icons/skill-room.svg'}`}
+              src={`${showRoomAvatar(chatRoomDetail?.type || '')}`}
               border="full"
               name="Multi users"
             />

@@ -971,41 +971,51 @@ const ChatDetail = ({
   };
 
   const renderImageRound = (type = '', participants: ChatParticipant[]) => {
-    if (type === ChatRoomType.GROUP) {
-      return (
-        <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-          <ImageRound
-            className="w-14 h-14 rounded-full"
-            src="/icons/multi-users.svg"
-            border="full"
-            name="Multi users"
-          />
-        </div>
-      );
-    }
-    if (type === ChatRoomType.TASK) {
-      return (
-        <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-          <ImageRound
-            className="w-14 h-14"
-            src="/icons/document.svg"
-            border="full"
-            name="Task"
-          />
-        </div>
-      );
-    }
-    if (type === ChatRoomType.SKILL) {
-      return (
-        <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-          <ImageRound
-            className="w-14 h-14"
-            src="/icons/skill-room.svg"
-            border="full"
-            name="Task"
-          />
-        </div>
-      );
+    switch (type) {
+      case ChatRoomType.GROUP:
+        return (
+          <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+            <ImageRound
+              className="w-14 h-14 rounded-full"
+              src="/icons/multi-users.svg"
+              border="full"
+              name="Multi users"
+            />
+          </div>
+        );
+      case ChatRoomType.TASK:
+        return (
+          <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+            <ImageRound
+              className="w-14 h-14"
+              src="/icons/document.svg"
+              border="full"
+              name="Task room"
+            />
+          </div>
+        );
+      case ChatRoomType.SKILL:
+        return (
+          <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+            <ImageRound
+              className="w-14 h-14"
+              src="/icons/skill-room.svg"
+              border="full"
+              name="Skill room"
+            />
+          </div>
+        );
+      case ChatRoomType.CALENDAR:
+        return (
+          <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+            <ImageRound
+              className="w-14 h-14"
+              src="/icons/calendar-room.svg"
+              border="full"
+              name="Calendar room"
+            />
+          </div>
+        );
     }
 
     const avatarColor =
@@ -1023,7 +1033,7 @@ const ChatDetail = ({
 
     return (
       <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-        <div className="scale-150 mt-[-4px]">
+        <div className="scale-150">
           {AvatarIconWithDynamicColor({
             color: avatarColor,
             size: 36,
@@ -1278,6 +1288,7 @@ const ChatDetail = ({
                       ChatRoomType.GROUP,
                       ChatRoomType.TASK,
                       ChatRoomType.SKILL,
+                      ChatRoomType.CALENDAR,
                     ].map(
                       (type) =>
                         chatRoomDetail?.code == chatRoomCode &&
@@ -1306,7 +1317,7 @@ const ChatDetail = ({
             </div>
           </div>
           <div
-            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
+            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
             {dataMessageDetail &&
               chatRoomNotifications &&
               dataMessageDetail
