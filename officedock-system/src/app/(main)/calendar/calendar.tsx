@@ -82,6 +82,7 @@ import { TaskContext } from '@providers/TaskProvider';
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
@@ -2339,6 +2340,9 @@ const EventCalendar = () => {
       handleRemoveTaskParam();
     },
     onError: (error: AxiosError<any>) => {
+      if (error.response?.data.taskSchedules) {
+        showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+      }
       showErrorToast(error, ERROR_UPDATE_MESSAGE);
     },
     onSettled: () => {

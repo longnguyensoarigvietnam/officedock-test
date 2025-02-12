@@ -60,6 +60,7 @@ import {
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
@@ -1745,14 +1746,25 @@ const KanbanBoardTask = () => {
       });
       setDataTaskEdit(null);
     },
-    onError: ({ response }: ResponseError<{ detail: TaskErrorPerson }>) => {
+    onError: ({
+      response,
+    }: ResponseError<{
+      detail: TaskErrorPerson;
+      taskSchedules: TaskErrorPerson;
+    }>) => {
       if (response?.data.detail) {
         setDataErrorTask(response?.data.detail);
+      } else if (response?.data.taskSchedules) {
+        showToast({
+          variant: 'error',
+          description: ERROR_MESSAGE_OVERLAP_TASK,
+        });
+      } else {
+        showToast({
+          variant: 'error',
+          description: ERROR_UPDATE_MESSAGE,
+        });
       }
-      showToast({
-        variant: 'error',
-        description: ERROR_UPDATE_MESSAGE,
-      });
     },
     onSettled: () => {
       setTimeout(() => {
@@ -2275,7 +2287,11 @@ const KanbanBoardTask = () => {
         setShowEditTaskModal(false);
       },
       onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
+        if (error.response?.data.taskSchedules) {
+          showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+        } else {
+          showErrorToast(error, ERROR_CREATE_MESSAGE);
+        }
       },
       onSettled: () => {
         setPeopleDefaultId(`${session?.user.id}`);
@@ -2550,6 +2566,18 @@ const KanbanBoardTask = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+  const [isFilterDeadline, setIsFilterDeadline] = useState(false);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      if (authenticatedUser.setting?.isSortingTaskByImportant) {
+        setIsFilterDeadline(false);
+      }
+      if (authenticatedUser.setting?.isSortingTaskByDeadline) {
+        setIsFilterDeadline(true);
+      }
+    }
+  }, [authenticatedUser]);
 
   return (
     <>
@@ -2629,33 +2657,47 @@ const KanbanBoardTask = () => {
                       name="Sort icon"
                       className="w-[18px] h-[14px]"
                     />
-                    <Button
-                      onClick={() => {
-                        if (
-                          authenticatedUser?.setting?.isSortingTaskByDeadline
-                        ) {
-                          setOrderingRequest('deadline');
-                        } else {
-                          setOrderingRequest('');
-                        }
-                      }}
-                      variant={
-                        authenticatedUser?.setting?.isSortingTaskByDeadline
-                          ? 'primary'
-                          : 'outline'
-                      }
-                      className={`${authenticatedUser?.setting?.isSortingTaskByDeadline ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
-                      締切期間
-                    </Button>
-                    <Button
-                      variant={
-                        authenticatedUser?.setting?.isSortingTaskByImportant
-                          ? 'primary'
-                          : 'outline'
-                      }
-                      className={`${authenticatedUser?.setting?.isSortingTaskByImportant ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px] border-[#A7B7C2] !text-[#A7B7C2] `}>
-                      重要
-                    </Button>
+                    {authenticatedUser && (
+                      <>
+                        <Button
+                          disabled={isLoadingDataTask}
+                          onClick={() => {
+                            if (!isFilterDeadline) {
+                              setIsFilterDeadline(true);
+                              setOrderingRequest('deadline');
+                            }
+                          }}
+                          variant={
+                            isLoadingDataTask
+                              ? 'outline'
+                              : isFilterDeadline
+                                ? 'primary'
+                                : 'outline'
+                          }
+                          className={`${isFilterDeadline && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                          締切期間
+                        </Button>
+                        <Button
+                          disabled={isLoadingDataTask}
+                          onClick={() => {
+                            if (isFilterDeadline) {
+                              setIsFilterDeadline(false);
+                              setOrderingRequest('is_important');
+                            }
+                          }}
+                          variant={
+                            isLoadingDataTask
+                              ? 'outline'
+                              : !isFilterDeadline && !isLoadingDataTask
+                                ? 'primary'
+                                : 'outline'
+                          }
+                          className={`${!isFilterDeadline && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                          重要
+                        </Button>
+                      </>
+                    )}
+
                     {/* Filter option modal */}
                     <Popover className="relative">
                       {() => (

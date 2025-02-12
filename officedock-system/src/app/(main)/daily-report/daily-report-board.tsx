@@ -179,9 +179,9 @@ const DailyReportBoard = () => {
       }));
 
       // Color chart
-      const listColor = dataStatistic.categories.map(
-        (item) => item.categoryColor,
-      );
+      const listColor = dataStatistic.categories
+        .filter((data) => data.categoryColor)
+        .map((item) => item.categoryColor);
 
       // Get list label
       const listLableChart = dataStatistic.categories.map(
@@ -1624,10 +1624,10 @@ const DailyReportBoard = () => {
       times.min !== null ? `${Math.min(times.min, 9)}:00:00` : defaultMinTime;
 
     const adjustedMaxTime =
-      times.max !== null && times.max > 19 ? times.max + 1 : times.max;
+      times.max !== null && times.max > 18 ? times.max + 1 : times.max;
     const slotMaxTime =
       adjustedMaxTime !== null
-        ? `${Math.max(adjustedMaxTime, 19)}:00:00`
+        ? `${Math.max(adjustedMaxTime, 18)}:00:00`
         : defaultMaxTime;
 
     return { slotMinTime, slotMaxTime };
@@ -1710,7 +1710,7 @@ const DailyReportBoard = () => {
           </div>
         </header>
         <div className="mt-4 flex gap-3">
-          <div className="w-[262px] px-5 bg-[#F8FAFC] rounded-[14px] daily-custom h-fit overflow-y-auto">
+          <div className="w-[262px] px-5 bg-[#F8FAFC] h-[calc(100vh_-_177px)] rounded-[14px] daily-custom  overflow-y-auto">
             <p className=" pt-[30px] mb-2">スケジュール実績</p>
             <FullCalendar
               ref={calendarRef}

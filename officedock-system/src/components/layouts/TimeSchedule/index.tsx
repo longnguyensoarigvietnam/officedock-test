@@ -2564,7 +2564,7 @@ const TimeSchedule = memo(
                   }}
                   slotDuration={isOptionZoomSchedule}
                   initialDate={new Date()}
-                  eventResizableFromStart={true}
+                  eventResizableFromStart={false}
                   eventDrop={handleEventDrop}
                   eventContent={handleRenderEvent}
                   eventReceive={handleEventReceive}

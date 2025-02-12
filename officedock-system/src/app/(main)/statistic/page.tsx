@@ -1,7 +1,7 @@
 import React from 'react';
 
 const StatisticPage = () => {
-  return <div>StatisticPage</div>;
+  return <div></div>;
 };
 
 export default StatisticPage;
