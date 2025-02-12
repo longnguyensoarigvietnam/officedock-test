@@ -50,6 +50,7 @@ import { SETTING_MENU, SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_DELETE_MESSAGE,
+  ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -280,7 +281,9 @@ const Header = ({ className }: HeaderProps) => {
       setShowModalTask(false);
     },
     onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      if (error.response?.data.taskSchedules) {
+        showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+      } else showErrorToast(error, ERROR_UPDATE_MESSAGE);
     },
     onSettled: () => {
       setTimeout(() => {

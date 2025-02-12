@@ -35,7 +35,6 @@ const PieChart = ({
     'rgba(255, 206, 86, 0.8)',
     'rgba(75, 192, 192, 0.8)',
   ];
-
   const chartData: ChartData<'pie', number[], string> = {
     labels,
     datasets: [
