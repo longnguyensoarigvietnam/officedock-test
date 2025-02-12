@@ -303,6 +303,10 @@ def get_common_categories(category):
         {
             "id": getattr(category, attr).id,
             "name": getattr(category, attr).name,
+            # FIXME: Check spec implement color of category
+            "color": getattr(category, attr).color
+            if type_value == ScheduleCategoryTypes.LARGE.value
+            else None,
             "type": type_value,
         }
         for attr, type_value in category_types

@@ -142,6 +142,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
     type = serializers.SerializerMethodField()
     event_type = serializers.SerializerMethodField()
     is_my_schedule = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
 
     class Meta:
         model = Schedule
@@ -156,7 +157,16 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "participants",
             "is_start",
             "event_type",
+            "categories",
         ]
+
+    # FIXME: Check spec implement color of category
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Schedule."""
+        if not obj.categories.exists():
+            return []
+
+        return get_common_categories(obj.categories.first())
 
     def get_type(self, obj):
         """

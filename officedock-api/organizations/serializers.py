@@ -20,7 +20,8 @@ class StatisticCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StatisticCategory
-        fields = ["id", "name", "uuid"]
+        # FIXME: Check spec implement color of category
+        fields = ["id", "name", "uuid", "color"]
         read_only_fields = ["id"]
 
     def validate(self, attrs):
