@@ -238,7 +238,10 @@ class StatDataViewSet(BaseAPIViewSet):
                 queryset.filter(
                     Q(categories__large_statistic_category__isnull=False)
                 )
-                .values("categories__large_statistic_category__name")
+                .values(
+                    "categories__large_statistic_category__name",
+                    "categories__large_statistic_category__color",
+                )
                 .annotate(duration=Sum("duration"))
             )
 
@@ -273,11 +276,18 @@ class StatDataViewSet(BaseAPIViewSet):
                 none_large_categories[
                     "categories__large_statistic_category__name"
                 ] = None
+                none_large_categories[
+                    "categories__large_statistic_category__color"
+                ] = None
             for event in event_without_large_durations:
                 none_large_categories["duration"] += event["duration"]
                 none_large_categories[
                     "categories__large_statistic_category__name"
                 ] = None
+                none_large_categories[
+                    "categories__large_statistic_category__color"
+                ] = None
+
             category_list = list(
                 chain(
                     task_with_category_large_durations, [none_large_categories]
@@ -287,6 +297,7 @@ class StatDataViewSet(BaseAPIViewSet):
         for cat in category_list:
             category_duration = format_duration(cat["duration"]) or timedelta(0)
             category_name = cat["categories__large_statistic_category__name"]
+            category_color = cat["categories__large_statistic_category__color"]
             percent_per_total_duration = (
                 (
                     time_to_timedelta(category_duration).total_seconds()
@@ -305,6 +316,7 @@ class StatDataViewSet(BaseAPIViewSet):
             data["categories"].append(
                 {
                     "category_name": category_name,
+                    "category_color": category_color,
                     "duration": category_duration,
                     "percent": round(percent_per_total_duration)
                     if percent_per_total_duration < 100
