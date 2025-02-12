@@ -13,6 +13,7 @@ import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
 
 import {
+  EventWorkCategory,
   ItemScheduleType,
   ItemStartType,
   PermissionsSystem,
@@ -313,6 +314,10 @@ const Item = ({
       session?.user.permissions,
       PermissionsSystem.MY_TASK_ADD,
     );
+  const largeColor =
+    content.categories &&
+    content.categories.find((item) => item.type === EventWorkCategory.LARGE)
+      ?.color;
 
   return (
     <>
@@ -331,10 +336,15 @@ const Item = ({
                 end: formatISO(addHoursToDate(`${now}`)),
                 startEditable: true,
                 itemKanban: true,
+                largeColor: largeColor,
               })}
               {...provided.draggableProps}
               {...provided.dragHandleProps}
-              className={`relative ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              style={{
+                borderLeftColor: largeColor,
+                ...provided.draggableProps.style,
+              }}
+              className={`relative ${largeColor && !content.isStart && 'border border-l-2'} ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
               <div className="relative w-[100%]   h-full">
                 {isPermissionUpdate && (
                   <>

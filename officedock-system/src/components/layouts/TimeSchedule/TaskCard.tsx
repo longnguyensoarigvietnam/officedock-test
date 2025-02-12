@@ -376,14 +376,22 @@ const TaskCard = ({
         : 46;
   const extendedProps = event.event?.extendedProps;
 
+  const largeColor = event.event?.extendedProps.largeColor;
+
   return (
     <>
       <div
         style={{
           paddingTop: `${(slotHeight / baseHeight) * 7}px`,
           paddingBottom: `${(slotHeight / baseHeight) * 8}px`,
+          borderLeftColor: resourcePlan ? largeColor : '',
+          backgroundColor: resourcePlan
+            ? 'white'
+            : largeColor
+              ? largeColor
+              : '#A7B9C2',
         }}
-        className={`h-full group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && '!bg-[#A7B9C2] !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}
+        className={`h-full ${largeColor && resourcePlan && 'border border-l-2'}  group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}
         onClick={() => {
           if (event.event.extendedProps.type === ItemStartType.SCHEDULE) {
             const newId = event.event.id.replace('event', '');
@@ -478,7 +486,7 @@ const TaskCard = ({
           )}
         </div>
 
-        <div className="absolute opacity-0 group-hover:opacity-100 bottom-[-20px] left-1/2 -translate-x-1/2 z-50">
+        <div className="absolute fc-resizer   custom-resize-handle opacity-0  group-hover:opacity-100 bottom-[-20px] left-1/2 -translate-x-1/2 z-50">
           <ImageRound
             src={`/icons/resize-task.svg`}
             name="icon resize"

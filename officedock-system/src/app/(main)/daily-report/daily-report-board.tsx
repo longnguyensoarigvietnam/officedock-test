@@ -4,7 +4,6 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -52,7 +51,7 @@ import {
 import { apiRouters } from '@constants/routers';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 
-import './styles/statistics.css';
+import './styles/daily-report.css';
 import useDataStatistic from '@hooks/useDataStatistic';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import {
@@ -82,11 +81,7 @@ import {
   isTodaySchedule,
   isYesterdaySchedule,
 } from '@utils/date';
-import {
-  getColors,
-  hasPermissionInArray,
-  transformDataTaskDailyToTable,
-} from '@utils';
+import { hasPermissionInArray, transformDataTaskDailyToTable } from '@utils';
 import { useWebSocket } from '@providers/WebSocketProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -97,7 +92,7 @@ import Dropdown from '@components/common/Dropdown';
 import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 import { useErrorToast } from '@hooks/useErrorToast';
 
-const StatisticBoard = () => {
+const DailyReportBoard = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
   const calendarDownloadRef = useRef<FullCalendar | null>(null);
 
@@ -152,6 +147,10 @@ const StatisticBoard = () => {
         pausedAt: duration.pausedAt ? new Date(duration.pausedAt) : currentDate,
         start: new Date(duration.startedAt),
         end: duration.pausedAt ? new Date(duration.pausedAt) : new Date(),
+        largeColor:
+          task.categories &&
+          task.categories.find((item) => item.type === EventWorkCategory.LARGE)
+            ?.color,
       })),
     );
   };
@@ -167,24 +166,22 @@ const StatisticBoard = () => {
     }
   }, [creationDataTaskData]);
 
-  const generatedColors = useMemo(() => {
-    if (dataStatistic?.categories?.length) {
-      return getColors(dataStatistic.categories.length);
-    }
-    return [];
-  }, [dataStatistic?.categories?.length]);
-
   useEffect(() => {
     if (dataStatistic) {
       // Generate color
 
       // Add color for item
-      const dataAddColor = dataStatistic.categories.map((item, index) => ({
-        color: generatedColors[index],
+      const dataAddColor = dataStatistic.categories.map((item) => ({
+        color: item.categoryColor,
         categoryName: item.categoryName ? item.categoryName : '未設定',
         duration: item.duration,
         percent: item.percent,
       }));
+
+      // Color chart
+      const listColor = dataStatistic.categories.map(
+        (item) => item.categoryColor,
+      );
 
       // Get list label
       const listLableChart = dataStatistic.categories.map(
@@ -212,8 +209,9 @@ const StatisticBoard = () => {
       setRemarkData(
         dataStatistic?.remark.remark ? dataStatistic?.remark.remark : '',
       );
+
       setChartData({
-        colors: generatedColors,
+        colors: listColor,
         labels: listLableChart,
         data: listValueChart,
         actualValue: listValueActualChart,
@@ -2191,4 +2189,4 @@ const StatisticBoard = () => {
   );
 };
 
-export default StatisticBoard;
+export default DailyReportBoard;

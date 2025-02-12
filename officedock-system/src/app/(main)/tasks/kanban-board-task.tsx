@@ -98,6 +98,13 @@ import {
 } from '@utils/date';
 import { compareItems } from '@utils';
 import api from '@base/api';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
+import ActionFilterTask from '@components/modals/ActionFilterTask';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -2542,6 +2549,7 @@ const KanbanBoardTask = () => {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   return (
     <>
@@ -2621,19 +2629,70 @@ const KanbanBoardTask = () => {
                       name="Sort icon"
                       className="w-[18px] h-[14px]"
                     />
-                    <Button className="h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]">
+                    <Button
+                      onClick={() => {
+                        if (
+                          authenticatedUser?.setting?.isSortingTaskByDeadline
+                        ) {
+                          setOrderingRequest('deadline');
+                        } else {
+                          setOrderingRequest('');
+                        }
+                      }}
+                      variant={
+                        authenticatedUser?.setting?.isSortingTaskByDeadline
+                          ? 'primary'
+                          : 'outline'
+                      }
+                      className={`${authenticatedUser?.setting?.isSortingTaskByDeadline ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
                       締切期間
                     </Button>
                     <Button
-                      variant="outline"
-                      className="h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px] border-[#A7B7C2] !text-[#A7B7C2] ">
+                      variant={
+                        authenticatedUser?.setting?.isSortingTaskByImportant
+                          ? 'primary'
+                          : 'outline'
+                      }
+                      className={`${authenticatedUser?.setting?.isSortingTaskByImportant ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px] border-[#A7B7C2] !text-[#A7B7C2] `}>
                       重要
                     </Button>
-                    <ImageRound
-                      src="/icons/filter.svg"
-                      name="Filter icon"
-                      className="w-[14px] h-[14px] ml-2"
-                    />
+                    {/* Filter option modal */}
+                    <Popover className="relative">
+                      {() => (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <PopoverButton
+                              onClick={() =>
+                                setIsOpenModalFilter(!isOpenModalFilter)
+                              }
+                              className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                              <ImageRound
+                                src="/icons/filter.svg"
+                                name="Filter icon"
+                                className="w-[14px] h-[14px] ml-2"
+                              />
+                            </PopoverButton>
+                          </div>
+                          <Transition
+                            as={Fragment}
+                            show={isOpenModalFilter}
+                            enter="transition ease-out duration-200"
+                            enterFrom="opacity-0 translate-y-1"
+                            enterTo="opacity-100 translate-y-0"
+                            leave="transition ease-in duration-150"
+                            leaveFrom="opacity-100 translate-y-0"
+                            leaveTo="opacity-0 translate-y-1">
+                            <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
+                              <ActionFilterTask
+                                creationDataTaskData={creationDataTaskData}
+                                handleClose={() => setIsOpenModalFilter(false)}
+                              />
+                            </PopoverPanel>
+                          </Transition>
+                        </>
+                      )}
+                    </Popover>
+
                     <InputSearch
                       className="w-[300px] h-[34px] py-0 bg-[#EBF1F7] !rounded-[20px]"
                       inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm"
