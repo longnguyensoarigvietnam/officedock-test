@@ -69,8 +69,13 @@ class TypeChatGroup(EnumChoices):
     TypeChatGroup constants.
     """
 
+    # FIXME: Remove NOTIFY and CHAT later when if not split chatroom and notify group
     NOTIFY = "NOTIFY"
     CHAT = "CHAT"
+
+    GROUP = "GROUP"
+    PRIVATE = "PRIVATE"
+    UNREAD = "UNREAD"
 
 
 USER_ACTION_GROUP = "{}_user_action_group"

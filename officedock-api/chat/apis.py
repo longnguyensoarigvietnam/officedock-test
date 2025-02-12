@@ -9,6 +9,7 @@ from django.db.models import (
     CharField,
     F,
     Q,
+    Count,
 )
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -30,7 +31,6 @@ from chat.constants import (
     ChatMessageTypes,
     ChatRoomTypes,
     WebSocketEventType,
-    ChatRoomNames,
     TypeChatGroup,
 )
 from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
@@ -293,7 +293,11 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             OpenApiParameter(
                 "type",
                 type=str,
-                enum=[TypeChatGroup.CHAT.value, TypeChatGroup.NOTIFY.value],
+                enum=[
+                    TypeChatGroup.GROUP.value,
+                    TypeChatGroup.PRIVATE.value,
+                    TypeChatGroup.UNREAD.value,
+                ],
             ),
         ]
     )
@@ -304,32 +308,40 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         user = request.user
 
         # Get or create chat room type task
-        task_room = ChatRoom.objects.filter(
-            type=ChatRoomTypes.TASK.value,
-            participants=user,
-            company=user.company,
-            name=ChatRoomNames.TASK_CARD.value,
-        ).first()
-
-        # Get or create chat room type skill
-        skill_room = ChatRoom.objects.filter(
-            type=ChatRoomTypes.SKILL.value,
-            participants=user,
-            company=user.company,
-            name=ChatRoomNames.SKILL_UP.value,
-        ).first()
+        # FIXME: Remove later
+        # task_room = ChatRoom.objects.filter(
+        #     type=ChatRoomTypes.TASK.value,
+        #     participants=user,
+        #     company=user.company,
+        #     name=ChatRoomNames.TASK_CARD.value,
+        # ).first()
+        #
+        # # Get or create chat room type skill
+        # skill_room = ChatRoom.objects.filter(
+        #     type=ChatRoomTypes.SKILL.value,
+        #     participants=user,
+        #     company=user.company,
+        #     name=ChatRoomNames.SKILL_UP.value,
+        # ).first()
 
         # Use select_related to load related ForeignKey relationships
-        chat_rooms_participants = user.chat_rooms_participants.select_related(
-            "chat_room",
-        ).filter(hidden_at__isnull=True)
-
-        task_card_room = ChatRoomsParticipants.objects.filter(
-            chat_room=task_room, user=user
-        ).first()
-        skill_card_room = ChatRoomsParticipants.objects.filter(
-            chat_room=skill_room, user=user
-        ).first()
+        chat_rooms_participants = (
+            user.chat_rooms_participants.select_related("chat_room")
+            .annotate(
+                participant_count=Count("chat_room__chat_rooms_participants")
+            )
+            .filter(hidden_at__isnull=True)
+            .exclude(
+                chat_room__type=ChatRoomTypes.PRIVATE.value, participant_count=1
+            )
+        )
+        # FIXME: Remove later
+        # task_card_room = ChatRoomsParticipants.objects.filter(
+        #     chat_room=task_room, user=user
+        # ).first()
+        # skill_card_room = ChatRoomsParticipants.objects.filter(
+        #     chat_room=skill_room, user=user
+        # ).first()
 
         # Subquery to get the latest message
         latest_message_subquery = Subquery(
@@ -414,20 +426,16 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             "chat_room__participants",
             "chat_room__chat_messages",
         )
-        if request.query_params.get("type") == TypeChatGroup.CHAT.value:
-            updated_chat_rooms = chat_rooms.exclude(
-                chat_room__type__in=[
-                    ChatRoomTypes.TASK.value,
-                    ChatRoomTypes.SKILL.value,
-                ]
-            )
-        elif request.query_params.get("type") == TypeChatGroup.NOTIFY.value:
+        if request.query_params.get("type") == TypeChatGroup.PRIVATE.value:
             updated_chat_rooms = chat_rooms.filter(
-                chat_room__type__in=[
-                    ChatRoomTypes.TASK.value,
-                    ChatRoomTypes.SKILL.value,
-                ]
+                chat_room__type=ChatRoomTypes.PRIVATE.value
             )
+        elif request.query_params.get("type") == TypeChatGroup.GROUP.value:
+            updated_chat_rooms = chat_rooms.filter(
+                chat_room__type=ChatRoomTypes.GROUP.value
+            )
+        elif request.query_params.get("type") == TypeChatGroup.UNREAD.value:
+            updated_chat_rooms = chat_rooms.filter(unread_messages__gt=0)
         else:
             updated_chat_rooms = chat_rooms
             # FIXME: Remove later
