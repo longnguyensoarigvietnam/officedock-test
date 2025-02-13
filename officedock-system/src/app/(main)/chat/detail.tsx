@@ -978,9 +978,9 @@ const ChatDetail = ({
     switch (type) {
       case ChatRoomType.GROUP:
         return (
-          <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
             <ImageRound
-              className="w-14 h-14 rounded-full"
+              className="w-12 h-12 rounded-full"
               src="/icons/multi-users.svg"
               border="full"
               name="Multi users"
@@ -989,9 +989,9 @@ const ChatDetail = ({
         );
       case ChatRoomType.TASK:
         return (
-          <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
             <ImageRound
-              className="w-14 h-14"
+              className="w-12 h-12"
               src="/icons/document.svg"
               border="full"
               name="Task room"
@@ -1000,9 +1000,9 @@ const ChatDetail = ({
         );
       case ChatRoomType.SKILL:
         return (
-          <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
             <ImageRound
-              className="w-14 h-14"
+              className="w-12 h-12"
               src="/icons/skill-room.svg"
               border="full"
               name="Skill room"
@@ -1011,9 +1011,9 @@ const ChatDetail = ({
         );
       case ChatRoomType.CALENDAR:
         return (
-          <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
             <ImageRound
-              className="w-14 h-14"
+              className="w-12 h-12"
               src="/icons/calendar-room.svg"
               border="full"
               name="Calendar room"
@@ -1179,38 +1179,40 @@ const ChatDetail = ({
               background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
             }}>
             <div className={`flex items-center w-[60%] gap-2`}>
-              <div className="!min-w-[50px]">
-                {renderImageRound(
-                  chatRoomDetail?.type,
-                  chatRoomDetail?.participants || [],
-                )}
-              </div>
               {chatRoomDetail && (
-                <p
-                  className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_370px)]'}   ml-3`}
-                  style={{
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                  }}>
-                  {chatRoomDetail
-                    ? chatRoomCode &&
-                      chatRoomNameEditing.find(
-                        (room) => room.roomCode === chatRoomCode,
-                      )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === chatRoomCode,
-                        )?.roomName
-                      : chatRoomDetail?.name
-                    : chatRoomCode &&
+                <>
+                  <div className="!min-w-[48px]">
+                    {renderImageRound(
+                      chatRoomDetail?.type,
+                      chatRoomDetail?.participants || [],
+                    )}
+                  </div>
+                  <p
+                    className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_370px)]'}   ml-3`}
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}>
+                    {chatRoomDetail
+                      ? chatRoomCode &&
                         chatRoomNameEditing.find(
                           (room) => room.roomCode === chatRoomCode,
                         )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === chatRoomCode,
-                        )?.roomName
-                      : ''}
-                </p>
+                        ? chatRoomNameEditing.find(
+                            (room) => room.roomCode === chatRoomCode,
+                          )?.roomName
+                        : chatRoomDetail?.name
+                      : chatRoomCode &&
+                          chatRoomNameEditing.find(
+                            (room) => room.roomCode === chatRoomCode,
+                          )
+                        ? chatRoomNameEditing.find(
+                            (room) => room.roomCode === chatRoomCode,
+                          )?.roomName
+                        : ''}
+                  </p>
+                </>
               )}
               <div className="max-w-[280px] w-[280px] ml-3">
                 {chatRoomDetail &&

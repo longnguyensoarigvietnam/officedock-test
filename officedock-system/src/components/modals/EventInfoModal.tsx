@@ -3,12 +3,13 @@ import { isSameDay } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
+import tinycolor from "tinycolor2";
 
 import ImageRound from '@components/common/ImageRound';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 import { NO_SETTING } from '@constants';
-import { PermissionsSystem } from '@constants/enums';
+import { EventCalendarType, PermissionsSystem } from '@constants/enums';
 
 import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
 
@@ -23,7 +24,7 @@ export type EventInfoModalProps = {
   top?: number;
   left?: number;
   dataEvent?: EventEditFormData;
-  checkShowUserAvatar: (participants?: EventParticipant[]) => boolean
+  checkShowUserAvatar: (type?: EventCalendarType, participants?: EventParticipant[]) => boolean
   onClose: () => void;
   onEdit?: (values: EventEditFormData) => void;
   onDelete?: (values: EventEditFormData) => void;
@@ -69,10 +70,14 @@ const EventInfoModal = memo(
         .find((selectedUserId) => Number(selectedUserId) == participantId);
     };
 
+    const lightenColor = (color: string, amount = 40) => {
+      return tinycolor(color).lighten(amount).toString();
+    };
+
     return (
       <div className="z-50 flex items-center justify-center">
         <div
-          className="font-primary shadow-sm shadow-[#072338] bg-[#0068B6] w-[330px] !rounded-2xl z-50 p-4"
+          className="font-primary shadow-lg bg-white w-[330px] !rounded-2xl z-50 p-4"
           ref={popoverRef}
           style={{
             position: 'absolute',
@@ -80,7 +85,7 @@ const EventInfoModal = memo(
             left: `${left}px`,
           }}>
           <div className="flex items-center justify-between">
-            <p className="font-medium text-xs text-white">予定</p>
+            <p className="font-medium text-xs text-[#77858F]">予定</p>
             <div className="flex gap-1 justify-end items-center">
               {session?.user.permissions &&
                 hasPermissionInArray(
@@ -94,13 +99,13 @@ const EventInfoModal = memo(
                     placement="top"
                     offset={[0, 5]}>
                     <div
-                      className="hover:bg-[#1f7abf] p-1.5 hover:rounded-full hover:cursor-pointer"
+                      className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer"
                       onClick={() => {
                         onEdit && onEdit(dataEvent as EventEditFormData);
                       }}>
                       <ImageRound
                         name="Edit"
-                        src={'/icons/edit-event.svg'}
+                        src={'/icons/edit-task.svg'}
                         className="w-[16px] h-[16px] hover:cursor-pointer"
                       />
                     </div>
@@ -118,35 +123,35 @@ const EventInfoModal = memo(
                     placement="top"
                     offset={[0, 5]}>
                     <div
-                      className="hover:bg-[#1f7abf] px-2 py-1.5 hover:rounded-full hover:cursor-pointer"
+                      className="hover:bg-[#EBF1F4] px-2 py-1.5 hover:rounded-full hover:cursor-pointer"
                       onClick={() => {
                         onDelete && onDelete(dataEvent as EventEditFormData);
                       }}>
                       <ImageRound
                         name="Delete"
-                        src={'/icons/delete-event.svg'}
+                        src={'/icons/delete-task.svg'}
                         className="w-[13px] h-[16px] hover:cursor-pointer"
                       />
                     </div>
                   </Tippy>
                 )}
               <div
-                className="hover:bg-[#1f7abf] p-1.5 hover:rounded-full hover:cursor-pointer"
+                className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer"
                 onClick={onClose}>
                 <ImageRound
                   name="Close"
-                  src={'/icons/white-close.svg'}
+                  src={'/icons/close.svg'}
                   className="w-[18px] h-[18px] hover:cursor-pointer"
                 />
               </div>
             </div>
           </div>
 
-          <p className="text-white font-bold text-[16px] mb-3 break-words">
+          <p className="font-bold text-[16px] mb-3 break-words">
             {dataEvent?.title}
           </p>
           <div className="flex">
-            <p className="text-white">
+            <p className="">
               {dataEvent?.startDate &&
                 dataEvent?.endDate &&
                 (isSameDay(
@@ -158,12 +163,12 @@ const EventInfoModal = memo(
             </p>
           </div>
           {dataEvent && dataEvent.isAllDay ? (
-            <p className="text-white text-[14px]">終日</p>
+            <p className="text-[14px]">終日</p>
           ) : (
             dataEvent &&
             dataEvent.startDate &&
             dataEvent.endDate && (
-              <div className="flex gap-1 items-center text-white text-[14px]">
+              <div className="flex gap-1 items-center text-[14px]">
                 <p className="text-[12px]">開始</p>
                 <p>
                   {formatHoursAndMinutesForDateTime(
@@ -180,18 +185,19 @@ const EventInfoModal = memo(
               </div>
             )
           )}
-          <div className="flex gap-3 mt-3">
-            <p className="text-white flex-none text-[14px]">場所</p>
-            <p className="text-[#0068B6] bg-white rounded-md px-1 py-0.5 truncate max-w-[305px] text-[14px]">
+          <div className="flex items-center gap-3 mt-3">
+            <p className="flex-none text-[14px]">場所</p>
+            <p className="bg-[#EBF1F7] rounded-[4px] px-[5px] py-[6px] truncate max-w-[305px] text-[14px]">
               {dataEvent?.address || `${NO_SETTING}`}
             </p>
           </div>
           {dataEvent &&
             checkShowUserAvatar(
+              EventCalendarType.SCHEDULE,
               dataEvent.participants,
             ) && (
               <div className="mt-3">
-                <p className="text-white flex-none text-[14px] mb-3">
+                <p className="text-[#77858F] flex-none text-[14px] mb-3">
                   参加メンバー {dataEvent.participants?.length}人
                 </p>
                 <div className="flex flex-wrap">
@@ -220,7 +226,7 @@ const EventInfoModal = memo(
                           })}
                         </div>
                       </Tippy>
-                      <p className="text-white text-[14px] font-medium">
+                      <p className="text-[#000000] text-[14px] font-medium">
                         {dataEvent.participants[0].fullName}
                       </p>
                     </div>
@@ -253,9 +259,11 @@ const EventInfoModal = memo(
                             placement="top"
                             offset={[0, 5]}>
                             <div
-                              className={`${index > 0 && 'ml-[-6px]'} mb-1 border-[2px] border-white rounded-full w-[40px] h-[40px] ${checkShowDimmedUserAvatar(Number(participant.id)) && 'opacity-60'}`}>
+                              className={`${index > 0 && 'ml-[-6px]'} mb-1`}>
                               {AvatarIconWithDynamicColor({
-                                color: avatarColor || '',
+                                color: checkShowDimmedUserAvatar(Number(participant.id))
+                                ? lightenColor(avatarColor || '', 30)
+                                : avatarColor || '',
                                 size: 36,
                                 customClassName: '!mt-0',
                               })}

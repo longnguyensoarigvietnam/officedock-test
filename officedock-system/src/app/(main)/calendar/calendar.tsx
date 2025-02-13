@@ -535,12 +535,23 @@ const EventCalendar = () => {
     return () => resizeObserver.disconnect();
   }, [calendarRef, containerRef]);
 
-  const checkShowUserAvatar = (participants?: EventParticipant[]) => {
-    return !(
-      participants?.length == 1 &&
-      participants.find(
-        (participant: EventParticipant) => participant.id == session?.user.id,
-      )
+  const checkShowUserAvatar = (
+    type?: EventCalendarType,
+    participants?: EventParticipant[],
+  ) => {
+    const filteredUserIds = selectedScheduleUserIds
+      .split(',')
+      .map((num) => num.trim())
+      .filter(Boolean);
+    return (
+      !(
+        participants?.length == 1 &&
+        participants.find(
+          (participant: EventParticipant) => participant.id == session?.user.id,
+        )
+      ) &&
+      type == EventCalendarType.SCHEDULE &&
+      filteredUserIds.length > 0
     );
   };
 
@@ -663,7 +674,7 @@ const EventCalendar = () => {
                       placement="top"
                       offset={[0, 5]}>
                       <div
-                        className={`text-white text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
+                        className={`text-[#77858F] text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
                         +{participantList.length - 5}
                       </div>
                     </Tippy>
@@ -677,7 +688,7 @@ const EventCalendar = () => {
                       placement="top"
                       offset={[0, 5]}>
                       <div
-                        className={`text-white text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
+                        className={`text-[#77858F] text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
                         +{participantList.length - 1}
                       </div>
                     </Tippy>
@@ -701,8 +712,10 @@ const EventCalendar = () => {
           return (
             <div className="mb-1">
               <div
-                className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7] text-white' : 'text-black bg-white'} overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}>
+                className={` text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
+                style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                 {checkShowUserAvatar(
+                  eventContent.event.extendedProps.type,
                   eventContent.event.extendedProps.participants,
                 ) ? (
                   <div className="flex items-center gap-1">
@@ -732,6 +745,7 @@ const EventCalendar = () => {
         return (
           <div className="overflow-hidden p-1.5">
             {checkShowUserAvatar(
+              eventContent.event.extendedProps.type,
               eventContent.event.extendedProps.participants,
             ) &&
               showUserAvatars(
@@ -741,16 +755,14 @@ const EventCalendar = () => {
                 '!w-[32px] !h-[32px]',
                 true,
               )}
-            <div
-              className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} text-[14px] font-medium px-1`}>
+            <div className={` text-black text-[14px] font-medium px-1`}>
               <p className="font-semibold min-h-5">
                 {eventContent.event.title != 'null'
                   ? eventContent.event.title
                   : ''}
               </p>
             </div>
-            <div
-              className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} text-[12px] font-normal px-1`}>
+            <div className={` text-black text-[12px] font-normal px-1`}>
               {new Date(eventContent.event.start).getDate() !=
               new Date(eventContent.event.end).getDate() ? (
                 <p className="whitespace-nowrap">
@@ -759,9 +771,10 @@ const EventCalendar = () => {
                   {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                 </p>
               ) : (
-                isMoreThanSixtyMinutes(eventContent.timeText)
+                isMoreThanSixtyMinutes(eventContent.timeText) && eventContent.timeText
               )}
             </div>
+            <p className={` text-black text-[12px] font-normal px-1`}>{eventContent.event.extendedProps.address}</p>
           </div>
         );
       } else if (currentView === CalendarViewOptions.VIEW_BY_DAY) {
@@ -769,7 +782,8 @@ const EventCalendar = () => {
           return (
             <div className="mb-1">
               <div
-                className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7]' : 'text-black bg-white'} overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}>
+                className={`text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
+                style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                 <p className="truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px]">
                   {eventContent.event.title !== 'null'
                     ? eventContent.event.title
@@ -781,16 +795,14 @@ const EventCalendar = () => {
         }
         return (
           <div className="overflow-hidden">
-            <div
-              className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} font-medium px-1 pt-1 text-[14px]`}>
+            <div className={` text-black font-medium px-1 pt-1 text-[14px]`}>
               <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
                 {eventContent.event.title != 'null'
                   ? eventContent.event.title
                   : ''}
               </p>
             </div>{' '}
-            <div
-              className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} font-normal px-1 text-[12px]`}>
+            <div className={`text-black font-normal px-1 text-[12px]`}>
               {new Date(eventContent.event.start).getDate() !=
               new Date(eventContent.event.end).getDate() ? (
                 <p className="whitespace-nowrap">
@@ -813,8 +825,10 @@ const EventCalendar = () => {
           return (
             <div className="fc-daygrid-event mb-1">
               <div
-                className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7] text-white' : 'text-black bg-white'} overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}>
+                className={`text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
+                style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                 {checkShowUserAvatar(
+                  eventContent.event.extendedProps.type,
                   eventContent.event.extendedProps.participants,
                 ) ? (
                   <div className="flex items-center gap-1">
@@ -845,14 +859,14 @@ const EventCalendar = () => {
           <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
             <div className="flex items-center gap-1">
               <div
-                className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black py-0.5'} flex items-center gap-1 font-normal text-[12px]`}>
+                className={`text-black py-0.5 flex items-center gap-1 font-normal text-[12px]`}>
                 <div
-                  className={`notification-dot ${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7]' : 'bg-[#9fa1a2]'} !w-2 !h-2 ml-1 rounded-full`}
+                  className={`notification-dot bg-[#9fa1a2] !w-2 !h-2 ml-1 rounded-full`}
                 />
                 <p>{eventContent.timeText}</p>
               </div>{' '}
               <p
-                className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] ${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'hover:!bg-transparent' : 'text-black'} font-semibold px-1 text-[12px]`}>
+                className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-black font-semibold px-1 text-[12px]`}>
                 {eventContent.event.title != 'null'
                   ? eventContent.event.title
                   : ''}
@@ -912,6 +926,7 @@ const EventCalendar = () => {
                     end: new Date(adjustedEnd).toLocaleString(),
                     type: event.type,
                     participants: event.participants || [],
+                    address: event.address || ''
                   });
                 }
               } else {
@@ -926,6 +941,7 @@ const EventCalendar = () => {
                   end: new Date(adjustedEnd).toLocaleString(),
                   type: event.type,
                   participants: event.participants || [],
+                  address: event.address || ''
                 });
               }
             }
@@ -1085,6 +1101,8 @@ const EventCalendar = () => {
             end: new Date(adjustedEnd).toLocaleString(),
             type: event.type,
             participants: event.participants || [],
+            address: event.address || '',
+            allDay: event.allDay
           });
         }
       }
@@ -1166,6 +1184,7 @@ const EventCalendar = () => {
                 id: `${event.id}`,
                 type: EventCalendarType.SCHEDULE,
                 participants: event.participants || [],
+                address: event.address || '',
                 resourceIds: [
                   ...(event.participants
                     ?.filter(
@@ -1240,6 +1259,7 @@ const EventCalendar = () => {
                 id: `${event.id}`,
                 type: EventCalendarType.SCHEDULE,
                 isMyEvent: true,
+                address: event.address || '',
                 participants: event.participants || [],
                 resourceIds: [
                   ...(event.participants
@@ -1851,7 +1871,8 @@ const EventCalendar = () => {
   const handleEventClick = (clickInfo: EventClickArg) => {
     if (
       searchParams.get('view') == ViewOptions.DAY ||
-      searchParams.get('view') == ViewOptions.WEEK
+      searchParams.get('view') == ViewOptions.WEEK ||
+      searchParams.get('view') == ViewOptions.MONTH
     ) {
       if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
         handleConfirmGetDataEventInfo(`${clickInfo.event.id}`);
@@ -1859,8 +1880,8 @@ const EventCalendar = () => {
         clickInfo.event.extendedProps.type === EventCalendarType.TASK
       ) {
         handleConfirmGetDataTaskInfo({
-          id: `${clickInfo.event.id}`,
-          taskScheduleId: String(clickInfo.event.extendedProps.taskId),
+          id: String(clickInfo.event.extendedProps.taskId),
+          taskScheduleId: `${clickInfo.event.id}`,
         });
       }
       setInfoModalPosition({
@@ -1960,20 +1981,20 @@ const EventCalendar = () => {
 
   const calendarViewOptions = [
     {
-      value: CalendarViewOptions.VIEW_BY_YEAR,
-      label: '年',
-    },
-    {
-      value: CalendarViewOptions.VIEW_BY_MONTH,
-      label: '月',
+      value: CalendarViewOptions.VIEW_BY_DAY,
+      label: '日',
     },
     {
       value: CalendarViewOptions.VIEW_BY_WEEK,
       label: '週',
     },
     {
-      value: CalendarViewOptions.VIEW_BY_DAY,
-      label: '日',
+      value: CalendarViewOptions.VIEW_BY_MONTH,
+      label: '月',
+    },
+    {
+      value: CalendarViewOptions.VIEW_BY_YEAR,
+      label: '年',
     },
   ];
 
@@ -2164,6 +2185,7 @@ const EventCalendar = () => {
               allDay: data.isAllDay,
               type: EventCalendarType.SCHEDULE,
               isMyEvent: isMyEvent,
+              address: data.address,
               participants: data.participants,
               resourceIds: [
                 ...(data.participants
@@ -2499,6 +2521,7 @@ const EventCalendar = () => {
               allDay: data.isAllDay,
               isMyEvent: true,
               participants: data.participants,
+              address: data.address,
               resourceIds: [
                 ...(data.participants
                   ?.filter(
@@ -2714,19 +2737,19 @@ const EventCalendar = () => {
   };
 
   const getDefaultCalendarView = () => {
-    let defaultView = calendarViewOptions[1];
+    let defaultView = calendarViewOptions[2];
     switch (searchParams.get('view')) {
       case ViewOptions.YEAR:
-        defaultView = calendarViewOptions[0];
+        defaultView = calendarViewOptions[3];
         break;
       case ViewOptions.MONTH:
-        defaultView = calendarViewOptions[1];
-        break;
-      case ViewOptions.WEEK:
         defaultView = calendarViewOptions[2];
         break;
+      case ViewOptions.WEEK:
+        defaultView = calendarViewOptions[1];
+        break;
       case ViewOptions.DAY:
-        defaultView = calendarViewOptions[3];
+        defaultView = calendarViewOptions[0];
         break;
       default:
         break;
@@ -3131,7 +3154,7 @@ const EventCalendar = () => {
           </div>
         )}
         <div
-          className={`transition-all duration-1000 ${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
+          className={`transition-all duration-300 ${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
           <CalendarSidebar
             filterMyEvent={filterMyEvent}
             filterMyTask={filterMyTask}
