@@ -238,6 +238,9 @@ export const TaskAndEventListModal = ({
                       </div>
                       <div className="flex gap-1">
                         <div className="flex gap-1">
+                          {event && event.allDay && (
+                            <p className="text-[11px]">終日</p>
+                          )}
                           <p className="text-[11px]">
                             {event?.start &&
                               event?.end &&
@@ -248,10 +251,8 @@ export const TaskAndEventListModal = ({
                                 ? formatShowDeadline(event?.start)
                                 : `${formatShowDeadline(event?.start)} ~ ${formatShowDeadline(event?.end)}`)}{' '}
                           </p>
-                          {event && event.allDay ? (
-                            <p className="text-[11px]">終日</p>
-                          ) : (
-                            event &&
+                          {event &&
+                            !event.allDay &&
                             event.start &&
                             event.end && (
                               <div className="flex gap-1 items-center text-[11px]">
@@ -267,10 +268,9 @@ export const TaskAndEventListModal = ({
                                   )}
                                 </p>
                               </div>
-                            )
-                          )}
+                            )}
                         </div>
-                        <p className="text-[11px] truncate max-w-[150px]">
+                        <p className="text-[11px] truncate max-w-[100px]">
                           {event.address}
                         </p>
                       </div>

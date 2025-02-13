@@ -1036,11 +1036,12 @@ const ChatDetail = ({
       })?.avatarColor || '';
 
     return (
-      <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+      <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
         <div className="scale-150">
           {AvatarIconWithDynamicColor({
             color: avatarColor,
-            size: 36,
+            size: 33,
+            customClassName: 'mt-0.5 ml-0.5'
           })}
         </div>
       </div>

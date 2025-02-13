@@ -966,8 +966,8 @@ const ListChatUsers = ({
                   </Tippy>
 
                   <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-3 flex gap-1 items-center">
-                    <p className="text-sm max-w-[260px] font-medium truncate">
+                  <div className="ml-2 flex gap-1 items-center">
+                    <p className="text-sm max-w-[160px] font-medium truncate">
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -977,7 +977,7 @@ const ListChatUsers = ({
                           )?.roomName
                         : item?.name || ''}
                     </p>
-                    <p className="text-[#77858F] text-[12px] font-medium">
+                    <p className="text-[#77858F] text-[12px] max-w-[80px] truncate font-medium">
                       {((item.type == ChatRoomType.PRIVATE ||
                         item.type == ChatRoomType.SELF) &&
                         item.participants.find((participant) =>
@@ -1045,8 +1045,8 @@ const ListChatUsers = ({
                     />
                   </div>
                   <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-3 flex gap-1 items-center">
-                    <p className="text-sm max-w-[260px] font-medium truncate">
+                  <div className="ml-2 flex gap-1 items-center">
+                    <p className="text-sm max-w-[160px] font-medium truncate">
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -1056,7 +1056,7 @@ const ListChatUsers = ({
                           )?.roomName
                         : item?.name || ''}
                     </p>
-                    <p className="text-[#77858F] text-[12px] font-medium">
+                    <p className="text-[#77858F] text-[12px] max-w-[80px] font-medium truncate">
                       {((item.type == ChatRoomType.PRIVATE ||
                         item.type == ChatRoomType.SELF) &&
                         item.participants.find((participant) =>
