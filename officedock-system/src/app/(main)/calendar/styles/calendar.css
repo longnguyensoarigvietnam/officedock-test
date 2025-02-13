@@ -194,19 +194,34 @@
   color: rgb(148 163 184);
 }
 /* Week */
-.calendar-custom.week.one-all-day-event .fc-daygrid-body.fc-daygrid-body-unbalanced.fc-daygrid-body-natural,
- .calendar-custom.day.one-all-day-event .fc-scrollgrid.fc-scrollgrid-liquid tbody tr:first-child .fc-scroller-harness{
+.calendar-custom.week.one-all-day-event
+  .fc-daygrid-body.fc-daygrid-body-unbalanced.fc-daygrid-body-natural,
+.calendar-custom.day.one-all-day-event
+  .fc-scrollgrid.fc-scrollgrid-liquid
+  tbody
+  tr:first-child
+  .fc-scroller-harness {
   height: 40px !important;
   overflow: hidden;
 }
-.calendar-custom.week.zero-all-day-events .fc-daygrid-body.fc-daygrid-body-unbalanced.fc-daygrid-body-natural, 
-.calendar-custom.day.zero-all-day-events .fc-scrollgrid.fc-scrollgrid-liquid tbody tr:first-child .fc-scroller-harness{
+.calendar-custom.week.zero-all-day-events
+  .fc-daygrid-body.fc-daygrid-body-unbalanced.fc-daygrid-body-natural,
+.calendar-custom.day.zero-all-day-events
+  .fc-scrollgrid.fc-scrollgrid-liquid
+  tbody
+  tr:first-child
+  .fc-scroller-harness {
   height: 0px !important;
   overflow: hidden;
 }
-.calendar-custom.week.many-all-day-events .fc-daygrid-body.fc-daygrid-body-unbalanced.fc-daygrid-body-natural, 
-.calendar-custom.day.many-all-day-events .fc-scrollgrid.fc-scrollgrid-liquid tbody tr:first-child .fc-scroller-harness{
-  height: 80px !important;
+.calendar-custom.week.many-all-day-events
+  .fc-daygrid-body.fc-daygrid-body-unbalanced.fc-daygrid-body-natural,
+.calendar-custom.day.many-all-day-events
+  .fc-scrollgrid.fc-scrollgrid-liquid
+  tbody
+  tr:first-child
+  .fc-scroller-harness {
+  height: 90px !important;
   overflow: hidden;
 }
 .calendar-custom .fc-theme-standard th {
@@ -327,7 +342,9 @@
   height: 100%;
   border-radius: 8px;
 }
-.calendar-custom .fc-timegrid-event-harness-inset .fc-timegrid-event, .fc-timegrid-event.fc-event-mirror, .fc-timegrid-more-link {
+.calendar-custom .fc-timegrid-event-harness-inset .fc-timegrid-event,
+.fc-timegrid-event.fc-event-mirror,
+.fc-timegrid-more-link {
   box-shadow: none;
 }
 .calendar-custom .fc-timegrid-now-indicator-arrow::after {
@@ -345,8 +362,8 @@
 .calendar-custom .fc .fc-multimonth {
   border: 0;
 }
-.calendar-custom.year .fc-day-header{
-  color: #77858F;
+.calendar-custom.year .fc-day-header {
+  color: #77858f;
 }
 .calendar-custom
   .fc

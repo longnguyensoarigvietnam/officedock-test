@@ -69,7 +69,7 @@ const DetailActualItemDailyModal = ({
             </div>
             <p>~</p>
             <div className="flex gap-1 items-center">
-              <span>開始</span>
+              <span>終了</span>
               <span className="text-base font-normal text-black">
                 {formatTime24h(popoverInfo.end)}
               </span>

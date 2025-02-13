@@ -159,8 +159,8 @@ const DailyReportBoard = () => {
     setPopoverInfo({
       largeColor: data.largeColor ? data.largeColor : '',
       title: data.title,
-      end: '1',
-      start: '1',
+      end: data.end,
+      start: data.start,
       left: adjustPositionForViewport(
         {
           top: Number(data.clientY),
@@ -347,6 +347,37 @@ const DailyReportBoard = () => {
   const { mutate: editCategoryInline } = useMutation(
     'postEditCategoryTaskInline',
     handleEditCategoryInline,
+    {
+      onSuccess: async () => {
+        refetchDataStatistic();
+      },
+      onError: (error: AxiosError<any>) => {
+        setIsLoading(false);
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {},
+    },
+  );
+
+  //  Handle call api edit Event
+  const handleEditEventCategoryInline = async (dataTask: {
+    id: string;
+    categoryIds: {
+      categoryId: number | null;
+      type: string;
+    }[];
+  }) => {
+    setIsLoading(true);
+
+    const { data } = await api.patch(
+      `${apiRouters.SCHEDULE_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
+      dataTask,
+    );
+    return data;
+  };
+  const { mutate: editCategoryEventInline } = useMutation(
+    'postEditCategoryEventInline',
+    handleEditEventCategoryInline,
     {
       onSuccess: async () => {
         refetchDataStatistic();
@@ -564,8 +595,10 @@ const DailyReportBoard = () => {
   };
   // Actions sort status
   const sortStatusById = (firstRow: any, secondRow: any) => {
-    const statusFirstRow = firstRow.original.status.id;
-    const statusSecondRow = secondRow.original.status.id;
+    const statusFirstRow =
+      firstRow.original.status && firstRow.original.status.id;
+    const statusSecondRow =
+      secondRow.original.status && secondRow.original.status.id;
 
     if (statusFirstRow === StatusValueTask.MY_ROUTINE) return -1;
     if (statusSecondRow === StatusValueTask.MY_ROUTINE) return 1;
@@ -670,26 +703,49 @@ const DailyReportBoard = () => {
                 showArrow
                 options={optionData}
                 onChange={(e) => {
-                  editCategoryInline({
-                    id: info.row.original.id,
-                    categoryIds: [
-                      {
-                        categoryId:
-                          e?.value == NO_OPTION_CATEGORY
-                            ? null
-                            : (e?.value as number),
-                        type: EventWorkCategory.LARGE,
-                      },
-                      {
-                        categoryId: null,
-                        type: EventWorkCategory.MEDIUM,
-                      },
-                      {
-                        categoryId: null,
-                        type: EventWorkCategory.SMALL,
-                      },
-                    ],
-                  });
+                  if (info.row.original.type === EventCalendarType.TASK) {
+                    editCategoryInline({
+                      id: info.row.original.id,
+                      categoryIds: [
+                        {
+                          categoryId:
+                            e?.value == NO_OPTION_CATEGORY
+                              ? null
+                              : (e?.value as number),
+                          type: EventWorkCategory.LARGE,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.MEDIUM,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.SMALL,
+                        },
+                      ],
+                    });
+                  } else {
+                    editCategoryEventInline({
+                      id: info.row.original.id,
+                      categoryIds: [
+                        {
+                          categoryId:
+                            e?.value == NO_OPTION_CATEGORY
+                              ? null
+                              : (e?.value as number),
+                          type: EventWorkCategory.LARGE,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.MEDIUM,
+                        },
+                        {
+                          categoryId: null,
+                          type: EventWorkCategory.SMALL,
+                        },
+                      ],
+                    });
+                  }
                 }}
               />
               <div className="flex items-center  w-3 h-[30px]">
@@ -783,29 +839,55 @@ const DailyReportBoard = () => {
                   placeholder=""
                   options={optionMedium}
                   onChange={(e) => {
-                    editCategoryInline({
-                      id: info.row.original.id,
-                      categoryIds: [
-                        {
-                          categoryId:
-                            e?.value == NO_OPTION_CATEGORY
-                              ? null
-                              : (e?.value as number),
-                          type: EventWorkCategory.MEDIUM,
-                        },
-                        {
-                          categoryId:
-                            info.row.original.LARGE.id == NO_OPTION_CATEGORY
-                              ? null
-                              : (info.row.original.LARGE.id as number),
-                          type: EventWorkCategory.LARGE,
-                        },
-                        {
-                          categoryId: null,
-                          type: EventWorkCategory.SMALL,
-                        },
-                      ],
-                    });
+                    if (info.row.original.type === EventCalendarType.TASK) {
+                      editCategoryInline({
+                        id: info.row.original.id,
+                        categoryIds: [
+                          {
+                            categoryId:
+                              e?.value == NO_OPTION_CATEGORY
+                                ? null
+                                : (e?.value as number),
+                            type: EventWorkCategory.MEDIUM,
+                          },
+                          {
+                            categoryId:
+                              info.row.original.LARGE.id == NO_OPTION_CATEGORY
+                                ? null
+                                : (info.row.original.LARGE.id as number),
+                            type: EventWorkCategory.LARGE,
+                          },
+                          {
+                            categoryId: null,
+                            type: EventWorkCategory.SMALL,
+                          },
+                        ],
+                      });
+                    } else {
+                      editCategoryEventInline({
+                        id: info.row.original.id,
+                        categoryIds: [
+                          {
+                            categoryId:
+                              e?.value == NO_OPTION_CATEGORY
+                                ? null
+                                : (e?.value as number),
+                            type: EventWorkCategory.MEDIUM,
+                          },
+                          {
+                            categoryId:
+                              info.row.original.LARGE.id == NO_OPTION_CATEGORY
+                                ? null
+                                : (info.row.original.LARGE.id as number),
+                            type: EventWorkCategory.LARGE,
+                          },
+                          {
+                            categoryId: null,
+                            type: EventWorkCategory.SMALL,
+                          },
+                        ],
+                      });
+                    }
                   }}
                 />
               </div>
@@ -915,32 +997,61 @@ const DailyReportBoard = () => {
               showArrow
               options={optionSmall}
               onChange={(e) => {
-                editCategoryInline({
-                  id: info.row.original.id,
-                  categoryIds: [
-                    {
-                      categoryId:
-                        e?.value == NO_OPTION_CATEGORY
-                          ? null
-                          : (e?.value as number),
-                      type: EventWorkCategory.SMALL,
-                    },
-                    {
-                      categoryId:
-                        info.row.original.LARGE.id == NO_OPTION_CATEGORY
-                          ? null
-                          : (info.row.original.LARGE.id as number),
-                      type: EventWorkCategory.LARGE,
-                    },
-                    {
-                      categoryId:
-                        info.row.original.MEDIUM.id == NO_OPTION_CATEGORY
-                          ? null
-                          : (info.row.original.MEDIUM.id as number),
-                      type: EventWorkCategory.MEDIUM,
-                    },
-                  ],
-                });
+                if (info.row.original.type === EventCalendarType.TASK) {
+                  editCategoryInline({
+                    id: info.row.original.id,
+                    categoryIds: [
+                      {
+                        categoryId:
+                          e?.value == NO_OPTION_CATEGORY
+                            ? null
+                            : (e?.value as number),
+                        type: EventWorkCategory.SMALL,
+                      },
+                      {
+                        categoryId:
+                          info.row.original.LARGE.id == NO_OPTION_CATEGORY
+                            ? null
+                            : (info.row.original.LARGE.id as number),
+                        type: EventWorkCategory.LARGE,
+                      },
+                      {
+                        categoryId:
+                          info.row.original.MEDIUM.id == NO_OPTION_CATEGORY
+                            ? null
+                            : (info.row.original.MEDIUM.id as number),
+                        type: EventWorkCategory.MEDIUM,
+                      },
+                    ],
+                  });
+                } else {
+                  editCategoryEventInline({
+                    id: info.row.original.id,
+                    categoryIds: [
+                      {
+                        categoryId:
+                          e?.value == NO_OPTION_CATEGORY
+                            ? null
+                            : (e?.value as number),
+                        type: EventWorkCategory.SMALL,
+                      },
+                      {
+                        categoryId:
+                          info.row.original.LARGE.id == NO_OPTION_CATEGORY
+                            ? null
+                            : (info.row.original.LARGE.id as number),
+                        type: EventWorkCategory.LARGE,
+                      },
+                      {
+                        categoryId:
+                          info.row.original.MEDIUM.id == NO_OPTION_CATEGORY
+                            ? null
+                            : (info.row.original.MEDIUM.id as number),
+                        type: EventWorkCategory.MEDIUM,
+                      },
+                    ],
+                  });
+                }
               }}
             />
           </div>
