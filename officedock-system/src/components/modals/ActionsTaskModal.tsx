@@ -185,15 +185,17 @@ const ActionsTaskModal = ({
     OptionDropdownType[]
   >([]);
 
+  const [isShowFieldRemind, setIsShowFieldRemind] = useState(false);
+
   const [isSubmit, setIsSubmit] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const optionsCountType = Object.keys(TimeType).map((key) => ({
+  const _optionsCountType = Object.keys(TimeType).map((key) => ({
     label: TimeType[key as keyof typeof TimeType],
     value: key,
   }));
-  const optionsCountDown = generateOptionsCount(10);
+  const _optionsCountDown = generateOptionsCount(10);
 
   const {
     register,
@@ -684,6 +686,10 @@ const ActionsTaskModal = ({
           planEndDate: null,
           planStartTime: '',
         });
+      }
+
+      if (dataTask.remindType && dataTask.remindType) {
+        setIsShowFieldRemind(true);
       }
       // Default focus input fake
       if (dataTask.peopleInCharge.length) {
@@ -1481,7 +1487,8 @@ const ActionsTaskModal = ({
                   </div>
                   <div className="ml-2">
                     <ImageRound
-                      src="/icons/bell.svg"
+                      onClick={() => setIsShowFieldRemind(!isShowFieldRemind)}
+                      src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell.svg'}`}
                       name="Bell icon"
                       className="h-4 w-4"
                     />
@@ -1492,75 +1499,80 @@ const ActionsTaskModal = ({
                   className="mt-[6px] text-xs"
                 />
               </div>
-              <div className="max-w-[250px]">
-                <div className="flex items-center gap-1">
-                  <div className="w-[56px]">
-                    <Controller
-                      control={control}
-                      name="deadlineRemindCountdown"
-                      render={({ field: { value, onChange } }) => (
-                        <Dropdown
-                          className="h-[34px] !py-1 !px-0 text-xs border-[#77858F] rounded-md"
-                          classNameTextData="!text-xs !ml-0"
-                          labelOptionClass="!ml-0 !px-0 text-center w-full "
-                          classNameOption="!text-xs "
-                          classNameError="!text-xs"
-                          classActive="justify-between"
-                          labelClass="w-[80%]"
-                          disabled={
-                            isCheckActionPermission ||
-                            watch('statusId')?.value ===
-                              StatusValueTask.MY_ROUTINE
-                          }
-                          options={optionsCountDown}
-                          selectedOption={optionsCountDown.find(
-                            (element) => element.value === value?.value,
-                          )}
-                          onChange={(e) => {
-                            onChange(e);
-                          }}
-                          error={errors.statusId?.message}
-                        />
-                      )}
-                    />
+              {/* TODO: Implement remind task */}
+              {/* {isShowFieldRemind ? (
+                <div className="max-w-[250px]">
+                  <div className="flex items-center gap-1">
+                    <div className="w-[56px]">
+                      <Controller
+                        control={control}
+                        name="deadlineRemindCountdown"
+                        render={({ field: { value, onChange } }) => (
+                          <Dropdown
+                            className="h-[34px] !py-1 !px-0 text-xs border-[#77858F] rounded-md"
+                            classNameTextData="!text-xs !ml-0"
+                            labelOptionClass="!ml-0 !px-0 text-center w-full "
+                            classNameOption="!text-xs "
+                            classNameError="!text-xs"
+                            classActive="justify-between"
+                            labelClass="w-[80%]"
+                            disabled={
+                              isCheckActionPermission ||
+                              watch('statusId')?.value ===
+                                StatusValueTask.MY_ROUTINE
+                            }
+                            options={optionsCountDown}
+                            selectedOption={optionsCountDown.find(
+                              (element) => element.value === value?.value,
+                            )}
+                            onChange={(e) => {
+                              onChange(e);
+                            }}
+                            error={errors.statusId?.message}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="w-[82px] ">
+                      <Controller
+                        control={control}
+                        name="deadlineRemindType"
+                        render={({ field: { value, onChange } }) => (
+                          <Dropdown
+                            className="h-[34px] !py-1 !pr-2 text-xs border-[#77858F] rounded-md"
+                            classNameTextData="!text-xs"
+                            classNameOption="!text-xs !ml-0"
+                            classNameError="!text-xs"
+                            labelOptionClass="!ml-0 !px-0 text-center w-full"
+                            classActive=" justify-between"
+                            labelClass="w-[80%]"
+                            disabled={
+                              isCheckActionPermission ||
+                              watch('statusId')?.value ===
+                                StatusValueTask.MY_ROUTINE
+                            }
+                            options={optionsCountType}
+                            selectedOption={optionsCountType.find(
+                              (element) => element.value === value?.value,
+                            )}
+                            onChange={(e) => {
+                              onChange(e);
+                            }}
+                            error={errors.statusId?.message}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="w-[60px]">に通知</div>
                   </div>
-                  <div className="w-[82px] ">
-                    <Controller
-                      control={control}
-                      name="deadlineRemindType"
-                      render={({ field: { value, onChange } }) => (
-                        <Dropdown
-                          className="h-[34px] !py-1 !pr-2 text-xs border-[#77858F] rounded-md"
-                          classNameTextData="!text-xs"
-                          classNameOption="!text-xs !ml-0"
-                          classNameError="!text-xs"
-                          labelOptionClass="!ml-0 !px-0 text-center w-full"
-                          classActive=" justify-between"
-                          labelClass="w-[80%]"
-                          disabled={
-                            isCheckActionPermission ||
-                            watch('statusId')?.value ===
-                              StatusValueTask.MY_ROUTINE
-                          }
-                          options={optionsCountType}
-                          selectedOption={optionsCountType.find(
-                            (element) => element.value === value?.value,
-                          )}
-                          onChange={(e) => {
-                            onChange(e);
-                          }}
-                          error={errors.statusId?.message}
-                        />
-                      )}
-                    />
-                  </div>
-                  <div className="w-[60px]">に通知</div>
+                  <ErrorMessage
+                    error={errors.deadlineTime?.message}
+                    className="mt-[6px] text-xs"
+                  />
                 </div>
-                <ErrorMessage
-                  error={errors.deadlineTime?.message}
-                  className="mt-[6px] text-xs"
-                />
-              </div>
+              ) : (
+                <div className="w-fit"></div>
+              )} */}
 
               <div>
                 {!isCheckActionPermission && (

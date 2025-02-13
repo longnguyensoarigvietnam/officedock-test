@@ -1527,26 +1527,28 @@ const TimeSchedule = memo(
             item.taskId === droppedEvent.extendedProps.taskId
           );
         });
-        const hasOverlapPlanWeek = taskTimeScheduleList
-          .filter((data) => data.uuid !== droppedEvent.extendedProps.uuid)
-          .some((item) => {
-            return (
-              startDrop < item.end &&
-              endDrop > item.start &&
-              item.resourceId === isCheckWeek &&
-              resourcePlanWeek &&
-              item.type === ItemStartType.TASK &&
-              droppedEvent.extendedProps.type === ItemStartType.TASK
-            );
-          });
         // Check overlap actual week
+
         if (hasOverlapWeek) {
           return info.revert();
         }
-        // Check overlap plan week
-        if (hasOverlapPlanWeek) {
-          return info.revert();
-        }
+        // const hasOverlapPlanWeek = taskTimeScheduleList
+        //   .filter((data) => data.uuid !== droppedEvent.extendedProps.uuid)
+        //   .some((item) => {
+        //     return (
+        //       startDrop < item.end &&
+        //       endDrop > item.start &&
+        //       item.resourceId === isCheckWeek &&
+        //       resourcePlanWeek &&
+        //       item.type === ItemStartType.TASK &&
+        //       droppedEvent.extendedProps.type === ItemStartType.TASK
+        //     );
+        //   });
+
+        // // Check overlap plan week
+        // if (hasOverlapPlanWeek) {
+        //   return info.revert();
+        // }
 
         if (matchData && matchData.uuid !== droppedEvent.extendedProps.uuid) {
           info.view.calendar.refetchEvents();
@@ -1672,6 +1674,7 @@ const TimeSchedule = memo(
             if (item.uuid === droppedEvent.extendedProps.uuid) {
               return false;
             }
+
             return (
               startDrop < item.end &&
               endDrop > item.start &&
@@ -1698,12 +1701,10 @@ const TimeSchedule = memo(
                 droppedEvent.extendedProps.type === ItemStartType.TASK
               );
             });
-
           if (hasOverlap) {
             return info.revert();
           }
         }
-
         const newDataTimeList = taskTimeScheduleList.map((event) => {
           if (event.uuid === droppedEvent.extendedProps.uuid) {
             const newData = {
@@ -2543,6 +2544,7 @@ const TimeSchedule = memo(
                       PermissionsSystem.MY_TASK_UPDATE,
                     )
                   }
+                  eventResizableFromStart={true}
                   firstDay={1}
                   droppable={true}
                   resources={currentResources}
@@ -2564,7 +2566,6 @@ const TimeSchedule = memo(
                   }}
                   slotDuration={isOptionZoomSchedule}
                   initialDate={new Date()}
-                  eventResizableFromStart={false}
                   eventDrop={handleEventDrop}
                   eventContent={handleRenderEvent}
                   eventReceive={handleEventReceive}
