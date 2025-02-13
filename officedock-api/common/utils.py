@@ -1,6 +1,6 @@
 import io
 from datetime import timedelta
-
+import random
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
@@ -337,3 +337,8 @@ def create_categories_by_model(model, categories):
         small_statistic_category=small_cat,
         company=model.company,
     )
+
+
+def generate_random_color():
+    """Generate a random hex color code."""
+    return "#{:06x}".format(random.randint(0, 0xFFFFFF))

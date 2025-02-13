@@ -24,6 +24,7 @@ from common.utils import (
     format_duration,
     time_to_timedelta,
     transform_statistic_categories,
+    generate_random_color,
 )
 from organizations.serializers import OrganizationDetailSerializer
 from stat_data.serializers import DailyTaskSerializer, DailyEventSerializer
@@ -278,7 +279,9 @@ class StatDataViewSet(BaseAPIViewSet):
                 ] = None
                 none_large_categories[
                     "categories__large_statistic_category__color"
-                ] = None
+                ] = (
+                    generate_random_color()
+                )  # FXIME: Maybe remove later when not accept use random for unsetting category
             for event in event_without_large_durations:
                 none_large_categories["duration"] += event["duration"]
                 none_large_categories[
@@ -286,7 +289,9 @@ class StatDataViewSet(BaseAPIViewSet):
                 ] = None
                 none_large_categories[
                     "categories__large_statistic_category__color"
-                ] = None
+                ] = (
+                    generate_random_color()
+                )  # FXIME: Maybe remove later when not accept use random for unsetting category
 
             category_list = list(
                 chain(

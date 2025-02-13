@@ -152,6 +152,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "start_date",
             "end_date",
             "is_all_day",
+            "address",
             "type",
             "is_my_schedule",
             "participants",
