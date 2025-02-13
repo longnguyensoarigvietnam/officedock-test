@@ -33,7 +33,6 @@ from chat.constants import (
     WebSocketEventType,
     ChatMessageTypes,
     ChatRoomTypes,
-    ChatRoomNames,
 )
 from chat.models import ChatRoom
 from chat.serializers import (
@@ -58,6 +57,8 @@ from tasks.utils import (
     update_todo_list_for_task,
 )
 from roles.constants import Screens
+from users.utils import reset_sort_task
+from users.models import Setting
 from .models import (
     PeopleInChargeTasks,
     Task,
@@ -158,6 +159,7 @@ class TaskViewSet(
                     user,
                     through_defaults={"company": company},
                 )
+                reset_sort_task(user)
                 if copy_task:
                     current_task_index = copy_task.task_index.filter(
                         user=user
@@ -223,19 +225,11 @@ class TaskViewSet(
         """
         Handle send to task space
         """
-        task_room, created = ChatRoom.objects.get_or_create(
+        task_room = ChatRoom.objects.filter(
             type=ChatRoomTypes.TASK.value,
             chat_rooms_participants__user=user,
-            defaults={
-                "company": user.company,
-                "type": ChatRoomTypes.TASK.value,
-                "name": ChatRoomNames.TASK_CARD.value,
-            },
-        )
-        if created:
-            task_room.participants.set(
-                {user}, through_defaults={"company": user.company}
-            )
+            company=user.company,
+        ).first()
         task_message = task_room.chat_messages.create(**message)
         chat_room_participant = task_room.chat_rooms_participants.filter(
             user__id=user.id
@@ -628,6 +622,7 @@ class TaskViewSet(
                 task_index = TaskIndex.objects.filter(
                     user=user, task=task
                 ).first()
+                reset_sort_task(user)
                 # Reset pin at to now
                 if task_index and task_index.pin_at:
                     task_index.pin_at = timezone.now()
@@ -718,6 +713,7 @@ class TaskViewSet(
                 },
                 chat_room=message.chat_room,
             )
+        reset_sort_task(request.user)
 
         return super().destroy(request, *args, **kwargs)
 
@@ -832,6 +828,7 @@ class TaskViewSet(
                 TaskIndex.objects.update_or_create(
                     task=task, user=user, defaults=item
                 )
+                reset_sort_task(user)
             elif tag:
                 item.pop("user", None)
                 TaskIndex.objects.update_or_create(
@@ -909,6 +906,7 @@ class TaskViewSet(
             )
 
         task_index.save()
+        reset_sort_task(user)
         return self.response_ok(TaskIndexSerializer(task_index).data)
 
 
@@ -1185,8 +1183,6 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if ids:
                 queryset = queryset.filter(
                     Q(categories__large_statistic_category__in=ids)
-                    | Q(categories__medium_statistic_category__in=ids)
-                    | Q(categories__small_statistic_category__in=ids)
                 )
 
         if organization_ids := self.request.query_params.get(
@@ -1217,6 +1213,36 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         ],
     )
     def list(self, request, *args, **kwargs):
+        """
+        Handle get list tasks
+        """
+        user = request.user
+        queryset = self.filter_queryset(self.get_queryset())
+        ordering = request.query_params.get("ordering", None)
+        if ordering:
+            if "deadline" in ordering:
+                Setting.objects.update_or_create(
+                    user=user,
+                    company=user.company,
+                    defaults={
+                        "is_sorting_task_by_deadline": True,
+                        "is_sorting_task_by_important": False,
+                    },
+                )
+            if "is_important" in ordering:
+                Setting.objects.update_or_create(
+                    user=user,
+                    company=user.company,
+                    defaults={
+                        "is_sorting_task_by_deadline": False,
+                        "is_sorting_task_by_important": True,
+                    },
+                )
+
+            tasks = queryset.all()
+            for idx, task in enumerate(tasks):
+                task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
+
         return super().list(request, *args, **kwargs)
 
 

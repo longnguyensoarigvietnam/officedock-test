@@ -133,7 +133,7 @@ const FrequentlyTask = ({
           leave="transition-transform duration-150 ease-in"
           leaveFrom="transform translate-y-0"
           leaveTo="transform -translate-y-[10%]">
-          <div className="flex mt-3 gap-5 overflow-x-auto max-w-[1270px] pr-3">
+          <div className="flex mt-3 gap-5 overflow-x-auto max-w-[1400px] pr-3">
             {templates &&
               templates.length > 0 &&
               templates.map((template) => {

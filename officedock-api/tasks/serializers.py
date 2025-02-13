@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework import serializers
@@ -172,11 +173,31 @@ class TaskScheduleSerializer(serializers.ModelSerializer):
             and plan_start_date >= plan_end_date
         ):
             raise serializers.ValidationError(
-                {
-                    "task_schedules": ERROR_MESSAGES[
-                        "start_date_end_date_invalid"
-                    ]
-                }
+                {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
+            )
+
+        check_exists_schedule = TaskSchedule.objects.filter(
+            Q(
+                Q(plan_start_date__lt=plan_end_date)
+                | Q(plan_start_date__lte=plan_start_date)
+            )
+            & Q(
+                Q(plan_end_date__gt=plan_start_date)
+                | Q(plan_end_date__gte=plan_end_date)
+            )
+        )
+        task_schedule = attrs.get("schedule_id") or self.instance or None
+        if task_schedule:
+            task = Task.objects.filter(id=task_schedule.task_id).first()
+            check_exists_schedule = check_exists_schedule.filter(
+                task__people_in_charge_tasks__user__in=task.people_in_charge_tasks.values_list(
+                    "user", flat=True
+                )
+            ).exclude(id=task_schedule.id)
+
+        if check_exists_schedule.exists():
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["exists_task_schedule"]}
             )
 
         return attrs
@@ -343,6 +364,54 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
 
         read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
 
+    def validate(self, attrs):
+        """Validation data"""
+        task_schedules = attrs.get("task_schedules")
+        people_in_charge_ids = attrs.get("people_in_charge_ids")
+
+        # Sort list by plan start date
+        if task_schedules:
+            task_schedules.sort(key=lambda x: x["plan_start_date"])
+            for i in range(len(task_schedules) - 1):
+                if (
+                    task_schedules[i]["plan_end_date"]
+                    > task_schedules[i + 1]["plan_start_date"]
+                ):
+                    raise serializers.ValidationError(
+                        {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+                    )
+            for task_schedule in task_schedules:
+                plan_start_date = task_schedule["plan_start_date"]
+                plan_end_date = task_schedule["plan_end_date"]
+
+                check_exists_schedule = TaskSchedule.objects.filter(
+                    Q(
+                        Q(plan_start_date__lt=plan_end_date)
+                        | Q(plan_start_date__lte=plan_start_date)
+                    )
+                    & Q(
+                        Q(plan_end_date__gt=plan_start_date)
+                        | Q(plan_end_date__gte=plan_end_date)
+                    )
+                    & Q(
+                        task__people_in_charge_tasks__user__in=[
+                            user["people_in_charge"]
+                            for user in people_in_charge_ids
+                        ]
+                    )
+                )
+                if task_schedule.get("schedule_id"):
+                    check_exists_schedule = check_exists_schedule.exclude(
+                        id=task_schedule.get("schedule_id").id
+                    )
+
+                if check_exists_schedule.exists():
+                    raise serializers.ValidationError(
+                        {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+                    )
+
+        return attrs
+
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
         if not obj.categories.exists():
@@ -390,6 +459,8 @@ class TaskBoardSerializer(TaskCommonSerializer):
     index = serializers.SerializerMethodField(read_only=True)
     pin_at = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
+    # FIXME: Check spec implement color of category
+    categories = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Task
@@ -406,7 +477,16 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "index",
             "pin_at",
             "type",
+            "categories",
         ]
+
+    # FIXME: Check spec implement color of category
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Task."""
+        if not obj.categories.exists():
+            return []
+
+        return get_common_categories(obj.categories.first())
 
     def get_index(self, instance):
         """
@@ -435,6 +515,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
     """
 
     type = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
     task_schedules = TaskScheduleSerializer(many=True)
 
     class Meta:
@@ -446,6 +527,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "is_my_task",
             "task_schedules",
             "type",
+            "categories",
         ]
 
     def get_type(self, instance):
@@ -453,6 +535,14 @@ class TaskCalendarSerializer(TaskCommonSerializer):
         Return task type for calendar event
         """
         return CalendarTypes.TASK.value
+
+    # FIXME: Check spec implement color of category
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Task."""
+        if not obj.categories.exists():
+            return []
+
+        return get_common_categories(obj.categories.first())
 
 
 class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
@@ -475,6 +565,44 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
             "plan_start_date",
             "plan_end_date",
         ]
+
+    def validate(self, attrs):
+        """Validation"""
+        plan_start_date = attrs.get("plan_start_date")
+        plan_end_date = attrs.get("plan_end_date")
+        task = attrs.get("task")
+        if (
+            plan_start_date
+            and plan_end_date
+            and plan_start_date >= plan_end_date
+        ):
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
+            )
+        check_exists_schedule = TaskSchedule.objects.filter(
+            Q(
+                Q(plan_start_date__lt=plan_end_date)
+                | Q(plan_start_date__lte=plan_start_date)
+            )
+            & Q(
+                Q(plan_end_date__gt=plan_start_date)
+                | Q(plan_end_date__gte=plan_end_date)
+            )
+        )
+
+        if task:
+            check_exists_schedule = check_exists_schedule.filter(
+                task__people_in_charge_tasks__user__in=task.people_in_charge_tasks.values_list(
+                    "user", flat=True
+                )
+            )
+
+        if check_exists_schedule.exists():
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+            )
+
+        return attrs
 
     def get_task(self, obj):
         return {

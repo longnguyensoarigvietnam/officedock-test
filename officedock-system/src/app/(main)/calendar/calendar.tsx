@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  Fragment,
-  useContext,
-} from 'react';
+import { useEffect, useRef, useState, Fragment, useContext } from 'react';
 import { AxiosError } from 'axios';
 import { debounce } from 'lodash';
 import FullCalendar from '@fullcalendar/react';
@@ -23,11 +17,12 @@ import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import resourcePlugin from '@fullcalendar/resource';
 import scrollgridPlugin from '@fullcalendar/scrollgrid';
 import './styles/calendar.css';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
 import InputSearch from '@components/common/InputSearch';
-import Checkbox from '@components/common/Checkbox';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
@@ -39,30 +34,27 @@ import EventInfoModal from '@components/modals/EventInfoModal';
 import TaskInfoModal from '@components/modals/TaskInfoModal';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Button from '@components/common/Button';
-import Spinner from '@components/common/Spinner';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import { CalendarSidebar } from '@components/calendar/Sidebar';
+import { TaskAndEventListModal } from '@components/modals/TaskAndEventListModal';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
-import {
-  adjustPositionForViewport,
-  getRandomColor,
-  hasPermissionInArray,
-} from '@utils';
+import { adjustPositionForViewport, hasPermissionInArray } from '@utils';
 import {
   addTimeToDate,
+  formatHoursAndMinutesForDateTime,
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
-  getDateInfo,
-  getTimeRangeForClickDate,
+  getJapaneseDayName,
   isMidnight,
-  isMoreThanSixtyMinutes,
+  isMoreThanThirtyMinutes,
   removeTimeAndCompareDates,
   subtractOneDay,
 } from '@utils/date';
 import {
-  CalendarDashboardMember,
   CalendarPopoverInfo,
   EventCalendarDayRange,
   EventCalendarDetail,
@@ -90,6 +82,7 @@ import { TaskContext } from '@providers/TaskProvider';
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
@@ -114,7 +107,7 @@ import {
   NO_OPTION_CATEGORY,
 } from '@constants';
 import api from '@base/api';
-import { useErrorToast } from '@hooks/useErrorToast';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const EventCalendar = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -154,12 +147,9 @@ const EventCalendar = () => {
   );
   const [searchName, setSearchName] = useState<string>('');
   const [removeMyselfOption, setRemoveMyselfOption] = useState(false);
-  const [displayYear, setDisplayYear] = useState<number>(
-    new Date().getFullYear(),
-  );
-  const [displayMonth, setDisplayMonth] = useState<number>(
-    new Date().getMonth() + 1,
-  );
+  const [displayYear, setDisplayYear] = useState<number>();
+  const [displayMonth, setDisplayMonth] = useState<number>();
+  const [displayDay, setDisplayDay] = useState<number>();
   const [showSidebar, setShowSidebar] = useState(false);
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const { creationDataTaskData } = useCreationDataTask({});
@@ -181,10 +171,8 @@ const EventCalendar = () => {
   );
   const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
   const [openTaskInfoModal, setOpenTaskInfoModal] = useState<boolean>(false);
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
-  const [dashboardMembers, setDashboardMembers] = useState<
-    CalendarDashboardMember[]
-  >([]);
   const [infoModalPosition, setInfoModalPosition] = useState<{
     top: number;
     left: number;
@@ -547,19 +535,6 @@ const EventCalendar = () => {
     return () => resizeObserver.disconnect();
   }, [calendarRef, containerRef]);
 
-  useEffect(() => {
-    if (dashboardMemberList?.length) {
-      const membersWithAvatars = dashboardMemberList.map((member) => {
-        return {
-          id: member.id,
-          fullName: member.fullName,
-          avatarColor: getRandomColor(),
-        };
-      });
-      setDashboardMembers(membersWithAvatars);
-    }
-  }, [dashboardMemberList]);
-
   const checkShowUserAvatar = (
     type?: EventCalendarType,
     participants?: EventParticipant[],
@@ -567,21 +542,161 @@ const EventCalendar = () => {
     const filteredUserIds = selectedScheduleUserIds
       .split(',')
       .map((num) => num.trim())
-      .filter(Boolean)
-      .filter((num) => num != String(session?.user.id));
-    if (type == EventCalendarType.TASK) {
-      return filterMyTask && filteredUserIds.length > 0;
-    } else {
-      return (
-        filteredUserIds.length > 0 &&
-        participants &&
-        participants.length > 0 &&
-        participants.find((participant: EventParticipant) =>
-          `${selectedScheduleUserIds},${session?.user.id}`.includes(
-            `${participant.id}`,
-          ),
+      .filter(Boolean);
+    return (
+      !(
+        participants?.length == 1 &&
+        participants.find(
+          (participant: EventParticipant) => participant.id == session?.user.id,
         )
-      );
+      ) &&
+      type == EventCalendarType.SCHEDULE &&
+      filteredUserIds.length > 0
+    );
+  };
+
+  const showUserAvatars = (
+    participantList: EventParticipant[],
+    type: string,
+    avatarSize: number,
+    borderClassName: string,
+    isWeekView?: boolean,
+  ) => {
+    if (participantList && participantList.length > 0) {
+      if (type == EventCalendarType.TASK) {
+        const avatarColor =
+          dashboardMembersWithAvatars.find(
+            (member) => member.id == session?.user.id,
+          )?.avatarColor || '';
+        return (
+          <Tippy
+            content={`${session?.user.profile.fullName}`}
+            arrow={false}
+            delay={1000}
+            placement="top"
+            offset={[0, 5]}>
+            <div
+              className={`border-[1px] border-white rounded-full ${borderClassName}`}>
+              {AvatarIconWithDynamicColor({
+                color: avatarColor,
+                size: avatarSize,
+              })}
+            </div>
+          </Tippy>
+        );
+      } else {
+        if (participantList.length == 1) {
+          const avatarColor =
+            dashboardMembersWithAvatars.find(
+              (member) => member.id == participantList[0].id,
+            )?.avatarColor || '';
+          return (
+            <Tippy
+              content={`${participantList[0].fullName}`}
+              arrow={false}
+              delay={1000}
+              placement="top"
+              offset={[0, 5]}>
+              <div
+                className={`border-[1px] border-white rounded-full ${borderClassName}`}>
+                {AvatarIconWithDynamicColor({
+                  color: avatarColor,
+                  size: avatarSize,
+                })}
+              </div>
+            </Tippy>
+          );
+        } else if (participantList.length === 2) {
+          return (
+            <div className="mr-1 flex items-center">
+              {participantList.map((participant, index) => {
+                const avatarColor =
+                  dashboardMembersWithAvatars.find(
+                    (member) => member.id === participant.id,
+                  )?.avatarColor || '';
+
+                return (
+                  <Tippy
+                    content={`${participant.fullName}`}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    key={participant.id}
+                    offset={[0, 5]}>
+                    <div
+                      className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
+                      {AvatarIconWithDynamicColor({
+                        color: avatarColor,
+                        size: avatarSize,
+                      })}
+                    </div>
+                  </Tippy>
+                );
+              })}
+            </div>
+          );
+        } else if (participantList.length > 2) {
+          return (
+            <div className={`mr-1 flex items-center ${!isWeekView && 'gap-1'}`}>
+              {participantList
+                .slice(0, isWeekView ? 5 : 1)
+                .map((participant, index) => {
+                  const avatarColor =
+                    dashboardMembersWithAvatars.find(
+                      (member) => member.id === participant.id,
+                    )?.avatarColor || '';
+
+                  return (
+                    <Tippy
+                      content={`${participant.fullName}`}
+                      arrow={false}
+                      delay={1000}
+                      placement="top"
+                      key={participant.id}
+                      offset={[0, 5]}>
+                      <div
+                        className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
+                        {AvatarIconWithDynamicColor({
+                          color: avatarColor,
+                          size: avatarSize,
+                        })}
+                      </div>
+                    </Tippy>
+                  );
+                })}
+              {isWeekView
+                ? participantList &&
+                  participantList.length > 5 && (
+                    <Tippy
+                      content={`他に${participantList.length - 5}人の表示があります`}
+                      arrow={false}
+                      delay={1000}
+                      placement="top"
+                      offset={[0, 5]}>
+                      <div
+                        className={`text-[#77858F] text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
+                        +{participantList.length - 5}
+                      </div>
+                    </Tippy>
+                  )
+                : participantList &&
+                  participantList.length > 1 && (
+                    <Tippy
+                      content={`他に${participantList.length - 1}人の表示があります`}
+                      arrow={false}
+                      delay={1000}
+                      placement="top"
+                      offset={[0, 5]}>
+                      <div
+                        className={`text-[#77858F] text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
+                        +{participantList.length - 1}
+                      </div>
+                    </Tippy>
+                  )}
+            </div>
+          );
+        }
+      }
     }
   };
 
@@ -591,86 +706,33 @@ const EventCalendar = () => {
     } else {
       const calendarApi = eventContent.view.calendar;
       const currentView = calendarApi.view.type;
-      let avatarColor = '';
-      if (eventContent.event.extendedProps.participants.length > 0) {
-        if (eventContent.event.extendedProps.type == EventCalendarType.TASK) {
-          avatarColor =
-            dashboardMembers.find((member) => member.id == session?.user.id)
-              ?.avatarColor || '';
-        } else {
-          const updatedUserIds: string[] = selectedScheduleUserIds
-            ? selectedScheduleUserIds.split(',').filter(Boolean)
-            : [];
-          if (
-            filterMyEvent &&
-            !updatedUserIds.find(
-              (userId) => String(userId) == String(session?.user.id),
-            )
-          ) {
-            updatedUserIds.push(String(session?.user.id));
-          }
-          if (
-            eventContent.event.extendedProps.participants.find(
-              (participant: EventParticipant) =>
-                participant.id == session?.user.id,
-            ) &&
-            updatedUserIds.includes(`${session?.user.id}`)
-          ) {
-            avatarColor =
-              dashboardMembers.find((member) => member.id == session?.user.id)
-                ?.avatarColor || '';
-          } else {
-            const participantList =
-              eventContent.event.extendedProps.participants
-                .filter((participant: EventParticipant) =>
-                  updatedUserIds.find((userId) => userId == participant.id),
-                )
-                .sort((prev: EventParticipant, next: EventParticipant) =>
-                  prev.fullName.localeCompare(next.fullName),
-                )
-                .map((participant: EventParticipant) => {
-                  return {
-                    id: participant.id,
-                    fullName: participant.fullName,
-                    avatarColor: dashboardMembers.find(
-                      (member) => member.id == participant.id,
-                    )?.avatarColor,
-                  };
-                });
-            if (participantList && participantList.length > 0) {
-              avatarColor = participantList[0].avatarColor || '';
-            } else {
-              avatarColor = '';
-            }
-          }
-        }
-      }
 
       if (currentView === CalendarViewOptions.VIEW_BY_WEEK) {
         if (eventContent.event.allDay) {
           return (
             <div className="mb-1">
               <div
-                className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7] text-white' : 'text-black bg-white'} overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}>
+                className={` text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
+                style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                 {checkShowUserAvatar(
                   eventContent.event.extendedProps.type,
                   eventContent.event.extendedProps.participants,
                 ) ? (
-                  <div className="flex items-center">
-                    <div className="h-6">
-                      {AvatarIconWithDynamicColor({
-                        color: avatarColor || '',
-                        size: 27,
-                      })}
-                    </div>
-                    <p className="truncate max-w-[100%] mt-0.5 pt-0.5 h-[25px]">
+                  <div className="flex items-center gap-1">
+                    {showUserAvatars(
+                      eventContent.event.extendedProps.participants,
+                      eventContent.event.extendedProps.type,
+                      25,
+                      '!w-[19px] !h-[19px]',
+                    )}
+                    <p className="truncate max-w-[100%] font-semibold mt-0.5 pt-0.5 h-[25px]">
                       {eventContent.event.title !== 'null'
                         ? eventContent.event.title
                         : ''}
                     </p>
                   </div>
                 ) : (
-                  <p className="truncate max-w-[100%] mt-0.5 pt-0.5 h-[25px]">
+                  <p className="truncate max-w-[100%] mt-0.5 font-semibold pt-0.5 h-[25px]">
                     {eventContent.event.title !== 'null'
                       ? eventContent.event.title
                       : ''}
@@ -681,48 +743,51 @@ const EventCalendar = () => {
           );
         }
         return (
-          <div
-            className={`relative ${
-              checkShowUserAvatar(
-                eventContent.event.extendedProps.type,
-                eventContent.event.extendedProps.participants,
-              ) && 'pl-8'
-            } `}>
-            <div className="overflow-hidden">
-              <div
-                className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} text-[14px] font-medium px-1 pt-1`}>
-                <p className="truncate max-w-[calc(100%)] min-h-5">
-                  {eventContent.event.title != 'null'
-                    ? eventContent.event.title
-                    : ''}
-                </p>
-              </div>
-              <div
-                className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} text-[12px] font-normal px-1`}>
-                {isMoreThanSixtyMinutes(eventContent.timeText) && (
-                  <p className="truncate max-w-[calc(100%)] min-h-5">
-                    {eventContent.timeText}
-                  </p>
-                )}
-              </div>
-            </div>
+          <div className="overflow-hidden p-1.5">
             {checkShowUserAvatar(
               eventContent.event.extendedProps.type,
               eventContent.event.extendedProps.participants,
-            ) && (
-              <div className="absolute top-[-10px] left-[-8px] ">
-                <div className="relative">
-                  {AvatarIconWithDynamicColor({
-                    color: avatarColor || '',
-                    size: 36,
-                  })}
-                  <p className="rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4 absolute bottom-[0px] right-[0px]">
-                    {eventContent.event.extendedProps.participants &&
-                      eventContent.event.extendedProps.participants.length}
+            ) &&
+              showUserAvatars(
+                eventContent.event.extendedProps.participants,
+                eventContent.event.extendedProps.type,
+                33,
+                '!w-[32px] !h-[32px]',
+                true,
+              )}
+            <div className={` text-black text-[14px] font-medium px-1`}>
+              <p className="font-semibold min-h-5">
+                {eventContent.event.title != 'null'
+                  ? eventContent.event.title
+                  : ''}
+              </p>
+            </div>
+            <div className={` text-black text-[12px] font-normal px-1`}>
+              {new Date(eventContent.event.start).getDate() !=
+              new Date(eventContent.event.end).getDate() ? (
+                <>
+                  <p className="whitespace-nowrap">
+                    {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
+                    ~{' '}
+                    {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                </div>
-              </div>
-            )}
+                  <p className={` text-black text-[12px] font-normal px-1`}>
+                    {eventContent.event.extendedProps.address}
+                  </p>
+                </>
+              ) : (
+                <>
+                  {isMoreThanThirtyMinutes(eventContent.timeText) && (
+                    <>
+                      <p>{eventContent.timeText}</p>
+                      <p className={` text-black text-[12px] font-normal px-1`}>
+                        {eventContent.event.extendedProps.address}
+                      </p>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         );
       } else if (currentView === CalendarViewOptions.VIEW_BY_DAY) {
@@ -730,8 +795,9 @@ const EventCalendar = () => {
           return (
             <div className="mb-1">
               <div
-                className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7]' : 'text-black bg-white'} overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}>
-                <p className="truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px]">
+                className={`text-black bg-white overflow-hidden px-1 !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
+                style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
+                <p className="truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px]">
                   {eventContent.event.title !== 'null'
                     ? eventContent.event.title
                     : ''}
@@ -742,46 +808,67 @@ const EventCalendar = () => {
         }
         return (
           <div className="overflow-hidden">
-            <div
-              className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} font-medium px-1 pt-1 text-[14px]`}>
-              <p className="truncate max-w-[calc(100%)] min-h-5">
+            <div className={` text-black font-medium px-1 pt-1 text-[14px]`}>
+              <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
                 {eventContent.event.title != 'null'
                   ? eventContent.event.title
                   : ''}
               </p>
             </div>{' '}
-            <div
-              className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black'} font-normal px-1 text-[12px]`}>
-              {isMoreThanSixtyMinutes(eventContent.timeText) &&
-                eventContent.timeText}
-            </div>{' '}
+            <div className={` text-black text-[12px] font-normal px-1`}>
+              {new Date(eventContent.event.start).getDate() !=
+              new Date(eventContent.event.end).getDate() ? (
+                <>
+                  <p className="whitespace-nowrap">
+                    {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
+                    ~{' '}
+                    {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
+                  </p>
+                  <p>{eventContent.event.extendedProps.address}</p>
+                </>
+              ) : (
+                <>
+                  {isMoreThanThirtyMinutes(eventContent.timeText) && (
+                    <div className="text-black text-[12px] font-normal px-1">
+                      <p>{eventContent.timeText}</p>
+                      <p>{eventContent.event.extendedProps.address}</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         );
       } else if (currentView === CalendarViewOptions.VIEW_BY_MONTH) {
-        if (eventContent.event.allDay) {
+        if (
+          eventContent.event.allDay ||
+          new Date(eventContent.event.start).getDate() !=
+            new Date(eventContent.event.end).getDate()
+        ) {
           return (
             <div className="fc-daygrid-event mb-1">
               <div
-                className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7] text-white' : 'text-black bg-white'} overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}>
+                className={`text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
+                style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                 {checkShowUserAvatar(
                   eventContent.event.extendedProps.type,
                   eventContent.event.extendedProps.participants,
                 ) ? (
-                  <div className="flex items-center">
-                    <div className="h-6">
-                      {AvatarIconWithDynamicColor({
-                        color: avatarColor || '',
-                        size: 27,
-                      })}
-                    </div>
-                    <p className="truncate max-w-[100%] mt-0.5 pt-0.5 h-[25px]">
+                  <div className="flex items-center gap-1">
+                    {showUserAvatars(
+                      eventContent.event.extendedProps.participants,
+                      eventContent.event.extendedProps.type,
+                      25,
+                      '!w-[19px] !h-[19px]',
+                    )}
+                    <p className="truncate max-w-[100%] font-semibold mt-0.5 pt-0.5 h-[25px]">
                       {eventContent.event.title !== 'null'
                         ? eventContent.event.title
                         : ''}
                     </p>
                   </div>
                 ) : (
-                  <p className="truncate max-w-[100%] mt-0.5 pt-0.5 h-[25px]">
+                  <p className="truncate max-w-[100%] font-semibold mt-0.5 pt-0.5 h-[25px]">
                     {eventContent.event.title !== 'null'
                       ? eventContent.event.title
                       : ''}
@@ -795,14 +882,14 @@ const EventCalendar = () => {
           <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
             <div className="flex items-center gap-1">
               <div
-                className={`${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? '' : 'text-black py-0.5'} flex items-center gap-1 font-normal text-[12px]`}>
+                className={`text-black py-0.5 flex items-center gap-1 font-normal text-[12px]`}>
                 <div
-                  className={`notification-dot ${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7]' : 'bg-[#9fa1a2]'} !w-2 !h-2 ml-1 rounded-full`}
+                  className={`notification-dot bg-[#9fa1a2] !w-2 !h-2 ml-1 rounded-full`}
                 />
                 <p>{eventContent.timeText}</p>
               </div>{' '}
               <p
-                className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] ${eventContent.event.extendedProps.type == EventCalendarType.SCHEDULE ? 'hover:!bg-transparent' : 'text-black'} font-semibold px-1 text-[12px]`}>
+                className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-black font-semibold px-1 text-[12px]`}>
                 {eventContent.event.title != 'null'
                   ? eventContent.event.title
                   : ''}
@@ -862,6 +949,7 @@ const EventCalendar = () => {
                     end: new Date(adjustedEnd).toLocaleString(),
                     type: event.type,
                     participants: event.participants || [],
+                    address: event.address || '',
                   });
                 }
               } else {
@@ -876,6 +964,7 @@ const EventCalendar = () => {
                   end: new Date(adjustedEnd).toLocaleString(),
                   type: event.type,
                   participants: event.participants || [],
+                  address: event.address || '',
                 });
               }
             }
@@ -1015,7 +1104,7 @@ const EventCalendar = () => {
           eventEnd.getMinutes() !== 0 ||
           eventEnd.getSeconds() !== 0;
         const adjustedEnd =
-          isDifferentDate && isEndNotMidnight
+          isDifferentDate && isEndNotMidnight && event.allDay
             ? subtractOneDay(event.end)
             : event.end;
 
@@ -1035,6 +1124,8 @@ const EventCalendar = () => {
             end: new Date(adjustedEnd).toLocaleString(),
             type: event.type,
             participants: event.participants || [],
+            address: event.address || '',
+            allDay: event.allDay,
           });
         }
       }
@@ -1063,14 +1154,14 @@ const EventCalendar = () => {
           top: Number(clientY),
           left: Number(clientX),
         },
-        3,
+        5,
       ).left,
       top: adjustPositionForViewport(
         {
           top: Number(clientY),
           left: Number(clientX),
         },
-        3,
+        5,
       ).top,
     });
   };
@@ -1116,6 +1207,7 @@ const EventCalendar = () => {
                 id: `${event.id}`,
                 type: EventCalendarType.SCHEDULE,
                 participants: event.participants || [],
+                address: event.address || '',
                 resourceIds: [
                   ...(event.participants
                     ?.filter(
@@ -1134,13 +1226,9 @@ const EventCalendar = () => {
 
             if (event.end) {
               const end = new Date(event.end);
-              if (
-                start.toDateString() !== end.toDateString() &&
-                !isMidnight(end)
-              ) {
+              if (start.toDateString() !== end.toDateString() && event.allDay) {
                 end.setDate(end.getDate() + 1);
                 event.end = end.toISOString();
-                event.allDay = true;
               }
             }
             return event;
@@ -1190,6 +1278,7 @@ const EventCalendar = () => {
                 id: `${event.id}`,
                 type: EventCalendarType.SCHEDULE,
                 isMyEvent: true,
+                address: event.address || '',
                 participants: event.participants || [],
                 resourceIds: [
                   ...(event.participants
@@ -1213,11 +1302,11 @@ const EventCalendar = () => {
               const end = new Date(event.end);
               if (
                 start.toDateString() !== end.toDateString() &&
-                !isMidnight(end)
+                !isMidnight(end) &&
+                event.allDay
               ) {
                 end.setDate(end.getDate() + 1);
                 event.end = end.toISOString();
-                event.allDay = true;
               }
             }
             return event;
@@ -1800,21 +1889,58 @@ const EventCalendar = () => {
   );
 
   const handleEventClick = (clickInfo: EventClickArg) => {
-    setPopoverInfo(null);
-    if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
-      handleSetEventParam({
-        id: `${clickInfo.event.id}`,
-        action: ActionsEvent.EDIT,
+    if (
+      searchParams.get('view') == ViewOptions.DAY ||
+      searchParams.get('view') == ViewOptions.WEEK ||
+      searchParams.get('view') == ViewOptions.MONTH
+    ) {
+      if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
+        handleConfirmGetDataEventInfo(`${clickInfo.event.id}`);
+      } else if (
+        clickInfo.event.extendedProps.type === EventCalendarType.TASK
+      ) {
+        handleConfirmGetDataTaskInfo({
+          id: String(clickInfo.event.extendedProps.taskId),
+          taskScheduleId: `${clickInfo.event.id}`,
+        });
+      }
+      setInfoModalPosition({
+        left: adjustPositionForViewport(
+          {
+            top: Number(clickInfo.jsEvent.clientY),
+            left: Number(clickInfo.jsEvent.clientX),
+          },
+          5,
+        ).left,
+        top: adjustPositionForViewport(
+          {
+            top: Number(clickInfo.jsEvent.clientY),
+            left: Number(clickInfo.jsEvent.clientX),
+          },
+          5,
+        ).top,
       });
-      handleConfirmGetDataDetailEvent(`${clickInfo.event.id}`);
-    } else if (clickInfo.event.extendedProps.type === EventCalendarType.TASK) {
-      handleSetTaskParam({
-        id: `${clickInfo.event.extendedProps.taskId}`,
-        action: ActionsEvent.EDIT,
-      });
-      handleConfirmGetDataDetailTask(`${clickInfo.event.extendedProps.taskId}`);
+    } else {
+      setPopoverInfo(null);
+      if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
+        handleSetEventParam({
+          id: `${clickInfo.event.id}`,
+          action: ActionsEvent.EDIT,
+        });
+        handleConfirmGetDataDetailEvent(`${clickInfo.event.id}`);
+      } else if (
+        clickInfo.event.extendedProps.type === EventCalendarType.TASK
+      ) {
+        handleSetTaskParam({
+          id: `${clickInfo.event.extendedProps.taskId}`,
+          action: ActionsEvent.EDIT,
+        });
+        handleConfirmGetDataDetailTask(
+          `${clickInfo.event.extendedProps.taskId}`,
+        );
+      }
+      setActionEventClick(ActionsEvent.EDIT);
     }
-    setActionEventClick(ActionsEvent.EDIT);
   };
 
   const handleEventClickInPopup = (
@@ -1875,20 +2001,20 @@ const EventCalendar = () => {
 
   const calendarViewOptions = [
     {
-      value: CalendarViewOptions.VIEW_BY_YEAR,
-      label: '年',
-    },
-    {
-      value: CalendarViewOptions.VIEW_BY_MONTH,
-      label: '月',
+      value: CalendarViewOptions.VIEW_BY_DAY,
+      label: '日',
     },
     {
       value: CalendarViewOptions.VIEW_BY_WEEK,
       label: '週',
     },
     {
-      value: CalendarViewOptions.VIEW_BY_DAY,
-      label: '日',
+      value: CalendarViewOptions.VIEW_BY_MONTH,
+      label: '月',
+    },
+    {
+      value: CalendarViewOptions.VIEW_BY_YEAR,
+      label: '年',
     },
   ];
 
@@ -2065,18 +2191,12 @@ const EventCalendar = () => {
               data.endDate &&
               new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              !isMidnight(new Date(data.endDate))
+              !isMidnight(new Date(data.endDate)) &&
+              data.isAllDay
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
                 : data.endDate;
-            const start = new Date(data.startDate);
-            if (data.endDate) {
-              const end = new Date(data.endDate);
-              if (start.getDate() !== end.getDate()) {
-                data.isAllDay = true;
-              }
-            }
             const newEventData = {
               id: `${data.id}`,
               title: data.title,
@@ -2085,6 +2205,7 @@ const EventCalendar = () => {
               allDay: data.isAllDay,
               type: EventCalendarType.SCHEDULE,
               isMyEvent: isMyEvent,
+              address: data.address,
               participants: data.participants,
               resourceIds: [
                 ...(data.participants
@@ -2198,6 +2319,12 @@ const EventCalendar = () => {
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
+        : null,
     });
   };
   const handleEditTask = async (data: TaskRequest) => {
@@ -2255,6 +2382,9 @@ const EventCalendar = () => {
       handleRemoveTaskParam();
     },
     onError: (error: AxiosError<any>) => {
+      if (error.response?.data.taskSchedules) {
+        showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+      }
       showErrorToast(error, ERROR_UPDATE_MESSAGE);
     },
     onSettled: () => {
@@ -2397,18 +2527,12 @@ const EventCalendar = () => {
               data.endDate &&
               new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              !isMidnight(new Date(data.endDate))
+              !isMidnight(new Date(data.endDate)) &&
+              data.isAllDay
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
                 : data.endDate;
-            const start = new Date(data.startDate);
-            if (data.endDate) {
-              const end = new Date(data.endDate);
-              if (start.getDate() !== end.getDate()) {
-                data.isAllDay = true;
-              }
-            }
             updatedEvents[foundEventIndex] = {
               ...updatedEvents[foundEventIndex],
               title: data.title,
@@ -2417,6 +2541,7 @@ const EventCalendar = () => {
               allDay: data.isAllDay,
               isMyEvent: true,
               participants: data.participants,
+              address: data.address,
               resourceIds: [
                 ...(data.participants
                   ?.filter(
@@ -2570,13 +2695,6 @@ const EventCalendar = () => {
         return [];
       }
       return events.map((event) => {
-        const start = new Date(event.start);
-        if (event.end) {
-          const end = new Date(event.end);
-          if (start.getDate() !== end.getDate()) {
-            event.allDay = true;
-          }
-        }
         let eventClass = '';
         if (event.type === EventCalendarType.TASK) {
           eventClass = 'event-type-task';
@@ -2639,19 +2757,19 @@ const EventCalendar = () => {
   };
 
   const getDefaultCalendarView = () => {
-    let defaultView = calendarViewOptions[1];
+    let defaultView = calendarViewOptions[2];
     switch (searchParams.get('view')) {
       case ViewOptions.YEAR:
-        defaultView = calendarViewOptions[0];
+        defaultView = calendarViewOptions[3];
         break;
       case ViewOptions.MONTH:
-        defaultView = calendarViewOptions[1];
-        break;
-      case ViewOptions.WEEK:
         defaultView = calendarViewOptions[2];
         break;
+      case ViewOptions.WEEK:
+        defaultView = calendarViewOptions[1];
+        break;
       case ViewOptions.DAY:
-        defaultView = calendarViewOptions[3];
+        defaultView = calendarViewOptions[0];
         break;
       default:
         break;
@@ -2675,130 +2793,177 @@ const EventCalendar = () => {
     };
   }, []);
 
+  const showCurrentViewButtonContent = () => {
+    switch (searchParams.get('view')) {
+      case ViewOptions.DAY:
+        return '今日';
+      case ViewOptions.MONTH:
+        return '今月';
+      case ViewOptions.WEEK:
+        return '今週';
+      case ViewOptions.YEAR:
+        return '今年';
+      default:
+        return '';
+    }
+  };
+
+  const getAllDayEventCountText = (events: EventCalendarDetail[]) => {
+    if (!events || events.length === 0) return 'zero-all-day-events';
+
+    const allDayCount = events.filter((event) => event.allDay).length;
+
+    if (allDayCount === 1) return 'one-all-day-event';
+    if (allDayCount >= 2) return 'many-all-day-events';
+
+    return 'zero-all-day-events';
+  };
+
   return (
     <Fragment>
       <div className="flex mb-3 pl-8 overflow-y-hidden" ref={containerRef}>
         <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'} p-4`}>
           <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center ml-[-2rem]">
-              {searchParams.get('view') != ViewOptions.DAY && (
-                <>
-                  <ImageRound
-                    name="Chevron left"
-                    src={'/icons/chevron-left-calendar.svg'}
-                    onClick={handlePrev}
-                    className="!w-[10px] !h-4 hover:cursor-pointer"
-                  />
-                  <ImageRound
-                    name="Chevron right"
-                    src={'/icons/chevron-left-calendar.svg'}
-                    onClick={handleNext}
-                    className="!w-[10px] !h-4 ml-3 rotate-180 hover:cursor-pointer"
-                  />
-                </>
-              )}
-              <div className="flex items-end font-normal ml-3 gap-2">
+            <div className="flex items-center ml-[-1rem] gap-4">
+              <ImageRound
+                name="Chevron left"
+                src={'/icons/chevron-left-calendar.svg'}
+                onClick={handlePrev}
+                className="!w-[8px] !h-[10px] hover:cursor-pointer"
+              />
+              <div className="flex items-end font-normal gap-2">
                 {searchParams.get('view') != ViewOptions.DAY && (
-                  <>
-                    <p
-                      className={`${
-                        searchParams.get('view') == ViewOptions.YEAR
-                          ? 'text-[30px]'
-                          : 'text-[18px]'
-                      }  mb-[7px] text-[#5B6770] font-medium`}>
-                      {displayYear}年
-                    </p>
-                    {searchParams.get('view') !== ViewOptions.YEAR && (
-                      <p className="text-[30px] text-[#5B6770] font-medium">
-                        {displayMonth}月
-                      </p>
-                    )}
-                  </>
+                  <p
+                    className={`${
+                      searchParams.get('view') == ViewOptions.YEAR
+                        ? 'text-[25px]'
+                        : 'text-[18px]'
+                    }  mb-[5px] text-[#5B6770] font-medium`}>
+                    {displayYear}年
+                  </p>
                 )}
-
+                {searchParams.get('view') !== ViewOptions.YEAR && (
+                  <p className="text-[30px] text-[#5B6770] font-medium">
+                    {displayMonth}月
+                  </p>
+                )}
                 {searchParams.get('view') == ViewOptions.DAY && (
                   <>
-                    <div className="w-[260px] ml-6 !z-20 flex gap-0 items-center">
-                      <Button
-                        onClick={() => handlePrev()}
-                        className="h-10 bg-white !px-2">
-                        <ImageRound
-                          className=" w-7 h-7 "
-                          src="/icons/chevron-left.svg"
-                          name="left"
-                        />
-                      </Button>
-                      <DatePicker
-                        className="h-10 !z-20"
-                        selected={
-                          calendarRef.current
-                            ? calendarRef.current.getApi().getDate()
-                            : new Date()
-                        }
-                        onChange={(e) => {
-                          handleNavigateToSpecificDay(e as Date);
-                        }}
-                      />
-                      <Button
-                        onClick={() => handleNext()}
-                        className="h-10 bg-white !px-2">
-                        <ImageRound
-                          className=" w-7 h-7 "
-                          src="/icons/chevron-right.svg"
-                          name="right"
-                        />
-                      </Button>
-                    </div>
+                    <p className="text-[30px] text-[#5B6770] font-medium">
+                      {displayDay}日
+                    </p>
+                    <p className="text-[18px] mb-[5px] text-[#5B6770] font-medium">
+                      (
+                      {getJapaneseDayName(
+                        calendarRef.current
+                          ? String(calendarRef.current.getApi().getDate())
+                          : String(new Date()),
+                      )}
+                      )
+                    </p>
                   </>
                 )}
-                <Button
-                  type="button"
-                  className="h-10 self-center"
-                  onClick={handleNavigateToTodayView}>
-                  今日
-                </Button>
+              </div>
+
+              <ImageRound
+                name="Chevron right"
+                src={'/icons/chevron-left-calendar.svg'}
+                onClick={handleNext}
+                className="!w-[8px] !h-[10px] rotate-180 hover:cursor-pointer"
+              />
+              <div className="mt-5 z-20">
+                <DatePicker
+                  className="z-50"
+                  isShowInput={false}
+                  selected={
+                    calendarRef.current
+                      ? calendarRef.current.getApi().getDate()
+                      : new Date()
+                  }
+                  tooltipMsg="カレンダーから日付を選択"
+                  iconClassName="!static !w-10 !h-5"
+                  onChange={(e) => {
+                    handleNavigateToSpecificDay(e as Date);
+                  }}
+                />
+              </div>
+              <Tippy
+                content={`${showCurrentViewButtonContent()}に移動`}
+                arrow={false}
+                delay={1000}
+                placement="top"
+                offset={[0, 5]}>
+                <div>
+                  <Button
+                    type="button"
+                    className="!self-center !text-[#0068B6] !bg-white !w-[48px] !h-[34px] !rounded-[6px] !text-[14px] !font-medium !p-[8px] !border-none"
+                    onClick={handleNavigateToTodayView}>
+                    {showCurrentViewButtonContent()}
+                  </Button>
+                </div>
+              </Tippy>
+            </div>
+            <div
+              className={`flex gap-5 items-center ${!showSidebar && 'mr-14'}`}>
+              <InputSearch
+                placeholder="予定、キーワードを検索"
+                inputClassName="!w-[300px] !py-2 !rounded-[20px] text-sm !bg-white border-none placeholder-[#77858F99]"
+              />
+              <div className="!w-[54px]">
+                <Controller
+                  control={control}
+                  name={'calendarView'}
+                  defaultValue={getDefaultCalendarView()}
+                  render={({ field: { value, onChange } }) => (
+                    <Dropdown
+                      options={calendarViewOptions}
+                      selectedOption={calendarViewOptions.find(
+                        (element) => element.value === value?.value,
+                      )}
+                      className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
+                      classNameTextData="!text-xs"
+                      classActive="!text-sm"
+                      classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
+                      labelOptionClass="!text-sm font-medium !pl-0.5 !border-b-[1px] !border-[#EBF1F7]"
+                      onChange={(e) => {
+                        onChange(e);
+                        handleViewChange(e.value as string);
+                        setIsCalendarLoading(true);
+                        setTimeout(() => setIsCalendarLoading(false), 600);
+                      }}
+                    />
+                  )}
+                />
               </div>
             </div>
-            <div className={`flex gap-3 items-center mr-[1rem]`}>
-              <ImageRound
-                src="/icons/search.svg"
-                name="Search input icon"
-                className="w-4 h-4 z-10 ml-3 top-3.5"
-              />
-              <Controller
-                control={control}
-                name={'calendarView'}
-                defaultValue={getDefaultCalendarView()}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    options={calendarViewOptions}
-                    selectedOption={calendarViewOptions.find(
-                      (element) => element.value === value?.value,
-                    )}
-                    className="h-[34px] text-xs !py-1 w-full !shadow-none"
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
-                    onChange={(e) => {
-                      onChange(e);
-                      handleViewChange(e.value as string);
-                      setIsCalendarLoading(true);
-                      setTimeout(() => setIsCalendarLoading(false), 600);
-                    }}
+            {!showSidebar && (
+              <Tippy
+                content={'表示するメンバー'}
+                arrow={false}
+                delay={1000}
+                placement="left"
+                offset={[0, 5]}>
+                <div
+                  className="bg-white w-[60px] h-[46px] rounded-l-[30px] flex items-center shadow-md hover:cursor-pointer fixed top-[90px] right-0"
+                  onClick={() => setShowSidebar((prev) => !prev)}>
+                  <ImageRound
+                    className="w-8 h-8 ml-2"
+                    src="/icons/multi-users.svg"
+                    border="full"
+                    name="Avatar user"
                   />
-                )}
-              />
-              {!showSidebar && (
-                <Checkbox
-                  className="mr-3"
-                  isChecked={!showSidebar}
-                  onChange={(state) => setShowSidebar(!state)}
-                />
-              )}
-            </div>
+                  <ImageRound
+                    className="w-4 h-4 -rotate-90 ml-1"
+                    src={'/icons/arrow-down.svg'}
+                    name="Arrow down"
+                  />
+                </div>
+              </Tippy>
+            )}
           </div>
 
           <div
-            className={`w-full relative calendar-custom ${searchParams.get('view') || ''} ${showSidebar ? '' : 'pr-8'}`}
+            className={`w-full relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} ${showSidebar ? '' : 'pr-8'}`}
             style={{ overflowX: 'auto', width: '100%' }}>
             {calendarLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#ebf1f4] z-10"></div>
@@ -2834,19 +2999,24 @@ const EventCalendar = () => {
                   : CalendarViewOptions.VIEW_BY_MONTH
               }
               resources={currentResources}
+              resourceOrder={(a: any, b: any) => {
+                if (a.id === String(session?.user.id)) return -1;
+                if (b.id === String(session?.user.id)) return 1;
+                return a.title.localeCompare(b.title);
+              }}
               resourceLabelContent={(resource) => {
                 const avatarColor = String(
-                  dashboardMembers.find(
+                  dashboardMembersWithAvatars.find(
                     (member) => member.id == resource.resource.id,
                   )?.avatarColor,
                 );
                 return (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center justify-start gap-1">
                     {AvatarIconWithDynamicColor({
                       color: avatarColor || '',
                       size: 36,
                     })}
-                    <p className="truncate max-w-[100px] text-black">
+                    <p className="truncate max-w-[100px] text-[15px] font-medium text-black">
                       {resource.resource.title}
                     </p>
                   </div>
@@ -2881,6 +3051,28 @@ const EventCalendar = () => {
                 meridiem: false,
                 hour12: false,
               }}
+              dayHeaderContent={(arg) => {
+                const date = new Date(arg.date);
+                let day = date.getDate().toString();
+                if (day.length === 1) {
+                  day = '0' + day;
+                }
+                const weekday = date.toLocaleDateString('ja-JP', {
+                  weekday: 'short',
+                });
+                const viewType = arg.view.type;
+
+                if (viewType === 'timeGridWeek') {
+                  return (
+                    <div className="fc-day-header text-[#5B6770] font-medium">
+                      <span className="text-[18px] mr-1">{day}日</span>
+                      <span className="text-[12px]">({weekday})</span>
+                    </div>
+                  );
+                } else {
+                  return <span className="fc-day-header">{weekday}</span>;
+                }
+              }}
               multiMonthMaxColumns={4}
               eventContent={handleEventContent}
               multiMonthMinWidth={200}
@@ -2893,9 +3085,9 @@ const EventCalendar = () => {
                 meridiem: false,
                 hour12: false,
               }}
-              slotLabelInterval={{
-                hour: 1,
-              }}
+              slotDuration="00:30:00"
+              slotLabelInterval="00:30:00"
+              slotEventOverlap={false}
               slotLabelContent={({ text }) => (
                 <div className="text-[12px] text-[#77858F]">{text}</div>
               )}
@@ -2924,7 +3116,7 @@ const EventCalendar = () => {
 
                     return (
                       <div
-                        className={`text-[14px] ${isSelectedDate && 'bg-[#D1E2FB] text-[#0068b7] ml-[-5px] !w-[29px] !h-[29px] mt-[-4px] mr-[-5px] rounded-full flex items-center justify-center'}`}>
+                        className={`text-[14px] ${isSelectedDate && 'bg-[#E2E9EE] ml-[-5px] !w-[29px] !h-[29px] mt-[-4px] mr-[-5px] rounded-full flex items-center justify-center'}`}>
                         {date.getDate()}
                       </div>
                     );
@@ -2956,7 +3148,7 @@ const EventCalendar = () => {
 
                     return (
                       <div
-                        className={`text-[14px] ${isSelectedDate && 'bg-[#D1E2FB] text-[#0068b7] ml-[-5px] !w-[29px] !h-[29px] mt-[-8px] mr-[-5px] rounded-full flex items-center justify-center'}`}>
+                        className={`text-[14px] ${isSelectedDate && 'bg-[#E2E9EE] ml-[-5px] !w-[29px] !h-[29px] mt-[-8px] mr-[-5px] rounded-full flex items-center justify-center'}`}>
                         {date.getDate()}
                       </div>
                     );
@@ -2970,6 +3162,7 @@ const EventCalendar = () => {
                   titleFormat: (date) => {
                     setDisplayYear(date.date.year);
                     setDisplayMonth(date.date.month + 1);
+                    setDisplayDay(date.date.day);
                     return `${date.date.year}年 ${date.date.month + 1}月 ${date.date.day}日`;
                   },
                 },
@@ -2979,327 +3172,37 @@ const EventCalendar = () => {
         </div>
         {popoverInfo && (
           <div className="z-30 flex items-center justify-center">
-            <div
-              className={`p-4 bg-white border custom-popover w-[330px] border-gray-200 shadow-lg font-primary max-h-[500px] overflow-y-auto !rounded-2xl py-4`}
-              ref={popoverRef}
-              style={{
-                position: 'absolute',
-                top: `${popoverInfo.top}px`,
-                left: `${popoverInfo.left}px`,
-              }}>
-              <div
-                className="hover:bg-[#EBF1F4] absolute p-1.5 right-2 top-2 hover:rounded-full hover:cursor-pointer"
-                onClick={() => {
-                  handlePopoverClose();
-                  setDefaultCreateStartDate(undefined);
-                }}>
-                <ImageRound
-                  name="Close"
-                  src={'/icons/close.svg'}
-                  className="w-[18px] h-[18px] hover:cursor-pointer"
-                />
-              </div>
-              <h3 className="text-center mb-4">
-                {popoverInfo.date
-                  ? (() => {
-                      const { day, dayOfWeek, month } = getDateInfo(
-                        new Date(popoverInfo.date),
-                      );
-                      return (
-                        <>
-                          <span className="text-md font-semibold mr-1">
-                            {month}月{day}日
-                          </span>
-                          <span className="text-sm font-medium">
-                            ({dayOfWeek})
-                          </span>
-                        </>
-                      );
-                    })()
-                  : ''}
-              </h3>
-              <ul className="list-disc">
-                {popoverInfo.events.map((event) => {
-                  let timeRange = '';
-                  if (event.start && event.end) {
-                    timeRange = getTimeRangeForClickDate(
-                      new Date(event.start),
-                      new Date(event.end),
-                    );
-                  }
-
-                  let avatarColor = '';
-                  if (event.participants && event.participants.length > 0) {
-                    if (event.type == EventCalendarType.TASK) {
-                      avatarColor =
-                        dashboardMembers.find(
-                          (member) => member.id == session?.user.id,
-                        )?.avatarColor || '';
-                    } else {
-                      const updatedUserIds: string[] = selectedScheduleUserIds
-                        ? selectedScheduleUserIds.split(',').filter(Boolean)
-                        : [];
-                      if (
-                        filterMyEvent &&
-                        !updatedUserIds.find(
-                          (userId) =>
-                            String(userId) == String(session?.user.id),
-                        )
-                      ) {
-                        updatedUserIds.push(String(session?.user.id));
-                      }
-                      if (
-                        event.participants.find(
-                          (participant: EventParticipant) =>
-                            participant.id == session?.user.id,
-                        ) &&
-                        updatedUserIds.includes(`${session?.user.id}`)
-                      ) {
-                        avatarColor =
-                          dashboardMembers.find(
-                            (member) => member.id == session?.user.id,
-                          )?.avatarColor || '';
-                      } else {
-                        const participantList = event.participants
-                          .filter((participant: EventParticipant) =>
-                            updatedUserIds.find(
-                              (userId) => userId == participant.id,
-                            ),
-                          )
-                          .sort(
-                            (prev: EventParticipant, next: EventParticipant) =>
-                              prev.fullName.localeCompare(next.fullName),
-                          )
-                          .map((participant: EventParticipant) => {
-                            return {
-                              id: participant.id,
-                              fullName: participant.fullName,
-                              avatarColor: dashboardMembers.find(
-                                (member) => member.id == participant.id,
-                              )?.avatarColor,
-                            };
-                          });
-                        if (participantList && participantList.length > 0) {
-                          avatarColor = participantList[0].avatarColor || '';
-                        } else {
-                          avatarColor = '';
-                        }
-                      }
-                    }
-                  }
-                  return (
-                    <li
-                      key={event.id}
-                      className={`text-xs list-none mb-1 ${event.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7] text-white' : 'bg-[#ebf1f4] text-[#444546]'} !rounded-[8px] pl-1.5 pt-1`}
-                      onClick={() => {
-                        handlePopoverClose();
-                        handleEventClickInPopup(
-                          `${event.type}`,
-                          event.type == EventCalendarType.TASK
-                            ? String(event.taskId)
-                            : event.id,
-                          event.type == EventCalendarType.TASK ? event.id : '',
-                        );
-                      }}>
-                      <div className="flex items-center gap-2">
-                        {checkShowUserAvatar(
-                          event.type,
-                          event.participants,
-                        ) && (
-                          <div className="relative mt-[-7px] mr-1">
-                            <div>
-                              {AvatarIconWithDynamicColor({
-                                color: avatarColor,
-                                size: 33,
-                              })}
-                            </div>
-                            <p className="rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4 absolute bottom-[0px] right-[-5px]">
-                              {event.participants && event.participants.length}
-                            </p>
-                          </div>
-                        )}
-                        <div className="mb-2">
-                          <div className="font-semibold max-w-[200px] min-h-4 truncate">
-                            {event.title || ''}
-                          </div>
-                          <div className="text-[11px]">{timeRange || ''}</div>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-              {popoverInfoLoading && (
-                <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
-              )}
-              {!popoverInfoLoading &&
-                session?.user.permissions &&
-                hasPermissionInArray(
-                  session?.user.permissions,
-                  PermissionsSystem.CALENDAR_ADD,
-                ) && (
-                  <div
-                    className={`mx-auto mt-3 w-fit hover:cursor-pointer hover:rounded-full p-[6px] hover:bg-gray-200 border-[1px] border-transparent`}
-                    onClick={() => {
-                      handlePopoverClose();
-                      handleCreateNewEventFromPopup();
-                    }}>
-                    <ImageRound
-                      src={`/icons/add.svg`}
-                      name="Add"
-                      className="!w-4 !h-4 text-"
-                    />
-                  </div>
-                )}
-            </div>
+            <TaskAndEventListModal
+              checkShowUserAvatar={checkShowUserAvatar}
+              handleCreateNewEventFromPopup={handleCreateNewEventFromPopup}
+              handleEventClickInPopup={handleEventClickInPopup}
+              handlePopoverClose={handlePopoverClose}
+              popoverInfo={popoverInfo}
+              popoverInfoLoading={popoverInfoLoading}
+              popoverRef={popoverRef}
+              setDefaultCreateStartDate={setDefaultCreateStartDate}
+            />
           </div>
         )}
         <div
-          className={`transition-all duration-1000 ${showSidebar ? 'w-[24%] relative p-6 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
-          <div className="flex flex-col mb-7">
-            <div
-              className="bg-white absolute hover:bg-slate-200 right-3 shadow-lg rounded-full p-[5px] hover:cursor-pointer"
-              onClick={() => setShowSidebar(false)}>
-              <ImageRound
-                className="w-5 h-5 hover:cursor-pointer"
-                src="/icons/close.svg"
-                name="Close modal"
-              />
-            </div>
-            <p className="font-normal text-gray-500 mb-2 mt-8 text-sm">
-              表示する項目
-            </p>
-            <Checkbox
-              label="マイスケジュール"
-              isChecked={filterMyEvent}
-              onChange={(state) =>
-                handleToggleFilterOptions(state, EventCalendarType.SCHEDULE)
-              }
-            />
-            <Checkbox
-              label="マイタスク"
-              className="mr-3"
-              isChecked={filterMyTask}
-              onChange={(state) =>
-                handleToggleFilterOptions(state, EventCalendarType.TASK)
-              }
-            />
-            <Checkbox label="会社の予定" />
-          </div>
-          <p className="font-normal mb-2 text-sm text-gray-500">
-            メンバーの予定を見る
-          </p>
-          <div className="p-3 mb-2 rounded-md shadow-md bg-white">
-            <InputSearch
-              placeholder="名前で検索"
-              className="w-[100%]"
-              inputClassName="!py-2 mb-3"
-              onChange={(e) => setSearchName(e.target.value)}
-            />
-            <div className="flex justify-between mb-2">
-              <p
-                className="text-gray-500 text-xs hover:cursor-pointer hover:text-gray-700"
-                onClick={() => handleGetAllMemberSchedules()}>
-                全てをチェック
-              </p>
-              <p
-                className="text-gray-500 text-xs hover:cursor-pointer hover:text-gray-700"
-                onClick={() => handleRemoveAllMemberSchedules()}>
-                全てのチェックをクリア
-              </p>
-            </div>
-            <div className="pt-3 mb-3 max-h-[250px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
-              {dashboardMembers &&
-                dashboardMembers
-                  .filter((member) =>
-                    member.fullName
-                      .toLowerCase()
-                      .includes(searchName.toLowerCase()),
-                  )
-                  .filter(
-                    (member) =>
-                      !removeMyselfOption || member.id != session?.user.id,
-                  )
-                  .map((member) => {
-                    return (
-                      <div key={member.id} className="flex items-center">
-                        <div className="w-5">
-                          <Checkbox
-                            label=""
-                            className="mr-2"
-                            isChecked={
-                              selectedScheduleUserIds.includes(`${member.id}`)
-                                ? true
-                                : false
-                            }
-                            onChange={() =>
-                              handleFilterScheduleByUserIds(Number(member.id))
-                            }
-                          />
-                        </div>
-                        <div
-                          className={`flex gap-5 items-center p-1.5 hover:cursor-pointer`}>
-                          {AvatarIconWithDynamicColor({
-                            color: member.avatarColor,
-                            size: 36,
-                          })}
-                          <p className="font-normal text-sm truncate max-w-[200px] text-black">
-                            {member.fullName}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-            </div>
-          </div>
-          <div className="ml-[13px]">
-            <Checkbox
-              label="自分をメンバーから外す"
-              onChange={(state) => {
-                setRemoveMyselfOption(state);
-                setCurrentResources((prevCurrentResources) => {
-                  if (
-                    !filterMyEvent &&
-                    !filterMyTask &&
-                    prevCurrentResources.find(
-                      (resource) => resource.id == String(session?.user.id),
-                    )
-                  ) {
-                    return prevCurrentResources.filter(
-                      (resource) => resource.id !== String(session?.user.id),
-                    );
-                  }
-                  return [...prevCurrentResources];
-                });
-                if (state) {
-                  let updatedUserIds: string[] = selectedScheduleUserIds
-                    ? selectedScheduleUserIds.split(',').filter(Boolean)
-                    : [];
-                  const userIdStr = String(session?.user.id);
-                  updatedUserIds = updatedUserIds.filter(
-                    (id) => id !== userIdStr,
-                  );
-                  setSelectedScheduleUserIds(updatedUserIds.join(','));
-                  if (filterMyEvent) {
-                    updatedUserIds.push(userIdStr);
-                    getEventCalendarByUsers({
-                      userId:
-                        `${updatedUserIds.join(',')}`.length > 0
-                          ? `${updatedUserIds.join(',')}`
-                          : ``,
-                    });
-                  } else {
-                    getEventCalendarByUsers({
-                      userId:
-                        `${updatedUserIds.join(',')}`.length > 0
-                          ? `${updatedUserIds.join(',')}`
-                          : ``,
-                    });
-                  }
-                }
-              }}
-            />
-          </div>
+          className={`transition-all duration-300 ${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
+          <CalendarSidebar
+            filterMyEvent={filterMyEvent}
+            filterMyTask={filterMyTask}
+            getEventCalendarByUsers={getEventCalendarByUsers}
+            handleFilterScheduleByUserIds={handleFilterScheduleByUserIds}
+            handleGetAllMemberSchedules={handleGetAllMemberSchedules}
+            handleRemoveAllMemberSchedules={handleRemoveAllMemberSchedules}
+            handleToggleFilterOptions={handleToggleFilterOptions}
+            removeMyselfOption={removeMyselfOption}
+            searchName={searchName}
+            selectedScheduleUserIds={selectedScheduleUserIds}
+            setCurrentResources={setCurrentResources}
+            setRemoveMyselfOption={setRemoveMyselfOption}
+            setSearchName={setSearchName}
+            setSelectedScheduleUserIds={setSelectedScheduleUserIds}
+            setShowSidebar={setShowSidebar}
+          />
         </div>
       </div>
       {openCreateEventModal && (
@@ -3507,8 +3410,8 @@ const EventCalendar = () => {
           dataEvent={dataEventEdit}
           top={infoModalPosition?.top}
           left={infoModalPosition?.left}
-          dashboardMembers={dashboardMembers}
           checkShowUserAvatar={checkShowUserAvatar}
+          selectedScheduleUserIds={selectedScheduleUserIds}
           onClose={() => {
             handleRemoveTaskParam();
             setDataEventEdit(undefined);

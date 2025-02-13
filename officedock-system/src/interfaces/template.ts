@@ -38,7 +38,7 @@ export interface TemplateFormData {
   isImportant: boolean;
   todoList?: TodoItem[];
   oldIdStatus?: string;
-  organization?: OptionDropdownType;
+  organization?: OptionDropdownType | null;
   peopleInChargeIds?: OptionDropdownType[];
 }
 

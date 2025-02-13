@@ -8,7 +8,7 @@ import 'tippy.js/dist/tippy.css';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import InputSearch from '@components/common/InputSearch';
+import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 
 import {
   ActionTask,
@@ -17,24 +17,25 @@ import {
   PermissionsSystem,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
+import { ERROR_TIME_START_MESSAGE } from '@constants/message';
 
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import useContinueCounterTime from '@hooks/useContinueCounterTime';
 import useTaskHeaderStart from '@hooks/useTaskHeaderStart';
-import { useDebounce } from '@hooks/useDebounce';
 import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
+import useDataHeaderTaskList from '@hooks/useDataHeaderTask';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { TaskDuration } from '@interfaces/task';
 import { TaskContext } from '@providers/TaskProvider';
-import { handleSearchRegex, hasPermissionInArray } from '@utils';
+import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
-import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 import {
+  calculateTotalTime,
   convertToCurrentTimezone,
   formatQueryStartDateForCalendar,
+  formatTimeTask,
 } from '@utils/date';
-import useDataHeaderTaskList from '@hooks/useDataHeaderTask';
 
 const ShowTimeCounter = memo(
   ({ statusTaskSelected }: { statusTaskSelected: TaskDuration }) => {
@@ -75,7 +76,6 @@ const TaskPageDataHeader = () => {
     setTaskSelected,
     setStatusTaskSelected,
     setTaskSelectedAction,
-    setSearchValue,
     setIdTaskStarting,
     setShowWarningStartTaskModal,
     setDataRunning,
@@ -86,7 +86,6 @@ const TaskPageDataHeader = () => {
     setTaskSelectedToStart,
     setDataActualAddSchedule,
   } = useContext(TaskContext);
-  const debouncedSetSearchValue = useDebounce(setSearchValue, 1000);
 
   const [optionsTaskMe, setOptionsTaskMe] = useState<OptionDropdownType[]>([]);
   const today = new Date();
@@ -135,6 +134,7 @@ const TaskPageDataHeader = () => {
           label: item.title,
           value: item.type === ItemStartType.TASK ? item.id : `${item.id}event`,
           type: item.type,
+          totalData: item.totalDuration,
         };
       });
 
@@ -292,9 +292,10 @@ const TaskPageDataHeader = () => {
       });
       refetchTaskDurationDetail();
       refetchTaskHeaderStart();
-      if (pathname === pageRouters.STATISTICS_MANAGEMENT.href) {
+      if (pathname === pageRouters.DAILY_REPORT_MANAGEMENT.href) {
         queryClient.refetchQueries(['getDataStatistic']);
       }
+
       if (data) {
         const startDateActual = new Date(
           convertToCurrentTimezone(`${data.planStartDate}`),
@@ -312,6 +313,10 @@ const TaskPageDataHeader = () => {
           type: ItemStartType.TASK,
           isMyTask: false,
         });
+
+        if (!data.isStart) {
+          refetchDataHeaderTaskList();
+        }
       }
     },
   });
@@ -410,6 +415,37 @@ const TaskPageDataHeader = () => {
       });
   };
 
+  // Handle call API cancel alert
+  const handleCancelAlert = async ({
+    uuid,
+    isCancelAlert,
+  }: {
+    uuid: string;
+    isCancelAlert: boolean;
+  }) => {
+    return await api.put(apiRouters.UPDATE_TASK_ACTUAL(uuid), {
+      isCancelAlert,
+    });
+  };
+  // Function call API  cancel alert
+  const { mutate: cancelAlert } = useMutation(
+    'postCancelAlert',
+    handleCancelAlert,
+    {
+      onSuccess: async () => {
+        refetchTaskHeaderStart();
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
+  const timeTaskSelect = dataTaskHeaderList?.find(
+    (item) =>
+      item.id === parseInt(String(taskSelected.value).replace('event', '')) &&
+      item.type === taskSelected.type,
+  );
+
   return (
     <>
       <div className="flex justify-between flex-grow">
@@ -444,69 +480,135 @@ const TaskPageDataHeader = () => {
                   }}
                 />
               </div>
-              {taskSelected.value && statusTaskSelected && <Tippy
-                content={
-                  statusTaskSelected?.isStart && taskSelected.value
-                    ? '計測停止'
-                    : '計測開始'
-                }
-                arrow={false}
-                delay={1000}
-                placement="right"
-                offset={[
-                  0,
-                  statusTaskSelected?.isStart && taskSelected.value ? 27 : 5,
-                ]}>
-                <div
-                  className={`flex justify-center items-center ${statusTaskSelected?.isStart && taskSelected.value && 'mx-5'}`}>
+              {taskSelected.value && statusTaskSelected && (
+                <Tippy
+                  content={
+                    statusTaskSelected?.isStart && taskSelected.value
+                      ? '計測停止'
+                      : '計測開始'
+                  }
+                  arrow={false}
+                  delay={1000}
+                  placement="right"
+                  offset={[
+                    0,
+                    statusTaskSelected?.isStart && taskSelected.value ? 27 : 5,
+                  ]}>
                   <div
-                    className={`animated-border-box-glow ${
-                      statusTaskSelected?.isStart && taskSelected.value
-                        ? 'animate'
-                        : ''
-                    }`}></div>
-                  <div
-                    className={`animated-border-box ${
-                      statusTaskSelected?.isStart && taskSelected.value
-                        ? 'animate'
-                        : ''
-                    }`}>
-                    <div className="mt-[4px] ml-[4px]">
-                      <ImageRound
-                        src={`/icons/${statusTaskSelected?.isStart && taskSelected.value ? 'pause' : 'play'}.svg`}
-                        name="Start task day"
-                        className={`!w-9 !h-9 hover:cursor-pointer`}
-                        onClick={() => {
-                          const selectedTask = taskSelected.value;
+                    className={`flex justify-center items-center ${statusTaskSelected?.isStart && taskSelected.value && 'mx-5'}`}>
+                    <div
+                      className={`animated-border-box-glow ${
+                        statusTaskSelected?.isStart && taskSelected.value
+                          ? 'animate'
+                          : ''
+                      }`}></div>
+                    <div
+                      className={`animated-border-box ${
+                        statusTaskSelected?.isStart && taskSelected.value
+                          ? 'animate'
+                          : ''
+                      }`}>
+                      <div className="mt-[4px] ml-[4px]">
+                        <ImageRound
+                          src={`/icons/${statusTaskSelected?.isStart && taskSelected.value ? 'pause' : 'play'}.svg`}
+                          name="Start task day"
+                          className={`!w-9 !h-9 hover:cursor-pointer`}
+                          onClick={() => {
+                            const selectedTask = taskSelected.value;
 
-                          if (!selectedTask) return;
+                            if (!selectedTask) return;
 
-                          setTaskSelectedToStart({
-                            title: taskSelected.label,
-                            id: taskSelected.value,
-                            type: taskSelected.type as string,
-                          });
+                            setTaskSelectedToStart({
+                              title: taskSelected.label,
+                              id: taskSelected.value,
+                              type: taskSelected.type as string,
+                            });
 
-                          checkTask({
-                            id: `${selectedTask}`.replace('event', ''),
-                            type: `${taskSelected.type}`,
-                          });
-                        }}
-                      />
+                            checkTask({
+                              id: `${selectedTask}`.replace('event', ''),
+                              type: `${taskSelected.type}`,
+                            });
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Tippy>}
-              
+                </Tippy>
+              )}
 
               {taskSelected.value && parseInt(String(taskSelected.value)) ? (
-                <ShowTimeCounter statusTaskSelected={statusTaskSelected} />
+                <div className="flex gap-x-4">
+                  <ShowTimeCounter statusTaskSelected={statusTaskSelected} />
+                  <div className="flex items-center justify-center text-xs font-medium text-[#A7B7C2] gap-x-1 min-w-[146px]">
+                    <p>開始</p>
+                    <p className="text-base font-normal text-[#77858F]">
+                      {statusTaskSelected?.isStart && taskSelected.value
+                        ? formatTimeTask(`${dataTaskHeaderStart?.startedAt}`)
+                        : formatTimeTask(
+                            `${timeTaskSelect ? timeTaskSelect.startedAt : ''}`,
+                          )}
+                    </p>
+                    <p className="px-[2px]">~</p>
+
+                    {statusTaskSelected?.isStart && taskSelected.value ? (
+                      <>
+                        <p>終了</p>
+                        <p className="text-xs font-normal text-[#77858F]">
+                          計測中
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p>終了</p>
+                        <p className="text-base font-normal text-[#77858F]">
+                          {formatTimeTask(
+                            `${
+                              dataTaskHeaderList?.find(
+                                (item) =>
+                                  item.id ===
+                                    parseInt(
+                                      String(taskSelected.value).replace(
+                                        'event',
+                                        '',
+                                      ),
+                                    ) && item.type === taskSelected.type,
+                              )?.pausedAt
+                            }`,
+                          )}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
               ) : (
                 <span className="text-[#77858F]">{'00:00:00'}</span>
               )}
+              {statusTaskSelected?.isStart &&
+                taskSelected.value &&
+                dataTaskHeaderStart?.isOverEstimate && (
+                  <div className="flex gap-1 items-center text-xs font-normal text-[#C32E2E] mt-[2px]">
+                    <ImageRound
+                      src={`/icons/overlap-task.svg`}
+                      name="icon warning"
+                      className=" w-3 h-3"
+                    />
+                    <ImageRound
+                      src={`/icons/red-close.svg`}
+                      name="icon cancel"
+                      onClick={() => {
+                        cancelAlert({
+                          uuid: dataTaskHeaderStart.taskDurationRunningUuid,
+                          isCancelAlert: true,
+                        });
+                      }}
+                      className=" w-4 h-4 cursor-pointer"
+                    />
+                    <p className="break-keep">{ERROR_TIME_START_MESSAGE}</p>
+                  </div>
+                )}
               <Button
                 variant="secondary"
-                className="whitespace-nowrap  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"
+                className="whitespace-nowrap mt-1 min-w-[22px]  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"
                 onClick={() => {
                   if (
                     taskSelected.value &&
@@ -537,16 +639,13 @@ const TaskPageDataHeader = () => {
               </Button>
             </div>
           )}
-        {isTaskPage && (
-          <InputSearch
-            placeholder="タスク、キーワードを検索"
-            className="w-[360px]"
-            inputClassName="!py-2"
-            onChange={(e) =>
-              debouncedSetSearchValue(handleSearchRegex(e.target.value))
-            }
-          />
-        )}
+
+        <div className="flex flex-col gap-1 text-xs font-medium text-[#A7B7C2]">
+          <p className="break-keep">本日の作業時間</p>
+          <p className="text-base font-normal text-[#77858F] w-full text-center">
+            {dataTaskHeaderList ? calculateTotalTime(optionsTaskMe) : ''}
+          </p>
+        </div>
       </div>
       {showWarningStartTaskModal && !isTaskPage && (
         <WarningStartTaskModal

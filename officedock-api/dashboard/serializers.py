@@ -38,6 +38,7 @@ class DurationSerializer(serializers.ModelSerializer):
     plan_start_date = serializers.SerializerMethodField()
     plan_end_date = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
 
     class Meta:
         model = TaskDuration
@@ -52,8 +53,19 @@ class DurationSerializer(serializers.ModelSerializer):
             "plan_start_date",
             "plan_end_date",
             "type",
+            "is_cancel_alert",
+            "categories",
         ]
         read_only_fields = ["id"]
+
+    # FIXME: Check spec implement color of category
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Task."""
+        model = obj.task or obj.schedule
+        if not model.categories.exists():
+            return []
+
+        return get_common_categories(model.categories.first())
 
     def get_task_id(self, instance):
         """
@@ -175,6 +187,7 @@ class UpdateDurationSerializer(serializers.ModelSerializer):
             "uuid",
             "started_at",
             "paused_at",
+            "is_cancel_alert",
         ]
         read_only_fields = ["id"]
 

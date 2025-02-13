@@ -110,6 +110,20 @@ export const formatTime = (seconds: number) => {
   const secs = (seconds % 60).toString().padStart(2, '0');
   return `${hrs}:${mins}:${secs}`;
 };
+export function formatTimeTask(isoString: string): string {
+  if (!isoString || isNaN(Date.parse(isoString))) {
+    return '----';
+  }
+
+  const date: Date = new Date(isoString);
+
+  const hours: number = date.getHours();
+  const minutes: number = date.getMinutes();
+
+  const formattedTime: string = `${hours}:${minutes.toString().padStart(2, '0')}`;
+
+  return formattedTime;
+}
 //Convert date to 00:00
 export const convertDateToStartDate = (dateString: string): string => {
   const date = parseISO(dateString);
@@ -243,7 +257,25 @@ export function addTimeDifference(
 
   return newTotal;
 }
+export const getMinuteDifference = (timeText: string): number => {
+  if (!timeText) return 0;
 
+  const [start, end] = timeText.split(' - ');
+  if (!start || !end) return 0;
+
+  const toMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return 0;
+    return hours * 60 + minutes;
+  };
+
+  const startMinutes = toMinutes(start);
+  const endMinutes = toMinutes(end);
+
+  return endMinutes >= startMinutes
+    ? endMinutes - startMinutes
+    : endMinutes + 1440 - startMinutes;
+};
 export function isMoreThanFifteenMinutes(start: string, end: string): boolean {
   if (!start || !end || typeof start !== 'string' || typeof end !== 'string') {
     return false;
@@ -402,15 +434,9 @@ export function formatShowDeadline(date: string | Date): string {
 
   inputDate.setHours(0, 0, 0, 0);
 
-  if (inputDate.getTime() === today.getTime()) {
-    return '今日';
-  } else if (inputDate.getTime() === tomorrow.getTime()) {
-    return '明日';
-  } else {
-    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-    const day = String(inputDate.getDate()).padStart(2, '0');
-    return `${month}月${day}日`;
-  }
+  const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  return `${month}月${day}日`;
 }
 
 export const compareWithCurrentTime = (inputDate: Date | string): boolean => {
@@ -680,6 +706,11 @@ export const getSubmitLevelFormattedDate = (date: Date) => {
   return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
 };
 
+// Format hours and minutes for event start and end time
+export const formatHoursAndMinutesForDateTime = (date: Date) => {
+  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+};
+
 // Calculate task and event's duration
 export function calculateActualDuration(
   startedAt: string,
@@ -692,6 +723,26 @@ export function calculateActualDuration(
 
   const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
   const hours = Math.floor(durationMs / (1000 * 60 * 60));
+  return `${hours}時間 ${minutes}分`;
+}
+export function calculateActualDurationDaily(
+  start: string,
+  end: string,
+): string {
+  const [startHour, startMinute] = start.split(':').map(Number);
+  const [endHour, endMinute] = end.split(':').map(Number);
+
+  const startDate = new Date();
+  startDate.setHours(startHour, startMinute, 0, 0);
+
+  const endDate = new Date();
+  endDate.setHours(endHour, endMinute, 0, 0);
+
+  const durationMs = endDate.getTime() - startDate.getTime();
+
+  const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
+  const hours = Math.floor(durationMs / (1000 * 60 * 60));
+
   return `${hours}時間 ${minutes}分`;
 }
 
@@ -761,4 +812,26 @@ export const isYesterdaySchedule = (date: Date) => {
     date.getMonth() === yesterday.getMonth() &&
     date.getDate() === yesterday.getDate()
   );
+};
+export const calculateTotalTime = (data: OptionDropdownType[]): string => {
+  const timeToSeconds = (time: string): number => {
+    if (!time) return 0;
+
+    const [hh, mm, ss] = time.split(':').map(Number);
+    return hh * 3600 + mm * 60 + ss;
+  };
+
+  const secondsToTime = (totalSeconds: number): string => {
+    const hh = Math.floor(totalSeconds / 3600);
+    const mm = Math.floor((totalSeconds % 3600) / 60);
+    const ss = totalSeconds % 60;
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+  };
+
+  const totalSeconds = data.reduce((sum, item) => {
+    const timeStr = item.totalData ? item.totalData : '';
+    return sum + timeToSeconds(timeStr);
+  }, 0);
+
+  return secondsToTime(totalSeconds);
 };

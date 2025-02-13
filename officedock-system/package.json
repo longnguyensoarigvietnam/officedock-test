@@ -51,6 +51,7 @@
     "react-rnd": "^10.4.11",
     "react-select": "^5.8.0",
     "react-textarea-autosize": "^8.5.3",
+    "tinycolor2": "^1.6.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
@@ -63,6 +64,7 @@
     "@types/react-big-calendar": "^1.8.9",
     "@types/react-datepicker": "^6.2.0",
     "@types/react-dom": "^18",
+    "@types/tinycolor2": "^1.4.6",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.9.0",

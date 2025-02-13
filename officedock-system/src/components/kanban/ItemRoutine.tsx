@@ -12,6 +12,7 @@ import 'tippy.js/dist/tippy.css';
 import ImageRound from '@components/common/ImageRound';
 
 import {
+  EventWorkCategory,
   ItemScheduleType,
   ItemStartType,
   PermissionsSystem,
@@ -166,6 +167,9 @@ const ItemRoutine = ({
           type: ItemStartType.TASK,
           isMyTask: false,
         });
+        if (!data.isStart) {
+          queryClient.refetchQueries(['getDataTaskHeaderList']);
+        }
       }
     },
   });
@@ -248,6 +252,11 @@ const ItemRoutine = ({
       PermissionsSystem.MY_TASK_ADD,
     );
 
+  const largeColor =
+    content.categories &&
+    content.categories.find((item) => item.type === EventWorkCategory.LARGE)
+      ?.color;
+
   return (
     <>
       {selectedOptionZoom.value !== 25 ? (
@@ -265,10 +274,15 @@ const ItemRoutine = ({
                 end: formatISO(addHoursToDate(`${now}`)),
                 startEditable: true,
                 itemKanban: true,
+                largeColor: largeColor,
               })}
               {...provided.draggableProps}
               {...provided.dragHandleProps}
-              className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              style={{
+                borderLeftColor: largeColor,
+                ...provided.draggableProps.style,
+              }}
+              className={`relative ${largeColor && !content.isStart && 'border border-l-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
               <div className="relative w-[100%]   h-full">
                 {isPermissionUpdate && (
                   <>
@@ -406,7 +420,7 @@ const ItemRoutine = ({
                           : '12px',
                       marginRight: `${(columnWidth / 247) * 12}px`,
                     }}
-                    className={`!border-none break-words cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                    className={`!border-none break-words cursor-pointer rounded-none bg-transparent !p-0 !pb-1 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                     {content.title}
                   </p>
                 </div>

@@ -20,6 +20,11 @@ export const pageRouters = {
     name: 'ログイン認証',
     href: '/login/2fa',
   },
+  // Setting
+  SETTING: {
+    name: '設定',
+    href: '/settings',
+  },
   // User
   USERS_MANAGEMENT: {
     name: 'ユーザー管理',
@@ -73,7 +78,6 @@ export const pageRouters = {
     name: '組織詳細',
     href: (id: string) => `/organizations/${id}`,
   },
-
   // TAG
   TAGS_MANAGEMENT: {
     name: '集計タグ管理',
@@ -118,11 +122,16 @@ export const pageRouters = {
     name: 'チャット詳細',
     href: (code: string) => `/chat/${code}`,
   },
-
   // STATISTIC
-  STATISTICS_MANAGEMENT: {
+  STATISTIC_MANAGEMENT: {
     name: '集計',
-    href: '/statistics',
+    href: '/statistic',
+  },
+
+  // DAILY REPORT
+  DAILY_REPORT_MANAGEMENT: {
+    name: '日報',
+    href: '/daily-report',
   },
   // CATEGORY
   CATEGORY_MANAGEMENT: {

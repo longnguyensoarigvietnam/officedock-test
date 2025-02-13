@@ -85,6 +85,7 @@ export enum AvatarChat {
   SELF = 'SELF',
   TASK = 'TASK',
   SKILL = 'SKILL',
+  CALENDAR = 'CALENDAR'
 }
 
 // TODO: The state is not fixed, so defining the state using an enum is not appropriate,
@@ -115,6 +116,8 @@ export enum ChatRoomType {
   SELF = 'SELF',
   TASK = 'TASK',
   SKILL = 'SKILL',
+  CALENDAR = 'CALENDAR',
+  UNREAD = 'UNREAD'
 }
 export enum MessageType {
   MESSAGE = 'MESSAGE',
@@ -145,6 +148,7 @@ export enum SocketActions {
   TOTAL_UNREAD_MESSAGE = 'TOTAL_UNREAD_MESSAGE',
   CHANGE_TASK_STATUS = 'CHANGE_TASK_STATUS',
   CHANGE_ROLE = 'CHANGE_ROLE',
+  REMIND_TASK = 'REMIND_TASK',
 }
 
 export enum WebSocketState {
@@ -365,4 +369,10 @@ export enum OrganizationType {
 export enum TabType {
   MY_DOC = 'マイドック',
   TEAM_DOCK = 'チームドック',
+}
+
+export enum TimeType {
+  HOURS = '時間前',
+  DAY = '日前',
+  WEEK = '週間前',
 }

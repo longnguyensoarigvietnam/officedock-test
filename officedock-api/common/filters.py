@@ -1,6 +1,11 @@
+from django.db.models import Value, DateTimeField
+from django.db.models.functions import Coalesce
 from rest_framework.filters import OrderingFilter
 from rest_framework.exceptions import ValidationError
+
+from base.constants import REPLACE_NULL_DATE
 from base.messages import ERROR_MESSAGES
+from common.constants import ORDERING_DATETIME_FIELD
 
 
 class CustomOrderFilter(OrderingFilter):
@@ -50,6 +55,18 @@ class CustomOrderFilter(OrderingFilter):
                 symbol = "-" if field.startswith("-") else ""
                 field_name = field.lstrip("-")
                 try:
+                    if field_name in ORDERING_DATETIME_FIELD:
+                        queryset = queryset.annotate(
+                            coalesced_ordering_datetime=Coalesce(
+                                field_name,
+                                Value(REPLACE_NULL_DATE),
+                                output_field=DateTimeField(),
+                            )
+                        )
+                        ordering_fields[
+                            field_name
+                        ] = "coalesced_ordering_datetime"
+
                     # Map the short field name to the actual model field name
                     order_fields.append(
                         f"{symbol}{ordering_fields[field_name]}"

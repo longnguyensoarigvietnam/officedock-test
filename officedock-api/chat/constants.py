@@ -27,6 +27,7 @@ class ChatRoomTypes(EnumChoices):
     GROUP = "GROUP"
     TASK = "TASK"
     SKILL = "SKILL"
+    CALENDAR = "CALENDAR"
 
 
 class ChatRoomNames(EnumChoices):
@@ -34,8 +35,9 @@ class ChatRoomNames(EnumChoices):
     ChatRoomNames constants.
     """
 
-    TASK_CARD = "タスクカード"
-    SKILL_UP = "スキルアップ"
+    TASK_CARD = "タスク通知"
+    SKILL_UP = "スキルマップ通知"
+    CALENDAR = "カレンダー通知"
 
 
 class WebSocketEventType(EnumChoices):
@@ -67,8 +69,18 @@ class TypeChatGroup(EnumChoices):
     TypeChatGroup constants.
     """
 
+    # FIXME: Remove NOTIFY and CHAT later when if not split chatroom and notify group
     NOTIFY = "NOTIFY"
     CHAT = "CHAT"
 
+    GROUP = "GROUP"
+    PRIVATE = "PRIVATE"
+    UNREAD = "UNREAD"
+
 
 USER_ACTION_GROUP = "{}_user_action_group"
+ROOM_TYPES = [
+    (ChatRoomTypes.TASK, ChatRoomNames.TASK_CARD),
+    (ChatRoomTypes.SKILL, ChatRoomNames.SKILL_UP),
+    (ChatRoomTypes.CALENDAR, ChatRoomNames.CALENDAR),
+]

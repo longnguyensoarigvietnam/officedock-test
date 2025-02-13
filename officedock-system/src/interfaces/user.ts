@@ -53,6 +53,8 @@ export interface User {
     isCheckSelfSchedule?: boolean;
     isCheckCompanySchedule?: boolean;
     isEnterSendMessage?: boolean;
+    isSortingTaskByDeadline?: boolean;
+    isSortingTaskByImportant?: boolean;
   };
   actions?: {
     update: boolean;

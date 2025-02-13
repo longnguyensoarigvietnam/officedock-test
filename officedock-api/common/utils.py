@@ -1,6 +1,6 @@
 import io
 from datetime import timedelta
-
+import random
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
@@ -303,6 +303,10 @@ def get_common_categories(category):
         {
             "id": getattr(category, attr).id,
             "name": getattr(category, attr).name,
+            # FIXME: Check spec implement color of category
+            "color": getattr(category, attr).color
+            if type_value == ScheduleCategoryTypes.LARGE.value
+            else None,
             "type": type_value,
         }
         for attr, type_value in category_types
@@ -333,3 +337,8 @@ def create_categories_by_model(model, categories):
         small_statistic_category=small_cat,
         company=model.company,
     )
+
+
+def generate_random_color():
+    """Generate a random hex color code."""
+    return "#{:06x}".format(random.randint(0, 0xFFFFFF))

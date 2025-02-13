@@ -37,6 +37,7 @@
       }
     ],
     "import/no-unresolved": 0,
+     "import/default": "off",
     "@typescript-eslint/no-empty-interface": "warn",
     "no-constant-condition": ["error", { "checkLoops": false }],
     "react/display-name": "off",

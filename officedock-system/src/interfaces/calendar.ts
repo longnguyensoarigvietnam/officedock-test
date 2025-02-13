@@ -14,6 +14,7 @@ export interface EventCalendarDetail {
   isMyEvent?: boolean;
   participants?: EventParticipant[];
   resourceIds?: string[];
+  address?: string
 }
 
 export interface EventCalendarDayRange {
@@ -59,6 +60,7 @@ export interface EventEditFormData {
   smallCategory?: OptionDropdownType;
   categories?: { id: string; name: string; type: string }[];
   organization?: OptionDropdownType | Organizations;
+  createdAt?: Date;
 }
 
 export interface EventRequest {
@@ -124,6 +126,13 @@ export interface EventCalendarProps {
   isMySchedule: boolean;
   isStart: boolean;
   participants?: EventParticipant[];
+  address?: string;
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+    color: string;
+  }[];
 }
 
 export interface TaskCalendarProps {
@@ -157,6 +166,8 @@ export interface CalendarPopoverInfo {
     type?: EventCalendarType;
     participants?: EventParticipant[];
     taskId?: string;
+    address?: string;
+    allDay?: boolean;
   }>;
   left?: number;
   top?: number;

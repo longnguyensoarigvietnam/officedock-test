@@ -9,12 +9,8 @@ import {
 } from 'react';
 
 import { parseInt } from 'lodash';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
+import { AxiosError } from 'axios';
+
 import { useMutation, useQueryClient } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
@@ -31,6 +27,11 @@ import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import Dropdown from '@components/common/Dropdown';
 import ActionsTemplateModal from '@components/modals/ActionsTemplateModal';
 import CardListView from '@components/kanban/CardListView';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
+import Button from '@components/common/Button';
+import InputSearch from '@components/common/InputSearch';
+import BoardKanban from '@components/kanban/Board';
+import FixedTaskData from './fixed-task';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useTaskBoardList from '@hooks/useTaskBoardList';
@@ -38,6 +39,8 @@ import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import useFrequentlyTasks from '@hooks/useFrequentlyTasks';
 import useTemplateList from '@hooks/useTemplateList';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
+import { useErrorToast } from '@hooks/useErrorToast';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -57,6 +60,7 @@ import {
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
@@ -80,6 +84,7 @@ import {
   TemplateFormData,
   TemplateRequest,
 } from '@interfaces/template';
+import { User } from '@interfaces/user';
 
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -94,13 +99,13 @@ import {
 } from '@utils/date';
 import { compareItems } from '@utils';
 import api from '@base/api';
-import FixedTaskData from './fixed-task';
-import { AxiosError } from 'axios';
-import { useErrorToast } from '@hooks/useErrorToast';
-import BoardKanban from '@components/kanban/Board';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
-import { User } from '@interfaces/user';
-import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
+import ActionFilterTask from '@components/modals/ActionFilterTask';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -226,8 +231,8 @@ const KanbanBoardTask = () => {
   const [dataItemChangeInline, setDataItemChangeInline] = useState<Task>();
   const [dataItemUpdateSchedule, setDataItemUpdateSchedule] = useState<Task>();
 
-  const [sortType, setSortType] = useState<'asc' | 'desc'>('asc');
-  const [columnSort, setColumnSort] = useState<string>('');
+  const [sortType, _setSortType] = useState<'asc' | 'desc'>('asc');
+  const [columnSort, _setColumnSort] = useState<string>('');
   const [columnId, setColumnId] = useState<string>('');
   const [peopleDefaultId, setPeopleDefaultId] = useState<string>('');
 
@@ -1135,23 +1140,6 @@ const KanbanBoardTask = () => {
     }
   }, [handleUpdateItemStart, taskSelectedAction]);
 
-  // Sort kanban option UI
-  const SortKanbanOption = ({
-    label,
-    isActive,
-    onClick,
-  }: {
-    label: string;
-    isActive: boolean;
-    onClick: () => void;
-  }) => (
-    <div
-      className={`flex items-center rounded-md justify-between px-3 py-2 hover:bg-gray-50 hover:cursor-pointer ${isActive && 'text-primary'}`}
-      onClick={onClick}>
-      {label}
-    </div>
-  );
-
   // Handle click sort item
   useEffect(() => {
     setOrderingRequest(
@@ -1758,14 +1746,25 @@ const KanbanBoardTask = () => {
       });
       setDataTaskEdit(null);
     },
-    onError: ({ response }: ResponseError<{ detail: TaskErrorPerson }>) => {
+    onError: ({
+      response,
+    }: ResponseError<{
+      detail: TaskErrorPerson;
+      taskSchedules: TaskErrorPerson;
+    }>) => {
       if (response?.data.detail) {
         setDataErrorTask(response?.data.detail);
+      } else if (response?.data.taskSchedules) {
+        showToast({
+          variant: 'error',
+          description: ERROR_MESSAGE_OVERLAP_TASK,
+        });
+      } else {
+        showToast({
+          variant: 'error',
+          description: ERROR_UPDATE_MESSAGE,
+        });
       }
-      showToast({
-        variant: 'error',
-        description: ERROR_UPDATE_MESSAGE,
-      });
     },
     onSettled: () => {
       setTimeout(() => {
@@ -1894,6 +1893,12 @@ const KanbanBoardTask = () => {
       peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
+        : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
         : null,
     });
     const isCheckPeopleInCharge =
@@ -2222,6 +2227,12 @@ const KanbanBoardTask = () => {
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
+        : null,
     });
   };
 
@@ -2276,7 +2287,11 @@ const KanbanBoardTask = () => {
         setShowEditTaskModal(false);
       },
       onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
+        if (error.response?.data.taskSchedules) {
+          showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+        } else {
+          showErrorToast(error, ERROR_CREATE_MESSAGE);
+        }
       },
       onSettled: () => {
         setPeopleDefaultId(`${session?.user.id}`);
@@ -2550,6 +2565,19 @@ const KanbanBoardTask = () => {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+  const [isFilterDeadline, setIsFilterDeadline] = useState(false);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      if (authenticatedUser.setting?.isSortingTaskByImportant) {
+        setIsFilterDeadline(false);
+      }
+      if (authenticatedUser.setting?.isSortingTaskByDeadline) {
+        setIsFilterDeadline(true);
+      }
+    }
+  }, [authenticatedUser]);
 
   return (
     <>
@@ -2621,88 +2649,100 @@ const KanbanBoardTask = () => {
                 frequentlyTasks={frequentlyTasks}
                 pinItemToTop={pinItemToTop}
               />
-              <div className="w-full h-[1px] bg-gray-200" />
-              <div className="flex-grow flex flex-col gap-2">
-                <div className={`flex gap-7 h-4 w-fit min-w-[300px]`}>
-                  <Popover className="relative">
-                    {() => (
+              <div className="flex-grow flex flex-col gap-2 mt-[30px] mb-6">
+                <div className={`flex gap-7 mb-6 w-fit min-w-[300px]`}>
+                  <div className="flex items-center gap-2">
+                    <ImageRound
+                      src="/icons/sort-task.svg"
+                      name="Sort icon"
+                      className="w-[18px] h-[14px]"
+                    />
+                    {authenticatedUser && (
                       <>
-                        <div className="flex items-center gap-2">
-                          <ImageRound
-                            src="/icons/order-asc.svg"
-                            name="Order icon"
-                            className={`!w-3 !h-3 hover:cursor-pointer ${sortType === 'desc' && 'rotate-180'}`}
-                            onClick={() =>
-                              columnSort &&
-                              setSortType(sortType === 'asc' ? 'desc' : 'asc')
+                        <Button
+                          disabled={isLoadingDataTask}
+                          onClick={() => {
+                            if (!isFilterDeadline) {
+                              setIsFilterDeadline(true);
+                              setOrderingRequest('deadline');
                             }
-                          />
-                          <PopoverButton className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
-                            <p>
-                              {columnSort
-                                ? columnSort === 'priority'
-                                  ? '優先順位順'
-                                  : '締切順'
-                                : '並べ替えなし'}
-                            </p>
-
-                            <ImageRound
-                              src="/icons/threedot.svg"
-                              name="More icon"
-                              className="!w-3 !h-[2px]"
-                            />
-                          </PopoverButton>
-                        </div>
-                        <Transition
-                          as={Fragment}
-                          enter="transition ease-out duration-200"
-                          enterFrom="opacity-0 translate-y-1"
-                          enterTo="opacity-100 translate-y-0"
-                          leave="transition ease-in duration-150"
-                          leaveFrom="opacity-100 translate-y-0"
-                          leaveTo="opacity-0 translate-y-1">
-                          <PopoverPanel className="absolute left-0 top-5 z-[1] w-fit transform">
-                            <div className="w-40 bg-white rounded-lg shadow-common p-1 flex flex-col gap-1 text-sm">
-                              <SortKanbanOption
-                                label="並べ替えなし"
-                                isActive={orderingRequest === ''}
-                                onClick={() => {
-                                  setOrderTaskSave([]);
-                                  setColumnSort('');
-                                  setSortType('asc');
-                                }}
-                              />
-                              <SortKanbanOption
-                                label="締切順"
-                                isActive={['-deadline', 'deadline'].includes(
-                                  orderingRequest,
-                                )}
-                                onClick={() => {
-                                  if (orderingRequest === 'deadline') return;
-                                  setColumnsKanbanData(undefined);
-                                  setColumnSort('deadline');
-                                  setSortType('desc');
-                                }}
-                              />
-                            </div>
-                          </PopoverPanel>
-                        </Transition>
+                          }}
+                          variant={
+                            isLoadingDataTask
+                              ? 'outline'
+                              : isFilterDeadline
+                                ? 'primary'
+                                : 'outline'
+                          }
+                          className={`${isFilterDeadline && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                          締切期間
+                        </Button>
+                        <Button
+                          disabled={isLoadingDataTask}
+                          onClick={() => {
+                            if (isFilterDeadline) {
+                              setIsFilterDeadline(false);
+                              setOrderingRequest('is_important');
+                            }
+                          }}
+                          variant={
+                            isLoadingDataTask
+                              ? 'outline'
+                              : !isFilterDeadline && !isLoadingDataTask
+                                ? 'primary'
+                                : 'outline'
+                          }
+                          className={`${!isFilterDeadline && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                          重要
+                        </Button>
                       </>
                     )}
-                  </Popover>
-                  <div className="flex items-center gap-2 text-xs font-medium text-[#77858F]">
-                    <ImageRound
-                      src="/icons/order-asc.svg"
-                      name="Order icon"
-                      className="!w-3 !h-3"
-                    />
-                    <p>ステータス</p>
-                    <ImageRound
-                      src="/icons/threedot.svg"
-                      name="More icon"
-                      className="!w-3 !h-[2px]"
+
+                    {/* Filter option modal */}
+                    <Popover className="relative">
+                      {() => (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <PopoverButton
+                              onClick={() =>
+                                setIsOpenModalFilter(!isOpenModalFilter)
+                              }
+                              className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                              <ImageRound
+                                src="/icons/filter.svg"
+                                name="Filter icon"
+                                className="w-[14px] h-[14px] ml-2"
+                              />
+                            </PopoverButton>
+                          </div>
+                          <Transition
+                            as={Fragment}
+                            show={isOpenModalFilter}
+                            enter="transition ease-out duration-200"
+                            enterFrom="opacity-0 translate-y-1"
+                            enterTo="opacity-100 translate-y-0"
+                            leave="transition ease-in duration-150"
+                            leaveFrom="opacity-100 translate-y-0"
+                            leaveTo="opacity-0 translate-y-1">
+                            <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
+                              <ActionFilterTask
+                                creationDataTaskData={creationDataTaskData}
+                                handleClose={() => setIsOpenModalFilter(false)}
+                              />
+                            </PopoverPanel>
+                          </Transition>
+                        </>
+                      )}
+                    </Popover>
+
+                    <InputSearch
+                      className="w-[300px] h-[34px] py-0 bg-[#EBF1F7] !rounded-[20px]"
+                      inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm"
+                      iconClassName="w-[14px] h-[14px]"
+                      placeholder="タスク、キーワードを検索"
                     />
                   </div>
+
                   <Tippy
                     content={
                       isListView ? 'タスクを看板表示' : 'タスクをリスト表示'

@@ -12,6 +12,9 @@ interface dataListTaskHeaderResponse {
   id: number;
   title: string;
   type: string;
+  totalDuration: string;
+  startedAt: string;
+  pausedAt: string;
 }
 interface propsDataType {
   start_date: string;

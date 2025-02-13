@@ -7,14 +7,14 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import Input from '@components/common/Input';
 import Button from '@components/common/Button';
 
-import api from '@base/api';
 import { apiRouters } from '@constants/routers';
+import { SUCCESS_SENT_MAIL_MESSAGE } from '@constants/message';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { emailRules } from '@utils/validators';
-import { SUCCESS_SENT_MAIL_MESSAGE } from '@constants/message';
+import api from '@base/api';
 
 const ForgotPasswordForm = () => {
   const router = useRouter();
@@ -58,14 +58,16 @@ const ForgotPasswordForm = () => {
           label="メールアドレス"
           placeholder="入力してください"
           autoFocus={true}
+          className='!border-[#77858F]'
+          labelClassName="!text-[#77858F]"
           register={register('email', emailRules(true))}
           error={errors.email?.message}
         />
       </div>
 
-      <div className="flex flex-col w-full gap-2">
+      <div className="flex flex-col w-full gap-5">
         <Button type="submit">送信</Button>
-        <Button variant="secondary" type="button" onClick={() => router.back()}>
+        <Button variant="outline" type="button" onClick={() => router.back()}>
           戻る
         </Button>
       </div>

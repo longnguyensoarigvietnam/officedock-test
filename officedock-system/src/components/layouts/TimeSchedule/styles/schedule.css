@@ -371,6 +371,7 @@
 /* Ensure events don't overlap */
 .schedule-custom .fc-event {
   z-index: 2; /* Ensure event sits above the divider */
+  padding: 0 12px 0 !important;
 }
 
 /* Day */
@@ -398,11 +399,8 @@
   .fc-event.fc-event-draggable.fc-event-start.fc-event-today.fc-daygrid-event.fc-daygrid-block-event.fc-h-event {
   border: 1px solid #dfe6ea;
   width: 100%;
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.1),
-    0 2px 4px -2px rgb(0 0 0 / 0.1);
+
   background-color: transparent !important;
-  overflow: hidden;
 }
 .schedule-custom .fc .fc-timegrid-slot-label {
   vertical-align: unset !important;
@@ -470,7 +468,6 @@
   td:not(:first-child) {
   border-left: none !important;
   border-bottom: none !important;
-  border: 1px solid #d2dbe1;
 }
 .schedule-custom .fc-timeGridWeek-view .fc-timegrid-cols td {
   border-left: none !important;
@@ -510,6 +507,7 @@
   .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
   position: relative;
   top: -9px;
+  left: -5px;
 }
 .schedule-custom
   .fc-timeGridWeek-view
@@ -605,7 +603,7 @@
   border: none;
 }
 .schedule-custom .fc .fc-scrollgrid-section-sticky > * {
-  background-color: #EBF1F7 !important;
+  background-color: #ebf1f7 !important;
   z-index: 2;
 }
 .schedule-custom .fc-theme-standard th {

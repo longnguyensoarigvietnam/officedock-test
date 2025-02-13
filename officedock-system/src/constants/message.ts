@@ -61,6 +61,7 @@ export const ERROR_SENT_MAIL_MESSAGE = 'メール送信に失敗しました。'
 export const INVALID_URL_MESSAGE = 'URLの形式で入力してください。';
 export const ERROR_UPDATE_MESSAGE = '更新に失敗しました。';
 export const ERROR_SAVE_MESSAGE = '保存に失敗しました。';
+export const ERROR_TIME_START_MESSAGE = '予定時間をオーバーしています';
 
 export const OTP_CODE_INVALID =
   '認証コードが無効であるか、有効期限が切れています';
@@ -83,5 +84,6 @@ export const ERROR_TITLE_MESSAGE = 'エラー';
 export const MESSAGE_CREATED_TASK = 'タスクカードを作成しました。';
 export const ERROR_MESSAGE_TIME_TASK =
   '計測時間は重複しているか、未来の時刻になっています。';
+export const ERROR_MESSAGE_OVERLAP_TASK = '実施予定日時が重複しています。';
 
 export const RESEND_OTP_SUCCESS = '認証コードを再送しました。';

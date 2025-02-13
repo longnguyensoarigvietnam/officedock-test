@@ -1,5 +1,5 @@
 'use client';
-import { Dispatch, SetStateAction, useCallback, useContext, useEffect, useState } from 'react';
+import { Fragment, useCallback, useContext, useEffect, useState } from 'react';
 
 import { useMutation } from 'react-query';
 import { useInView } from 'react-intersection-observer';
@@ -12,6 +12,7 @@ import InputSearch from '@components/common/InputSearch';
 import ActionsAddMembersModal from '@components/modals/ActionsAddMembersModal';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 import useDebounceText from '@hooks/useDebounceText';
 
@@ -34,9 +35,14 @@ import {
 } from '@interfaces/chat';
 import { BasePagination } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
-import api from '@base/api';
 import { useWebSocket } from '@providers/WebSocketProvider';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import api from '@base/api';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 interface dataProps {
   dataChatList: ChatRoomItem[];
@@ -45,9 +51,7 @@ interface dataProps {
   filteredChatList: ChatRoomItem[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
-  notifyRoomList: ChatRoomItem[]
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
-  setNotifyRoomList: Dispatch<SetStateAction<ChatRoomItem[]>>
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
@@ -64,8 +68,6 @@ const ListChatUsers = ({
   filteredChatList,
   dashboardMemberList,
   dashboardMembers,
-  notifyRoomList,
-  setNotifyRoomList,
   setLastItemId,
   setDataChatList,
   setFilteredChatList,
@@ -87,9 +89,9 @@ const ListChatUsers = ({
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState<boolean>(false);
   const [initialLoadSearch, setInitialLoadSearch] = useState<boolean>(false);
-  
 
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchRoomType, setSearchRoomType] = useState<string>('');
   const [lastPinAt, setLastPinAt] = useState<string | null>();
   const [lastMsgItemRoom, setLastMsItemRoom] = useState<string>('');
   const [lastPinAtSearch, setLastPinAtSearch] = useState<string | null>();
@@ -106,14 +108,7 @@ const ListChatUsers = ({
   // Handle get list and more data room chat
   const handleGetDataRoomChat = async (pageNumber: number) => {
     setInitialLoad(true);
-    const apiUrl = `${apiRouters.CHAT_LIST}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${lastMsgItemRoom ? `&last_message_at=${lastMsgItemRoom}` : ''}${lastPinAt ? `&pin_at=${encodeFormatDateISO(new Date(lastPinAt))}` : ''}&type=CHAT`;
-    return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
-  };
-
-  // Handle get list and more data room chat
-  const handleGetDataNotifyRooms = async () => {
-    setInitialLoad(true);
-    const apiUrl = `${apiRouters.CHAT_LIST}?type=NOTIFY`;
+    const apiUrl = `${apiRouters.CHAT_LIST}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${lastMsgItemRoom ? `&last_message_at=${lastMsgItemRoom}` : ''}${lastPinAt ? `&pin_at=${encodeFormatDateISO(new Date(lastPinAt))}` : ''}`;
     return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
   };
 
@@ -165,20 +160,6 @@ const ListChatUsers = ({
     },
   );
 
-  const { mutate: getDataNotifyRooms } = useMutation(
-    'getDataNotifyRooms',
-    handleGetDataNotifyRooms,
-    {
-      onSuccess: ({ data }) => {
-        setNotifyRoomList(data.results);
-      },
-      onError: () => {},
-      onSettled: () => {
-        setInitialLoad(false);
-      },
-    },
-  );
-
   // Action load more list room
   useEffect(() => {
     if (inViewListRoom && hasMore) {
@@ -187,71 +168,73 @@ const ListChatUsers = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inViewListRoom]);
 
-  useEffect(() => {
-    if (!notifyRoomList.length) {
-      getDataNotifyRooms();
-    }
-  }, [getDataNotifyRooms, notifyRoomList.length]);
-
   const handleUpdateDatePin = useCallback(
     (data: ChatRoomItem) => {
       if (data.pinAt) {
-        if (data.type == ChatRoomType.TASK || data.type == ChatRoomType.SKILL) {
-          setNotifyRoomList((prevDataChatList) => {
+        setDataChatList((prevDataChatList) => {
+          const filteredList = prevDataChatList.filter(
+            (item) => item.code !== data.code,
+          );
+          return [data, ...filteredList];
+        });
+        if (searchTerm || searchRoomType) {
+          setFilteredChatList((prevDataChatList) => {
             const filteredList = prevDataChatList.filter(
               (item) => item.code !== data.code,
             );
             return [data, ...filteredList];
           });
-        } else {
-          setDataChatList((prevDataChatList) => {
-            const filteredList = prevDataChatList.filter(
-              (item) => item.code !== data.code,
-            );
-            return [data, ...filteredList];
-          });
-          if (searchTerm) {
-            setFilteredChatList((prevDataChatList) => {
-              const filteredList = prevDataChatList.filter(
-                (item) => item.code !== data.code,
-              );
-              return [data, ...filteredList];
-            });
-          }
         }
       } else {
-        if (data.type == ChatRoomType.TASK || data.type == ChatRoomType.SKILL) {
-          setNotifyRoomList((prevDataChatList) => {
-            const filteredList = prevDataChatList.filter(
-              (item) => item.code !== data.code,
-            );
-            const items = [...filteredList, data];
-            items.sort((currentItem, nextItem) => {
-              if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
-                return 0;
-              } else if (
-                currentItem.pinAt !== null &&
-                nextItem.pinAt === null
-              ) {
-                return -1;
-              } else {
-                return 1;
-              }
-            });
-            return items;
+        setDataChatList((prevDataChatList) => {
+          const filteredList = prevDataChatList.filter(
+            (item) => item.code !== data.code,
+          );
+          const lastItem = filteredList[filteredList.length - 1];
+          if (
+            lastItem &&
+            new Date(data.lastMessageAt as string) <
+              new Date(lastItem.lastMessageAt as string)
+          ) {
+            if (hasMore) {
+              return filteredList;
+            } else {
+              return [...filteredList, data];
+            }
+          }
+          const items = [...filteredList, data];
+          items.sort((currentItem, nextItem) => {
+            if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
+              return 0;
+            } else if (currentItem.pinAt !== null && nextItem.pinAt === null) {
+              return -1;
+            } else if (currentItem.pinAt === null && nextItem.pinAt !== null) {
+              return 1;
+            } else {
+              const currentItemDate = currentItem.lastMessageAt
+                ? new Date(currentItem.lastMessageAt)
+                : new Date(0);
+              const nextItemDate = nextItem.lastMessageAt
+                ? new Date(nextItem.lastMessageAt)
+                : new Date(0);
+              return nextItemDate.getTime() - currentItemDate.getTime();
+            }
           });
-        } else {
-          setDataChatList((prevDataChatList) => {
+          return items;
+        });
+        if (searchTerm || searchRoomType) {
+          setFilteredChatList((prevDataChatList) => {
             const filteredList = prevDataChatList.filter(
               (item) => item.code !== data.code,
             );
             const lastItem = filteredList[filteredList.length - 1];
+
             if (
               lastItem &&
               new Date(data.lastMessageAt as string) <
                 new Date(lastItem.lastMessageAt as string)
             ) {
-              if (hasMore) {
+              if (hasMoreSearch) {
                 return filteredList;
               } else {
                 return [...filteredList, data];
@@ -272,17 +255,6 @@ const ListChatUsers = ({
               ) {
                 return 1;
               } else {
-                if (
-                  currentItem.type === ChatRoomType.TASK &&
-                  nextItem.type !== ChatRoomType.TASK
-                ) {
-                  return -1;
-                } else if (
-                  currentItem.type !== ChatRoomType.TASK &&
-                  nextItem.type === ChatRoomType.TASK
-                ) {
-                  return 1;
-                }
                 const currentItemDate = currentItem.lastMessageAt
                   ? new Date(currentItem.lastMessageAt)
                   : new Date(0);
@@ -294,55 +266,10 @@ const ListChatUsers = ({
             });
             return items;
           });
-          if (searchTerm) {
-            setFilteredChatList((prevDataChatList) => {
-              const filteredList = prevDataChatList.filter(
-                (item) => item.code !== data.code,
-              );
-              const lastItem = filteredList[filteredList.length - 1];
-
-              if (
-                lastItem &&
-                new Date(data.lastMessageAt as string) <
-                  new Date(lastItem.lastMessageAt as string)
-              ) {
-                if (hasMoreSearch) {
-                  return filteredList;
-                } else {
-                  return [...filteredList, data];
-                }
-              }
-              const items = [...filteredList, data];
-              items.sort((currentItem, nextItem) => {
-                if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
-                  return 0;
-                } else if (
-                  currentItem.pinAt !== null &&
-                  nextItem.pinAt === null
-                ) {
-                  return -1;
-                } else if (
-                  currentItem.pinAt === null &&
-                  nextItem.pinAt !== null
-                ) {
-                  return 1;
-                } else {
-                  const currentItemDate = currentItem.lastMessageAt
-                    ? new Date(currentItem.lastMessageAt)
-                    : new Date(0);
-                  const nextItemDate = nextItem.lastMessageAt
-                    ? new Date(nextItem.lastMessageAt)
-                    : new Date(0);
-                  return nextItemDate.getTime() - currentItemDate.getTime();
-                }
-              });
-              return items;
-            });
-          }
         }
       }
     },
-    [hasMore, hasMoreSearch, searchTerm, setDataChatList, setFilteredChatList],
+    [hasMore, hasMoreSearch, searchTerm, searchRoomType, setDataChatList, setFilteredChatList],
   );
   const handleUpdateDataHide = useCallback(
     (data: ChatRoomItem) => {
@@ -731,12 +658,14 @@ const ListChatUsers = ({
   const handleGetDataSearchRoomChat = async ({
     page,
     name,
+    showLastMessageAt
   }: {
     page: number;
     name: string;
+    showLastMessageAt?: boolean
   }) => {
     setInitialLoadSearch(true);
-    const apiUrl = `${apiRouters.CHAT_LIST}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${name ? `&name=${encodeURIComponent(name)}` : ''}${lastMsgItemRoomSearch ? `&last_message_at=${lastMsgItemRoomSearch}` : ''}${lastPinAtSearch ? `pin_at=${lastPinAtSearch}` : ''}&type=CHAT`;
+    const apiUrl = `${apiRouters.CHAT_LIST}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${name ? `&name=${encodeURIComponent(name)}` : ''}${lastMsgItemRoomSearch && showLastMessageAt ? `&last_message_at=${lastMsgItemRoomSearch}` : ''}${lastPinAtSearch ? `&pin_at=${lastPinAtSearch}` : ''}${searchRoomType ? `&type=${searchRoomType}` : ''}`;
     return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
   };
 
@@ -783,15 +712,16 @@ const ListChatUsers = ({
     },
   );
   useEffect(() => {
-    if (searchTermDebounce) {
+    if (searchTermDebounce || searchRoomType) {
       setFilteredChatList([]);
       getDataSearchRoomChat({
         name: searchTermDebounce,
         page: 1,
+        showLastMessageAt: false
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getDataSearchRoomChat, searchTermDebounce]);
+  }, [getDataSearchRoomChat, searchTermDebounce, searchRoomType]);
 
   useEffect(() => {
     if (
@@ -802,6 +732,7 @@ const ListChatUsers = ({
       getDataSearchRoomChat({
         name: searchTermDebounce,
         page: 1,
+        showLastMessageAt: true
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -839,6 +770,17 @@ const ListChatUsers = ({
           src="/icons/skill-room.svg"
           border="full"
           name="Skill"
+        />
+      );
+    }
+
+    if (item.type === AvatarChat.CALENDAR) {
+      return (
+        <ImageRound
+          className="w-8 h-8"
+          src="/icons/calendar-room.svg"
+          border="full"
+          name="Calendar"
         />
       );
     }
@@ -882,7 +824,7 @@ const ListChatUsers = ({
         />
       </div>
       <div className="flex items-center mb-5 px-3">
-        <div className="flex items-center gap-1 w-5/6">
+        <div className="flex items-center gap-1 w-4/5">
           <ImageRound
             src="/icons/save-chat.svg"
             name="Save chat icon"
@@ -890,21 +832,74 @@ const ListChatUsers = ({
           />
           <p className="text-[#77858F] text-[14px] font-medium">ブックマーク</p>
         </div>
-        <div className="flex items-center w-1/6 justify-between">
-          <Tippy
-            content={'チャットルームの絞り込み'}
-            arrow={false}
-            delay={1000}
-            placement="top"
-            offset={[0, 5]}>
-            <div>
-              <ImageRound
-                src="/icons/filter.svg"
-                name="Filter icon"
-                className="!w-4 !h-4 text-gray-400 cursor-pointer"
-              />
-            </div>
-          </Tippy>
+        <div className="flex items-center w-1/5 justify-between">
+          <Popover className="relative">
+            {({ open }) => {
+              return (
+                <>
+                  <Tippy
+                    content={'チャットルームの絞り込み'}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    offset={[0, 5]}>
+                    <PopoverButton
+                      className={`focus:outline-none ${open && 'rounded-full bg-white'} w-[36px] h-[36px] flex items-center justify-center`}>
+                      <ImageRound
+                        src="/icons/filter.svg"
+                        name="Filter icon"
+                        className="!w-4 !h-4 text-gray-400 cursor-pointer"
+                      />
+                    </PopoverButton>
+                  </Tippy>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1">
+                    <PopoverPanel className="absolute left-0 z-10 min-w-[196px] max-w-[196px] transform">
+                      <div className="bg-[#5B6770] text-white rounded-[6px] py-[5px] mt-2 text-sm font-medium">
+                        <p
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
+                          onClick={() => {
+                            setSearchRoomType('');
+                          }}>
+                          すべてのチャット
+                        </p>
+                        <p
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
+                          onClick={() => {
+                            setSearchRoomType(ChatRoomType.UNREAD);
+                          }}>
+                          未読があるチャット
+                        </p>
+                        <p
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
+                          onClick={() => {
+                            setSearchRoomType(ChatRoomType.GROUP);
+                          }}>
+                          グループチャット
+                        </p>
+                        <p
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
+                          onClick={() => {
+                            setSearchRoomType(ChatRoomType.PRIVATE);
+                          }}>
+                          個人チャット
+                        </p>
+                        <p className="py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer">
+                          チームメンバーのチャット
+                        </p>
+                      </div>
+                    </PopoverPanel>
+                  </Transition>
+                </>
+              );
+            }}
+          </Popover>
 
           {session?.user.permissions &&
             hasPermissionInArray(
@@ -929,83 +924,11 @@ const ListChatUsers = ({
             )}
         </div>
       </div>
-      {notifyRoomList && notifyRoomList.length > 0 && (
-        <div className="flex w-full gap-2 items-center">
-          <p className="font-medium text-[#77858F] w-[40px] mt-[-3px]">通知</p>
-          <div className="border-t-[1px] border-[#C2CFD7] w-full h-1"></div>
-        </div>
-      )}
-
-      {notifyRoomList &&
-        notifyRoomList.length > 0 &&
-        notifyRoomList.map((item) => (
-          <div
-            key={item?.code}
-            className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
-            onClick={() => {
-              setLastItemId(null);
-              handleSetChatRoomParam(`${item?.code}`);
-              handleResetChatRoomUnreadMessages(item);
-              setSearchChatMsg('');
-              setIsReload(false);
-            }}>
-            <Tippy
-              content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
-              arrow={false}
-              delay={1000}
-              placement="top"
-              offset={[0, 5]}>
-              <div
-                className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePinClick({
-                    code: item.code,
-                    isPin: item.pinAt !== null,
-                  });
-                  close();
-                }}>
-                <ImageRound
-                  className="w-[14px] h-[16px] hover:cursor-pointer"
-                  src="/icons/pin-chat.svg"
-                  border="full"
-                  name="Pin chat"
-                />
-              </div>
-            </Tippy>
-
-            <div className="relative">{renderAvatar(item)}</div>
-            <div className="ml-3 flex flex-grow justify-between">
-              <p className="text-sm max-w-[260px] font-medium truncate">
-                {item.code &&
-                chatRoomNameEditing.find((room) => room.roomCode === item.code)
-                  ? chatRoomNameEditing.find(
-                      (room) => room.roomCode === item.code,
-                    )?.roomName
-                  : item?.name || ''}
-              </p>
-            </div>
-            {item?.unreadMessages > 0 && (
-              <p className="absolute top-1/2 -translate-y-1/2 right-2 rounded-full w-[20px] pt-[2px] h-[20px] bg-[#C32E2E] text-[10px] text-center text-white leading-4">
-                {item?.unreadMessages}
-              </p>
-            )}
-          </div>
-        ))}
-
-      {!searchTerm && (
+      {!searchTerm && !searchRoomType && (
         <>
           {' '}
-          {dataChatList && dataChatList.length > 0 && (
-            <div className="flex w-full gap-2 items-center mt-3">
-              <p className="font-medium text-[#77858F] w-[90px] mt-[-3px]">
-                チャット
-              </p>
-              <div className="border-t-[1px] border-[#C2CFD7] w-full h-1"></div>
-            </div>
-          )}
           <div
-            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_400px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
+            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_210px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
             {dataChatList && dataChatList.length > 0 ? (
               dataChatList.map((item) => (
                 <div
@@ -1032,7 +955,6 @@ const ListChatUsers = ({
                           code: item.code,
                           isPin: item.pinAt !== null,
                         });
-                        close();
                       }}>
                       <ImageRound
                         className="w-[14px] h-[16px] hover:cursor-pointer"
@@ -1044,8 +966,8 @@ const ListChatUsers = ({
                   </Tippy>
 
                   <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-3 flex flex-grow justify-between">
-                    <p className="text-sm max-w-[260px] font-medium truncate">
+                  <div className="ml-2 flex gap-1 items-center">
+                    <p className="text-sm max-w-[160px] font-medium truncate">
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -1054,6 +976,16 @@ const ListChatUsers = ({
                             (room) => room.roomCode === item.code,
                           )?.roomName
                         : item?.name || ''}
+                    </p>
+                    <p className="text-[#77858F] text-[12px] max-w-[80px] truncate font-medium">
+                      {((item.type == ChatRoomType.PRIVATE ||
+                        item.type == ChatRoomType.SELF) &&
+                        item.participants.find((participant) =>
+                          item.type == ChatRoomType.PRIVATE
+                            ? participant.id != session?.user.id
+                            : participant.id == session?.user.id,
+                        )?.organizations?.name) ||
+                        ''}
                     </p>
                   </div>
                   {item?.unreadMessages > 0 && (
@@ -1080,18 +1012,11 @@ const ListChatUsers = ({
           </div>
         </>
       )}
-      {searchTerm && searchTermDebounce === searchTerm && (
+      {((searchTerm && searchTermDebounce === searchTerm) ||
+        searchRoomType) && (
         <>
-          {filteredChatList && filteredChatList.length > 0 && (
-            <div className="flex w-full gap-2 items-center mt-3">
-              <p className="font-medium text-[#77858F] w-[90px] mt-[-3px]">
-                チャット
-              </p>
-              <div className="border-t-[1px] border-[#C2CFD7] w-full h-1"></div>
-            </div>
-          )}
           <div
-            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_400px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
+            className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_210px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
             {filteredChatList && filteredChatList.length > 0 ? (
               filteredChatList.map((item) => (
                 <div
@@ -1105,12 +1030,12 @@ const ListChatUsers = ({
                   }}>
                   <div
                     className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       handlePinClick({
                         code: item.code,
                         isPin: item.pinAt !== null,
                       });
-                      close();
                     }}>
                     <ImageRound
                       className="w-[14px] h-[16px] hover:cursor-pointer"
@@ -1120,8 +1045,8 @@ const ListChatUsers = ({
                     />
                   </div>
                   <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-3 flex flex-grow justify-between">
-                    <p className="text-sm max-w-[260px] font-medium truncate">
+                  <div className="ml-2 flex gap-1 items-center">
+                    <p className="text-sm max-w-[160px] font-medium truncate">
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -1130,6 +1055,16 @@ const ListChatUsers = ({
                             (room) => room.roomCode === item.code,
                           )?.roomName
                         : item?.name || ''}
+                    </p>
+                    <p className="text-[#77858F] text-[12px] max-w-[80px] font-medium truncate">
+                      {((item.type == ChatRoomType.PRIVATE ||
+                        item.type == ChatRoomType.SELF) &&
+                        item.participants.find((participant) =>
+                          item.type == ChatRoomType.PRIVATE
+                            ? participant.id != session?.user.id
+                            : participant.id == session?.user.id,
+                        )?.organizations?.name) ||
+                        ''}
                     </p>
                   </div>
                   {item?.unreadMessages > 0 && (

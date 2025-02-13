@@ -241,13 +241,13 @@ const Dropdown = ({
                           key={option.value}
                           style={styleClassOption}
                           className={({ focus }) =>
-                            `relative ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} cursor-default border-b-[1px] border-[#EBF1F7] select-none ${!openByDefault && 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass}`
+                            `relative  ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} cursor-default border-b-[1px] border-[#EBF1F7] select-none ${!openByDefault && 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass}`
                           }
                           value={option}
                           onClick={() => handleOptionClick(option)}>
                           {() => (
                             <>
-                              <div className="flex items-center w-full">
+                              <div className="flex  items-center w-full">
                                 {option.imgUrl && (
                                   <ImageRound
                                     src={option.imgUrl}
@@ -265,7 +265,10 @@ const Dropdown = ({
                                   {option.label}
                                 </p>
                                 {isStatusDropdown && (
-                                  <p className='w-[40px] text-[#A7B7C2]'>{selected?.value === option.value && '選択中'}</p>
+                                  <p className="w-[40px] text-[#A7B7C2]">
+                                    {selected?.value === option.value &&
+                                      '選択中'}
+                                  </p>
                                 )}
                               </div>
                             </>

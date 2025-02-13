@@ -31,7 +31,6 @@ const BoardChat = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [dataChatList, setDataChatList] = useState<ChatRoomItem[]>([]);
   const [filteredChatList, setFilteredChatList] = useState<ChatRoomItem[]>([]);
-  const [notifyRoomList, setNotifyRoomList] = useState<ChatRoomItem[]>([]);
   const [searchChatMsg, setSearchChatMsg] = useState('');
   const { data: session } = useSession();
   const [dashboardMembers, setDashboardMembers] = useState<
@@ -130,11 +129,7 @@ const BoardChat = () => {
                     ? `${data.participants.find((participant) => participant.id !== session?.user.id)?.fullName}`
                     : data.name,
               },
-              ...updatedUnpinnedItems.filter(
-                (item) =>
-                  item.type !== ChatRoomType.TASK &&
-                  item.type !== ChatRoomType.SKILL,
-              ),
+              ...updatedUnpinnedItems,
             ];
           } else {
             return [
@@ -218,276 +213,87 @@ const BoardChat = () => {
   };
 
   const handleUpdateLocalByCodeMsg = (data: ChatRoomItem) => {
-    if (data.type == ChatRoomType.TASK || data.type == ChatRoomType.SKILL) {
-      setNotifyRoomList((prevDataChatList) => {
-        const pinnedItems = prevDataChatList.filter(
-          (item) => item.pinAt !== null,
+    setDataChatList((prevDataChatList) => {
+      const pinnedItems = prevDataChatList.filter(
+        (item) => item.pinAt !== null,
+      );
+      const unpinnedItems = prevDataChatList.filter(
+        (item) => item.pinAt === null,
+      );
+      if (data.pinAt || pinnedItems.find((item) => item.code === data.code)) {
+        const pinnedItemToUpdate = pinnedItems.find(
+          (item) => item.code === data.code,
         );
-        const unpinnedItems = prevDataChatList.filter(
-          (item) => item.pinAt === null,
-        );
-        if (data.pinAt || pinnedItems.find((item) => item.code === data.code)) {
-          const pinnedItemToUpdate = pinnedItems.find(
+        if (pinnedItemToUpdate) {
+          const updatedPinnedItem = {
+            ...pinnedItemToUpdate,
+            lastMessageAt: data.lastMessageAt,
+            unreadMessages: data.unreadMessages,
+          };
+          return [
+            ...pinnedItems.map((item) =>
+              item.code === data.code ? updatedPinnedItem : item,
+            ),
+            ...unpinnedItems,
+          ];
+        }
+      } else {
+        if (unpinnedItems.length === 0) {
+          return [...pinnedItems, ...unpinnedItems];
+        } else {
+          const itemToUpdate = unpinnedItems.find(
             (item) => item.code === data.code,
           );
-          if (pinnedItemToUpdate) {
-            const updatedPinnedItem = {
-              ...pinnedItemToUpdate,
-              lastMessageAt: data.lastMessageAt,
-              unreadMessages: data.unreadMessages,
-            };
-            return [
-              ...pinnedItems.map((item) =>
-                item.code === data.code ? updatedPinnedItem : item,
-              ),
-              ...unpinnedItems,
-            ];
-          }
-        } else {
-          if (unpinnedItems.length === 0) {
-            return [...pinnedItems, ...unpinnedItems];
-          } else {
-            const itemToUpdate = unpinnedItems.find(
-              (item) => item.code === data.code,
+          if (itemToUpdate) {
+            const updatedUnpinnedItems = unpinnedItems.filter(
+              (item) => item.code !== data.code,
             );
-            if (itemToUpdate) {
-              const updatedUnpinnedItems = unpinnedItems.filter(
-                (item) => item.code !== data.code,
-              );
-              if (itemToUpdate.type == ChatRoomType.SKILL) {
-                return [
-                  ...pinnedItems,
-                  ...updatedUnpinnedItems.filter(
-                    (item) => item.type === ChatRoomType.TASK,
-                  ),
-                  {
-                    ...data,
-                    pinAt: data.pinAt ? data.pinAt : null,
-                    unreadMessages: data.unreadMessages,
-                    name: data.name,
-                  },
-                  ...updatedUnpinnedItems.filter(
-                    (item) =>
-                      item.type !== ChatRoomType.TASK &&
-                      item.type !== ChatRoomType.SKILL,
-                  ),
-                ];
-              } else if (itemToUpdate.type == ChatRoomType.TASK) {
-                return [
-                  ...pinnedItems,
-                  {
-                    ...data,
-                    pinAt: data.pinAt ? data.pinAt : null,
-                    unreadMessages: data.unreadMessages,
-                    name: data.name,
-                  },
-                  ...updatedUnpinnedItems.filter(
-                    (item) => item.type === ChatRoomType.SKILL,
-                  ),
-                  ...updatedUnpinnedItems.filter(
-                    (item) =>
-                      item.type !== ChatRoomType.TASK &&
-                      item.type !== ChatRoomType.SKILL,
-                  ),
-                ];
-              } else {
-                return [
-                  ...pinnedItems,
-                  ...updatedUnpinnedItems.filter(
-                    (item) => item.type === ChatRoomType.TASK,
-                  ),
-                  ...updatedUnpinnedItems.filter(
-                    (item) => item.type === ChatRoomType.SKILL,
-                  ),
-                  {
-                    ...data,
-                    pinAt: data.pinAt ? data.pinAt : null,
-                    unreadMessages: data.unreadMessages,
-                    name:
-                      data.type === ChatRoomType.PRIVATE
-                        ? `${data.participants.find((participant) => participant.id !== session?.user.id)?.fullName}`
-                        : data.name,
-                  },
-                  ...updatedUnpinnedItems.filter(
-                    (item) =>
-                      item.type !== ChatRoomType.TASK &&
-                      item.type !== ChatRoomType.SKILL,
-                  ),
-                ];
-              }
-            } else {
-              const updatedUnpinnedItems = unpinnedItems.filter(
-                (item) => item.code !== data.code,
-              );
-              return [
-                ...pinnedItems,
-                ...updatedUnpinnedItems.filter(
-                  (item) => item.type === ChatRoomType.TASK,
-                ),
-                ...updatedUnpinnedItems.filter(
-                  (item) => item.type === ChatRoomType.SKILL,
-                ),
-                {
-                  ...data,
-                  pinAt: data.pinAt ? data.pinAt : null,
-                  unreadMessages: data.unreadMessages,
-                  name:
-                    data.type === ChatRoomType.PRIVATE
-                      ? `${data.participants.find((participant) => participant.id !== session?.user.id)?.fullName}`
-                      : data.name,
-                },
-                ...updatedUnpinnedItems.filter(
-                  (item) =>
-                    item.type !== ChatRoomType.TASK &&
-                    item.type !== ChatRoomType.SKILL,
-                ),
-              ];
-            }
-          }
-        }
-        return [...pinnedItems, ...unpinnedItems];
-      });
-    } else {
-      setDataChatList((prevDataChatList) => {
-        const pinnedItems = prevDataChatList.filter(
-          (item) => item.pinAt !== null,
-        );
-        const unpinnedItems = prevDataChatList.filter(
-          (item) => item.pinAt === null,
-        );
-        if (data.pinAt || pinnedItems.find((item) => item.code === data.code)) {
-          const pinnedItemToUpdate = pinnedItems.find(
-            (item) => item.code === data.code,
-          );
-          if (pinnedItemToUpdate) {
-            const updatedPinnedItem = {
-              ...pinnedItemToUpdate,
-              lastMessageAt: data.lastMessageAt,
-              unreadMessages: data.unreadMessages,
-            };
             return [
-              ...pinnedItems.map((item) =>
-                item.code === data.code ? updatedPinnedItem : item,
-              ),
-              ...unpinnedItems,
-            ];
-          }
-        } else {
-          if (unpinnedItems.length === 0) {
-            return [...pinnedItems, ...unpinnedItems];
-          } else {
-            const itemToUpdate = unpinnedItems.find(
-              (item) => item.code === data.code,
-            );
-            if (itemToUpdate) {
-              const updatedUnpinnedItems = unpinnedItems.filter(
-                (item) => item.code !== data.code,
-              );
-              if (itemToUpdate.type == ChatRoomType.SKILL) {
-                return [
-                  ...pinnedItems,
-                  ...updatedUnpinnedItems.filter(
-                    (item) => item.type === ChatRoomType.TASK,
-                  ),
-                  {
-                    ...data,
-                    pinAt: data.pinAt ? data.pinAt : null,
-                    unreadMessages: data.unreadMessages,
-                    name: data.name,
-                  },
-                  ...updatedUnpinnedItems.filter(
-                    (item) =>
-                      item.type !== ChatRoomType.TASK &&
-                      item.type !== ChatRoomType.SKILL,
-                  ),
-                ];
-              } else if (itemToUpdate.type == ChatRoomType.TASK) {
-                return [
-                  ...pinnedItems,
-                  {
-                    ...data,
-                    pinAt: data.pinAt ? data.pinAt : null,
-                    unreadMessages: data.unreadMessages,
-                    name: data.name,
-                  },
-                  ...updatedUnpinnedItems.filter(
-                    (item) => item.type === ChatRoomType.SKILL,
-                  ),
-                  ...updatedUnpinnedItems.filter(
-                    (item) =>
-                      item.type !== ChatRoomType.TASK &&
-                      item.type !== ChatRoomType.SKILL,
-                  ),
-                ];
-              } else {
-                return [
-                  ...pinnedItems,
-                  ...updatedUnpinnedItems.filter(
-                    (item) => item.type === ChatRoomType.TASK,
-                  ),
-                  ...updatedUnpinnedItems.filter(
-                    (item) => item.type === ChatRoomType.SKILL,
-                  ),
-                  {
-                    ...data,
-                    pinAt: data.pinAt ? data.pinAt : null,
-                    unreadMessages: data.unreadMessages,
-                    name:
-                      data.type === ChatRoomType.PRIVATE
-                        ? `${data.participants.find((participant) => participant.id !== session?.user.id)?.fullName}`
-                        : data.name,
-                  },
-                  ...updatedUnpinnedItems.filter(
-                    (item) =>
-                      item.type !== ChatRoomType.TASK &&
-                      item.type !== ChatRoomType.SKILL,
-                  ),
-                ];
-              }
-            } else {
-              const updatedUnpinnedItems = unpinnedItems.filter(
-                (item) => item.code !== data.code,
-              );
-              return [
-                ...pinnedItems,
-                ...updatedUnpinnedItems.filter(
-                  (item) => item.type === ChatRoomType.TASK,
-                ),
-                ...updatedUnpinnedItems.filter(
-                  (item) => item.type === ChatRoomType.SKILL,
-                ),
-                {
-                  ...data,
-                  pinAt: data.pinAt ? data.pinAt : null,
-                  unreadMessages: data.unreadMessages,
-                  name:
-                    data.type === ChatRoomType.PRIVATE
-                      ? `${data.participants.find((participant) => participant.id !== session?.user.id)?.fullName}`
-                      : data.name,
-                },
-                ...updatedUnpinnedItems.filter(
-                  (item) =>
-                    item.type !== ChatRoomType.TASK &&
-                    item.type !== ChatRoomType.SKILL,
-                ),
-              ];
-            }
-          }
-        }
-        return [...pinnedItems, ...unpinnedItems];
-      });
-      setFilteredChatList((prevData) => {
-        return prevData.map((item) =>
-          item.code === data.code
-            ? {
-                ...item,
-                lastMessageAt: data.lastMessageAt,
+              ...pinnedItems,
+              {
+                ...data,
+                pinAt: data.pinAt ? data.pinAt : null,
                 unreadMessages: data.unreadMessages,
-              }
-            : item,
-        );
-      });
-    }
+                name:
+                  data.type === ChatRoomType.PRIVATE
+                    ? `${data.participants.find((participant) => participant.id !== session?.user.id)?.fullName}`
+                    : data.name,
+              },
+              ...updatedUnpinnedItems,
+            ];
+          } else {
+            const updatedUnpinnedItems = unpinnedItems.filter(
+              (item) => item.code !== data.code,
+            );
+            return [
+              ...pinnedItems,
+              {
+                ...data,
+                pinAt: data.pinAt ? data.pinAt : null,
+                unreadMessages: data.unreadMessages,
+                name:
+                  data.type === ChatRoomType.PRIVATE
+                    ? `${data.participants.find((participant) => participant.id !== session?.user.id)?.fullName}`
+                    : data.name,
+              },
+              ...updatedUnpinnedItems,
+            ];
+          }
+        }
+      }
+      return [...pinnedItems, ...unpinnedItems];
+    });
+    setFilteredChatList((prevData) => {
+      return prevData.map((item) =>
+        item.code === data.code
+          ? {
+              ...item,
+              lastMessageAt: data.lastMessageAt,
+              unreadMessages: data.unreadMessages,
+            }
+          : item,
+      );
+    });
   };
   return (
     <>
@@ -499,13 +305,11 @@ const BoardChat = () => {
         chatRoomCode={chatRoomCode}
         dashboardMemberList={dashboardMemberList}
         dashboardMembers={dashboardMembers}
-        notifyRoomList={notifyRoomList}
         setLastItemId={setLastItemId}
         setDataChatList={setDataChatList}
         setFilteredChatList={setFilteredChatList}
         setHasMore={setHasMore}
         setSearchChatMsg={setSearchChatMsg}
-        setNotifyRoomList={setNotifyRoomList}
         handleSetChatRoomParam={handleSetChatRoomParam}
         handleRemoveChatRoomParam={handleRemoveChatRoomParam}
       />
@@ -525,7 +329,6 @@ const BoardChat = () => {
           setFilteredChatList={setFilteredChatList}
           setLastItemId={setLastItemId}
           setHasMoreDetail={setHasMoreDetail}
-          setNotifyRoomList={setNotifyRoomList}
           handleUpdateLocalByCode={handleUpdateLocalByCode}
           handleUpdateLocalByCodeMsg={handleUpdateLocalByCodeMsg}
           setDataChatList={setDataChatList}

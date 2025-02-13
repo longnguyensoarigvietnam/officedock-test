@@ -376,6 +376,11 @@ const TimeSchedule = memo(
                   isSameDay(startDate, endDate) || isMidnight(endDate)
                     ? endDate
                     : addDays(endDate, 1);
+                const largeColor =
+                  event.categories &&
+                  event.categories.find(
+                    (item) => item.type === EventWorkCategory.LARGE,
+                  )?.color;
 
                 return {
                   ...event,
@@ -387,6 +392,7 @@ const TimeSchedule = memo(
                     name: '',
                     id: null,
                   },
+                  uuid: uuidv4(),
                   planStartDate: `${event.startDate}`,
                   planEndDate: `${event.endDate}`,
                   isStart: event.isStart,
@@ -395,13 +401,16 @@ const TimeSchedule = memo(
                   taskSchedules: [],
                   startEditable: false,
                   resourceId: ItemScheduleType.PLANS,
+                  largeColor: largeColor,
                 };
               });
+
             setTaskTimeScheduleList((prevEvents) => {
               const updatedEvents = [...prevEvents];
               const myTasks = updatedEvents.filter(
                 (event) => event.type == EventCalendarType.TASK,
               );
+
               return [...myTasks, ...eventsTimeSchedule];
             });
           }
@@ -442,6 +451,11 @@ const TimeSchedule = memo(
                     isSameDay(startDate, endDate) || isMidnight(endDate)
                       ? endDate
                       : addDays(endDate, 1);
+                  const largeColor =
+                    item.categories &&
+                    item.categories.find(
+                      (item) => item.type === EventWorkCategory.LARGE,
+                    )?.color;
                   return {
                     id: `${taskSchedule.id}`,
                     uuid: taskSchedule.uuid,
@@ -454,6 +468,7 @@ const TimeSchedule = memo(
                     planEndDate: taskSchedule.planEndDate as string,
                     end: adjustedEndDate,
                     startEditable: true,
+                    largeColor: largeColor,
                     resourceId: ItemScheduleType.PLANS,
                   };
                 }),
@@ -463,6 +478,7 @@ const TimeSchedule = memo(
               const mySchedule = updatedEvents.filter(
                 (event) => event.type == EventCalendarType.SCHEDULE,
               );
+
               return [...mySchedule, ...tasksTimeSchedule];
             });
           }
@@ -493,7 +509,7 @@ const TimeSchedule = memo(
         onSuccess: (data) => {
           if (data) {
             const tasksActualSchedule = data
-              .filter((task) => task.planStartDate)
+              .filter((data) => data.planStartDate)
               .map((task) => {
                 const startDateActual = new Date(
                   convertToCurrentTimezone(`${task.planStartDate}`),
@@ -504,6 +520,11 @@ const TimeSchedule = memo(
                 const endTimeCustom = task.planEndDate
                   ? endDateActual
                   : getNext30MinuteSlot(startDateActual);
+                const largeColor =
+                  task.categories &&
+                  task.categories.find(
+                    (item) => item.type === EventWorkCategory.LARGE,
+                  )?.color;
                 if (task.type === ItemStartType.TASK) {
                   return {
                     title: task.title,
@@ -524,6 +545,7 @@ const TimeSchedule = memo(
                     isMyTask: false,
                     isStart: false,
                     isCalculation: task.planEndDate ? false : true,
+                    largeColor: largeColor,
                   };
                 } else {
                   return {
@@ -546,6 +568,7 @@ const TimeSchedule = memo(
                     isMyTask: false,
                     isStart: false,
                     isCalculation: task.planEndDate ? false : true,
+                    largeColor: largeColor,
                   };
                 }
               });
@@ -732,6 +755,11 @@ const TimeSchedule = memo(
               item.resourceId === ItemScheduleType.PLANS
             ),
         );
+        const largeColor =
+          dataItemUpdateSchedule.categories &&
+          dataItemUpdateSchedule.categories.find(
+            (item) => item.type === EventWorkCategory.LARGE,
+          )?.color;
         const dataUpdateTitle = updatedTaskList.map((item) => {
           if (`${item.taskId}` === `${dataItemUpdateSchedule.id}`) {
             return {
@@ -739,6 +767,7 @@ const TimeSchedule = memo(
               title: dataItemUpdateSchedule.title
                 ? dataItemUpdateSchedule.title
                 : '',
+              largeColor: largeColor,
             };
           }
           return item;
@@ -766,6 +795,7 @@ const TimeSchedule = memo(
               start: new Date(`${item.planStartDate}`),
               end: new Date(`${item.planEndDate}`),
               resourceId: ItemScheduleType.PLANS,
+              largeColor: largeColor,
             };
           });
         setTaskTimeScheduleList([...dataUpdateTitle, ...newDataList]);
@@ -819,7 +849,6 @@ const TimeSchedule = memo(
     }, [idTaskDelete, setIdTaskDelete, taskTimeScheduleList]);
 
     // Update data when start item
-
     useEffect(() => {
       if (dataItemChangeInline) {
         const updatedList = taskTimeScheduleList.map((item) => {
@@ -981,17 +1010,57 @@ const TimeSchedule = memo(
     const isErrorObject = (obj: any): boolean => {
       return obj instanceof Error || obj?.message || obj?.stack;
     };
+
     const handleRenderEvent = (eventInfo: EventContentArg) => {
       const event = eventInfo?.event;
+      const calendarEvents = eventInfo.view.calendar.getEvents();
       if (isErrorObject(event)) {
         return null;
       }
       const extendedProps = event?.extendedProps;
-      if (!extendedProps) {
-        return null;
-      }
+      if (!extendedProps) null;
+      if (!event.start || !event.end) return null;
+
+      const overlappingEvents = calendarEvents.filter((e: any) => {
+        if (!e.start || !e.end || e.id === event.id) return false;
+        const eResourceId =
+          e._def &&
+          e._def.resourceIds?.length &&
+          e._def.resourceIds[0] === ItemScheduleType.PLANS;
+        if (!eResourceId) return false;
+        return (
+          e.start.getTime() < event.end!.getTime() &&
+          e.end.getTime() > event.start!.getTime()
+        );
+      });
+      const allOverlappingEvents = [...overlappingEvents, event];
+
+      const eventWithMaxDuration = allOverlappingEvents.reduce(
+        (maxEvent, e) => {
+          return e.end!.getTime() - e.start!.getTime() >
+            maxEvent.end!.getTime() - maxEvent.start!.getTime()
+            ? e
+            : maxEvent;
+        },
+        event,
+      );
+      const isMaxDurationEvent =
+        allOverlappingEvents.length > 1 && eventWithMaxDuration.id === event.id;
+
+      const resourcePlan =
+        event._def &&
+        event._def.resourceIds?.length &&
+        event._def.resourceIds[0] === ItemScheduleType.PLANS;
+
       return (
         <>
+          {isMaxDurationEvent && resourcePlan && !isLoadingSchedule && (
+            <ImageRound
+              src={`/icons/overlap-task.svg`}
+              name="icon lock"
+              className="absolute custom-resize-handle fc-resizer z-50  left-[-19px] top-1/2 -translate-y-1/2 w-[18px] h-[18px]"
+            />
+          )}
           {!isLoadingSchedule && (
             <TaskCard
               event={eventInfo}
@@ -1004,6 +1073,7 @@ const TimeSchedule = memo(
               setTaskTimeScheduleList={setTaskTimeScheduleList}
             />
           )}
+          <div></div>
         </>
       );
     };
@@ -1099,8 +1169,22 @@ const TimeSchedule = memo(
             item.taskId === Number(newEventId)
           );
         });
-
+        const hasOverlapPlan = taskTimeScheduleList.some((item) => {
+          return (
+            newEvent.start < item.end &&
+            newEvent.end > item.start &&
+            item.resourceId === ItemScheduleType.PLANS &&
+            resourcePlan &&
+            item.type === ItemStartType.TASK
+          );
+        });
+        // Check overlap actual
         if (hasOverlap) {
+          return info.revert();
+        }
+        // Check overlap plan
+
+        if (hasOverlapPlan) {
           return info.revert();
         }
         info.view.calendar.refetchEvents();
@@ -1131,6 +1215,7 @@ const TimeSchedule = memo(
             startEditable: true,
             planStartDate: convertDateString(`${newEvent.start}`),
             planEndDate: convertDateString(`${newEvent.end}`),
+            largeColor: newEvent.extendedProps.largeColor,
           });
 
           return updatedEvents;
@@ -1302,6 +1387,23 @@ const TimeSchedule = memo(
             return info.revert();
           }
         }
+      } else {
+        // Check overlap plan
+        const hasOverlap = taskTimeScheduleList
+          .filter((data) => data.uuid !== resizedEvent.extendedProps.uuid)
+          .some((item) => {
+            return (
+              resizedEvent.start < item.end &&
+              resizedEvent.end > item.start &&
+              item.resourceId === ItemScheduleType.PLANS &&
+              resourcePlanDay &&
+              item.type === ItemStartType.TASK &&
+              resizedEvent.extendedProps.type === ItemStartType.TASK
+            );
+          });
+        if (hasOverlap) {
+          return info.revert();
+        }
       }
 
       setTaskTimeScheduleList((prevEvents) => {
@@ -1429,10 +1531,29 @@ const TimeSchedule = memo(
             item.taskId === droppedEvent.extendedProps.taskId
           );
         });
+        // Check overlap actual week
 
         if (hasOverlapWeek) {
           return info.revert();
         }
+        // const hasOverlapPlanWeek = taskTimeScheduleList
+        //   .filter((data) => data.uuid !== droppedEvent.extendedProps.uuid)
+        //   .some((item) => {
+        //     return (
+        //       startDrop < item.end &&
+        //       endDrop > item.start &&
+        //       item.resourceId === isCheckWeek &&
+        //       resourcePlanWeek &&
+        //       item.type === ItemStartType.TASK &&
+        //       droppedEvent.extendedProps.type === ItemStartType.TASK
+        //     );
+        //   });
+
+        // // Check overlap plan week
+        // if (hasOverlapPlanWeek) {
+        //   return info.revert();
+        // }
+
         if (matchData && matchData.uuid !== droppedEvent.extendedProps.uuid) {
           info.view.calendar.refetchEvents();
         }
@@ -1551,10 +1672,13 @@ const TimeSchedule = memo(
           ? ItemScheduleType.PLANS
           : ItemScheduleType.ACTUAL;
         if (!resourcePlanDay) {
+          // Check overlap actual
+
           const hasOverlap = taskTimeScheduleList.some((item) => {
             if (item.uuid === droppedEvent.extendedProps.uuid) {
               return false;
             }
+
             return (
               startDrop < item.end &&
               endDrop > item.start &&
@@ -1567,8 +1691,24 @@ const TimeSchedule = memo(
           if (hasOverlap) {
             return info.revert();
           }
+        } else {
+          // Check overlap plan
+          const hasOverlap = taskTimeScheduleList
+            .filter((data) => data.uuid !== droppedEvent.extendedProps.uuid)
+            .some((item) => {
+              return (
+                startDrop < item.end &&
+                endDrop > item.start &&
+                item.resourceId === ItemScheduleType.PLANS &&
+                resourcePlanDay &&
+                item.type === ItemStartType.TASK &&
+                droppedEvent.extendedProps.type === ItemStartType.TASK
+              );
+            });
+          if (hasOverlap) {
+            return info.revert();
+          }
         }
-
         const newDataTimeList = taskTimeScheduleList.map((event) => {
           if (event.uuid === droppedEvent.extendedProps.uuid) {
             const newData = {
@@ -1900,7 +2040,25 @@ const TimeSchedule = memo(
       'editEventCalendar',
       handleEditEventCalendar,
       {
-        onSuccess: async () => {
+        onSuccess: async ({ data }) => {
+          setTaskTimeScheduleList((prevEvents) =>
+            prevEvents.map((event) => {
+              if (event.id === `${data.id}event`) {
+                const largeColor =
+                  data.categories &&
+                  data.categories.find(
+                    (item: any) => item.type === EventWorkCategory.LARGE,
+                  )?.color;
+                return {
+                  ...event,
+                  largeColor: largeColor,
+                };
+              } else {
+                return event;
+              }
+            }),
+          );
+
           handleRemoveEventParam();
           setOpenConfirmEditEventModal(false);
           setBackToEditing(false);
@@ -2310,7 +2468,7 @@ const TimeSchedule = memo(
                         isShowInput={false}
                         selected={displayHederDateStart}
                         tooltipMsg="カレンダーから日付を選択"
-                        iconClassName='!static !w-8'
+                        iconClassName="!static !w-8"
                         onChange={(e) => {
                           handleChooseDay(e as Date);
                         }}
@@ -2390,6 +2548,7 @@ const TimeSchedule = memo(
                       PermissionsSystem.MY_TASK_UPDATE,
                     )
                   }
+                  eventResizableFromStart={true}
                   firstDay={1}
                   droppable={true}
                   resources={currentResources}
@@ -2411,7 +2570,6 @@ const TimeSchedule = memo(
                   }}
                   slotDuration={isOptionZoomSchedule}
                   initialDate={new Date()}
-                  eventResizableFromStart={true}
                   eventDrop={handleEventDrop}
                   eventContent={handleRenderEvent}
                   eventReceive={handleEventReceive}

@@ -19,13 +19,15 @@ from rest_framework.exceptions import ValidationError
 
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
+from calendars.models import Schedule
 from common.utils import (
     format_duration,
     time_to_timedelta,
     transform_statistic_categories,
+    generate_random_color,
 )
 from organizations.serializers import OrganizationDetailSerializer
-from stat_data.serializers import DailyTaskSerializer
+from stat_data.serializers import DailyTaskSerializer, DailyEventSerializer
 from tasks.models import Task, TaskDuration
 from tasks.utils import split_date_range
 from users.serializers import DailyReportSerializer
@@ -81,9 +83,10 @@ class StatDataViewSet(BaseAPIViewSet):
         Return daily report data by date
         """
         user = request.user
-        date = request.query_params.get("date")
+        date = request.query_params.get("date", None)
+
         # Validate date format using regex
-        if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
+        if not date or not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
             raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
 
         if not date:
@@ -105,14 +108,41 @@ class StatDataViewSet(BaseAPIViewSet):
             .all()
             .distinct()
         )
+
+        events = (
+            Schedule.objects.filter(
+                Q(
+                    Q(participants__in=[user])
+                    & Q(task_durations__paused_at__isnull=True)
+                )
+            )
+            .all()
+            .distinct()
+        )
         for task in tasks:
             durations = task.task_durations.filter(paused_at__isnull=True).all()
+            for duration in durations:
+                self._separate_duration(duration, timezone.now())
+        for event in events:
+            durations = event.task_durations.filter(
+                paused_at__isnull=True
+            ).all()
             for duration in durations:
                 self._separate_duration(duration, timezone.now())
         if start_of_today == start_of_day:
             tasks = Task.objects.filter(
                 Q(
                     Q(people_in_charge_tasks__user__in=[user])
+                    & Q(task_durations__started_at__gte=start_of_day)
+                    & Q(
+                        Q(task_durations__paused_at__isnull=True)
+                        | Q(task_durations__paused_at__lte=end_of_day)
+                    )
+                )
+            )
+            events = Schedule.objects.filter(
+                Q(
+                    Q(participants__in=[user])
                     & Q(task_durations__started_at__gte=start_of_day)
                     & Q(
                         Q(task_durations__paused_at__isnull=True)
@@ -128,68 +158,118 @@ class StatDataViewSet(BaseAPIViewSet):
                     & Q(task_durations__paused_at__lte=end_of_day)
                 )
             )
+            events = Schedule.objects.filter(
+                Q(
+                    Q(participants__in=[user])
+                    & Q(task_durations__started_at__gte=start_of_day)
+                    & Q(task_durations__paused_at__lte=end_of_day)
+                )
+            )
         tasks = tasks.all().distinct()
-
-        data = {
-            "tasks": DailyTaskSerializer(
+        events = events.all().distinct()
+        merged_duration = (
+            DailyTaskSerializer(
                 tasks,
                 many=True,
                 context={
                     "start_of_day": start_of_day,
                     "end_of_day": end_of_day,
                 },
-            ).data,
+            ).data
+            + DailyEventSerializer(
+                events,
+                many=True,
+                context={
+                    "start_of_day": start_of_day,
+                    "end_of_day": end_of_day,
+                },
+            ).data
+        )
+
+        data = {
+            "tasks": merged_duration,
             "organization_categories": {},
         }
 
-        for task in tasks:
+        for item in list(tasks) + list(events):
             if (
-                task.organization is not None
-                and data["organization_categories"].get(task.organization.id)
-                is None
+                item.organization
+                and item.organization.id not in data["organization_categories"]
             ):
                 categories = OrganizationDetailSerializer(
-                    task.organization
+                    item.organization
                 ).data["statistic_categories"]
                 data["organization_categories"][
-                    task.organization.id
+                    item.organization.id
                 ] = transform_statistic_categories(categories)
 
-        tasks = tasks.annotate(
-            duration=ExpressionWrapper(
-                Case(
-                    When(
-                        task_durations__paused_at__isnull=True,
-                        then=end_of_day
-                        if end_of_day < timezone.now()
-                        else Now(),
-                    ),
-                    default=F("task_durations__paused_at"),
+        def annotate_duration(queryset, start_of_day, end_of_day):
+            return queryset.annotate(
+                duration=ExpressionWrapper(
+                    Case(
+                        When(
+                            task_durations__paused_at__isnull=True,
+                            then=end_of_day
+                            if end_of_day < timezone.now()
+                            else Now(),
+                        ),
+                        default=F("task_durations__paused_at"),
+                        output_field=DurationField(),
+                    )
+                    - Coalesce(F("task_durations__started_at"), start_of_day),
                     output_field=DurationField(),
                 )
-                - Coalesce(F("task_durations__started_at"), start_of_day),
-                output_field=DurationField(),
             )
-        )
+
+        tasks = annotate_duration(tasks, start_of_day, end_of_day)
+        events = annotate_duration(events, start_of_day, end_of_day)
 
         total_duration = timedelta()
 
         for task in data["tasks"]:
             total_duration += time_to_timedelta(task["total_duration"])
 
-        task_with_category_large_durations = (
-            tasks.filter(Q(categories__large_statistic_category__isnull=False))
-            .values("categories__large_statistic_category__name")
-            .annotate(duration=Sum("duration"))
-        )
-        task_without_large_durations = (
-            tasks.filter(Q(categories__large_statistic_category__isnull=True))
-            .annotate(duration=Sum("duration"))
-            .values("duration")
-        )
+        def get_category_durations(queryset):
+            """
+            Splits the queryset into two parts:
+            - One with a large statistic category
+            - One without a large statistic category
+            """
+            with_large = (
+                queryset.filter(
+                    Q(categories__large_statistic_category__isnull=False)
+                )
+                .values(
+                    "categories__large_statistic_category__name",
+                    "categories__large_statistic_category__color",
+                )
+                .annotate(duration=Sum("duration"))
+            )
+
+            without_large = (
+                queryset.filter(
+                    Q(categories__large_statistic_category__isnull=True)
+                )
+                .annotate(duration=Sum("duration"))
+                .values("duration")
+            )
+
+            return with_large, without_large
+
+        (
+            task_with_category_large_durations,
+            task_without_large_durations,
+        ) = get_category_durations(tasks)
+        (
+            event_with_category_large_durations,
+            event_without_large_durations,
+        ) = get_category_durations(events)
+
         data["total_duration"] = format_duration(total_duration)
         data["categories"] = []
-        category_list = task_with_category_large_durations
+        category_list = list(task_with_category_large_durations) + list(
+            event_with_category_large_durations
+        )
         if task_without_large_durations:
             none_large_categories = {"duration": timedelta()}
             for task in task_without_large_durations:
@@ -197,6 +277,22 @@ class StatDataViewSet(BaseAPIViewSet):
                 none_large_categories[
                     "categories__large_statistic_category__name"
                 ] = None
+                none_large_categories[
+                    "categories__large_statistic_category__color"
+                ] = (
+                    generate_random_color()
+                )  # FXIME: Maybe remove later when not accept use random for unsetting category
+            for event in event_without_large_durations:
+                none_large_categories["duration"] += event["duration"]
+                none_large_categories[
+                    "categories__large_statistic_category__name"
+                ] = None
+                none_large_categories[
+                    "categories__large_statistic_category__color"
+                ] = (
+                    generate_random_color()
+                )  # FXIME: Maybe remove later when not accept use random for unsetting category
+
             category_list = list(
                 chain(
                     task_with_category_large_durations, [none_large_categories]
@@ -206,6 +302,7 @@ class StatDataViewSet(BaseAPIViewSet):
         for cat in category_list:
             category_duration = format_duration(cat["duration"]) or timedelta(0)
             category_name = cat["categories__large_statistic_category__name"]
+            category_color = cat["categories__large_statistic_category__color"]
             percent_per_total_duration = (
                 (
                     time_to_timedelta(category_duration).total_seconds()
@@ -224,6 +321,7 @@ class StatDataViewSet(BaseAPIViewSet):
             data["categories"].append(
                 {
                     "category_name": category_name,
+                    "category_color": category_color,
                     "duration": category_duration,
                     "percent": round(percent_per_total_duration)
                     if percent_per_total_duration < 100

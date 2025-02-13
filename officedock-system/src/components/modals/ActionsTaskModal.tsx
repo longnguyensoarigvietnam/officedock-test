@@ -1,5 +1,5 @@
 'use client';
-import React, {
+import {
   ChangeEvent,
   Dispatch,
   SetStateAction,
@@ -52,6 +52,7 @@ import {
   PermissionsSystem,
   ScreenName,
   StatusValueTask,
+  TimeType,
 } from '@constants/enums';
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -73,6 +74,7 @@ import {
   generateTimeOptionsAsObjects,
 } from '@utils/date';
 import {
+  generateOptionsCount,
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
@@ -183,9 +185,17 @@ const ActionsTaskModal = ({
     OptionDropdownType[]
   >([]);
 
+  const [isShowFieldRemind, setIsShowFieldRemind] = useState(false);
+
   const [isSubmit, setIsSubmit] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const _optionsCountType = Object.keys(TimeType).map((key) => ({
+    label: TimeType[key as keyof typeof TimeType],
+    value: key,
+  }));
+  const _optionsCountDown = generateOptionsCount(10);
 
   const {
     register,
@@ -308,6 +318,8 @@ const ActionsTaskModal = ({
       tagIds: dataTask ? [] : [{ label: '', value: '' }],
       deadlineDate: null,
       deadlineTime: '',
+      deadlineRemindCountdown: null,
+      deadlineRemindType: null,
       type: {
         label: '',
         value: '',
@@ -333,28 +345,34 @@ const ActionsTaskModal = ({
       },
       isImportant: false,
       plans: [],
-      organization: {
-        label:
-          authenticatedUser?.organizations.find(
-            (organization) => organization.isMain,
-          )?.name || '',
-        value:
-          authenticatedUser?.organizations.find(
-            (organization) => organization.isMain,
-          )?.id || '',
-      },
+      organization: authenticatedUser?.organizations
+        ? {
+            label:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.name || '',
+            value:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.id || '',
+          }
+        : null,
     };
     if (authenticatedUser) {
-      value.organization = {
-        label:
-          authenticatedUser?.organizations.find(
-            (organization) => organization.isMain,
-          )?.name || '',
-        value:
-          authenticatedUser?.organizations.find(
-            (organization) => organization.isMain,
-          )?.id || '',
-      };
+      value.organization = authenticatedUser?.organizations.find(
+        (organization) => organization.isMain,
+      )
+        ? {
+            label:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.name || '',
+            value:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.id || '',
+          }
+        : null;
     }
     if (dataTask) {
       (value.id = `${dataTask.id}`),
@@ -382,6 +400,18 @@ const ActionsTaskModal = ({
           label: dataTask.priority || '',
           value: dataTask.priority || '',
         }),
+        (value.deadlineRemindCountdown = dataTask.remindCountdown
+          ? {
+              label: dataTask.remindCountdown,
+              value: dataTask.remindCountdown || '',
+            }
+          : null),
+        (value.deadlineRemindType = dataTask.remindType
+          ? {
+              label: dataTask.remindType,
+              value: dataTask.remindType,
+            }
+          : null),
         (value.deadlineDate = dataTask.deadline
           ? new Date(dataTask.deadline)
           : null),
@@ -656,6 +686,10 @@ const ActionsTaskModal = ({
           planEndDate: null,
           planStartTime: '',
         });
+      }
+
+      if (dataTask.remindType && dataTask.remindType) {
+        setIsShowFieldRemind(true);
       }
       // Default focus input fake
       if (dataTask.peopleInCharge.length) {
@@ -1023,7 +1057,7 @@ const ActionsTaskModal = ({
               disabled={isCheckActionPermission}
               autoCompleteInput
               placeholder="タスクのタイトル"
-              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-centers !py-0 h-[46px] focus:!shadow-none focus:border border-[#77858F] rounded-md"
+              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md"
               register={register('title', {
                 required: watch('title') !== null ? true : false,
                 onChange: () => {
@@ -1066,9 +1100,10 @@ const ActionsTaskModal = ({
               <Controller
                 control={control}
                 name={'organization'}
+                rules={{ required: ORGANIZATION_REQUIRED_MESSAGE }}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md !border-none !shadow-none !w-fit !pl-0"
+                    className="h-[34px] !py-1 text-xs  rounded-md !border-none !shadow-none !w-fit !pl-0"
                     classNameTextData="!text-xs !w-fit"
                     classNameOption="!text-xs !w-fit"
                     classNameError="!text-xs !w-fit"
@@ -1092,7 +1127,6 @@ const ActionsTaskModal = ({
                     }}
                   />
                 )}
-                rules={{ required: ORGANIZATION_REQUIRED_MESSAGE }}
               />
               <ErrorMessage
                 error={errors.organization?.message}
@@ -1102,7 +1136,9 @@ const ActionsTaskModal = ({
           </div>
           {/* Category */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2">業務の種類</div>
+            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+              業務の種類
+            </div>
             <div className="w-full max-w-[515px] flex flex-col gap-4">
               {/* Category large */}
               <Controller
@@ -1112,7 +1148,7 @@ const ActionsTaskModal = ({
                   return (
                     <Dropdown
                       placeholder="大カテゴリ"
-                      className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md"
+                      className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
@@ -1148,7 +1184,7 @@ const ActionsTaskModal = ({
                   return (
                     <Dropdown
                       placeholder="中カテゴリ"
-                      className="h-[34px] !py-1 text-xs"
+                      className="h-[34px] !py-1 text-xs "
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
@@ -1179,7 +1215,7 @@ const ActionsTaskModal = ({
                 name={'categories.SMALL'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs"
+                    className="h-[34px] !py-1 text-xs "
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     classNameError="!text-xs"
@@ -1201,12 +1237,17 @@ const ActionsTaskModal = ({
           </div>
           {/* Tag */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2">タグ</div>
+            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+              タグ
+            </div>
             <div className="w-full max-w-[518px]">
               <div className="flex gap-2 max-w-[518px]">
                 <div className="w-[461px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
+                    labelClass="!min-h-0"
+                    valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
+                    optionClassName="!border-[1px] !border-[#77858F]"
                     disabled={isCheckActionPermission}
                     options={dataOptionsTagIds}
                     customLabel={
@@ -1217,13 +1258,17 @@ const ActionsTaskModal = ({
                     }
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
-                      let updatedTagIds = []
-                        const currentTagIds = getValues('tagIds') || [];
-                      const foundItemIndex = currentTagIds.findIndex((tag) => tag.value == selected.value)
-                      if(foundItemIndex == -1){
-                        updatedTagIds = [...currentTagIds, selected]
-                      } else{
-                        updatedTagIds = currentTagIds.filter((tag) => tag.value != selected.value)
+                      let updatedTagIds = [];
+                      const currentTagIds = getValues('tagIds') || [];
+                      const foundItemIndex = currentTagIds.findIndex(
+                        (tag) => tag.value == selected.value,
+                      );
+                      if (foundItemIndex == -1) {
+                        updatedTagIds = [...currentTagIds, selected];
+                      } else {
+                        updatedTagIds = currentTagIds.filter(
+                          (tag) => tag.value != selected.value,
+                        );
                       }
                       setIsFormTouched(true);
                       setValue('tagIds', updatedTagIds);
@@ -1286,14 +1331,16 @@ const ActionsTaskModal = ({
           <div
             style={{ zIndex: planFields.length + 2 }}
             className="flex gap-[10px] items-center">
-            <div className="w-full max-w-[100px]">ステータス</div>
+            <div className="w-full max-w-[100px] text-[14px] font-medium">
+              ステータス
+            </div>
             <div className="w-full max-w-[180px]">
               <Controller
                 control={control}
                 name={'statusId'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md"
+                    className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     classNameError="!text-xs"
@@ -1330,7 +1377,9 @@ const ActionsTaskModal = ({
           </div>
           {/* isImportant */}
           <div className="flex  gap-[10px] items-center">
-            <div className="w-full max-w-[100px]">重要</div>
+            <div className="w-full max-w-[100px] text-[14px] font-medium">
+              重要
+            </div>
             <div className="w-full max-w-48 ">
               <Controller
                 control={control}
@@ -1355,7 +1404,9 @@ const ActionsTaskModal = ({
           <div
             style={{ zIndex: planFields.length + 1 }}
             className="flex  gap-[10px] items-center">
-            <div className="w-full max-w-[100px]">締切日時</div>
+            <div className="w-full max-w-[100px] text-[14px] font-medium">
+              締切日時
+            </div>
             <div className="w-full max-w-[515px] items-start flex gap-1 justify-between">
               <div className="max-w-[250px]">
                 <div className="flex gap-1 items-center">
@@ -1370,7 +1421,7 @@ const ActionsTaskModal = ({
                             watch('statusId')?.value ===
                               StatusValueTask.MY_ROUTINE
                           }
-                          className="h-[34px] !px-2 !pl-[30px] border-[#77858F] rounded-md !text-xs !pt-2 text-center"
+                          className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
                           selected={value ? new Date(value) : null}
                           onChange={(e) => {
                             setIsFormTouched(true);
@@ -1431,12 +1482,13 @@ const ActionsTaskModal = ({
                           );
                         }
                       }}
-                      className="h-[34px] !text-xs !pr-1 !pl-7 border-[#77858F] rounded-md"
+                      className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                     />
                   </div>
-                  <div>
+                  <div className="ml-2">
                     <ImageRound
-                      src="/icons/bell.svg"
+                      onClick={() => setIsShowFieldRemind(!isShowFieldRemind)}
+                      src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell.svg'}`}
                       name="Bell icon"
                       className="h-4 w-4"
                     />
@@ -1447,6 +1499,81 @@ const ActionsTaskModal = ({
                   className="mt-[6px] text-xs"
                 />
               </div>
+              {/* TODO: Implement remind task */}
+              {/* {isShowFieldRemind ? (
+                <div className="max-w-[250px]">
+                  <div className="flex items-center gap-1">
+                    <div className="w-[56px]">
+                      <Controller
+                        control={control}
+                        name="deadlineRemindCountdown"
+                        render={({ field: { value, onChange } }) => (
+                          <Dropdown
+                            className="h-[34px] !py-1 !px-0 text-xs border-[#77858F] rounded-md"
+                            classNameTextData="!text-xs !ml-0"
+                            labelOptionClass="!ml-0 !px-0 text-center w-full "
+                            classNameOption="!text-xs "
+                            classNameError="!text-xs"
+                            classActive="justify-between"
+                            labelClass="w-[80%]"
+                            disabled={
+                              isCheckActionPermission ||
+                              watch('statusId')?.value ===
+                                StatusValueTask.MY_ROUTINE
+                            }
+                            options={optionsCountDown}
+                            selectedOption={optionsCountDown.find(
+                              (element) => element.value === value?.value,
+                            )}
+                            onChange={(e) => {
+                              onChange(e);
+                            }}
+                            error={errors.statusId?.message}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="w-[82px] ">
+                      <Controller
+                        control={control}
+                        name="deadlineRemindType"
+                        render={({ field: { value, onChange } }) => (
+                          <Dropdown
+                            className="h-[34px] !py-1 !pr-2 text-xs border-[#77858F] rounded-md"
+                            classNameTextData="!text-xs"
+                            classNameOption="!text-xs !ml-0"
+                            classNameError="!text-xs"
+                            labelOptionClass="!ml-0 !px-0 text-center w-full"
+                            classActive=" justify-between"
+                            labelClass="w-[80%]"
+                            disabled={
+                              isCheckActionPermission ||
+                              watch('statusId')?.value ===
+                                StatusValueTask.MY_ROUTINE
+                            }
+                            options={optionsCountType}
+                            selectedOption={optionsCountType.find(
+                              (element) => element.value === value?.value,
+                            )}
+                            onChange={(e) => {
+                              onChange(e);
+                            }}
+                            error={errors.statusId?.message}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="w-[60px]">に通知</div>
+                  </div>
+                  <ErrorMessage
+                    error={errors.deadlineTime?.message}
+                    className="mt-[6px] text-xs"
+                  />
+                </div>
+              ) : (
+                <div className="w-fit"></div>
+              )} */}
+
               <div>
                 {!isCheckActionPermission && (
                   <Button
@@ -1459,6 +1586,8 @@ const ActionsTaskModal = ({
                       setIsFormTouched(true);
                       setValue('deadlineTime', '');
                       setValue('deadlineDate', null);
+                      setValue('deadlineRemindCountdown', null);
+                      setValue('deadlineRemindType', null);
                     }}>
                     削除
                   </Button>
@@ -1468,7 +1597,9 @@ const ActionsTaskModal = ({
           </div>
           {/* Plan date */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2">実施予定日時</div>
+            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+              実施予定日時
+            </div>
             <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
               {planFields.map((field, index) => {
                 return (
@@ -1490,7 +1621,7 @@ const ActionsTaskModal = ({
                             render={({ field: { value, onChange } }) => {
                               return (
                                 <DatePickerCustom
-                                  className="h-[34px] border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
+                                  className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
                                   selected={
                                     value
                                       ? new Date(value)
@@ -1585,7 +1716,7 @@ const ActionsTaskModal = ({
                                 updateMinDatePlan(index, new Date());
                               }
                             }}
-                            className="h-[34px] !text-xs !pr-1 !pl-7 border-[#77858F] rounded-md"
+                            className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                           />
                         </div>
                       </div>
@@ -1608,7 +1739,7 @@ const ActionsTaskModal = ({
                             name={`plans.${index}.planEndDate`}
                             render={({ field: { value, onChange } }) => (
                               <DatePickerCustom
-                                className="h-[34px] border-[#77858F] rounded-md !px-2 !pl-[30px] !text-xs !pt-2 text-center"
+                                className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2 !pl-[30px] !text-xs !pt-2 text-center"
                                 selected={
                                   value
                                     ? new Date(value)
@@ -1784,7 +1915,7 @@ const ActionsTaskModal = ({
                               }
                             }}
                             type="text"
-                            className="h-[34px] !text-xs !pr-1 !pl-7 border-[#77858F] rounded-md"
+                            className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                           />
                         </div>
                       </div>
@@ -1862,7 +1993,7 @@ const ActionsTaskModal = ({
                       setIsFormTouched(true);
                     },
                   })}
-                  className="resize-none"
+                  className="resize-none !border-[1px] !border-[#77858F]"
                 />
               </>
             ) : (

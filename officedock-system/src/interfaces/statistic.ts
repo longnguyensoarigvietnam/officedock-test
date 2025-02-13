@@ -40,6 +40,7 @@ export interface dataStatisticResponse {
     categoryName: string;
     duration: string;
     percent: number;
+    categoryColor: string;
   }[];
   tasks: dataTaskDaily[];
   remark: {
@@ -64,6 +65,7 @@ export interface dataTaskDaily {
     id: number;
     name: string;
     type: string;
+    color: string;
   }[];
   status: {
     id: number;
@@ -77,6 +79,7 @@ export interface dataTaskDaily {
     startedAt: string;
     pausedAt: string;
   }[];
+  type: string;
   todoList: TodoItem[];
   totalDuration: string;
 }
@@ -96,6 +99,7 @@ export interface ChildTask {
   startedAt: string;
   pausedAt: string;
   isRunning?: boolean;
+  type?: string;
   SMALL: {
     id: number | string;
     name: string;
@@ -142,4 +146,13 @@ export interface dataTaskDailyTable {
   pausedAt?: string;
   isRunning?: boolean;
   organization?: number;
+  type?: string;
+}
+export interface DataActualDetail {
+  largeColor: string;
+  title: string;
+  start: string;
+  end: string;
+  left?: number;
+  top?: number;
 }

@@ -289,6 +289,9 @@ class Setting(BaseModel):
     is_check_self_schedule = models.BooleanField(default=False)
     is_check_company_schedule = models.BooleanField(default=False)
     is_enter_send_message = models.BooleanField(default=False)
+    is_sorting_task_by_deadline = models.BooleanField(default=False)
+    is_sorting_task_by_important = models.BooleanField(default=False)
+
     user = models.OneToOneField(
         "User", related_name="setting", on_delete=models.CASCADE
     )
@@ -297,6 +300,14 @@ class Setting(BaseModel):
         related_name="setting",
         on_delete=models.CASCADE,
     )
+
+    def reset_sort_task(self):
+        """
+        Handle reset sort task
+        """
+        self.is_sorting_task_by_deadline = False
+        self.is_sorting_task_by_important = False
+        self.save()
 
 
 class Profile(BaseModel):

@@ -38,6 +38,9 @@ export interface TaskRequest {
   action?: string;
   copyTaskId?: string | null;
   organizationId?: number | null;
+  remindCountdown?: string | null;
+  remindType?: string | null;
+  remind_at?: string | null;
 }
 export interface TaskFormData {
   id?: string;
@@ -47,6 +50,8 @@ export interface TaskFormData {
   priority?: OptionDropdownType;
   deadlineDate?: Date | null;
   deadlineTime?: string | null;
+  deadlineRemindCountdown?: OptionDropdownType | null;
+  deadlineRemindType?: OptionDropdownType | null;
   planStartDate?: Date | null;
   planStartTime?: string | null;
   planEndDate?: Date | null;
@@ -73,7 +78,7 @@ export interface TaskFormData {
   todoList?: TodoItem[];
   plans: PlanItem[] | null;
   oldIdStatus?: string;
-  organization?: OptionDropdownType;
+  organization?: OptionDropdownType | null;
 }
 
 export interface StatusTask {
@@ -120,6 +125,7 @@ export interface Task {
     name: string;
     type: string;
     id: number;
+    color: string;
   }[];
   resourceId?: string;
   isImportant?: boolean;
@@ -133,8 +139,20 @@ export interface Task {
     planEndDate?: string | null;
   }[];
   organization?: Organizations;
+  remindCountdown?: string | null;
+  remindType?: string | null;
 }
-
+export interface TaskRunningType {
+  id: number;
+  isOverEstimate: boolean;
+  isStart: boolean;
+  pausedAt: string | null;
+  startedAt: string;
+  taskDuration: string;
+  taskDurationRunningUuid: string;
+  title: string;
+  type: string;
+}
 export interface TaskActualType {
   id: number;
   taskId: number;
@@ -146,6 +164,12 @@ export interface TaskActualType {
   planStartDate: string | null;
   planEndDate?: string | null;
   type?: string;
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+    color: string;
+  }[];
 }
 export interface peopleInChargeType {
   id: number | string;
@@ -167,10 +191,10 @@ export interface CreationDataTask {
   types: string[];
   priorities: string[];
   categories: {
-    LARGE: string[];
-    MEDIUM: string[];
-    SMALL: string[];
-  };
+    id: number;
+    name: string;
+    uuid: string;
+  }[];
   organizations: {
     id: number;
     name: string;
@@ -224,6 +248,7 @@ export interface TaskTimeSchedule {
   planStartDate: string | null;
   planEndDate: string | null;
   isCalculation?: boolean;
+  largeColor?: string;
 }
 export interface TaskErrorPerson {
   id: string;

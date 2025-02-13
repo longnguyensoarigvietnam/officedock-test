@@ -142,6 +142,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
     type = serializers.SerializerMethodField()
     event_type = serializers.SerializerMethodField()
     is_my_schedule = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
 
     class Meta:
         model = Schedule
@@ -151,12 +152,22 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "start_date",
             "end_date",
             "is_all_day",
+            "address",
             "type",
             "is_my_schedule",
             "participants",
             "is_start",
             "event_type",
+            "categories",
         ]
+
+    # FIXME: Check spec implement color of category
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Schedule."""
+        if not obj.categories.exists():
+            return []
+
+        return get_common_categories(obj.categories.first())
 
     def get_type(self, obj):
         """
@@ -222,11 +233,7 @@ class TaskScheduleSerializer(serializers.ModelSerializer):
             and plan_start_date >= plan_end_date
         ):
             raise serializers.ValidationError(
-                {
-                    "task_schedules": ERROR_MESSAGES[
-                        "start_date_end_date_invalid"
-                    ]
-                }
+                {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
             )
 
         return attrs
