@@ -50,7 +50,7 @@ import {
   formatQueryStartDateForCalendar,
   getJapaneseDayName,
   isMidnight,
-  isMoreThanSixtyMinutes,
+  isMoreThanThirtyMinutes,
   removeTimeAndCompareDates,
   subtractOneDay,
 } from '@utils/date';
@@ -765,16 +765,29 @@ const EventCalendar = () => {
             <div className={` text-black text-[12px] font-normal px-1`}>
               {new Date(eventContent.event.start).getDate() !=
               new Date(eventContent.event.end).getDate() ? (
-                <p className="whitespace-nowrap">
-                  {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
-                  ~{' '}
-                  {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
-                </p>
+                <>
+                  <p className="whitespace-nowrap">
+                    {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
+                    ~{' '}
+                    {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
+                  </p>
+                  <p className={` text-black text-[12px] font-normal px-1`}>
+                    {eventContent.event.extendedProps.address}
+                  </p>
+                </>
               ) : (
-                isMoreThanSixtyMinutes(eventContent.timeText) && eventContent.timeText
+                <>
+                  {isMoreThanThirtyMinutes(eventContent.timeText) && (
+                    <>
+                      <p>{eventContent.timeText}</p>
+                      <p className={` text-black text-[12px] font-normal px-1`}>
+                        {eventContent.event.extendedProps.address}
+                      </p>
+                    </>
+                  )}
+                </>
               )}
             </div>
-            <p className={` text-black text-[12px] font-normal px-1`}>{eventContent.event.extendedProps.address}</p>
           </div>
         );
       } else if (currentView === CalendarViewOptions.VIEW_BY_DAY) {
@@ -782,7 +795,7 @@ const EventCalendar = () => {
           return (
             <div className="mb-1">
               <div
-                className={`text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
+                className={`text-black bg-white overflow-hidden px-1 !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                 <p className="truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px]">
                   {eventContent.event.title !== 'null'
@@ -802,18 +815,32 @@ const EventCalendar = () => {
                   : ''}
               </p>
             </div>{' '}
-            <div className={`text-black font-normal px-1 text-[12px]`}>
+            <div className={` text-black text-[12px] font-normal px-1`}>
               {new Date(eventContent.event.start).getDate() !=
               new Date(eventContent.event.end).getDate() ? (
-                <p className="whitespace-nowrap">
-                  {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
-                  ~{' '}
-                  {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
-                </p>
+                <>
+                  <p className="whitespace-nowrap">
+                    {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
+                    ~{' '}
+                    {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
+                  </p>
+                  <p>
+                    {eventContent.event.extendedProps.address}
+                  </p>
+                </>
               ) : (
-                isMoreThanSixtyMinutes(eventContent.timeText)
+                <>
+                  {isMoreThanThirtyMinutes(eventContent.timeText) && (
+                    <div className='text-black text-[12px] font-normal px-1'>
+                      <p>{eventContent.timeText}</p>
+                      <p>
+                        {eventContent.event.extendedProps.address}
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
-            </div>{' '}
+            </div>
           </div>
         );
       } else if (currentView === CalendarViewOptions.VIEW_BY_MONTH) {
@@ -926,7 +953,7 @@ const EventCalendar = () => {
                     end: new Date(adjustedEnd).toLocaleString(),
                     type: event.type,
                     participants: event.participants || [],
-                    address: event.address || ''
+                    address: event.address || '',
                   });
                 }
               } else {
@@ -941,7 +968,7 @@ const EventCalendar = () => {
                   end: new Date(adjustedEnd).toLocaleString(),
                   type: event.type,
                   participants: event.participants || [],
-                  address: event.address || ''
+                  address: event.address || '',
                 });
               }
             }
@@ -1102,7 +1129,7 @@ const EventCalendar = () => {
             type: event.type,
             participants: event.participants || [],
             address: event.address || '',
-            allDay: event.allDay
+            allDay: event.allDay,
           });
         }
       }

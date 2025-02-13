@@ -434,13 +434,9 @@ export function formatShowDeadline(date: string | Date): string {
 
   inputDate.setHours(0, 0, 0, 0);
 
-  if (inputDate.getTime() === today.getTime()) {
-    return '今日';
-  } else {
-    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-    const day = String(inputDate.getDate()).padStart(2, '0');
-    return `${month}月${day}日`;
-  }
+  const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  return `${month}月${day}日`;
 }
 
 export const compareWithCurrentTime = (inputDate: Date | string): boolean => {
