@@ -42,6 +42,7 @@ import ActionDetailDaily from '@components/daily/ActionDetailDaily';
 import TaskDailyCard from './taskDailyCard';
 
 import {
+  EventCalendarType,
   EventWorkCategory,
   PermissionsSystem,
   ScreenName,
@@ -56,6 +57,7 @@ import useDataStatistic from '@hooks/useDataStatistic';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import {
   ChildTask,
+  DataActualDetail,
   dataTaskDaily,
   dataTaskDailyTable,
   dataTotalCategory,
@@ -81,7 +83,11 @@ import {
   isTodaySchedule,
   isYesterdaySchedule,
 } from '@utils/date';
-import { hasPermissionInArray, transformDataTaskDailyToTable } from '@utils';
+import {
+  adjustPositionForViewport,
+  hasPermissionInArray,
+  transformDataTaskDailyToTable,
+} from '@utils';
 import { useWebSocket } from '@providers/WebSocketProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -91,9 +97,12 @@ import ResizeTextArea from '@components/custom/resizeTextArea';
 import Dropdown from '@components/common/Dropdown';
 import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 import { useErrorToast } from '@hooks/useErrorToast';
+import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';
 
 const DailyReportBoard = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+
   const calendarDownloadRef = useRef<FullCalendar | null>(null);
 
   const socket = useWebSocket();
@@ -121,6 +130,8 @@ const DailyReportBoard = () => {
     OrganizationCategories | undefined
   >(undefined);
 
+  const [popoverInfo, setPopoverInfo] = useState<DataActualDetail | null>(null);
+
   const { creationDataTaskData } = useCreationDataTask({});
 
   const [chartData, setChartData] = useState<{
@@ -136,7 +147,54 @@ const DailyReportBoard = () => {
     dataTaskDailyTable[]
   >([]);
 
-  const createTaskDurationItems = (tasks: dataTaskDaily[]) => {
+  const handleShowEventsInModal = (data: {
+    largeColor?: string;
+    start: string;
+    end: string;
+    title: string;
+    eventList: any[];
+    clientX: number;
+    clientY: number;
+  }) => {
+    setPopoverInfo({
+      largeColor: data.largeColor ? data.largeColor : '',
+      title: data.title,
+      end: '1',
+      start: '1',
+      left: adjustPositionForViewport(
+        {
+          top: Number(data.clientY),
+          left: Number(data.clientX),
+        },
+        data.eventList.length,
+      ).left,
+      top: adjustPositionForViewport(
+        {
+          top: Number(data.clientY),
+          left: Number(data.clientX),
+        },
+        data.eventList.length,
+      ).top,
+    });
+  };
+  const handleEventClick = (clickInfo?: any) => {
+    handleShowEventsInModal({
+      title: clickInfo.event.title,
+      largeColor: clickInfo.event.extendedProps.largeColor
+        ? clickInfo.event.extendedProps.largeColor
+        : '',
+      start: clickInfo.event.start,
+      end: clickInfo.event.end,
+      eventList: taskTimeStatisticList,
+      clientX: clickInfo.jsEvent.clientX,
+      clientY: clickInfo.jsEvent.clientY,
+    });
+  };
+
+  const createTaskDurationItems = (
+    tasks: dataTaskDaily[],
+    listColor: string[],
+  ) => {
     return tasks.flatMap((task) =>
       task.taskDurations.map((duration) => ({
         id: `${duration.id}`,
@@ -150,7 +208,11 @@ const DailyReportBoard = () => {
         largeColor:
           task.categories &&
           task.categories.find((item) => item.type === EventWorkCategory.LARGE)
-            ?.color,
+            ?.color
+            ? task.categories.find(
+                (item) => item.type === EventWorkCategory.LARGE,
+              )?.color
+            : listColor[0],
       })),
     );
   };
@@ -200,7 +262,10 @@ const DailyReportBoard = () => {
 
       const dataTaskResult = transformDataTaskDailyToTable(dataStatistic.tasks);
 
-      const taskDurationItems = createTaskDurationItems(dataStatistic.tasks);
+      const taskDurationItems = createTaskDurationItems(
+        dataStatistic.tasks,
+        listColor,
+      );
 
       setDataOrganizationCategories(dataStatistic.organizationCategories);
 
@@ -216,6 +281,7 @@ const DailyReportBoard = () => {
         data: listValueChart,
         actualValue: listValueActualChart,
       });
+
       setTaskTimeStatisticList(taskDurationItems);
     }
   }, [dataStatistic]);
@@ -225,9 +291,10 @@ const DailyReportBoard = () => {
     id: string;
     startedAt?: string;
     pausedAt?: string;
-    taskId: number;
+    taskId?: number;
     oldStartAt?: string;
     oldEndAt?: string;
+    scheduleId?: number;
   }) => {
     setIsLoading(true);
     return await api.patch(
@@ -348,6 +415,7 @@ const DailyReportBoard = () => {
     e: ChangeEvent<HTMLInputElement>,
     id: string,
     taskId: number,
+    typeAction: string,
     startedAt?: string,
   ): void => {
     let value = e.target.value.replace(/\D/g, '');
@@ -377,22 +445,34 @@ const DailyReportBoard = () => {
 
       return updatedTask;
     });
-
-    editDurationTask({
-      id: id,
-      taskId: taskId,
-      startedAt: combineDateAndTime(
-        currentDate,
-        `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
-      ),
-      oldStartAt: `${startedAt}`,
-    });
+    if (typeAction === EventCalendarType.TASK) {
+      editDurationTask({
+        id: id,
+        taskId: taskId,
+        startedAt: combineDateAndTime(
+          currentDate,
+          `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
+        ),
+        oldStartAt: `${startedAt}`,
+      });
+    } else {
+      editDurationTask({
+        id: id,
+        scheduleId: taskId,
+        startedAt: combineDateAndTime(
+          currentDate,
+          `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
+        ),
+        oldStartAt: `${startedAt}`,
+      });
+    }
     setDataTaskDailyList(updatedTasks);
   };
   const handleChangeEndTime = (
     e: ChangeEvent<HTMLInputElement>,
     id: string,
     taskId: number,
+    type: string,
     endTimeAt: string,
   ): void => {
     let value = e.target.value.replace(/\D/g, '');
@@ -423,15 +503,27 @@ const DailyReportBoard = () => {
       return updatedTask;
     });
 
-    editDurationTask({
-      id: id,
-      pausedAt: combineDateAndTime(
-        currentDate,
-        `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
-      ),
-      taskId: taskId,
-      oldEndAt: endTimeAt,
-    });
+    if (type === EventCalendarType.TASK) {
+      editDurationTask({
+        id: id,
+        pausedAt: combineDateAndTime(
+          currentDate,
+          `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
+        ),
+        taskId: taskId,
+        oldEndAt: endTimeAt,
+      });
+    } else {
+      editDurationTask({
+        id: id,
+        pausedAt: combineDateAndTime(
+          currentDate,
+          `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
+        ),
+        scheduleId: taskId,
+        oldEndAt: endTimeAt,
+      });
+    }
     setDataTaskDailyList(updatedTasks);
   };
 
@@ -562,7 +654,7 @@ const DailyReportBoard = () => {
 
         return (
           <div
-            className={`daily-custom text-left custom-statistic  h-[30px] mt-1 ${isHasChild && 'mt-[15px]  mb-[18px]'}`}>
+            className={`daily-custom text-left custom-statistic  h-[30px] mt-[12px] ${isHasChild && '!mt-[19px]  mb-[18px]'}`}>
             <div className="flex justify-between h-full relative rounded-md gap-1">
               <SingleSelect
                 className="border-none shadow-none min-w-[162px] h-[30px] bg-[#EBF1F7] rounded-md"
@@ -674,7 +766,7 @@ const DailyReportBoard = () => {
 
         return (
           <div
-            className={`daily-custom text-left custom-statistic mt-1 ${isHasChild && 'mt-[15px]  mb-[18px]'}`}>
+            className={`daily-custom text-left custom-statistic mt-[12px] ${isHasChild && '!mt-[19px] mb-[18px]'}`}>
             <div className="flex justify-between h-full relative  rounded-md gap-1">
               <div className="">
                 <SingleSelect
@@ -808,7 +900,7 @@ const DailyReportBoard = () => {
 
         return (
           <div
-            className={`daily-custom text-left custom-statistic mt-1 ${isHasChild && 'mt-[15px]  mb-[18px]'}`}>
+            className={`daily-custom text-left custom-statistic mt-[12px] ${isHasChild && '!mt-[19px]  mb-[18px]'}`}>
             <SingleSelect
               className="border-none h-6 text-xs min-w-[162px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
               defaultValue={optionSmall.find(
@@ -857,47 +949,77 @@ const DailyReportBoard = () => {
     },
     {
       accessorKey: 'totalDuration',
-      header: ({ column }) => (
-        <div
-          className="flex gap-1 items-center justify-center"
-          onClick={() => {
-            const isAsc = column.getIsSorted() === 'asc';
-
-            const newSortState = isAsc
-              ? [{ id: column.id, desc: true }]
-              : [{ id: column.id, desc: false }];
-            setSortState(newSortState);
-            column.toggleSorting();
-          }}>
-          <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
-          <div className="ml-[60px] relative flex flex-col">
-            <Image
-              src="/icons/sort-down.svg"
-              alt="Sort down"
-              width={9}
-              height={10}
-              className="cursor-pointer justify-self-end "
-            />
-          </div>
-        </div>
-      ),
-      cell: ({ row, getValue }) => {
-        const rowData = row.original as ChildTask;
-        const isParent = row.depth === 0;
+      header: ({ column }) => {
+        const isAsc = column.getIsSorted() === 'asc';
 
         return (
           <div
-            className={`font-bold text-xs  ${isParent ? 'mb-[18px] mt-[14px]' : 'my-[10px]'}`}>
-            {row.subRows?.length > 1 ? (
-              ''
+            className="flex gap-1 items-center justify-center"
+            onClick={() => {
+              const newSortState = isAsc
+                ? [{ id: column.id, desc: true }]
+                : [{ id: column.id, desc: false }];
+              setSortState(newSortState);
+              column.toggleSorting();
+            }}>
+            <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
+            <div className="ml-[60px] relative flex flex-col">
+              <Image
+                src="/icons/sort-down.svg"
+                alt="Sort down"
+                width={9}
+                height={10}
+                className={`cursor-pointer justify-self-end  ${isAsc && 'rotate-180'}`}
+              />
+            </div>
+          </div>
+        );
+      },
+      cell: ({ row, getValue }) => {
+        const rowData = row.original as ChildTask;
+        const isParent = row.depth === 0;
+        const isHasChild =
+          row.original.children && row.original.children?.length > 1;
+        const resultParentDuration =
+          row.original.children &&
+          row.original.children.reduce(
+            (acc, item) => {
+              const pausedAt = item.pausedAt ? item.pausedAt : '計測中';
+
+              if (item.startedAt < acc.startedAt) {
+                acc.startedAt = item.startedAt;
+              }
+
+              if (pausedAt > acc.pausedAt) {
+                acc.pausedAt = pausedAt;
+              }
+
+              return acc;
+            },
+            { startedAt: '99 : 99', pausedAt: '0000' },
+          );
+        const isRowParent = isParent && isHasChild;
+        const isAnyRunning =
+          row.original.children &&
+          row.original.children.some((item) => item.isRunning);
+
+        return (
+          <div
+            className={`font-bold text-xs mt-2 relative ${isHasChild ? 'top-[-12px]' : 'top-[-3px]'} `}>
+            {isRowParent && isAnyRunning ? (
+              <p>計測中</p>
             ) : (
-              <div className="flex text-[10px] w-full justify-center items-center">
+              <div className="flex text-[10px] w-full justify-center items-center ">
                 <div className="bg-transparent p-1">
                   <div className="w-12">
                     <Input
-                      defaultValue={`${rowData.startedAt}`}
+                      defaultValue={
+                        isRowParent
+                          ? resultParentDuration?.startedAt
+                          : `${rowData.startedAt}`
+                      }
                       type="text"
-                      disabled={!isPermissionAction}
+                      disabled={!isPermissionAction || isRowParent}
                       onBlur={(e) => {
                         if (e.target.value === rowData.startedAt) return;
                         const data = isTimeEarlier(
@@ -914,6 +1036,7 @@ const DailyReportBoard = () => {
                             e,
                             row.original.idEdit as string,
                             parseInt(row.original.id),
+                            `${row.original.type}`,
                             `${rowData.startedAt}`,
                           );
                         } else {
@@ -933,8 +1056,12 @@ const DailyReportBoard = () => {
                 <div className="bg-transparent p-1">
                   <div className="w-12">
                     <Input
-                      disabled={!isPermissionAction}
-                      defaultValue={`${row.original.isRunning ? '計測中' : rowData.pausedAt}`}
+                      disabled={!isPermissionAction || isRowParent}
+                      defaultValue={
+                        isRowParent
+                          ? resultParentDuration?.pausedAt
+                          : `${row.original.isRunning ? '計測中' : rowData.pausedAt}`
+                      }
                       type="text"
                       onBlur={(e) => {
                         if (e.target.value === rowData.pausedAt) return;
@@ -950,6 +1077,7 @@ const DailyReportBoard = () => {
                             e,
                             row.original.idEdit as string,
                             parseInt(row.original.id),
+                            `${row.original.type}`,
                             `${rowData.pausedAt}`,
                           );
                         } else {
@@ -977,30 +1105,35 @@ const DailyReportBoard = () => {
     },
     {
       accessorKey: 'status',
-      header: ({ column }) => (
-        <div
-          className="flex gap-1 items-center justify-center cursor-pointer"
-          onClick={() => {
-            const isAsc = column.getIsSorted() === 'asc';
-            const newSortState = isAsc
-              ? [{ id: column.id, desc: true }]
-              : [{ id: column.id, desc: false }];
-            const defaultState = [{ id: column.id, desc: true }];
-            setSortState(sortState.length !== 0 ? newSortState : defaultState);
-            column.toggleSorting();
-          }}>
-          <p className="!text-xs font-medium !text-[#77858F]">ステータス</p>
-          <div className="ml-1 relative flex flex-col">
-            <Image
-              src="/icons/sort-down.svg"
-              alt="Sort down"
-              width={9}
-              height={10}
-              className="cursor-pointer justify-self-end "
-            />
+      header: ({ column }) => {
+        const isAsc = column.getIsSorted() === 'asc';
+
+        return (
+          <div
+            className="flex gap-1 items-center justify-center cursor-pointer"
+            onClick={() => {
+              const newSortState = isAsc
+                ? [{ id: column.id, desc: true }]
+                : [{ id: column.id, desc: false }];
+              const defaultState = [{ id: column.id, desc: true }];
+              setSortState(
+                sortState.length !== 0 ? newSortState : defaultState,
+              );
+              column.toggleSorting();
+            }}>
+            <p className="!text-xs font-medium !text-[#77858F]">ステータス</p>
+            <div className="ml-1 relative flex flex-col">
+              <Image
+                src="/icons/sort-down.svg"
+                alt="Sort down"
+                width={9}
+                height={10}
+                className={`cursor-pointer justify-self-end  ${isAsc && 'rotate-180'}`}
+              />
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
       cell: (info) => {
         const isParent = info.row.depth === 0;
         return isParent ? (
@@ -1624,10 +1757,10 @@ const DailyReportBoard = () => {
       times.min !== null ? `${Math.min(times.min, 9)}:00:00` : defaultMinTime;
 
     const adjustedMaxTime =
-      times.max !== null && times.max > 18 ? times.max + 1 : times.max;
+      times.max !== null && times.max >= 19 ? times.max + 1 : times.max;
     const slotMaxTime =
       adjustedMaxTime !== null
-        ? `${Math.max(adjustedMaxTime, 18)}:00:00`
+        ? `${Math.max(adjustedMaxTime, 19)}:00:00`
         : defaultMaxTime;
 
     return { slotMinTime, slotMaxTime };
@@ -1724,6 +1857,7 @@ const DailyReportBoard = () => {
               events={modifyEvents(taskTimeStatisticList)}
               headerToolbar={false}
               initialView={'timeGridDay'}
+              eventClick={handleEventClick}
               slotLabelFormat={{
                 hour: 'numeric',
                 minute: '2-digit',
@@ -2185,6 +2319,13 @@ const DailyReportBoard = () => {
           </div>
         </div>
       </div>
+      {popoverInfo && (
+        <DetailActualItemDailyModal
+          popoverInfo={popoverInfo}
+          popoverRef={popoverRef}
+          onClose={() => setPopoverInfo(null)}
+        />
+      )}
     </div>
   );
 };

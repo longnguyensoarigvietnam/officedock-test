@@ -181,6 +181,11 @@ const Sidebar = ({ className }: Props) => {
                                 if (isHasTerm) return;
                                 if (
                                   item.href ===
+                                  pageRouters.STATISTIC_MANAGEMENT.href
+                                )
+                                  return;
+                                if (
+                                  item.href ===
                                   pageRouters.TASKS_MANAGEMENT.href
                                 ) {
                                   setTagSelected('');
