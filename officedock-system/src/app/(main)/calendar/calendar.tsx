@@ -824,18 +824,14 @@ const EventCalendar = () => {
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p>
-                    {eventContent.event.extendedProps.address}
-                  </p>
+                  <p>{eventContent.event.extendedProps.address}</p>
                 </>
               ) : (
                 <>
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
-                    <div className='text-black text-[12px] font-normal px-1'>
+                    <div className="text-black text-[12px] font-normal px-1">
                       <p>{eventContent.timeText}</p>
-                      <p>
-                        {eventContent.event.extendedProps.address}
-                      </p>
+                      <p>{eventContent.event.extendedProps.address}</p>
                     </div>
                   )}
                 </>
@@ -1108,7 +1104,7 @@ const EventCalendar = () => {
           eventEnd.getMinutes() !== 0 ||
           eventEnd.getSeconds() !== 0;
         const adjustedEnd =
-          isDifferentDate && isEndNotMidnight
+          isDifferentDate && isEndNotMidnight && event.allDay
             ? subtractOneDay(event.end)
             : event.end;
 
@@ -1230,11 +1226,7 @@ const EventCalendar = () => {
 
             if (event.end) {
               const end = new Date(event.end);
-              if (
-                start.toDateString() !== end.toDateString() &&
-                !isMidnight(end) &&
-                variables.isYearView
-              ) {
+              if (start.toDateString() !== end.toDateString() && event.allDay) {
                 end.setDate(end.getDate() + 1);
                 event.end = end.toISOString();
               }
@@ -1310,7 +1302,8 @@ const EventCalendar = () => {
               const end = new Date(event.end);
               if (
                 start.toDateString() !== end.toDateString() &&
-                !isMidnight(end)
+                !isMidnight(end) &&
+                event.allDay
               ) {
                 end.setDate(end.getDate() + 1);
                 event.end = end.toISOString();
@@ -2815,6 +2808,17 @@ const EventCalendar = () => {
     }
   };
 
+  const getAllDayEventCountText = (events: EventCalendarDetail[]) => {
+    if (!events || events.length === 0) return 'zero-all-day-events';
+
+    const allDayCount = events.filter((event) => event.allDay).length;
+
+    if (allDayCount === 1) return 'one-all-day-event';
+    if (allDayCount >= 2) return 'many-all-day-events';
+
+    return 'zero-all-day-events';
+  };
+
   return (
     <Fragment>
       <div className="flex mb-3 pl-8 overflow-y-hidden" ref={containerRef}>
@@ -2959,7 +2963,7 @@ const EventCalendar = () => {
           </div>
 
           <div
-            className={`w-full relative calendar-custom ${searchParams.get('view') || ''} ${showSidebar ? '' : 'pr-8'}`}
+            className={`w-full relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} ${showSidebar ? '' : 'pr-8'}`}
             style={{ overflowX: 'auto', width: '100%' }}>
             {calendarLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#ebf1f4] z-10"></div>
