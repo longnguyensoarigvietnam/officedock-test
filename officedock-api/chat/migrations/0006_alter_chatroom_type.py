@@ -17,22 +17,21 @@ def seed_data_notify_chat_room(apps, schema_editor):
         for room_type, room_name in ROOM_TYPES:
             code = generate_unique_code(chat_room, "code", 10)
             room = user.chat_rooms.filter(type=room_type.value).first()
-            if room:
-                obj, created = chat_room.objects.update_or_create(
-                    id=room.id,
-                    defaults={
-                        "type": room_type.value,
-                        "name": room_name.value,
-                        "company": user.company,
-                    },
-                    create_defaults={
-                        "code": code,
-                    },
+            obj, created = chat_room.objects.update_or_create(
+                id=room.id if room else None,  # Ensure id is correctly assigned
+                defaults={
+                    "type": room_type.value,
+                    "name": room_name.value,
+                    "company": user.company,
+                    "code": code
+                    if not room
+                    else room.code,  # Preserve code on update
+                },
+            )
+            if created:
+                obj.participants.add(
+                    user, through_defaults={"company": user.company}
                 )
-                if created:
-                    obj.participants.add(
-                        user, through_defaults={"company": user.company}
-                    )
 
 
 class Migration(migrations.Migration):

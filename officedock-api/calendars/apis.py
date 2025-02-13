@@ -361,6 +361,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         calendar_room_participant = user.chat_rooms_participants.filter(
             chat_room__type=ChatRoomTypes.CALENDAR.value
         ).first()
+        if not calendar_room_participant:
+            return
         chat_room = calendar_room_participant.chat_room
         calendar_room_participant.unread_messages = (
             calendar_room_participant.unread_messages + 1
