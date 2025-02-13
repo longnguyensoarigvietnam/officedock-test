@@ -73,7 +73,7 @@ export const CalendarSidebar = ({
 
   return (
     <div className="overflow-y-auto">
-      <div className="flex flex-col mb-7">
+      <div className="flex flex-col mb-5">
         <div className="flex items-center">
           <ImageRound
             className="w-10 h-10"
@@ -95,7 +95,7 @@ export const CalendarSidebar = ({
           </div>
         </div>
 
-        <p className="font-normal text-gray-500 mb-2 mt-8 text-sm">
+        <p className="font-normal text-gray-500 mb-2 mt-5 text-sm">
           表示する項目
         </p>
         <Checkbox
@@ -137,7 +137,7 @@ export const CalendarSidebar = ({
             全てのチェックをクリア
           </p>
         </div>
-        <div className="pt-3 mb-3 max-h-[250px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+        <div className="pt-3 max-h-[250px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
           {dashboardMembersWithAvatars &&
             dashboardMembersWithAvatars.filter((member) =>
               member.fullName.toLowerCase().includes(searchName.toLowerCase()),

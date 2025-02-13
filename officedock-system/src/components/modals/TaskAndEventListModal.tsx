@@ -8,13 +8,15 @@ import ImageRound from '@components/common/ImageRound';
 import Spinner from '@components/common/Spinner';
 
 import { EventCalendarType, PermissionsSystem } from '@constants/enums';
-import {
-  CalendarPopoverInfo,
-  EventParticipant,
-} from '@interfaces/calendar';
+import { CalendarPopoverInfo, EventParticipant } from '@interfaces/calendar';
 import { hasPermissionInArray } from '@utils';
-import { getDateInfo, getTimeRangeForClickDate } from '@utils/date';
+import {
+  formatHoursAndMinutesForDateTime,
+  formatShowDeadline,
+  getDateInfo,
+} from '@utils/date';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { isSameDay } from 'date-fns';
 
 interface TaskAndEventListModalProps {
   popoverRef: MutableRefObject<HTMLDivElement | null>;
@@ -28,7 +30,10 @@ interface TaskAndEventListModalProps {
     eventId: string,
     taskScheduleId: string | undefined,
   ) => void;
-  checkShowUserAvatar: (participants?: EventParticipant[]) => boolean
+  checkShowUserAvatar: (
+    type?: EventCalendarType,
+    participants?: EventParticipant[],
+  ) => boolean;
 }
 
 export const TaskAndEventListModal = ({
@@ -51,8 +56,9 @@ export const TaskAndEventListModal = ({
     if (participantList && participantList.length > 0) {
       if (type == EventCalendarType.TASK) {
         const avatarColor =
-        dashboardMembersWithAvatars.find((member) => member.id == session?.user.id)
-            ?.avatarColor || '';
+          dashboardMembersWithAvatars.find(
+            (member) => member.id == session?.user.id,
+          )?.avatarColor || '';
         return (
           <Tippy
             content={`${session?.user.profile.fullName}`}
@@ -71,7 +77,7 @@ export const TaskAndEventListModal = ({
       } else {
         if (participantList.length == 1) {
           const avatarColor =
-          dashboardMembersWithAvatars.find(
+            dashboardMembersWithAvatars.find(
               (member) => member.id == participantList[0].id,
             )?.avatarColor || '';
           return (
@@ -94,7 +100,7 @@ export const TaskAndEventListModal = ({
             <div className="mt-[-7px] mr-1 flex items-center">
               {participantList.map((participant, index) => {
                 const avatarColor =
-                dashboardMembersWithAvatars.find(
+                  dashboardMembersWithAvatars.find(
                     (member) => member.id === participant.id,
                   )?.avatarColor || '';
 
@@ -123,7 +129,7 @@ export const TaskAndEventListModal = ({
             <div className="mt-[-7px] mr-1 flex items-center">
               {participantList.slice(0, 1).map((participant, index) => {
                 const avatarColor =
-                dashboardMembersWithAvatars.find(
+                  dashboardMembersWithAvatars.find(
                     (member) => member.id === participant.id,
                   )?.avatarColor || '';
 
@@ -206,18 +212,10 @@ export const TaskAndEventListModal = ({
           </h3>
           <ul className="list-disc">
             {popoverInfo.events.map((event) => {
-              let timeRange = '';
-              if (event.start && event.end) {
-                timeRange = getTimeRangeForClickDate(
-                  new Date(event.start),
-                  new Date(event.end),
-                );
-              }
-
               return (
                 <li
                   key={event.id}
-                  className={`text-xs list-none mb-1 ${event.type == EventCalendarType.SCHEDULE ? 'bg-[#0068b7] text-white' : 'bg-[#ebf1f4] text-[#444546]'} !rounded-[8px] pl-1.5 pt-1`}
+                  className={`text-xs list-none mb-1 bg-[#EBF1F7] text-[#444546] !rounded-[8px] pl-1.5 pt-1`}
                   onClick={() => {
                     handlePopoverClose();
                     handleEventClickInPopup(
@@ -229,7 +227,7 @@ export const TaskAndEventListModal = ({
                     );
                   }}>
                   <div className="flex items-center gap-2">
-                    {checkShowUserAvatar(event.participants) &&
+                    {checkShowUserAvatar(event.type, event.participants) &&
                       showUserAvatars(
                         event.participants || [],
                         event.type as string,
@@ -238,7 +236,44 @@ export const TaskAndEventListModal = ({
                       <div className="font-semibold max-w-[200px] min-h-4 truncate">
                         {event.title || ''}
                       </div>
-                      <div className="text-[11px]">{timeRange || ''}</div>
+                      <div className="flex gap-1">
+                        <div className="flex gap-1">
+                          <p className="text-[11px]">
+                            {event?.start &&
+                              event?.end &&
+                              (isSameDay(
+                                new Date(event?.start),
+                                new Date(event?.end),
+                              )
+                                ? formatShowDeadline(event?.start)
+                                : `${formatShowDeadline(event?.start)} ~ ${formatShowDeadline(event?.end)}`)}{' '}
+                          </p>
+                          {event && event.allDay ? (
+                            <p className="text-[11px]">終日</p>
+                          ) : (
+                            event &&
+                            event.start &&
+                            event.end && (
+                              <div className="flex gap-1 items-center text-[11px]">
+                                <p>
+                                  {formatHoursAndMinutesForDateTime(
+                                    new Date(event.start),
+                                  )}
+                                </p>
+                                <p className="text-[11px]">~</p>
+                                <p>
+                                  {formatHoursAndMinutesForDateTime(
+                                    new Date(event.end),
+                                  )}
+                                </p>
+                              </div>
+                            )
+                          )}
+                        </div>
+                        <p className="text-[11px] truncate max-w-[150px]">
+                          {event.address}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </li>

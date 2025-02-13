@@ -436,8 +436,6 @@ export function formatShowDeadline(date: string | Date): string {
 
   if (inputDate.getTime() === today.getTime()) {
     return '今日';
-  } else if (inputDate.getTime() === tomorrow.getTime()) {
-    return '明日';
   } else {
     const month = String(inputDate.getMonth() + 1).padStart(2, '0');
     const day = String(inputDate.getDate()).padStart(2, '0');
