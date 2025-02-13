@@ -85,12 +85,14 @@ const TaskCard = ({
   let isStart = false;
   let isEvent = false;
   let isCalculation = false;
+  let largeColor = '';
 
   try {
     const extendedProps = event?.event?.extendedProps;
     isStart = extendedProps?.isStart ?? false;
     isEvent = extendedProps?.type === ItemStartType.SCHEDULE;
     isCalculation = extendedProps?.isCalculation ?? false;
+    largeColor = extendedProps.largeColor;
   } catch (error) {
     // Handle Error
   }
@@ -374,9 +376,6 @@ const TaskCard = ({
       : isOptionZoomSchedule === '01:00:00'
         ? 90
         : 46;
-  const extendedProps = event.event?.extendedProps;
-
-  const largeColor = event.event?.extendedProps.largeColor;
 
   return (
     <>
@@ -423,11 +422,15 @@ const TaskCard = ({
                 {!isCalculation ? (
                   !event.timeText && isEvent ? (
                     <>
-                      {extendedProps &&
-                        convertToTimeString(extendedProps.planStartDate)}
+                      {event.event?.extendedProps &&
+                        convertToTimeString(
+                          event.event?.extendedProps.planStartDate,
+                        )}
                       ~
-                      {extendedProps &&
-                        convertToTimeString(extendedProps.planEndDate)}{' '}
+                      {event.event?.extendedProps &&
+                        convertToTimeString(
+                          event.event?.extendedProps.planEndDate,
+                        )}{' '}
                     </>
                   ) : (
                     event.timeText &&

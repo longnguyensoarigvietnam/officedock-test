@@ -1184,7 +1184,7 @@ const ActionsTaskModal = ({
                   return (
                     <Dropdown
                       placeholder="中カテゴリ"
-                      className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F]"
+                      className="h-[34px] !py-1 text-xs "
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
@@ -1215,7 +1215,7 @@ const ActionsTaskModal = ({
                 name={'categories.SMALL'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F]"
+                    className="h-[34px] !py-1 text-xs "
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     classNameError="!text-xs"

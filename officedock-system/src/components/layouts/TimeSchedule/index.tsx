@@ -392,6 +392,7 @@ const TimeSchedule = memo(
                     name: '',
                     id: null,
                   },
+                  uuid: uuidv4(),
                   planStartDate: `${event.startDate}`,
                   planEndDate: `${event.endDate}`,
                   isStart: event.isStart,
@@ -403,11 +404,13 @@ const TimeSchedule = memo(
                   largeColor: largeColor,
                 };
               });
+
             setTaskTimeScheduleList((prevEvents) => {
               const updatedEvents = [...prevEvents];
               const myTasks = updatedEvents.filter(
                 (event) => event.type == EventCalendarType.TASK,
               );
+
               return [...myTasks, ...eventsTimeSchedule];
             });
           }
@@ -475,6 +478,7 @@ const TimeSchedule = memo(
               const mySchedule = updatedEvents.filter(
                 (event) => event.type == EventCalendarType.SCHEDULE,
               );
+
               return [...mySchedule, ...tasksTimeSchedule];
             });
           }
@@ -1050,7 +1054,7 @@ const TimeSchedule = memo(
 
       return (
         <>
-          {isMaxDurationEvent && resourcePlan && (
+          {isMaxDurationEvent && resourcePlan && !isLoadingSchedule && (
             <ImageRound
               src={`/icons/overlap-task.svg`}
               name="icon lock"
