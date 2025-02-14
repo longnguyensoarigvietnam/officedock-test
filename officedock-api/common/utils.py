@@ -4,7 +4,7 @@ import random
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import Sum
+from django.db.models import Sum, Func
 from django.utils.crypto import get_random_string
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from djangorestframework_camel_case.parser import CamelCaseJSONParser
@@ -13,6 +13,7 @@ from rest_framework.exceptions import ValidationError
 from base.messages import ERROR_MESSAGES
 from calendars.constants import ScheduleCategoryTypes
 from chat.constants import USER_ACTION_GROUP, WebSocketEventType
+from common.constants import STRIP_TAGS
 from roles.constants import SelectionResultOptions
 from tasks.constants import DatetimeUnitTypes
 from users.models import User, RoleDetail
@@ -367,3 +368,8 @@ def convert_time_difference(deadline, remind_time):
             "remind_countdown": delta.total_seconds() // 3600,
             "remind_type": DatetimeUnitTypes.HOURS.value,
         }
+
+
+class StripTags(Func):
+    function = "regexp_replace"
+    template = "%(function)s(%(expressions)s, {}, '', 'g')".format(STRIP_TAGS)
