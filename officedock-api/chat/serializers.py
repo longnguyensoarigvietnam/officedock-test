@@ -190,7 +190,6 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "schedule_changes",
             "schedule",
             "type",
-            "mentions",
         ]
         read_only_fields = ["id", "uuid"]
 
@@ -219,26 +218,12 @@ class SendMessageSerializer(serializers.ModelSerializer):
     Serializer for send message
     """
 
-    mentions = CreationDataUserWithMainOrganizationSerializer(
-        many=True, read_only=True
-    )
-    mention_ids = serializers.PrimaryKeyRelatedField(
-        source="mentions",
-        queryset=User.objects.all(),
-        write_only=True,
-        many=True,
-        required=False,
-        allow_null=False,
-    )
-
     class Meta:
         model = ChatMessage
         fields = [
             "uuid",
             "message",
             "type",
-            "mentions",
-            "mention_ids",
         ]
 
     def update(self, instance, validated_data):
