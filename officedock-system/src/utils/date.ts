@@ -439,6 +439,20 @@ export function formatShowDeadline(date: string | Date): string {
   return `${month}月${day}日`;
 }
 
+export function formatShowDeadlineAllDayEvent(date: string | Date): string {
+  const inputDate = new Date(date);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  inputDate.setHours(0, 0, 0, 0);
+
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  return `${day}日`;
+}
+
 export const compareWithCurrentTime = (inputDate: Date | string): boolean => {
   const currentTime = new Date();
 
