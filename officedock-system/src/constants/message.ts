@@ -64,7 +64,7 @@ export const ERROR_SAVE_MESSAGE = '保存に失敗しました。';
 export const ERROR_TIME_START_MESSAGE = '予定時間をオーバーしています';
 
 export const OTP_CODE_INVALID =
-  '認証コードが無効であるか、有効期限が切れています';
+  '認証コードが無効であるか、有効期限が切れています。';
 
 export const TOKEN_INVALID = 'トークンは無効です。';
 export const ERROR_CREATE_MESSAGE = '作成に失敗しました。';

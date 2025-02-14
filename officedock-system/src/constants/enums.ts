@@ -85,7 +85,7 @@ export enum AvatarChat {
   SELF = 'SELF',
   TASK = 'TASK',
   SKILL = 'SKILL',
-  CALENDAR = 'CALENDAR'
+  CALENDAR = 'CALENDAR',
 }
 
 // TODO: The state is not fixed, so defining the state using an enum is not appropriate,
@@ -117,7 +117,7 @@ export enum ChatRoomType {
   TASK = 'TASK',
   SKILL = 'SKILL',
   CALENDAR = 'CALENDAR',
-  UNREAD = 'UNREAD'
+  UNREAD = 'UNREAD',
 }
 export enum MessageType {
   MESSAGE = 'MESSAGE',
@@ -375,4 +375,8 @@ export enum TimeType {
   HOURS = '時間前',
   DAY = '日前',
   WEEK = '週間前',
+}
+export enum FilterTypeKanban {
+  DEADLINE = 'deadline',
+  IMPORTANT = 'is_important',
 }
