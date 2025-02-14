@@ -2,9 +2,9 @@ export type AvatarIconProps = {
   color: string;
   size: number;
   customClassName?: string;
+  isCalendarScreen?: boolean;
 };
-
-const AvatarIconWithDynamicColor = ({ color, size, customClassName }: AvatarIconProps) => {
+const AvatarIconWithDynamicColor = ({ color, size, customClassName, isCalendarScreen = false }: AvatarIconProps) => {
   return (
     <div className={`${customClassName}`}>
       <svg
@@ -15,7 +15,7 @@ const AvatarIconWithDynamicColor = ({ color, size, customClassName }: AvatarIcon
         xmlns="http://www.w3.org/2000/svg">
         <rect width={size} height={size} rx={size / 2} fill={color} />
         <mask
-          id={`mask0_528_5${size}`}
+          id={`mask0_528_5${size}${isCalendarScreen && Math.random()}`}
           style={{ 'mask-type': 'alpha' } as React.CSSProperties}
           maskUnits="userSpaceOnUse"
           x="0"
@@ -24,7 +24,7 @@ const AvatarIconWithDynamicColor = ({ color, size, customClassName }: AvatarIcon
           height={size}>
           <rect width={size} height={size} rx={size / 2} fill={color} />
         </mask>
-        <g mask={`url(#mask0_528_5${size})`}>
+        <g mask={`url(#mask0_528_5${size}${isCalendarScreen && Math.random()})`}>
           <rect
             x={size * 0.19}
             y={size * 0.57}
@@ -46,5 +46,4 @@ const AvatarIconWithDynamicColor = ({ color, size, customClassName }: AvatarIcon
     </div>
   );
 };
-
 export default AvatarIconWithDynamicColor;

@@ -48,6 +48,7 @@ import {
   formatHoursAndMinutesForDateTime,
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
+  formatShowDeadlineAllDayEvent,
   getJapaneseDayName,
   isMidnight,
   isMoreThanThirtyMinutes,
@@ -561,6 +562,7 @@ const EventCalendar = () => {
     avatarSize: number,
     borderClassName: string,
     isWeekView?: boolean,
+    isWeekViewAllDaySection?: boolean
   ) => {
     if (participantList && participantList.length > 0) {
       if (type == EventCalendarType.TASK) {
@@ -580,6 +582,7 @@ const EventCalendar = () => {
               {AvatarIconWithDynamicColor({
                 color: avatarColor,
                 size: avatarSize,
+                isCalendarScreen: true
               })}
             </div>
           </Tippy>
@@ -602,6 +605,7 @@ const EventCalendar = () => {
                 {AvatarIconWithDynamicColor({
                   color: avatarColor,
                   size: avatarSize,
+                  isCalendarScreen: true
                 })}
               </div>
             </Tippy>
@@ -628,6 +632,7 @@ const EventCalendar = () => {
                       {AvatarIconWithDynamicColor({
                         color: avatarColor,
                         size: avatarSize,
+                        isCalendarScreen: true
                       })}
                     </div>
                   </Tippy>
@@ -659,6 +664,7 @@ const EventCalendar = () => {
                         {AvatarIconWithDynamicColor({
                           color: avatarColor,
                           size: avatarSize,
+                          isCalendarScreen: true
                         })}
                       </div>
                     </Tippy>
@@ -688,7 +694,8 @@ const EventCalendar = () => {
                       placement="top"
                       offset={[0, 5]}>
                       <div
-                        className={`text-[#77858F] text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
+                        className={`text-[#77858F] text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white border-white rounded-full !w-[19px] !h-[19px] bg-[#77858F] flex items-center justify-center'} `}
+                        >
                         +{participantList.length - 1}
                       </div>
                     </Tippy>
@@ -710,7 +717,7 @@ const EventCalendar = () => {
       if (currentView === CalendarViewOptions.VIEW_BY_WEEK) {
         if (eventContent.event.allDay) {
           return (
-            <div className="mb-1">
+            <div className="mb-1 hover:cursor-pointer">
               <div
                 className={` text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
@@ -724,6 +731,8 @@ const EventCalendar = () => {
                       eventContent.event.extendedProps.type,
                       25,
                       '!w-[19px] !h-[19px]',
+                      false,
+                      true
                     )}
                     <p className="truncate max-w-[100%] font-semibold mt-0.5 pt-0.5 h-[25px]">
                       {eventContent.event.title !== 'null'
@@ -754,6 +763,7 @@ const EventCalendar = () => {
                 33,
                 '!w-[32px] !h-[32px]',
                 true,
+                false
               )}
             <div className={` text-black text-[14px] font-medium px-1`}>
               <p className="font-semibold min-h-5">
@@ -792,16 +802,25 @@ const EventCalendar = () => {
         );
       } else if (currentView === CalendarViewOptions.VIEW_BY_DAY) {
         if (eventContent.event.allDay) {
+          const end = new Date(eventContent.event?.end);
+          const start = new Date(eventContent.event?.start);
+          if (start.toDateString() !== end.toDateString()) {
+            end.setDate(end.getDate() - 1);
+          }
           return (
-            <div className="mb-1">
+            <div className="mb-1 hover:cursor-pointer">
               <div
-                className={`text-black bg-white overflow-hidden px-1 !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
+                className={`text-black bg-white flex gap-2 items-center overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
                 <p className="truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px]">
                   {eventContent.event.title !== 'null'
                     ? eventContent.event.title
                     : ''}
                 </p>
+                <div className="flex gap-2">
+                  <p>終日</p>
+                  <p>{`${formatShowDeadlineAllDayEvent(start)} ~ ${formatShowDeadlineAllDayEvent(end)}`}</p>
+                </div>
               </div>{' '}
             </div>
           );
@@ -846,7 +865,7 @@ const EventCalendar = () => {
             new Date(eventContent.event.end).getDate()
         ) {
           return (
-            <div className="fc-daygrid-event mb-1">
+            <div className={`fc-daygrid-event mb-1 ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
               <div
                 className={`text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
@@ -860,6 +879,8 @@ const EventCalendar = () => {
                       eventContent.event.extendedProps.type,
                       25,
                       '!w-[19px] !h-[19px]',
+                      false,
+                      false
                     )}
                     <p className="truncate max-w-[100%] font-semibold mt-0.5 pt-0.5 h-[25px]">
                       {eventContent.event.title !== 'null'
