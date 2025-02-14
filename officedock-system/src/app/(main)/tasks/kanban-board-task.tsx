@@ -31,6 +31,7 @@ import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import Button from '@components/common/Button';
 import InputSearch from '@components/common/InputSearch';
 import BoardKanban from '@components/kanban/Board';
+import ActionFilterTask from '@components/modals/ActionFilterTask';
 import FixedTaskData from './fixed-task';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
@@ -46,6 +47,7 @@ import { apiRouters } from '@constants/routers';
 import {
   ActionTask,
   EventWorkCategory,
+  FilterTypeKanban,
   ItemScheduleType,
   ItemStartType,
   KanbanType,
@@ -105,7 +107,6 @@ import {
   PopoverPanel,
   Transition,
 } from '@headlessui/react';
-import ActionFilterTask from '@components/modals/ActionFilterTask';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -250,6 +251,8 @@ const KanbanBoardTask = () => {
   const [orderTaskSave, setOrderTaskSave] = useState<Task[]>([]);
   const [showTemplateModal, setShowTemplateModal] = useState<boolean>(false);
 
+  const [isReadyToFetch, setIsReadyToFetch] = useState(false);
+
   const { dashboardMemberList } = useDashboardMemberList();
   const { frequentlyTasks: frequentlyTasksList } = useFrequentlyTasks();
   const { templates: templateList } = useTemplateList();
@@ -280,6 +283,7 @@ const KanbanBoardTask = () => {
     },
     orderingRequest,
     statusTask,
+    isReadyToFetch,
   );
   useEffect(() => {
     if (numberPages) {
@@ -2566,16 +2570,16 @@ const KanbanBoardTask = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
-  const [isFilterDeadline, setIsFilterDeadline] = useState(false);
 
   useEffect(() => {
     if (authenticatedUser) {
       if (authenticatedUser.setting?.isSortingTaskByImportant) {
-        setIsFilterDeadline(false);
+        setOrderingRequest(FilterTypeKanban.IMPORTANT);
       }
       if (authenticatedUser.setting?.isSortingTaskByDeadline) {
-        setIsFilterDeadline(true);
+        setOrderingRequest(FilterTypeKanban.DEADLINE);
       }
+      setIsReadyToFetch(true);
     }
   }, [authenticatedUser]);
 
@@ -2657,46 +2661,44 @@ const KanbanBoardTask = () => {
                       name="Sort icon"
                       className="w-[18px] h-[14px]"
                     />
-                    {authenticatedUser && (
-                      <>
-                        <Button
-                          disabled={isLoadingDataTask}
-                          onClick={() => {
-                            if (!isFilterDeadline) {
-                              setIsFilterDeadline(true);
-                              setOrderingRequest('deadline');
-                            }
-                          }}
-                          variant={
-                            isLoadingDataTask
-                              ? 'outline'
-                              : isFilterDeadline
-                                ? 'primary'
-                                : 'outline'
+                    <>
+                      <Button
+                        disabled={isLoadingDataTask}
+                        onClick={() => {
+                          if (orderingRequest !== FilterTypeKanban.DEADLINE) {
+                            setOrderingRequest(FilterTypeKanban.DEADLINE);
+                          } else {
+                            setOrderingRequest('');
                           }
-                          className={`${isFilterDeadline && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
-                          締切期間
-                        </Button>
-                        <Button
-                          disabled={isLoadingDataTask}
-                          onClick={() => {
-                            if (isFilterDeadline) {
-                              setIsFilterDeadline(false);
-                              setOrderingRequest('is_important');
-                            }
-                          }}
-                          variant={
-                            isLoadingDataTask
-                              ? 'outline'
-                              : !isFilterDeadline && !isLoadingDataTask
-                                ? 'primary'
-                                : 'outline'
+                        }}
+                        variant={
+                          isLoadingDataTask
+                            ? 'outline'
+                            : orderingRequest === FilterTypeKanban.DEADLINE
+                              ? 'primary'
+                              : 'outline'
+                        }
+                        className={`${orderingRequest === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                        締切期間
+                      </Button>
+                      <Button
+                        disabled={isLoadingDataTask}
+                        onClick={() => {
+                          if (orderingRequest !== FilterTypeKanban.IMPORTANT) {
+                            setOrderingRequest(FilterTypeKanban.IMPORTANT);
                           }
-                          className={`${!isFilterDeadline && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
-                          重要
-                        </Button>
-                      </>
-                    )}
+                        }}
+                        variant={
+                          isLoadingDataTask
+                            ? 'outline'
+                            : orderingRequest === FilterTypeKanban.IMPORTANT
+                              ? 'primary'
+                              : 'outline'
+                        }
+                        className={`${orderingRequest === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                        重要
+                      </Button>
+                    </>
 
                     {/* Filter option modal */}
                     <Popover className="relative">

@@ -1027,7 +1027,11 @@ const TimeSchedule = memo(
           e._def &&
           e._def.resourceIds?.length &&
           e._def.resourceIds[0] === ItemScheduleType.PLANS;
-        if (!eResourceId) return false;
+        const isSameType =
+          e.extendedProps.type === EventCalendarType.SCHEDULE &&
+          extendedProps.type === EventCalendarType.SCHEDULE;
+
+        if (!eResourceId || isSameType) return false;
         return (
           e.start.getTime() < event.end!.getTime() &&
           e.end.getTime() > event.start!.getTime()
