@@ -34,7 +34,6 @@ import {
 } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
-import { encodeFormatDateISO } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import { TaskContext } from '@providers/TaskProvider';
 import { OptionDropdownType } from '@interfaces/common';
@@ -112,7 +111,6 @@ const Column = ({
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
   const [taskLast, setTaskLast] = useState<number | null>(null);
-  const [deadlineLast, setDeadlineLast] = useState<string | null>(null);
   const [pinAtLast, setPinAtLast] = useState<string | null>(null);
 
   const [page, setPage] = useState<number>(1);
@@ -157,11 +155,7 @@ const Column = ({
       apiUrl += `&pin_at=${pinAtLast}`;
     }
     if (orderingRequest) {
-      if (orderingRequest === 'deadline') {
-        apiUrl += `&ordering=${orderingRequest}${idTasks ? `&ids=${idTasks}` : ''}&task_id=${taskLast}${deadlineLast ? `&deadline=${encodeFormatDateISO(new Date(deadlineLast))}` : ''}`;
-      } else {
-        apiUrl += `&ordering=${orderingRequest}${idTasks ? `&ids=${idTasks}` : ''}&task_id=${taskLast}`;
-      }
+      apiUrl += `&ordering=${orderingRequest}${idTasks ? `&ids=${idTasks}` : ''}&task_id=${taskLast}`;
     } else if (lastIndex) {
       apiUrl += `&index=${lastIndex}`;
     }
@@ -255,10 +249,8 @@ const Column = ({
       }
       if (orderingRequest) {
         if (items.length) {
-          setDeadlineLast(items[items.length - 1].deadline);
           setTaskLast(parseInt(`${items[items.length - 1].id}`));
         } else {
-          setDeadlineLast(null);
           setTaskLast(null);
         }
       }

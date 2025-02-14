@@ -237,18 +237,27 @@ export const TaskAndEventListModal = ({
                         {event.title || ''}
                       </div>
                       <div className="flex gap-1">
-                        <div className="flex gap-1">
+                        <div className="flex">
                           {event && event.allDay && (
-                            <p className="text-[11px]">終日</p>
+                            <p className="text-[11px] mr-1">終日</p>
                           )}
-                          <p className="text-[11px]">
+                          <p
+                            className={`text-[11px] ${
+                              event?.start &&
+                              event?.end &&
+                              !isSameDay(
+                                new Date(event?.start),
+                                new Date(event?.end),
+                              ) &&
+                              'mr-1'
+                            }`}>
                             {event?.start &&
                               event?.end &&
                               (isSameDay(
                                 new Date(event?.start),
                                 new Date(event?.end),
                               )
-                                ? formatShowDeadline(event?.start)
+                                ? ''
                                 : `${formatShowDeadline(event?.start)} ~ ${formatShowDeadline(event?.end)}`)}{' '}
                           </p>
                           {event &&

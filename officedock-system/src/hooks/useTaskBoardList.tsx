@@ -24,6 +24,7 @@ const useTaskBoardList = (
   filter?: FilterProps,
   ordering?: string,
   statusList?: StatusTask[],
+  isReadyToFetch?: boolean,
 ) => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -80,7 +81,7 @@ const useTaskBoardList = (
     queryKey: ['getTaskBoardList', [filter, ordering, statusList]],
     queryFn: getTaskBoardList,
     retry: 0,
-    enabled: !!token,
+    enabled: isReadyToFetch && !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onError: ({ response }: ResponseError<any>) => {
