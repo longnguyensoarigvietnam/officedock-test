@@ -18,9 +18,8 @@ interface ChatMentionMembersModalProps {
   };
   dashboardMembers: ChatDashboardMember[]
   setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
+  handleCheckboxClick: (member: ChatParticipant, type: string) => void
   setSearchMentionMembers: Dispatch<SetStateAction<string>>;
-  setMessage: (value: SetStateAction<string>) => void;
-  insertTextAtCursor: (text: string) => void;
   onClose: () => void;
 }
 
@@ -31,9 +30,8 @@ export const ChatMentionMembersModal = ({
   mentionMemberModalPosition,
   dashboardMembers,
   setMentionMembers,
+  handleCheckboxClick,
   setSearchMentionMembers,
-  setMessage,
-  insertTextAtCursor,
   onClose,
 }: ChatMentionMembersModalProps) => {
   const popoverRef = useRef<HTMLDivElement | null>(null);
@@ -117,16 +115,9 @@ export const ChatMentionMembersModal = ({
                           updatedMentionMembers = updatedMentionMembers.filter(
                             (member) => member.id !== participant.id,
                           );
-                          setMessage((prevMessage) => {
-                            const mentionText = `@${participant.fullName}`;
-                            return prevMessage.includes(mentionText)
-                              ? prevMessage.replace(mentionText, '').trim()
-                              : prevMessage;
-                          });
+                          handleCheckboxClick(participant, 'remove')
                         } else {
-                          if (insertTextAtCursor) {
-                            insertTextAtCursor(`@${participant.fullName}`);
-                          }
+                          handleCheckboxClick(participant, 'insert')
                           updatedMentionMembers = [
                             ...updatedMentionMembers,
                             participant,
@@ -169,7 +160,7 @@ export const ChatMentionMembersModal = ({
                         name="Avatar user"
                       />
                     )}
-                    <p className="font-medium text-[14px] truncate max-w-[200px] text-black">
+                    <p className="font-medium text-[14px] text-black !break-words max-w-[160px]">
                       {participant.fullName}
                     </p>
                   </div>
