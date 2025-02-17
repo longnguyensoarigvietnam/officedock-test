@@ -115,6 +115,9 @@ class ChatMessage(BaseModel):
         null=True,
         blank=True,
     )
+    mentions = models.ManyToManyField(
+        "users.User", related_name="mentioned_messages", blank=True, null=True
+    )
 
     def save(self, *args, **kwargs):
         # Set default company when creating

@@ -524,6 +524,8 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "id",
             "title",
             "is_start",
+            "is_important",
+            "deadline",
             "is_my_task",
             "task_schedules",
             "type",
