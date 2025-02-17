@@ -647,28 +647,6 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
 
         return self.response_ok(data)
 
-    def _get_duration(self, obj):
-        """
-        Calculate task duration.
-        """
-        start_of_today = datetime.combine(timezone.now().date(), time.min)
-        end_of_today = datetime.combine(timezone.now().date(), time.max)
-        task_durations = obj.task_durations.filter(
-            Q(started_at__gte=start_of_today)
-            & Q(Q(paused_at__lte=end_of_today) | Q(paused_at__isnull=True))
-        ).all()
-        total_duration = timedelta()
-        # Calculate time between started and paused
-        for task_duration in task_durations:
-            paused_at = (
-                task_duration.paused_at
-                if task_duration.paused_at
-                else timezone.now()
-            )
-            total_duration += paused_at - task_duration.started_at
-
-        return format_duration(total_duration)
-
     def _separate_duration_while_keep_running(self, duration, end_date):
         """
         Handle update and create duration by intervals

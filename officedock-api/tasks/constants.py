@@ -50,6 +50,16 @@ class TaskCategoryTypes(EnumChoices):
     SMALL = "SMALL"
 
 
+class DatetimeUnitTypes(EnumChoices):
+    """
+    DatetimeUnitTypes constants.
+    """
+
+    HOURS = "HOURS"
+    DAY = "DAY"
+    WEEK = "WEEK"
+
+
 # Define category default
 TASK_WORK_TYPES = {
     TaskCategoryTypes.LARGE.value: ["大カテゴリ1", "大カテゴリ2", "大カテゴリ3"],

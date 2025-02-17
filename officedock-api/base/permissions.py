@@ -1,5 +1,6 @@
 from rest_framework import permissions
 
+from core import settings
 from roles.constants import Actions, Screens
 from users.constants import RoleTypes
 from users.models import User
@@ -209,3 +210,17 @@ class IsGeneralReadOnly(BasePermission):
         return self.is_role(
             request, RoleTypes.GENERAL.value
         ) and view.action in ["list", "retrieve"]
+
+
+class IsCronJob(BasePermission):
+    """
+    The permission for only use cron job
+    """
+
+    def has_permission(self, request, view):
+        CRONJOB_KEY_DOTENV = settings.CRONJOB_KEY
+        cronjob_key_request = request.query_params.get("cronjob_key")
+        if not CRONJOB_KEY_DOTENV or CRONJOB_KEY_DOTENV != cronjob_key_request:
+            return False
+
+        return True
