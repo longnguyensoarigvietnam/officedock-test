@@ -36,9 +36,9 @@ import { TaskContext } from '@providers/TaskProvider';
 
 import {
   addHoursToDate,
-  compareWithCurrentTime,
+  compareWithCurrentDate,
   convertToCurrentTimezone,
-  formatShowDeadline,
+  formatShowDeadlineTask,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
@@ -175,7 +175,7 @@ const ListViewItem = ({
 
   useEffect(() => {
     if (content && content.deadline) {
-      setCheckDeadline(compareWithCurrentTime(content.deadline));
+      setCheckDeadline(compareWithCurrentDate(content.deadline));
     }
   }, [content]);
 
@@ -434,8 +434,9 @@ const ListViewItem = ({
                 {content.status?.id !== StatusValueTask.MY_ROUTINE ? (
                   <>
                     <p
-                      className={`hover:cursor-pointer ${!checkDeadline && 'text-red-600'} border-x-2 w-2/5 text-center`}>
-                      {content.deadline && formatShowDeadline(content.deadline)}
+                      className={`hover:cursor-pointer ${checkDeadline && 'text-[#0068B6]'} border-x-2 w-2/5 text-center`}>
+                      {content.deadline &&
+                        formatShowDeadlineTask(content.deadline)}
                     </p>
                     {content.isImportant ? (
                       <div className="w-1/5 border-r-2 flex items-center justify-center">
@@ -507,7 +508,9 @@ const ListViewItem = ({
                   </>
                 ) : (
                   <>
-                    <p className="w-[calc(50%_+_7px)] text-center border-x-2">毎週水曜日13:00~14:00</p>
+                    <p className="w-[calc(50%_+_7px)] text-center border-x-2">
+                      毎週水曜日13:00~14:00
+                    </p>
                   </>
                 )}
               </div>

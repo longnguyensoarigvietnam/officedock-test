@@ -37,9 +37,9 @@ import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
 import {
   addHoursToDate,
-  compareWithCurrentTime,
+  compareWithCurrentDate,
   convertToCurrentTimezone,
-  formatShowDeadline,
+  formatShowDeadlineTask,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 
@@ -177,7 +177,7 @@ const Item = ({
 
   useEffect(() => {
     if (content && content.deadline) {
-      setCheckDeadline(compareWithCurrentTime(content.deadline));
+      setCheckDeadline(compareWithCurrentDate(content.deadline));
     }
   }, [content]);
 
@@ -537,9 +537,9 @@ const Item = ({
                         className="flex gap-2 items-center">
                         締切
                         <span
-                          className={`hover:cursor-pointer ${!checkDeadline && 'text-red-600'}`}>
+                          className={`hover:cursor-pointer ${checkDeadline && 'text-[#0068B6]'}`}>
                           {content.deadline &&
-                            formatShowDeadline(content.deadline)}
+                            formatShowDeadlineTask(content.deadline)}
                         </span>
                       </p>
                     </div>

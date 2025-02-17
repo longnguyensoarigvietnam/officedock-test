@@ -327,6 +327,7 @@ export const apiRouters = {
   TASK_DETAIL: (id: string) => `/tasks/${id}/`,
   TASK_SCHEDULE_DETAIL: (id: string) => `/tasks/schedules/${id}/`,
   TASK_PLAN_SCHEDULE_DETAIL: (uuid: string) => `/tasks/schedules/${uuid}/`,
+  TASK_SCHEDULE_COPY: (uuid: string) => `tasks/schedules/${uuid}/copy`,
 
   TASK_COPY: (id: string) => `/tasks/${id}/copy/`,
   TASK_PIN: (id: string) => `/tasks/${id}/pin/`,

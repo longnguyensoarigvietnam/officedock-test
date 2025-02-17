@@ -6,7 +6,7 @@ import DailyReportBoard from './daily-report-board';
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
 
-const StatisticPage = () => {
+const DailyReportPage = () => {
   return (
     <MainLayout
       title={pageRouters.DAILY_REPORT_MANAGEMENT.name}
@@ -18,4 +18,4 @@ const StatisticPage = () => {
   );
 };
 
-export default StatisticPage;
+export default DailyReportPage;
