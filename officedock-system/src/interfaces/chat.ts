@@ -51,6 +51,7 @@ export interface ChatMessageResponse {
   createdAt: Date | string;
   deletedAt: Date | null;
   type: MessageType;
+  mentions?: number[]
 }
 
 export interface ChatDashboardMember {
@@ -69,7 +70,7 @@ export interface OrganizationDetail {
 }
 
 export interface ChatParticipant {
-  id: number;
+  id: number | null;
   fullName: string;
   organizations?: {
     id: number,

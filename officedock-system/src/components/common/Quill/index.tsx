@@ -1,62 +1,44 @@
-import dynamic from 'next/dynamic';
-import { Dispatch, SetStateAction, useEffect, useMemo } from 'react';
-import 'react-quill/dist/quill.snow.css';
-import './styles/quill.css';
+import dynamic from "next/dynamic";
+import { Dispatch, SetStateAction } from "react";
+import "react-quill/dist/quill.snow.css";
+import "./styles/quill.css";
 
 export type QuillProps = {
+  quillRef?: any
   text?: string;
-  msgEditing?: string;
   className?: string;
   placeholder?: string;
   setText?: Dispatch<SetStateAction<string>>;
-  setMsgEditing?: Dispatch<SetStateAction<string | undefined>>;
-  messageSubmitted?: boolean;
-  setMessageSubmitted?: Dispatch<SetStateAction<boolean>>;
 };
 
-const Quill = ({
-  text,
-  setText,
-  className,
-  placeholder = '',
-  setMsgEditing,
-  msgEditing,
-  messageSubmitted,
-  setMessageSubmitted,
-}: QuillProps) => {
-  const ReactQuill = useMemo(
-    () => dynamic(() => import('react-quill'), { ssr: false }),
-    [],
-  );
+const ReactQuill = dynamic(
+  async () => {
+    const { default: RQ } = await import("react-quill");
 
+    return ({ forwardedRef, ...props }: any) => <RQ ref={forwardedRef} {...props} />;
+  },
+  { ssr: false }
+);
+
+const Quill = ({ quillRef, text, setText, className, placeholder = "" }: QuillProps) => {
   const modules = {
-    toolbar: []
+    toolbar: [],
   };
 
   const handleChange = (content: string) => {
-    if (setText && setMessageSubmitted) {
-      setMessageSubmitted(false);
+    if (setText) {
       setText(content);
     }
-    if (setMsgEditing) {
-      setMsgEditing(content);
-    }
   };
-
-  useEffect(() => {
-    if (setText && messageSubmitted) {
-      setText('');
-    }
-  }, [messageSubmitted, setText]);
-
 
   return (
     <>
       <ReactQuill
         theme="snow"
+        forwardedRef={quillRef}
         modules={modules}
         onChange={(content: string) => handleChange(content)}
-        value={msgEditing || text}
+        value={text}
         className={className}
         placeholder={placeholder}
       />
