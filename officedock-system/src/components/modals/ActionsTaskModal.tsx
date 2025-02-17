@@ -191,11 +191,11 @@ const ActionsTaskModal = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const _optionsCountType = Object.keys(TimeType).map((key) => ({
+  const optionsCountType = Object.keys(TimeType).map((key) => ({
     label: TimeType[key as keyof typeof TimeType],
     value: key,
   }));
-  const _optionsCountDown = generateOptionsCount(10);
+  const optionsCountDown = generateOptionsCount(10);
 
   const {
     register,
@@ -1488,7 +1488,7 @@ const ActionsTaskModal = ({
                   <div className="ml-2">
                     <ImageRound
                       onClick={() => setIsShowFieldRemind(!isShowFieldRemind)}
-                      src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell.svg'}`}
+                      src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell-white.svg'}`}
                       name="Bell icon"
                       className="h-4 w-4"
                     />
@@ -1499,8 +1499,7 @@ const ActionsTaskModal = ({
                   className="mt-[6px] text-xs"
                 />
               </div>
-              {/* TODO: Implement remind task */}
-              {/* {isShowFieldRemind ? (
+              {isShowFieldRemind ? (
                 <div className="max-w-[250px]">
                   <div className="flex items-center gap-1">
                     <div className="w-[56px]">
@@ -1572,7 +1571,7 @@ const ActionsTaskModal = ({
                 </div>
               ) : (
                 <div className="w-fit"></div>
-              )} */}
+              )}
 
               <div>
                 {!isCheckActionPermission && (

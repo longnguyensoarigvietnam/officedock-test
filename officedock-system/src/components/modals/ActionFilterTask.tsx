@@ -80,7 +80,7 @@ const ActionFilterTask = ({
             </div>
           </div>
         </div>
-        <div className="mt-[10px] flex flex-col gap-[14px] ">
+        <div className="mt-[10px] flex  flex-col gap-[14px] ">
           {/* Organization */}
           <div>
             <MultiSelectDropdown
@@ -88,6 +88,7 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
+              labelOptionClass="break-words max-w-[324px]"
               options={dataOptionsOrganizations}
               selectedOptions={[]}
               customLabel={
@@ -120,6 +121,7 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
+              labelOptionClass="break-words max-w-[324px]"
               options={dataOptionsCategoryIds}
               selectedOptions={[]}
               customLabel={
@@ -152,6 +154,7 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
+              labelOptionClass="break-words max-w-[324px]"
               options={dataOptionsTagIds}
               selectedOptions={[]}
               customLabel={

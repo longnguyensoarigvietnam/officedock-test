@@ -249,6 +249,8 @@ export interface TaskTimeSchedule {
   planEndDate: string | null;
   isCalculation?: boolean;
   largeColor?: string;
+  isImportant?: boolean;
+  deadline?: string;
 }
 export interface TaskErrorPerson {
   id: string;
@@ -281,4 +283,19 @@ export interface TaskActualCalculationType {
   title: string;
   uuid: string;
   type: string;
+}
+export interface DataDetailTaskType {
+  id: string;
+  largeColor: string;
+  title: string;
+  start: string;
+  end: string;
+  resource: string;
+  left?: number;
+  top?: number;
+  type: string;
+  taskId: string | number;
+  isImportant?: boolean | null;
+  deadline?: string;
+  uuid: string;
 }

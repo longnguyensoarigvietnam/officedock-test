@@ -22,6 +22,7 @@ type Props = {
   labelClass?: string;
   valueClassName?: string;
   optionClassName?: string;
+  labelOptionClass?: string;
   customLabel?: string;
   placeholder?: string;
   searchOption?: boolean;
@@ -39,6 +40,7 @@ const MultiSelectDropdown = ({
   customLabel,
   className,
   labelClass,
+  labelOptionClass,
   valueClassName,
   optionClassName,
   selectedOptions,
@@ -104,12 +106,13 @@ const MultiSelectDropdown = ({
         options.map((option) => (
           <div
             key={option.value}
-            className={`relative hover:cursor-pointer select-none hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}>
+            className={`relative hover:cursor-pointer  select-none hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}>
             <Checkbox
               label={option.label}
               onChange={() => {
                 handleOptionClick(option);
               }}
+              classLabel={labelOptionClass}
               isChecked={
                 selected?.find(
                   (selectedOption) => selectedOption.value == option.value,

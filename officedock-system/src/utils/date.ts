@@ -438,6 +438,28 @@ export function formatShowDeadline(date: string | Date): string {
   const day = String(inputDate.getDate()).padStart(2, '0');
   return `${month}月${day}日`;
 }
+export function formatShowDeadlineTask(date: string | Date): string {
+  const inputDate = new Date(date);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  inputDate.setHours(0, 0, 0, 0);
+
+  if (inputDate.getTime() === today.getTime()) {
+    return '今日';
+  }
+
+  if (inputDate.getTime() === tomorrow.getTime()) {
+    return '明日';
+  }
+
+  const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  return `${month}月${day}日`;
+}
 
 export function formatShowDeadlineAllDayEvent(date: string | Date): string {
   const inputDate = new Date(date);
@@ -453,13 +475,21 @@ export function formatShowDeadlineAllDayEvent(date: string | Date): string {
   return `${day}日`;
 }
 
-export const compareWithCurrentTime = (inputDate: Date | string): boolean => {
-  const currentTime = new Date();
+export const compareWithCurrentDate = (inputDate: Date | string): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const compareDate =
-    typeof inputDate === 'string' ? new Date(inputDate) : inputDate;
+  let compareDate: Date;
+  if (typeof inputDate === 'string') {
+    compareDate = new Date(inputDate);
+    if (isNaN(compareDate.getTime())) return false;
+  } else {
+    compareDate = inputDate;
+  }
 
-  return compareDate.getTime() >= currentTime.getTime();
+  compareDate.setHours(0, 0, 0, 0);
+
+  return compareDate.getTime() >= today.getTime();
 };
 
 export function getRandomDateTimeBetween(

@@ -364,7 +364,7 @@ export const adjustPositionForViewport = (
   numberOfEvents: number,
 ) => {
   let { top, left } = position;
-  const popupWidth = 330;
+  const popupWidth = 250;
   let popupHeight = 300;
   switch (true) {
     case numberOfEvents >= 10:
@@ -380,6 +380,31 @@ export const adjustPositionForViewport = (
       popupHeight = 300;
       break;
   }
+  const padding = 10;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  if (left + popupWidth + padding > viewportWidth) {
+    left = viewportWidth - popupWidth - padding;
+  }
+  if (top + popupHeight + padding > viewportHeight) {
+    top = viewportHeight - popupHeight - padding;
+  }
+  if (left < padding) {
+    left = padding;
+  }
+  if (top < padding) {
+    top = padding;
+  }
+  return { top, left };
+};
+export const adjustPositionForViewportSchedule = (position: {
+  top: number;
+  left: number;
+}) => {
+  let { top, left } = position;
+  const popupWidth = 250;
+  const popupHeight = 170;
+
   const padding = 10;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
