@@ -81,7 +81,7 @@ const ConfirmRemoveChatMemberModal = memo(
                 .filter(
                   (participant) => participant.id != selectedRemoveMemberId,
                 )
-                .map((participant) => participant.id);
+                .map((participant) => Number(participant.id));
               onConfirm(filterParticipantList || []);
             }}>
             OK

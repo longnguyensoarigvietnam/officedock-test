@@ -174,3 +174,5 @@ export const DEFAULT_TASK_SCHEDULE_DURATION = '0時間 0分';
 export const NO_OPTION_CATEGORY = '未選択';
 
 export const MY_TEMPLATE = 'マイテンプレート';
+
+export const MENTION_ALL_MEMBERS = 'すべてのメンバー'
