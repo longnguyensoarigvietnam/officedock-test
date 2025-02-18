@@ -20,6 +20,7 @@ from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
 from .filters import OrganizationFilter, OrganizationSkillFilter
 from .serializers import (
+    OrganizationMemberSerializer,
     OrganizationSerializer,
     OrganizationDetailSerializer,
     ListOrganizationStatisticSerializer,
@@ -155,6 +156,19 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         return category
+
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="members",
+        serializer_class=OrganizationMemberSerializer,
+    )
+    def members(self, request):
+        """
+        Get list of member in organization
+        """
+        queryset = self.get_queryset()
+        return self.response_ok(self.get_serializer(queryset, many=True).data)
 
     @action(
         methods=["GET", "POST", "DELETE"],
