@@ -9,14 +9,11 @@ import InputSearch from '@components/common/InputSearch';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { CalendarDashboardMember } from '@interfaces/calendar';
-import { EventCalendarType } from '@constants/enums';
 import { NO_DATA_AVAILABLE } from '@constants';
 
 export type CalendarSidebarProps = {
   selectedScheduleUserIds: string;
   removeMyselfOption: boolean;
-  filterMyEvent: boolean;
-  filterMyTask: boolean;
   searchName: string;
   setShowSidebar: Dispatch<SetStateAction<boolean>>;
   setSearchName: Dispatch<SetStateAction<string>>;
@@ -33,7 +30,6 @@ export type CalendarSidebarProps = {
   handleGetAllMemberSchedules: () => void;
   handleRemoveAllMemberSchedules: () => void;
   handleFilterScheduleByUserIds: (userId: number) => void;
-  handleToggleFilterOptions: (state: boolean, type: string) => void;
   getEventCalendarByUsers: UseMutateAsyncFunction<
     any,
     unknown,
@@ -55,8 +51,6 @@ export const CalendarSidebar = ({
   removeMyselfOption,
   selectedScheduleUserIds,
   searchName,
-  filterMyEvent,
-  filterMyTask,
   setSearchName,
   setShowSidebar,
   setRemoveMyselfOption,
@@ -65,7 +59,6 @@ export const CalendarSidebar = ({
   handleGetAllMemberSchedules,
   handleRemoveAllMemberSchedules,
   handleFilterScheduleByUserIds,
-  handleToggleFilterOptions,
   getEventCalendarByUsers,
 }: CalendarSidebarProps) => {
   const { data: session } = useSession();
@@ -94,30 +87,7 @@ export const CalendarSidebar = ({
             />
           </div>
         </div>
-
-        <p className="font-normal text-gray-500 mb-2 mt-5 text-sm">
-          表示する項目
-        </p>
-        <Checkbox
-          label="マイスケジュール"
-          isChecked={filterMyEvent}
-          onChange={(state) =>
-            handleToggleFilterOptions(state, EventCalendarType.SCHEDULE)
-          }
-        />
-        <Checkbox
-          label="マイタスク"
-          className="mr-3"
-          isChecked={filterMyTask}
-          onChange={(state) =>
-            handleToggleFilterOptions(state, EventCalendarType.TASK)
-          }
-        />
-        <Checkbox label="会社の予定" />
       </div>
-      <p className="font-normal mb-2 text-sm text-gray-500">
-        メンバーの予定を見る
-      </p>
       <div className="py-3 mb-2 rounded-md shadow-md bg-white">
         <InputSearch
           placeholder="名前で検索"
@@ -137,7 +107,7 @@ export const CalendarSidebar = ({
             全てのチェックをクリア
           </p>
         </div>
-        <div className="pt-3 max-h-[250px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+        <div className="pt-3 max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
           {dashboardMembersWithAvatars &&
             dashboardMembersWithAvatars.filter((member) =>
               member.fullName.toLowerCase().includes(searchName.toLowerCase()),
@@ -223,8 +193,6 @@ export const CalendarSidebar = ({
             setRemoveMyselfOption(state);
             setCurrentResources((prevCurrentResources) => {
               if (
-                !filterMyEvent &&
-                !filterMyTask &&
                 prevCurrentResources.find(
                   (resource) => resource.id == String(session?.user.id),
                 )
@@ -242,22 +210,12 @@ export const CalendarSidebar = ({
               const userIdStr = String(session?.user.id);
               updatedUserIds = updatedUserIds.filter((id) => id !== userIdStr);
               setSelectedScheduleUserIds(updatedUserIds.join(','));
-              if (filterMyEvent) {
-                updatedUserIds.push(userIdStr);
-                getEventCalendarByUsers({
-                  userId:
-                    `${updatedUserIds.join(',')}`.length > 0
-                      ? `${updatedUserIds.join(',')}`
-                      : ``,
-                });
-              } else {
-                getEventCalendarByUsers({
-                  userId:
-                    `${updatedUserIds.join(',')}`.length > 0
-                      ? `${updatedUserIds.join(',')}`
-                      : ``,
-                });
-              }
+              getEventCalendarByUsers({
+                userId:
+                  `${updatedUserIds.join(',')}`.length > 0
+                    ? `${updatedUserIds.join(',')}`
+                    : ``,
+              });
             }
           }}
         />
