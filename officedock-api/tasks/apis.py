@@ -145,7 +145,7 @@ class TaskViewSet(
                 serializer_data["deadline"], remind_countdown, remind_type
             )
 
-        task = serializer.save(company=company)
+        task = serializer.save(company=company, created_by=user)
 
         # Handle task schedules creation
         if task_schedules is not None:

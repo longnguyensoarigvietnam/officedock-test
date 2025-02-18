@@ -55,6 +55,13 @@ class Task(BaseModel):
     is_start = models.BooleanField(default=False)
     is_important = models.BooleanField(default=False)
     remind_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tasks",
+    )
 
     def save(self, *args, **kwargs):
         """

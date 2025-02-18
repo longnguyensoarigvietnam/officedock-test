@@ -29,6 +29,7 @@ from organizations.models import OrganizationsSkills
 from roles.constants import Actions, Screens, SelectionResultOptions
 from .serializers import (
     CreationDataOrganizationSerializer,
+    CreationDataTaskListSerializer,
     CreationDataUserSerializer,
     CreationDataTagSerializer,
     CreationDataTaskSerializer,
@@ -223,6 +224,30 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         }
 
         return self.response_ok(data)
+
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="tasks",
+        serializer_class=CreationDataTaskSerializer,
+    )
+    def tasks(self, request):
+        """
+        Get creation data for task option
+        """
+
+        organizations = request.user.organizations.order_by("created_at")
+        tasks = (
+            Task.objects.filter(
+                Q(organization__in=organizations) | Q(created_by=request.user)
+            )
+            .exclude(type=TaskTypes.MY_TEMPLATE.value)
+            .order_by("-created_at")
+        )
+
+        return self.response_ok(
+            CreationDataTaskListSerializer(tasks, many=True).data
+        )
 
     @action(methods=["GET"], detail=False, url_path="schedule")
     def schedule(self, request):
