@@ -14,6 +14,12 @@ import { useSession } from 'next-auth/react';
 import { useInView } from 'react-intersection-observer';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Document } from '@tiptap/extension-document';
+import { Mention } from '@tiptap/extension-mention';
+import { Paragraph } from '@tiptap/extension-paragraph';
+import { Text } from '@tiptap/extension-text';
+import { EditorContent, useEditor, Editor } from '@tiptap/react';
+import { Placeholder } from '@tiptap/extension-placeholder';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -21,7 +27,6 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
-import Quill from '@components/common/Quill';
 import ActionsChatMembersModal from '@components/modals/ActionsChatMembersModal';
 import ChatSettingModal from '@components/modals/ChatSettingModal';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
@@ -202,7 +207,6 @@ const ChatDetail = ({
   }>({
     left: 0,
   });
-  const quillRef = useRef<any>(null);
   const mentionIconRef = useRef<HTMLDivElement | null>(null);
 
   //Task
@@ -322,8 +326,13 @@ const ChatDetail = ({
     if (chatRoomCode) {
       setDataMessageDetail([]);
       setLastItemId(null);
+      if (editor) {
+        editor.commands.clearContent();
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatRoomCode, setLastItemId]);
+
   const handleDeleteMessageLocal = useCallback(
     (data: WebSocketMessageData) => {
       setDataMessageDetail((prevDataMessageDetail) => {
@@ -616,6 +625,9 @@ const ChatDetail = ({
       ...dataMessageDetail,
     ]);
     setMessage('');
+    if (!editor) return;
+
+    editor.commands.clearContent();
     handleSendMsgChat({
       data: newMsg,
       uuid: uuidMsg,
@@ -984,6 +996,54 @@ const ChatDetail = ({
     },
   );
 
+  const editor = useEditor({
+    extensions: [
+      Document,
+      Paragraph,
+      Text,
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention text-[#0068B6]',
+        },
+      }),
+      Placeholder.configure({
+        placeholder: 'メッセージを入力',
+      }),
+    ],
+    content: message,
+    onUpdate: ({ editor }: { editor: Editor }) => {
+      setMessage(editor.getHTML());
+    },
+  });
+
+  const handleCheckboxClick = (member: ChatParticipant, type: string) => {
+    if (!editor) return;
+
+    if (type == 'remove') {
+      const { doc, tr } = editor.state;
+
+      doc.descendants((node, pos) => {
+        if (node.type.name === 'mention' && node.attrs.id === member.fullName) {
+          tr.delete(pos, pos + node.nodeSize);
+        }
+      });
+
+      editor.view.dispatch(tr);
+    } else {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'mention',
+          attrs: {
+            id: member.fullName,
+          },
+        })
+        .insertContent(' ')
+        .run();
+    }
+  };
+
   const handleSetParam = ({
     id,
     action,
@@ -1145,23 +1205,6 @@ const ChatDetail = ({
     },
   );
 
-  const insertTextAtCursor = (text: string) => {
-    const quill = quillRef.current?.getEditor();
-    if (!quill) return;
-
-    const cursorPosition = quill.getSelection()?.index || quill.getLength();
-
-    const html = ` <span style="color: #0068b7">${text}</span>&nbsp;`;
-
-    quill.clipboard.dangerouslyPasteHTML(
-      trimUnnecessaryLineBreaks(message).length ? cursorPosition : 0,
-      html,
-    );
-
-    quill.setSelection(cursorPosition + text.length + 1);
-    quill.format('color', '#000');
-  };
-
   useEffect(() => {
     if (message.length) {
       setMentionMembers((prevMentionMembers) =>
@@ -1172,14 +1215,29 @@ const ChatDetail = ({
     }
   }, [message]);
 
-  const mentionMemberOptions = [
-    {
-      id: null,
-      fullName: MENTION_ALL_MEMBERS,
-    },
-    ...(chatRoomDetail?.participants || []),
-  ];
-
+  const mentionMemberOptions = chatRoomDetail
+    ? [
+        {
+          id: null,
+          fullName: MENTION_ALL_MEMBERS,
+        },
+        ...(chatRoomParticipantsEditing.find(
+          (room) => room.roomCode === chatRoomDetail.code,
+        )
+          ? chatRoomParticipantsEditing
+              .find((room) => room.roomCode === chatRoomDetail.code)
+              ?.participantsList.map((participantId) => {
+                const member = dashboardMembers.find(
+                  (member) => member.id === participantId,
+                );
+                return {
+                  id: participantId,
+                  fullName: member?.fullName || '',
+                };
+              }) || []
+          : chatRoomDetail?.participants || []),
+      ]
+    : [];
   return (
     <Fragment>
       {chatRoomCode && (
@@ -1632,13 +1690,8 @@ const ChatDetail = ({
                             )}
                         </div>
                       </div>
-                      <div className="mt-[-10px]">
-                        <Quill
-                          text={message}
-                          quillRef={quillRef}
-                          setText={setMessage}
-                          placeholder="メッセージを入力"
-                        />
+                      <div className="mt-5">
+                        <EditorContent editor={editor} />
                       </div>
                     </div>
                   ),
@@ -1661,9 +1714,8 @@ const ChatDetail = ({
           mentionMembers={mentionMembers}
           dashboardMembers={dashboardMembers}
           setMentionMembers={setMentionMembers}
+          handleCheckboxClick={handleCheckboxClick}
           setSearchMentionMembers={setSearchMentionMembers}
-          setMessage={setMessage}
-          insertTextAtCursor={insertTextAtCursor}
           onClose={() => setOpenMentionMembersModal(false)}
         />
       )}
