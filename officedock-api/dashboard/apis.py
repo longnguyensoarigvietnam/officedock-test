@@ -595,9 +595,11 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
                 ).first()
                 if isinstance(current_duration_start, Task):
                     task_schedules = (
-                        current_duration_start.task_schedules.all().order_by(
-                            "plan_start_date"
+                        current_duration_start.task_schedules.filter(
+                            plan_start_date__gte=start_of_today
                         )
+                        .all()
+                        .order_by("plan_start_date")
                     )
                     for idx, task_schedule in enumerate(task_schedules):
                         if idx + 1 < len(

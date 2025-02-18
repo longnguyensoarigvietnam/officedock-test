@@ -67,6 +67,8 @@ def send_web_socket_event(data, user=None, chat_room=None):
         if data["action"] not in [
             WebSocketEventType.CHANGE_TASK_STATUS.value,
             WebSocketEventType.CHANGE_ROLE.value,
+            WebSocketEventType.REMIND_TASK.value,
+            WebSocketEventType.DURATION_OVERTIME_WARNING.value,
         ]:
             # Send websocket total unread message
             async_to_sync(channel_layer.group_send)(
