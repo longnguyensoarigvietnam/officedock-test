@@ -171,7 +171,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
     message = serializers.SerializerMethodField()
     schedule = serializers.SerializerMethodField(read_only=True)
-    sender = CreationDataUserForChatSerializer()
+    sender = CreationDataUserWithMainOrganizationSerializer()
     task = TaskForChatMessageSerializer()
     submit_level = SubmitLevelForChatMessageSerializer()
 

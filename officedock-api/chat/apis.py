@@ -44,7 +44,7 @@ from chat.serializers import (
     ChatRoomsParticipantsWebSocketSerializer,
     SendMessageSerializer,
 )
-from common.utils import send_web_socket_event
+from common.utils import send_web_socket_event, StripTags
 from base.permissions import ActionPermission
 from roles.constants import Screens
 
@@ -625,6 +625,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 description=BasePagination.page_size_query_description,
             ),
             OpenApiParameter("message_id", type=int, required=False),
+            OpenApiParameter("message", type=str, required=False),
             OpenApiParameter("sorting", type=str, required=False),
             OpenApiParameter("bookmark_message_id", type=int, required=False),
         ],
@@ -655,6 +656,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if request.method == "GET":
             sorting = request.query_params.get("sorting")
             message_id = request.query_params.get("message_id")
+            message = request.query_params.get("message")
             bookmark_message_id = request.query_params.get(
                 "bookmark_message_id"
             )
@@ -675,7 +677,17 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 chat_messages = chat_messages.filter(
                     **{filter_field: message_id}
                 )
-
+            elif message:
+                chat_messages = (
+                    chat_messages.annotate(
+                        clean_message=StripTags(F("message"))
+                    )
+                    .filter(
+                        Q(clean_message__icontains=message)
+                        & Q(deleted_at__isnull=True)
+                    )
+                    .order_by("-created_at")
+                )
             return self.response_pagination(
                 request, chat_messages, ChatMessageSerializer
             )
@@ -748,23 +760,37 @@ class ChatMessageViewSet(
         return super().get_serializer_class()
 
     @extend_schema(
-        parameters=[OpenApiParameter("is_bookmark", type=bool, required=True)]
+        parameters=[
+            OpenApiParameter("is_bookmark", type=bool, required=False),
+            OpenApiParameter("message", type=str, required=False),
+        ]
     )
     def list(self, request, *args, **kwargs):
         """
         Get a list of chat rooms.
         """
+        user = request.user
+        messages = []
         if is_bookmark := request.query_params.get("is_bookmark"):
-            user = request.user
             messages = ChatMessage.objects.filter(
                 sender=user, bookmark_at__isnull=False
             ).order_by("bookmark_at")
 
-            return self.response_pagination(
-                request, messages, ChatMessageBookMarkSerializer
+        if message := request.query_params.get("message"):
+            messages = (
+                ChatMessage.objects.annotate(
+                    clean_message=StripTags(F("message"))
+                )
+                .filter(
+                    Q(clean_message__icontains=message)
+                    & Q(deleted_at__isnull=True)
+                )
+                .order_by("-created_at")
             )
 
-        return self.response_ok([])
+        return self.response_pagination(
+            request, messages, ChatMessageBookMarkSerializer
+        )
 
     @action(
         methods=["POST"],
