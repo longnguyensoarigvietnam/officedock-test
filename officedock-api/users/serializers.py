@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from base.messages import ERROR_MESSAGES
+from calendars.constants import CalendarTypes
 from companies.serializers import CompanySerializer
 from organizations.models import UsersOrganizations, Organization
 from organizations.serializers import (
@@ -270,6 +271,7 @@ class UserSerializer(BaseUserSerializer):
     setting = SettingSerializer(read_only=True)
     unread_terms = serializers.SerializerMethodField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
+    current_event = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -287,6 +289,7 @@ class UserSerializer(BaseUserSerializer):
             "login_type",
             "setting",
             "unread_terms",
+            "current_event",
         ]
 
     def get_permissions(self, obj):
@@ -352,6 +355,27 @@ class UserSerializer(BaseUserSerializer):
                 data.append({"id": privacy_policy.id})
 
             return data
+
+    def get_current_event(self, obj):
+        """Get current event starting"""
+        event = (
+            obj.tasks.filter(is_start=True).first()
+            or obj.schedules.filter(is_start=True).first()
+        )
+
+        if event:
+            event_type = (
+                CalendarTypes.TASK.value
+                if event in obj.tasks.all()
+                else CalendarTypes.SCHEDULE.value
+            )
+            return {
+                "type": event_type,
+                "id": event.id,
+                "title": event.title,
+            }
+
+        return None
 
 
 class UserLoginSerializer(BaseUserSerializer):

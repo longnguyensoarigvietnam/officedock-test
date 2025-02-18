@@ -174,6 +174,10 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     sender = CreationDataUserWithMainOrganizationSerializer()
     task = TaskForChatMessageSerializer()
     submit_level = SubmitLevelForChatMessageSerializer()
+    mentions = CreationDataUserWithMainOrganizationSerializer(
+        many=True, read_only=True
+    )
+    tasks = TaskForChatMessageSerializer(many=True, read_only=True)
 
     class Meta:
         model = ChatMessage
@@ -191,6 +195,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "schedule",
             "type",
             "mentions",
+            "tasks",
         ]
         read_only_fields = ["id", "uuid"]
 
@@ -265,6 +270,15 @@ class SendMessageSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=False,
     )
+    tasks = TaskForChatMessageSerializer(many=True, read_only=True)
+    task_ids = serializers.PrimaryKeyRelatedField(
+        source="tasks",
+        queryset=Task.objects.all(),
+        write_only=True,
+        many=True,
+        required=False,
+        allow_null=False,
+    )
 
     class Meta:
         model = ChatMessage
@@ -274,6 +288,8 @@ class SendMessageSerializer(serializers.ModelSerializer):
             "type",
             "mentions",
             "mention_ids",
+            "tasks",
+            "task_ids",
         ]
 
     def update(self, instance, validated_data):

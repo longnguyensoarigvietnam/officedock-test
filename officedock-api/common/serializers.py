@@ -4,7 +4,7 @@ from users.models import User
 from organizations.models import Organization
 from organizations.serializers import SuperiorSerializer
 from tags.models import Tag
-from tasks.models import TaskStatus
+from tasks.models import Task, TaskStatus
 
 
 class CreationDataUserSerializer(serializers.ModelSerializer):
@@ -79,6 +79,16 @@ class CreationDataTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ["id", "name"]
+
+
+class CreationDataTaskListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Creation data Task
+    """
+
+    class Meta:
+        model = Task
+        fields = ["id", "title"]
 
 
 class CreationDataTaskStatusSerializer(serializers.ModelSerializer):
