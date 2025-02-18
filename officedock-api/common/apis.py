@@ -1,3 +1,5 @@
+from datetime import timedelta, datetime, time
+
 from django.db import transaction
 from django.db.models import Count, Q, F
 from django.utils import timezone
@@ -10,7 +12,9 @@ from base.permissions import IsCronJob
 from calendars.constants import (
     ScheduleTypes,
     SCHEDULE_CATEGORIES,
+    CalendarTypes,
 )
+from calendars.models import Schedule
 from chat.constants import WebSocketEventType
 from skills.models import StatisticCategory
 from organizations.serializers import StatisticCategorySerializer
@@ -18,7 +22,7 @@ from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
 from users.models import Role, RoleDetail
-from tasks.models import TaskStatus, Task
+from tasks.models import TaskStatus, Task, TaskDuration
 from tasks.constants import TASK_WORK_TYPES, TaskPriorities, TaskTypes
 from skills.serializers import SkillSerializer
 from organizations.models import OrganizationsSkills
@@ -362,6 +366,111 @@ class CronJobViewSet(BaseAPIViewSet):
                             ],
                             "remind_type": convert_time["remind_type"],
                             "action": WebSocketEventType.REMIND_TASK.value,
+                        },
+                        user=user,
+                    )
+
+        return self.response_ok()
+
+    @extend_schema(
+        parameters=[OpenApiParameter("cronjob_key", type=str, required=True)]
+    )
+    @action(methods=["POST"], detail=False, url_path="duration-overtime")
+    @transaction.atomic()
+    def actual_duration_overtime(self, request):
+        """Handle check is task running overtime"""
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        task_durations = TaskDuration.objects.filter(
+            started_at__gte=start_of_today, paused_at__isnull=True
+        ).all()
+        for task_duration in task_durations:
+            is_over_estimate = False
+            is_send_sk = False
+            users = []
+            related_obj = (
+                task_duration.task
+                if task_duration.task
+                else task_duration.schedule
+            )
+            if isinstance(related_obj, Task):
+                task_schedules = (
+                    related_obj.task_schedules.filter(
+                        plan_start_date__gte=start_of_today
+                    )
+                    .all()
+                    .order_by("plan_start_date")
+                )
+                users = related_obj.people_in_charge.all()
+                for idx, task_schedule in enumerate(task_schedules):
+                    if idx + 1 < len(
+                        task_schedules
+                    ):  # Ensure next task exists before accessing
+                        next_task_schedule = task_schedules[
+                            idx + 1
+                        ].plan_start_date
+                    else:
+                        next_task_schedule = None  # No next task
+
+                    prev_task_schedule = (
+                        task_schedules[idx - 1] if idx > 0 else None
+                    )
+                    if (
+                        prev_task_schedule
+                        and task_duration.is_cancel_alert
+                        and prev_task_schedule.plan_end_date
+                        < timezone.now()
+                        >= task_schedule.plan_start_date
+                    ):
+                        task_duration.is_cancel_alert = False
+                        is_send_sk = True
+                        task_duration.save()
+                    diff_time = timezone.now() - task_schedule.plan_end_date
+                    if (
+                        timedelta(minutes=30)
+                        <= diff_time
+                        <= timedelta(minutes=32)
+                        and task_duration.is_cancel_alert is False
+                        and (
+                            next_task_schedule is None
+                            or timezone.now() <= next_task_schedule
+                        )
+                    ):
+                        is_send_sk = True
+                        is_over_estimate = True
+                        break
+                    elif (
+                        timedelta(minutes=2)
+                        >= timezone.now() - task_schedule.plan_start_date
+                        >= timedelta(minutes=0)
+                    ):
+                        is_send_sk = True
+                        is_over_estimate = False
+                        break
+            elif (
+                isinstance(related_obj, Schedule)
+                and task_duration.is_cancel_alert is False
+            ):
+                users = related_obj.participants.all()
+                diff_time = timezone.now() - related_obj.end_date
+                if timedelta(minutes=30) <= diff_time <= timedelta(minutes=32):
+                    is_send_sk = True
+                    is_over_estimate = True
+
+            if is_send_sk:
+                for user in users:
+                    send_web_socket_event(
+                        {
+                            "id": task_duration.task.id
+                            if isinstance(related_obj, Task)
+                            else task_duration.schedule.id,
+                            "task_duration_running_uuid": str(
+                                task_duration.uuid
+                            ),
+                            "is_over_estimate": is_over_estimate,
+                            "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                            "type": CalendarTypes.TASK.value
+                            if isinstance(related_obj, Task)
+                            else CalendarTypes.SCHEDULE.value,
                         },
                         user=user,
                     )

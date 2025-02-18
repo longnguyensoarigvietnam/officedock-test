@@ -63,6 +63,7 @@ class WebSocketEventType(EnumChoices):
     CHANGE_TASK_STATUS = "CHANGE_TASK_STATUS"
     CHANGE_ROLE = "CHANGE_ROLE"
     REMIND_TASK = "REMIND_TASK"
+    DURATION_OVERTIME_WARNING = "DURATION_OVERTIME_WARNING"
 
 
 class TypeChatGroup(EnumChoices):
