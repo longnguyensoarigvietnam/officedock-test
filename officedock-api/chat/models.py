@@ -102,6 +102,7 @@ class ChatMessage(BaseModel):
     )
     message = models.TextField()
     is_edited = models.BooleanField(default=False)
+    bookmark_at = models.DateTimeField(null=True, blank=True)
     type = models.CharField(
         max_length=100,
         choices=ChatMessageTypes.choices(),
@@ -116,7 +117,7 @@ class ChatMessage(BaseModel):
         blank=True,
     )
     mentions = models.ManyToManyField(
-        "users.User", related_name="mentioned_messages", blank=True, null=True
+        "users.User", related_name="mentioned_messages"
     )
 
     def save(self, *args, **kwargs):

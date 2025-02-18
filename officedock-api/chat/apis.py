@@ -35,7 +35,9 @@ from chat.constants import (
 )
 from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
 from chat.serializers import (
+    BookMarkSerializer,
     ChatMessageSerializer,
+    ChatMessageBookMarkSerializer,
     ChatRoomDetailSerializer,
     ChatRoomSerializer,
     ChatRoomsParticipantsSerializer,
@@ -623,6 +625,8 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 description=BasePagination.page_size_query_description,
             ),
             OpenApiParameter("message_id", type=int, required=False),
+            OpenApiParameter("sorting", type=str, required=False),
+            OpenApiParameter("bookmark_message_id", type=int, required=False),
         ],
         responses={
             status.HTTP_200_OK: OpenApiResponse(
@@ -649,12 +653,28 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         if request.method == "GET":
+            sorting = request.query_params.get("sorting")
+            message_id = request.query_params.get("message_id")
+            bookmark_message_id = request.query_params.get(
+                "bookmark_message_id"
+            )
+
+            # Sorting message by asc or desc create_at
+            order_by_field = "created_at" if sorting else "-created_at"
             chat_messages = chat_room.chat_messages.order_by(
-                "-created_at"
+                order_by_field
             ).all()
 
-            if message_id := request.query_params.get("message_id"):
-                chat_messages = chat_messages.filter(id__lt=message_id)
+            # Filter message_id or bookmark_message_id
+            if bookmark_message_id:
+                chat_messages = chat_messages.filter(
+                    id__lt=int(bookmark_message_id) + 5
+                )
+            elif message_id:
+                filter_field = "id__gt" if sorting else "id__lt"
+                chat_messages = chat_messages.filter(
+                    **{filter_field: message_id}
+                )
 
             return self.response_pagination(
                 request, chat_messages, ChatMessageSerializer
@@ -695,7 +715,10 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
 @extend_schema(tags=["System > Chat Message"])
 class ChatMessageViewSet(
-    BaseAPIViewSet, mixins.UpdateModelMixin, mixins.DestroyModelMixin
+    BaseAPIViewSet,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
 ):
     """
     API endpoint for Chat Message
@@ -714,6 +737,53 @@ class ChatMessageViewSet(
 
         user = self.request.user
         return super().get_queryset().filter(sender=user)
+
+    def get_serializer_class(self):
+        """
+        Serializer classification by action
+        """
+        if self.action == "list":
+            return ChatMessageBookMarkSerializer
+
+        return super().get_serializer_class()
+
+    @extend_schema(
+        parameters=[OpenApiParameter("is_bookmark", type=bool, required=True)]
+    )
+    def list(self, request, *args, **kwargs):
+        """
+        Get a list of chat rooms.
+        """
+        if is_bookmark := request.query_params.get("is_bookmark"):
+            user = request.user
+            messages = ChatMessage.objects.filter(
+                sender=user, bookmark_at__isnull=False
+            ).order_by("bookmark_at")
+
+            return self.response_pagination(
+                request, messages, ChatMessageBookMarkSerializer
+            )
+
+        return self.response_ok([])
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="bookmark",
+        serializer_class=BookMarkSerializer,
+    )
+    def bookmark(self, request, uuid=None):
+        """
+        Bookmark message
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        instance.bookmark_at = serializer_data.pop("bookmark_at", None)
+        instance.save()
+
+        return self.response_ok()
 
     def update(self, request, *args, **kwargs):
         """
