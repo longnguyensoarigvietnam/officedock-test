@@ -263,6 +263,10 @@ export const pageRouters = {
     name: '実績管理詳細',
     href: (id: string) => `/actual-durations/${id}`,
   },
+  MEMBER_MANAGEMENT: {
+    name: 'メンバー一覧',
+    href: `/member`,
+  },
 };
 
 // For the API routers

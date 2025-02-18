@@ -5,13 +5,22 @@ import Button from '../common/Button';
 
 export type WarningDeadlineTaskModalProps = {
   open: boolean;
-  time: string;
+  title: string;
+  remindType?: string;
+  remindCountdown?: number;
   onConfirm: () => void;
   onClose: () => void;
 };
 
 const WarningDeadlineTaskModal = memo(
-  ({ open, time, onConfirm, onClose }: WarningDeadlineTaskModalProps) => {
+  ({
+    open,
+    title,
+    remindCountdown,
+    remindType,
+    onConfirm,
+    onClose,
+  }: WarningDeadlineTaskModalProps) => {
     return (
       <Modal
         open={open}
@@ -21,9 +30,8 @@ const WarningDeadlineTaskModal = memo(
         title="">
         <div className="text-base font-medium text-white items-baseline">
           <p className="leading-6 text-neutral-02 text-center">
-            {`
-              プロモーション用動画作成 締切 ${time} です
-              `}
+            {title} 締切 {remindCountdown}
+            {remindType} です
           </p>
         </div>
         <div className=" mt-3 pt-2 text-sm font-medium  gap-4 flex justify-center">
