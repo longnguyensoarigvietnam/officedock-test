@@ -214,6 +214,41 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         )
 
 
+class ChatMessageBookMarkSerializer(ChatMessageSerializer):
+    """
+    Chat message bookmark serializer
+    """
+
+    chat_room_code = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatMessage
+        fields = [
+            "id",
+            "uuid",
+            "chat_room_code",
+            "message",
+            "sender",
+            "is_edited",
+            "created_at",
+            "deleted_at",
+            "bookmark_at",
+            "type",
+        ]
+
+    def get_chat_room_code(self, obj):
+        """Get chat room code"""
+        return obj.chat_room.code
+
+
+class BookMarkSerializer(serializers.Serializer):
+    """
+    Bookmark serializer
+    """
+
+    bookmark_at = serializers.DateTimeField(allow_null=True, required=False)
+
+
 class SendMessageSerializer(serializers.ModelSerializer):
     """
     Serializer for send message
