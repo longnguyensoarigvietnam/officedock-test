@@ -55,6 +55,7 @@ const Tabs = ({
 
   return (
     <TabGroup
+      className={'h-full'}
       selectedIndex={tabIdx}
       onChange={(idx) => onChangeTab(idx)}
       key={tabIdx}>

@@ -15,6 +15,7 @@ import {
   ItemScheduleType,
   ItemStartType,
   PermissionsSystem,
+  SocketActions,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ERROR_TIME_START_MESSAGE } from '@constants/message';
@@ -36,6 +37,8 @@ import {
   formatQueryStartDateForCalendar,
   formatTimeTask,
 } from '@utils/date';
+import { WebSocketMessageDataOverTime } from '@interfaces/chat';
+import socketEventEmitter from '@components/socket/socketEventEmitter';
 
 const ShowTimeCounter = memo(
   ({ statusTaskSelected }: { statusTaskSelected: TaskDuration }) => {
@@ -88,6 +91,12 @@ const TaskPageDataHeader = () => {
   } = useContext(TaskContext);
 
   const [optionsTaskMe, setOptionsTaskMe] = useState<OptionDropdownType[]>([]);
+  const [dataOverTimeWarning, setDataOverTimeWarning] = useState<{
+    id: string;
+    type: string;
+    isOverEstimate: boolean;
+    taskDurationRunningUuid: string;
+  } | null>();
   const today = new Date();
   const startOfDay = new Date(
     today.getFullYear(),
@@ -106,12 +115,54 @@ const TaskPageDataHeader = () => {
 
   const { dataTaskHeaderStart, refetchTaskHeaderStart } = useTaskHeaderStart({
     userId: `${userIdTask}`,
+    onSuccess: (data) => {
+      if (data.isOverEstimate) {
+        setDataOverTimeWarning({
+          id: `${data.id}`,
+          type: data.type,
+          isOverEstimate: true,
+          taskDurationRunningUuid: data.taskDurationRunningUuid,
+        });
+      } else {
+        setDataOverTimeWarning(null);
+      }
+    },
   });
+
   const { dataTaskHeaderList, refetchDataHeaderTaskList } =
     useDataHeaderTaskList({
       start_date: formatQueryStartDateForCalendar(startOfDay),
       end_date: formatQueryStartDateForCalendar(endOfDay),
     });
+
+  useEffect(() => {
+    const handleSocketMessage = (data: WebSocketMessageDataOverTime) => {
+      switch (data.action) {
+        case SocketActions.DURATION_OVERTIME_WARNING:
+          if (data.isOverEstimate) {
+            setDataOverTimeWarning({
+              id: `${data.id}`,
+              type: data.type,
+              isOverEstimate: true,
+              taskDurationRunningUuid: data.taskDurationRunningUuid,
+            });
+          } else {
+            setDataOverTimeWarning(null);
+          }
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    socketEventEmitter.on('message', handleSocketMessage);
+
+    return () => {
+      socketEventEmitter.off('message', handleSocketMessage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isTaskPage) {
@@ -585,7 +636,10 @@ const TaskPageDataHeader = () => {
               )}
               {statusTaskSelected?.isStart &&
                 taskSelected.value &&
-                dataTaskHeaderStart?.isOverEstimate && (
+                dataOverTimeWarning &&
+                dataOverTimeWarning?.isOverEstimate &&
+                taskSelected.type === dataOverTimeWarning.type &&
+                `${taskSelected.value}` === dataOverTimeWarning.id && (
                   <div className="flex gap-1 items-center text-xs font-normal text-[#C32E2E] mt-[2px]">
                     <ImageRound
                       src={`/icons/overlap-task.svg`}
@@ -597,7 +651,7 @@ const TaskPageDataHeader = () => {
                       name="icon cancel"
                       onClick={() => {
                         cancelAlert({
-                          uuid: dataTaskHeaderStart.taskDurationRunningUuid,
+                          uuid: dataOverTimeWarning.taskDurationRunningUuid,
                           isCancelAlert: true,
                         });
                       }}

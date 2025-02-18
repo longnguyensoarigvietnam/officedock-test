@@ -138,6 +138,11 @@ html *::-webkit-scrollbar-track {
   font-size: 0.75em;
 }
 
+/*  Side bar */
+.tab-panel {
+  height: 100%;
+}
+
 .menu-item::before {
   content: '';
   position: absolute;

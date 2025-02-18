@@ -44,8 +44,8 @@ export interface ChatMessageResponse {
     status: SubmitLevelStatus;
   };
   schedule?: {
-    id: number,
-    title: string
+    id: number;
+    title: string;
   };
   isEdited: boolean;
   createdAt: Date | string;
@@ -73,9 +73,9 @@ export interface ChatParticipant {
   id: number | null;
   fullName: string;
   organizations?: {
-    id: number,
-    name: string,
-  } | null
+    id: number;
+    name: string;
+  } | null;
 }
 
 export interface ChatRoomDetail {
@@ -116,6 +116,14 @@ export interface WebSocketMessageData {
   };
   remindCountdown?: number;
   remindType?: string;
+  title?: string;
+}
+export interface WebSocketMessageDataOverTime {
+  action: string;
+  isOverEstimate: boolean;
+  taskDurationRunningUuid: string;
+  type: string;
+  id: number;
 }
 
 export interface DataChatRoomSocket {
