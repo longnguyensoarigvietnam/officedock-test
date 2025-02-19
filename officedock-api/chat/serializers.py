@@ -98,6 +98,7 @@ class ChatRoomDetailSerializer(ChatRoomSerializer):
             "name",
             "code",
             "participants",
+            "memo",
             "type",
             "unread_messages",
         ]
@@ -392,3 +393,9 @@ class ChatRoomsParticipantsWebSocketSerializer(ChatRoomsParticipantsSerializer):
             "pin_at",
             "participants",
         ]
+
+
+class ChatRoomMemoSerializer(serializers.Serializer):
+    """Serializer for chat room memo"""
+
+    memo = serializers.CharField(required=False, allow_null=True)

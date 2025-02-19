@@ -26,6 +26,7 @@ class ChatRoom(BaseModel):
     type = models.CharField(
         max_length=15, null=True, blank=True, choices=ChatRoomTypes.choices()
     )
+    memo = models.TextField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Generate unique code when creating
