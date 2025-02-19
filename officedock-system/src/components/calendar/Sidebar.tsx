@@ -107,7 +107,7 @@ export const CalendarSidebar = ({
             全てのチェックをクリア
           </p>
         </div>
-        <div className="pt-3 max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+        <div className="pt-3 max-h-[calc(85vh_-_200px)] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
           {dashboardMembersWithAvatars &&
             dashboardMembersWithAvatars.filter((member) =>
               member.fullName.toLowerCase().includes(searchName.toLowerCase()),
@@ -127,12 +127,12 @@ export const CalendarSidebar = ({
                 (member) =>
                   !removeMyselfOption || member.id != session?.user.id,
               )
-              .sort(
-                (
-                  prev: CalendarDashboardMember,
-                  next: CalendarDashboardMember,
-                ) => prev.fullName.localeCompare(next.fullName),
-              )
+              .sort((prev: CalendarDashboardMember,
+                next: CalendarDashboardMember,) => {
+                if (prev.id === session?.user.id) return -1; 
+                if (next.id === session?.user.id) return 1;
+                return prev.fullName.localeCompare(next.fullName);
+              })
               .map((member) => {
                 return (
                   <div

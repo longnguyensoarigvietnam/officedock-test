@@ -91,8 +91,9 @@ export const MessageDetail = ({
       const mentionMembers = mentionIds.map((mentionId) => {
         return {
           id: Number(mentionId),
-          fullName: dashboardMembers.find((member) => member.id == mentionId)
-            ?.fullName || '',
+          fullName:
+            dashboardMembers.find((member) => member.id == mentionId)
+              ?.fullName || '',
         };
       });
       setMentionMembers(mentionMembers || []);
@@ -172,16 +173,8 @@ export const MessageDetail = ({
               <div className="flex justify-between items-center">
                 <div className="flex gap-2 font-semibold text-sm pb-2">
                   <p>{messageDetail.sender.fullName} </p>
-                  <p className="font-normal text-[10px] truncate max-w-[400px]">
-                    {messageDetail.sender.organizations &&
-                      messageDetail.sender.organizations.map(
-                        (organization, index) => (
-                          <span
-                            key={
-                              organization.id
-                            }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
-                        ),
-                      )}
+                  <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
+                    {messageDetail.sender?.organizations?.name}
                   </p>
                 </div>
                 <div className={`flex items-start`}>
@@ -699,16 +692,8 @@ export const MessageDetail = ({
                 ) : (
                   <div className="flex gap-2 font-semibold text-sm pb-2">
                     <p>{messageDetail.sender.fullName} </p>
-                    <p className="font-normal text-[10px] truncate max-w-[400px]">
-                      {messageDetail.sender.organizations &&
-                        messageDetail.sender.organizations.map(
-                          (organization, index) => (
-                            <span
-                              key={
-                                organization.id
-                              }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
-                          ),
-                        )}
+                    <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
+                      {messageDetail.sender?.organizations?.name}
                     </p>
                   </div>
                 )}
@@ -835,16 +820,8 @@ export const MessageDetail = ({
                 ) : (
                   <div className="flex gap-2 font-semibold text-sm pb-2">
                     <p>{messageDetail.sender.fullName} </p>
-                    <p className="font-normal text-[10px] truncate max-w-[400px]">
-                      {messageDetail.sender.organizations &&
-                        messageDetail.sender.organizations.map(
-                          (organization, index) => (
-                            <span
-                              key={
-                                organization.id
-                              }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
-                          ),
-                        )}
+                    <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
+                      {messageDetail.sender?.organizations?.name}
                     </p>
                   </div>
                 )}
@@ -970,16 +947,8 @@ export const MessageDetail = ({
               <div className="flex justify-between items-center">
                 <div className="flex gap-2 font-semibold text-sm pb-2">
                   <p>{messageDetail.sender.fullName}</p>
-                  <p className="font-normal text-[10px] truncate max-w-[400px]">
-                    {messageDetail.sender.organizations &&
-                      messageDetail.sender.organizations.map(
-                        (organization, index) => (
-                          <span
-                            key={
-                              organization.id
-                            }>{`${organization.name}${messageDetail.sender.organizations && messageDetail.sender.organizations.length - 1 !== index ? '、' : ''}`}</span>
-                        ),
-                      )}
+                  <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
+                    {messageDetail.sender?.organizations?.name}
                   </p>
                 </div>
                 <div className={`flex items-start`}>

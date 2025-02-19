@@ -1,5 +1,4 @@
 import { MessageType, SubmitLevelStatus } from '@constants/enums';
-import { Organizations } from './organization';
 
 export interface ChatMessageResponse {
   id?: number;
@@ -8,7 +7,10 @@ export interface ChatMessageResponse {
   sender: {
     id: number;
     fullName: string;
-    organizations?: Organizations[];
+    organizations?: {
+      id: number,
+      name: string,
+    } | null
   };
   task: {
     id: number;

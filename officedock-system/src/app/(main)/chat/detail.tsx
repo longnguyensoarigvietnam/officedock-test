@@ -618,7 +618,14 @@ const ChatDetail = ({
         sender: {
           fullName: session?.user.profile.fullName || '',
           id: session?.user.id as number,
-          organizations: [],
+          organizations: {
+            id: loggedInUser?.organizations.find(
+              (organization) => organization.isMain,
+            )?.id || 0,
+            name: loggedInUser?.organizations.find(
+              (organization) => organization.isMain,
+            )?.name || ''
+          },
         },
         mentions: mentionIds,
       },
