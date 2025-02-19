@@ -171,6 +171,7 @@ const Header = ({ className }: HeaderProps) => {
           id: member.id,
           fullName: member.fullName,
           avatarColor: getRandomColor(),
+          mainOrganization: member.organizations?.name || ''
         };
       });
       setDashboardMembersWithAvatars(membersWithAvatars);
@@ -229,8 +230,7 @@ const Header = ({ className }: HeaderProps) => {
     if (
       actionType &&
       typeDetail === ItemStartType.TASK &&
-      !isTaskPage &&
-      !isCalendarPage
+      !isTaskPage 
     ) {
       if (taskDetailId) {
         getDataDetailTask(parseInt(taskDetailId));

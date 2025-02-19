@@ -114,6 +114,7 @@ export interface CalendarDashboardMember {
   fullName: string;
   id: number | string;
   avatarColor: string;
+  mainOrganization: string;
 }
 
 export interface EventCalendarProps {

@@ -67,6 +67,10 @@ export interface Profile {
   fullName: string;
   birthday: string;
   gender: string;
+  organizations?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
 export interface CreateUserFormRequest {
