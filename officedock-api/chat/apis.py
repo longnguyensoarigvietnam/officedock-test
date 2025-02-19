@@ -654,6 +654,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         if request.method == "GET":
+            page_size = request.query_params.get("page_size", 20)
             sorting = request.query_params.get("sorting")
             message_id = request.query_params.get("message_id")
             message = request.query_params.get("message")
@@ -669,9 +670,34 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
             # Filter message_id or bookmark_message_id
             if bookmark_message_id:
-                chat_messages = chat_messages.filter(
-                    id__lt=int(bookmark_message_id) + 5
-                )
+                bookmark_message_id = int(bookmark_message_id)
+                page_size = int(page_size)
+
+                # Check if list has more than page_size items
+                if len(chat_messages) > page_size:
+                    # Find the position of bookmark_message_id in the list
+                    bookmark_index = next(
+                        (
+                            i
+                            for i, msg in enumerate(chat_messages)
+                            if msg.id == bookmark_message_id
+                        ),
+                        None,
+                    )
+
+                    if bookmark_index is not None:
+                        start_index = max(bookmark_index - 5, 0)
+                        chat_messages_result = chat_messages[start_index:]
+
+                        # If the number of messages is not enough for page_size, get more from before
+                        if len(chat_messages_result) < page_size:
+                            remaining_items = page_size - len(
+                                chat_messages_result
+                            )
+                            extra_start = max(start_index - remaining_items, 0)
+                            chat_messages_result = chat_messages[extra_start:]
+
+                        chat_messages = chat_messages_result
             elif message_id:
                 filter_field = "id__gt" if sorting else "id__lt"
                 chat_messages = chat_messages.filter(
