@@ -37,7 +37,7 @@ from .serializers import (
     CreationDataUserWithOrganizationSerializer,
     OrganizationWithUserNotHaveSkillMapSerializer,
 )
-from .utils import convert_time_difference, send_web_socket_event
+from .utils import send_web_socket_event
 
 
 @extend_schema(tags=["System > Creation Data"])
@@ -373,23 +373,21 @@ class CronJobViewSet(BaseAPIViewSet):
         """
         Get remind notify of task
         """
-        tasks = Task.objects.filter(remind_at__lte=timezone.now()).all()
+        tasks = Task.objects.filter(
+            remind_at__lte=timezone.now(), deadline__gt=timezone.now()
+        ).all()
 
         for task in tasks:
             if task.deadline and task.remind_at:
-                convert_time = convert_time_difference(
-                    task.deadline, task.remind_at
-                )
+                reminds = task.reminds
                 users = task.people_in_charge_tasks.all()
                 for user in users:
                     send_web_socket_event(
                         {
                             "id": task.id,
                             "title": task.title,
-                            "remind_countdown": convert_time[
-                                "remind_countdown"
-                            ],
-                            "remind_type": convert_time["remind_type"],
+                            "remind_countdown": reminds["countdown"],
+                            "remind_type": reminds["type"],
                             "action": WebSocketEventType.REMIND_TASK.value,
                         },
                         user=user,

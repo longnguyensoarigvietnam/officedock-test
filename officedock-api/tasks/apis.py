@@ -144,6 +144,10 @@ class TaskViewSet(
             serializer_data["remind_at"] = calculate_new_time(
                 serializer_data["deadline"], remind_countdown, remind_type
             )
+            serializer_data["reminds"] = {
+                "type": remind_type,
+                "countdown": remind_countdown,
+            }
 
         task = serializer.save(company=company, created_by=user)
 
@@ -531,6 +535,10 @@ class TaskViewSet(
             serializer_data["remind_at"] = calculate_new_time(
                 serializer_data["deadline"], remind_countdown, remind_type
             )
+            serializer_data["reminds"] = {
+                "type": remind_type,
+                "countdown": remind_countdown,
+            }
 
         # Update task
         task = serializer.save()
