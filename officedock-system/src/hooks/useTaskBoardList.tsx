@@ -78,7 +78,9 @@ const useTaskBoardList = (
     refetch: refetchTaskBoardList,
     isFetched: isFetchedTaskBoards,
   } = useQuery({
-    queryKey: ['getTaskBoardList', [filter, ordering, statusList]],
+    queryKey: isReadyToFetch
+      ? ['getTaskBoardList', filter, ordering, statusList]
+      : ['getTaskBoardList'],
     queryFn: getTaskBoardList,
     retry: 0,
     enabled: isReadyToFetch && !!token,

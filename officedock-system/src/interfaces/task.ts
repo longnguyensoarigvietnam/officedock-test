@@ -2,6 +2,7 @@ import { EventCalendarType } from '@constants/enums';
 import { OptionDropdownType } from './common';
 import { PeopleInCharge, TagId, Tags } from './tag';
 import { Organizations } from './organization';
+import { EventParticipant } from './calendar';
 
 export interface TaskRequest {
   id?: number | string;
@@ -251,6 +252,9 @@ export interface TaskTimeSchedule {
   largeColor?: string;
   isImportant?: boolean;
   deadline?: string;
+  address?: string;
+  participants?: EventParticipant[];
+  isAllDay?: boolean;
 }
 export interface TaskErrorPerson {
   id: string;
