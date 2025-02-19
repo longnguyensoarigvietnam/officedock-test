@@ -279,30 +279,6 @@ class CategoryForCreationTaskSerializer(serializers.Serializer):
     )
 
 
-def _convert_time_difference(deadline, remind_time):
-    """
-    Convert time difference between deadline and remind time.
-    """
-    delta = deadline - remind_time
-    days = delta.days
-    if days >= 7:
-        return {
-            "remind_countdown": days + 1 // 7,
-            "remind_type": DatetimeUnitTypes.WEEK.value,
-        }
-
-    elif days >= 1:
-        return {
-            "remind_countdown": days,
-            "remind_type": DatetimeUnitTypes.DAY.value,
-        }
-    else:
-        return {
-            "remind_countdown": delta.total_seconds() // 3600,
-            "remind_type": DatetimeUnitTypes.HOURS.value,
-        }
-
-
 class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
     """
     Serializer for the Task model.
@@ -464,14 +440,9 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         representation["people_in_charge"] = CreationDataUserSerializer(
             sorted_users, many=True
         ).data
-        if instance.remind_at and instance.deadline:
-            convert_time = _convert_time_difference(
-                instance.deadline, instance.remind_at
-            )
-            representation["remind_countdown"] = convert_time[
-                "remind_countdown"
-            ]
-            representation["remind_type"] = convert_time["remind_type"]
+        if instance.reminds:
+            representation["remind_countdown"] = instance.reminds["countdown"]
+            representation["remind_type"] = instance.reminds["type"]
         return representation
 
     def get_index(self, instance):
