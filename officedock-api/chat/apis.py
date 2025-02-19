@@ -44,6 +44,7 @@ from chat.serializers import (
     ChatRoomsParticipantsSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
     SendMessageSerializer,
+    ReactionSerializer,
 )
 from common.utils import send_web_socket_event, StripTags
 from base.permissions import ActionPermission
@@ -854,6 +855,27 @@ class ChatMessageViewSet(
         serializer_data = serializer.validated_data
         instance.bookmark_at = serializer_data.pop("bookmark_at", None)
         instance.save()
+
+        return self.response_ok()
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="reaction",
+        serializer_class=ReactionSerializer,
+    )
+    def reaction(self, request, uuid=None):
+        """
+        Bookmark message
+        """
+        user = request.user
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        instance.reactions.create(
+            company=user.company, user=user, icon=serializer_data.pop("icon")
+        )
 
         return self.response_ok()
 
