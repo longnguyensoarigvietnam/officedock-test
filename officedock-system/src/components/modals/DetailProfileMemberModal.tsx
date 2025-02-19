@@ -29,7 +29,7 @@ const DetailProfileMemberModal = memo(
   ({ onClose }: DetailProfileMemberProps) => {
     return (
       <Modal
-        open={true}
+        open={false}
         className="font-primary bg-[#F8FAFC] w-[540px] !rounded-lg !p-10"
         onClose={onClose}
         title="">

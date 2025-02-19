@@ -584,9 +584,7 @@ const ChatDetail = ({
   const { mutate: handleSendMsgChat } = useMutation(postSendMsg, {
     onSuccess: async () => {},
     onError: () => {},
-    onSettled: () => {
-      setMentionMembers([]);
-    },
+    onSettled: () => {},
   });
 
   const handleConfirmSendMessage = () => {
@@ -638,6 +636,7 @@ const ChatDetail = ({
     if (!editor) return;
 
     editor.commands.clearContent();
+    setMentionMembers([]);
     handleSendMsgChat({
       data: newMsg,
       uuid: uuidMsg,
@@ -661,7 +660,11 @@ const ChatDetail = ({
     handleDeleteMsgChat();
   };
   // Update message
-  const postUpdateMsg = async (data: { uuid: string; message: string }) => {
+  const postUpdateMsg = async (data: {
+    uuid: string;
+    message: string;
+    mentionIds: number[];
+  }) => {
     const { data: response } = await api.patch(
       apiRouters.CHAT_MESSAGES_DETAIL(data.uuid),
       data,
@@ -680,9 +683,26 @@ const ChatDetail = ({
     if (uuid) {
       if (!editor) return;
       editor.commands.clearContent();
+      const chatRoomMemberIds =
+        chatRoomDetail?.participants
+          ?.filter((participant) => participant.id !== session?.user.id)
+          .map((member) => Number(member.id)) || [];
+      let mentionIds = [];
+      const isMentionAllMembers = mentionMembers.find(
+        (mentionMember) =>
+          mentionMember.id == null &&
+          mentionMember.fullName == MENTION_ALL_MEMBERS,
+      );
+      if (isMentionAllMembers) {
+        mentionIds = [...chatRoomMemberIds];
+      } else {
+        mentionIds = mentionMembers.map((member) => Number(member.id)) || [];
+      }
+      setMentionMembers([]);
       handleUpdateMsgChat({
         message: trimUnnecessaryLineBreaks(`${message}`) as string,
         uuid: uuid,
+        mentionIds,
       });
     }
   };
@@ -1732,7 +1752,10 @@ const ChatDetail = ({
           setMentionMembers={setMentionMembers}
           handleCheckboxClick={handleCheckboxClick}
           setSearchMentionMembers={setSearchMentionMembers}
-          onClose={() => setOpenMentionMembersModal(false)}
+          onClose={() => {
+            setOpenMentionMembersModal(false)
+            setSearchMentionMembers('')
+          }}
         />
       )}
       {openSettingBox && (
