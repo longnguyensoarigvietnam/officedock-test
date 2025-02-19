@@ -398,4 +398,7 @@ export const apiRouters = {
 
   // TEMPLATES
   TEMPLATE_LIST: '/tasks/template/',
+
+  // MEMBER ORGANIZATION
+  MEMBER_ORGANIZATION_LIST: '/organizations/members/',
 };

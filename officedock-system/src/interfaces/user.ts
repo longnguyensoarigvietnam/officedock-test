@@ -115,3 +115,11 @@ export interface MemoDetailData {
   content: string;
   isOpen: boolean;
 }
+export interface UserOrganization {
+  id: number;
+  name: string;
+  users: {
+    id: number;
+    fullName: string;
+  }[];
+}

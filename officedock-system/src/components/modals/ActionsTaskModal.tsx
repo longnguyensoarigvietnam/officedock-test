@@ -221,6 +221,7 @@ const ActionsTaskModal = ({
           planStartTime: '',
         },
       ],
+
       isImportant: dataTask?.isImportant || false,
     },
   });
@@ -318,8 +319,12 @@ const ActionsTaskModal = ({
       tagIds: dataTask ? [] : [{ label: '', value: '' }],
       deadlineDate: null,
       deadlineTime: '',
-      deadlineRemindCountdown: null,
-      deadlineRemindType: null,
+      deadlineRemindCountdown: {
+        label: '1',
+        value: 1,
+      },
+
+      deadlineRemindType: optionsCountType[0],
       type: {
         label: '',
         value: '',
