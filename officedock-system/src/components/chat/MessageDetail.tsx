@@ -100,7 +100,19 @@ export const MessageDetail = ({
               ?.fullName || '',
         };
       });
-      setMentionMembers(mentionMembers || []);
+      if (messageDetail.message.includes(`@${MENTION_ALL_MEMBERS}`)) {
+        setMentionMembers(
+          [
+            {
+              id: null,
+              fullName: MENTION_ALL_MEMBERS,
+            },
+            ...mentionMembers,
+          ],
+        );
+      } else {
+        setMentionMembers(mentionMembers || []);
+      }
     }
     editor && editor.commands.setContent(messageDetail.message);
   };

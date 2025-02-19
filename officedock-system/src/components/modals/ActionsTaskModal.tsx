@@ -472,14 +472,13 @@ const ActionsTaskModal = ({
       }
     }
     return value;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    dataTask,
-    session?.user.profile.fullName,
-    session?.user.id,
-    optionsCountType,
-    authenticatedUser,
     action,
-    optionsCountDown,
+    dataTask,
+    session?.user.id,
+    session?.user.profile.fullName,
+    authenticatedUser,
   ]);
 
   useEffect(() => {
