@@ -20,6 +20,7 @@ import {
   ServerStatusCode,
   SocketActions,
   StatusValueTask,
+  TimeType,
 } from '@constants/enums';
 import { MenuItem } from '@interfaces/menu';
 import TaskPageDataHeader from './TaskPageDataHeader';
@@ -979,7 +980,11 @@ const Header = ({ className }: HeaderProps) => {
           open={openWarningDeadlineModal}
           title={`${dataRemind?.title}`}
           remindCountdown={dataRemind?.count}
-          remindType={dataRemind?.type}
+          remindType={
+            dataRemind?.type
+              ? TimeType[dataRemind?.type as keyof typeof TimeType]
+              : ''
+          }
           onConfirm={() => {
             handleConfirmRemind();
             handleSetParam({

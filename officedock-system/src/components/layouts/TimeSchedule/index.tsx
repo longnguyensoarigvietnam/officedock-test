@@ -212,6 +212,8 @@ const TimeSchedule = memo(
     >([]);
     const today = new Date();
 
+    const [isStartPopupDetail, setIsStartPopupDetail] = useState(false);
+
     const [currentResources, setCurrentResources] = useState<
       {
         id: string;
@@ -236,6 +238,7 @@ const TimeSchedule = memo(
     const actionType = searchParams.get('action');
 
     const typeDetail = searchParams.get('type');
+    const view = searchParams.get('view');
 
     const screenHeight = window.innerHeight;
 
@@ -1350,6 +1353,7 @@ const TimeSchedule = memo(
             planStartDate: convertDateString(`${newEvent.start}`),
             planEndDate: convertDateString(`${newEvent.end}`),
             largeColor: newEvent.extendedProps.largeColor,
+            deadline: newEvent.extendedProps.deadline,
           });
 
           return updatedEvents;
@@ -2012,6 +2016,7 @@ const TimeSchedule = memo(
         clickInfo.event._def &&
         clickInfo.event._def.resourceIds?.length &&
         clickInfo.event._def.resourceIds[0] === ItemScheduleType.PLANS;
+      setIsStartPopupDetail(clickInfo.event.extendedProps.isStart);
       handleShowEventsInModal({
         title: clickInfo.event.title,
         id: clickInfo.event.id,
@@ -2594,6 +2599,18 @@ const TimeSchedule = memo(
       return '00:15:00';
     };
 
+    useEffect(() => {
+      if (!view) {
+        params.set('view', ViewOptions.DAY);
+        router.push(`?${params.toString()}`);
+      } else {
+        if (view !== ViewOptions.DAY && view !== ViewOptions.WEEK) {
+          params.set('view', ViewOptions.DAY);
+          router.push(`?${params.toString()}`);
+        }
+      }
+    }, [view]);
+
     return (
       <div
         style={{
@@ -2964,6 +2981,8 @@ const TimeSchedule = memo(
         {popoverInfo && (
           <DetailPlanItemModal
             popoverInfo={popoverInfo}
+            isStart={isStartPopupDetail}
+            setIsStartPopupDetail={setIsStartPopupDetail}
             popoverRef={popoverRef}
             copyPlanTime={(uuid: string) => copyPlanTime(uuid)}
             deletePlanTask={(uuid: string) => {
@@ -2979,6 +2998,7 @@ const TimeSchedule = memo(
             }}
             deleteActualTask={(uuid: string) => deleteActualTask(uuid)}
             onClose={() => setPopoverInfo(null)}
+            handleUpdateItemStart={handleUpdateItemStart}
           />
         )}
       </div>

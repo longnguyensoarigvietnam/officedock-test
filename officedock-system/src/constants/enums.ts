@@ -378,6 +378,6 @@ export enum TimeType {
   WEEK = '週間前',
 }
 export enum FilterTypeKanban {
-  DEADLINE = 'deadline',
+  DEADLINE = '-deadline',
   IMPORTANT = 'is_important',
 }

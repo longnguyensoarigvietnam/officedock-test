@@ -17,17 +17,6 @@ export const SETTING_MENU: SettingMenuItem[] = [
   },
 ];
 
-export const MEMBER_OPTION: MenuItem = {
-  ...pageRouters.MEMBER_MANAGEMENT,
-  name: pageRouters.MEMBER_MANAGEMENT.name,
-  iconUrl: (active: boolean) => {
-    return active ? '/icons/team-active.svg' : '/icons/team.svg';
-  },
-  current: false,
-  companyMenu: false,
-  requiredPermission: PermissionsSystem.USER_VIEW,
-};
-
 export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
   {
     ...pageRouters.USERS_MANAGEMENT,
@@ -205,5 +194,15 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     current: false,
     companyMenu: true,
     requiredPermission: PermissionsSystem.VIEW_ALL,
+  },
+  {
+    ...pageRouters.MEMBER_MANAGEMENT,
+    name: pageRouters.MEMBER_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/team-active.svg' : '/icons/team.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.USER_VIEW,
   },
 ];

@@ -26,7 +26,7 @@ const WarningDeadlineTaskModal = memo(
         open={open}
         contentClass="items-baseline"
         className="font-primary w-[375px] !rounded-2xl py-[30px] bg-[#5B6770] border-none "
-        onClose={onClose}
+        onClose={() => {}}
         title="">
         <div className="text-base font-medium text-white items-baseline">
           <p className="leading-6 text-neutral-02 text-center">

@@ -7,6 +7,7 @@ const ResetPasswordPage = () => {
   return (
     <MainLayout
       title={pageRouters.MEMBER_MANAGEMENT.name}
+      className="bg-[#EBF1F7]"
       permission={PermissionsSystem.VIEW_ALL}>
       <ListMember />
     </MainLayout>

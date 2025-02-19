@@ -17,7 +17,7 @@ import ImageRound from '@components/common/ImageRound';
 import Tabs from '@components/common/Tabs';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 
-import { MEMBER_OPTION, SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
+import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 import { PermissionsSystem, SocketActions, TabType } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
@@ -137,6 +137,10 @@ const Sidebar = ({ className }: Props) => {
     }
   }, [session]);
 
+  const memberOption = menuItems.find(
+    (item) => item.href == pageRouters.MEMBER_MANAGEMENT.href,
+  );
+
   return (
     <aside
       className={`overflow-x-hidden ${hour} overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px]' : 'w-20 min-w-[70px]'} flex flex-col ${className}`}
@@ -158,7 +162,11 @@ const Sidebar = ({ className }: Props) => {
               <li className="flex-1">
                 <ul role="list" className="list-none pl-2">
                   {menuItems
-                    .filter((item) => item.companyMenu == false)
+                    .filter(
+                      (item) =>
+                        item.companyMenu == false &&
+                        item.href !== pageRouters.MEMBER_MANAGEMENT.href,
+                    )
                     .map((item) => (
                       <Tippy
                         content={`${item.name}`}
@@ -277,57 +285,61 @@ const Sidebar = ({ className }: Props) => {
               </li>
             </ul>
           </nav>
-          <div
-            className={`absolute ${expanded ? 'bottom-[123px]' : 'bottom-[165px]'}  left-0 w-full`}>
-            <ul
-              role="list"
-              className="flex max-h-20 flex-col gap-y-6 list-none">
-              <li className="flex-1">
-                <ul role="list" className="list-none pl-2">
-                  <Tippy
-                    content={`${MEMBER_OPTION.name}`}
-                    disabled={expanded}
-                    arrow={false}
-                    delay={1000}
-                    key={MEMBER_OPTION.name}
-                    placement="right"
-                    offset={[0, 0]}>
-                    <li key={MEMBER_OPTION.name} className={`text-sm relative`}>
-                      <div
-                        className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${MEMBER_OPTION.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
-                        onClick={() => {
-                          if (isHasTerm) return;
+          {memberOption && (
+            <div
+              className={`absolute ${expanded ? 'bottom-[135px]' : 'bottom-[165px]'}  left-0 w-full`}>
+              <ul
+                role="list"
+                className="flex max-h-20 flex-col gap-y-6 list-none">
+                <li className="flex-1">
+                  <ul role="list" className="list-none pl-2">
+                    <Tippy
+                      content={`${memberOption.name}`}
+                      disabled={expanded}
+                      arrow={false}
+                      delay={1000}
+                      key={memberOption.name}
+                      placement="right"
+                      offset={[0, 0]}>
+                      <li
+                        key={memberOption.name}
+                        className={`text-sm relative`}>
+                        <div
+                          className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
+                          onClick={() => {
+                            if (isHasTerm) return;
 
-                          router.push(MEMBER_OPTION.href);
-                        }}>
-                        {MEMBER_OPTION.iconUrl && (
-                          <ImageRound
-                            className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
-                            src={MEMBER_OPTION.iconUrl(MEMBER_OPTION.current)}
-                            name={`Icon ${MEMBER_OPTION.name} menu`}
-                          />
-                        )}
-                        {!expanded &&
-                          MEMBER_OPTION.iconUrl &&
-                          MEMBER_OPTION.iconUrl(true).includes('chat') &&
-                          totalNotifications > 0 && (
-                            <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                            router.push(memberOption.href);
+                          }}>
+                          {memberOption.iconUrl && (
+                            <ImageRound
+                              className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
+                              src={memberOption.iconUrl(memberOption.current)}
+                              name={`Icon ${memberOption.name} menu`}
+                            />
                           )}
-                        {expanded && (
-                          <>
-                            <p
-                              className={`opacity-100 text-left font-medium w-fit text-white ${MEMBER_OPTION.current && !memberSelected && !tagSelected && '!text-black'}`}>
-                              {MEMBER_OPTION.name}
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    </li>
-                  </Tippy>
-                </ul>
-              </li>
-            </ul>
-          </div>
+                          {!expanded &&
+                            memberOption.iconUrl &&
+                            memberOption.iconUrl(true).includes('chat') &&
+                            totalNotifications > 0 && (
+                              <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                            )}
+                          {expanded && (
+                            <>
+                              <p
+                                className={`opacity-100 text-left font-medium w-fit text-white ${memberOption.current && !memberSelected && !tagSelected && '!text-black'}`}>
+                                {memberOption.name}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </li>
+                    </Tippy>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          )}
         </TabPanel>
         <TabPanel key={1}></TabPanel>
         <Tippy

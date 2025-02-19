@@ -2667,8 +2667,6 @@ const KanbanBoardTask = () => {
                         onClick={() => {
                           if (orderingRequest !== FilterTypeKanban.DEADLINE) {
                             setOrderingRequest(FilterTypeKanban.DEADLINE);
-                          } else {
-                            setOrderingRequest('');
                           }
                         }}
                         variant={

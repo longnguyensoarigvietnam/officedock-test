@@ -8,6 +8,7 @@ import 'tippy.js/dist/tippy.css';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
+import socketEventEmitter from '@components/socket/socketEventEmitter';
 import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 
 import {
@@ -28,6 +29,7 @@ import useDataHeaderTaskList from '@hooks/useDataHeaderTask';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { TaskDuration } from '@interfaces/task';
+import { WebSocketMessageDataOverTime } from '@interfaces/chat';
 import { TaskContext } from '@providers/TaskProvider';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
@@ -37,8 +39,6 @@ import {
   formatQueryStartDateForCalendar,
   formatTimeTask,
 } from '@utils/date';
-import { WebSocketMessageDataOverTime } from '@interfaces/chat';
-import socketEventEmitter from '@components/socket/socketEventEmitter';
 
 const ShowTimeCounter = memo(
   ({ statusTaskSelected }: { statusTaskSelected: TaskDuration }) => {
