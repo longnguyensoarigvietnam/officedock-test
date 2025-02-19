@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from time import timezone
 
 from django.db import transaction
@@ -540,6 +540,11 @@ class TaskViewSet(
                 "countdown": remind_countdown,
             }
 
+        if (current_task.deadline != serializer_data.get("deadline")) or (
+            current_task.is_important != serializer_data.get("is_important")
+        ):
+            reset_sort_task(user)
+
         # Update task
         task = serializer.save()
 
@@ -930,6 +935,7 @@ class TaskViewSet(
 
         task_index.save()
         reset_sort_task(user)
+
         return self.response_ok(TaskIndexSerializer(task_index).data)
 
 
@@ -1243,6 +1249,32 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         queryset = self.filter_queryset(self.get_queryset())
         ordering = request.query_params.get("ordering", None)
         if ordering:
+            tasks = queryset.all()
+            for idx, task in enumerate(tasks):
+                task_index = task.task_index.first()
+                if task_index.pin_at:
+                    task.task_index.update(
+                        pin_at=timezone.now()
+                        - timedelta(seconds=INITIAL_INDEX_VALUE + idx)
+                    )
+                task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
+
+            task_pin = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=user.id
+            ).values("pin_at")[:1]
+            task_index = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=user.id
+            ).values("index")[:1]
+            # Annotate the queryset with the index from TaskIndex
+            queryset = queryset.annotate(
+                index=Subquery(task_index),
+                coalesced_pin_at=Coalesce(
+                    Subquery(task_pin),
+                    Value(REPLACE_NULL_DATE),
+                    output_field=DateTimeField(),
+                ),
+            ).order_by("-coalesced_pin_at", "-index")
+
             if "deadline" in ordering:
                 Setting.objects.update_or_create(
                     user=user,
@@ -1262,11 +1294,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     },
                 )
 
-            tasks = queryset.all()
-            for idx, task in enumerate(tasks):
-                task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
-
-        return super().list(request, *args, **kwargs)
+        return self.response_pagination(request, queryset, TaskBoardSerializer)
 
 
 @extend_schema(tags=["System > Task > Todo List"])
