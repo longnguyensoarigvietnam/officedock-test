@@ -325,6 +325,7 @@ const ChatDetail = ({
   useEffect(() => {
     if (chatRoomCode) {
       setDataMessageDetail([]);
+      setMsgIdUpdated(undefined);
       setLastItemId(null);
       if (editor) {
         editor.commands.clearContent();
@@ -619,12 +620,14 @@ const ChatDetail = ({
           fullName: session?.user.profile.fullName || '',
           id: session?.user.id as number,
           organizations: {
-            id: loggedInUser?.organizations.find(
-              (organization) => organization.isMain,
-            )?.id || 0,
-            name: loggedInUser?.organizations.find(
-              (organization) => organization.isMain,
-            )?.name || ''
+            id:
+              loggedInUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.id || 0,
+            name:
+              loggedInUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.name || '',
           },
         },
         mentions: mentionIds,
@@ -675,6 +678,8 @@ const ChatDetail = ({
 
   const handleConfirmUpdateMsg = (uuid: string) => {
     if (uuid) {
+      if (!editor) return;
+      editor.commands.clearContent();
       handleUpdateMsgChat({
         message: trimUnnecessaryLineBreaks(`${message}`) as string,
         uuid: uuid,
@@ -1470,6 +1475,7 @@ const ChatDetail = ({
                       chatRoomDetail={chatRoomDetail}
                       messageDetail={item}
                       msgEditing={msgEditing}
+                      editor={editor}
                       dashboardMembers={dashboardMembers}
                       setMentionMembers={setMentionMembers}
                       setMessage={setMessage}
@@ -1507,6 +1513,7 @@ const ChatDetail = ({
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
                       messageDetail={item}
+                      editor={editor}
                       msgEditing={msgEditing}
                       dashboardMembers={dashboardMembers}
                       setMentionMembers={setMentionMembers}
@@ -1668,6 +1675,8 @@ const ChatDetail = ({
                                 onClick={() => {
                                   setMsgIdUpdated && setMsgIdUpdated(undefined);
                                   setMessage && setMessage('');
+                                  if (!editor) return;
+                                  editor.commands.clearContent();
                                 }}>
                                 キャンセル
                               </Button>

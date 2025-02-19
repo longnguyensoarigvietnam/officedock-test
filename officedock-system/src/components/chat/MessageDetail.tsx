@@ -2,6 +2,7 @@ import { format, isSameDay } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Dispatch, Fragment, SetStateAction } from 'react';
+import { Editor } from '@tiptap/react';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
@@ -43,6 +44,7 @@ import {
   getFormattedDateTime,
   getJapaneseDayName,
 } from '@utils/date';
+
 import { MessageHoverOptions } from './MessageHoverOptions';
 
 export type MessageDetailProps = {
@@ -50,6 +52,7 @@ export type MessageDetailProps = {
   messageDetail: ChatMessageResponse;
   msgEditing?: string;
   dashboardMembers: ChatDashboardMember[];
+  editor: Editor | null;
   setMessage: Dispatch<SetStateAction<string>>;
   setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
   setMsgIdUpdated?: Dispatch<SetStateAction<string | undefined>>;
@@ -64,6 +67,7 @@ export const MessageDetail = ({
   chatRoomDetail,
   messageDetail,
   dashboardMembers,
+  editor,
   setMessage,
   setMentionMembers,
   setMsgIdUpdated,
@@ -98,6 +102,7 @@ export const MessageDetail = ({
       });
       setMentionMembers(mentionMembers || []);
     }
+    editor && editor.commands.setContent(messageDetail.message);
   };
 
   const renderAvatar = (senderId: number) => {

@@ -236,6 +236,9 @@ html *::-webkit-scrollbar-track {
 
 .ProseMirror p.is-editor-empty:first-child::before {
   color: #77858F !important;
-  content: attr(data-placeholder) !important;
+  content: attr(data-placeholder);
+  float: left;
+  pointer-events: none;
+  height: 0; 
   font-size: 14px !important;
 }
