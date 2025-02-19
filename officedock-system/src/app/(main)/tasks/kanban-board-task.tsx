@@ -10,6 +10,12 @@ import {
 
 import { parseInt } from 'lodash';
 import { AxiosError } from 'axios';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import { useMutation, useQueryClient } from 'react-query';
 import { useSession } from 'next-auth/react';
@@ -30,6 +36,7 @@ import CardListView from '@components/kanban/CardListView';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import Button from '@components/common/Button';
 import InputSearch from '@components/common/InputSearch';
+import socketEventEmitter from '@components/socket/socketEventEmitter';
 import BoardKanban from '@components/kanban/Board';
 import ActionFilterTask from '@components/modals/ActionFilterTask';
 import FixedTaskData from './fixed-task';
@@ -51,6 +58,7 @@ import {
   ItemScheduleType,
   ItemStartType,
   KanbanType,
+  SocketActions,
   StatusValueTask,
   TemplateAction,
 } from '@constants/enums';
@@ -81,6 +89,7 @@ import {
   UpdateTaskKanbanRequest,
 } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
+import { WebSocketMessageSortKanban } from '@interfaces/chat';
 import {
   Template,
   TemplateFormData,
@@ -101,12 +110,6 @@ import {
 } from '@utils/date';
 import { compareItems } from '@utils';
 import api from '@base/api';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -260,6 +263,9 @@ const KanbanBoardTask = () => {
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [openWarningCloseModal, setOpenWarningCloseModal] =
     useState<boolean>(false);
+
+  const [dataOrderRing, setDataOrderRing] = useState<string>('');
+
   const [resetFunctions, setResetFunctions] = useState<{
     resetDataCategoryOptions?: () => void;
     reset?: () => void;
@@ -2574,14 +2580,33 @@ const KanbanBoardTask = () => {
   useEffect(() => {
     if (authenticatedUser) {
       if (authenticatedUser.setting?.isSortingTaskByImportant) {
-        setOrderingRequest(FilterTypeKanban.IMPORTANT);
+        setDataOrderRing(FilterTypeKanban.IMPORTANT);
       }
       if (authenticatedUser.setting?.isSortingTaskByDeadline) {
-        setOrderingRequest(FilterTypeKanban.DEADLINE);
+        setDataOrderRing(FilterTypeKanban.DEADLINE);
       }
       setIsReadyToFetch(true);
     }
   }, [authenticatedUser]);
+
+  // Socket
+  useEffect(() => {
+    const handleSocketMessage = (data: WebSocketMessageSortKanban) => {
+      switch (data.action) {
+        case SocketActions.RESET_STATUS_SORT_TASK:
+          setIsReadyToFetch(false);
+          setOrderingRequest('');
+          setDataOrderRing('');
+          break;
+      }
+    };
+
+    socketEventEmitter.on('message', handleSocketMessage);
+
+    return () => {
+      socketEventEmitter.off('message', handleSocketMessage);
+    };
+  }, []);
 
   return (
     <>
@@ -2665,37 +2690,41 @@ const KanbanBoardTask = () => {
                       <Button
                         disabled={isLoadingDataTask}
                         onClick={() => {
-                          if (orderingRequest !== FilterTypeKanban.DEADLINE) {
+                          if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
+                            setIsReadyToFetch(true);
+
+                            setDataOrderRing(FilterTypeKanban.DEADLINE);
                             setOrderingRequest(FilterTypeKanban.DEADLINE);
-                          } else {
-                            setOrderingRequest('');
                           }
                         }}
                         variant={
                           isLoadingDataTask
                             ? 'outline'
-                            : orderingRequest === FilterTypeKanban.DEADLINE
+                            : dataOrderRing === FilterTypeKanban.DEADLINE
                               ? 'primary'
                               : 'outline'
                         }
-                        className={`${orderingRequest === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
                         締切期間
                       </Button>
                       <Button
                         disabled={isLoadingDataTask}
                         onClick={() => {
-                          if (orderingRequest !== FilterTypeKanban.IMPORTANT) {
+                          if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+                            setIsReadyToFetch(true);
+
+                            setDataOrderRing(FilterTypeKanban.IMPORTANT);
                             setOrderingRequest(FilterTypeKanban.IMPORTANT);
                           }
                         }}
                         variant={
                           isLoadingDataTask
                             ? 'outline'
-                            : orderingRequest === FilterTypeKanban.IMPORTANT
+                            : dataOrderRing === FilterTypeKanban.IMPORTANT
                               ? 'primary'
                               : 'outline'
                         }
-                        className={`${orderingRequest === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
                         重要
                       </Button>
                     </>

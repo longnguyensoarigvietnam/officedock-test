@@ -26,6 +26,7 @@ class ChatRoom(BaseModel):
     type = models.CharField(
         max_length=15, null=True, blank=True, choices=ChatRoomTypes.choices()
     )
+    memo = models.TextField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Generate unique code when creating
@@ -102,6 +103,7 @@ class ChatMessage(BaseModel):
     )
     message = models.TextField()
     is_edited = models.BooleanField(default=False)
+    bookmark_at = models.DateTimeField(null=True, blank=True)
     type = models.CharField(
         max_length=100,
         choices=ChatMessageTypes.choices(),
@@ -115,6 +117,10 @@ class ChatMessage(BaseModel):
         null=True,
         blank=True,
     )
+    mentions = models.ManyToManyField(
+        "users.User", related_name="mentioned_messages"
+    )
+    tasks = models.ManyToManyField("tasks.Task", related_name="link_messages")
 
     def save(self, *args, **kwargs):
         # Set default company when creating

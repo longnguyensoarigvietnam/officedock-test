@@ -1,6 +1,5 @@
 'use client';
 import { useContext, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from 'react-query';
 import { EventContentArg } from '@fullcalendar/core/index.js';
 
@@ -10,12 +9,7 @@ import ActionActualSchedule from '@components/modals/ActionActualSchedule';
 
 import { apiRouters } from '@constants/routers';
 import { NO_SETTING } from '@constants';
-import {
-  ActionsEvent,
-  ActionTask,
-  ItemScheduleType,
-  ItemStartType,
-} from '@constants/enums';
+import { ItemScheduleType, ItemStartType } from '@constants/enums';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
@@ -56,7 +50,6 @@ const TaskCard = ({
   event,
   slotHeight,
   isOptionZoomSchedule,
-  handleSetEventParam,
   handleUpdateItemStart,
   setTaskTimeScheduleList,
 }: TaskCardProps) => {
@@ -67,7 +60,6 @@ const TaskCard = ({
     setDataClickTask,
     setIdTaskStarting,
     setTaskSelectedToStart,
-    setIdTaskEditSelected,
     setTaskSelectedAction,
     setTaskSelected,
     setDataActualAddSchedule,
@@ -75,8 +67,6 @@ const TaskCard = ({
 
   const [isShowEditActual, setIsShowEditActual] = useState(false);
 
-  const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
   const resourcePlan =
     event.event._def &&
     event.event._def.resourceIds?.length &&
@@ -99,8 +89,6 @@ const TaskCard = ({
 
   const [showWarningStartModal, setShowWarningStartModal] =
     useState<boolean>(false);
-
-  const router = useRouter();
 
   const queryClient = useQueryClient();
 
@@ -253,21 +241,6 @@ const TaskCard = ({
     }
   };
 
-  const handleSetParam = ({
-    id,
-    action,
-  }: {
-    id: string | null;
-    action: string;
-  }) => {
-    if (id) {
-      params.set('task', id);
-    }
-    params.set('type', ItemStartType.TASK);
-    params.set('action', action);
-    router.push(`?${params.toString()}`);
-  };
-
   const differentTime =
     event.timeText && isMoreThanThirtyMinutes(event.timeText);
 
@@ -390,24 +363,7 @@ const TaskCard = ({
               ? largeColor
               : '#A7B9C2',
         }}
-        className={`h-full ${largeColor && resourcePlan && 'border border-l-2'}  group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}
-        onClick={() => {
-          if (event.event.extendedProps.type === ItemStartType.SCHEDULE) {
-            const newId = event.event.id.replace('event', '');
-            handleSetEventParam({
-              id: newId,
-              action: ActionsEvent.EDIT,
-            });
-          } else {
-            if (resourcePlan) {
-              setIdTaskEditSelected(`${event.event.extendedProps.taskId}`);
-              handleSetParam({
-                id: `${event.event.extendedProps.taskId}`,
-                action: ActionTask.EDIT,
-              });
-            }
-          }
-        }}>
+        className={`h-full ${largeColor && resourcePlan && 'border border-l-2'}  group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}>
         <div className="flex w-full relative h-full justify-between overflow-hidden">
           <div className="flex overflow-hidden flex-col gap-2 w-[95%]">
             <p className="font-bold min-h-[20px] text-sm truncate block w-full  ">

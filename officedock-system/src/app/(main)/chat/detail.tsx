@@ -14,6 +14,12 @@ import { useSession } from 'next-auth/react';
 import { useInView } from 'react-intersection-observer';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Document } from '@tiptap/extension-document';
+import { Mention } from '@tiptap/extension-mention';
+import { Paragraph } from '@tiptap/extension-paragraph';
+import { Text } from '@tiptap/extension-text';
+import { EditorContent, useEditor, Editor } from '@tiptap/react';
+import { Placeholder } from '@tiptap/extension-placeholder';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -21,13 +27,13 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
-import Quill from '@components/common/Quill';
 import ActionsChatMembersModal from '@components/modals/ActionsChatMembersModal';
 import ChatSettingModal from '@components/modals/ChatSettingModal';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
+import { ChatMentionMembersModal } from '@components/modals/ChatMentionMembersModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMemberModal';
@@ -38,6 +44,7 @@ import { apiRouters } from '@constants/routers';
 import {
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
+  MENTION_ALL_MEMBERS,
   NO_OPTION_CATEGORY,
   PAGINATION_PAGE_SIZE_HIGHT,
 } from '@constants';
@@ -149,7 +156,6 @@ const ChatDetail = ({
   const [openAddMembersBoxFromSetting, setOpenAddMembersBoxFromSetting] =
     useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
-  const [messageSubmitted, setMessageSubmitted] = useState<boolean>(false);
   const [page, _setPage] = useState<number>(1);
   const [isShowModalTask, setShowModalTask] = useState<boolean>(false);
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
@@ -192,6 +198,16 @@ const ChatDetail = ({
   const activeRoomRef = useRef<string | null>(null);
   const { authenticatedUser } = useAuthenticatedUser();
   const [loggedInUser, setLoggedInUser] = useState<User>();
+  const [mentionMembers, setMentionMembers] = useState<ChatParticipant[]>([]);
+  const [searchMentionMembers, setSearchMentionMembers] = useState<string>('');
+  const [openMentionMembersModal, setOpenMentionMembersModal] =
+    useState<boolean>(false);
+  const [mentionMemberModalPosition, setMentionMemberModalPosition] = useState<{
+    left: number;
+  }>({
+    left: 0,
+  });
+  const mentionIconRef = useRef<HTMLDivElement | null>(null);
 
   //Task
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
@@ -289,7 +305,7 @@ const ChatDetail = ({
   ) => {
     if (participantsList) {
       const participantIds = [] as number[];
-      participantsList.map((member) => participantIds.push(member.id));
+      participantsList.map((member) => participantIds.push(Number(member.id)));
       return participantIds;
     }
   };
@@ -300,7 +316,7 @@ const ChatDetail = ({
         (room) => room.code === chatRoomCode,
       );
       if (initialRoomDetail) {
-        setMessageSubmitted(true);
+        setMessage('');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -309,9 +325,15 @@ const ChatDetail = ({
   useEffect(() => {
     if (chatRoomCode) {
       setDataMessageDetail([]);
+      setMsgIdUpdated(undefined);
       setLastItemId(null);
+      if (editor) {
+        editor.commands.clearContent();
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatRoomCode, setLastItemId]);
+
   const handleDeleteMessageLocal = useCallback(
     (data: WebSocketMessageData) => {
       setDataMessageDetail((prevDataMessageDetail) => {
@@ -401,7 +423,7 @@ const ChatDetail = ({
         }
       });
       const list = [] as number[];
-      data.chatRoom.participants.map((member) => list.push(member.id));
+      data.chatRoom.participants.map((member) => list.push(Number(member.id)));
       setChatRoomParticipantsEditing((prevChatRoomParticipantsEditing) => {
         const updatedChatRoomParticipantsEditing = [
           ...(prevChatRoomParticipantsEditing ?? []),
@@ -478,7 +500,6 @@ const ChatDetail = ({
             }
           }
           handleUpdateLocalByCodeMsg(data.chatRoom);
-          setMessageSubmitted(true);
           break;
         case SocketActions.CREATION_TASK:
           if (data.chatRoom.code === chatRoomCode) {
@@ -491,7 +512,6 @@ const ChatDetail = ({
             }
           }
           handleUpdateLocalByCode(data.chatRoom);
-          setMessageSubmitted(true);
           break;
         case SocketActions.DELETE_TASK:
           if (data.chatRoom.code === chatRoomCode) {
@@ -544,16 +564,19 @@ const ChatDetail = ({
   const postSendMsg = async ({
     data,
     uuid,
+    mentionIds,
   }: {
     data: string;
     uuid: string;
+    mentionIds: number[];
   }) => {
     const { data: response } = await api.post(
       apiRouters.CHAT_MESSAGES(`${chatRoomCode}`),
       {
         message: data,
-        uuid: uuid,
-        clientId: clientId,
+        uuid,
+        clientId,
+        mentionIds,
       },
     );
     return response;
@@ -561,12 +584,27 @@ const ChatDetail = ({
   const { mutate: handleSendMsgChat } = useMutation(postSendMsg, {
     onSuccess: async () => {},
     onError: () => {},
+    onSettled: () => {},
   });
 
   const handleConfirmSendMessage = () => {
-    setMessageSubmitted(true);
     const uuidMsg = uuidv4();
     const newMsg = trimUnnecessaryLineBreaks(message) as string;
+    const chatRoomMemberIds =
+      chatRoomDetail?.participants
+        ?.filter((participant) => participant.id !== session?.user.id)
+        .map((member) => Number(member.id)) || [];
+    let mentionIds = [];
+    const isMentionAllMembers = mentionMembers.find(
+      (mentionMember) =>
+        mentionMember.id == null &&
+        mentionMember.fullName == MENTION_ALL_MEMBERS,
+    );
+    if (isMentionAllMembers) {
+      mentionIds = [...chatRoomMemberIds];
+    } else {
+      mentionIds = mentionMembers.map((member) => Number(member.id)) || [];
+    }
     setDataMessageDetail([
       {
         uuid: uuidMsg,
@@ -579,15 +617,30 @@ const ChatDetail = ({
         sender: {
           fullName: session?.user.profile.fullName || '',
           id: session?.user.id as number,
-          organizations: [],
+          organizations: {
+            id:
+              loggedInUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.id || 0,
+            name:
+              loggedInUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.name || '',
+          },
         },
+        mentions: mentionIds,
       },
       ...dataMessageDetail,
     ]);
+    setMessage('');
+    if (!editor) return;
 
+    editor.commands.clearContent();
+    setMentionMembers([]);
     handleSendMsgChat({
       data: newMsg,
       uuid: uuidMsg,
+      mentionIds,
     });
   };
 
@@ -607,7 +660,11 @@ const ChatDetail = ({
     handleDeleteMsgChat();
   };
   // Update message
-  const postUpdateMsg = async (data: { uuid: string; message: string }) => {
+  const postUpdateMsg = async (data: {
+    uuid: string;
+    message: string;
+    mentionIds: number[];
+  }) => {
     const { data: response } = await api.patch(
       apiRouters.CHAT_MESSAGES_DETAIL(data.uuid),
       data,
@@ -617,13 +674,35 @@ const ChatDetail = ({
   const { mutate: handleUpdateMsgChat } = useMutation(postUpdateMsg, {
     onSuccess: async () => {},
     onError: () => {},
+    onSettled: () => {
+      setMessage('');
+    },
   });
 
   const handleConfirmUpdateMsg = (uuid: string) => {
     if (uuid) {
+      if (!editor) return;
+      editor.commands.clearContent();
+      const chatRoomMemberIds =
+        chatRoomDetail?.participants
+          ?.filter((participant) => participant.id !== session?.user.id)
+          .map((member) => Number(member.id)) || [];
+      let mentionIds = [];
+      const isMentionAllMembers = mentionMembers.find(
+        (mentionMember) =>
+          mentionMember.id == null &&
+          mentionMember.fullName == MENTION_ALL_MEMBERS,
+      );
+      if (isMentionAllMembers) {
+        mentionIds = [...chatRoomMemberIds];
+      } else {
+        mentionIds = mentionMembers.map((member) => Number(member.id)) || [];
+      }
+      setMentionMembers([]);
       handleUpdateMsgChat({
-        message: trimUnnecessaryLineBreaks(`${msgEditing}`) as string,
+        message: trimUnnecessaryLineBreaks(`${message}`) as string,
         uuid: uuid,
+        mentionIds,
       });
     }
   };
@@ -949,6 +1028,54 @@ const ChatDetail = ({
     },
   );
 
+  const editor = useEditor({
+    extensions: [
+      Document,
+      Paragraph,
+      Text,
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention text-[#0068B6]',
+        },
+      }),
+      Placeholder.configure({
+        placeholder: 'メッセージを入力',
+      }),
+    ],
+    content: message,
+    onUpdate: ({ editor }: { editor: Editor }) => {
+      setMessage(editor.getHTML());
+    },
+  });
+
+  const handleCheckboxClick = (member: ChatParticipant, type: string) => {
+    if (!editor) return;
+
+    if (type == 'remove') {
+      const { doc, tr } = editor.state;
+
+      doc.descendants((node, pos) => {
+        if (node.type.name === 'mention' && node.attrs.id === member.fullName) {
+          tr.delete(pos, pos + node.nodeSize);
+        }
+      });
+
+      editor.view.dispatch(tr);
+    } else {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'mention',
+          attrs: {
+            id: member.fullName,
+          },
+        })
+        .insertContent(' ')
+        .run();
+    }
+  };
+
   const handleSetParam = ({
     id,
     action,
@@ -1041,7 +1168,7 @@ const ChatDetail = ({
           {AvatarIconWithDynamicColor({
             color: avatarColor,
             size: 33,
-            customClassName: 'mt-0.5 ml-0.5'
+            customClassName: 'mt-0.5 ml-0.5',
           })}
         </div>
       </div>
@@ -1110,6 +1237,39 @@ const ChatDetail = ({
     },
   );
 
+  useEffect(() => {
+    if (message.length) {
+      setMentionMembers((prevMentionMembers) =>
+        prevMentionMembers.filter((member) =>
+          message.includes(member.fullName),
+        ),
+      );
+    }
+  }, [message]);
+
+  const mentionMemberOptions = chatRoomDetail
+    ? [
+        {
+          id: null,
+          fullName: MENTION_ALL_MEMBERS,
+        },
+        ...(chatRoomParticipantsEditing.find(
+          (room) => room.roomCode === chatRoomDetail.code,
+        )
+          ? chatRoomParticipantsEditing
+              .find((room) => room.roomCode === chatRoomDetail.code)
+              ?.participantsList.map((participantId) => {
+                const member = dashboardMembers.find(
+                  (member) => member.id === participantId,
+                );
+                return {
+                  id: participantId,
+                  fullName: member?.fullName || '',
+                };
+              }) || []
+          : chatRoomDetail?.participants || []),
+      ]
+    : [];
   return (
     <Fragment>
       {chatRoomCode && (
@@ -1334,12 +1494,12 @@ const ChatDetail = ({
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
                       messageDetail={item}
-                      messageSubmitted={messageSubmitted}
-                      msgIdUpdated={msgIdUpdated}
                       msgEditing={msgEditing}
+                      editor={editor}
                       dashboardMembers={dashboardMembers}
+                      setMentionMembers={setMentionMembers}
+                      setMessage={setMessage}
                       setMsgEditing={setMsgEditing}
-                      setMessageSubmitted={setMessageSubmitted}
                       setMsgIdDeleted={setMsgIdDeleted}
                       setOpenConfirmDeleteModal={setOpenConfirmDeleteModal}
                       setMsgIdUpdated={setMsgIdUpdated}
@@ -1373,12 +1533,12 @@ const ChatDetail = ({
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
                       messageDetail={item}
-                      messageSubmitted={messageSubmitted}
-                      msgIdUpdated={msgIdUpdated}
+                      editor={editor}
                       msgEditing={msgEditing}
                       dashboardMembers={dashboardMembers}
+                      setMentionMembers={setMentionMembers}
+                      setMessage={setMessage}
                       setMsgEditing={setMsgEditing}
-                      setMessageSubmitted={setMessageSubmitted}
                       setMsgIdDeleted={setMsgIdDeleted}
                       setOpenConfirmDeleteModal={setOpenConfirmDeleteModal}
                       setMsgIdUpdated={setMsgIdUpdated}
@@ -1422,20 +1582,37 @@ const ChatDetail = ({
                       className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
                       <div className="flex justify-between items-center">
                         <div className="flex gap-1 items-center">
-                          <Tippy
-                            content={'メンション'}
-                            arrow={false}
-                            delay={1000}
-                            placement="top"
-                            offset={[0, 8]}>
-                            <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Mention"
-                                src="/icons/mention.svg"
-                                className="w-[16px] h-[16px]"
-                              />
-                            </div>
-                          </Tippy>
+                          {chatRoomDetail?.type == ChatRoomType.GROUP && (
+                            <>
+                              <Tippy
+                                content={'メンション'}
+                                arrow={false}
+                                delay={1000}
+                                placement="top"
+                                offset={[0, 8]}>
+                                <div
+                                  ref={mentionIconRef}
+                                  className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer"
+                                  onClick={() => {
+                                    if (mentionIconRef.current) {
+                                      const rect =
+                                        mentionIconRef.current.getBoundingClientRect();
+                                      setMentionMemberModalPosition({
+                                        left: rect.left,
+                                      });
+                                    }
+                                    setOpenMentionMembersModal(true);
+                                  }}>
+                                  <ImageRound
+                                    name="Mention"
+                                    src="/icons/mention.svg"
+                                    className="w-[16px] h-[16px]"
+                                  />
+                                </div>
+                              </Tippy>
+                            </>
+                          )}
+
                           <Tippy
                             content={'ファイルを送信'}
                             arrow={false}
@@ -1505,7 +1682,25 @@ const ChatDetail = ({
                           </Tippy>
                         </div>
 
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-3">
+                          {session?.user.permissions &&
+                            hasPermissionInArray(
+                              session?.user.permissions,
+                              PermissionsSystem.CHAT_UPDATE,
+                            ) &&
+                            msgIdUpdated && (
+                              <Button
+                                className="w-[120px]"
+                                variant="outline"
+                                onClick={() => {
+                                  setMsgIdUpdated && setMsgIdUpdated(undefined);
+                                  setMessage && setMessage('');
+                                  if (!editor) return;
+                                  editor.commands.clearContent();
+                                }}>
+                                キャンセル
+                              </Button>
+                            )}
                           {session?.user.permissions &&
                             hasPermissionInArray(
                               session?.user.permissions,
@@ -1514,7 +1709,13 @@ const ChatDetail = ({
                               <Button
                                 className="w-[100px]"
                                 type="submit"
-                                onClick={handleConfirmSendMessage}
+                                onClick={() => {
+                                  if (msgIdUpdated) {
+                                    handleConfirmUpdateMsg(msgIdUpdated);
+                                  } else {
+                                    handleConfirmSendMessage();
+                                  }
+                                }}
                                 disabled={
                                   trimUnnecessaryLineBreaks(
                                     message as string,
@@ -1525,14 +1726,8 @@ const ChatDetail = ({
                             )}
                         </div>
                       </div>
-                      <div className="mt-[-10px]">
-                        <Quill
-                          text={message}
-                          setText={setMessage}
-                          messageSubmitted={messageSubmitted}
-                          setMessageSubmitted={setMessageSubmitted}
-                          placeholder="メッセージを入力"
-                        />
+                      <div className="mt-5">
+                        <EditorContent editor={editor} />
                       </div>
                     </div>
                   ),
@@ -1546,6 +1741,22 @@ const ChatDetail = ({
             </div>
           )}
         </div>
+      )}
+      {openMentionMembersModal && (
+        <ChatMentionMembersModal
+          mentionMemberModalPosition={mentionMemberModalPosition}
+          mentionMemberOptions={mentionMemberOptions}
+          searchMentionMembers={searchMentionMembers}
+          mentionMembers={mentionMembers}
+          dashboardMembers={dashboardMembers}
+          setMentionMembers={setMentionMembers}
+          handleCheckboxClick={handleCheckboxClick}
+          setSearchMentionMembers={setSearchMentionMembers}
+          onClose={() => {
+            setOpenMentionMembersModal(false)
+            setSearchMentionMembers('')
+          }}
+        />
       )}
       {openSettingBox && (
         <ChatSettingModal

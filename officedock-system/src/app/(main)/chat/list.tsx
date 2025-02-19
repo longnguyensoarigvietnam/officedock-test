@@ -967,7 +967,8 @@ const ListChatUsers = ({
 
                   <div className="relative">{renderAvatar(item)}</div>
                   <div className="ml-2 flex gap-1 items-center">
-                    <p className="text-sm max-w-[160px] font-medium truncate">
+                    <p className={`text-sm ${(item.type == ChatRoomType.PRIVATE ||
+                        item.type == ChatRoomType.SELF) ? 'max-w-[200px] truncate' : 'break-words w-[265px]'} font-medium `}>
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -977,7 +978,7 @@ const ListChatUsers = ({
                           )?.roomName
                         : item?.name || ''}
                     </p>
-                    <p className="text-[#77858F] text-[12px] max-w-[80px] truncate font-medium">
+                    <p className="text-[#77858F] text-[12px] min-w-[calc(100%_-_200px)] truncate font-medium">
                       {((item.type == ChatRoomType.PRIVATE ||
                         item.type == ChatRoomType.SELF) &&
                         item.participants.find((participant) =>

@@ -84,7 +84,7 @@ import {
   isYesterdaySchedule,
 } from '@utils/date';
 import {
-  adjustPositionForViewport,
+  adjustPositionForViewportSchedule,
   hasPermissionInArray,
   transformDataTaskDailyToTable,
 } from '@utils';
@@ -161,20 +161,14 @@ const DailyReportBoard = () => {
       title: data.title,
       end: data.end,
       start: data.start,
-      left: adjustPositionForViewport(
-        {
-          top: Number(data.clientY),
-          left: Number(data.clientX),
-        },
-        data.eventList.length,
-      ).left,
-      top: adjustPositionForViewport(
-        {
-          top: Number(data.clientY),
-          left: Number(data.clientX),
-        },
-        data.eventList.length,
-      ).top,
+      left: adjustPositionForViewportSchedule({
+        top: Number(data.clientY),
+        left: Number(data.clientX),
+      }).left,
+      top: adjustPositionForViewportSchedule({
+        top: Number(data.clientY),
+        left: Number(data.clientX),
+      }).top,
     });
   };
   const handleEventClick = (clickInfo?: any) => {

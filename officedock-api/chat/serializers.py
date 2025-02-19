@@ -98,6 +98,7 @@ class ChatRoomDetailSerializer(ChatRoomSerializer):
             "name",
             "code",
             "participants",
+            "memo",
             "type",
             "unread_messages",
         ]
@@ -171,9 +172,13 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
     message = serializers.SerializerMethodField()
     schedule = serializers.SerializerMethodField(read_only=True)
-    sender = CreationDataUserForChatSerializer()
+    sender = CreationDataUserWithMainOrganizationSerializer()
     task = TaskForChatMessageSerializer()
     submit_level = SubmitLevelForChatMessageSerializer()
+    mentions = CreationDataUserWithMainOrganizationSerializer(
+        many=True, read_only=True
+    )
+    tasks = TaskForChatMessageSerializer(many=True, read_only=True)
 
     class Meta:
         model = ChatMessage
@@ -190,6 +195,8 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "schedule_changes",
             "schedule",
             "type",
+            "mentions",
+            "tasks",
         ]
         read_only_fields = ["id", "uuid"]
 
@@ -213,10 +220,66 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         )
 
 
+class ChatMessageBookMarkSerializer(ChatMessageSerializer):
+    """
+    Chat message bookmark serializer
+    """
+
+    chat_room_code = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatMessage
+        fields = [
+            "id",
+            "uuid",
+            "chat_room_code",
+            "message",
+            "sender",
+            "is_edited",
+            "created_at",
+            "deleted_at",
+            "bookmark_at",
+            "type",
+        ]
+
+    def get_chat_room_code(self, obj):
+        """Get chat room code"""
+        return obj.chat_room.code
+
+
+class BookMarkSerializer(serializers.Serializer):
+    """
+    Bookmark serializer
+    """
+
+    bookmark_at = serializers.DateTimeField(allow_null=True, required=False)
+
+
 class SendMessageSerializer(serializers.ModelSerializer):
     """
     Serializer for send message
     """
+
+    mentions = CreationDataUserWithMainOrganizationSerializer(
+        many=True, read_only=True
+    )
+    mention_ids = serializers.PrimaryKeyRelatedField(
+        source="mentions",
+        queryset=User.objects.all(),
+        write_only=True,
+        many=True,
+        required=False,
+        allow_null=False,
+    )
+    tasks = TaskForChatMessageSerializer(many=True, read_only=True)
+    task_ids = serializers.PrimaryKeyRelatedField(
+        source="tasks",
+        queryset=Task.objects.all(),
+        write_only=True,
+        many=True,
+        required=False,
+        allow_null=False,
+    )
 
     class Meta:
         model = ChatMessage
@@ -224,6 +287,10 @@ class SendMessageSerializer(serializers.ModelSerializer):
             "uuid",
             "message",
             "type",
+            "mentions",
+            "mention_ids",
+            "tasks",
+            "task_ids",
         ]
 
     def update(self, instance, validated_data):
@@ -326,3 +393,9 @@ class ChatRoomsParticipantsWebSocketSerializer(ChatRoomsParticipantsSerializer):
             "pin_at",
             "participants",
         ]
+
+
+class ChatRoomMemoSerializer(serializers.Serializer):
+    """Serializer for chat room memo"""
+
+    memo = serializers.CharField(required=False, allow_null=True)

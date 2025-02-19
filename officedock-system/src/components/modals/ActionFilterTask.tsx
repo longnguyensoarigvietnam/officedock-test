@@ -6,7 +6,6 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { CreationDataTask } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
-import { UNREGISTERED } from '@constants';
 
 type ActionTaskFilterProp = {
   creationDataTaskData: CreationDataTask | undefined;
@@ -27,7 +26,7 @@ const ActionFilterTask = ({
     OptionDropdownType[]
   >([]);
 
-  const { watch, getValues, setValue } = useForm<{
+  const { getValues, setValue, reset } = useForm<{
     organizationIds?: OptionDropdownType[];
     tagIds?: OptionDropdownType[];
     categoryIds: OptionDropdownType[];
@@ -65,7 +64,9 @@ const ActionFilterTask = ({
         <div className="text-xs font-medium text-[#77858F] flex justify-between items-center">
           <span>絞り込み</span>
           <div className="flex items-center gap-x-[10px]">
-            <span>選択をクリア</span>
+            <span onClick={() => reset()} className="cursor-pointer">
+              選択をクリア
+            </span>
             <div
               style={{
                 padding: '5px',
@@ -80,7 +81,7 @@ const ActionFilterTask = ({
             </div>
           </div>
         </div>
-        <div className="mt-[10px] flex flex-col gap-[14px] ">
+        <div className="mt-[10px] flex  flex-col gap-[14px] ">
           {/* Organization */}
           <div>
             <MultiSelectDropdown
@@ -88,14 +89,10 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
+              labelOptionClass="break-words max-w-[324px]"
               options={dataOptionsOrganizations}
               selectedOptions={[]}
-              customLabel={
-                (watch('organizationIds') ?? []).filter((tag) => tag.value)
-                  .length > 0
-                  ? `${(watch('organizationIds') ?? []).filter((tag) => tag.value).length}件選択中`
-                  : UNREGISTERED
-              }
+              customLabel="チーム"
               onChange={(selected) => {
                 let updatedTagIds = [];
                 const currentTagIds = getValues('organizationIds') || [];
@@ -120,14 +117,10 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
+              labelOptionClass="break-words max-w-[324px]"
               options={dataOptionsCategoryIds}
               selectedOptions={[]}
-              customLabel={
-                (watch('categoryIds') ?? []).filter((tag) => tag.value).length >
-                0
-                  ? `${(watch('categoryIds') ?? []).filter((tag) => tag.value).length}件選択中`
-                  : UNREGISTERED
-              }
+              customLabel="カテゴリー"
               onChange={(selected) => {
                 let updatedTagIds = [];
                 const currentTagIds = getValues('categoryIds') || [];
@@ -152,13 +145,10 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
+              labelOptionClass="break-words max-w-[324px]"
               options={dataOptionsTagIds}
               selectedOptions={[]}
-              customLabel={
-                (watch('tagIds') ?? []).filter((tag) => tag.value).length > 0
-                  ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
-                  : UNREGISTERED
-              }
+              customLabel="タグ"
               onChange={(selected) => {
                 let updatedTagIds = [];
                 const currentTagIds = getValues('tagIds') || [];

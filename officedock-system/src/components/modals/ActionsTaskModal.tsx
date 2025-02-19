@@ -191,11 +191,11 @@ const ActionsTaskModal = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const _optionsCountType = Object.keys(TimeType).map((key) => ({
+  const optionsCountType = Object.keys(TimeType).map((key) => ({
     label: TimeType[key as keyof typeof TimeType],
     value: key,
   }));
-  const _optionsCountDown = generateOptionsCount(10);
+  const optionsCountDown = generateOptionsCount(10);
 
   const {
     register,
@@ -221,6 +221,7 @@ const ActionsTaskModal = ({
           planStartTime: '',
         },
       ],
+
       isImportant: dataTask?.isImportant || false,
     },
   });
@@ -318,8 +319,12 @@ const ActionsTaskModal = ({
       tagIds: dataTask ? [] : [{ label: '', value: '' }],
       deadlineDate: null,
       deadlineTime: '',
-      deadlineRemindCountdown: null,
-      deadlineRemindType: null,
+      deadlineRemindCountdown: {
+        label: '1',
+        value: 1,
+      },
+
+      deadlineRemindType: optionsCountType[0],
       type: {
         label: '',
         value: '',
@@ -405,13 +410,13 @@ const ActionsTaskModal = ({
               label: dataTask.remindCountdown,
               value: dataTask.remindCountdown || '',
             }
-          : null),
+          : optionsCountDown[0]),
         (value.deadlineRemindType = dataTask.remindType
           ? {
               label: dataTask.remindType,
               value: dataTask.remindType,
             }
-          : null),
+          : optionsCountType[0]),
         (value.deadlineDate = dataTask.deadline
           ? new Date(dataTask.deadline)
           : null),
@@ -467,6 +472,7 @@ const ActionsTaskModal = ({
       }
     }
     return value;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     action,
     dataTask,
@@ -1488,7 +1494,7 @@ const ActionsTaskModal = ({
                   <div className="ml-2">
                     <ImageRound
                       onClick={() => setIsShowFieldRemind(!isShowFieldRemind)}
-                      src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell.svg'}`}
+                      src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell-white.svg'}`}
                       name="Bell icon"
                       className="h-4 w-4"
                     />
@@ -1499,8 +1505,7 @@ const ActionsTaskModal = ({
                   className="mt-[6px] text-xs"
                 />
               </div>
-              {/* TODO: Implement remind task */}
-              {/* {isShowFieldRemind ? (
+              {isShowFieldRemind ? (
                 <div className="max-w-[250px]">
                   <div className="flex items-center gap-1">
                     <div className="w-[56px]">
@@ -1509,7 +1514,7 @@ const ActionsTaskModal = ({
                         name="deadlineRemindCountdown"
                         render={({ field: { value, onChange } }) => (
                           <Dropdown
-                            className="h-[34px] !py-1 !px-0 text-xs border-[#77858F] rounded-md"
+                            className="h-[34px] !py-1 !px-0 text-xs !border-[#77858F] rounded-md"
                             classNameTextData="!text-xs !ml-0"
                             labelOptionClass="!ml-0 !px-0 text-center w-full "
                             classNameOption="!text-xs "
@@ -1539,7 +1544,7 @@ const ActionsTaskModal = ({
                         name="deadlineRemindType"
                         render={({ field: { value, onChange } }) => (
                           <Dropdown
-                            className="h-[34px] !py-1 !pr-2 text-xs border-[#77858F] rounded-md"
+                            className="h-[34px] !py-1 !pr-2 text-xs !border-[#77858F] rounded-md"
                             classNameTextData="!text-xs"
                             classNameOption="!text-xs !ml-0"
                             classNameError="!text-xs"
@@ -1572,7 +1577,7 @@ const ActionsTaskModal = ({
                 </div>
               ) : (
                 <div className="w-fit"></div>
-              )} */}
+              )}
 
               <div>
                 {!isCheckActionPermission && (

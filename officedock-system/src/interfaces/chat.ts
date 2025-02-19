@@ -1,5 +1,4 @@
 import { MessageType, SubmitLevelStatus } from '@constants/enums';
-import { Organizations } from './organization';
 
 export interface ChatMessageResponse {
   id?: number;
@@ -8,7 +7,10 @@ export interface ChatMessageResponse {
   sender: {
     id: number;
     fullName: string;
-    organizations?: Organizations[];
+    organizations?: {
+      id: number;
+      name: string;
+    } | null;
   };
   task: {
     id: number;
@@ -44,13 +46,14 @@ export interface ChatMessageResponse {
     status: SubmitLevelStatus;
   };
   schedule?: {
-    id: number,
-    title: string
+    id: number;
+    title: string;
   };
   isEdited: boolean;
   createdAt: Date | string;
   deletedAt: Date | null;
   type: MessageType;
+  mentions?: number[];
 }
 
 export interface ChatDashboardMember {
@@ -69,12 +72,12 @@ export interface OrganizationDetail {
 }
 
 export interface ChatParticipant {
-  id: number;
+  id: number | null;
   fullName: string;
   organizations?: {
-    id: number,
-    name: string,
-  } | null
+    id: number;
+    name: string;
+  } | null;
 }
 
 export interface ChatRoomDetail {
@@ -115,6 +118,20 @@ export interface WebSocketMessageData {
   };
   remindCountdown?: number;
   remindType?: string;
+  title?: string;
+}
+export interface WebSocketMessageDataOverTime {
+  action: string;
+  isOverEstimate: boolean;
+  taskDurationRunningUuid: string;
+  type: string;
+  id: number;
+}
+
+export interface WebSocketMessageSortKanban {
+  action: string;
+  isSortingTaskByDeadline: boolean;
+  isSortingTaskByImportant: boolean;
 }
 
 export interface DataChatRoomSocket {

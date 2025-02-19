@@ -22,7 +22,7 @@ from tasks.models import (
     TaskStatus,
     TodoList,
 )
-from tasks.constants import INITIAL_INDEX_VALUE
+from tasks.constants import INITIAL_INDEX_VALUE, DatetimeUnitTypes
 from users.serializers import UsersForCreationSerializer
 
 
@@ -326,6 +326,10 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         allow_null=True,
         required=False,
     )
+    remind_countdown = serializers.IntegerField(allow_null=True, required=False)
+    remind_type = serializers.ChoiceField(
+        allow_null=True, required=False, choices=DatetimeUnitTypes.choices()
+    )
 
     class Meta:
         model = Task
@@ -342,6 +346,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "is_my_task",
             "priority",
             "deadline",
+            "remind_at",
             "description",
             "tags",
             "tag_ids",
@@ -360,6 +365,8 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "category_ids",
             "copy_task_id",
             "is_schedule_in_today",
+            "remind_countdown",
+            "remind_type",
         ]
 
         read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
@@ -433,6 +440,9 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         representation["people_in_charge"] = CreationDataUserSerializer(
             sorted_users, many=True
         ).data
+        if instance.reminds:
+            representation["remind_countdown"] = instance.reminds["countdown"]
+            representation["remind_type"] = instance.reminds["type"]
         return representation
 
     def get_index(self, instance):
@@ -524,6 +534,8 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "id",
             "title",
             "is_start",
+            "is_important",
+            "deadline",
             "is_my_task",
             "task_schedules",
             "type",

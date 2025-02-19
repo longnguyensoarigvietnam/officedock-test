@@ -67,6 +67,10 @@ export interface Profile {
   fullName: string;
   birthday: string;
   gender: string;
+  organizations?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
 export interface CreateUserFormRequest {
@@ -110,4 +114,12 @@ export interface UserFilterFormData {
 export interface MemoDetailData {
   content: string;
   isOpen: boolean;
+}
+export interface UserOrganization {
+  id: number;
+  name: string;
+  users: {
+    id: number;
+    fullName: string;
+  }[];
 }

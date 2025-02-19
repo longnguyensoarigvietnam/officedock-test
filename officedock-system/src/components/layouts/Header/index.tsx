@@ -96,6 +96,9 @@ const Header = ({ className }: HeaderProps) => {
   const { setDataEventEdit, setIdEventDelete } = useContext(TaskContext);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const params = new URLSearchParams(searchParams);
+
   const showErrorToast = useErrorToast();
 
   const queryClient = useQueryClient();
@@ -120,6 +123,7 @@ const Header = ({ className }: HeaderProps) => {
     count: number;
     type: string;
     id: number;
+    title: string;
   }>();
 
   const [backToEditing, setBackToEditing] = useState(false);
@@ -168,6 +172,7 @@ const Header = ({ className }: HeaderProps) => {
           id: member.id,
           fullName: member.fullName,
           avatarColor: getRandomColor(),
+          mainOrganization: member.organizations?.name || '',
         };
       });
       setDashboardMembersWithAvatars(membersWithAvatars);
@@ -183,6 +188,7 @@ const Header = ({ className }: HeaderProps) => {
             count: data.remindCountdown as number,
             type: data.remindType as string,
             id: data.id as number,
+            title: data.title as string,
           });
           break;
       }
@@ -222,12 +228,7 @@ const Header = ({ className }: HeaderProps) => {
   );
 
   useEffect(() => {
-    if (
-      actionType &&
-      typeDetail === ItemStartType.TASK &&
-      !isTaskPage &&
-      !isCalendarPage
-    ) {
+    if (actionType && typeDetail === ItemStartType.TASK && !isTaskPage) {
       if (taskDetailId) {
         getDataDetailTask(parseInt(taskDetailId));
       } else {
@@ -245,8 +246,25 @@ const Header = ({ className }: HeaderProps) => {
     typeDetail,
   ]);
 
+  const handleSetParam = ({
+    id,
+    action,
+  }: {
+    id: string | null;
+    action: string;
+  }) => {
+    if (id) {
+      params.set('task', id);
+    }
+    params.delete('event');
+    params.delete('action');
+    params.delete('type');
+    params.set('action', action);
+    params.set('type', ItemStartType.TASK);
+    router.push(`?${params.toString()}`);
+  };
+
   const handleRemoveParam = () => {
-    const params = new URLSearchParams(searchParams);
     params.delete('task');
     params.delete('action');
     params.delete('type');
@@ -255,7 +273,6 @@ const Header = ({ className }: HeaderProps) => {
     setShowModalTask(false);
   };
   const handleRemoveEventParam = () => {
-    const params = new URLSearchParams(searchParams);
     params.delete('event');
     params.delete('type');
     params.delete('action');
@@ -279,6 +296,7 @@ const Header = ({ className }: HeaderProps) => {
       });
       setDataTaskEdit(null);
       setShowModalTask(false);
+      setOpenWarningDeadlineModal(false);
     },
     onError: (error: AxiosError<any>) => {
       if (error.response?.data.taskSchedules) {
@@ -291,6 +309,26 @@ const Header = ({ className }: HeaderProps) => {
       }, 500);
     },
   });
+  //
+  const handleEditTaskRemind = async (data: TaskRequest) => {
+    return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
+  };
+
+  const { mutate: editTaskRemind } = useMutation(
+    'postEditTaskRemind',
+    handleEditTaskRemind,
+    {
+      onSuccess: async () => {
+        setOpenWarningDeadlineModal(false);
+      },
+      onError: (error: AxiosError<any>) => {
+        if (error.response?.data.taskSchedules) {
+          showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+        } else showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {},
+    },
+  );
   // Action call api edit task
   const handleConfirmEditTask = (data: TaskFormData) => {
     const tagIds = data.tagIds
@@ -643,8 +681,7 @@ const Header = ({ className }: HeaderProps) => {
 
   // Handle confirm remind
   const handleConfirmRemind = () => {
-    setOpenWarningDeadlineModal(false);
-    editTask({
+    editTaskRemind({
       remind_at: null,
       id: dataRemind?.id,
     });
@@ -937,11 +974,21 @@ const Header = ({ className }: HeaderProps) => {
       {openWarningDeadlineModal && (
         <WarningDeadlineTaskModal
           open={openWarningDeadlineModal}
-          time={`${dataRemind?.count}${TimeType[dataRemind?.type as keyof typeof TimeType]}`}
-          onConfirm={handleConfirmRemind}
-          onClose={() => {
-            setOpenWarningDeadlineModal(false);
+          title={`${dataRemind?.title}`}
+          remindCountdown={dataRemind?.count}
+          remindType={
+            dataRemind?.type
+              ? TimeType[dataRemind?.type as keyof typeof TimeType]
+              : ''
+          }
+          onConfirm={() => {
+            handleConfirmRemind();
+            handleSetParam({
+              id: `${dataRemind?.id}`,
+              action: ActionTask.EDIT,
+            });
           }}
+          onClose={handleConfirmRemind}
         />
       )}
     </>

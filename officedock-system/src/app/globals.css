@@ -138,6 +138,11 @@ html *::-webkit-scrollbar-track {
   font-size: 0.75em;
 }
 
+/*  Side bar */
+.tab-panel {
+  height: 100%;
+}
+
 .menu-item::before {
   content: '';
   position: absolute;
@@ -216,4 +221,24 @@ html *::-webkit-scrollbar-track {
   100% {
     transform: translate(-50%, -50%) rotate(1turn);
   }
+}
+
+.ProseMirror{
+  height: 150px;
+  border: 1px solid #77858F !important;
+  border-radius: 6px !important;
+  padding: 14px
+}
+
+.ProseMirror-focused{
+  outline: none !important;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #77858F !important;
+  content: attr(data-placeholder);
+  float: left;
+  pointer-events: none;
+  height: 0; 
+  font-size: 14px !important;
 }

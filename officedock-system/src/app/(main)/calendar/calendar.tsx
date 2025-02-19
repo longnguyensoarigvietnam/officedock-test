@@ -24,14 +24,10 @@ import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
 import InputSearch from '@components/common/InputSearch';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
-import ActionsTaskModal from '@components/modals/ActionsTaskModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import DatePicker from '@components/common/DatePicker';
 import CalendarSkeleton from '@components/skeleton/CalendarSkeleton';
-import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import EventInfoModal from '@components/modals/EventInfoModal';
-import TaskInfoModal from '@components/modals/TaskInfoModal';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Button from '@components/common/Button';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
@@ -40,7 +36,6 @@ import { TaskAndEventListModal } from '@components/modals/TaskAndEventListModal'
 
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
-import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import { adjustPositionForViewport, hasPermissionInArray } from '@utils';
 import {
@@ -64,26 +59,17 @@ import {
   EventFormData,
   EventParticipant,
   EventRequest,
-  TaskCalendarProps,
 } from '@interfaces/calendar';
-import {
-  peopleInChargeType,
-  Task,
-  TaskFormData,
-  TaskRequest,
-} from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
-import { PeopleInCharge } from '@interfaces/tag';
 import { User } from '@interfaces/user';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
-import { TaskContext } from '@providers/TaskProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
-  ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
@@ -94,11 +80,9 @@ import { apiRouters } from '@constants/routers';
 import {
   ActionsEvent,
   CalendarViewOptions,
-  CurrentScreen,
   EventCalendarType,
   EventWorkCategory,
   PermissionsSystem,
-  ScreenName,
   ServerStatusCode,
   ViewOptions,
 } from '@constants/enums';
@@ -108,7 +92,6 @@ import {
   NO_OPTION_CATEGORY,
 } from '@constants';
 import api from '@base/api';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const EventCalendar = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -121,10 +104,8 @@ const EventCalendar = () => {
   });
   const { data: session } = useSession();
   const [events, setEvents] = useState<EventCalendarDetail[]>([]);
-  const [filterMyTask, setFilterMyTask] = useState(false);
-  const [filterMyEvent, setFilterMyEvent] = useState(false);
   const [selectedScheduleUserIds, setSelectedScheduleUserIds] =
-    useState<string>('');
+    useState<string>(`${Number(session?.user.id)}`);
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [openConfirmDeleteEventModal, setOpenConfirmDeleteEventModal] =
     useState(false);
@@ -132,17 +113,12 @@ const EventCalendar = () => {
     useState(false);
   const [openConfirmEditEventModal, setOpenConfirmEditEventModal] =
     useState(false);
-  const [openConfirmDeleteTaskModal, setOpenConfirmDeleteTaskModal] =
-    useState(false);
   const [confirmEventDataToCreate, setConfirmEventDataToCreate] =
     useState<EventFormData>();
   const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
     useState<EventEditFormData>();
   const [backToEditing, setBackToEditing] = useState(false);
   const [dataEventEdit, setDataEventEdit] = useState<EventEditFormData>();
-  const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
-  const [selectedTaskScheduleId, setSelectedTaskScheduleId] =
-    useState<string>();
   const [actionEventClick, setActionEventClick] = useState<string>(
     ActionsEvent.CREATE,
   );
@@ -153,25 +129,21 @@ const EventCalendar = () => {
   const [displayDay, setDisplayDay] = useState<number>();
   const [showSidebar, setShowSidebar] = useState(false);
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
-  const { creationDataTaskData } = useCreationDataTask({});
   const { dashboardMemberList } = useDashboardMemberList();
   const [authenticatedUser, setAuthenticatedUser] = useState<User>();
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
-  const { showEditTaskModal, setShowEditTaskModal } = useContext(TaskContext);
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const router = useRouter();
   const actionType = searchParams.get('action');
   const eventIdURL = searchParams.get('event');
   const eventDetailId = eventIdURL?.replace('event', '');
-  const taskDetailId = searchParams.get('task');
   const containerRef = useRef(null);
   const [popoverInfo, setPopoverInfo] = useState<CalendarPopoverInfo | null>(
     null,
   );
   const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
-  const [openTaskInfoModal, setOpenTaskInfoModal] = useState<boolean>(false);
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
   const [infoModalPosition, setInfoModalPosition] = useState<{
@@ -194,20 +166,12 @@ const EventCalendar = () => {
   >();
   const [popoverInfoLoading, setPopoverInfoLoading] = useState<boolean>(false);
   const showErrorToast = useErrorToast();
-  const [openWarningCloseModal, setOpenWarningCloseModal] =
-    useState<boolean>(false);
-  const [resetFunctions, setResetFunctions] = useState<{
-    resetDataCategoryOptions?: () => void;
-    reset?: () => void;
-  }>({});
 
   const debouncedFetchCalendarData = useRef(
     debounce(
       async (
         startDate,
         endDate,
-        filterMyTask,
-        filterMyEvent,
         selectedScheduleUserIds,
         date?: Date,
         clientX?: number,
@@ -217,35 +181,17 @@ const EventCalendar = () => {
         const updatedUserIds: string[] = selectedScheduleUserIds
           ? selectedScheduleUserIds.split(',').filter(Boolean)
           : [];
-        updatedUserIds.push(`${session?.user.id}`);
 
-        const params: any = {
-          userId: `${session?.user.id}`,
-          startDate,
-          endDate,
-        };
         await getEventCalendarByUsers({
-          userId: filterMyEvent
-            ? updatedUserIds.join(',')
-            : selectedScheduleUserIds,
+          userId: updatedUserIds.join(','),
           startDate,
           endDate,
-          filterMyTask,
           isYearView,
           date,
           clientX,
           clientY,
         });
-        if (filterMyTask) {
-          if (date) params.date = date;
-          if (clientX !== undefined) params.clientX = clientX;
-          if (clientY !== undefined) params.clientY = clientY;
-          if (isYearView !== undefined) params.isYearView = isYearView;
-
-          await getMyTaskCalendar(params);
-        } else {
-          setPopoverInfoLoading(false);
-        }
+        setPopoverInfoLoading(false);
         setIsEventRendering(false);
       },
       1000,
@@ -269,8 +215,6 @@ const EventCalendar = () => {
       debouncedFetchCalendarData(
         startDateISOString,
         endDateISOString,
-        filterMyTask,
-        filterMyEvent,
         selectedScheduleUserIds,
       );
     }
@@ -293,8 +237,6 @@ const EventCalendar = () => {
       debouncedFetchCalendarData(
         startDateISOString,
         endDateISOString,
-        filterMyTask,
-        filterMyEvent,
         selectedScheduleUserIds,
       );
     }
@@ -316,8 +258,6 @@ const EventCalendar = () => {
       debouncedFetchCalendarData(
         startDateISOString,
         endDateISOString,
-        filterMyTask,
-        filterMyEvent,
         selectedScheduleUserIds,
       );
     }
@@ -339,8 +279,6 @@ const EventCalendar = () => {
       debouncedFetchCalendarData(
         startDateISOString,
         endDateISOString,
-        filterMyTask,
-        filterMyEvent,
         selectedScheduleUserIds,
       );
     }
@@ -395,8 +333,6 @@ const EventCalendar = () => {
       debouncedFetchCalendarData(
         startDateISOString,
         endDateISOString,
-        filterMyTask,
-        filterMyEvent,
         selectedScheduleUserIds,
         date,
         clientX,
@@ -406,11 +342,7 @@ const EventCalendar = () => {
     }
   };
 
-  const handleViewChange = async (
-    calendarView: string,
-    initialFilterMyTask?: boolean,
-    initialFilterMyEvent?: boolean,
-  ) => {
+  const handleViewChange = async (calendarView: string) => {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
       if (calendarView === CalendarViewOptions.VIEW_BY_WEEK) {
@@ -435,66 +367,17 @@ const EventCalendar = () => {
       const apiCalls: Promise<any>[] = [];
 
       if (calendarView !== CalendarViewOptions.VIEW_BY_YEAR) {
-        if (initialFilterMyEvent !== undefined) {
-          if (initialFilterMyEvent == true) {
-            apiCalls.push(
-              getEventCalendarByUsers({
-                userId: String(session?.user.id),
-                startDate: startDateISOString,
-                endDate: endDateISOString,
-              }),
-            );
-          }
-        }
+        const updatedUserIds: string[] = selectedScheduleUserIds
+          ? selectedScheduleUserIds.split(',').filter(Boolean)
+          : [];
 
-        if (initialFilterMyTask !== undefined) {
-          if (initialFilterMyTask == true) {
-            apiCalls.push(
-              getMyTaskCalendar({
-                userId: `${session?.user.id}`,
-                startDate: startDateISOString,
-                endDate: endDateISOString,
-              }),
-            );
-          }
-        }
-
-        if (
-          initialFilterMyEvent == undefined &&
-          initialFilterMyTask == undefined
-        ) {
-          if (filterMyEvent) {
-            const updatedUserIds: string[] = selectedScheduleUserIds
-              ? selectedScheduleUserIds.split(',').filter(Boolean)
-              : [];
-
-            updatedUserIds.push(`${session?.user.id}`);
-            apiCalls.push(
-              getEventCalendarByUsers({
-                userId: updatedUserIds.join(','),
-                startDate: startDateISOString,
-                endDate: endDateISOString,
-              }),
-            );
-          } else {
-            apiCalls.push(
-              getEventCalendarByUsers({
-                userId: selectedScheduleUserIds,
-                startDate: startDateISOString,
-                endDate: endDateISOString,
-              }),
-            );
-          }
-          if (filterMyTask) {
-            apiCalls.push(
-              getMyTaskCalendar({
-                userId: `${session?.user.id}`,
-                startDate: startDateISOString,
-                endDate: endDateISOString,
-              }),
-            );
-          }
-        }
+        apiCalls.push(
+          getEventCalendarByUsers({
+            userId: updatedUserIds.join(','),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          }),
+        );
       }
 
       await Promise.all(apiCalls);
@@ -558,21 +441,20 @@ const EventCalendar = () => {
 
   const showUserAvatars = (
     participantList: EventParticipant[],
-    type: string,
     avatarSize: number,
     borderClassName: string,
     isWeekView?: boolean,
-    isWeekViewAllDaySection?: boolean
+    isWeekViewAllDaySection?: boolean,
   ) => {
     if (participantList && participantList.length > 0) {
-      if (type == EventCalendarType.TASK) {
+      if (participantList.length == 1) {
         const avatarColor =
           dashboardMembersWithAvatars.find(
-            (member) => member.id == session?.user.id,
+            (member) => member.id == participantList[0].id,
           )?.avatarColor || '';
         return (
           <Tippy
-            content={`${session?.user.profile.fullName}`}
+            content={`${participantList[0].fullName}`}
             arrow={false}
             delay={1000}
             placement="top"
@@ -582,38 +464,47 @@ const EventCalendar = () => {
               {AvatarIconWithDynamicColor({
                 color: avatarColor,
                 size: avatarSize,
-                isCalendarScreen: true
+                isCalendarScreen: true,
               })}
             </div>
           </Tippy>
         );
-      } else {
-        if (participantList.length == 1) {
-          const avatarColor =
-            dashboardMembersWithAvatars.find(
-              (member) => member.id == participantList[0].id,
-            )?.avatarColor || '';
-          return (
-            <Tippy
-              content={`${participantList[0].fullName}`}
-              arrow={false}
-              delay={1000}
-              placement="top"
-              offset={[0, 5]}>
-              <div
-                className={`border-[1px] border-white rounded-full ${borderClassName}`}>
-                {AvatarIconWithDynamicColor({
-                  color: avatarColor,
-                  size: avatarSize,
-                  isCalendarScreen: true
-                })}
-              </div>
-            </Tippy>
-          );
-        } else if (participantList.length === 2) {
-          return (
-            <div className="mr-1 flex items-center">
-              {participantList.map((participant, index) => {
+      } else if (participantList.length === 2) {
+        return (
+          <div className="mr-1 flex items-center">
+            {participantList.map((participant, index) => {
+              const avatarColor =
+                dashboardMembersWithAvatars.find(
+                  (member) => member.id === participant.id,
+                )?.avatarColor || '';
+
+              return (
+                <Tippy
+                  content={`${participant.fullName}`}
+                  arrow={false}
+                  delay={1000}
+                  placement="top"
+                  key={participant.id}
+                  offset={[0, 5]}>
+                  <div
+                    className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
+                    {AvatarIconWithDynamicColor({
+                      color: avatarColor,
+                      size: avatarSize,
+                      isCalendarScreen: true,
+                    })}
+                  </div>
+                </Tippy>
+              );
+            })}
+          </div>
+        );
+      } else if (participantList.length > 2) {
+        return (
+          <div className={`mr-1 flex items-center ${!isWeekView && 'gap-1'}`}>
+            {participantList
+              .slice(0, isWeekView ? 5 : 1)
+              .map((participant, index) => {
                 const avatarColor =
                   dashboardMembersWithAvatars.find(
                     (member) => member.id === participant.id,
@@ -632,77 +523,43 @@ const EventCalendar = () => {
                       {AvatarIconWithDynamicColor({
                         color: avatarColor,
                         size: avatarSize,
-                        isCalendarScreen: true
+                        isCalendarScreen: true,
                       })}
                     </div>
                   </Tippy>
                 );
               })}
-            </div>
-          );
-        } else if (participantList.length > 2) {
-          return (
-            <div className={`mr-1 flex items-center ${!isWeekView && 'gap-1'}`}>
-              {participantList
-                .slice(0, isWeekView ? 5 : 1)
-                .map((participant, index) => {
-                  const avatarColor =
-                    dashboardMembersWithAvatars.find(
-                      (member) => member.id === participant.id,
-                    )?.avatarColor || '';
-
-                  return (
-                    <Tippy
-                      content={`${participant.fullName}`}
-                      arrow={false}
-                      delay={1000}
-                      placement="top"
-                      key={participant.id}
-                      offset={[0, 5]}>
-                      <div
-                        className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
-                        {AvatarIconWithDynamicColor({
-                          color: avatarColor,
-                          size: avatarSize,
-                          isCalendarScreen: true
-                        })}
-                      </div>
-                    </Tippy>
-                  );
-                })}
-              {isWeekView
-                ? participantList &&
-                  participantList.length > 5 && (
-                    <Tippy
-                      content={`他に${participantList.length - 5}人の表示があります`}
-                      arrow={false}
-                      delay={1000}
-                      placement="top"
-                      offset={[0, 5]}>
-                      <div
-                        className={`text-[#77858F] text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
-                        +{participantList.length - 5}
-                      </div>
-                    </Tippy>
-                  )
-                : participantList &&
-                  participantList.length > 1 && (
-                    <Tippy
-                      content={`他に${participantList.length - 1}人の表示があります`}
-                      arrow={false}
-                      delay={1000}
-                      placement="top"
-                      offset={[0, 5]}>
-                      <div
-                        className={`text-[#77858F] text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white border-white rounded-full !w-[19px] !h-[19px] bg-[#77858F] flex items-center justify-center'} `}
-                        >
-                        +{participantList.length - 1}
-                      </div>
-                    </Tippy>
-                  )}
-            </div>
-          );
-        }
+            {isWeekView
+              ? participantList &&
+                participantList.length > 5 && (
+                  <Tippy
+                    content={`他に${participantList.length - 5}人の表示があります`}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    offset={[0, 5]}>
+                    <div
+                      className={`text-[#77858F] text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
+                      +{participantList.length - 5}
+                    </div>
+                  </Tippy>
+                )
+              : participantList &&
+                participantList.length > 1 && (
+                  <Tippy
+                    content={`他に${participantList.length - 1}人の表示があります`}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    offset={[0, 5]}>
+                    <div
+                      className={`text-[#77858F] text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white border-white rounded-full !w-[19px] !h-[19px] bg-[#77858F] flex items-center justify-center'} `}>
+                      +{participantList.length - 1}
+                    </div>
+                  </Tippy>
+                )}
+          </div>
+        );
       }
     }
   };
@@ -728,11 +585,10 @@ const EventCalendar = () => {
                   <div className="flex items-center gap-1">
                     {showUserAvatars(
                       eventContent.event.extendedProps.participants,
-                      eventContent.event.extendedProps.type,
                       25,
                       '!w-[19px] !h-[19px]',
                       false,
-                      true
+                      true,
                     )}
                     <p className="truncate max-w-[100%] font-semibold mt-0.5 pt-0.5 h-[25px]">
                       {eventContent.event.title !== 'null'
@@ -759,11 +615,10 @@ const EventCalendar = () => {
             ) &&
               showUserAvatars(
                 eventContent.event.extendedProps.participants,
-                eventContent.event.extendedProps.type,
                 33,
                 '!w-[32px] !h-[32px]',
                 true,
-                false
+                false,
               )}
             <div className={` text-black text-[14px] font-medium px-1`}>
               <p className="font-semibold min-h-5">
@@ -865,7 +720,8 @@ const EventCalendar = () => {
             new Date(eventContent.event.end).getDate()
         ) {
           return (
-            <div className={`fc-daygrid-event mb-1 ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
+            <div
+              className={`fc-daygrid-event mb-1 ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
               <div
                 className={`text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
@@ -876,11 +732,10 @@ const EventCalendar = () => {
                   <div className="flex items-center gap-1">
                     {showUserAvatars(
                       eventContent.event.extendedProps.participants,
-                      eventContent.event.extendedProps.type,
                       25,
                       '!w-[19px] !h-[19px]',
                       false,
-                      false
+                      false,
                     )}
                     <p className="truncate max-w-[100%] font-semibold mt-0.5 pt-0.5 h-[25px]">
                       {eventContent.event.title !== 'null'
@@ -961,10 +816,6 @@ const EventCalendar = () => {
                 if (event.allDay) {
                   filterEvents.push({
                     id: `${event.id}`,
-                    taskId:
-                      event.type == EventCalendarType.TASK
-                        ? `${event.taskId}`
-                        : '',
                     title: event.title,
                     start: eventStart.toLocaleString(),
                     end: new Date(adjustedEnd).toLocaleString(),
@@ -976,10 +827,6 @@ const EventCalendar = () => {
               } else {
                 filterEvents.push({
                   id: `${event.id}`,
-                  taskId:
-                    event.type == EventCalendarType.TASK
-                      ? `${event.taskId}`
-                      : '',
                   title: event.title,
                   start: eventStart.toLocaleString(),
                   end: new Date(adjustedEnd).toLocaleString(),
@@ -1038,20 +885,12 @@ const EventCalendar = () => {
   }, [getAuthenticatedUser]);
 
   useEffect(() => {
-    let initialFilterMyTask = false;
-    let initialFilterMyEvent = false;
     if (authenticatedUser) {
-      initialFilterMyTask = authenticatedUser.setting?.isCheckSelfTask
-        ? true
-        : false;
-      initialFilterMyEvent = authenticatedUser.setting?.isCheckSelfSchedule
-        ? true
-        : false;
       setCurrentResources((prevCurrentResources) => {
         const existedResource = prevCurrentResources.find(
           (resource) => resource.id == String(authenticatedUser.id),
         );
-        if ((initialFilterMyTask || initialFilterMyEvent) && !existedResource) {
+        if (!existedResource) {
           return [
             ...prevCurrentResources,
             {
@@ -1062,33 +901,15 @@ const EventCalendar = () => {
         }
         return [...prevCurrentResources];
       });
-      setFilterMyEvent(initialFilterMyEvent);
-      setFilterMyTask(initialFilterMyTask);
     }
     if (searchParams.get('view') == ViewOptions.WEEK) {
-      handleViewChange(
-        CalendarViewOptions.VIEW_BY_WEEK,
-        initialFilterMyTask,
-        initialFilterMyEvent,
-      );
+      handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
     } else if (searchParams.get('view') == ViewOptions.DAY) {
-      handleViewChange(
-        CalendarViewOptions.VIEW_BY_DAY,
-        initialFilterMyTask,
-        initialFilterMyEvent,
-      );
+      handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
     } else if (searchParams.get('view') == ViewOptions.YEAR) {
-      handleViewChange(
-        CalendarViewOptions.VIEW_BY_YEAR,
-        initialFilterMyTask,
-        initialFilterMyEvent,
-      );
+      handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
     } else {
-      handleViewChange(
-        CalendarViewOptions.VIEW_BY_MONTH,
-        initialFilterMyTask,
-        initialFilterMyEvent,
-      );
+      handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticatedUser]);
@@ -1138,8 +959,6 @@ const EventCalendar = () => {
         ) {
           filterEvents.push({
             id: `${event.id}`,
-            taskId:
-              event.type == EventCalendarType.TASK ? `${event.taskId}` : '',
             title: event.title,
             start: eventStart.toLocaleString(),
             end: new Date(adjustedEnd).toLocaleString(),
@@ -1195,7 +1014,6 @@ const EventCalendar = () => {
     userId: string;
     startDate?: string;
     endDate?: string;
-    filterMyTask?: boolean;
     isYearView?: boolean;
     date?: Date;
     clientX?: number;
@@ -1217,9 +1035,7 @@ const EventCalendar = () => {
               const checkShowMyEventResource =
                 event.participants?.find(
                   (participant) => participant.id == session?.user.id,
-                ) &&
-                (variables.userId.includes(String(session?.user.id)) ||
-                  filterMyEvent);
+                ) && variables.userId.includes(String(session?.user.id));
               return {
                 title: event.title,
                 start: `${event.startDate}`,
@@ -1254,165 +1070,21 @@ const EventCalendar = () => {
             }
             return event;
           });
-          setEvents((prevEvents) => {
-            const updatedEvents = [...prevEvents];
-            const myTasks = updatedEvents.filter(
-              (event) => event.type == EventCalendarType.TASK,
-            );
-            if (!variables.filterMyTask && variables.isYearView) {
+          setEvents(() => {
+            if (variables.isYearView) {
               handleShowEventsInModal(
-                [...myTasks, ...newEvents],
+                [...newEvents],
                 variables.date as Date,
                 Number(variables.clientX),
                 Number(variables.clientY),
               );
             }
-            return [...myTasks, ...newEvents];
+            return [...newEvents];
           });
         }
       },
       onSettled: () => {
         setIsLoading(false);
-      },
-    },
-  );
-
-  const { mutateAsync: getMyEventCalendar } = useMutation(
-    'getMyEventCalendar',
-    handleGetEventCalendarByUsers,
-    {
-      onSuccess: (data, variables) => {
-        if (data) {
-          const eventList: EventCalendarDetail[] = data.map(
-            (event: EventCalendarProps) => {
-              const checkShowMyEventResource =
-                event.participants?.find(
-                  (participant) => participant.id == session?.user.id,
-                ) &&
-                (variables.userId.includes(String(session?.user.id)) ||
-                  !filterMyEvent);
-              return {
-                title: event.title,
-                start: `${event.startDate}`,
-                end: `${event.endDate}`,
-                allDay: event.isAllDay || false,
-                id: `${event.id}`,
-                type: EventCalendarType.SCHEDULE,
-                isMyEvent: true,
-                address: event.address || '',
-                participants: event.participants || [],
-                resourceIds: [
-                  ...(event.participants
-                    ?.filter(
-                      (participant: EventParticipant) =>
-                        participant.id !== session?.user.id,
-                    )
-                    ?.map((participant: EventParticipant) => participant.id) ??
-                    []),
-                  ...(checkShowMyEventResource
-                    ? [Number(session?.user.id)]
-                    : []),
-                ],
-              };
-            },
-          );
-          const newEvents = eventList.map((event) => {
-            const start = new Date(event.start);
-
-            if (event.end) {
-              const end = new Date(event.end);
-              if (
-                start.toDateString() !== end.toDateString() &&
-                !isMidnight(end) &&
-                event.allDay
-              ) {
-                end.setDate(end.getDate() + 1);
-                event.end = end.toISOString();
-              }
-            }
-            return event;
-          });
-          setEvents((prevEvents) => {
-            const updatedEvents = [...prevEvents];
-            const myTasks = updatedEvents.filter(
-              (event) => event.type == EventCalendarType.TASK,
-            );
-            return [...myTasks, ...newEvents];
-          });
-        }
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
-    },
-  );
-
-  const handleGetTaskCalendarByUsers = async ({
-    userId,
-    startDate,
-    endDate,
-  }: {
-    userId: string;
-    startDate?: string;
-    endDate?: string;
-    isYearView?: boolean;
-    date?: Date;
-    clientX?: number;
-    clientY?: number;
-  }) => {
-    const apiUrl = `${apiRouters.TASK_CALENDAR}?${userId ? `&user_id=${userId}` : ''}${startDate ? `&start_date=${startDate}` : `&start_date=${currentRange.start}`}${endDate ? `&end_date=${endDate}:59.9999999` : `&end_date=${currentRange.end}`}&current_screen=${ScreenName.CALENDAR}`;
-    const { data } = await api.get<TaskCalendarProps[]>(apiUrl);
-    return data;
-  };
-
-  const { mutateAsync: getMyTaskCalendar } = useMutation(
-    'getMyTaskCalendar',
-    handleGetTaskCalendarByUsers,
-    {
-      onSuccess: (data, variables) => {
-        const { date, isYearView, clientX, clientY } = variables;
-        if (data) {
-          const taskList = data
-            .filter((task) => task.taskSchedules && task.taskSchedules.length)
-            .flatMap((item) =>
-              item.taskSchedules.map((taskSchedule) => {
-                return {
-                  id: `${taskSchedule.id}`,
-                  taskId: `${item.id}`,
-                  title: item.title ? item.title : '',
-                  start: taskSchedule.planStartDate || '',
-                  end: taskSchedule.planEndDate || '',
-                  participants: item.participants || [],
-                  type: EventCalendarType.TASK,
-                  resourceId: `${session?.user.id}`,
-                };
-              }),
-            );
-
-          setEvents((prevEvents) => {
-            const updatedEvents = [...prevEvents];
-            const myEvents = updatedEvents.filter(
-              (event) => event.type !== EventCalendarType.TASK,
-            );
-            const newEventList = [...myEvents, ...taskList];
-            if (isYearView) {
-              if (newEventList) {
-                handleShowEventsInModal(
-                  newEventList,
-                  date as Date,
-                  Number(clientX),
-                  Number(clientY),
-                );
-              }
-            }
-
-            return newEventList;
-          });
-        }
-      },
-      onSettled: () => {
-        setIsLoading(false);
-        setPopoverInfoLoading(false);
       },
     },
   );
@@ -1423,7 +1095,6 @@ const EventCalendar = () => {
       : [];
     setCurrentResources((prevCurrentResources) => {
       const userStringId = String(userId);
-      const isCurrentUser = userStringId === String(session?.user.id);
       const userExists = prevCurrentResources.some(
         (resource) => resource.id === userStringId,
       );
@@ -1440,50 +1111,22 @@ const EventCalendar = () => {
       const removeUserResource = () =>
         prevCurrentResources.filter((resource) => resource.id !== userStringId);
 
-      if (!isCurrentUser) {
-        return userExists ? removeUserResource() : addUserResource();
-      }
-
-      if (!filterMyEvent && !filterMyTask) {
-        return userExists ? removeUserResource() : addUserResource();
-      }
-
-      return [...prevCurrentResources];
+      return userExists ? removeUserResource() : addUserResource();
     });
 
     const userIdStr = String(userId);
-    if (userIdStr == `${session?.user.id}`) {
-      if (!updatedUserIds.includes(userIdStr)) {
-        updatedUserIds.push(userIdStr);
-      } else {
-        updatedUserIds = updatedUserIds.filter((id) => id !== userIdStr);
-      }
-      setSelectedScheduleUserIds(updatedUserIds.join(','));
-      if (!filterMyEvent) {
-        getEventCalendarByUsers({
-          userId:
-            `${updatedUserIds.join(',')}`.length > 0
-              ? `${updatedUserIds.join(',')}`
-              : ``,
-        });
-      }
+    if (updatedUserIds.includes(userIdStr)) {
+      updatedUserIds = updatedUserIds.filter((id) => id !== userIdStr);
     } else {
-      if (updatedUserIds.includes(userIdStr)) {
-        updatedUserIds = updatedUserIds.filter((id) => id !== userIdStr);
-      } else {
-        updatedUserIds.push(userIdStr);
-      }
-      setSelectedScheduleUserIds(updatedUserIds.join(','));
-      if (filterMyEvent) {
-        updatedUserIds.push(`${session?.user.id}`);
-      }
-      getEventCalendarByUsers({
-        userId:
-          `${updatedUserIds.join(',')}`.length > 0
-            ? `${updatedUserIds.join(',')}`
-            : ``,
-      });
+      updatedUserIds.push(userIdStr);
     }
+    setSelectedScheduleUserIds(updatedUserIds.join(','));
+    getEventCalendarByUsers({
+      userId:
+        `${updatedUserIds.join(',')}`.length > 0
+          ? `${updatedUserIds.join(',')}`
+          : ``,
+    });
   };
 
   const handleGetAllMemberSchedules = () => {
@@ -1513,59 +1156,27 @@ const EventCalendar = () => {
 
     setSelectedScheduleUserIds(updatedMemberIds.join(','));
 
-    if (filterMyEvent && !updatedMemberIds.includes(Number(session?.user.id))) {
-      getEventCalendarByUsers({
-        userId:
-          `${[...updatedMemberIds, Number(session?.user.id)].join(',')}`
-            .length > 0
-            ? `${[...updatedMemberIds, Number(session?.user.id)].join(',')}`
-            : ``,
-      });
-    } else {
-      getEventCalendarByUsers({
-        userId:
-          `${updatedMemberIds.join(',')}`.length > 0
-            ? `${updatedMemberIds.join(',')}`
-            : ``,
-      });
-    }
+    getEventCalendarByUsers({
+      userId:
+        `${updatedMemberIds.join(',')}`.length > 0
+          ? `${updatedMemberIds.join(',')}`
+          : ``,
+    });
+    setCurrentResources(() => {
+      const updatedResources: { id: string; title: string }[] = [];
 
-    if (
-      (filterMyEvent || filterMyTask) &&
-      !updatedMemberIds.includes(Number(session?.user.id))
-    ) {
-      setCurrentResources(() => {
-        const updatedResources: { id: string; title: string }[] = [];
-
-        [...updatedMemberIds, Number(session?.user.id)].forEach((userId) => {
-          updatedResources.push({
-            id: String(userId),
-            title:
-              dashboardMemberList?.find(
-                (member) => String(member.id) == String(userId),
-              )?.fullName || '',
-          });
+      [...updatedMemberIds].forEach((userId) => {
+        updatedResources.push({
+          id: String(userId),
+          title:
+            dashboardMemberList?.find(
+              (member) => String(member.id) == String(userId),
+            )?.fullName || '',
         });
-
-        return updatedResources;
       });
-    } else {
-      setCurrentResources(() => {
-        const updatedResources: { id: string; title: string }[] = [];
 
-        updatedMemberIds.forEach((userId) => {
-          updatedResources.push({
-            id: String(userId),
-            title:
-              dashboardMemberList?.find(
-                (member) => String(member.id) == String(userId),
-              )?.fullName || '',
-          });
-        });
-
-        return updatedResources;
-      });
-    }
+      return updatedResources;
+    });
   };
 
   const handleRemoveAllMemberSchedules = () => {
@@ -1587,212 +1198,29 @@ const EventCalendar = () => {
 
     setSelectedScheduleUserIds(updatedMemberIds.join(','));
 
-    if (filterMyEvent && !updatedMemberIds.includes(Number(session?.user.id))) {
-      getEventCalendarByUsers({
-        userId:
-          `${[...updatedMemberIds, Number(session?.user.id)].join(',')}`
-            .length > 0
-            ? `${[...updatedMemberIds, Number(session?.user.id)].join(',')}`
-            : ``,
+    getEventCalendarByUsers({
+      userId:
+        `${updatedMemberIds.join(',')}`.length > 0
+          ? `${updatedMemberIds.join(',')}`
+          : ``,
+    });
+
+    setCurrentResources(() => {
+      const updatedResources: { id: string; title: string }[] = [];
+
+      updatedMemberIds.forEach((userId) => {
+        updatedResources.push({
+          id: String(userId),
+          title:
+            dashboardMemberList?.find(
+              (member) => String(member.id) == String(userId),
+            )?.fullName || '',
+        });
       });
-    } else {
-      getEventCalendarByUsers({
-        userId:
-          `${updatedMemberIds.join(',')}`.length > 0
-            ? `${updatedMemberIds.join(',')}`
-            : ``,
-      });
-    }
 
-    if (
-      (filterMyEvent || filterMyTask) &&
-      !updatedMemberIds.includes(Number(session?.user.id))
-    ) {
-      setCurrentResources(() => {
-        const updatedResources: { id: string; title: string }[] = [];
-
-        [...updatedMemberIds, Number(session?.user.id)].forEach((userId) => {
-          updatedResources.push({
-            id: String(userId),
-            title:
-              dashboardMemberList?.find(
-                (member) => String(member.id) == String(userId),
-              )?.fullName || '',
-          });
-        });
-
-        return updatedResources;
-      });
-    } else {
-      setCurrentResources(() => {
-        const updatedResources: { id: string; title: string }[] = [];
-
-        updatedMemberIds.forEach((userId) => {
-          updatedResources.push({
-            id: String(userId),
-            title:
-              dashboardMemberList?.find(
-                (member) => String(member.id) == String(userId),
-              )?.fullName || '',
-          });
-        });
-
-        return updatedResources;
-      });
-    }
+      return updatedResources;
+    });
   };
-
-  const handleToggleFilterOptions = (state: boolean, type: string) => {
-    if (type === EventCalendarType.TASK) {
-      if (state) {
-        getMyTaskCalendar({
-          userId: `${session?.user.id}`,
-        });
-        handleConfirmUpdateCalendarSettings({
-          isCheckSelfSchedule: filterMyEvent,
-          isCheckSelfTask: true,
-        });
-        setCurrentResources((prevCurrentResources) => {
-          const updatedUserIds: string[] = selectedScheduleUserIds
-            ? selectedScheduleUserIds.split(',').filter(Boolean)
-            : [];
-          if (
-            !filterMyEvent &&
-            !filterMyTask &&
-            !updatedUserIds.find(
-              (userId) => String(userId) == String(session?.user.id),
-            )
-          ) {
-            return [
-              ...prevCurrentResources,
-              {
-                id: String(session?.user.id),
-                title:
-                  dashboardMemberList?.find(
-                    (member) => String(member.id) == String(session?.user.id),
-                  )?.fullName || '',
-              },
-            ];
-          }
-          return [...prevCurrentResources];
-        });
-      } else {
-        setEvents((prevEvents) => {
-          const updatedEvents = [...prevEvents];
-          const myEvents = updatedEvents.filter(
-            (event) => event.type !== EventCalendarType.TASK,
-          );
-          return myEvents;
-        });
-        handleConfirmUpdateCalendarSettings({
-          isCheckSelfSchedule: filterMyEvent,
-          isCheckSelfTask: false,
-        });
-        setCurrentResources((prevCurrentResources) => {
-          const updatedUserIds: string[] = selectedScheduleUserIds
-            ? selectedScheduleUserIds.split(',').filter(Boolean)
-            : [];
-          if (
-            !filterMyEvent &&
-            filterMyTask &&
-            !updatedUserIds.find(
-              (userId) => String(userId) == String(session?.user.id),
-            )
-          ) {
-            return prevCurrentResources.filter(
-              (resource) => resource.id !== String(session?.user.id),
-            );
-          }
-          return [...prevCurrentResources];
-        });
-      }
-      setFilterMyTask(state);
-    } else if (type === EventCalendarType.SCHEDULE) {
-      const updatedUserIds: string[] = selectedScheduleUserIds
-        ? selectedScheduleUserIds.split(',').filter(Boolean)
-        : [];
-      if (!state) {
-        setCurrentResources((prevCurrentResources) => {
-          const updatedUserIds: string[] = selectedScheduleUserIds
-            ? selectedScheduleUserIds.split(',').filter(Boolean)
-            : [];
-          if (
-            filterMyEvent &&
-            !filterMyTask &&
-            !updatedUserIds.find(
-              (userId) => String(userId) == String(session?.user.id),
-            )
-          ) {
-            return prevCurrentResources.filter(
-              (resource) => resource.id !== String(session?.user.id),
-            );
-          }
-          return [...prevCurrentResources];
-        });
-        handleConfirmUpdateCalendarSettings({
-          isCheckSelfSchedule: false,
-          isCheckSelfTask: filterMyTask,
-        });
-      } else {
-        setCurrentResources((prevCurrentResources) => {
-          const updatedUserIds: string[] = selectedScheduleUserIds
-            ? selectedScheduleUserIds.split(',').filter(Boolean)
-            : [];
-          if (
-            !filterMyEvent &&
-            !filterMyTask &&
-            !updatedUserIds.find(
-              (userId) => String(userId) == String(session?.user.id),
-            )
-          ) {
-            return [
-              ...prevCurrentResources,
-              {
-                id: String(session?.user.id),
-                title:
-                  dashboardMemberList?.find(
-                    (member) => String(member.id) == String(session?.user.id),
-                  )?.fullName || '',
-              },
-            ];
-          }
-          return [...prevCurrentResources];
-        });
-        handleConfirmUpdateCalendarSettings({
-          isCheckSelfSchedule: true,
-          isCheckSelfTask: filterMyTask,
-        });
-      }
-      if (!updatedUserIds.includes(String(session?.user.id))) {
-        if (state) {
-          updatedUserIds.push(String(session?.user.id));
-        }
-        getMyEventCalendar({
-          userId: updatedUserIds.join(','),
-        });
-      }
-      setFilterMyEvent(state);
-    }
-  };
-
-  const handleConfirmUpdateCalendarSettings = (data: {
-    isCheckSelfTask: boolean;
-    isCheckSelfSchedule: boolean;
-  }) => {
-    updateCalendarSettings(data);
-  };
-
-  const handleUpdateCalendarSettings = async (data: {
-    isCheckSelfTask: boolean;
-    isCheckSelfSchedule: boolean;
-  }) => {
-    return await api.post(apiRouters.USER_SETTING, data);
-  };
-
-  const { mutate: updateCalendarSettings } = useMutation(
-    'postUpdateCalendarSettings',
-    handleUpdateCalendarSettings,
-  );
 
   const handleGetDataDetailEvent = async (id: string) => {
     const { data: response } = await api.get(apiRouters.SCHEDULE_DETAIL(id));
@@ -1849,66 +1277,6 @@ const EventCalendar = () => {
     getDataEventInfo(id);
   };
 
-  const handleConfirmGetDataTaskInfo = (taskInfo: {
-    id: string;
-    taskScheduleId?: string;
-  }) => {
-    getDataTaskInfo({
-      id: taskInfo.id,
-      taskScheduleId: taskInfo.taskScheduleId,
-    });
-  };
-
-  const handleConfirmGetDataDetailTask = (id: string) => {
-    getDataDetailTask({ id });
-  };
-  const handleGetDataDetailTask = async (taskInfo: {
-    id: string;
-    taskScheduleId?: string;
-  }) => {
-    const { data: response } = await api.get(
-      `${apiRouters.TASK_DETAIL(`${taskInfo.id}`)}?current_screen=${CurrentScreen.CALENDAR}`,
-    );
-    return response;
-  };
-
-  const { mutate: getDataTaskInfo } = useMutation(
-    'getDataTaskInfo',
-    handleGetDataDetailTask,
-    {
-      onSuccess: async (data, variables) => {
-        setSelectedTaskScheduleId(variables.taskScheduleId);
-        setDataTaskEdit(data);
-        if (actionType) {
-          setActionEventClick(`${actionType}`);
-        }
-        setOpenTaskInfoModal(true);
-      },
-      onError: () => {},
-      onSettled: () => {},
-    },
-  );
-
-  const { mutate: getDataDetailTask } = useMutation(
-    'getDetailTask',
-    handleGetDataDetailTask,
-    {
-      onSuccess: async (data) => {
-        const initialParticipantList: PeopleInCharge[] = [];
-        data.peopleInCharge.forEach((member: peopleInChargeType) => {
-          initialParticipantList.push({ peopleInChargeId: member.id });
-        });
-        setDataTaskEdit(data);
-        if (actionType) {
-          setActionEventClick(`${actionType}`);
-        }
-        setShowEditTaskModal(true);
-      },
-      onError: () => {},
-      onSettled: () => {},
-    },
-  );
-
   const handleEventClick = (clickInfo: EventClickArg) => {
     if (
       searchParams.get('view') == ViewOptions.DAY ||
@@ -1917,13 +1285,6 @@ const EventCalendar = () => {
     ) {
       if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
         handleConfirmGetDataEventInfo(`${clickInfo.event.id}`);
-      } else if (
-        clickInfo.event.extendedProps.type === EventCalendarType.TASK
-      ) {
-        handleConfirmGetDataTaskInfo({
-          id: String(clickInfo.event.extendedProps.taskId),
-          taskScheduleId: `${clickInfo.event.id}`,
-        });
       }
       setInfoModalPosition({
         left: adjustPositionForViewport(
@@ -1949,33 +1310,14 @@ const EventCalendar = () => {
           action: ActionsEvent.EDIT,
         });
         handleConfirmGetDataDetailEvent(`${clickInfo.event.id}`);
-      } else if (
-        clickInfo.event.extendedProps.type === EventCalendarType.TASK
-      ) {
-        handleSetTaskParam({
-          id: `${clickInfo.event.extendedProps.taskId}`,
-          action: ActionsEvent.EDIT,
-        });
-        handleConfirmGetDataDetailTask(
-          `${clickInfo.event.extendedProps.taskId}`,
-        );
       }
       setActionEventClick(ActionsEvent.EDIT);
     }
   };
 
-  const handleEventClickInPopup = (
-    eventType: string,
-    eventId: string,
-    taskScheduleId: string | undefined,
-  ) => {
+  const handleEventClickInPopup = (eventType: string, eventId: string) => {
     if (eventType === EventCalendarType.SCHEDULE) {
       handleConfirmGetDataEventInfo(`${eventId}`);
-    } else if (eventType === EventCalendarType.TASK) {
-      handleConfirmGetDataTaskInfo({
-        id: `${eventId}`,
-        taskScheduleId: String(taskScheduleId),
-      });
     }
   };
 
@@ -1990,13 +1332,6 @@ const EventCalendar = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getDataDetailEvent, eventDetailId, actionType]);
-
-  useEffect(() => {
-    if (taskDetailId && dataTaskEdit === null && actionType) {
-      getDataDetailTask({ id: taskDetailId });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getDataDetailTask, taskDetailId, actionType]);
 
   const handleDayCellMount = (info: { date: Date; el: HTMLElement }) => {
     const { date, el } = info;
@@ -2195,7 +1530,7 @@ const EventCalendar = () => {
           ? true
           : false;
         if (
-          (isMyEvent && filterMyEvent) ||
+          isMyEvent ||
           (isMyEvent && updatedUserIds.includes(String(session?.user.id))) ||
           isOtherMembersEvent
         ) {
@@ -2203,9 +1538,7 @@ const EventCalendar = () => {
             data.participants?.find(
               (participant: EventParticipant) =>
                 participant.id == session?.user.id,
-            ) &&
-            (selectedScheduleUserIds.includes(String(session?.user.id)) ||
-              filterMyEvent);
+            ) && selectedScheduleUserIds.includes(String(session?.user.id));
           setEvents((prevEvents) => {
             const dataEndDate =
               data.startDate &&
@@ -2256,163 +1589,6 @@ const EventCalendar = () => {
       },
     },
   );
-
-  // Action call api edit task
-  const handleConfirmEditTask = (data: TaskFormData) => {
-    const tagIds = data.tagIds
-      ? data.tagIds
-          .filter((item) => item.value !== '')
-          .map((item) => ({ tagId: item.value }))
-      : [];
-    const peopleInChargeIds =
-      data.peopleInChargeIds &&
-      data.peopleInChargeIds
-        .filter((item) => item.value !== '')
-        .map((item) => ({ peopleInChargeId: item.value }));
-
-    const planList = data.plans
-      ? data.plans
-          .filter((item) => item.planStartDate !== null)
-          .map((item) => {
-            return {
-              scheduleId: item.scheduleId || null,
-              planStartDate:
-                item.planStartDate && item.planStartTime
-                  ? addTimeToDate(
-                      item.planStartDate as Date,
-                      item.planStartTime,
-                    )
-                  : null,
-              planEndDate:
-                item.planEndDate && item.planEndTime
-                  ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
-                  : null,
-            };
-          })
-      : null;
-    const todoListData =
-      data.todoList && data.todoList.filter((item) => item.content !== '');
-    const newWorkCategories = [];
-    if (data.categories.LARGE?.value) {
-      newWorkCategories.push({
-        categoryId:
-          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
-            ? null
-            : `${data.categories.LARGE.value}`,
-        type: EventWorkCategory.LARGE,
-      });
-    }
-    if (data.categories.MEDIUM.value) {
-      newWorkCategories.push({
-        categoryId:
-          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
-            ? null
-            : `${data.categories.MEDIUM.value}`,
-        type: EventWorkCategory.MEDIUM,
-      });
-    }
-    if (data.categories.SMALL.value) {
-      newWorkCategories.push({
-        categoryId:
-          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
-            ? null
-            : `${data.categories.SMALL.value}`,
-        type: EventWorkCategory.SMALL,
-      });
-    }
-    editTask({
-      id: data.id,
-      title: data.title,
-      statusId: data.statusId ? (data.statusId.value as number) : null,
-      priority: data.priority ? data.priority.value.toString() : '',
-      deadline:
-        data.deadlineDate && data.deadlineTime
-          ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
-          : null,
-      description: data.description,
-      tagIds: tagIds,
-      isImportant: data.isImportant,
-      todoList: todoListData,
-      taskSchedules: planList && planList.length ? planList : [],
-      sendToChat: true,
-      peopleInChargeIds: peopleInChargeIds,
-      categoryIds: newWorkCategories,
-      organizationId: data.organization
-        ? Number(data.organization.value)
-        : null,
-      remindCountdown: data.deadlineRemindCountdown?.value
-        ? `${data.deadlineRemindCountdown?.value}`
-        : null,
-      remindType: data.deadlineRemindType?.value
-        ? `${data.deadlineRemindType?.value}`
-        : null,
-    });
-  };
-  const handleEditTask = async (data: TaskRequest) => {
-    setIsLoading(true);
-    return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
-  };
-  const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
-    onSuccess: async ({ data }) => {
-      const isMyTask = data.peopleInCharge.find(
-        (participant: peopleInChargeType) => participant.id == session?.user.id,
-      )
-        ? true
-        : false;
-      if (isMyTask) {
-        const exceptUpdatedTaskList = events.filter(
-          (event) => String(event.taskId) != String(data.id),
-        );
-        const taskList = data.taskSchedules.map(
-          (taskSchedule: {
-            id?: number | null;
-            uuid?: string;
-            planStartDate: string | null;
-            planEndDate?: string | null;
-          }) => {
-            return {
-              id: `${taskSchedule.id}`,
-              taskId: `${data.id}`,
-              title: data.title ? data.title : '',
-              start: taskSchedule.planStartDate || '',
-              end: taskSchedule.planEndDate || '',
-              participants: data.participants || [],
-              type: EventCalendarType.TASK,
-              resourceId: `${session?.user.id}`,
-            };
-          },
-        );
-        setEvents([...exceptUpdatedTaskList, ...taskList]);
-      } else {
-        setEvents((prevEvents) => {
-          const updatedEvents = [...prevEvents];
-          const filteredEventIndex = updatedEvents.findIndex(
-            (event) =>
-              String(event.taskId) === String(data.id) &&
-              event.type === EventCalendarType.TASK,
-          );
-          if (filteredEventIndex !== -1) {
-            updatedEvents.splice(filteredEventIndex, 1);
-          }
-          return updatedEvents;
-        });
-      }
-      showToast({
-        description: SUCCESS_UPDATE_MESSAGE,
-      });
-      handleRemoveTaskParam();
-    },
-    onError: (error: AxiosError<any>) => {
-      if (error.response?.data.taskSchedules) {
-        showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
-      }
-      showErrorToast(error, ERROR_UPDATE_MESSAGE);
-    },
-    onSettled: () => {
-      setIsLoading(false);
-      setDataTaskEdit(null);
-    },
-  });
 
   const handleConfirmEditEventCalendar = (
     data: EventEditFormData,
@@ -2528,14 +1704,12 @@ const EventCalendar = () => {
         )
           ? true
           : false;
-        if ((isMyEvent && filterMyEvent) || isSelectedUserEvent) {
+        if (isMyEvent || isSelectedUserEvent) {
           const checkShowMyEventResource =
             data.participants?.find(
               (participant: EventParticipant) =>
                 participant.id == session?.user.id,
-            ) &&
-            (selectedScheduleUserIds.includes(String(session?.user.id)) ||
-              filterMyEvent);
+            ) && selectedScheduleUserIds.includes(String(session?.user.id));
           setEvents((prevEvents) => {
             const updatedEvents = [...prevEvents];
             const foundEventIndex = updatedEvents.findIndex(
@@ -2643,49 +1817,10 @@ const EventCalendar = () => {
     },
   );
 
-  const handleConfirmDeleteTask = () => {
-    if (taskDetailId) {
-      setIsLoading(true);
-      deleteTask(taskDetailId);
-      return;
-    }
-  };
-
-  const handleDeleteTask = async (id: string) => {
-    const { data: response } = await api.delete(
-      apiRouters.TASK_DETAIL(`${id}`),
-    );
-    return response;
-  };
-
-  const { mutate: deleteTask } = useMutation('deleteTask', handleDeleteTask, {
-    onSuccess: async () => {
-      handleRemoveTaskParam();
-      setOpenConfirmDeleteTaskModal(false);
-      showToast({
-        description: SUCCESS_DELETE_MESSAGE,
-      });
-      setEvents((prevEvents) => {
-        const updatedEvents = [...prevEvents];
-        const filteredEvents = updatedEvents.filter(
-          (event) => String(event.taskId) !== String(taskDetailId),
-        );
-        return filteredEvents;
-      });
-    },
-    onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
-    },
-    onSettled: () => {
-      setIsLoading(false);
-    },
-  });
-
   const modifyEvents = (events: EventCalendarDetail[]) => {
     if (isEventRendering) {
       if (
         calendarRef.current &&
-        (filterMyEvent || filterMyTask) &&
         searchParams.get('view') == ViewOptions.MONTH
       ) {
         const calendarApi = calendarRef.current.getApi();
@@ -2716,12 +1851,7 @@ const EventCalendar = () => {
         return [];
       }
       return events.map((event) => {
-        let eventClass = '';
-        if (event.type === EventCalendarType.TASK) {
-          eventClass = 'event-type-task';
-        } else {
-          eventClass = 'event-type-schedule';
-        }
+        const eventClass = 'event-type-schedule';
         return {
           ...event,
           classNames: [eventClass],
@@ -2751,30 +1881,6 @@ const EventCalendar = () => {
     params.delete('event');
     params.delete('action');
     router.replace(`?${params.toString()}`);
-  };
-
-  const handleSetTaskParam = ({
-    id,
-    action,
-  }: {
-    id: string | null;
-    action?: string;
-  }) => {
-    if (id) {
-      params.set('task', id);
-    }
-    if (action) {
-      params.set('action', action);
-    }
-    router.push(`?${params.toString()}`);
-  };
-
-  const handleRemoveTaskParam = () => {
-    const params = new URLSearchParams(searchParams);
-    params.delete('task');
-    params.delete('action');
-    router.replace(`?${params.toString()}`);
-    setShowEditTaskModal(false);
   };
 
   const getDefaultCalendarView = () => {
@@ -3208,13 +2314,10 @@ const EventCalendar = () => {
         <div
           className={`transition-all duration-300 ${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
           <CalendarSidebar
-            filterMyEvent={filterMyEvent}
-            filterMyTask={filterMyTask}
             getEventCalendarByUsers={getEventCalendarByUsers}
             handleFilterScheduleByUserIds={handleFilterScheduleByUserIds}
             handleGetAllMemberSchedules={handleGetAllMemberSchedules}
             handleRemoveAllMemberSchedules={handleRemoveAllMemberSchedules}
-            handleToggleFilterOptions={handleToggleFilterOptions}
             removeMyselfOption={removeMyselfOption}
             searchName={searchName}
             selectedScheduleUserIds={selectedScheduleUserIds}
@@ -3366,66 +2469,6 @@ const EventCalendar = () => {
           }}
         />
       )}
-      {showEditTaskModal && (
-        <ActionsTaskModal
-          open={showEditTaskModal}
-          dataTask={dataTaskEdit}
-          action={actionEventClick}
-          dashboardMemberList={dashboardMemberList}
-          creationDataTaskData={creationDataTaskData}
-          onClose={() => {
-            handleRemoveTaskParam();
-            setDataTaskEdit(null);
-          }}
-          onEdit={handleConfirmEditTask}
-          onDelete={() => {
-            setShowEditTaskModal(false);
-            setOpenConfirmDeleteTaskModal(true);
-          }}
-          onWarning={({
-            reset,
-            resetDataCategoryOptions,
-          }: {
-            reset: () => void;
-            resetDataCategoryOptions: () => void;
-          }) => {
-            setResetFunctions({
-              resetDataCategoryOptions,
-              reset,
-            });
-            setOpenWarningCloseModal(true);
-          }}
-        />
-      )}
-      {openWarningCloseModal && (
-        <WarningCloseTaskModal
-          open={openWarningCloseModal}
-          onClose={() => {
-            setOpenWarningCloseModal(false);
-          }}
-          onConfirm={() => {
-            setShowEditTaskModal(false);
-            setOpenWarningCloseModal(false);
-            handleRemoveTaskParam();
-            setDataTaskEdit(null);
-            setIsLoading(false);
-            resetFunctions.resetDataCategoryOptions?.();
-            resetFunctions.reset?.();
-          }}
-        />
-      )}
-      {openConfirmDeleteTaskModal && (
-        <ConfirmDeleteModal
-          open={openConfirmDeleteTaskModal}
-          type="タスク"
-          onConfirm={handleConfirmDeleteTask}
-          onClose={() => {
-            handleRemoveTaskParam();
-            setDataEventEdit(undefined);
-            setOpenConfirmDeleteTaskModal(false);
-          }}
-        />
-      )}
       {openEventInfoModal && (
         <EventInfoModal
           dataEvent={dataEventEdit}
@@ -3434,7 +2477,6 @@ const EventCalendar = () => {
           checkShowUserAvatar={checkShowUserAvatar}
           selectedScheduleUserIds={selectedScheduleUserIds}
           onClose={() => {
-            handleRemoveTaskParam();
             setDataEventEdit(undefined);
             setOpenEventInfoModal(false);
             setDefaultCreateStartDate(undefined);
@@ -3523,40 +2565,6 @@ const EventCalendar = () => {
             setOpenCreateEventModal(false);
             setOpenConfirmDeleteEventModal(true);
             setOpenEventInfoModal(false);
-          }}
-        />
-      )}
-      {openTaskInfoModal && (
-        <TaskInfoModal
-          dataTask={dataTaskEdit}
-          selectedTaskScheduleId={selectedTaskScheduleId}
-          top={infoModalPosition?.top}
-          left={infoModalPosition?.left}
-          onClose={() => {
-            handleRemoveTaskParam();
-            setOpenTaskInfoModal(false);
-            setDataTaskEdit(null);
-            setDefaultCreateStartDate(undefined);
-            setInfoModalPosition({
-              left: 0,
-              top: 0,
-            });
-          }}
-          onEdit={(data) => {
-            handleSetTaskParam({
-              id: `${data.id}`,
-              action: ActionsEvent.EDIT,
-            });
-            setActionEventClick(ActionsEvent.EDIT);
-            setShowEditTaskModal(true);
-            setOpenTaskInfoModal(false);
-          }}
-          onDelete={(data) => {
-            handleSetTaskParam({
-              id: `${data.id}`,
-            });
-            setOpenTaskInfoModal(false);
-            setOpenConfirmDeleteTaskModal(true);
           }}
         />
       )}

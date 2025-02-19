@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from time import timezone
 
 from django.db import transaction
@@ -55,6 +55,7 @@ from tasks.utils import (
     delete_todo_list_for_task,
     update_task_schedule,
     update_todo_list_for_task,
+    calculate_new_time,
 )
 from roles.constants import Screens
 from users.utils import reset_sort_task
@@ -125,6 +126,8 @@ class TaskViewSet(
         company = user.company
         categories = serializer_data.pop("category_ids", None)
         task_type = serializer_data.get("type", None)
+        remind_countdown = serializer_data.pop("remind_countdown", None)
+        remind_type = serializer_data.pop("remind_type", None)
 
         # Implement create task template base on T146
         if task_type == TaskTypes.MY_TEMPLATE.value:
@@ -137,7 +140,16 @@ class TaskViewSet(
         if serializer_data["status"] == TaskStatus.MY_ROUTINE.value:
             serializer_data["deadline"] = None
 
-        task = serializer.save(company=company)
+        if serializer_data.get("deadline") and remind_countdown and remind_type:
+            serializer_data["remind_at"] = calculate_new_time(
+                serializer_data["deadline"], remind_countdown, remind_type
+            )
+            serializer_data["reminds"] = {
+                "type": remind_type,
+                "countdown": remind_countdown,
+            }
+
+        task = serializer.save(company=company, created_by=user)
 
         # Handle task schedules creation
         if task_schedules is not None:
@@ -480,6 +492,8 @@ class TaskViewSet(
         send_to_chat = serializer_data.pop("send_to_chat", None)
         chat_room_code = serializer_data.pop("chat_room_code", None)
         serializer_data.get("type", None)
+        remind_countdown = serializer_data.pop("remind_countdown", None)
+        remind_type = serializer_data.pop("remind_type", None)
 
         # Implement create task template base on T146
         if current_task.type == TaskTypes.MY_TEMPLATE.value:
@@ -516,6 +530,20 @@ class TaskViewSet(
                                 "detail": ERROR_MESSAGES["cannot_updated"],
                             }
                         )
+
+        if serializer_data.get("deadline") and remind_countdown and remind_type:
+            serializer_data["remind_at"] = calculate_new_time(
+                serializer_data["deadline"], remind_countdown, remind_type
+            )
+            serializer_data["reminds"] = {
+                "type": remind_type,
+                "countdown": remind_countdown,
+            }
+
+        if (current_task.deadline != serializer_data.get("deadline")) or (
+            current_task.is_important != serializer_data.get("is_important")
+        ):
+            reset_sort_task(user)
 
         # Update task
         task = serializer.save()
@@ -907,6 +935,7 @@ class TaskViewSet(
 
         task_index.save()
         reset_sort_task(user)
+
         return self.response_ok(TaskIndexSerializer(task_index).data)
 
 
@@ -1220,6 +1249,32 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         queryset = self.filter_queryset(self.get_queryset())
         ordering = request.query_params.get("ordering", None)
         if ordering:
+            tasks = queryset.all()
+            for idx, task in enumerate(tasks):
+                task_index = task.task_index.first()
+                if task_index.pin_at:
+                    task.task_index.update(
+                        pin_at=timezone.now()
+                        - timedelta(seconds=INITIAL_INDEX_VALUE + idx)
+                    )
+                task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
+
+            task_pin = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=user.id
+            ).values("pin_at")[:1]
+            task_index = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=user.id
+            ).values("index")[:1]
+            # Annotate the queryset with the index from TaskIndex
+            queryset = queryset.annotate(
+                index=Subquery(task_index),
+                coalesced_pin_at=Coalesce(
+                    Subquery(task_pin),
+                    Value(REPLACE_NULL_DATE),
+                    output_field=DateTimeField(),
+                ),
+            ).order_by("-coalesced_pin_at", "-index")
+
             if "deadline" in ordering:
                 Setting.objects.update_or_create(
                     user=user,
@@ -1239,11 +1294,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     },
                 )
 
-            tasks = queryset.all()
-            for idx, task in enumerate(tasks):
-                task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
-
-        return super().list(request, *args, **kwargs)
+        return self.response_pagination(request, queryset, TaskBoardSerializer)
 
 
 @extend_schema(tags=["System > Task > Todo List"])

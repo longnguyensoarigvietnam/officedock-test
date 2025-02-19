@@ -195,4 +195,14 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     companyMenu: true,
     requiredPermission: PermissionsSystem.VIEW_ALL,
   },
+  {
+    ...pageRouters.MEMBER_MANAGEMENT,
+    name: pageRouters.MEMBER_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/team-active.svg' : '/icons/team.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.USER_VIEW,
+  },
 ];

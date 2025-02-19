@@ -9,7 +9,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.mixins import UpdateModelMixin
+from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
@@ -18,7 +18,7 @@ from calendars.constants import CalendarTypes
 from calendars.models import Schedule
 from common.serializers import (
     CreationDataTagSerializer,
-    CreationDataUserSerializer,
+    CreationDataUserWithMainOrganizationSerializer,
 )
 from common.utils import (
     get_total_unread_messages,
@@ -51,7 +51,7 @@ class DashboardViewSet(BaseAPIViewSet):
         methods=["GET"],
         detail=False,
         url_path="members",
-        serializer_class=CreationDataUserSerializer,
+        serializer_class=CreationDataUserWithMainOrganizationSerializer,
     )
     def members(self, request):
         """
@@ -212,7 +212,7 @@ class DashboardViewSet(BaseAPIViewSet):
 
 
 @extend_schema(tags=["System > Duration"])
-class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
+class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
     """
     API endpoint for Dashboard.
     """
@@ -262,6 +262,18 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
             return [
                 DurationSerializer(instance, context={"request": request}).data
             ]
+
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        """
+        Handle delete actual duration
+        """
+        model = instance.task or instance.schedule
+        if model and model.is_start:
+            model.is_start = False
+            model.save()
+
+        instance.delete()
 
     def update(self, request, *args, **kwargs):
         """Override update to control the response"""
@@ -595,9 +607,11 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
                 ).first()
                 if isinstance(current_duration_start, Task):
                     task_schedules = (
-                        current_duration_start.task_schedules.all().order_by(
-                            "plan_start_date"
+                        current_duration_start.task_schedules.filter(
+                            plan_start_date__gte=start_of_today
                         )
+                        .all()
+                        .order_by("plan_start_date")
                     )
                     for idx, task_schedule in enumerate(task_schedules):
                         if idx + 1 < len(
@@ -646,28 +660,6 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
             }
 
         return self.response_ok(data)
-
-    def _get_duration(self, obj):
-        """
-        Calculate task duration.
-        """
-        start_of_today = datetime.combine(timezone.now().date(), time.min)
-        end_of_today = datetime.combine(timezone.now().date(), time.max)
-        task_durations = obj.task_durations.filter(
-            Q(started_at__gte=start_of_today)
-            & Q(Q(paused_at__lte=end_of_today) | Q(paused_at__isnull=True))
-        ).all()
-        total_duration = timedelta()
-        # Calculate time between started and paused
-        for task_duration in task_durations:
-            paused_at = (
-                task_duration.paused_at
-                if task_duration.paused_at
-                else timezone.now()
-            )
-            total_duration += paused_at - task_duration.started_at
-
-        return format_duration(total_duration)
 
     def _separate_duration_while_keep_running(self, duration, end_date):
         """

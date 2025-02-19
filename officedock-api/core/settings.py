@@ -120,27 +120,32 @@ INSTALLED_APPS = [
 ]
 
 # Get REDIS_URL from environment variable or install directly
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-parsed_redis_url = urlparse(REDIS_URL)
+REDIS_URL = os.getenv("REDIS_URL", None)
 
 # Channels
 ASGI_APPLICATION = "core.asgi.application"
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-        # TODO: Handle case Redis Channel Layer
-        # "BACKEND": "channels_redis.core.RedisChannelLayer",
-        # "CONFIG": {
-        #     "hosts": [
-        #         (
-        #             parsed_redis_url.hostname,
-        #             parsed_redis_url.port,
-        #             {"password": parsed_redis_url.password},
-        #         )
-        #     ],
-        # },
-    },
-}
+
+if REDIS_URL:
+    parsed_redis_url = urlparse(REDIS_URL)
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
+            "CONFIG": {
+                "hosts": [
+                    {
+                        "host": parsed_redis_url.hostname,
+                        "port": parsed_redis_url.port,
+                        "password": parsed_redis_url.password,
+                        "username": parsed_redis_url.username,
+                    }
+                ],
+            },
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
+    }
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -185,6 +190,7 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", None)
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", None)
 EMAIL_SENDER = os.getenv("EMAIL_SENDER", EMAIL_HOST_USER)
 NAME_SENDER = os.getenv("NAME_SENDER", "OfficeDock")
+CRONJOB_KEY = os.getenv("CRONJOB_KEY", None)
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")

@@ -1,5 +1,5 @@
 from django.db import transaction
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
 from rest_framework import viewsets, mixins
@@ -20,6 +20,7 @@ from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
 from .filters import OrganizationFilter, OrganizationSkillFilter
 from .serializers import (
+    OrganizationMemberSerializer,
     OrganizationSerializer,
     OrganizationDetailSerializer,
     ListOrganizationStatisticSerializer,
@@ -155,6 +156,27 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         return category
+
+    @extend_schema(parameters=[OpenApiParameter("search", type=str)])
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="members",
+        serializer_class=OrganizationMemberSerializer,
+    )
+    def members(self, request):
+        """
+        Get list of member in organization
+        """
+        queryset = self.get_queryset()
+
+        if search := request.query_params.get("search"):
+            queryset = queryset.filter(
+                Q(name__icontains=search)
+                | Q(users__profile__full_name__icontains=search)
+            )
+
+        return self.response_ok(self.get_serializer(queryset, many=True).data)
 
     @action(
         methods=["GET", "POST", "DELETE"],

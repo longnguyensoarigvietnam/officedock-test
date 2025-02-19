@@ -263,6 +263,10 @@ export const pageRouters = {
     name: '実績管理詳細',
     href: (id: string) => `/actual-durations/${id}`,
   },
+  MEMBER_MANAGEMENT: {
+    name: 'メンバー一覧',
+    href: `/member`,
+  },
 };
 
 // For the API routers
@@ -327,6 +331,7 @@ export const apiRouters = {
   TASK_DETAIL: (id: string) => `/tasks/${id}/`,
   TASK_SCHEDULE_DETAIL: (id: string) => `/tasks/schedules/${id}/`,
   TASK_PLAN_SCHEDULE_DETAIL: (uuid: string) => `/tasks/schedules/${uuid}/`,
+  TASK_SCHEDULE_COPY: (uuid: string) => `tasks/schedules/${uuid}/copy`,
 
   TASK_COPY: (id: string) => `/tasks/${id}/copy/`,
   TASK_PIN: (id: string) => `/tasks/${id}/pin/`,
@@ -393,4 +398,7 @@ export const apiRouters = {
 
   // TEMPLATES
   TEMPLATE_LIST: '/tasks/template/',
+
+  // MEMBER ORGANIZATION
+  MEMBER_ORGANIZATION_LIST: '/organizations/members/',
 };

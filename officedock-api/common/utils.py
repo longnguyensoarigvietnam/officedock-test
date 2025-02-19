@@ -4,7 +4,7 @@ import random
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import Sum
+from django.db.models import Sum, Func
 from django.utils.crypto import get_random_string
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from djangorestframework_camel_case.parser import CamelCaseJSONParser
@@ -13,6 +13,7 @@ from rest_framework.exceptions import ValidationError
 from base.messages import ERROR_MESSAGES
 from calendars.constants import ScheduleCategoryTypes
 from chat.constants import USER_ACTION_GROUP, WebSocketEventType
+from common.constants import STRIP_TAGS
 from roles.constants import SelectionResultOptions
 from users.models import User, RoleDetail
 
@@ -66,6 +67,8 @@ def send_web_socket_event(data, user=None, chat_room=None):
         if data["action"] not in [
             WebSocketEventType.CHANGE_TASK_STATUS.value,
             WebSocketEventType.CHANGE_ROLE.value,
+            WebSocketEventType.REMIND_TASK.value,
+            WebSocketEventType.DURATION_OVERTIME_WARNING.value,
         ]:
             # Send websocket total unread message
             async_to_sync(channel_layer.group_send)(
@@ -342,3 +345,8 @@ def create_categories_by_model(model, categories):
 def generate_random_color():
     """Generate a random hex color code."""
     return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+
+
+class StripTags(Func):
+    function = "regexp_replace"
+    template = "%(function)s(%(expressions)s, {}, '', 'g')".format(STRIP_TAGS)

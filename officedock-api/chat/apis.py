@@ -35,14 +35,17 @@ from chat.constants import (
 )
 from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
 from chat.serializers import (
+    BookMarkSerializer,
     ChatMessageSerializer,
+    ChatMessageBookMarkSerializer,
     ChatRoomDetailSerializer,
+    ChatRoomMemoSerializer,
     ChatRoomSerializer,
     ChatRoomsParticipantsSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
     SendMessageSerializer,
 )
-from common.utils import send_web_socket_event
+from common.utils import send_web_socket_event, StripTags
 from base.permissions import ActionPermission
 from roles.constants import Screens
 
@@ -623,6 +626,9 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 description=BasePagination.page_size_query_description,
             ),
             OpenApiParameter("message_id", type=int, required=False),
+            OpenApiParameter("message", type=str, required=False),
+            OpenApiParameter("sorting", type=str, required=False),
+            OpenApiParameter("bookmark_message_id", type=int, required=False),
         ],
         responses={
             status.HTTP_200_OK: OpenApiResponse(
@@ -649,13 +655,66 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         if request.method == "GET":
+            page_size = request.query_params.get("page_size", 20)
+            sorting = request.query_params.get("sorting")
+            message_id = request.query_params.get("message_id")
+            message = request.query_params.get("message")
+            bookmark_message_id = request.query_params.get(
+                "bookmark_message_id"
+            )
+
+            # Sorting message by asc or desc create_at
+            order_by_field = "created_at" if sorting else "-created_at"
             chat_messages = chat_room.chat_messages.order_by(
-                "-created_at"
+                order_by_field
             ).all()
 
-            if message_id := request.query_params.get("message_id"):
-                chat_messages = chat_messages.filter(id__lt=message_id)
+            # Filter message_id or bookmark_message_id
+            if bookmark_message_id:
+                bookmark_message_id = int(bookmark_message_id)
+                page_size = int(page_size)
 
+                # Check if list has more than page_size items
+                if len(chat_messages) > page_size:
+                    # Find the position of bookmark_message_id in the list
+                    bookmark_index = next(
+                        (
+                            i
+                            for i, msg in enumerate(chat_messages)
+                            if msg.id == bookmark_message_id
+                        ),
+                        None,
+                    )
+
+                    if bookmark_index is not None:
+                        start_index = max(bookmark_index - 5, 0)
+                        chat_messages_result = chat_messages[start_index:]
+
+                        # If the number of messages is not enough for page_size, get more from before
+                        if len(chat_messages_result) < page_size:
+                            remaining_items = page_size - len(
+                                chat_messages_result
+                            )
+                            extra_start = max(start_index - remaining_items, 0)
+                            chat_messages_result = chat_messages[extra_start:]
+
+                        chat_messages = chat_messages_result
+            elif message_id:
+                filter_field = "id__gt" if sorting else "id__lt"
+                chat_messages = chat_messages.filter(
+                    **{filter_field: message_id}
+                )
+            elif message:
+                chat_messages = (
+                    chat_messages.annotate(
+                        clean_message=StripTags(F("message"))
+                    )
+                    .filter(
+                        Q(clean_message__icontains=message)
+                        & Q(deleted_at__isnull=True)
+                    )
+                    .order_by("-created_at")
+                )
             return self.response_pagination(
                 request, chat_messages, ChatMessageSerializer
             )
@@ -692,10 +751,32 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return self.response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    @action(
+        methods=["PATCH"],
+        detail=True,
+        url_path="memo",
+        serializer_class=ChatRoomMemoSerializer,
+    )
+    def memo(self, request, code=None):
+        """
+        Update memo for chat room
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        instance.memo = serializer_data.pop("memo", None)
+        instance.save()
+
+        return self.response_ok()
+
 
 @extend_schema(tags=["System > Chat Message"])
 class ChatMessageViewSet(
-    BaseAPIViewSet, mixins.UpdateModelMixin, mixins.DestroyModelMixin
+    BaseAPIViewSet,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
 ):
     """
     API endpoint for Chat Message
@@ -714,6 +795,67 @@ class ChatMessageViewSet(
 
         user = self.request.user
         return super().get_queryset().filter(sender=user)
+
+    def get_serializer_class(self):
+        """
+        Serializer classification by action
+        """
+        if self.action == "list":
+            return ChatMessageBookMarkSerializer
+
+        return super().get_serializer_class()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("is_bookmark", type=bool, required=False),
+            OpenApiParameter("message", type=str, required=False),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """
+        Get a list of chat rooms.
+        """
+        user = request.user
+        messages = []
+        if is_bookmark := request.query_params.get("is_bookmark"):
+            messages = ChatMessage.objects.filter(
+                sender=user, bookmark_at__isnull=False
+            ).order_by("bookmark_at")
+
+        if message := request.query_params.get("message"):
+            messages = (
+                ChatMessage.objects.annotate(
+                    clean_message=StripTags(F("message"))
+                )
+                .filter(
+                    Q(clean_message__icontains=message)
+                    & Q(deleted_at__isnull=True)
+                )
+                .order_by("-created_at")
+            )
+
+        return self.response_pagination(
+            request, messages, ChatMessageBookMarkSerializer
+        )
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="bookmark",
+        serializer_class=BookMarkSerializer,
+    )
+    def bookmark(self, request, uuid=None):
+        """
+        Bookmark message
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        instance.bookmark_at = serializer_data.pop("bookmark_at", None)
+        instance.save()
+
+        return self.response_ok()
 
     def update(self, request, *args, **kwargs):
         """
