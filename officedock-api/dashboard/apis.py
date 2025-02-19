@@ -9,7 +9,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.mixins import UpdateModelMixin
+from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
@@ -18,7 +18,7 @@ from calendars.constants import CalendarTypes
 from calendars.models import Schedule
 from common.serializers import (
     CreationDataTagSerializer,
-    CreationDataUserSerializer,
+    CreationDataUserWithMainOrganizationSerializer,
 )
 from common.utils import (
     get_total_unread_messages,
@@ -51,7 +51,7 @@ class DashboardViewSet(BaseAPIViewSet):
         methods=["GET"],
         detail=False,
         url_path="members",
-        serializer_class=CreationDataUserSerializer,
+        serializer_class=CreationDataUserWithMainOrganizationSerializer,
     )
     def members(self, request):
         """
@@ -212,7 +212,7 @@ class DashboardViewSet(BaseAPIViewSet):
 
 
 @extend_schema(tags=["System > Duration"])
-class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
+class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
     """
     API endpoint for Dashboard.
     """
@@ -262,6 +262,18 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
             return [
                 DurationSerializer(instance, context={"request": request}).data
             ]
+
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        """
+        Handle delete actual duration
+        """
+        model = instance.task or instance.schedule
+        if model and model.is_start:
+            model.is_start = False
+            model.save()
+
+        instance.delete()
 
     def update(self, request, *args, **kwargs):
         """Override update to control the response"""
