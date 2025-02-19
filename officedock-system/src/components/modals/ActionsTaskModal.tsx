@@ -410,13 +410,13 @@ const ActionsTaskModal = ({
               label: dataTask.remindCountdown,
               value: dataTask.remindCountdown || '',
             }
-          : null),
+          : optionsCountDown[0]),
         (value.deadlineRemindType = dataTask.remindType
           ? {
               label: dataTask.remindType,
               value: dataTask.remindType,
             }
-          : null),
+          : optionsCountType[0]),
         (value.deadlineDate = dataTask.deadline
           ? new Date(dataTask.deadline)
           : null),
@@ -473,11 +473,13 @@ const ActionsTaskModal = ({
     }
     return value;
   }, [
-    action,
     dataTask,
-    session?.user.id,
     session?.user.profile.fullName,
+    session?.user.id,
+    optionsCountType,
     authenticatedUser,
+    action,
+    optionsCountDown,
   ]);
 
   useEffect(() => {
@@ -1513,7 +1515,7 @@ const ActionsTaskModal = ({
                         name="deadlineRemindCountdown"
                         render={({ field: { value, onChange } }) => (
                           <Dropdown
-                            className="h-[34px] !py-1 !px-0 text-xs border-[#77858F] rounded-md"
+                            className="h-[34px] !py-1 !px-0 text-xs !border-[#77858F] rounded-md"
                             classNameTextData="!text-xs !ml-0"
                             labelOptionClass="!ml-0 !px-0 text-center w-full "
                             classNameOption="!text-xs "
@@ -1543,7 +1545,7 @@ const ActionsTaskModal = ({
                         name="deadlineRemindType"
                         render={({ field: { value, onChange } }) => (
                           <Dropdown
-                            className="h-[34px] !py-1 !pr-2 text-xs border-[#77858F] rounded-md"
+                            className="h-[34px] !py-1 !pr-2 text-xs !border-[#77858F] rounded-md"
                             classNameTextData="!text-xs"
                             classNameOption="!text-xs !ml-0"
                             classNameError="!text-xs"

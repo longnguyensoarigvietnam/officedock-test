@@ -149,6 +149,7 @@ export enum SocketActions {
   CHANGE_TASK_STATUS = 'CHANGE_TASK_STATUS',
   CHANGE_ROLE = 'CHANGE_ROLE',
   REMIND_TASK = 'REMIND_TASK',
+  RESET_STATUS_SORT_TASK = 'RESET_STATUS_SORT_TASK',
   DURATION_OVERTIME_WARNING = 'DURATION_OVERTIME_WARNING',
 }
 
@@ -379,5 +380,5 @@ export enum TimeType {
 }
 export enum FilterTypeKanban {
   DEADLINE = '-deadline',
-  IMPORTANT = 'is_important',
+  IMPORTANT = '-is_important',
 }

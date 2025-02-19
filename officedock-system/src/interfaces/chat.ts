@@ -8,9 +8,9 @@ export interface ChatMessageResponse {
     id: number;
     fullName: string;
     organizations?: {
-      id: number,
-      name: string,
-    } | null
+      id: number;
+      name: string;
+    } | null;
   };
   task: {
     id: number;
@@ -53,7 +53,7 @@ export interface ChatMessageResponse {
   createdAt: Date | string;
   deletedAt: Date | null;
   type: MessageType;
-  mentions?: number[]
+  mentions?: number[];
 }
 
 export interface ChatDashboardMember {
@@ -126,6 +126,12 @@ export interface WebSocketMessageDataOverTime {
   taskDurationRunningUuid: string;
   type: string;
   id: number;
+}
+
+export interface WebSocketMessageSortKanban {
+  action: string;
+  isSortingTaskByDeadline: boolean;
+  isSortingTaskByImportant: boolean;
 }
 
 export interface DataChatRoomSocket {

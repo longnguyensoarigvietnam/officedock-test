@@ -172,7 +172,7 @@ const Header = ({ className }: HeaderProps) => {
           id: member.id,
           fullName: member.fullName,
           avatarColor: getRandomColor(),
-          mainOrganization: member.organizations?.name || ''
+          mainOrganization: member.organizations?.name || '',
         };
       });
       setDashboardMembersWithAvatars(membersWithAvatars);
@@ -228,11 +228,7 @@ const Header = ({ className }: HeaderProps) => {
   );
 
   useEffect(() => {
-    if (
-      actionType &&
-      typeDetail === ItemStartType.TASK &&
-      !isTaskPage 
-    ) {
+    if (actionType && typeDetail === ItemStartType.TASK && !isTaskPage) {
       if (taskDetailId) {
         getDataDetailTask(parseInt(taskDetailId));
       } else {
@@ -313,10 +309,14 @@ const Header = ({ className }: HeaderProps) => {
       }, 500);
     },
   });
+  //
+  const handleEditTaskRemind = async (data: TaskRequest) => {
+    return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
+  };
 
   const { mutate: editTaskRemind } = useMutation(
     'postEditTaskRemind',
-    handleEditTask,
+    handleEditTaskRemind,
     {
       onSuccess: async () => {
         setOpenWarningDeadlineModal(false);
@@ -326,11 +326,7 @@ const Header = ({ className }: HeaderProps) => {
           showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
         } else showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
-      onSettled: () => {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 500);
-      },
+      onSettled: () => {},
     },
   );
   // Action call api edit task

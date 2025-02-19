@@ -416,6 +416,9 @@ const TimeSchedule = memo(
                   startEditable: false,
                   resourceId: ItemScheduleType.PLANS,
                   largeColor: largeColor,
+                  address: event.address,
+                  isAllDay: event.isAllDay,
+                  participants: event.participants,
                 };
               });
 
@@ -2017,6 +2020,7 @@ const TimeSchedule = memo(
         clickInfo.event._def.resourceIds?.length &&
         clickInfo.event._def.resourceIds[0] === ItemScheduleType.PLANS;
       setIsStartPopupDetail(clickInfo.event.extendedProps.isStart);
+
       handleShowEventsInModal({
         title: clickInfo.event.title,
         id: clickInfo.event.id,
@@ -2612,20 +2616,20 @@ const TimeSchedule = memo(
     }, [view]);
 
     return (
-      <div
-        style={{
-          width: isExtendCalendar
-            ? isCurrentWeek
-              ? `${calculatedWidth}px`
-              : '1040px'
-            : '440px',
-          minWidth: isExtendCalendar
-            ? isCurrentWeek
-              ? `${calculatedWidth}px`
-              : '1040px'
-            : '440px',
-        }}>
+      <>
         <div
+          style={{
+            width: isExtendCalendar
+              ? isCurrentWeek
+                ? `${calculatedWidth}px`
+                : '1040px'
+              : '440px',
+            minWidth: isExtendCalendar
+              ? isCurrentWeek
+                ? `${calculatedWidth}px`
+                : '1040px'
+              : '440px',
+          }}
           className={`schedule-page relative overflow-x-auto overflow-y-hidden `}
           ref={resizableElementRef}>
           <div
@@ -3001,7 +3005,7 @@ const TimeSchedule = memo(
             handleUpdateItemStart={handleUpdateItemStart}
           />
         )}
-      </div>
+      </>
     );
   },
 );
