@@ -39,6 +39,7 @@ from chat.serializers import (
     ChatMessageSerializer,
     ChatMessageBookMarkSerializer,
     ChatRoomDetailSerializer,
+    ChatRoomMemoSerializer,
     ChatRoomSerializer,
     ChatRoomsParticipantsSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
@@ -749,6 +750,25 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             return self.response_created(ChatMessageSerializer(message).data)
 
         return self.response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    @action(
+        methods=["PATCH"],
+        detail=True,
+        url_path="memo",
+        serializer_class=ChatRoomMemoSerializer,
+    )
+    def memo(self, request, code=None):
+        """
+        Update memo for chat room
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        instance.memo = serializer_data.pop("memo", None)
+        instance.save()
+
+        return self.response_ok()
 
 
 @extend_schema(tags=["System > Chat Message"])
