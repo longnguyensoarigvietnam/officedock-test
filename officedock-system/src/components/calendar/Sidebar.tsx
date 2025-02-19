@@ -1,6 +1,12 @@
 import { UseMutateAsyncFunction } from 'react-query';
 import { useSession } from 'next-auth/react';
-import { Dispatch, SetStateAction, useContext } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Checkbox from '@components/common/Checkbox';
@@ -63,6 +69,17 @@ export const CalendarSidebar = ({
 }: CalendarSidebarProps) => {
   const { data: session } = useSession();
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="overflow-y-auto">
@@ -127,12 +144,16 @@ export const CalendarSidebar = ({
                 (member) =>
                   !removeMyselfOption || member.id != session?.user.id,
               )
-              .sort((prev: CalendarDashboardMember,
-                next: CalendarDashboardMember,) => {
-                if (prev.id === session?.user.id) return -1; 
-                if (next.id === session?.user.id) return 1;
-                return prev.fullName.localeCompare(next.fullName);
-              })
+              .sort(
+                (
+                  prev: CalendarDashboardMember,
+                  next: CalendarDashboardMember,
+                ) => {
+                  if (prev.id === session?.user.id) return -1;
+                  if (next.id === session?.user.id) return 1;
+                  return prev.fullName.localeCompare(next.fullName);
+                },
+              )
               .map((member) => {
                 return (
                   <div
@@ -153,7 +174,7 @@ export const CalendarSidebar = ({
                       />
                     </div>
                     <div
-                      className={`flex gap-3 items-center p-1.5 hover:cursor-pointer`}>
+                      className={`flex flex-1 gap-3 items-center p-1.5 hover:cursor-pointer`}>
                       {dashboardMembersWithAvatars &&
                       dashboardMembersWithAvatars.find(
                         (memberWithAvatar) => memberWithAvatar.id == member.id,
@@ -176,9 +197,18 @@ export const CalendarSidebar = ({
                           name="Avatar user"
                         />
                       )}
-                      <p className="font-medium text-[15px] truncate max-w-[200px] text-black">
-                        {member.fullName}
-                      </p>
+                      <div className="!w-full">
+                        <p
+                          style={{
+                            maxWidth: `calc(${Math.max(viewportWidth, 1280) / 8 - 10}px )`,
+                          }}
+                          className={`truncate font-medium text-[15px] text-black`}>
+                          <span>{member.fullName}</span>
+                          <span className="text-[#77858F] text-xs ml-1">
+                            {member.mainOrganization}
+                          </span>
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
