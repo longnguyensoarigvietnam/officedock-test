@@ -1,5 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 
 from base.messages import ERROR_MESSAGES
 from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
@@ -197,8 +198,30 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "type",
             "mentions",
             "tasks",
+            "quote",
+            "reply",
         ]
         read_only_fields = ["id", "uuid"]
+
+    def to_representation(self, instance):
+        """To representation field"""
+        representation = super().to_representation(instance)
+
+        if instance.quote:
+            message = ChatMessage.objects.filter(
+                uuid=instance.quote["message_uuid"]
+            ).first()
+            representation["quote"]["message_content"] = instance.quote[
+                "message"
+            ]
+            representation["quote"]["message"] = ChatMessageSerializer(
+                message
+            ).data
+            representation["quote"].pop("message_uuid")
+        if instance.reply:
+            representation["reply"] = ChatMessageSerializer(instance.reply).data
+
+        return representation
 
     def get_message(self, obj):
         """
@@ -255,6 +278,26 @@ class BookMarkSerializer(serializers.Serializer):
     bookmark_at = serializers.DateTimeField(allow_null=True, required=False)
 
 
+class QuoteMessageSerializer(serializers.Serializer):
+    """
+    Quote message serializer
+    """
+
+    message_uuid = serializers.UUIDField(
+        required=True,
+    )
+    message = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        """Validate quote"""
+        message_uuid = attrs.get("message_uuid")
+        if not ChatMessage.objects.filter(uuid=message_uuid).exists():
+            raise NotFound({"detail": ERROR_MESSAGES["message_not_exists"]})
+        attrs["message_uuid"] = str(message_uuid)
+
+        return attrs
+
+
 class SendMessageSerializer(serializers.ModelSerializer):
     """
     Serializer for send message
@@ -280,6 +323,8 @@ class SendMessageSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=False,
     )
+    quote = QuoteMessageSerializer(required=False, allow_null=True)
+    reply_uuid = serializers.UUIDField(required=False, allow_null=True)
 
     class Meta:
         model = ChatMessage
@@ -291,7 +336,20 @@ class SendMessageSerializer(serializers.ModelSerializer):
             "mention_ids",
             "tasks",
             "task_ids",
+            "quote",
+            "reply_uuid",
         ]
+
+    def validate(self, attrs):
+        """Validate send message"""
+        reply_uuid = attrs.pop("reply_uuid", None)
+        if reply_uuid:
+            if message := ChatMessage.objects.filter(uuid=reply_uuid).first():
+                attrs["reply"] = message
+            else:
+                raise NotFound({"detail": ERROR_MESSAGES["message_not_exists"]})
+
+        return attrs
 
     def update(self, instance, validated_data):
         validated_data.pop("uuid", None)  # Remove uuid when update

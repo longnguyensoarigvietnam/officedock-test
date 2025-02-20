@@ -120,6 +120,14 @@ class ChatMessage(BaseModel):
     mentions = models.ManyToManyField(
         "users.User", related_name="mentioned_messages"
     )
+    quote = models.JSONField(null=True, blank=True)
+    reply = models.ForeignKey(
+        "chat.ChatMessage",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="reply_message",
+    )
     tasks = models.ManyToManyField("tasks.Task", related_name="link_messages")
 
     def save(self, *args, **kwargs):
