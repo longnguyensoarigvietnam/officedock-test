@@ -40,6 +40,11 @@ export interface User {
   loginType: string;
   username: string;
   email: string;
+  currentEvent?: {
+    id: number;
+    title: string;
+    type: string;
+  };
   twoFactorAuthEmail: string;
   roles: UserRoleType[];
   profile: Profile;
