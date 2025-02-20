@@ -59,7 +59,6 @@ const DetailPlanItemModal = ({
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const router = useRouter();
-  const isEvent = popoverInfo?.type === ItemStartType.SCHEDULE;
 
   const {
     idTaskStarting,
@@ -109,9 +108,9 @@ const DetailPlanItemModal = ({
           },
         ]);
       handleUpdateItemStart({
-        id: isEvent ? (popoverInfo.id as string) : `${popoverInfo?.taskId}`,
+        id: `${popoverInfo?.taskId}`,
         isStart: !isStart,
-        type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+        type: ItemStartType.TASK,
       });
 
       taskSelectedToStart &&
@@ -170,22 +169,18 @@ const DetailPlanItemModal = ({
       onSuccess: async ({ data }, task) => {
         if (!data.isAnotherTaskStarted) {
           calculateDurationTask({
-            id: isEvent
-              ? popoverInfo.id.replace('event', '')
-              : `${popoverInfo.taskId}`,
-            type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+            id: `${popoverInfo.taskId}`,
+            type: ItemStartType.TASK,
           });
           setTaskSelectedAction({
-            id: isEvent ? popoverInfo.id : popoverInfo.taskId,
+            id: popoverInfo.taskId,
             isStart: !isStart,
             title: popoverInfo.title,
-            type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+            type: ItemStartType.TASK,
           });
           setDataRunning({
-            id: isEvent
-              ? popoverInfo.id.replace('event', '')
-              : `${popoverInfo.taskId}`,
-            type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+            id: `${popoverInfo.taskId}`,
+            type: ItemStartType.TASK,
           });
         } else {
           setDataClickTask({
@@ -208,33 +203,22 @@ const DetailPlanItemModal = ({
   const handleConfirmCheckStartTask = (id: string) => {
     checkTask({
       id: id,
-      type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+      type: ItemStartType.TASK,
     });
   };
 
   const handleStartStopTask = async (e: any) => {
     e.stopPropagation();
-    if (isEvent) {
-      await new Promise<void>((resolve) => {
-        setTaskSelectedToStart({
-          id: parseInt(popoverInfo.id),
-          title: popoverInfo.title,
-          type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
-        });
-        resolve();
+
+    await new Promise<void>((resolve) => {
+      setTaskSelectedToStart({
+        id: parseInt(`${popoverInfo.taskId}`),
+        title: popoverInfo.title,
+        type: ItemStartType.TASK,
       });
-      handleConfirmCheckStartTask(`${popoverInfo.id.replace('event', '')}`);
-    } else {
-      await new Promise<void>((resolve) => {
-        setTaskSelectedToStart({
-          id: parseInt(`${popoverInfo.taskId}`),
-          title: popoverInfo.title,
-          type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
-        });
-        resolve();
-      });
-      handleConfirmCheckStartTask(`${popoverInfo.taskId}`);
-    }
+      resolve();
+    });
+    handleConfirmCheckStartTask(`${popoverInfo.taskId}`);
   };
 
   const handleConfirmStartNewTask = async () => {
@@ -247,16 +231,14 @@ const DetailPlanItemModal = ({
       type: idTaskStarting.type,
     });
     calculateDurationTask({
-      id: isEvent
-        ? `${popoverInfo.id.replace('event', '')}`
-        : `${popoverInfo.taskId}`,
-      type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+      id: `${popoverInfo.taskId}`,
+      type: ItemStartType.TASK,
     });
     setShowWarningStartModal(false);
 
     setDataRunning({
       id: `${popoverInfo.id.replace('event', '')}`,
-      type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+      type: ItemStartType.TASK,
     });
   };
 
