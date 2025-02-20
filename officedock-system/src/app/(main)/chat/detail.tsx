@@ -11,7 +11,6 @@ import {
   useState,
 } from 'react';
 import { useSession } from 'next-auth/react';
-import { useInView } from 'react-intersection-observer';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Document } from '@tiptap/extension-document';
@@ -39,6 +38,7 @@ import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMemberModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import { MessageDetail } from '@components/chat/MessageDetail';
+import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -139,9 +139,6 @@ const ChatDetail = ({
   setSearchChatMsg,
 }: dataProps) => {
   const { data: session } = useSession();
-  const { ref, inView } = useInView({
-    threshold: 0.2,
-  });
 
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
@@ -195,7 +192,6 @@ const ChatDetail = ({
   const { chatRoomDetail } = useChatRoomDetail({
     code: `${chatRoomCode}`,
   });
-  const activeRoomRef = useRef<string | null>(null);
   const { authenticatedUser } = useAuthenticatedUser();
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [mentionMembers, setMentionMembers] = useState<ChatParticipant[]>([]);
@@ -208,6 +204,23 @@ const ChatDetail = ({
     left: 0,
   });
   const mentionIconRef = useRef<HTMLDivElement | null>(null);
+  const [openSearchMessagesModal, setOpenSearchMessagesModal] = useState(false);
+  const [searchMessageResults, setSearchMessageResults] = useState<{
+    count: number;
+    numPages: number;
+    results: ChatMessageResponse[];
+    hasNext?: boolean;
+  }>();
+  const [lastGotoMessageId, setLastGotoMessageId] = useState<number | null>();
+  const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
+    useState(false);
+  const [gotoMessageId, setGotoMessageId] = useState<number | null>();
+  const gotoMessageRef = useRef<HTMLDivElement | null>(null);
+
+  // Search
+  const [searchResultsPage, setSearchResultsPage] = useState<number>(1);
+  const [hasMoreSearchResultDetail, setHasMoreSearchResultDetail] =
+    useState(false);
 
   //Task
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
@@ -227,36 +240,51 @@ const ChatDetail = ({
     }
   };
 
+  useEffect(() => {
+    if (
+      dataMessageDetail.length > 0 &&
+      gotoMessageId &&
+      gotoMessageRef.current
+    ) {
+      gotoMessageRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      });
+      setGotoMessageId(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataMessageDetail]);
+
   const { mutate: getDataListMessages } = useMutation(
     'getDataListMessages',
     handleGetDataMessages,
     {
       onSuccess: (variables) => {
-        if (activeRoomRef.current === chatRoomCode) {
-          if (variables) {
-            if (variables.data.results.length <= 0 || !variables.data.hasNext) {
-              setHasMoreDetail(false);
-            }
-            setDataMessageDetail((prev) => {
-              if (prev) {
-                return [...prev, ...variables.data.results];
-              } else {
-                return [...variables.data.results];
-              }
-            });
-            if (
-              variables.data.results.length > 0 &&
-              variables.data.results[variables.data.results.length - 1].id
-            ) {
-              setLastItemId &&
-                setLastItemId(
-                  variables.data.results[variables.data.results.length - 1].id,
-                );
-            } else {
-              setLastItemId(null);
-            }
+        if (variables) {
+          if (variables.data.results.length <= 0 || !variables.data.hasNext) {
+            setHasMoreDetail(false);
           }
-          activeRoomRef.current = null;
+          setDataMessageDetail((prev) => {
+            const newMessages = variables.data.results.filter(
+              (newMsg) =>
+                !(prev || []).some(
+                  (existingMsg) => existingMsg.id === newMsg.id,
+                ),
+            );
+            return [...(prev || []), ...newMessages];
+          });
+
+          if (
+            variables.data.results.length > 0 &&
+            variables.data.results[variables.data.results.length - 1].id
+          ) {
+            setLastItemId &&
+              setLastItemId(
+                variables.data.results[variables.data.results.length - 1].id,
+              );
+          } else {
+            setLastItemId(null);
+          }
         }
       },
       onError: ({ response }: AxiosError) => {
@@ -270,14 +298,198 @@ const ChatDetail = ({
     },
   );
 
+  const handleGotoSelectedMessage = async (data: {
+    pageNumber: number;
+    bookmarkMessageId?: number;
+  }) => {
+    if (chatRoomCode) {
+      setInitialLoad(true);
+      const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${data.pageNumber}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${data.bookmarkMessageId ? `&bookmark_message_id=${data.bookmarkMessageId}` : ''}`;
+
+      return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
+    }
+  };
+
+  const { mutate: gotoSelectedMessage } = useMutation(
+    'gotoSelectedMessage',
+    handleGotoSelectedMessage,
+    {
+      onSuccess: (data) => {
+        if (data) {
+          if (data.data.results.length <= 0 || !data.data.hasNext) {
+            setHasMoreDetail(false);
+          }
+          setHasMoreDetailOnScrollDown(true);
+          setDataMessageDetail(() => {
+            const uniqueMessages = [...data.data.results].filter(
+              (msg, index, self) =>
+                self.findIndex((m) => m.id === msg.id) === index,
+            );
+
+            return uniqueMessages;
+          });
+
+          setLastGotoMessageId(data.data.results[0].id);
+
+          if (
+            data.data.results.length > 0 &&
+            data.data.results[data.data.results.length - 1].id
+          ) {
+            setLastItemId &&
+              setLastItemId(data.data.results[data.data.results.length - 1].id);
+          } else {
+            setLastItemId(null);
+          }
+        }
+      },
+      onError: ({ response }: AxiosError) => {
+        if (response?.status === ServerStatusCode.NOT_FOUND) {
+          handleRemoveChatRoomParam();
+        }
+      },
+      onSettled: () => {
+        setInitialLoad(false);
+      },
+    },
+  );
+
+  const handleGetDataMessagesOnScrollDown = async (data: {
+    pageNumber: number;
+    sorting?: boolean;
+  }) => {
+    if (chatRoomCode) {
+      const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${data.pageNumber}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${lastGotoMessageId ? `&message_id=${lastGotoMessageId}` : ''}${data.sorting ? `&sorting=${data.sorting}` : ''}`;
+
+      return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
+    }
+  };
+
+  const { mutate: getDataListMessagesOnScrollDown } = useMutation(
+    'getDataListMessagesOnScrollDown',
+    handleGetDataMessagesOnScrollDown,
+    {
+      onSuccess: (data) => {
+        if (data) {
+          if (data.data.results.length <= 0 || !data.data.hasNext) {
+            setHasMoreDetailOnScrollDown(false);
+          }
+          setDataMessageDetail((prev) => {
+            if (prev) {
+              const newMessages = data.data.results.slice().reverse();
+
+              const filteredMessages = newMessages.filter(
+                (newMsg) =>
+                  !prev.some((existingMsg) => existingMsg.id === newMsg.id),
+              );
+
+              return [...filteredMessages, ...prev];
+            } else {
+              return [...data.data.results];
+            }
+          });
+
+          if (
+            data.data.results.length > 0 &&
+            data.data.results[data.data.results.length - 1].id
+          ) {
+            setLastGotoMessageId &&
+              setLastGotoMessageId(
+                data.data.results[data.data.results.length - 1].id,
+              );
+          } else {
+            setLastGotoMessageId(null);
+          }
+        }
+      },
+      onError: ({ response }: AxiosError) => {
+        if (response?.status === ServerStatusCode.NOT_FOUND) {
+          handleRemoveChatRoomParam();
+        }
+      },
+    },
+  );
+
+  const handleSearchMessagesInChatRoom = async (data: {
+    searchChatMsg: string;
+    pageNumber: number;
+  }) => {
+    if (chatRoomCode) {
+      if (data.pageNumber == 1) setIsLoading(true);
+      const encodedQuery = encodeURIComponent(data.searchChatMsg);
+      const apiUrl = `${apiRouters.CHAT_MESSAGES(chatRoomCode)}?${
+        data.searchChatMsg ? `message=${encodedQuery}` : ''
+      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}`;
+
+      return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
+    }
+  };
+
+  const { mutate: searchMessagesInChatRoom } = useMutation(
+    'searchMessagesInChatRoom',
+    handleSearchMessagesInChatRoom,
+    {
+      onSuccess: (data) => {
+        if (data) {
+          setSearchMessageResults((prev) => {
+            return {
+              count: data.data.count,
+              numPages: data.data.numPages,
+              results: [...(prev?.results || []), ...data.data.results],
+              hasNext: data.data.hasNext,
+            };
+          });
+          setHasMoreSearchResultDetail(data.data.hasNext || false);
+        }
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
   useEffect(() => {
-    if (inView && hasMoreDetail) {
-      activeRoomRef.current = chatRoomCode;
+    if (chatRoomCode) {
       getDataListMessages(page);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inView, chatRoomCode, hasMoreDetail]);
+  }, [chatRoomCode]);
+
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const chatContainer = chatContainerRef.current;
+      if (
+        chatContainer &&
+        hasMoreDetail &&
+        chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) ===
+          chatContainer.scrollHeight
+      ) {
+        getDataListMessages(page);
+      } else if (
+        chatContainer &&
+        hasMoreDetailOnScrollDown &&
+        Math.abs(chatContainer.scrollTop) == 0
+      ) {
+        chatContainer.scrollTop = -10;
+        getDataListMessagesOnScrollDown({ pageNumber: page, sorting: true });
+      }
+    };
+
+    const chatContainer = chatContainerRef.current;
+
+    if (chatContainer) {
+      chatContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (chatContainer) {
+        chatContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMoreDetail, hasMoreDetailOnScrollDown]);
 
   useEffect(() => {
     if (authenticatedUser) {
@@ -1444,6 +1656,12 @@ const ChatDetail = ({
                 inputClassName="!w-[290px] !py-2 !rounded-[30px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
                 value={searchChatMsg}
                 onChange={(e) => setSearchChatMsg(e.target.value)}
+                onKeyDown={(e: any) => {
+                  if (e.keyCode == 13 && e.target.value !== '') {
+                    searchMessagesInChatRoom({ searchChatMsg, pageNumber: 1 });
+                    setOpenSearchMessagesModal(true);
+                  }
+                }}
               />
               {session?.user.permissions &&
                 hasPermissionInArray(
@@ -1484,13 +1702,32 @@ const ChatDetail = ({
             </div>
           </div>
           <div
+            ref={chatContainerRef}
             className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
+            <div className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
+              <div>
+                {initialLoad ? (
+                  <div className="flex flex-col items-start ml-3">
+                    <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
+                    <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
+                    <RowSkeleton
+                      numberOfRows={4}
+                      className="!h-[50px] w-[700px]"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full"></div>
+                )}
+              </div>
+            </div>
             {dataMessageDetail &&
               chatRoomNotifications &&
               dataMessageDetail
                 .slice(0, chatRoomNotifications.notifications)
                 .map((item) => (
-                  <div key={item.id}>
+                  <div
+                    key={item.id}
+                    ref={item.id == gotoMessageId ? gotoMessageRef : null}>
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
                       messageDetail={item}
@@ -1529,7 +1766,9 @@ const ChatDetail = ({
                   dataMessageDetail.length,
                 )
                 .map((item) => (
-                  <div key={item.id}>
+                  <div
+                    key={item.id}
+                    ref={item.id == gotoMessageId ? gotoMessageRef : null}>
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
                       messageDetail={item}
@@ -1549,24 +1788,6 @@ const ChatDetail = ({
                     />
                   </div>
                 ))}
-            <div
-              ref={ref}
-              className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
-              <div>
-                {initialLoad ? (
-                  <div className="flex flex-col items-start ml-3">
-                    <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
-                    <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
-                    <RowSkeleton
-                      numberOfRows={4}
-                      className="!h-[50px] w-[700px]"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-6"></div>
-                )}
-              </div>
-            </div>
           </div>
           {chatRoomDetail ? (
             <>
@@ -1742,6 +1963,35 @@ const ChatDetail = ({
           )}
         </div>
       )}
+      {openSearchMessagesModal && (
+        <SearchMessagesModal
+          open={true}
+          dashboardMembers={dashboardMembers}
+          searchMessageResults={searchMessageResults}
+          searchChatMsg={searchChatMsg}
+          setSearchChatMsg={setSearchChatMsg}
+          searchResultsPage={searchResultsPage}
+          setSearchMessageResults={setSearchMessageResults}
+          setSearchResultsPage={setSearchResultsPage}
+          hasMoreSearchResultDetail={hasMoreSearchResultDetail}
+          onSubmit={(searchChatMsg: string, page: number) => {
+            searchMessagesInChatRoom({ searchChatMsg, pageNumber: page });
+          }}
+          onClose={() => {
+            setOpenSearchMessagesModal(false);
+            setSearchResultsPage(1);
+            setSearchMessageResults(undefined);
+          }}
+          onGotoMessage={(messageId) => {
+            setOpenSearchMessagesModal(false);
+            setGotoMessageId(messageId);
+            gotoSelectedMessage({
+              pageNumber: page,
+              bookmarkMessageId: messageId,
+            });
+          }}
+        />
+      )}
       {openMentionMembersModal && (
         <ChatMentionMembersModal
           mentionMemberModalPosition={mentionMemberModalPosition}
@@ -1753,8 +2003,8 @@ const ChatDetail = ({
           handleCheckboxClick={handleCheckboxClick}
           setSearchMentionMembers={setSearchMentionMembers}
           onClose={() => {
-            setOpenMentionMembersModal(false)
-            setSearchMentionMembers('')
+            setOpenMentionMembersModal(false);
+            setSearchMentionMembers('');
           }}
         />
       )}

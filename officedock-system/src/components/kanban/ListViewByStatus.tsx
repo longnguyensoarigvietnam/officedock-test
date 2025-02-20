@@ -284,8 +284,10 @@ const ListViewByStatus = ({
           />
         )}
         <p className="font-medium text-[14px]">{listTitle}</p>
-        {listId != StatusValueTask.MY_ROUTINE && <p className="text-[#77858F] text-[14px]">{count}</p>}
-        
+        {listId != StatusValueTask.MY_ROUTINE && (
+          <p className="text-[#77858F] text-[14px]">{count}</p>
+        )}
+
         <Tippy
           content="タスクを新規作成"
           arrow={false}
