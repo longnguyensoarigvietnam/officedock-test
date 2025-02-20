@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Count
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
@@ -180,6 +181,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         many=True, read_only=True
     )
     tasks = TaskForChatMessageSerializer(many=True, read_only=True)
+    reactions = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ChatMessage
@@ -200,6 +202,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "tasks",
             "quote",
             "reply",
+            "reactions",
         ]
         read_only_fields = ["id", "uuid"]
 
@@ -241,6 +244,25 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             if obj.schedule_id
             else None
         )
+
+    def get_reactions(self, obj):
+        """
+        Returns reactions of message
+        """
+        reacts = (
+            obj.reactions.values("icon")
+            .annotate(users=Count("user"))
+            .order_by("icon")
+        )
+
+        response_data = []
+        for react in reacts:
+            users = obj.reactions.filter(icon=react["icon"]).values_list(
+                "user", flat=True
+            )
+            response_data.append({"icon": react["icon"], "users": list(users)})
+
+        return response_data
 
 
 class ChatMessageBookMarkSerializer(ChatMessageSerializer):
@@ -296,6 +318,12 @@ class QuoteMessageSerializer(serializers.Serializer):
         attrs["message_uuid"] = str(message_uuid)
 
         return attrs
+class ReactionSerializer(serializers.Serializer):
+    """
+    Reaction serializer
+    """
+
+    icon = serializers.CharField(max_length=255, required=True)
 
 
 class SendMessageSerializer(serializers.ModelSerializer):

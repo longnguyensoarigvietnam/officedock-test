@@ -146,3 +146,24 @@ class ChatMessage(BaseModel):
         """
         self.deleted_at = timezone.now()
         self.save()
+
+
+class Reaction(BaseModel):
+    """Reaction model"""
+
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="reactions",
+        on_delete=models.CASCADE,
+    )
+    chat_message = models.ForeignKey(
+        ChatMessage,
+        related_name="reactions",
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        "users.User",
+        related_name="reactions",
+        on_delete=models.CASCADE,
+    )
+    icon = models.CharField(max_length=255, null=True, blank=True)
