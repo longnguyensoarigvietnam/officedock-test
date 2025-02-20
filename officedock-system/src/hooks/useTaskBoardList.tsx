@@ -13,6 +13,7 @@ import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import { KanbanDataResponse, StatusTask } from '@interfaces/task';
 import { TaskContext } from '@providers/TaskProvider';
 import { ResponseError } from '@interfaces/response';
+import { OptionDropdownType } from '@interfaces/common';
 
 interface FilterProps {
   userId?: string;
@@ -25,6 +26,11 @@ const useTaskBoardList = (
   ordering?: string,
   statusList?: StatusTask[],
   isReadyToFetch?: boolean,
+  orderingOptions?: {
+    category_ids: OptionDropdownType[];
+    tag_ids: OptionDropdownType[];
+    organization_ids: OptionDropdownType[];
+  } | null,
 ) => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -44,7 +50,31 @@ const useTaskBoardList = (
     }
 
     const fetchTasksForStatus = async (statusId: string) => {
-      const apiUrl = `${apiRouters.TASK_BOARD_LIST}?page_size=${PAGINATION_PAGE_SIZE_KANBAN}&status_id=${statusId}${ordering ? `&ordering=${ordering}` : ''}${filter?.userId ? `&user_id=${filter.userId}` : ''}${filter?.tagId ? `&tag_id=${filter.tagId}` : ''}${filter?.search ? `&search=${filter.search}` : ''}`;
+      const params = new URLSearchParams({
+        page_size: String(PAGINATION_PAGE_SIZE_KANBAN),
+        status_id: String(statusId),
+        ...(ordering && { ordering }),
+        ...(filter?.userId && { user_id: String(filter.userId) }),
+        ...(filter?.tagId && { tag_id: String(filter.tagId) }),
+        ...(filter?.search && { search: filter.search }),
+
+        ...(orderingOptions?.organization_ids?.length && {
+          organization_ids: orderingOptions.organization_ids
+            .map((item) => item.value)
+            .join(','),
+        }),
+        ...(orderingOptions?.category_ids?.length && {
+          category_ids: orderingOptions.category_ids
+            .map((item) => item.value)
+            .join(','),
+        }),
+        ...(orderingOptions?.tag_ids?.length && {
+          tag_ids: orderingOptions.tag_ids.map((item) => item.value).join(','),
+        }),
+      });
+
+      const apiUrl = `${apiRouters.TASK_BOARD_LIST}?${params.toString()}`;
+
       const { data } = await api.get<KanbanDataResponse>(apiUrl);
       return {
         statusId,
@@ -79,7 +109,7 @@ const useTaskBoardList = (
     isFetched: isFetchedTaskBoards,
   } = useQuery({
     queryKey: isReadyToFetch
-      ? ['getTaskBoardList', filter, ordering, statusList]
+      ? ['getTaskBoardList', filter, ordering, statusList, orderingOptions]
       : ['getTaskBoardList'],
     queryFn: getTaskBoardList,
     retry: 0,

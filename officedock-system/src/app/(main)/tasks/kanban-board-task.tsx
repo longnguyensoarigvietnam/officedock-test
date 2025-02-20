@@ -173,6 +173,7 @@ const KanbanBoardTask = () => {
     widthCalendar,
     columnWidth,
     selectedOptionZoom,
+    orderingOptions,
     setSelectedOptionZoom,
     setStatusTaskSelected,
     setDataRunning,
@@ -290,6 +291,7 @@ const KanbanBoardTask = () => {
     orderingRequest,
     statusTask,
     isReadyToFetch,
+    orderingOptions,
   );
   useEffect(() => {
     if (numberPages) {
