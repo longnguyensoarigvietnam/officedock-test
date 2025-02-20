@@ -175,4 +175,8 @@ export const NO_OPTION_CATEGORY = '未選択';
 
 export const MY_TEMPLATE = 'マイテンプレート';
 
-export const MENTION_ALL_MEMBERS = 'すべてのメンバー'
+export const MENTION_ALL_MEMBERS = 'すべてのメンバー';
+
+export const NO_EVENT_MEMBER = '特になし';
+
+export const TASK_STARTING = 'タスク実行中';

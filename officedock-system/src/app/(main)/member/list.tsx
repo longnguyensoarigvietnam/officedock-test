@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
@@ -11,13 +11,9 @@ import DetailProfileMemberModal from '@components/modals/DetailProfileMemberModa
 
 const ListMember = () => {
   const { listMemberOrganization } = useMemberOrganizationList({});
-  const getRandomColor = () => {
-    const hue = Math.floor(Math.random() * 360);
-    const saturation = Math.floor(Math.random() * (80 - 40) + 40);
-    const lightness = Math.floor(Math.random() * (70 - 30) + 30);
 
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  };
+  const [isShowModalDetail, setIsShowModalDetail] = useState(false);
+  const [userId, setUserId] = useState<string>('');
 
   return (
     <div className="px-6 py-[14px] text-black font-medium text-[26px] ">
@@ -58,20 +54,28 @@ const ListMember = () => {
         {listMemberOrganization &&
           listMemberOrganization.map((item) => {
             return (
-              <GroupMember key={item.id} item={item} color={getRandomColor()} />
+              <GroupMember
+                key={item.id}
+                item={item}
+                onClickMember={(id: string) => {
+                  setUserId(id);
+                  setIsShowModalDetail(true);
+                }}
+              />
             );
           })}
       </div>
-      <DetailProfileMemberModal
-        open={false}
-        type={''}
-        onConfirm={function (): void {
-          throw new Error('Function not implemented.');
-        }}
-        onClose={function (): void {
-          throw new Error('Function not implemented.');
-        }}
-      />
+      {isShowModalDetail && (
+        <DetailProfileMemberModal
+          open={isShowModalDetail}
+          userId={userId}
+          type={''}
+          onConfirm={function (): void {
+            throw new Error('Function not implemented.');
+          }}
+          onClose={() => setIsShowModalDetail(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,11 +1,28 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useMutation } from 'react-query';
+import { useRouter } from 'next/navigation';
 
 import Modal from '../common/Modal';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
+import {
+  SkeletonContainer,
+  SkeletonElement,
+} from '@components/common/SkeletonLoading';
+
+import { ItemStartType, UserRoles } from '@constants/enums';
+import { apiRouters, pageRouters } from '@constants/routers';
+import { NO_EVENT_MEMBER, TASK_STARTING } from '@constants';
+
+import useUserDetail from '@hooks/useUserDetail';
+import { hasRole } from '@utils';
+import { ChatRoomItem } from '@interfaces/chat';
+import api from '@base/api';
 
 export type DetailProfileMemberProps = {
+  userId: string;
   open: boolean;
   type: string;
   onConfirm: () => void;
@@ -26,67 +43,158 @@ const ViewDetail = ({ label, value }: { label: string; value: string }) => {
 };
 
 const DetailProfileMemberModal = memo(
-  ({ onClose }: DetailProfileMemberProps) => {
+  ({ userId, onClose }: DetailProfileMemberProps) => {
+    const router = useRouter();
+    const { data: session } = useSession();
+    const [isCalling, setIsCalling] = useState(true);
+    const { userDetail } = useUserDetail({
+      userId: userId,
+      onSettled: () => {
+        setIsCalling(false);
+      },
+    });
+
+    const mainOrganization = userDetail?.organizations.find(
+      (org) => org.isMain,
+    );
+    const differentOrganization = userDetail?.organizations
+      .filter((org) => !org.isMain)
+      .map((org) => org.name);
+
+    // Handle create chat
+    const handleCreateChat = async (data: {
+      name: string;
+      participantIds: number[];
+    }): Promise<ChatRoomItem> => {
+      const response = await api.post(apiRouters.CHAT_LIST, data);
+      return response.data;
+    };
+
+    const { mutate: createChat } = useMutation(
+      'handleCreateChat',
+      handleCreateChat,
+      {
+        onSuccess: async (data) => {
+          router.push(`${pageRouters.CHAT_MANAGEMENT.href}?room=${data.code}`);
+        },
+        onError: () => {},
+        onSettled: () => {},
+      },
+    );
+
     return (
       <Modal
-        open={false}
+        open={true}
         className="font-primary bg-[#F8FAFC] w-[540px] !rounded-lg !p-10"
         onClose={onClose}
         title="">
-        <div className="relative">
-          <div
-            className={`absolute top-[-20px] right-[-20px] w-[30px] h-[30px] flex items-center justify-center rounded-full bg-white`}>
-            <ImageRound
-              className={`mt-1 w-5 h-5 hover:cursor-pointer `}
-              src="/icons/close.svg"
-              name="Close modal"
-              onClick={onClose}
-            />
-          </div>
-          <div className="flex items-start gap-[10px]">
-            {AvatarIconWithDynamicColor({
-              color: '#0068B6',
-              size: 36,
-            })}
-            <p className="text-black font-medium text-[18px] line-clamp-3 break-all pt-1">
-              安藤 優希
-            </p>
-          </div>
-          <div className="flex">
-            <div className="flex flex-1 flex-col gap-4 mt-[22px]">
-              <ViewDetail label="メインチーム" value={'マーケティング部'} />
-              <ViewDetail label="サブチーム" value={'制作部 / 営業部'} />
-              <ViewDetail label="現在の予定" value={'打ち合わせ'} />
-              <ViewDetail label="メールアドレス" value={'○○○○○＠○○○○○'} />
+        {isCalling ? (
+          <SkeletonContainer className="w-full !bg-[#F8FAFC] !p-0">
+            <div className="flex items-center gap-2">
+              <SkeletonElement className="!w-12 !h-12 !rounded-full" />
+              <div className="flex flex-col gap-2">
+                <SkeletonElement className="!w-[103px]" />
+                <SkeletonElement className="!w-[248px]" />
+              </div>
             </div>
-            <div className="w-[136px] flex flex-col gap-1 justify-end">
-              <Button className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
-                <ImageRound
-                  src="/icons/chat.svg"
-                  name="Extend box"
-                  className={`!w-[18px] !h-4 `}
+            <div className="flex flex-col gap-2">
+              <SkeletonElement />
+              <SkeletonElement className="!w-[260px]" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <SkeletonElement />
+              <SkeletonElement className="!w-[260px]" />
+            </div>
+          </SkeletonContainer>
+        ) : (
+          <div className="relative">
+            <div
+              className={`absolute top-[-20px] right-[-20px] w-[30px] h-[30px] flex items-center justify-center rounded-full bg-white`}>
+              <ImageRound
+                className={`mt-1 w-5 h-5 hover:cursor-pointer `}
+                src="/icons/close.svg"
+                name="Close modal"
+                onClick={onClose}
+              />
+            </div>
+            <div className="flex items-start gap-[10px]">
+              {AvatarIconWithDynamicColor({
+                color: '#0068B6',
+                size: 36,
+              })}
+              <p className="text-black font-medium text-[18px] line-clamp-3 break-all pt-1">
+                {userDetail?.profile.fullName}
+              </p>
+            </div>
+            <div className="flex">
+              <div className="flex flex-1 flex-col gap-4 mt-[22px]">
+                <ViewDetail
+                  label="メインチーム"
+                  value={mainOrganization ? mainOrganization.name : ''}
                 />
-                <span>チャット</span>
-              </Button>
-              <Button className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
-                <ImageRound
-                  src="/icons/skill-map.svg"
-                  name="Extend box"
-                  className={`!w-4 !h-4 `}
+                <ViewDetail
+                  label="サブチーム"
+                  value={
+                    differentOrganization
+                      ? differentOrganization.join(' / ')
+                      : ''
+                  }
                 />
-                <span>スキルマップ</span>
-              </Button>
-              <Button className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2 ">
-                <ImageRound
-                  src="/icons/daily-report.svg"
-                  name="Extend box"
-                  className={`!w-4 !h-4 `}
+                <ViewDetail
+                  label="現在の予定"
+                  value={
+                    userDetail && userDetail.currentEvent
+                      ? userDetail.currentEvent.type === ItemStartType.SCHEDULE
+                        ? userDetail.currentEvent.title
+                        : TASK_STARTING
+                      : NO_EVENT_MEMBER
+                  }
                 />
-                <span>日報</span>
-              </Button>
+                <ViewDetail label="メールアドレス" value={'○○○○○＠○○○○○'} />
+              </div>
+              <div className="w-[136px] flex flex-col gap-1 justify-end">
+                <Button
+                  onClick={() => {
+                    if (userDetail && userDetail.id) {
+                      createChat({
+                        name: '',
+                        participantIds: [userDetail?.id],
+                      });
+                    }
+                  }}
+                  className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
+                  <ImageRound
+                    src="/icons/chat.svg"
+                    name="Extend box"
+                    className={`!w-[18px] !h-4 `}
+                  />
+                  <span>チャット</span>
+                </Button>
+                {session &&
+                  hasRole(session?.user.roles, UserRoles.SYSTEM_ADMIN) && (
+                    <>
+                      <Button className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
+                        <ImageRound
+                          src="/icons/skill-map.svg"
+                          name="Extend box"
+                          className={`!w-4 !h-4 `}
+                        />
+                        <span>スキルマップ</span>
+                      </Button>
+                      <Button className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2 ">
+                        <ImageRound
+                          src="/icons/daily-report.svg"
+                          name="Extend box"
+                          className={`!w-4 !h-4 `}
+                        />
+                        <span>日報</span>
+                      </Button>
+                    </>
+                  )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </Modal>
     );
   },

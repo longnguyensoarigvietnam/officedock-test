@@ -15,6 +15,7 @@ import { formatTime24h } from './date';
 import { Task } from '@interfaces/task';
 import { MAX_HEX_COLOR_VALUE } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
+import { UserRoleType } from '@interfaces/user';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -624,4 +625,8 @@ export function generateOptionsCount(
     label: (index + 1).toString(),
     value: index + 1,
   }));
+}
+// Check has role need
+export function hasRole(roles: UserRoleType[], roleName: string): boolean {
+  return roles.some((role) => role.name === roleName);
 }

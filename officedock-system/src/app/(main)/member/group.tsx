@@ -1,21 +1,22 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
+import ImageRound from '@components/common/ImageRound';
+
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { UserOrganization } from '@interfaces/user';
-import ImageRound from '@components/common/ImageRound';
 
 type DataGroupMemberProps = {
   item: UserOrganization;
-  color: string;
+  onClickMember: (id: string) => void;
 };
 
-const GroupMember = ({ item, color }: DataGroupMemberProps) => {
+const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
   const { dashboardMembersWithAvatars, expanded } =
     useContext(GlobalStateContext);
 
-  const [isExpandedGroup, setIsExpandedGroup] = useState(false);
+  const [isExpandedGroup, setIsExpandedGroup] = useState(true);
 
   const renderBoxUser = (userId: string) => {
     const avatarColor =
@@ -24,11 +25,20 @@ const GroupMember = ({ item, color }: DataGroupMemberProps) => {
 
     return <AvatarIconWithDynamicColor color={avatarColor} size={36} />;
   };
+  const getRandomColor = () => {
+    const hue = Math.floor(Math.random() * 360);
+    const saturation = Math.floor(Math.random() * (80 - 40) + 40);
+    const lightness = Math.floor(Math.random() * (70 - 30) + 30);
+
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  };
+  const randomColor = useMemo(() => getRandomColor(), []);
+
   return (
     <div>
       <div className="flex justify-between">
         <div className="flex items-center gap-[10px] w-fit">
-          <GroupIconWithDynamicColor color={color} />
+          <GroupIconWithDynamicColor color={randomColor} />
 
           <p className="text-[18px]">{item.name}</p>
           <span className="text-[#77858F] text-[13px] ml-[10px]">
@@ -56,7 +66,10 @@ const GroupMember = ({ item, color }: DataGroupMemberProps) => {
                 boxShadow: '0px 2px 8px 0px #0000001A',
                 width: expanded ? '265px' : '316px',
               }}
-              className=" h-[76px] bg-white flex items-center gap-[10px]  p-5 justify-start  rounded-lg">
+              onClick={() => {
+                onClickMember(String(user.id));
+              }}
+              className=" h-[76px] bg-white flex items-center gap-[10px]  p-5 justify-start cursor-pointer  rounded-lg">
               {renderBoxUser(`${user.id}`)}
               <p className="text-[18px]">{user.fullName}</p>
             </div>
