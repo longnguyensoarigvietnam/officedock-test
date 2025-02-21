@@ -720,5 +720,5 @@ class DailyReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DailyReport
-        fields = ["id", "date", "remark", "is_submit"]
+        fields = ["id", "date", "remark", "is_submit", "is_confirmed"]
         read_only_fields = ["id"]

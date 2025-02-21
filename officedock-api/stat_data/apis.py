@@ -1,5 +1,4 @@
 from datetime import datetime, time, timedelta
-from itertools import chain
 import re
 
 from django.db.models import (
@@ -14,29 +13,33 @@ from django.db.models import (
 from django.db.models.functions import Now, Coalesce
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework import mixins
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotFound
 
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
 from calendars.models import Schedule
+from common.constants import DATE_REGEX, BASE_DATE_FORMAT
 from common.utils import (
     format_duration,
     time_to_timedelta,
     transform_statistic_categories,
     generate_random_color,
 )
+from organizations.models import Organization
 from organizations.serializers import OrganizationDetailSerializer
 from stat_data.serializers import DailyTaskSerializer, DailyEventSerializer
 from tasks.models import Task, TaskDuration
 from tasks.utils import split_date_range
+from users.models import User
 from users.serializers import DailyReportSerializer
 from roles.constants import Screens
 from base.permissions import ActionPermission
 
 
 @extend_schema(tags=["System > Stat Data"])
-class StatDataViewSet(BaseAPIViewSet):
+class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     """
     Endpoint api stat data
     """
@@ -71,7 +74,13 @@ class StatDataViewSet(BaseAPIViewSet):
 
             return True
 
-    @extend_schema(parameters=[OpenApiParameter(name="date", type=datetime)])
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="date", type=datetime),
+            OpenApiParameter(name="user_id", type=int),
+            OpenApiParameter(name="organization_id", type=int),
+        ]
+    )
     @action(
         detail=False,
         methods=["GET"],
@@ -82,17 +91,45 @@ class StatDataViewSet(BaseAPIViewSet):
         """
         Return daily report data by date
         """
-        user = request.user
+        if user_id := request.query_params.get("user_id"):
+            user = User.objects.filter(id=user_id).first()
+        else:
+            user = request.user
+
+        if not user:
+            raise NotFound()
+
+        prev_user = None
+        next_user = None
+        # Find previous and next user in organization by current user
+        if organization_id := request.query_params.get("organization_id"):
+            organization = Organization.objects.get(pk=organization_id)
+            users = list(organization.users.all().order_by("created_at"))
+            # Find the user's position in the list
+            try:
+                index = users.index(user)  # Get index of the requesting user
+            except ValueError:
+                raise NotFound(
+                    {
+                        "detail": ERROR_MESSAGES["staff_not_exists"].format(
+                            id=user_id
+                        )
+                    }
+                )
+            # Get previous and next users safely
+            prev_user = users[index - 1].id if index > 0 else None
+            next_user = users[index + 1].id if index < len(users) - 1 else None
+
         date = request.query_params.get("date", None)
 
         # Validate date format using regex
-        if not date or not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
+        if not date or not re.match(DATE_REGEX, date):
             raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
 
         if not date:
             date = timezone.now().date()
         else:
-            date = datetime.strptime(date, "%Y-%m-%d").date()
+            date = datetime.strptime(date, BASE_DATE_FORMAT).date()
 
         start_of_day = datetime.combine(date, time.min)
         start_of_today = datetime.combine(timezone.now().date(), time.min)
@@ -189,6 +226,8 @@ class StatDataViewSet(BaseAPIViewSet):
         data = {
             "tasks": merged_duration,
             "organization_categories": {},
+            "next_user": next_user,
+            "prev_user": prev_user,
         }
 
         for item in list(tasks) + list(events):
@@ -267,42 +306,50 @@ class StatDataViewSet(BaseAPIViewSet):
 
         data["total_duration"] = format_duration(total_duration)
         data["categories"] = []
-        category_list = list(task_with_category_large_durations) + list(
+        category_dict = {}
+
+        combine_cards = list(task_with_category_large_durations) + list(
             event_with_category_large_durations
         )
-        if task_without_large_durations:
-            none_large_categories = {"duration": timedelta()}
-            for task in task_without_large_durations:
-                none_large_categories["duration"] += task["duration"]
-                none_large_categories[
-                    "categories__large_statistic_category__name"
-                ] = None
-                none_large_categories[
-                    "categories__large_statistic_category__color"
-                ] = (
-                    generate_random_color()
-                )  # FXIME: Maybe remove later when not accept use random for unsetting category
-            for event in event_without_large_durations:
-                none_large_categories["duration"] += event["duration"]
-                none_large_categories[
-                    "categories__large_statistic_category__name"
-                ] = None
-                none_large_categories[
-                    "categories__large_statistic_category__color"
-                ] = (
-                    generate_random_color()
-                )  # FXIME: Maybe remove later when not accept use random for unsetting category
 
-            category_list = list(
-                chain(
-                    task_with_category_large_durations, [none_large_categories]
-                )
-            )
+        for card in combine_cards:
+            category_name = card["categories__large_statistic_category__name"]
+            category_color = card["categories__large_statistic_category__color"]
+            duration = card["duration"]
+
+            if category_name in category_dict:
+                category_dict[category_name]["duration"] += duration
+            else:
+                category_dict[category_name] = {
+                    "category_name": category_name,
+                    "category_color": category_color,
+                    "duration": duration,
+                }
+
+        if task_without_large_durations:
+            category_dict["empty_category"] = {
+                "category_name": None,
+                "category_color": generate_random_color(),  # FXIME: Maybe remove later when not accept use random for unsetting category
+                "duration": timedelta(0),
+            }
+            for task in task_without_large_durations:
+                category_dict["empty_category"]["duration"] += task["duration"]
+        if event_without_large_durations:
+            if category_dict.get("empty_category") is None:
+                category_dict["empty_category"] = {
+                    "category_name": None,
+                    "category_color": generate_random_color(),  # FXIME: Maybe remove later when not accept use random for unsetting category
+                    "duration": timedelta(0),
+                }
+            for event in event_without_large_durations:
+                category_dict["empty_category"]["duration"] += event["duration"]
+        category_list = list(category_dict.values())
+
         percent = 100
         for cat in category_list:
             category_duration = format_duration(cat["duration"]) or timedelta(0)
-            category_name = cat["categories__large_statistic_category__name"]
-            category_color = cat["categories__large_statistic_category__color"]
+            category_name = cat["category_name"]
+            category_color = cat["category_color"]
             percent_per_total_duration = (
                 (
                     time_to_timedelta(category_duration).total_seconds()
@@ -340,3 +387,117 @@ class StatDataViewSet(BaseAPIViewSet):
         ).data
 
         return self.response_ok(data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="organization_ids", type=str),
+            OpenApiParameter(name="date", type=datetime),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """
+        Return list of statistic data
+        """
+        organization_ids_params = request.query_params.get("organization_ids")
+        organization_ids = []
+        date = request.query_params.get("date", None)
+
+        # Validate date format using regex
+        if not date or not re.match(DATE_REGEX, date):
+            raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+
+        if not date:
+            date = timezone.now().date()
+        else:
+            date = datetime.strptime(date, BASE_DATE_FORMAT).date()
+
+        start_of_day = datetime.combine(date, time.min)
+        datetime.combine(timezone.now().date(), time.min)
+        end_of_day = datetime.combine(date, time.max)
+
+        for id in organization_ids_params.split(","):
+            try:
+                organization_ids.append(int(id))
+            except ValueError:
+                continue
+        data = []
+        if organization_ids:
+            for organization_id in organization_ids:
+                organization = Organization.objects.get(id=organization_id)
+                users = organization.users.all().order_by("created_at")
+                user_list = []
+                for user in users:
+                    tasks = (
+                        Task.objects.filter(
+                            Q(
+                                Q(people_in_charge_tasks__user=user)
+                                & Q(
+                                    task_durations__started_at__gte=start_of_day
+                                )
+                                & Q(task_durations__paused_at__lte=end_of_day)
+                            )
+                        )
+                        .all()
+                        .distinct()
+                    )
+                    events = (
+                        Schedule.objects.filter(
+                            Q(
+                                Q(participants=user)
+                                & Q(
+                                    task_durations__started_at__gte=start_of_day
+                                )
+                                & Q(task_durations__paused_at__lte=end_of_day)
+                            )
+                        )
+                        .all()
+                        .distinct()
+                    )
+
+                    merged_duration = (
+                        DailyTaskSerializer(
+                            tasks,
+                            many=True,
+                            context={
+                                "start_of_day": start_of_day,
+                                "end_of_day": end_of_day,
+                            },
+                        ).data
+                        + DailyEventSerializer(
+                            events,
+                            many=True,
+                            context={
+                                "start_of_day": start_of_day,
+                                "end_of_day": end_of_day,
+                            },
+                        ).data
+                    )
+                    total_duration = timedelta()
+
+                    for task in merged_duration:
+                        total_duration += time_to_timedelta(
+                            task["total_duration"]
+                        )
+                    daily_report = user.daily_reports.filter(date=date).first()
+                    user_list.append(
+                        {
+                            "id": user.id,
+                            "full_name": user.profile.full_name,
+                            "is_confirmed": daily_report.is_confirmed
+                            if daily_report
+                            else False,
+                            "total_duration": format_duration(total_duration),
+                        }
+                    )
+
+                data.append(
+                    {
+                        "organization": {
+                            "id": organization.id,
+                            "name": organization.name,
+                        },
+                        "users": user_list,
+                    }
+                )
+
+        return self.response_ok({"data": data})
