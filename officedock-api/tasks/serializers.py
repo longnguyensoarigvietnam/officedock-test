@@ -1,11 +1,19 @@
 from datetime import datetime, timedelta
 
-from django.db.models import Q
+from django.db.models import (
+    OuterRef,
+    Subquery,
+    Q,
+    Value,
+    DateTimeField,
+)
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework import serializers
 
 from base.messages import ERROR_MESSAGES
+from base.constants import REPLACE_NULL_DATE
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 from chat.constants import ChatMessageTypes
 from common.serializers import CreationDataUserSerializer
@@ -23,7 +31,8 @@ from tasks.models import (
     TodoList,
 )
 from tasks.constants import INITIAL_INDEX_VALUE, DatetimeUnitTypes
-from users.serializers import UsersForCreationSerializer
+from users.serializers import ProfileSerializer, UsersForCreationSerializer
+from users.models import User
 
 
 class TaskDurationSerializer(serializers.ModelSerializer):
@@ -250,18 +259,21 @@ class TodoListSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-def get_task_index(instance, request):
+def get_task_index(instance, request, user_id=None):
     """
-    Return task index of task
+    Return the last TaskIndex for the given task and user.
     """
-    if user_id := request.query_params.get("user_id"):
-        last_task = TaskIndex.objects.filter(
-            task=instance, user_id=user_id
-        ).last()
-    else:
-        user = request.user
-        last_task = TaskIndex.objects.filter(task=instance, user=user).last()
-    return last_task
+    user_id = (
+        user_id
+        or request.query_params.get("user_id")
+        or getattr(request.user, "id", None)
+    )
+
+    return (
+        TaskIndex.objects.filter(task=instance, user_id=user_id).last()
+        if user_id
+        else None
+    )
 
 
 class CategoryForCreationTaskSerializer(serializers.Serializer):
@@ -449,14 +461,18 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         """
         Return index of task
         """
-        last_task = get_task_index(instance, self.context.get("request"))
+        last_task = get_task_index(
+            instance, self.context.get("request"), self.context.get("user_id")
+        )
         return last_task.index if last_task else INITIAL_INDEX_VALUE
 
     def get_pin_at(self, instance):
         """
         Return pin time of task
         """
-        last_task = get_task_index(instance, self.context.get("request"))
+        last_task = get_task_index(
+            instance, self.context.get("request"), self.context.get("user_id")
+        )
 
         return last_task.pin_at if last_task else None
 
@@ -502,14 +518,18 @@ class TaskBoardSerializer(TaskCommonSerializer):
         """
         Return index of task
         """
-        last_task = get_task_index(instance, self.context.get("request"))
+        last_task = get_task_index(
+            instance, self.context.get("request"), self.context.get("user_id")
+        )
         return last_task.index if last_task else INITIAL_INDEX_VALUE
 
     def get_pin_at(self, instance):
         """
         Return pin time of task
         """
-        last_task = get_task_index(instance, self.context.get("request"))
+        last_task = get_task_index(
+            instance, self.context.get("request"), self.context.get("user_id")
+        )
         return last_task.pin_at if last_task else None
 
     def get_type(self, instance):
@@ -673,3 +693,68 @@ class TaskTemplateSerializer(serializers.ModelSerializer):
             "title",
         ]
         read_only_fields = ["id"]
+
+
+class TaskTeamdockSerializer(serializers.ModelSerializer):
+    """
+    Serializer for task in teamdock
+    """
+
+    profile = ProfileSerializer(read_only=True)
+    status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "profile",
+            "status",
+        ]
+
+    def get_status(self, obj):
+        """
+        Retrieve the task status along with tasks assigned to the user.
+        """
+        per_page = 5
+        request = self.context.get("request")
+        statuses = TaskStatus.objects.order_by("id")
+        results = []
+
+        for status in statuses:
+            tasks = obj.in_charge_tasks.filter(status=status)
+            tasks_total = tasks.count()
+
+            # Fetch task index and pinned status for the user
+            task_pin = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=obj.id
+            ).values("pin_at")[:1]
+            task_index = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=obj.id
+            ).values("index")[:1]
+
+            # Annotate tasks with task index and pin timestamp
+            tasks = tasks.annotate(
+                index=Subquery(task_index),
+                coalesced_pin_at=Coalesce(
+                    Subquery(task_pin),
+                    Value(REPLACE_NULL_DATE),
+                    output_field=DateTimeField(),
+                ),
+            ).order_by("-coalesced_pin_at", "-index")[:per_page]
+
+            # Append formatted status data
+            results.append(
+                {
+                    "id": status.id,
+                    "name": status.name,
+                    "total": tasks_total,
+                    "has_next": tasks_total > per_page,
+                    "tasks": TaskBoardSerializer(
+                        tasks,
+                        many=True,
+                        context={"request": request, "user_id": obj.id},
+                    ).data,
+                }
+            )
+
+        return results

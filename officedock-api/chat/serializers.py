@@ -182,6 +182,15 @@ class ChatFileSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
+    def to_representation(self, instance):
+        """Override file URL representation to ensure consistency"""
+        representation = super().to_representation(instance)
+
+        if instance.compressed_file:
+            representation["compressed_file"] = instance.compressed_file.url
+
+        return representation
+
 
 class ChatFileDetailSerializer(serializers.ModelSerializer):
     """Serializer for chat file detail"""

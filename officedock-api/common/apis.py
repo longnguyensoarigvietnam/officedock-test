@@ -21,7 +21,7 @@ from organizations.serializers import StatisticCategorySerializer
 from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
-from users.models import Role, RoleDetail
+from users.models import Role, RoleDetail, User
 from tasks.models import TaskStatus, Task, TaskDuration
 from tasks.constants import TASK_WORK_TYPES, TaskPriorities, TaskTypes
 from skills.serializers import SkillSerializer
@@ -174,6 +174,11 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             self.get_serializer(organizations, many=True).data
         )
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=str, required=False),
+        ],
+    )
     @action(
         methods=["GET"],
         detail=False,
@@ -185,7 +190,19 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Get creation data for people in charge
         """
 
-        users = request.user.company.users.order_by("created_at").all()
+        if organization_id := request.query_params.get("organization_id"):
+            users = (
+                User.objects.filter(organizations__id=organization_id)
+                .order_by("created_at")
+                .all()
+            )
+        else:
+            users = (
+                User.objects.filter(company=request.user.company)
+                .order_by("created_at")
+                .all()
+            )
+
         return self.response_ok(self.get_serializer(users, many=True).data)
 
     @action(
@@ -231,9 +248,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         url_path="tasks",
         serializer_class=CreationDataTaskSerializer,
     )
-    def tasks(self, request):
+    def task_list_options(self, request):
         """
-        Get creation data for task option
+        Get task list of the option
         """
 
         organizations = request.user.organizations.order_by("created_at")
