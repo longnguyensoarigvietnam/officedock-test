@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 with contextlib.suppress(google.auth.exceptions.DefaultCredentialsError):
-    _, GOOGLE_CLOUD_PROJECT_ID = google.auth.default()
+    GOOGLE_CLOUD_CREDENTIALS, GOOGLE_CLOUD_PROJECT_ID = google.auth.default()
     if GOOGLE_CLOUD_PROJECT_ID is not None:
         os.environ["GOOGLE_CLOUD_PROJECT_ID"] = GOOGLE_CLOUD_PROJECT_ID
 
@@ -58,6 +58,24 @@ if GOOGLE_CLOUD_PROJECT_ID := os.environ.get("GOOGLE_CLOUD_PROJECT_ID", None):
 
     DEBUG = env("DEBUG", default=False)
     DATABASES = {"default": env.db()}
+
+    # Config google cloud storage
+    # https://django-storages.readthedocs.io/en/latest/backends/gcloud.html
+
+    GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME", None)
+    GS_CREDENTIALS = GOOGLE_CLOUD_CREDENTIALS
+    GS_QUERYSTRING_AUTH = False
+    GS_DEFAULT_ACL = None
+    GS_FILE_OVERWRITE = False
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+            "OPTIONS": {},
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+        },
+    }
 else:
     # SECURITY WARNING: keep the secret key used in production secret!
     SECRET_KEY = os.getenv("SECRET_KEY")
@@ -100,6 +118,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "django_filters",
+    "storages",
     # Add application
     "core",
     "base",
@@ -261,6 +280,8 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": DEFAULT_RENDERER_CLASSES,
     "DEFAULT_PARSER_CLASSES": (
         "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+        "djangorestframework_camel_case.parser.CamelCaseFormParser",
+        "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
         "rest_framework.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
@@ -291,7 +312,14 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "The Office Dock use Python, Django, DRF and development with Docker Compose.",
     "VERSION": "v1",
     "SERVE_INCLUDE_SCHEMA": False,
-    "PARSER_WHITELIST": ["rest_framework.parsers.JSONParser"],
+    "PARSER_WHITELIST": [
+        "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+        "djangorestframework_camel_case.parser.CamelCaseFormParser",
+        "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
+    ],
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields"
     ],

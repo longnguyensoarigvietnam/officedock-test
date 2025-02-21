@@ -87,3 +87,5 @@ ROOM_TYPES = [
     (ChatRoomTypes.SKILL, ChatRoomNames.SKILL_UP),
     (ChatRoomTypes.CALENDAR, ChatRoomNames.CALENDAR),
 ]
+
+CHAT_FILES_FOLDER_UPLOAD = "chat"
