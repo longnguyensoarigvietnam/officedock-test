@@ -806,6 +806,9 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if self.action in ["setting"]:
             return SettingSerializer
 
+        if self.action in ["report"]:
+            return DailyReportSerializer
+
         if self.action == "list":
             return UserListSerializer
 
@@ -1029,6 +1032,35 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         user.save()
 
         return self.response_ok()
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="report",
+        serializer_class=DailyReportSerializer,
+    )
+    @transaction.atomic()
+    def report(self, request, pk):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if (
+            DailyReport.objects.filter(
+                user=user, date=serializer.validated_data["date"]
+            ).count()
+            > 1
+        ):
+            DailyReport.objects.filter(
+                user=user, date=serializer.validated_data["date"]
+            ).first().delete()
+
+        daily, created = DailyReport.objects.update_or_create(
+            user=user,
+            date=serializer.validated_data["date"],
+            defaults=serializer.validated_data,
+        )
+
+        return self.response_ok(self.get_serializer(daily).data)
 
 
 @extend_schema(tags=["System > Users"])

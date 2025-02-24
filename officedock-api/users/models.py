@@ -475,6 +475,7 @@ class DailyReport(BaseModel):
     date = models.DateField(auto_now=False, auto_now_add=False)
     remark = models.TextField(null=True, blank=True)
     is_submit = models.BooleanField(default=False)
+    is_confirmed = models.BooleanField(default=False)
     company = models.ForeignKey(
         "companies.Company",
         related_name="daily_reports",
