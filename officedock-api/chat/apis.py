@@ -808,8 +808,13 @@ class ChatMessageViewSet(
         Filtering chat messages by user.
         """
 
+        queryset = super().get_queryset()
         user = self.request.user
-        return super().get_queryset().filter(sender=user)
+
+        if self.action in ["destroy", "perform_update"]:
+            return queryset.filter(sender=user)
+
+        return queryset.filter(company=user.company)
 
     def get_serializer_class(self):
         """

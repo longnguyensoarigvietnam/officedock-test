@@ -60,6 +60,7 @@ from tasks.utils import (
 from roles.constants import Screens
 from users.utils import reset_sort_task
 from users.models import Setting
+from users.models import User
 from .models import (
     PeopleInChargeTasks,
     Task,
@@ -76,6 +77,7 @@ from .serializers import (
     TaskIndexForCreationSerializer,
     TaskScheduleForCreationSerializer,
     TaskSerializer,
+    TaskTeamdockSerializer,
     TodoListSerializer,
     TaskIndexSerializer,
     TaskIndexPinAtSerializer,
@@ -1295,6 +1297,48 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 )
 
         return self.response_pagination(request, queryset, TaskBoardSerializer)
+
+
+@extend_schema(tags=["System > Task"])
+class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
+    """
+    API endpoint to show Tasks to the Teamdock.
+    """
+
+    queryset = User.objects.order_by("created_at")
+    serializer_class = TaskTeamdockSerializer
+
+    def get_queryset(self):
+        """Filter queryset"""
+        queryset = (
+            super().get_queryset().filter(company=self.request.user.company)
+        )
+
+        # Filter by organization id
+        if organization_id := self.request.query_params.get("organization_id"):
+            queryset = queryset.filter(organizations__id=organization_id)
+
+        # Filter by user ids
+        if user_ids := self.request.query_params.get("user_ids"):
+            ids = []
+            for id in user_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                queryset = queryset.filter(id__in=ids)
+
+        return queryset
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=str, required=False),
+            OpenApiParameter("user_ids", type=str, required=False),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 @extend_schema(tags=["System > Task > Todo List"])
