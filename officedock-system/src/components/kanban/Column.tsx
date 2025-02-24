@@ -106,7 +106,9 @@ const Column = ({
   const isMyRoutine = columnId === `${StatusValueTask.MY_ROUTINE}`;
 
   const { columnWidth } = useContext(TaskContext);
-  const { extendByStatus, setExtendByStatus } = useContext(TaskContext);
+
+  const { extendByStatus, orderingOptions, setExtendByStatus } =
+    useContext(TaskContext);
 
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
@@ -166,6 +168,17 @@ const Column = ({
 
     if (searchValue) {
       apiUrl += `&search=${searchValue}${idTasks ? `&ids=${idTasks}` : ''}`;
+    }
+    if (orderingOptions?.organization_ids?.length) {
+      apiUrl += `&organization_ids=${orderingOptions.organization_ids.map((item) => item.value).join(',')}`;
+    }
+
+    if (orderingOptions?.category_ids?.length) {
+      apiUrl += `&category_ids=${orderingOptions.category_ids.map((item) => item.value).join(',')}`;
+    }
+
+    if (orderingOptions?.tag_ids?.length) {
+      apiUrl += `&tag_ids=${orderingOptions.tag_ids.map((item) => item.value).join(',')}`;
     }
 
     return await api.get<KanbanDataResponse>(apiUrl);
