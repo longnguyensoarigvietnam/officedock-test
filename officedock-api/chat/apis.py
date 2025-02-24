@@ -1,3 +1,4 @@
+from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import (
     DateTimeField,
@@ -33,9 +34,10 @@ from chat.constants import (
     WebSocketEventType,
     TypeChatGroup,
 )
-from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
+from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants, ChatFile
 from chat.serializers import (
     BookMarkSerializer,
+    ChatFileDetailSerializer,
     ChatMessageSerializer,
     ChatMessageBookMarkSerializer,
     ChatRoomDetailSerializer,
@@ -46,7 +48,7 @@ from chat.serializers import (
     SendMessageSerializer,
     ReactionSerializer,
 )
-from common.utils import send_web_socket_event, StripTags
+from common.utils import StripTags, send_web_socket_event
 from base.permissions import ActionPermission
 from roles.constants import Screens
 
@@ -724,9 +726,21 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             client_id = request.data.pop("client_id", None)
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
+            serializer_data = serializer.validated_data
+            files = serializer_data.pop("files", None)
             message = serializer.save(
                 sender=user, chat_room=chat_room, company=user.company
             )
+
+            if files:
+                # Create chat files
+                ChatFile.create_files(
+                    company=chat_room.company,
+                    room=chat_room,
+                    message=message,
+                    files=files,
+                )
+
             chat_room_participants = chat_room.chat_rooms_participants.all()
             for participant in chat_room_participants:
                 if participant.user_id != user.id:
@@ -879,25 +893,57 @@ class ChatMessageViewSet(
 
         return self.response_ok()
 
-    def update(self, request, *args, **kwargs):
+    @transaction.atomic
+    def perform_update(self, serializer):
         """
         Handle update message.
         """
-        instance = self.get_object()
+
+        instance = serializer.instance
+        serializer_data = serializer.validated_data
+        files = serializer_data.pop("files", None)
+        file_ids = serializer_data.pop("file_ids", [])
+
         if (
             instance.type != ChatMessageTypes.MESSAGE.value
             or instance.deleted_at is not None
         ):
             raise ValidationError({"detail": ERROR_MESSAGES["cannot_updated"]})
 
-        # Perform the update operation
-        super().update(request, *args, **kwargs)
+        if not isinstance(file_ids, list):
+            file_ids = [file_ids]
 
-        # Fetch the updated message
-        instance.refresh_from_db()
+        # Delete chat files
+        chat_files = instance.chat_files.exclude(id__in=file_ids).all()
+
+        for chat_file in chat_files:
+            # Remove file in storage
+            if chat_file.original_file and default_storage.exists(
+                chat_file.original_file.name
+            ):
+                default_storage.delete(chat_file.original_file.name)
+
+            if chat_file.compressed_file and default_storage.exists(
+                chat_file.compressed_file.name
+            ):
+                default_storage.delete(chat_file.compressed_file.name)
+
+            chat_file.delete()
+
+        # Perform the update operation
+        instance = serializer.save()
+
+        chat_room = instance.chat_room
+        if files:
+            # Create chat files
+            ChatFile.create_files(
+                company=instance.company,
+                room=chat_room,
+                message=instance,
+                files=files,
+            )
 
         # Handle case realtime when edit chat message
-        chat_room = instance.chat_room
         send_web_socket_event(
             {
                 "action": WebSocketEventType.EDIT_MESSAGE.value,
@@ -906,8 +952,6 @@ class ChatMessageViewSet(
             },
             chat_room=chat_room,
         )
-
-        return self.response_ok()
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -929,3 +973,31 @@ class ChatMessageViewSet(
         )
 
         return self.response_ok()
+
+
+@extend_schema(tags=["System > Chat Message > File"])
+class ChatFileViewSet(
+    BaseAPIViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin
+):
+    """
+    API endpoint for chat file.
+    """
+
+    queryset = ChatFile.objects.order_by("created_at")
+    serializer_class = ChatFileDetailSerializer
+    permission_classes = [ActionPermission]
+    screen_name = Screens.CHAT.value
+
+    def get_queryset(self):
+        return super().get_queryset().filter(company=self.request.user.company)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("chat_room_code", type=str, required=False),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if chat_room_code := request.query_params.get("chat_room_code"):
+            queryset = queryset.filter(chat_room__code=chat_room_code)
+        return super().list(request, *args, **kwargs)

@@ -14,6 +14,7 @@ from submit_levels.models import SubmitLevelHistory
 from tags.serializers import BaseTagSerializer
 from users.models import User
 from tasks.models import Task
+from chat.models import ChatFile
 
 
 class CreationDataUserForChatSerializer(serializers.ModelSerializer):
@@ -167,11 +168,62 @@ class SubmitLevelForChatMessageSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class ChatFileSerializer(serializers.ModelSerializer):
+    """Serializer for chat file"""
+
+    class Meta:
+        model = ChatFile
+        fields = [
+            "id",
+            "file_name",
+            "compressed_file",
+            "file_type",
+            "file_size",
+            "created_at",
+        ]
+
+
+class ChatFileDetailSerializer(serializers.ModelSerializer):
+    """Serializer for chat file detail"""
+
+    images = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatFile
+        fields = [
+            "id",
+            "file_name",
+            "original_file",
+            "file_type",
+            "file_size",
+            "created_at",
+            "images",
+        ]
+
+    def get_images(self, obj):
+        """Get next or previous image"""
+
+        if obj.file_type.startswith("image"):
+            chat_files = ChatFile.objects.filter(
+                file_type__icontains="image", chat_room=obj.chat_room
+            ).order_by("id")
+            next_file = chat_files.filter(id__gt=obj.id).first()
+            previous_file = chat_files.filter(id__lt=obj.id).last()
+
+            return {
+                "next_id": next_file.id if next_file else None,
+                "previous_id": previous_file.id if previous_file else None,
+            }
+
+        return None
+
+
 class ChatMessageSerializer(serializers.ModelSerializer):
     """
     Serializer for Chat massage
     """
 
+    is_bookmark = serializers.SerializerMethodField()
     message = serializers.SerializerMethodField()
     schedule = serializers.SerializerMethodField(read_only=True)
     sender = CreationDataUserWithMainOrganizationSerializer()
@@ -182,6 +234,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     )
     tasks = TaskForChatMessageSerializer(many=True, read_only=True)
     reactions = serializers.SerializerMethodField(read_only=True)
+    chat_files = ChatFileSerializer(many=True, read_only=True)
 
     class Meta:
         model = ChatMessage
@@ -191,6 +244,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "message",
             "sender",
             "is_edited",
+            "is_bookmark",
             "created_at",
             "deleted_at",
             "task",
@@ -203,6 +257,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "quote",
             "reply",
             "reactions",
+            "chat_files",
         ]
         read_only_fields = ["id", "uuid"]
 
@@ -264,6 +319,10 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
         return response_data
 
+    def get_is_bookmark(self, obj):
+        """Get is bookmark"""
+        return True if obj.bookmark_at else False
+
 
 class ChatMessageBookMarkSerializer(ChatMessageSerializer):
     """
@@ -318,6 +377,8 @@ class QuoteMessageSerializer(serializers.Serializer):
         attrs["message_uuid"] = str(message_uuid)
 
         return attrs
+
+
 class ReactionSerializer(serializers.Serializer):
     """
     Reaction serializer
@@ -331,6 +392,10 @@ class SendMessageSerializer(serializers.ModelSerializer):
     Serializer for send message
     """
 
+    file_ids = serializers.ListField(
+        required=False, child=serializers.IntegerField()
+    )
+    files = serializers.ListField(required=False, child=serializers.FileField())
     mentions = CreationDataUserWithMainOrganizationSerializer(
         many=True, read_only=True
     )
@@ -366,6 +431,8 @@ class SendMessageSerializer(serializers.ModelSerializer):
             "task_ids",
             "quote",
             "reply_uuid",
+            "file_ids",
+            "files",
         ]
 
     def validate(self, attrs):

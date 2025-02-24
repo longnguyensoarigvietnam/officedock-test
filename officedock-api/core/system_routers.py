@@ -25,7 +25,7 @@ from dashboard.apis import (
     DashboardViewSet,
     DurationViewSet,
 )
-from chat.apis import ChatMessageViewSet, ChatRoomViewSet
+from chat.apis import ChatFileViewSet, ChatMessageViewSet, ChatRoomViewSet
 from roles.apis import RoleViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
@@ -79,6 +79,7 @@ api_router.register(
 )
 api_router.register("roles", RoleViewSet, basename="roles")
 api_router.register("cron-jobs", CronJobViewSet, basename="cron_jobs")
+api_router.register("chat-files", ChatFileViewSet, basename="chat_files")
 
 # Add api router urls
 urlpatterns = []
