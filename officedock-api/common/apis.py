@@ -33,7 +33,7 @@ from tasks.constants import (
     TaskCategoryTypes,
 )
 from skills.serializers import SkillSerializer
-from organizations.models import OrganizationsSkills
+from organizations.models import OrganizationsSkills, Organization
 from roles.constants import Actions, Screens, SelectionResultOptions
 from chat.models import ChatRoom
 from .serializers import (
@@ -46,6 +46,7 @@ from .serializers import (
     CreationDataUserWithOrganizationSerializer,
     OrganizationWithUserNotHaveSkillMapSerializer,
     CreationDataOrganizationWithTagSerializer,
+    CreationDataOrganizationWithStructCategorySerializer,
 )
 from .utils import (
     send_web_socket_event,
@@ -448,6 +449,50 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 merged_categories.append({"type": type, "category": category})
 
         return self.response_ok(merged_categories)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=int, required=False),
+        ],
+    )
+    @action(methods=["GET"], detail=False, url_path="statistics")
+    def statistics(self, request):
+        """
+        Return creation data for statistics
+        """
+        organization_id = request.query_params.get("organization_id")
+        user = request.user
+        list_org = []
+
+        if not organization_id:
+            organizations = user.organizations.all()
+        elif organization := Organization.objects.filter(
+            id=organization_id
+        ).first():
+            organizations = [organization]
+        for organization in organizations:
+            list_org.append(
+                CreationDataOrganizationWithStructCategorySerializer(
+                    organization, context={"user": user}
+                ).data
+            )
+
+        tags = (
+            request.user.company.tags.filter(
+                is_hidden=False,
+                organizations__in=organizations,
+            )
+            .order_by("created_at")
+            .all()
+            .distinct()
+        )
+
+        return self.response_ok(
+            {
+                "organizations": list_org,
+                "tags": BaseTagSerializer(tags, many=True).data,
+            }
+        )
 
 
 @extend_schema(tags=["System > Cron Job"])

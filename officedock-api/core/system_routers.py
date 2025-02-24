@@ -2,7 +2,11 @@ from rest_framework import routers
 
 from calendars.apis import CalendarViewSet, ScheduleViewSet
 from skills.apis import StatisticCategoryViewSet, SkillMapViewSet, SkillViewSet
-from stat_data.apis import StatDataViewSet
+from stat_data.apis import (
+    StatDataViewSet,
+    StatisticViewSet,
+    OrganizationStatisticViewSet,
+)
 from submit_levels.apis import SubmitLevelViewSet
 from tasks.apis import (
     TaskBoardViewSet,
@@ -93,6 +97,12 @@ api_router.register(
 api_router.register("roles", RoleViewSet, basename="roles")
 api_router.register("cron-jobs", CronJobViewSet, basename="cron_jobs")
 api_router.register("chat-files", ChatFileViewSet, basename="chat_files")
+api_router.register("statistics", StatisticViewSet, basename="statistics")
+api_router.register(
+    "organization-statistics",
+    OrganizationStatisticViewSet,
+    basename="organization_statistics",
+)
 
 # Add api router urls
 urlpatterns = []

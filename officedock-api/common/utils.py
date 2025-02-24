@@ -175,7 +175,7 @@ def format_duration(duration: timedelta) -> str:
     return "{:02}:{:02}:{:02}".format(hours, minutes, seconds)
 
 
-def time_to_timedelta(time_str):
+def time_str_to_timedelta(time_str):
     # Function to convert "HH:MM:SS" to timedelta
     hours, minutes, seconds = map(int, time_str.split(":"))
     return timedelta(hours=hours, minutes=minutes, seconds=seconds)
