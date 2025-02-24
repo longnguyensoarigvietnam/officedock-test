@@ -1,17 +1,15 @@
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
+import { Fragment } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { Dispatch, Fragment, SetStateAction } from 'react';
-import { Editor } from '@tiptap/react';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
+import { MessageHoverBookmark } from './MessageHoverBookmark';
 
 import {
   ADD_MEMBER_TASK_MESSAGE,
   CREATION_TASK_MESSAGE,
   DATE_FORMAT,
-  DELETED_SKILL_UP_MESSAGE,
   EVENT_BEFORE_EDITED,
   EVENT_CREATED,
   EVENT_DELETED,
@@ -20,108 +18,41 @@ import {
   MESSAGE_DELETED,
   NO_SETTING,
   REMOVE_MEMBER_TASK_MESSAGE,
-  SKILL_UP_MESSAGE,
   TASK_DELETED,
 } from '@constants';
-import { ChatRoomType, MessageType, PermissionsSystem } from '@constants/enums';
-import { pageRouters } from '@constants/routers';
+import { MessageType } from '@constants/enums';
 import { MENTION_NAME_REGEX } from '@constants/regex';
 
-import {
-  ChatDashboardMember,
-  ChatMessageResponse,
-  ChatParticipant,
-  ChatRoomDetail,
-} from '@interfaces/chat';
+import { ChatDashboardMember, ChatMessageResponse } from '@interfaces/chat';
+import { Profile } from '@interfaces/user';
 
-import { formatWithParagraphTags, hasPermissionInArray } from '@utils';
+import { formatWithParagraphTags } from '@utils';
 import {
   convertToCurrentTimezone,
   convertToTimeString,
   formatCheckDate,
-  formatHoursAndMinutesForDateTime,
-  formatShowDeadline,
   getFormattedDateTime,
   getJapaneseDayName,
 } from '@utils/date';
 
-import { MessageHoverOptions } from './MessageHoverOptions';
-
 export type MessageDetailProps = {
-  chatRoomDetail: ChatRoomDetail | undefined;
+  isLastItem: boolean;
   messageDetail: ChatMessageResponse;
-  msgEditing?: string;
   dashboardMembers: ChatDashboardMember[];
-  editor: Editor | null;
-  setMessage: Dispatch<SetStateAction<string>>;
-  setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
-  setMsgIdUpdated?: Dispatch<SetStateAction<string | undefined>>;
-  setOpenConfirmDeleteModal: Dispatch<SetStateAction<boolean>>;
-  setMsgIdDeleted?: Dispatch<SetStateAction<string | undefined>>;
-  setMsgEditing?: Dispatch<SetStateAction<string | undefined>>;
-  handleConfirmUpdateMsg: (uuid: string) => void;
-  handleConfirmGetDataDetailEvent: (id: string) => void;
-  setDataMessageDetail: ({
-    uuid,
-    isBookMark,
-  }: {
-    uuid: string;
-    isBookMark: boolean;
-  }) => void;
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
+  onGotoMessage: () => void;
+  handleRemoveItemBookmark: (uuid: string) => void;
 };
 
-export const MessageDetail = ({
-  chatRoomDetail,
+export const MessageDetailBookmark = ({
+  isLastItem,
   messageDetail,
   dashboardMembers,
-  editor,
-  setMessage,
-  setMentionMembers,
-  setMsgIdUpdated,
-  setOpenConfirmDeleteModal,
-  setMsgIdDeleted,
-  setDataMessageDetail,
-  handleConfirmGetDataDetailEvent,
+  dashboardMemberList,
+  onGotoMessage,
+  handleRemoveItemBookmark,
 }: MessageDetailProps) => {
   const { data: session } = useSession();
-  const router = useRouter();
-  const handleOpenDeleteMsgModal = (id: string) => {
-    setOpenConfirmDeleteModal(true);
-    if (setMsgIdDeleted) {
-      setMsgIdDeleted(id);
-    }
-  };
-  const handleOpenEditForm = (id: string) => {
-    if (setMsgIdUpdated) {
-      setMsgIdUpdated(id);
-    }
-    if (setMessage) {
-      setMessage(messageDetail.message);
-    }
-    if (setMentionMembers) {
-      const mentionIds = messageDetail.mentions || [];
-      const mentionMembers = mentionIds.map((mentionId) => {
-        return {
-          id: Number(mentionId),
-          fullName:
-            dashboardMembers.find((member) => member.id == mentionId)
-              ?.fullName || '',
-        };
-      });
-      if (messageDetail.message.includes(`@${MENTION_ALL_MEMBERS}`)) {
-        setMentionMembers([
-          {
-            id: null,
-            fullName: MENTION_ALL_MEMBERS,
-          },
-          ...mentionMembers,
-        ]);
-      } else {
-        setMentionMembers(mentionMembers || []);
-      }
-    }
-    editor && editor.commands.setContent(messageDetail.message);
-  };
 
   const renderAvatar = (senderId: number) => {
     const avatarColor =
@@ -152,7 +83,7 @@ export const MessageDetail = ({
         const mentionName = message.substring(i + 1, j).trim();
         if (
           mentionName == MENTION_ALL_MEMBERS &&
-          chatRoomDetail?.participants.every((participant) =>
+          dashboardMemberList.every((participant) =>
             [...mentions, Number(session?.user.id)].includes(
               Number(participant.id),
             ),
@@ -185,20 +116,25 @@ export const MessageDetail = ({
 
   return (
     <Fragment>
-      <div className="group my-6">
-        {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
-          chatRoomDetail?.type === ChatRoomType.GROUP ||
-          chatRoomDetail?.type === ChatRoomType.SELF) && (
+      <div className="group  ">
+        {
           <div
-            className={`flex !box-border group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border ${!isLastItem && 'border-b border-[#D2DBE1]'}  py-[14px] group-hover:bg-[#FFFFFF] ml-[30px] mr-3 group-hover:rounded-md`}>
             {renderAvatar(messageDetail.sender.id)}
-            <div className={`ml-3 w-full pr-5`}>
+            <div className={`ml-[10px] w-full pr-5 pt-2`}>
               <div className="flex justify-between items-center">
-                <div className="flex gap-2 font-semibold text-sm pb-2">
-                  <p>{messageDetail.sender.fullName} </p>
-                  <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
+                <div className="flex gap-2 font-semibold items-center text-sm pb-2">
+                  <p className="text-[15px] font-medium text-black">
+                    {messageDetail.sender.fullName}{' '}
+                  </p>
+                  <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
                     {messageDetail.sender?.organizations?.name}
                   </p>
+                  <ImageRound
+                    name="Save"
+                    src={`/icons/save-active.svg`}
+                    className="w-[10px] h-[12px] hover:cursor-pointer"
+                  />
                 </div>
                 <div className={`flex items-start`}>
                   <p className="font-medium text-xs text-[#77858F]">
@@ -233,7 +169,7 @@ export const MessageDetail = ({
                       <div>
                         {messageDetail.type === MessageType.MESSAGE && (
                           <p
-                            className={`text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]  `}
+                            className={` font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]  `}
                             dangerouslySetInnerHTML={{
                               __html: highlightMentions(
                                 messageDetail.message,
@@ -494,21 +430,7 @@ export const MessageDetail = ({
                                 {messageDetail.scheduleChanges?.participants &&
                                   messageDetail.scheduleChanges?.participants
                                     ?.length > 4 && <p>その他</p>}
-                                {messageDetail.schedule?.id ? (
-                                  <p
-                                    className="hover:cursor-pointer mt-2"
-                                    onClick={() =>
-                                      handleConfirmGetDataDetailEvent(
-                                        `${messageDetail.schedule?.id}`,
-                                      )
-                                    }>
-                                    予定を確認する
-                                  </p>
-                                ) : (
-                                  <p className="mt-2 italic text-gray-600">
-                                    {EVENT_DELETED}
-                                  </p>
-                                )}
+
                                 <p
                                   className={`mt-2 text-left`}
                                   dangerouslySetInnerHTML={{
@@ -608,21 +530,6 @@ export const MessageDetail = ({
                                 {messageDetail.scheduleChanges?.participants &&
                                   messageDetail.scheduleChanges?.participants
                                     ?.length > 4 && <p>その他</p>}
-                                {messageDetail.schedule?.id ? (
-                                  <p
-                                    className="hover:cursor-pointer mt-2"
-                                    onClick={() =>
-                                      handleConfirmGetDataDetailEvent(
-                                        `${messageDetail.schedule?.id}`,
-                                      )
-                                    }>
-                                    予定を確認する
-                                  </p>
-                                ) : (
-                                  <p className="mt-2 italic text-gray-600">
-                                    {EVENT_DELETED}
-                                  </p>
-                                )}
                               </div>
                             </div>
                           </div>
@@ -682,12 +589,10 @@ export const MessageDetail = ({
                   </div>
                   <>
                     {!messageDetail.deletedAt && (
-                      <MessageHoverOptions
-                        messageDetail={messageDetail}
-                        chatRoomDetail={chatRoomDetail}
-                        handleOpenEditForm={handleOpenEditForm}
-                        handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                        setDataMessageDetail={setDataMessageDetail}
+                      <MessageHoverBookmark
+                        uuid={messageDetail.uuid}
+                        onGotoMessage={onGotoMessage}
+                        handleRemoveItemBookmark={handleRemoveItemBookmark}
                       />
                     )}
                   </>
@@ -695,397 +600,7 @@ export const MessageDetail = ({
               </div>
             </div>
           </div>
-        )}
-        {chatRoomDetail?.type === ChatRoomType.TASK && (
-          <div
-            className={`flex !box-border group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
-            {messageDetail.type !== MessageType.MESSAGE ? (
-              <ImageRound
-                className="w-10 h-10"
-                src="/icons/document.svg"
-                border="full"
-                name="Task"
-              />
-            ) : (
-              <div>{renderAvatar(messageDetail.sender.id)}</div>
-            )}
-            <div className={`ml-3 w-full pr-5`}>
-              <div className="flex justify-between items-center">
-                {messageDetail.type !== MessageType.MESSAGE ? (
-                  <p className="font-semibold text-sm pb-2">タスクカード</p>
-                ) : (
-                  <div className="flex gap-2 font-semibold text-sm pb-2">
-                    <p>{messageDetail.sender.fullName} </p>
-                    <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
-                      {messageDetail.sender?.organizations?.name}
-                    </p>
-                  </div>
-                )}
-                <div className={`flex items-start`}>
-                  <p className="font-medium text-xs text-[#77858F]">
-                    {messageDetail.createdAt &&
-                      formatCheckDate(
-                        getFormattedDateTime(
-                          convertToCurrentTimezone(messageDetail.createdAt),
-                        ),
-                      )}
-                  </p>
-                  {messageDetail.isEdited && !messageDetail.deletedAt && (
-                    <div className="flex items-center">
-                      <ImageRound
-                        name="Dot"
-                        src={'/icons/dot.svg'}
-                        className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
-                      />
-                      <p className="font-normal text-xs ml-2">編集済</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="relative">
-                <div className={`!w-[100%]`}>
-                  <div className="flex flex-col">
-                    {messageDetail.deletedAt ? (
-                      <p
-                        className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
-                        {MESSAGE_DELETED}
-                      </p>
-                    ) : (
-                      <div>
-                        {messageDetail.type === MessageType.MESSAGE && (
-                          <p
-                            className={`text-chat-box font-normal text-sm hover:cursor-pointer max-w-[750px] -ml-1 p-1 rounded-[5px]  `}
-                            dangerouslySetInnerHTML={{
-                              __html: messageDetail.message,
-                            }}></p>
-                        )}
-                        {messageDetail.type !== MessageType.MESSAGE &&
-                          (messageDetail.task ? (
-                            <div className={`w-full flex justify-start`}>
-                              <div
-                                className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
-                                <div className={`flex flex-col items-start`}>
-                                  <h4 className="text-sm w-fit font-medium text-black h-5">
-                                    {messageDetail.type ==
-                                    MessageType.CREATION_TASK
-                                      ? CREATION_TASK_MESSAGE
-                                      : messageDetail.type ==
-                                          MessageType.REMOVE_MEMBER_TASK
-                                        ? REMOVE_MEMBER_TASK_MESSAGE
-                                        : ADD_MEMBER_TASK_MESSAGE}
-                                  </h4>
-                                  <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
-                                    タスクのタイトル:{' '}
-                                    {messageDetail.task.title || NO_SETTING}
-                                  </h4>
-                                  {messageDetail.type !==
-                                    MessageType.REMOVE_MEMBER_TASK && (
-                                    <p className="w-fit mt-2">
-                                      締切 :{' '}
-                                      {(messageDetail.task.deadline &&
-                                        format(
-                                          messageDetail.task.deadline,
-                                          DATE_FORMAT,
-                                        )) ||
-                                        NO_SETTING}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className={`w-full flex justify-start `}>
-                              <div
-                                className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
-                                <div className={`flex flex-col items-end`}>
-                                  <p
-                                    className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
-                                    {TASK_DELETED}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    )}
-                  </div>
-                  <>
-                    {!messageDetail.deletedAt && (
-                      <MessageHoverOptions
-                        messageDetail={messageDetail}
-                        chatRoomDetail={chatRoomDetail}
-                        handleOpenEditForm={handleOpenEditForm}
-                        handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                        setDataMessageDetail={setDataMessageDetail}
-                      />
-                    )}
-                  </>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {chatRoomDetail?.type === ChatRoomType.SKILL && (
-          <div
-            className={`flex !box-border group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
-            {messageDetail.type !== MessageType.MESSAGE ? (
-              <ImageRound
-                className="w-10 h-10"
-                src="/icons/skill-room.svg"
-                border="full"
-                name="Skill"
-              />
-            ) : (
-              <div>{renderAvatar(messageDetail.sender.id)}</div>
-            )}
-            <div className={`ml-3 w-full pr-5`}>
-              <div className="flex justify-between items-center">
-                {messageDetail.type !== MessageType.MESSAGE ? (
-                  <p className="font-semibold text-sm pb-2">スキルアップ</p>
-                ) : (
-                  <div className="flex gap-2 font-semibold text-sm pb-2">
-                    <p>{messageDetail.sender.fullName} </p>
-                    <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
-                      {messageDetail.sender?.organizations?.name}
-                    </p>
-                  </div>
-                )}
-                <div className={`flex items-start`}>
-                  <p className="font-medium text-xs text-[#77858F]">
-                    {messageDetail.createdAt &&
-                      formatCheckDate(
-                        getFormattedDateTime(
-                          convertToCurrentTimezone(messageDetail.createdAt),
-                        ),
-                      )}
-                  </p>
-                  {messageDetail.isEdited && !messageDetail.deletedAt && (
-                    <div className="flex items-center">
-                      <ImageRound
-                        name="Dot"
-                        src={'/icons/dot.svg'}
-                        className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
-                      />
-                      <p className="font-normal text-xs ml-2">編集済</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="relative">
-                <div className={`!w-[100%]`}>
-                  <div className="flex flex-col">
-                    {messageDetail.deletedAt ||
-                    (!messageDetail.submitLevel && !messageDetail.message) ? (
-                      <p
-                        className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
-                        {messageDetail.type == MessageType.MESSAGE
-                          ? MESSAGE_DELETED
-                          : DELETED_SKILL_UP_MESSAGE}
-                      </p>
-                    ) : (
-                      <div>
-                        {messageDetail.type === MessageType.MESSAGE && (
-                          <p
-                            className={`text-chat-box font-normal text-sm hover:cursor-pointer !w-[100%] -ml-1 p-1 rounded-[5px]  `}
-                            dangerouslySetInnerHTML={{
-                              __html: messageDetail.message,
-                            }}></p>
-                        )}
-                        {messageDetail.type !== MessageType.MESSAGE && (
-                          <div
-                            className={`w-full flex justify-start ${
-                              session?.user.permissions &&
-                              hasPermissionInArray(
-                                session?.user.permissions,
-                                PermissionsSystem.SKILL_MAP_VIEW,
-                              ) &&
-                              'hover:cursor-pointer'
-                            }`}
-                            onClick={() => {
-                              if (
-                                session?.user.permissions &&
-                                hasPermissionInArray(
-                                  session?.user.permissions,
-                                  PermissionsSystem.SKILL_MAP_VIEW,
-                                )
-                              ) {
-                                router.push(
-                                  pageRouters.DETAIL_SKILL_MAPS.href(
-                                    `${messageDetail.submitLevel?.id}`,
-                                    `${messageDetail.submitLevel?.organization}`,
-                                    `${messageDetail.submitLevel?.staff}`,
-                                  ),
-                                );
-                              }
-                            }}>
-                            <div
-                              className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
-                              <div className={`flex flex-col items-start`}>
-                                <h4 className="text-sm w-fit font-medium text-black h-5">
-                                  {messageDetail.sender.fullName}
-                                  {SKILL_UP_MESSAGE}
-                                </h4>
-                                <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
-                                  申請結果:{' '}
-                                  {messageDetail.submitLevel &&
-                                    messageDetail.submitLevel?.status}
-                                </h4>
-                                <div>
-                                  <h4 className="text-sm text-black h-5 max-w-[500px]">
-                                    コメント:
-                                  </h4>{' '}
-                                  {messageDetail.submitLevel &&
-                                    messageDetail.submitLevel?.comment &&
-                                    messageDetail.submitLevel?.comment
-                                      ?.split('\n')
-                                      .map((comment, index) => {
-                                        return <p key={index}>{comment}</p>;
-                                      })}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <>
-                    {!messageDetail.deletedAt && (
-                      <MessageHoverOptions
-                        messageDetail={messageDetail}
-                        chatRoomDetail={chatRoomDetail}
-                        handleOpenEditForm={handleOpenEditForm}
-                        handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                        setDataMessageDetail={setDataMessageDetail}
-                      />
-                    )}
-                  </>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {chatRoomDetail?.type === ChatRoomType.CALENDAR && (
-          <div
-            className={`flex !box-border group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
-            <div>{renderAvatar(messageDetail.sender.id)}</div>
-            <div className={`ml-3 w-full pr-5`}>
-              <div className="flex justify-between items-center">
-                <div className="flex gap-2 font-semibold text-sm pb-2">
-                  <p>{messageDetail.sender.fullName}</p>
-                  <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
-                    {messageDetail.sender?.organizations?.name}
-                  </p>
-                </div>
-                <div className={`flex items-start`}>
-                  <p className="font-medium text-xs text-[#77858F]">
-                    {messageDetail.createdAt &&
-                      formatCheckDate(
-                        getFormattedDateTime(
-                          convertToCurrentTimezone(messageDetail.createdAt),
-                        ),
-                      )}
-                  </p>
-                </div>
-              </div>
-              <div className="relative">
-                <div className={`!w-[100%]`}>
-                  <div className="flex flex-col gap-3">
-                    <div
-                      className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer"
-                      onClick={() => {
-                        handleConfirmGetDataDetailEvent(
-                          `${messageDetail.schedule?.id}`,
-                        );
-                      }}>
-                      <ImageRound
-                        className={`w-[15px] h-[14px]`}
-                        name="Calendar icon"
-                        src="/icons/calendar-time.svg"
-                      />
-                      <p className="text-[#0068B6] text-sm font-medium">
-                        {messageDetail.schedule?.title}
-                      </p>
-                    </div>
-                    <div className="flex gap-1 text-sm font-medium">
-                      <p className="text-[#0068B6]">
-                        {messageDetail.sender.fullName}
-                      </p>
-                      <p>
-                        {messageDetail.type === MessageType.REMOVE_SCHEDULE
-                          ? EVENT_DELETED
-                          : messageDetail.type === MessageType.EDIT_SCHEDULE
-                            ? EVENT_EDITED
-                            : EVENT_CREATED}
-                      </p>
-                    </div>
-                    <div className="text-[#5B6770] font-normal text-sm">
-                      {messageDetail.scheduleChanges?.new?.startDate &&
-                        messageDetail.scheduleChanges?.new?.endDate &&
-                        (isSameDay(
-                          new Date(
-                            messageDetail.scheduleChanges?.new?.startDate,
-                          ),
-                          new Date(messageDetail.scheduleChanges?.new?.endDate),
-                        ) ? (
-                          <p>
-                            {formatShowDeadline(
-                              messageDetail.scheduleChanges?.new?.startDate,
-                            )}{' '}
-                            {formatHoursAndMinutesForDateTime(
-                              new Date(
-                                messageDetail.scheduleChanges?.new?.startDate,
-                              ),
-                            )}{' '}
-                            ~{' '}
-                            {formatHoursAndMinutesForDateTime(
-                              new Date(
-                                messageDetail.scheduleChanges?.new?.endDate,
-                              ),
-                            )}
-                          </p>
-                        ) : (
-                          <p>
-                            {formatShowDeadline(
-                              messageDetail.scheduleChanges?.new?.startDate,
-                            )}{' '}
-                            {formatHoursAndMinutesForDateTime(
-                              new Date(
-                                messageDetail.scheduleChanges?.new?.startDate,
-                              ),
-                            )}{' '}
-                            ~{' '}
-                            {formatShowDeadline(
-                              messageDetail.scheduleChanges?.new?.endDate,
-                            )}{' '}
-                            {formatHoursAndMinutesForDateTime(
-                              new Date(
-                                messageDetail.scheduleChanges?.new?.endDate,
-                              ),
-                            )}
-                          </p>
-                        ))}
-                    </div>
-                    <p className="text-[#5B6770] font-normal text-sm">
-                      {messageDetail.message}
-                    </p>
-                  </div>
-                  <>
-                    {!messageDetail.deletedAt && (
-                      <MessageHoverOptions
-                        messageDetail={messageDetail}
-                        chatRoomDetail={chatRoomDetail}
-                        handleOpenEditForm={handleOpenEditForm}
-                        handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                        setDataMessageDetail={setDataMessageDetail}
-                      />
-                    )}
-                  </>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        }
       </div>
     </Fragment>
   );

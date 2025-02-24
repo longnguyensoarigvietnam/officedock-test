@@ -180,3 +180,5 @@ export const MENTION_ALL_MEMBERS = 'すべてのメンバー';
 export const NO_EVENT_MEMBER = '特になし';
 
 export const TASK_STARTING = 'タスク実行中';
+
+export const BOOKMARK_ROUTER_NAME = 'bookmark';

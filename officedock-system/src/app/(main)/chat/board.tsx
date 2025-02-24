@@ -5,14 +5,15 @@ import { useSession } from 'next-auth/react';
 
 import ListChatUsers from './list';
 import ChatDetail from './detail';
+import BookmarkList from './bookmark';
 
 import { ChatRoomType } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
+import { APP_NAME_METADATA, BOOKMARK_ROUTER_NAME } from '@constants';
 import { ChatDashboardMember, ChatRoomItem } from '@interfaces/chat';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import { generateUniqueId, getRandomColor } from '@utils';
-import { APP_NAME_METADATA } from '@constants';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const BoardChat = () => {
@@ -313,7 +314,7 @@ const BoardChat = () => {
         handleSetChatRoomParam={handleSetChatRoomParam}
         handleRemoveChatRoomParam={handleRemoveChatRoomParam}
       />
-      {chatRoomCode && (
+      {chatRoomCode && chatRoomCode !== BOOKMARK_ROUTER_NAME && (
         <ChatDetail
           clientId={clientId}
           lastItemId={lastItemId}
@@ -333,6 +334,14 @@ const BoardChat = () => {
           handleUpdateLocalByCodeMsg={handleUpdateLocalByCodeMsg}
           setDataChatList={setDataChatList}
           handleRemoveChatRoomParam={handleRemoveChatRoomParam}
+        />
+      )}
+      {chatRoomCode && chatRoomCode === BOOKMARK_ROUTER_NAME && (
+        <BookmarkList
+          searchChatMsg={searchChatMsg}
+          dashboardMembers={dashboardMembers}
+          dashboardMemberList={dashboardMemberList}
+          setSearchChatMsg={setSearchChatMsg}
         />
       )}
     </>

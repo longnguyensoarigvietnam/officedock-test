@@ -88,7 +88,6 @@ const Column = ({
   userId,
   totalCount,
   matchingTaskIds,
-  orderingRequest,
   columnsKanbanData,
   creationDataTaskData,
   showFrequentlyTasks,
@@ -110,7 +109,6 @@ const Column = ({
 
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
-  const [taskLast, setTaskLast] = useState<number | null>(null);
   const [pinAtLast, setPinAtLast] = useState<string | null>(null);
 
   const [page, setPage] = useState<number>(1);
@@ -154,9 +152,7 @@ const Column = ({
     if (pinAtLast) {
       apiUrl += `&pin_at=${pinAtLast}`;
     }
-    if (orderingRequest) {
-      apiUrl += `&ordering=${orderingRequest}${idTasks ? `&ids=${idTasks}` : ''}&task_id=${taskLast}`;
-    } else if (lastIndex) {
+    if (lastIndex) {
       apiUrl += `&index=${lastIndex}`;
     }
 
@@ -246,13 +242,6 @@ const Column = ({
       }
       if (items.length > PAGINATION_PAGE_SIZE_KANBAN - 1) {
         setChange(true);
-      }
-      if (orderingRequest) {
-        if (items.length) {
-          setTaskLast(parseInt(`${items[items.length - 1].id}`));
-        } else {
-          setTaskLast(null);
-        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

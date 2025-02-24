@@ -1,3 +1,4 @@
+'use client';
 import { useSession } from 'next-auth/react';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
@@ -7,21 +8,68 @@ import ImageRound from '@components/common/ImageRound';
 import { ChatRoomType, MessageType, PermissionsSystem } from '@constants/enums';
 import { ChatMessageResponse, ChatRoomDetail } from '@interfaces/chat';
 import { hasPermissionInArray } from '@utils';
+import { useEffect, useState } from 'react';
+import api from '@base/api';
+import { apiRouters } from '@constants/routers';
+import { useMutation } from 'react-query';
 
 interface MessageHoverOptionsProps {
   messageDetail: ChatMessageResponse;
   chatRoomDetail: ChatRoomDetail;
   handleOpenEditForm: (id: string) => void;
   handleOpenDeleteMsgModal: (id: string) => void;
+  setDataMessageDetail: ({
+    uuid,
+    isBookMark,
+  }: {
+    uuid: string;
+    isBookMark: boolean;
+  }) => void;
 }
 
 export const MessageHoverOptions = ({
   messageDetail,
   chatRoomDetail,
+  setDataMessageDetail,
   handleOpenEditForm,
   handleOpenDeleteMsgModal,
 }: MessageHoverOptionsProps) => {
   const { data: session } = useSession();
+
+  const [isBookmark, setIsBookmark] = useState(messageDetail.isBookmark);
+  useEffect(() => {
+    if (messageDetail) {
+      setIsBookmark(messageDetail.isBookmark);
+    }
+  }, [messageDetail]);
+
+  // Handle bookmark msg
+  const handleBookMarkMsg = async () => {
+    const { data: response } = await api.post(
+      apiRouters.BOOKMARK_MESSAGE(`${messageDetail.uuid}`),
+      {
+        bookmarkAt: isBookmark ? null : new Date(),
+      },
+    );
+    return response;
+  };
+
+  const { mutate: bookMarkMsg } = useMutation(
+    'bookMarkMsg',
+    handleBookMarkMsg,
+    {
+      onSuccess: async () => {
+        setIsBookmark(!isBookmark);
+        setDataMessageDetail({
+          uuid: messageDetail.uuid,
+          isBookMark: !isBookmark,
+        });
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
   return (
     <div
       className={`bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
@@ -74,10 +122,14 @@ export const MessageHoverOptions = ({
         delay={1000}
         placement="top"
         offset={[0, 5]}>
-        <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[8px] py-[7px] hover:cursor-pointer">
+        <div
+          onClick={() => {
+            bookMarkMsg();
+          }}
+          className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[8px] py-[7px] hover:cursor-pointer">
           <ImageRound
             name="Save"
-            src={'/icons/save.svg'}
+            src={`/icons/${isBookmark ? 'save-active.svg' : 'save.svg'}`}
             className="w-[12px] h-[14px] hover:cursor-pointer"
           />
         </div>

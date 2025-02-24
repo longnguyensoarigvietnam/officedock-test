@@ -4,6 +4,8 @@ export interface ChatMessageResponse {
   id?: number;
   uuid: string;
   message: string;
+  isBookmark?: boolean;
+  chatRoomCode?: string;
   sender: {
     id: number;
     fullName: string;
