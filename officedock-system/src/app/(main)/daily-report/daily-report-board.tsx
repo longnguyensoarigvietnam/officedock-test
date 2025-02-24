@@ -48,6 +48,7 @@ import {
   ScreenName,
   SocketActions,
   StatusValueTask,
+  UserRoles,
 } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
@@ -86,6 +87,7 @@ import {
 import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
+  hasRole,
   transformDataTaskDailyToTable,
 } from '@utils';
 import { useWebSocket } from '@providers/WebSocketProvider';
@@ -1925,6 +1927,19 @@ const DailyReportBoard = () => {
                 }}>
                 今日
               </Button>
+              {session &&
+                hasRole(session?.user.roles, UserRoles.SYSTEM_ADMIN) && (
+                  <div className="bg-white flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
+                    <span>チームの日報一覧</span>
+                    <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+                      <ImageRound
+                        className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                        src="/icons/right-statistic.svg"
+                        name="right"
+                      />
+                    </div>
+                  </div>
+                )}
             </div>
           </div>
 

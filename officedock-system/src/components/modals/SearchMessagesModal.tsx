@@ -1,4 +1,5 @@
-import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
+'use client';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
@@ -46,6 +47,7 @@ interface SearchMessagesModalProps {
   onSubmit: (searchChatMsg: string, page: number) => void;
   onGotoMessage: (messageId: any) => void;
   onClose: () => void;
+  handleBookmark: (data: { uuid: string; isBookmark: boolean }) => void;
 }
 
 export const SearchMessagesModal = ({
@@ -61,10 +63,19 @@ export const SearchMessagesModal = ({
   onGotoMessage,
   onSubmit,
   onClose,
+  handleBookmark,
 }: SearchMessagesModalProps) => {
   const { data: session } = useSession();
 
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const [dataSearch, setDataSearch] = useState<ChatMessageResponse[]>([]);
+
+  useEffect(() => {
+    if (searchMessageResults) {
+      setDataSearch(searchMessageResults.results);
+    }
+  }, [searchMessageResults]);
 
   const renderAvatar = (senderId: number) => {
     const avatarColor =
@@ -201,8 +212,8 @@ export const SearchMessagesModal = ({
         <div
           ref={resultsContainerRef}
           className="overflow-y-auto !max-h-[630px] h-[630px] bg-[#F8FAFC]">
-          {searchMessageResults && searchMessageResults?.results.length > 0 ? (
-            searchMessageResults?.results.map((messageDetail) => {
+          {dataSearch.length > 0 ? (
+            dataSearch.map((messageDetail) => {
               return (
                 <div
                   key={messageDetail.id}
@@ -251,10 +262,17 @@ export const SearchMessagesModal = ({
                         className="w-[15px] h-[13px] hover:cursor-pointer"
                       />
                     </div>
-                    <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+                    <div
+                      onClick={() => {
+                        handleBookmark({
+                          uuid: messageDetail.uuid,
+                          isBookmark: !messageDetail.isBookmark,
+                        });
+                      }}
+                      className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
                       <ImageRound
                         name="Book mark"
-                        src={'/icons/save-chat.svg'}
+                        src={`/icons/${messageDetail.isBookmark ? 'save-active.svg' : 'save-chat.svg'}`}
                         className="w-[10px] h-[12px] hover:cursor-pointer"
                       />
                     </div>

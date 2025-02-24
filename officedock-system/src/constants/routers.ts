@@ -354,6 +354,10 @@ export const apiRouters = {
   SOCKET_ACTION: (token: string) => `/system/ws/chat/?token=${token}`,
   CHAT_SETTING: '/users/chat-setting/',
 
+  // BOOKMARK
+  BOOKMARK_LIST: '/messages/',
+  BOOKMARK_MESSAGE: (uuid: string) => `/messages/${uuid}/bookmark/`,
+
   // SCHEDULE
   SCHEDULES: '/schedules/',
   SCHEDULE_DETAIL: (id: string) => `/schedules/${id}/`,

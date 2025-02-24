@@ -143,6 +143,8 @@ const ChatDetail = ({
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
 
+  const messageBookmarkId = searchParams.get('messageId');
+
   const router = useRouter();
   const showErrorToast = useErrorToast();
 
@@ -235,7 +237,7 @@ const ChatDetail = ({
   const handleGetDataMessages = async (pageNumber: number) => {
     if (chatRoomCode) {
       setInitialLoad(true);
-      const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${lastItemId ? `&message_id=${lastItemId}` : ''}`;
+      const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${lastItemId ? `&message_id=${lastItemId}` : ''}${messageBookmarkId ? `&bookmark_message_id=${messageBookmarkId}` : ''}`;
       return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
     }
   };
@@ -273,7 +275,6 @@ const ChatDetail = ({
             );
             return [...(prev || []), ...newMessages];
           });
-
           if (
             variables.data.results.length > 0 &&
             variables.data.results[variables.data.results.length - 1].id
@@ -284,6 +285,14 @@ const ChatDetail = ({
               );
           } else {
             setLastItemId(null);
+          }
+
+          // Delete messageBookmarkId when go to from list bookmark
+          if (messageBookmarkId) {
+            setGotoMessageId(parseInt(messageBookmarkId));
+            params.delete('messageId');
+
+            router.replace(`?${params.toString()}`);
           }
         }
       },
@@ -299,12 +308,11 @@ const ChatDetail = ({
   );
 
   const handleGotoSelectedMessage = async (data: {
-    pageNumber: number;
     bookmarkMessageId?: number;
   }) => {
     if (chatRoomCode) {
       setInitialLoad(true);
-      const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${data.pageNumber}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${data.bookmarkMessageId ? `&bookmark_message_id=${data.bookmarkMessageId}` : ''}`;
+      const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${data.bookmarkMessageId ? `&bookmark_message_id=${data.bookmarkMessageId}` : ''}`;
 
       return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
     }
@@ -841,7 +849,9 @@ const ChatDetail = ({
           },
         },
         mentions: mentionIds,
+        isBookmark: false,
       },
+
       ...dataMessageDetail,
     ]);
     setMessage('');
@@ -1482,6 +1492,50 @@ const ChatDetail = ({
           : chatRoomDetail?.participants || []),
       ]
     : [];
+
+  const handleUpdateBookmark = (dataUuid: string, dataIsBookmark: boolean) => {
+    setDataMessageDetail((prevMessages) =>
+      prevMessages.map((item) =>
+        item.uuid === dataUuid ? { ...item, isBookMark: dataIsBookmark } : item,
+      ),
+    );
+  };
+
+  const handleBookMarkMsg = async (data: {
+    uuid: string;
+    isBookmark: boolean;
+  }) => {
+    const { data: response } = await api.post(
+      apiRouters.BOOKMARK_MESSAGE(`${data.uuid}`),
+      {
+        bookmarkAt: data.isBookmark ? new Date() : null,
+      },
+    );
+    return response;
+  };
+
+  const { mutate: bookMarkMsg } = useMutation(
+    'bookMarkMsg',
+    handleBookMarkMsg,
+    {
+      onSuccess: async (data, bookmark) => {
+        setSearchMessageResults((prev) =>
+          prev
+            ? {
+                ...prev,
+                results: prev.results.map((item) =>
+                  item.uuid === bookmark.uuid
+                    ? { ...item, isBookMark: bookmark.isBookmark }
+                    : item,
+                ),
+              }
+            : prev,
+        );
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
   return (
     <Fragment>
       {chatRoomCode && (
@@ -1744,6 +1798,15 @@ const ChatDetail = ({
                       handleConfirmGetDataDetailEvent={
                         handleConfirmGetDataDetailEvent
                       }
+                      setDataMessageDetail={({
+                        uuid,
+                        isBookMark,
+                      }: {
+                        uuid: string;
+                        isBookMark: boolean;
+                      }) => {
+                        handleUpdateBookmark(uuid, isBookMark);
+                      }}
                     />
                   </div>
                 ))}
@@ -1785,6 +1848,15 @@ const ChatDetail = ({
                       handleConfirmGetDataDetailEvent={
                         handleConfirmGetDataDetailEvent
                       }
+                      setDataMessageDetail={({
+                        uuid,
+                        isBookMark,
+                      }: {
+                        uuid: string;
+                        isBookMark: boolean;
+                      }) => {
+                        handleUpdateBookmark(uuid, isBookMark);
+                      }}
                     />
                   </div>
                 ))}
@@ -1986,9 +2058,11 @@ const ChatDetail = ({
             setOpenSearchMessagesModal(false);
             setGotoMessageId(messageId);
             gotoSelectedMessage({
-              pageNumber: page,
               bookmarkMessageId: messageId,
             });
+          }}
+          handleBookmark={(data: { uuid: string; isBookmark: boolean }) => {
+            bookMarkMsg(data);
           }}
         />
       )}

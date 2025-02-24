@@ -356,12 +356,6 @@ const DetailPlanItemModal = ({
           {isShowAction && popoverInfo.resource === ItemScheduleType.PLANS && (
             <div className="absolute top-10 right-[-105px] bg-[#5B6770] w-[168px] rounded-md py-[6px] text-white font-medium text-sm">
               <p
-                // TODO: BE update with QA
-                // onClick={() => copyPlanTime(popoverInfo.uuid)}
-                className="py-[10px] px-[14px] hover:bg-[#7D8A94] cursor-pointer">
-                予定内のタスクを複製
-              </p>
-              <p
                 onClick={() => deletePlanTask(popoverInfo.uuid)}
                 className="py-[10px] px-[14px] hover:bg-[#7D8A94] cursor-pointer">
                 予定からタスクを削除

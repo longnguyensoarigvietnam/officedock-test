@@ -2583,9 +2583,10 @@ const KanbanBoardTask = () => {
     if (authenticatedUser) {
       if (authenticatedUser.setting?.isSortingTaskByImportant) {
         setDataOrderRing(FilterTypeKanban.IMPORTANT);
-      }
-      if (authenticatedUser.setting?.isSortingTaskByDeadline) {
+      } else if (authenticatedUser.setting?.isSortingTaskByDeadline) {
         setDataOrderRing(FilterTypeKanban.DEADLINE);
+      } else {
+        setDataOrderRing('');
       }
       setIsReadyToFetch(true);
     }
