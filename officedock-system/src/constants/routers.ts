@@ -303,6 +303,7 @@ export const apiRouters = {
   SKILL_CREATION: '/creation-data/organization-skills/',
   TAG_CREATION: '/creation-data/tags/',
   CATEGORY_FILTER_CREATION: '/creation-data/category-filters/',
+  TASK_LIST_CHAT: '/creation-data/tasks/',
 
   // USER
   USER_LIST: '/users/',

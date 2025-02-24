@@ -30,7 +30,6 @@ interface MessageHoverOptionsProps {
 export const MessageHoverOptions = ({
   messageDetail,
   chatRoomDetail,
-  setDataMessageDetail,
   handleOpenEditForm,
   handleOpenDeleteMsgModal,
 }: MessageHoverOptionsProps) => {
@@ -60,10 +59,6 @@ export const MessageHoverOptions = ({
     {
       onSuccess: async () => {
         setIsBookmark(!isBookmark);
-        setDataMessageDetail({
-          uuid: messageDetail.uuid,
-          isBookMark: !isBookmark,
-        });
       },
       onError: () => {},
       onSettled: () => {},

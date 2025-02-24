@@ -444,14 +444,6 @@ const TaskCard = ({
             />
           )}
         </div>
-        {/* FIXME: Update action resize with icon */}
-        {/* <div className="absolute fc-resizer   custom-resize-handle opacity-0  group-hover:opacity-100 bottom-[-20px] left-1/2 -translate-x-1/2 z-50">
-          <ImageRound
-            src={`/icons/resize-task.svg`}
-            name="icon resize"
-            className=""
-          />
-        </div> */}
       </div>
       {showWarningStartModal && (
         <WarningStartTaskModal
