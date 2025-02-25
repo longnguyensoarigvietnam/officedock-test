@@ -175,6 +175,7 @@ class ChatFileSerializer(serializers.ModelSerializer):
         model = ChatFile
         fields = [
             "id",
+            "uuid",
             "file_name",
             "compressed_file",
             "file_type",
@@ -238,9 +239,6 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     sender = CreationDataUserWithMainOrganizationSerializer()
     task = TaskForChatMessageSerializer()
     submit_level = SubmitLevelForChatMessageSerializer()
-    mentions = CreationDataUserWithMainOrganizationSerializer(
-        many=True, read_only=True
-    )
     tasks = TaskForChatMessageSerializer(many=True, read_only=True)
     reactions = serializers.SerializerMethodField(read_only=True)
     chat_files = ChatFileSerializer(many=True, read_only=True)
@@ -330,7 +328,12 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
     def get_is_bookmark(self, obj):
         """Get is bookmark"""
-        return True if obj.bookmark_at else False
+        request = self.context.get("request")
+        if not request:
+            return False
+
+        bookmark = obj.bookmarks.filter(user=request.user).first()
+        return bool(bookmark and bookmark.bookmark_at)
 
 
 class ChatMessageBookMarkSerializer(ChatMessageSerializer):
@@ -339,6 +342,7 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
     """
 
     chat_room_code = serializers.SerializerMethodField()
+    bookmark_at = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -358,6 +362,15 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
     def get_chat_room_code(self, obj):
         """Get chat room code"""
         return obj.chat_room.code
+
+    def get_bookmark_at(self, obj):
+        """Get bookmark_at"""
+        request = self.context.get("request")
+        if not request:
+            return None
+
+        bookmark = obj.bookmarks.filter(user=request.user).first()
+        return bookmark.bookmark_at if bookmark else None
 
 
 class BookMarkSerializer(serializers.Serializer):
@@ -401,8 +414,8 @@ class SendMessageSerializer(serializers.ModelSerializer):
     Serializer for send message
     """
 
-    file_ids = serializers.ListField(
-        required=False, child=serializers.IntegerField()
+    file_uuids = serializers.ListField(
+        required=False, child=serializers.UUIDField()
     )
     files = serializers.ListField(required=False, child=serializers.FileField())
     mentions = CreationDataUserWithMainOrganizationSerializer(
@@ -440,7 +453,7 @@ class SendMessageSerializer(serializers.ModelSerializer):
             "task_ids",
             "quote",
             "reply_uuid",
-            "file_ids",
+            "file_uuids",
             "files",
         ]
 
