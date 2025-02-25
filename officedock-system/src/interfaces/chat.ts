@@ -58,6 +58,11 @@ export interface ChatMessageResponse {
   mentions?: number[];
 }
 
+export interface TaskUserListChat {
+  id: number;
+  title: string;
+}
+
 export interface ChatDashboardMember {
   fullName: string;
   id: number | string;

@@ -39,6 +39,7 @@ import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMe
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import { MessageDetail } from '@components/chat/MessageDetail';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
+import ListTaskUserChat from '@components/chat/ListTaskUserChat';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -70,6 +71,8 @@ import {
 } from '@constants/message';
 
 import useChatRoomDetail from '@hooks/useChatRoomDetail';
+import { useErrorToast } from '@hooks/useErrorToast';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import { addTimeToDate, getCurrentTimeInJapan } from '@utils/date';
 import { hasPermissionInArray, trimUnnecessaryLineBreaks } from '@utils';
@@ -94,8 +97,6 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
-import { useErrorToast } from '@hooks/useErrorToast';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 interface dataProps {
   clientId: string;
@@ -104,8 +105,6 @@ interface dataProps {
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
   creationDataTaskData: CreationDataTask | undefined;
-  handleUpdateLocalByCode: (data: ChatRoomItem) => void;
-  handleUpdateLocalByCodeMsg: (data: ChatRoomItem) => void;
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
@@ -129,8 +128,6 @@ const ChatDetail = ({
   setFilteredChatList,
   setHasMoreDetail,
   setLastItemId,
-  handleUpdateLocalByCode,
-  handleUpdateLocalByCodeMsg,
   setDataChatList,
   handleRemoveChatRoomParam,
   chatRoomCode,
@@ -719,7 +716,6 @@ const ChatDetail = ({
               });
             }
           }
-          handleUpdateLocalByCodeMsg(data.chatRoom);
           break;
         case SocketActions.CREATION_TASK:
           if (data.chatRoom.code === chatRoomCode) {
@@ -731,7 +727,6 @@ const ChatDetail = ({
               });
             }
           }
-          handleUpdateLocalByCode(data.chatRoom);
           break;
         case SocketActions.DELETE_TASK:
           if (data.chatRoom.code === chatRoomCode) {
@@ -770,12 +765,10 @@ const ChatDetail = ({
   }, [
     chatRoomCode,
     dataMessageDetail,
-    handleUpdateLocalByCode,
     handleDeleteMessageLocal,
     handleUpdateMessageLocal,
     handleUpdateGroupLocal,
     handleRemoveParticipantsLocal,
-    handleUpdateLocalByCodeMsg,
     handleDeleteTaskLocal,
     clientId,
   ]);
@@ -1298,21 +1291,6 @@ const ChatDetail = ({
     }
   };
 
-  const handleSetParam = ({
-    id,
-    action,
-  }: {
-    id: string | null;
-    action: string;
-  }) => {
-    if (id) {
-      params.set('task', id);
-    }
-    params.set('action', action);
-    router.push(`?${params.toString()}`);
-    setShowModalTask(true);
-  };
-
   const handleRemoveParam = () => {
     const params = new URLSearchParams(searchParams);
     params.delete('task');
@@ -1536,6 +1514,19 @@ const ChatDetail = ({
       onSettled: () => {},
     },
   );
+
+  const handleQuoteTaskUser = (data: { id: number; title: string }[]) => {
+    if (!editor) return;
+
+    const generateTaskMessages = (
+      selectedItems: { id: number; title: string }[],
+    ) => {
+      return selectedItems.map((item) => `[タスク] ${item.title}`).join('\n');
+    };
+    const taskMessages = generateTaskMessages(data);
+
+    editor.chain().focus().insertContent(taskMessages).run();
+  };
   return (
     <Fragment>
       {chatRoomCode && (
@@ -1940,26 +1931,10 @@ const ChatDetail = ({
                               session?.user.permissions,
                               PermissionsSystem.MY_TASK_ADD,
                             ) && (
-                              <Tippy
-                                content={'タスクを引用'}
-                                arrow={false}
-                                delay={1000}
-                                placement="top"
-                                offset={[0, 8]}>
-                                <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                                  <ImageRound
-                                    name="Quote checker"
-                                    src="/icons/quote-checker.svg"
-                                    className="w-[18px] h-[18px]"
-                                    onClick={() => {
-                                      handleSetParam({
-                                        id: null,
-                                        action: ActionTask.CREATE,
-                                      });
-                                    }}
-                                  />
-                                </div>
-                              </Tippy>
+                              // List task for user
+                              <ListTaskUserChat
+                                handleQuoteTaskUser={handleQuoteTaskUser}
+                              />
                             )}
                           <Tippy
                             content={'書式設定'}

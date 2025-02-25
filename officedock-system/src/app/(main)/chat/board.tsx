@@ -6,15 +6,21 @@ import { useSession } from 'next-auth/react';
 import ListChatUsers from './list';
 import ChatDetail from './detail';
 import BookmarkList from './bookmark';
+import socketEventEmitter from '@components/socket/socketEventEmitter';
 
-import { ChatRoomType } from '@constants/enums';
+import { ChatRoomType, SocketActions } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { APP_NAME_METADATA, BOOKMARK_ROUTER_NAME } from '@constants';
-import { ChatDashboardMember, ChatRoomItem } from '@interfaces/chat';
+import {
+  ChatDashboardMember,
+  ChatRoomItem,
+  WebSocketMessageData,
+} from '@interfaces/chat';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import { generateUniqueId, getRandomColor } from '@utils';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { ChatContext } from '@providers/ChatProvider';
 
 const BoardChat = () => {
   const searchParams = useSearchParams();
@@ -23,6 +29,7 @@ const BoardChat = () => {
     () => new URLSearchParams(searchParams),
     [searchParams],
   );
+  const { setChatRoomNotifications } = useContext(ChatContext);
   const { dashboardMemberList = [] } = useDashboardMemberList();
   const { creationDataTaskData } = useCreationDataTask({});
   const { totalNotifications } = useContext(GlobalStateContext);
@@ -63,6 +70,43 @@ const BoardChat = () => {
       setDashboardMembers(membersWithAvatars);
     }
   }, [dashboardMemberList]);
+
+  // Socket Board
+  useEffect(() => {
+    // Create WebSocket
+    const handleSocketMessage = (data: WebSocketMessageData) => {
+      switch (data.action) {
+        case SocketActions.MESSAGE:
+          if (data.chatRoom.code === chatRoomCode) {
+            if (data.clientId !== clientId) {
+              setChatRoomNotifications({
+                notifications: data.chatRoom.unreadMessages,
+                roomCode: chatRoomCode,
+              });
+            }
+          }
+          handleUpdateLocalByCodeMsg(data.chatRoom);
+          break;
+        case SocketActions.CREATION_TASK:
+          if (data.chatRoom.code === chatRoomCode) {
+            if (data.clientId !== clientId) {
+              setChatRoomNotifications({
+                notifications: data.chatRoom.unreadMessages,
+                roomCode: chatRoomCode,
+              });
+            }
+          }
+          handleUpdateLocalByCode(data.chatRoom);
+          break;
+      }
+    };
+    socketEventEmitter.on('message', handleSocketMessage);
+
+    return () => {
+      socketEventEmitter.off('message', handleSocketMessage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientId]);
 
   const handleSetChatRoomParam = (code: string) => {
     if (code) {
@@ -330,8 +374,6 @@ const BoardChat = () => {
           setFilteredChatList={setFilteredChatList}
           setLastItemId={setLastItemId}
           setHasMoreDetail={setHasMoreDetail}
-          handleUpdateLocalByCode={handleUpdateLocalByCode}
-          handleUpdateLocalByCodeMsg={handleUpdateLocalByCodeMsg}
           setDataChatList={setDataChatList}
           handleRemoveChatRoomParam={handleRemoveChatRoomParam}
         />
