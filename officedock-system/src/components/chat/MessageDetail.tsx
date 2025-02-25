@@ -23,10 +23,13 @@ import {
   MESSAGE_DELETED,
   NO_SETTING,
   REMOVE_MEMBER_TASK_MESSAGE,
-  SKILL_UP_MESSAGE,
   TASK_DELETED,
 } from '@constants';
-import { ChatRoomType, MessageType, PermissionsSystem } from '@constants/enums';
+import {
+  ChatRoomType,
+  MessageType,
+  SubmitLevelStatus,
+} from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { MENTION_NAME_REGEX } from '@constants/regex';
 
@@ -40,7 +43,6 @@ import {
 import {
   formatWithParagraphTags,
   getChatFileURL,
-  hasPermissionInArray,
 } from '@utils';
 import {
   convertToCurrentTimezone,
@@ -234,6 +236,38 @@ export const MessageDetail = ({
     }
 
     return processedHtml;
+  };
+
+  const renderSubmitLevelMessage = (
+    type: string,
+    status: string,
+    skillName: string,
+  ) => {
+    if (type == MessageType.CREATE_SUBMIT_LEVEL_SKILL) {
+      return (
+        <p className="text-black text-sm">レベルアップ申請が届きました。</p>
+      );
+    } else {
+      if (status == SubmitLevelStatus.APPROVAL) {
+        return (
+          <div className="flex gap-2">
+            <p className="text-[#0068B6] font-medium text-sm">{skillName}</p>
+            <p className="text-black text-sm">
+              のスキルがレベルアップしました！
+            </p>
+          </div>
+        );
+      } else {
+        return (
+          <div className="flex gap-2">
+            <p className="text-[#0068B6] font-medium text-sm">{skillName}</p>
+            <p className="text-black text-sm">
+              のレベルアップの申請についてコメントが届いています。
+            </p>
+          </div>
+        );
+      }
+    }
   };
 
   return (
@@ -943,28 +977,21 @@ export const MessageDetail = ({
         {chatRoomDetail?.type === ChatRoomType.SKILL && (
           <div
             className={`flex !box-border group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
-            {messageDetail.type !== MessageType.MESSAGE ? (
-              <ImageRound
-                className="w-10 h-10"
-                src="/icons/skill-room.svg"
-                border="full"
-                name="Skill"
-              />
-            ) : (
-              <div>{renderAvatar(messageDetail.sender.id)}</div>
-            )}
+            <div>
+              {renderAvatar(
+                messageDetail.type == MessageType.CREATE_SUBMIT_LEVEL_SKILL
+                  ? Number(session?.user.id)
+                  : messageDetail.sender.id,
+              )}
+            </div>
             <div className={`ml-3 w-full pr-5`}>
               <div className="flex justify-between items-center">
-                {messageDetail.type !== MessageType.MESSAGE ? (
-                  <p className="font-semibold text-sm pb-2">スキルアップ</p>
-                ) : (
-                  <div className="flex gap-2 font-semibold text-sm pb-2">
-                    <p>{messageDetail.sender.fullName} </p>
-                    <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
-                      {messageDetail.sender?.organizations?.name}
-                    </p>
-                  </div>
-                )}
+                <div className="flex gap-2 items-center font-semibold text-sm pb-2">
+                  <p>{messageDetail.sender.fullName} </p>
+                  <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
+                    {messageDetail.sender?.organizations?.name}
+                  </p>
+                </div>
                 <div className={`flex items-start`}>
                   <p className="font-medium text-xs text-[#77858F]">
                     {messageDetail.createdAt &&
@@ -1001,62 +1028,46 @@ export const MessageDetail = ({
                       <div>
                         {messageDetail.type === MessageType.MESSAGE && (
                           <p
-                            className={`text-chat-box font-normal text-sm hover:cursor-pointer !w-[100%] -ml-1 p-1 rounded-[5px]  `}
+                            className={`text-chat-box font-normal text-sm hover:cursor-pointer !w-[100%] -ml-1 p-1 rounded-[5px]`}
                             dangerouslySetInnerHTML={{
                               __html: messageDetail.message,
                             }}></p>
                         )}
                         {messageDetail.type !== MessageType.MESSAGE && (
-                          <div
-                            className={`w-full flex justify-start ${
-                              session?.user.permissions &&
-                              hasPermissionInArray(
-                                session?.user.permissions,
-                                PermissionsSystem.SKILL_MAP_VIEW,
-                              ) &&
-                              'hover:cursor-pointer'
-                            }`}
-                            onClick={() => {
-                              if (
-                                session?.user.permissions &&
-                                hasPermissionInArray(
-                                  session?.user.permissions,
-                                  PermissionsSystem.SKILL_MAP_VIEW,
-                                )
-                              ) {
-                                router.push(
-                                  pageRouters.DETAIL_SKILL_MAPS.href(
-                                    `${messageDetail.submitLevel?.id}`,
-                                    `${messageDetail.submitLevel?.organization}`,
-                                    `${messageDetail.submitLevel?.staff}`,
-                                  ),
-                                );
-                              }
-                            }}>
-                            <div
-                              className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
-                              <div className={`flex flex-col items-start`}>
-                                <h4 className="text-sm w-fit font-medium text-black h-5">
-                                  {messageDetail.sender.fullName}
-                                  {SKILL_UP_MESSAGE}
+                          <div className="w-full flex justify-start">
+                            <div className={`text-xs font-normal !w-[100%] `}>
+                              <div className={`flex gap-5 items-center`}>
+                                <h4 className="text-sm w-fit text-black h-5">
+                                  {renderSubmitLevelMessage(
+                                    messageDetail.type,
+                                    messageDetail.submitLevel?.status || '',
+                                    messageDetail.submitLevel?.skill?.name ||
+                                      '',
+                                  )}
                                 </h4>
-                                <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
-                                  申請結果:{' '}
-                                  {messageDetail.submitLevel &&
-                                    messageDetail.submitLevel?.status}
-                                </h4>
-                                <div>
-                                  <h4 className="text-sm text-black h-5 max-w-[500px]">
-                                    コメント:
-                                  </h4>{' '}
-                                  {messageDetail.submitLevel &&
-                                    messageDetail.submitLevel?.comment &&
-                                    messageDetail.submitLevel?.comment
-                                      ?.split('\n')
-                                      .map((comment, index) => {
-                                        return <p key={index}>{comment}</p>;
-                                      })}
-                                </div>
+                                <Button
+                                  className="!text-black !font-medium !text-xs !bg-[#CED8DE] !rounded-[100px] !w-[86px] !h-[30px] !px-0"
+                                  onClick={() => {
+                                    if (
+                                      messageDetail.type ==
+                                      MessageType.CREATE_SUBMIT_LEVEL_SKILL
+                                    ) {
+                                      router.push(pageRouters.SUBMIT_LEVELS.href);
+                                    } else {
+                                      router.push(
+                                        pageRouters.DETAIL_SUBMIT_LEVELS.href(
+                                          `${messageDetail.submitLevel?.id}`,
+                                        ),
+                                      );
+                                    }
+                                  }}>
+                                  確認する
+                                  <ImageRound
+                                    name="Filter extend icon"
+                                    src={'/icons/arrow-down.svg'}
+                                    className={`w-4 h-4 cursor-pointer -rotate-90`}
+                                  />
+                                </Button>
                               </div>
                             </div>
                           </div>

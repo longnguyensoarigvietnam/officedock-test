@@ -43,7 +43,10 @@ export interface ChatMessageResponse {
     comment: string | null;
     id: number;
     organization: number;
-    skill: number;
+    skill: {
+      id: number,
+      name: string
+    };
     staff: number;
     status: SubmitLevelStatus;
   };
