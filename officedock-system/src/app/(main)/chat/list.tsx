@@ -914,9 +914,6 @@ const ListChatUsers = ({
                           }}>
                           個人チャット
                         </p>
-                        <p className="py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer">
-                          チームメンバーのチャット
-                        </p>
                       </div>
                     </PopoverPanel>
                   </Transition>
@@ -992,12 +989,7 @@ const ListChatUsers = ({
                   <div className="relative">{renderAvatar(item)}</div>
                   <div className="ml-2 flex gap-1 items-center">
                     <p
-                      className={`text-sm ${
-                        item.type == ChatRoomType.PRIVATE ||
-                        item.type == ChatRoomType.SELF
-                          ? 'max-w-[200px] truncate'
-                          : 'break-words w-[265px]'
-                      } font-medium `}>
+                      className={`text-sm break-words w-[260px] font-medium `}>
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -1006,16 +998,6 @@ const ListChatUsers = ({
                             (room) => room.roomCode === item.code,
                           )?.roomName
                         : item?.name || ''}
-                    </p>
-                    <p className="text-[#77858F] text-[12px] min-w-[calc(100%_-_200px)] truncate font-medium">
-                      {((item.type == ChatRoomType.PRIVATE ||
-                        item.type == ChatRoomType.SELF) &&
-                        item.participants.find((participant) =>
-                          item.type == ChatRoomType.PRIVATE
-                            ? participant.id != session?.user.id
-                            : participant.id == session?.user.id,
-                        )?.organizations?.name) ||
-                        ''}
                     </p>
                   </div>
                   {item?.unreadMessages > 0 && (
@@ -1076,7 +1058,7 @@ const ListChatUsers = ({
                   </div>
                   <div className="relative">{renderAvatar(item)}</div>
                   <div className="ml-2 flex gap-1 items-center">
-                    <p className="text-sm max-w-[160px] font-medium truncate">
+                    <p className="text-sm break-words w-[260px] font-medium">
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -1085,16 +1067,6 @@ const ListChatUsers = ({
                             (room) => room.roomCode === item.code,
                           )?.roomName
                         : item?.name || ''}
-                    </p>
-                    <p className="text-[#77858F] text-[12px] max-w-[80px] font-medium truncate">
-                      {((item.type == ChatRoomType.PRIVATE ||
-                        item.type == ChatRoomType.SELF) &&
-                        item.participants.find((participant) =>
-                          item.type == ChatRoomType.PRIVATE
-                            ? participant.id != session?.user.id
-                            : participant.id == session?.user.id,
-                        )?.organizations?.name) ||
-                        ''}
                     </p>
                   </div>
                   {item?.unreadMessages > 0 && (

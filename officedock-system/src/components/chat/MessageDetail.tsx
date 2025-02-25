@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { format, isSameDay } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -6,6 +7,8 @@ import { Editor } from '@tiptap/react';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
+import Button from '@components/common/Button';
+import { ProgressBar } from '@components/common/ProgressBar';
 
 import {
   ADD_MEMBER_TASK_MESSAGE,
@@ -34,7 +37,11 @@ import {
   ChatRoomDetail,
 } from '@interfaces/chat';
 
-import { formatWithParagraphTags, hasPermissionInArray } from '@utils';
+import {
+  formatWithParagraphTags,
+  getChatFileURL,
+  hasPermissionInArray,
+} from '@utils';
 import {
   convertToCurrentTimezone,
   convertToTimeString,
@@ -49,10 +56,36 @@ import { MessageHoverOptions } from './MessageHoverOptions';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
+  uploadFileStatus: Record<
+    string,
+    {
+      progress: number;
+      errorMsg?: string;
+    }
+  >;
   messageDetail: ChatMessageResponse;
   msgEditing?: string;
   dashboardMembers: ChatDashboardMember[];
   editor: Editor | null;
+  setPreserveFiles: Dispatch<
+    SetStateAction<
+      {
+        uuid: string;
+        file: {
+          name: string;
+        };
+      }[]
+    >
+  >;
+  setOpenUploadFilesModal: Dispatch<SetStateAction<boolean>>;
+  setUploadFiles: Dispatch<
+    SetStateAction<
+      {
+        uuid: string;
+        file: File;
+      }[]
+    >
+  >;
   setMessage: Dispatch<SetStateAction<string>>;
   setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
   setMsgIdUpdated?: Dispatch<SetStateAction<string | undefined>>;
@@ -72,9 +105,13 @@ export type MessageDetailProps = {
 
 export const MessageDetail = ({
   chatRoomDetail,
+  uploadFileStatus,
   messageDetail,
   dashboardMembers,
   editor,
+  setPreserveFiles,
+  setOpenUploadFilesModal,
+  setUploadFiles,
   setMessage,
   setMentionMembers,
   setMsgIdUpdated,
@@ -85,13 +122,15 @@ export const MessageDetail = ({
 }: MessageDetailProps) => {
   const { data: session } = useSession();
   const router = useRouter();
+
   const handleOpenDeleteMsgModal = (id: string) => {
     setOpenConfirmDeleteModal(true);
     if (setMsgIdDeleted) {
       setMsgIdDeleted(id);
     }
   };
-  const handleOpenEditForm = (id: string) => {
+
+  const handleOpenEditForm = async (id: string) => {
     if (setMsgIdUpdated) {
       setMsgIdUpdated(id);
     }
@@ -120,7 +159,21 @@ export const MessageDetail = ({
         setMentionMembers(mentionMembers || []);
       }
     }
-    editor && editor.commands.setContent(messageDetail.message);
+    if (messageDetail.chatFiles.length > 0) {
+      const preserveFiles = messageDetail.chatFiles.map((file) => {
+        return {
+          uuid: file.uuid,
+          file: {
+            name: file.fileName,
+          },
+        };
+      });
+      setPreserveFiles(preserveFiles);
+      setUploadFiles([]);
+      setOpenUploadFilesModal(true);
+    } else {
+      editor && editor.commands.setContent(messageDetail.message);
+    }
   };
 
   const renderAvatar = (senderId: number) => {
@@ -192,7 +245,7 @@ export const MessageDetail = ({
           <div
             className={`flex !box-border group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
             {renderAvatar(messageDetail.sender.id)}
-            <div className={`ml-3 w-full pr-5`}>
+            <div className={`ml-3 !w-full`}>
               <div className="flex justify-between items-center">
                 <div className="flex gap-2 font-semibold text-sm pb-2">
                   <p>{messageDetail.sender.fullName} </p>
@@ -201,7 +254,7 @@ export const MessageDetail = ({
                   </p>
                 </div>
                 <div className={`flex items-start`}>
-                  <p className="font-medium text-xs text-[#77858F]">
+                  <p className="font-medium text-xs text-[#77858F] min-w-[80px]">
                     {messageDetail.createdAt &&
                       formatCheckDate(
                         getFormattedDateTime(
@@ -221,7 +274,7 @@ export const MessageDetail = ({
                   )}
                 </div>
               </div>
-              <div className="relative">
+              <div className="relative !box-border">
                 <div>
                   <div className="flex flex-col">
                     {messageDetail.deletedAt ? (
@@ -230,16 +283,74 @@ export const MessageDetail = ({
                         {MESSAGE_DELETED}
                       </p>
                     ) : (
-                      <div>
+                      <div className="w-[100%]">
                         {messageDetail.type === MessageType.MESSAGE && (
-                          <p
-                            className={`text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]  `}
-                            dangerouslySetInnerHTML={{
-                              __html: highlightMentions(
-                                messageDetail.message,
-                                messageDetail.mentions || [],
-                              ),
-                            }}></p>
+                          <div className="!w-[100%]">
+                            <p
+                              className={`text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]  `}
+                              dangerouslySetInnerHTML={{
+                                __html: highlightMentions(
+                                  messageDetail.message,
+                                  messageDetail.mentions || [],
+                                ),
+                              }}></p>
+                            {messageDetail?.chatFiles &&
+                            messageDetail?.chatFiles.length > 0 &&
+                            uploadFileStatus[messageDetail.uuid]?.progress >
+                              0 &&
+                            uploadFileStatus[messageDetail.uuid]?.progress <
+                              100 ? (
+                              <ProgressBar
+                                value={
+                                  uploadFileStatus[messageDetail.uuid].progress
+                                }
+                              />
+                            ) : (
+                              <div className="flex flex-col gap-2 !w-[100%]">
+                                {messageDetail?.chatFiles &&
+                                  messageDetail?.chatFiles.length > 0 &&
+                                  messageDetail?.chatFiles.map(
+                                    (file, index) => {
+                                      return (
+                                        <div
+                                          key={index}
+                                          className="flex justify-between items-center !w-[100%]">
+                                          <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%_-_100px)]">
+                                            {file.fileType.includes(
+                                              'image',
+                                            ) && (
+                                              <div>
+                                                <Image
+                                                  src={getChatFileURL(
+                                                    file?.compressedFile || '',
+                                                  )}
+                                                  alt="Image"
+                                                  width={150}
+                                                  height={100}
+                                                />
+                                              </div>
+                                            )}
+                                            <p
+                                              className={`text-[#0068B6] font-medium text-[14px] break-words break-all max-w-full ${
+                                                file.fileType.includes('image')
+                                                  ? 'max-w-[calc(100%_-_200px)]'
+                                                  : 'max-w-[calc(100%)]'
+                                              }`}>
+                                              {file.fileName}
+                                            </p>
+                                          </div>
+                                          <Button
+                                            className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
+                                            variant="outline">
+                                            プレビュー
+                                          </Button>
+                                        </div>
+                                      );
+                                    },
+                                  )}
+                              </div>
+                            )}
+                          </div>
                         )}
                         {messageDetail.type === MessageType.REMOVE_SCHEDULE && (
                           <div className={`w-full flex justify-start`}>
@@ -681,15 +792,19 @@ export const MessageDetail = ({
                     )}
                   </div>
                   <>
-                    {!messageDetail.deletedAt && (
-                      <MessageHoverOptions
-                        messageDetail={messageDetail}
-                        chatRoomDetail={chatRoomDetail}
-                        handleOpenEditForm={handleOpenEditForm}
-                        handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                        setDataMessageDetail={setDataMessageDetail}
-                      />
-                    )}
+                    {!messageDetail.deletedAt &&
+                      !(
+                        uploadFileStatus[messageDetail.uuid]?.progress > 0 &&
+                        uploadFileStatus[messageDetail.uuid]?.progress < 100
+                      ) && (
+                        <MessageHoverOptions
+                          messageDetail={messageDetail}
+                          chatRoomDetail={chatRoomDetail}
+                          handleOpenEditForm={handleOpenEditForm}
+                          handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
+                          setDataMessageDetail={setDataMessageDetail}
+                        />
+                      )}
                   </>
                 </div>
               </div>

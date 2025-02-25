@@ -51,6 +51,7 @@ export interface ChatMessageResponse {
     id: number;
     title: string;
   };
+  chatFiles: ChatFileResponse[];
   isEdited: boolean;
   createdAt: Date | string;
   deletedAt: Date | null;
@@ -61,6 +62,15 @@ export interface ChatMessageResponse {
 export interface TaskUserListChat {
   id: number;
   title: string;
+}
+export interface ChatFileResponse {
+  compressedFile?: string,
+  createdAt?: Date | string;
+  id?: number;
+  fileType: string;
+  fileSize: number
+  fileName: string;
+  uuid: string
 }
 
 export interface ChatDashboardMember {
