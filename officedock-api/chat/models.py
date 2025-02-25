@@ -108,9 +108,8 @@ class ChatMessage(BaseModel):
         blank=True,
         on_delete=models.SET_NULL,
     )
-    message = models.TextField()
+    message = models.TextField(null=True, blank=True)
     is_edited = models.BooleanField(default=False)
-    bookmark_at = models.DateTimeField(null=True, blank=True)
     type = models.CharField(
         max_length=100,
         choices=ChatMessageTypes.choices(),
@@ -136,6 +135,11 @@ class ChatMessage(BaseModel):
         related_name="reply_message",
     )
     tasks = models.ManyToManyField("tasks.Task", related_name="link_messages")
+    bookmark_users = models.ManyToManyField(
+        "users.User",
+        through="Bookmark",
+        related_name="bookmark_messages",
+    )
 
     def save(self, *args, **kwargs):
         # Set default company when creating
@@ -153,6 +157,32 @@ class ChatMessage(BaseModel):
         """
         self.deleted_at = timezone.now()
         self.save()
+
+
+class Bookmark(BaseModel):
+    """Bookmark model"""
+
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="bookmarks",
+        on_delete=models.CASCADE,
+    )
+    chat_message = models.ForeignKey(
+        ChatMessage,
+        related_name="bookmarks",
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        "users.User",
+        related_name="bookmarks",
+        on_delete=models.CASCADE,
+    )
+    bookmark_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        # Set default company when creating
+        self.company = self.chat_message.company
+        super().save(*args, **kwargs)
 
 
 class Reaction(BaseModel):
@@ -184,6 +214,7 @@ def chat_file_upload_path(instance, filename):
 class ChatFile(BaseModel):
     """Model file upload to chat message"""
 
+    uuid = models.UUIDField(unique=True, default=uuid.uuid4)
     company = models.ForeignKey(
         "companies.Company",
         related_name="chat_files",
@@ -204,10 +235,10 @@ class ChatFile(BaseModel):
     file_size = models.FloatField()
 
     @classmethod
-    def create_files(cls, company, room, message, files):
+    def create_files(cls, company, room, message, files, uuids=[]):
         """Custom create method to handle file upload logic"""
         chat_files = []
-        for file in files:
+        for index, file in enumerate(files):
             file_name = file.name
             ext = file_name.split(".")[-1] if "." in file_name else "bin"
             file.name = generate_file_name(ext)  # Set custom file name
@@ -218,8 +249,10 @@ class ChatFile(BaseModel):
                 compressed_file = cls.compress_image_static(
                     file
                 )  # Compressed file if image
+
             chat_files.append(
                 cls(
+                    uuid=uuids[index] if index < len(uuids) else uuid.uuid4(),
                     company=company,
                     chat_room=room,
                     chat_message=message,

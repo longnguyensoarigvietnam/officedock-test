@@ -1,4 +1,4 @@
-from django.core.files.storage import default_storage
+from datetime import datetime
 from django.db import transaction
 from django.db.models import (
     DateTimeField,
@@ -34,7 +34,13 @@ from chat.constants import (
     WebSocketEventType,
     TypeChatGroup,
 )
-from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants, ChatFile
+from chat.models import (
+    ChatMessage,
+    ChatRoom,
+    ChatRoomsParticipants,
+    ChatFile,
+    Bookmark,
+)
 from chat.serializers import (
     BookMarkSerializer,
     ChatFileDetailSerializer,
@@ -48,6 +54,7 @@ from chat.serializers import (
     SendMessageSerializer,
     ReactionSerializer,
 )
+from chat.utils import remove_chat_files
 from common.utils import StripTags, send_web_socket_event
 from base.permissions import ActionPermission
 from roles.constants import Screens
@@ -728,6 +735,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer_data = serializer.validated_data
             files = serializer_data.pop("files", None)
+            file_uuids = serializer_data.pop("file_uuids", [])
             message = serializer.save(
                 sender=user, chat_room=chat_room, company=user.company
             )
@@ -739,6 +747,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     room=chat_room,
                     message=message,
                     files=files,
+                    uuids=file_uuids,
                 )
 
             chat_room_participants = chat_room.chat_rooms_participants.all()
@@ -838,9 +847,11 @@ class ChatMessageViewSet(
         user = request.user
         messages = []
         if is_bookmark := request.query_params.get("is_bookmark"):
-            messages = ChatMessage.objects.filter(
-                sender=user, bookmark_at__isnull=False
-            ).order_by("bookmark_at")
+            messages = (
+                user.bookmark_messages.filter(deleted_at__isnull=True)
+                .order_by("bookmarks__bookmark_at")
+                .distinct()
+            )
 
         if message := request.query_params.get("message"):
             messages = (
@@ -872,8 +883,17 @@ class ChatMessageViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
-        instance.bookmark_at = serializer_data.pop("bookmark_at", None)
-        instance.save()
+        bookmark_at = serializer_data.pop("bookmark_at", None)
+        if bookmark_at:
+            Bookmark.objects.get_or_create(
+                chat_message=instance,
+                user=request.user,
+                defaults={"bookmark_at": datetime.now()},
+            )
+        else:
+            Bookmark.objects.filter(
+                chat_message=instance, user=request.user
+            ).delete()
 
         return self.response_ok()
 
@@ -907,7 +927,7 @@ class ChatMessageViewSet(
         instance = serializer.instance
         serializer_data = serializer.validated_data
         files = serializer_data.pop("files", None)
-        file_ids = serializer_data.pop("file_ids", [])
+        file_uuids = serializer_data.pop("file_uuids", [])
 
         if (
             instance.type != ChatMessageTypes.MESSAGE.value
@@ -915,25 +935,21 @@ class ChatMessageViewSet(
         ):
             raise ValidationError({"detail": ERROR_MESSAGES["cannot_updated"]})
 
-        if not isinstance(file_ids, list):
-            file_ids = [file_ids]
+        if not isinstance(file_uuids, list):
+            file_uuids = [file_uuids]
+
+        # Get uuids not exists in files
+        uuids_exists = instance.chat_files.filter(
+            uuid__in=file_uuids
+        ).values_list("uuid", flat=True)
+        uuids_to_create = []
+        for uuid in file_uuids:
+            if uuid not in uuids_to_create and uuid not in uuids_exists:
+                uuids_to_create.append(uuid)
 
         # Delete chat files
-        chat_files = instance.chat_files.exclude(id__in=file_ids).all()
-
-        for chat_file in chat_files:
-            # Remove file in storage
-            if chat_file.original_file and default_storage.exists(
-                chat_file.original_file.name
-            ):
-                default_storage.delete(chat_file.original_file.name)
-
-            if chat_file.compressed_file and default_storage.exists(
-                chat_file.compressed_file.name
-            ):
-                default_storage.delete(chat_file.compressed_file.name)
-
-            chat_file.delete()
+        chat_files = instance.chat_files.exclude(uuid__in=file_uuids).all()
+        remove_chat_files(chat_files)
 
         # Perform the update operation
         instance = serializer.save()
@@ -946,6 +962,7 @@ class ChatMessageViewSet(
                 room=chat_room,
                 message=instance,
                 files=files,
+                uuids=uuids_to_create,
             )
 
         # Handle case realtime when edit chat message
@@ -965,6 +982,9 @@ class ChatMessageViewSet(
 
         message = self.get_object()
         message.soft_delete()
+
+        # Delete chat files
+        remove_chat_files(message.chat_files.all())
 
         # Handle case realtime when delete chat message
         chat_room = message.chat_room

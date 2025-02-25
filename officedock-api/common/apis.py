@@ -27,6 +27,8 @@ from tasks.constants import TASK_WORK_TYPES, TaskPriorities, TaskTypes
 from skills.serializers import SkillSerializer
 from organizations.models import OrganizationsSkills
 from roles.constants import Actions, Screens, SelectionResultOptions
+from organizations.models import Organization
+from chat.models import ChatRoom
 from .serializers import (
     CreationDataOrganizationSerializer,
     CreationDataTaskListSerializer,
@@ -242,28 +244,72 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
         return self.response_ok(data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("page_size", type=int, required=False),
+            OpenApiParameter("page", type=int, required=False),
+            OpenApiParameter("search", type=str, required=False),
+            OpenApiParameter("user_ids", type=str, required=False),
+            OpenApiParameter("chat_room_code", type=str, required=False),
+        ],
+    )
     @action(
         methods=["GET"],
         detail=False,
         url_path="tasks",
-        serializer_class=CreationDataTaskSerializer,
+        serializer_class=CreationDataTaskListSerializer,
     )
     def task_list_options(self, request):
         """
         Get task list of the option
         """
 
-        organizations = request.user.organizations.order_by("created_at")
-        tasks = (
-            Task.objects.filter(
-                Q(organization__in=organizations) | Q(created_by=request.user)
-            )
-            .exclude(type=TaskTypes.MY_TEMPLATE.value)
-            .order_by("-created_at")
+        tasks = Task.objects.exclude(type=TaskTypes.MY_TEMPLATE.value).order_by(
+            "-created_at"
         )
 
-        return self.response_ok(
-            CreationDataTaskListSerializer(tasks, many=True).data
+        # Get list of tasks by room code
+        if chat_room_code := request.query_params.get("chat_room_code"):
+            chat_room = ChatRoom.objects.filter(code=chat_room_code).first()
+            if chat_room and (
+                ids := chat_room.participants.values_list("id", flat=True)
+            ):
+                org_ids = Organization.objects.filter(
+                    users__id__in=ids
+                ).values_list("id", flat=True)
+                tasks = tasks.filter(
+                    Q(organization_id__in=org_ids) | Q(created_by_id__in=ids)
+                )
+
+        # Get list of tasks by user ids
+        elif user_ids := request.query_params.get("user_ids"):
+            ids = []
+            for id in user_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                org_ids = Organization.objects.filter(
+                    users__id__in=ids
+                ).values_list("id", flat=True)
+                tasks = tasks.filter(
+                    Q(organization_id__in=org_ids) | Q(created_by_id__in=ids)
+                )
+
+        # Get list of tasks by user logged in
+        else:
+            organizations = request.user.organizations.order_by("created_at")
+            tasks = tasks.filter(
+                Q(organization__in=organizations) | Q(created_by=request.user)
+            )
+
+        # Filter input keyword
+        if search_query := request.query_params.get("search"):
+            tasks = tasks.filter(title__icontains=search_query)
+
+        return self.response_pagination(
+            request, tasks, CreationDataTaskListSerializer
         )
 
     @action(methods=["GET"], detail=False, url_path="schedule")
