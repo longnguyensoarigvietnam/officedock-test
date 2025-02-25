@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { Editor } from '@tiptap/react';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Checkbox from '@components/common/Checkbox';
@@ -10,20 +11,24 @@ import { MENTION_ALL_MEMBERS, NO_OPTIONS } from '@constants';
 import { ChatDashboardMember, ChatParticipant } from '@interfaces/chat';
 
 interface ChatMentionMembersModalProps {
+  editor: Editor | null,
   mentionMembers: ChatParticipant[];
   mentionMemberOptions: ChatParticipant[];
   searchMentionMembers: string;
   mentionMemberModalPosition: {
     left: number;
+    top?: number;
+    bottom?: number;
   };
-  dashboardMembers: ChatDashboardMember[]
+  dashboardMembers: ChatDashboardMember[];
   setMentionMembers: Dispatch<SetStateAction<ChatParticipant[]>>;
-  handleCheckboxClick: (member: ChatParticipant, type: string) => void
+  handleCheckboxClick: (editor: Editor, member: ChatParticipant, type: string) => void
   setSearchMentionMembers: Dispatch<SetStateAction<string>>;
   onClose: () => void;
 }
 
 export const ChatMentionMembersModal = ({
+  editor,
   mentionMemberOptions,
   searchMentionMembers,
   mentionMembers,
@@ -62,10 +67,16 @@ export const ChatMentionMembersModal = ({
         className="relative bottom-10 -translate-x-1/2 z-10 shadow-md transform bg-white w-[280px] h-[300px] rounded-[8px] p-[10px]"
         style={{
           position: 'absolute',
-          bottom: `${250}px`,
+          top: `${mentionMemberModalPosition.top ? `${mentionMemberModalPosition.top}px` : 'auto'}`,
+          bottom: `${mentionMemberModalPosition.top ? 'auto' : '250px'}`,
           left: `${mentionMemberModalPosition.left + 15}px`,
         }}>
-        <div className="absolute left-1/2 -translate-x-1/2 -bottom-2 w-4 h-4 bg-white shadow-sm z-50 border-r border-b rotate-45"></div>
+        {mentionMemberModalPosition.top ? (
+          <div className="absolute left-1/2 -translate-x-1/2 -top-2.5 w-4 h-4 bg-white shadow-sm z-50 border-l border-t rotate-45"></div>
+        ) : (
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-2 w-4 h-4 bg-white shadow-sm z-50 border-r border-b rotate-45"></div>
+        )}
+
         <InputSearch
           placeholder="名前を検索"
           className="w-full mb-3"
@@ -115,9 +126,9 @@ export const ChatMentionMembersModal = ({
                           updatedMentionMembers = updatedMentionMembers.filter(
                             (member) => member.id !== participant.id,
                           );
-                          handleCheckboxClick(participant, 'remove')
+                          handleCheckboxClick(editor as Editor, participant, 'remove');
                         } else {
-                          handleCheckboxClick(participant, 'insert')
+                          handleCheckboxClick(editor as Editor, participant, 'insert');
                           updatedMentionMembers = [
                             ...updatedMentionMembers,
                             participant,

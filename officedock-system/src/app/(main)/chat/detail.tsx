@@ -3,6 +3,7 @@
 import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 import {
+  ChangeEvent,
   Fragment,
   useCallback,
   useContext,
@@ -37,6 +38,9 @@ import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModa
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMemberModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
+import ChatUploadingFilesModal from '@components/modals/ChatUploadingFilesModal';
+import ChatDroppingFileModal from '@components/modals/ChatDroppingFileModal';
+import ErrorChatUploadFileValidationModal from '@components/modals/ErrorChatUploadFileValidationModal';
 import { MessageDetail } from '@components/chat/MessageDetail';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import ListTaskUserChat from '@components/chat/ListTaskUserChat';
@@ -45,6 +49,7 @@ import { apiRouters } from '@constants/routers';
 import {
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
+  MAX_FILE_SIZE,
   MENTION_ALL_MEMBERS,
   NO_OPTION_CATEGORY,
   PAGINATION_PAGE_SIZE_HIGHT,
@@ -68,6 +73,7 @@ import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
+  UPLOAD_FILE_MAXIMUM_SZIE,
 } from '@constants/message';
 
 import useChatRoomDetail from '@hooks/useChatRoomDetail';
@@ -75,7 +81,11 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import { addTimeToDate, getCurrentTimeInJapan } from '@utils/date';
-import { hasPermissionInArray, trimUnnecessaryLineBreaks } from '@utils';
+import {
+  getChatFileURL,
+  hasPermissionInArray,
+  trimUnnecessaryLineBreaks,
+} from '@utils';
 import {
   ChatDashboardMember,
   ChatMessageResponse,
@@ -197,29 +207,61 @@ const ChatDetail = ({
   const [searchMentionMembers, setSearchMentionMembers] = useState<string>('');
   const [openMentionMembersModal, setOpenMentionMembersModal] =
     useState<boolean>(false);
+
   const [mentionMemberModalPosition, setMentionMemberModalPosition] = useState<{
     left: number;
+    top?: number;
+    bottom?: number;
   }>({
     left: 0,
   });
   const mentionIconRef = useRef<HTMLDivElement | null>(null);
-  const [openSearchMessagesModal, setOpenSearchMessagesModal] = useState(false);
-  const [searchMessageResults, setSearchMessageResults] = useState<{
-    count: number;
-    numPages: number;
-    results: ChatMessageResponse[];
-    hasNext?: boolean;
-  }>();
+
   const [lastGotoMessageId, setLastGotoMessageId] = useState<number | null>();
   const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
     useState(false);
   const [gotoMessageId, setGotoMessageId] = useState<number | null>();
   const gotoMessageRef = useRef<HTMLDivElement | null>(null);
 
+  // Upload files
+  const [openUploadFilesModal, setOpenUploadFilesModal] =
+    useState<boolean>(false);
+  const [uploadFiles, setUploadFiles] = useState<
+    { uuid: string; file: File }[]
+  >([]);
+  const [preserveFiles, setPreserveFiles] = useState<
+    {
+      uuid: string;
+      file: {
+        name: string;
+      };
+    }[]
+  >([]);
+  const [openDroppingFileModal, setOpenDroppingFileModal] =
+    useState<boolean>(false);
+  const [uploadFileStatus, setUploadFileStatus] = useState<
+    Record<
+      string,
+      {
+        progress: number;
+        errorMsg?: string;
+      }
+    >
+  >({});
+  const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
+    useState(false);
+
   // Search
+  const [openSearchMessagesModal, setOpenSearchMessagesModal] = useState(false);
   const [searchResultsPage, setSearchResultsPage] = useState<number>(1);
   const [hasMoreSearchResultDetail, setHasMoreSearchResultDetail] =
     useState(false);
+  const [searchMessageResults, setSearchMessageResults] = useState<{
+    count: number;
+    numPages: number;
+    results: ChatMessageResponse[];
+    hasNext?: boolean;
+  }>();
 
   //Task
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
@@ -573,6 +615,12 @@ const ChatDetail = ({
 
   const handleUpdateMessageLocal = useCallback(
     (data: WebSocketMessageData) => {
+      const chatFileList = data.chatMessage.chatFiles.map((file) => {
+        return {
+          ...file,
+          compressedFile: getChatFileURL(file.compressedFile || ''),
+        };
+      });
       setDataMessageDetail((prevDataMessageDetail) => {
         const updatedDataMessageDetail = [...prevDataMessageDetail];
         const updatedMessageItemIndex = updatedDataMessageDetail.findIndex(
@@ -582,6 +630,7 @@ const ChatDetail = ({
           updatedDataMessageDetail[updatedMessageItemIndex] = {
             ...updatedDataMessageDetail[updatedMessageItemIndex],
             isEdited: true,
+            chatFiles: chatFileList,
             message: trimUnnecessaryLineBreaks(
               `${data.chatMessage.message}`,
             ) as string,
@@ -708,8 +757,17 @@ const ChatDetail = ({
       switch (data.action) {
         case SocketActions.MESSAGE:
           if (data.chatRoom.code === chatRoomCode) {
-            if (data.clientId !== clientId) {
-              setDataMessageDetail([data.chatMessage, ...dataMessageDetail]);
+            if (data.clientId && !data.clientId.includes(clientId)) {
+              const chatFileList = data.chatMessage.chatFiles.map((file) => {
+                return {
+                  ...file,
+                  compressedFile: getChatFileURL(file.compressedFile || ''),
+                };
+              });
+              setDataMessageDetail([
+                { ...data.chatMessage, chatFiles: chatFileList },
+                ...dataMessageDetail,
+              ]);
               setChatRoomNotifications({
                 notifications: data.chatRoom.unreadMessages,
                 roomCode: chatRoomCode,
@@ -778,25 +836,64 @@ const ChatDetail = ({
     data,
     uuid,
     mentionIds,
+    files,
+    fileUuids,
   }: {
     data: string;
     uuid: string;
     mentionIds: number[];
+    files: File[];
+    fileUuids: string[];
   }) => {
+    const formData = new FormData();
+    formData.append('message', data);
+    formData.append('uuid', uuid);
+    formData.append('clientId', clientId);
+    mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
+    fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
+    if (files && files.length > 0) {
+      files.forEach((file, index) => {
+        formData.append(`files[${index}]`, file);
+      });
+    }
     const { data: response } = await api.post(
       apiRouters.CHAT_MESSAGES(`${chatRoomCode}`),
+      formData,
       {
-        message: data,
-        uuid,
-        clientId,
-        mentionIds,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            let percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
+            if (percentCompleted >= 99) {
+              percentCompleted = 99;
+            }
+            setUploadFileStatus((prev) => ({
+              ...prev,
+              [uuid]: { progress: percentCompleted },
+            }));
+          }
+        },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       },
     );
     return response;
   };
   const { mutate: handleSendMsgChat } = useMutation(postSendMsg, {
-    onSuccess: async () => {},
-    onError: () => {},
+    onSuccess: async (_data, variables) => {
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [variables.uuid]: { progress: 100 },
+      }));
+    },
+    onError: (_data, variables) => {
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [variables.uuid]: { progress: 0 },
+      }));
+    },
     onSettled: () => {},
   });
 
@@ -818,6 +915,19 @@ const ChatDetail = ({
     } else {
       mentionIds = mentionMembers.map((member) => Number(member.id)) || [];
     }
+    const chatUploadFiles = uploadFiles.map((file) => {
+      const newFile = new File([file.file], file.file.name, {
+        type: file.file.type,
+      });
+      const fileUrl = URL.createObjectURL(newFile);
+      return {
+        compressedFile: fileUrl,
+        fileName: file.file.name,
+        fileType: file.file.type,
+        fileSize: file.file.size,
+        uuid: file.uuid,
+      };
+    });
     setDataMessageDetail([
       {
         uuid: uuidMsg,
@@ -843,6 +953,7 @@ const ChatDetail = ({
         },
         mentions: mentionIds,
         isBookmark: false,
+        chatFiles: chatUploadFiles,
       },
 
       ...dataMessageDetail,
@@ -856,6 +967,8 @@ const ChatDetail = ({
       data: newMsg,
       uuid: uuidMsg,
       mentionIds,
+      files: uploadFiles.map((file) => file.file),
+      fileUuids: uploadFiles.map((file) => file.uuid),
     });
   };
 
@@ -879,16 +992,60 @@ const ChatDetail = ({
     uuid: string;
     message: string;
     mentionIds: number[];
+    files: File[];
+    fileUuids: string[];
   }) => {
+    const formData = new FormData();
+    formData.append('message', data.message);
+    formData.append('uuid', data.uuid);
+    data.mentionIds.forEach((id) =>
+      formData.append('mentionIds', id.toString()),
+    );
+    data.fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
+    if (data.files && data.files.length > 0) {
+      data.files.forEach((file) => {
+        formData.append('files', file);
+      });
+    }
+
     const { data: response } = await api.patch(
       apiRouters.CHAT_MESSAGES_DETAIL(data.uuid),
-      data,
+      formData,
+      {
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            let percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
+            if (percentCompleted >= 99) {
+              percentCompleted = 99;
+            }
+            setUploadFileStatus((prev) => ({
+              ...prev,
+              [data.uuid]: { progress: percentCompleted },
+            }));
+          }
+        },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
     );
     return response;
   };
   const { mutate: handleUpdateMsgChat } = useMutation(postUpdateMsg, {
-    onSuccess: async () => {},
-    onError: () => {},
+    onSuccess: async (_data, variables) => {
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [variables.uuid]: { progress: 100 },
+      }));
+    },
+    onError: (_data, variables) => {
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [variables.uuid]: { progress: 0 },
+      }));
+    },
     onSettled: () => {
       setMessage('');
     },
@@ -918,6 +1075,8 @@ const ChatDetail = ({
         message: trimUnnecessaryLineBreaks(`${message}`) as string,
         uuid: uuid,
         mentionIds,
+        files: uploadFiles.map((file) => file.file),
+        fileUuids: preserveFiles.map((file) => file.uuid),
       });
     }
   };
@@ -1263,7 +1422,11 @@ const ChatDetail = ({
     },
   });
 
-  const handleCheckboxClick = (member: ChatParticipant, type: string) => {
+  const handleCheckboxClick = (
+    editor: Editor,
+    member: ChatParticipant,
+    type: string,
+  ) => {
     if (!editor) return;
 
     if (type == 'remove') {
@@ -1527,6 +1690,93 @@ const ChatDetail = ({
 
     editor.chain().focus().insertContent(taskMessages).run();
   };
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      setOpenErrorUploadFileModal(true);
+      return;
+    }
+    const newFile = new File([file], file.name, {
+      type: file.type,
+    });
+    setUploadFiles((prev) => [
+      ...prev,
+      {
+        file: newFile,
+        uuid: uuidv4(),
+      },
+    ]);
+    setOpenUploadFilesModal(true);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOpenDroppingFileModal(false);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
+      const invalidFiles = droppedFiles.filter(
+        (file) => file.size > MAX_FILE_SIZE,
+      );
+
+      if (invalidFiles.length > 0) {
+        setOpenErrorUploadFileModal(true);
+        return;
+      }
+
+      const filesWithUUID = droppedFiles.map((file) => ({
+        uuid: uuidv4(),
+        file,
+      }));
+
+      setUploadFiles((prevFiles) => [...prevFiles, ...filesWithUUID]);
+    }
+    setOpenUploadFilesModal(true);
+  };
+
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setOpenUploadFilesModal(false);
+      setOpenDroppingFileModal(true);
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (
+        !e.relatedTarget ||
+        !document.body.contains(e.relatedTarget as Node)
+      ) {
+        setOpenDroppingFileModal(false);
+      }
+    };
+
+    const handleDropOutside = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (uploadFiles.length > 0) {
+        setOpenDroppingFileModal(false);
+        setOpenUploadFilesModal(true);
+      }
+    };
+
+    window.addEventListener('dragover', handleDragOver);
+    window.addEventListener('dragleave', handleDragLeave);
+    window.addEventListener('drop', handleDropOutside);
+
+    return () => {
+      window.removeEventListener('dragover', handleDragOver);
+      window.removeEventListener('dragleave', handleDragLeave);
+      window.removeEventListener('drop', handleDropOutside);
+    };
+  }, [uploadFiles]);
+
   return (
     <Fragment>
       {chatRoomCode && (
@@ -1775,10 +2025,14 @@ const ChatDetail = ({
                     ref={item.id == gotoMessageId ? gotoMessageRef : null}>
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
+                      uploadFileStatus={uploadFileStatus}
                       messageDetail={item}
                       msgEditing={msgEditing}
                       editor={editor}
                       dashboardMembers={dashboardMembers}
+                      setPreserveFiles={setPreserveFiles}
+                      setOpenUploadFilesModal={setOpenUploadFilesModal}
+                      setUploadFiles={setUploadFiles}
                       setMentionMembers={setMentionMembers}
                       setMessage={setMessage}
                       setMsgEditing={setMsgEditing}
@@ -1825,10 +2079,14 @@ const ChatDetail = ({
                     ref={item.id == gotoMessageId ? gotoMessageRef : null}>
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
+                      uploadFileStatus={uploadFileStatus}
                       messageDetail={item}
                       editor={editor}
                       msgEditing={msgEditing}
                       dashboardMembers={dashboardMembers}
+                      setPreserveFiles={setPreserveFiles}
+                      setOpenUploadFilesModal={setOpenUploadFilesModal}
+                      setUploadFiles={setUploadFiles}
                       setMentionMembers={setMentionMembers}
                       setMessage={setMessage}
                       setMsgEditing={setMsgEditing}
@@ -1896,6 +2154,14 @@ const ChatDetail = ({
                               </Tippy>
                             </>
                           )}
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={(e) => {
+                              handleFileChange(e);
+                            }}
+                          />
 
                           <Tippy
                             content={'ファイルを送信'}
@@ -1903,7 +2169,11 @@ const ChatDetail = ({
                             delay={1000}
                             placement="top"
                             offset={[0, 8]}>
-                            <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                            <div
+                              className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer"
+                              onClick={() => {
+                                fileInputRef.current?.click();
+                              }}>
                               <ImageRound
                                 name="Add file"
                                 src="/icons/add-file.svg"
@@ -2010,6 +2280,27 @@ const ChatDetail = ({
           )}
         </div>
       )}
+      {openErrorUploadFileModal && (
+        <ErrorChatUploadFileValidationModal
+          open={true}
+          message={UPLOAD_FILE_MAXIMUM_SZIE}
+          onClose={() => {
+            setOpenErrorUploadFileModal(false);
+          }}
+        />
+      )}
+      {openDroppingFileModal && (
+        <ChatDroppingFileModal
+          open={true}
+          onDropFile={handleDrop}
+          onClose={() => {
+            setOpenDroppingFileModal(false);
+          }}
+          onUploadFile={(e: ChangeEvent<HTMLInputElement>) => {
+            handleFileChange(e);
+          }}
+        />
+      )}
       {openSearchMessagesModal && (
         <SearchMessagesModal
           open={true}
@@ -2043,6 +2334,7 @@ const ChatDetail = ({
       )}
       {openMentionMembersModal && (
         <ChatMentionMembersModal
+          editor={editor}
           mentionMemberModalPosition={mentionMemberModalPosition}
           mentionMemberOptions={mentionMemberOptions}
           searchMentionMembers={searchMentionMembers}
@@ -2257,6 +2549,42 @@ const ChatDetail = ({
             setIsLoading(false);
             resetFunctions.resetDataCategoryOptions?.();
             resetFunctions.reset?.();
+          }}
+        />
+      )}
+      {openUploadFilesModal && (
+        <ChatUploadingFilesModal
+          message={message}
+          uploadFiles={uploadFiles}
+          preserveFiles={preserveFiles}
+          chatRoomDetail={chatRoomDetail}
+          setMentionMemberModalPosition={setMentionMemberModalPosition}
+          setPreserveFiles={setPreserveFiles}
+          setMessage={setMessage}
+          setUploadFiles={setUploadFiles}
+          handleFileChange={handleFileChange}
+          mentionMemberModalPosition={mentionMemberModalPosition}
+          mentionMemberOptions={mentionMemberOptions}
+          searchMentionMembers={searchMentionMembers}
+          mentionMembers={mentionMembers}
+          dashboardMembers={dashboardMembers}
+          setMentionMembers={setMentionMembers}
+          handleCheckboxClick={handleCheckboxClick}
+          setSearchMentionMembers={setSearchMentionMembers}
+          open={true}
+          onSubmit={() => {
+            if (msgIdUpdated) {
+              handleConfirmUpdateMsg(msgIdUpdated);
+              setPreserveFiles([]);
+            } else {
+              handleConfirmSendMessage();
+            }
+            setUploadFiles([]);
+            setOpenUploadFilesModal(false);
+          }}
+          onClose={() => {
+            setOpenUploadFilesModal(false);
+            setUploadFiles([]);
           }}
         />
       )}

@@ -630,3 +630,13 @@ export function generateOptionsCount(
 export function hasRole(roles: UserRoleType[], roleName: string): boolean {
   return roles.some((role) => role.name === roleName);
 }
+
+export const getChatFileURL = (url: string) => {
+  if (url && typeof url === 'string') {
+    if (url.includes('https://') || url.includes('http://')) {
+      return url;
+    }
+    return process.env.NEXT_PUBLIC_API_URL + url;
+  }
+  return '';
+};

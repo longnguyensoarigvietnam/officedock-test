@@ -182,3 +182,5 @@ export const NO_EVENT_MEMBER = '特になし';
 export const TASK_STARTING = 'タスク実行中';
 
 export const BOOKMARK_ROUTER_NAME = 'bookmark';
+
+export const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024;
