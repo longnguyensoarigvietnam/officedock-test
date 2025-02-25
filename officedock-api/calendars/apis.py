@@ -2,8 +2,13 @@ from datetime import datetime
 
 from django.db import transaction
 from django.db.models import Q, QuerySet
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiParameter,
+    OpenApiResponse,
+)
 from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
 from calendars.constants import ScheduleFields
@@ -12,6 +17,7 @@ from calendars.filters import TaskScheduleForCalendarFilter
 from calendars.serializers import (
     ScheduleSerializer,
     BaseScheduleSerializer,
+    ScheduleTeamdockSerializer,
     TaskScheduleForCalendarSerializer,
 )
 from chat.constants import ChatRoomTypes, ChatMessageTypes, WebSocketEventType
@@ -28,6 +34,7 @@ from common.utils import (
 from tasks.models import TaskSchedule
 from base.permissions import ActionPermission
 from roles.constants import Screens
+from users.models import User
 
 
 @extend_schema(tags=["System > Schedule"])
@@ -534,6 +541,61 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             BaseScheduleSerializer(
                 queryset, many=True, context={"request": request}
             ).data
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("page_size", type=int),
+            OpenApiParameter("page", type=int),
+            OpenApiParameter("organization_id", type=str),
+            OpenApiParameter("user_ids", type=str),
+            OpenApiParameter("start_date", type=datetime),
+            OpenApiParameter("end_date", type=datetime),
+            OpenApiParameter("search", type=str),
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=ScheduleTeamdockSerializer(many=True)
+            )
+        },
+    )
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="teamdock",
+        serializer_class=ScheduleTeamdockSerializer,
+    )
+    @transaction.atomic()
+    def teamdock(self, request):
+        """
+        Get list of schedules in teamdock.
+        """
+        organization_id = self.request.query_params.get("organization_id")
+        users = []
+
+        if not organization_id:
+            return self.response_pagination(
+                request, users, ScheduleTeamdockSerializer
+            )
+
+        # Filter by organization id
+        users = User.objects.filter(organizations__id=organization_id).order_by(
+            "created_at"
+        )
+
+        # Filter by user ids
+        if user_ids := self.request.query_params.get("user_ids"):
+            ids = []
+            for id in user_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                users = users.filter(id__in=ids)
+
+        return self.response_pagination(
+            request, users, ScheduleTeamdockSerializer
         )
 
 
