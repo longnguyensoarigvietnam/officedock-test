@@ -133,6 +133,14 @@ export const pageRouters = {
     name: '日報',
     href: '/daily-report',
   },
+  DAILY_REPORT_LIST: {
+    name: '日報一覧',
+    href: '/daily-report/list',
+  },
+  DAILY_REPORT_DETAIL: {
+    name: '日報',
+    href: (id: string) => `/daily-report/${id}`,
+  },
   // CATEGORY
   CATEGORY_MANAGEMENT: {
     name: '集計カテゴリ',
@@ -406,4 +414,8 @@ export const apiRouters = {
 
   // MEMBER ORGANIZATION
   MEMBER_ORGANIZATION_LIST: '/organizations/members/',
+
+  // STAT DATA
+  STAT_DATA: '/stat-data/',
+  CONFIRM_USER_DAILY: (id: number) => `/users/${id}/report/`,
 };

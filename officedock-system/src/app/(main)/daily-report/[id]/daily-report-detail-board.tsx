@@ -1,4 +1,5 @@
 'use client';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import React, {
   ChangeEvent,
   useCallback,
@@ -15,7 +16,6 @@ import Image from 'next/image';
 import jaLocale from '@fullcalendar/core/locales/ja';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import Link from 'next/link';
 
 import {
   useReactTable,
@@ -44,7 +44,7 @@ import SingleSelect from '@components/common/SingleSelect';
 import ResizeTextArea from '@components/custom/resizeTextArea';
 import Dropdown from '@components/common/Dropdown';
 import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';
-import TaskDailyCard from '../../../components/daily/taskDailyCard';
+import TaskDailyCard from '../../../../components/daily/taskDailyCard';
 
 import {
   EventCalendarType,
@@ -53,13 +53,13 @@ import {
   ScreenName,
   SocketActions,
   StatusValueTask,
-  UserRoles,
 } from '@constants/enums';
-import { apiRouters, pageRouters } from '@constants/routers';
-import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 
-import './styles/daily-report.css';
+import { apiRouters, pageRouters } from '@constants/routers';
+import { ERROR_UPDATE_MESSAGE } from '@constants/message';
+
+import './../styles/daily-report.css';
 import useDataStatistic from '@hooks/useDataStatistic';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import { useErrorToast } from '@hooks/useErrorToast';
@@ -70,6 +70,7 @@ import {
   dataTaskDaily,
   dataTaskDailyTable,
   dataTotalCategory,
+  DataUserDetailDailyType,
   LargeCategory,
   MediumCategory,
   OrganizationCategories,
@@ -95,17 +96,30 @@ import {
 import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
-  hasRole,
   transformDataTaskDailyToTable,
 } from '@utils';
 import { useWebSocket } from '@providers/WebSocketProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import api from '@base/api';
+import Checkbox from '@components/common/Checkbox';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import Link from 'next/link';
 
-const DailyReportBoard = () => {
+const DailyReportDetailBoard = () => {
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+
   const calendarRef = useRef<FullCalendar | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
+
+  const params = useParams();
+  const userId = params.id;
+  const router = useRouter();
+
+  const searchParams = useSearchParams();
+
+  const organization = searchParams.get('organization');
 
   const calendarDownloadRef = useRef<FullCalendar | null>(null);
 
@@ -120,10 +134,18 @@ const DailyReportBoard = () => {
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
+  const [dataDetailUser, setDataDetailUser] =
+    useState<DataUserDetailDailyType>();
+
   const [remarkData, setRemarkData] = useState<string>('');
 
   const { dataStatistic, refetchDataStatistic } = useDataStatistic({
     date: formatDateServer(currentDate),
+    userId: `${userId}`,
+    organizationId: `${organization}`,
+    onError: () => {
+      router.back();
+    },
   });
 
   const [taskTimeStatisticList, setTaskTimeStatisticList] = useState<
@@ -150,6 +172,10 @@ const DailyReportBoard = () => {
   const [dataTaskDailyList, setDataTaskDailyList] = useState<
     dataTaskDailyTable[]
   >([]);
+
+  const avatarColor =
+    dashboardMembersWithAvatars.find((member) => member.id == userId)
+      ?.avatarColor || '';
 
   const handleShowEventsInModal = (data: {
     largeColor?: string;
@@ -272,6 +298,13 @@ const DailyReportBoard = () => {
       setRemarkData(
         dataStatistic?.remark.remark ? dataStatistic?.remark.remark : '',
       );
+      setDataDetailUser({
+        id: dataStatistic.remark.user.id,
+        fullName: dataStatistic.remark.user.profile.fullName,
+        isConfirmed: dataStatistic?.remark.isConfirmed,
+        totalDuration: dataStatistic.totalDuration,
+        organizationName: dataStatistic?.remark.organizationName,
+      });
 
       setChartData({
         colors: listColor,
@@ -1875,6 +1908,23 @@ const DailyReportBoard = () => {
     return { slotMinTime, slotMaxTime };
   };
 
+  const handleNextUser = () => {
+    if (dataStatistic?.nextUser && organization) {
+      router.push(
+        `${pageRouters.DAILY_REPORT_DETAIL.href(String(dataStatistic?.nextUser))}?organization=${organization}`,
+        { scroll: false },
+      );
+    }
+  };
+  const handlePrevUser = () => {
+    if (dataStatistic?.prevUser && organization) {
+      router.push(
+        `${pageRouters.DAILY_REPORT_DETAIL.href(String(dataStatistic?.prevUser))}?organization=${organization}`,
+        { scroll: false },
+      );
+    }
+  };
+
   return (
     <div className="flex  flex-col ">
       <div className="h-[calc(100vh_-_83px)] overflow-y-auto ">
@@ -1929,24 +1979,74 @@ const DailyReportBoard = () => {
                 }}>
                 今日
               </Button>
-              {session &&
-                hasRole(session?.user.roles, UserRoles.SYSTEM_ADMIN) && (
-                  <Link
-                    href={pageRouters.DAILY_REPORT_LIST.href}
-                    className="bg-white flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
-                    <span>チームの日報一覧</span>
-                    <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                      <ImageRound
-                        className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                        src="/icons/right-statistic.svg"
-                        name="right"
-                      />
-                    </div>
-                  </Link>
-                )}
             </div>
           </div>
+        </header>
+        <div className="mb-[30px] flex items-center justify-between pr-10">
+          <div className="flex items-center gap-5">
+            <ImageRound
+              onClick={handlePrevUser}
+              style={{
+                opacity: dataStatistic?.prevUser && organization ? 1 : 0,
+              }}
+              className="h-fit w-fit cursor-pointer relative top-[1px]"
+              src="/icons/left-statistic.svg"
+              name="left"
+            />
+            <div className="flex gap-5 items-center">
+              <div className="flex flex-col gap-1 items-center w-10 text-xs  text-[#0068B6]">
+                {dataDetailUser?.isConfirmed ? (
+                  <span>確認済</span>
+                ) : (
+                  <span className="text-[#77858F]">未確認</span>
+                )}
+                <Checkbox
+                  isChecked={dataDetailUser?.isConfirmed}
+                  // onChange={(e) => {
+                  //   confirmUserDaily({
+                  //     id: user.id,
+                  //     isConfirmed: e,
+                  //     categoryId: item.organization.id,
+                  //   });
+                  // }}
+                  className="flex justify-center"
+                  classSize="w-4 h-4"
+                  boxLabelClass="!m-0"
+                />
+              </div>
 
+              <div className="flex items-center gap-[10px]">
+                <AvatarIconWithDynamicColor color={avatarColor} size={33} />
+                <span className="text-black max-w-[300px] truncate">
+                  {dataDetailUser && dataDetailUser?.fullName}
+                </span>
+                <span className="text-[#77858F] text-xs max-w-[300px] truncate relative top-[1px]">
+                  {dataDetailUser && dataDetailUser?.organizationName}
+                </span>
+              </div>
+            </div>
+            <ImageRound
+              onClick={handleNextUser}
+              style={{
+                opacity: dataStatistic?.nextUser && organization ? 1 : 0,
+              }}
+              className="h-fit w-fit cursor-pointer relative top-[1px]"
+              src="/icons/right-statistic.svg"
+              name="right"
+            />
+            <Link
+              href={pageRouters.DAILY_REPORT_LIST.href}
+              className="bg-white relative top-[1px] flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
+              <span>チームの日報一覧</span>
+              <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+                <ImageRound
+                  className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                  src="/icons/right-statistic.svg"
+                  name="right"
+                />
+              </div>
+            </Link>
+          </div>
           <div className="flex gap-4 items-center">
             <div className="flex items-center gap-3">
               {isPermissionAction && (
@@ -1965,9 +2065,9 @@ const DailyReportBoard = () => {
               )}
             </div>
           </div>
-        </header>
-        <div className="mt-4 flex gap-3">
-          <div className="w-[262px] px-5 bg-[#F8FAFC] h-[calc(100vh_-_177px)] rounded-[14px] daily-custom  overflow-y-auto">
+        </div>
+        <div className=" flex gap-3">
+          <div className="w-[262px] px-5 bg-[#F8FAFC] h-[calc(100vh_-_260px)] rounded-[14px] daily-custom  overflow-y-auto">
             <p className=" pt-[30px] mb-2">スケジュール実績</p>
             <FullCalendar
               ref={calendarRef}
@@ -2004,7 +2104,7 @@ const DailyReportBoard = () => {
               locale="ja"
             />
           </div>
-          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_177px)] overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
+          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_260px)] overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
             <div className="h-[325px] overflow-y-auto">
               <p>カテゴリーの割合</p>
               <div className="flex pt-5">
@@ -2454,4 +2554,4 @@ const DailyReportBoard = () => {
   );
 };
 
-export default DailyReportBoard;
+export default DailyReportDetailBoard;
