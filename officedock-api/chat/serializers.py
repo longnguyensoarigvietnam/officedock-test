@@ -15,6 +15,7 @@ from tags.serializers import BaseTagSerializer
 from users.models import User
 from tasks.models import Task
 from chat.models import ChatFile
+from skills.serializers import SkillSerializer
 
 
 class CreationDataUserForChatSerializer(serializers.ModelSerializer):
@@ -154,6 +155,8 @@ class SubmitLevelForChatMessageSerializer(serializers.ModelSerializer):
     """
     Submit Level serializer for chat message.
     """
+
+    skill = SkillSerializer(read_only=True)
 
     class Meta:
         model = SubmitLevelHistory

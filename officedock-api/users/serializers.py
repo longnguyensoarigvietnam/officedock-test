@@ -358,21 +358,18 @@ class UserSerializer(BaseUserSerializer):
 
     def get_current_event(self, obj):
         """Get current event starting"""
-        event = (
-            obj.tasks.filter(is_start=True).first()
-            or obj.schedules.filter(is_start=True).first()
-        )
-
-        if event:
-            event_type = (
-                CalendarTypes.TASK.value
-                if event in obj.tasks.all()
-                else CalendarTypes.SCHEDULE.value
-            )
+        if task := obj.in_charge_tasks.filter(is_start=True).first():
             return {
-                "type": event_type,
-                "id": event.id,
-                "title": event.title,
+                "type": CalendarTypes.TASK.value,
+                "id": task.id,
+                "title": task.title,
+            }
+
+        if schedule := obj.schedules.filter(is_start=True).first():
+            return {
+                "type": CalendarTypes.SCHEDULE.value,
+                "id": schedule.id,
+                "title": schedule.title,
             }
 
         return None
