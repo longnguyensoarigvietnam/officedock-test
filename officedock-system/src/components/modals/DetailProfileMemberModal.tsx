@@ -150,7 +150,10 @@ const DetailProfileMemberModal = memo(
                       : NO_EVENT_MEMBER
                   }
                 />
-                <ViewDetail label="メールアドレス" value={'○○○○○＠○○○○○'} />
+                <ViewDetail
+                  label="メールアドレス"
+                  value={userDetail?.email || ''}
+                />
               </div>
               <div className="w-[136px] flex flex-col gap-1 justify-end">
                 <Button
@@ -173,7 +176,11 @@ const DetailProfileMemberModal = memo(
                 {session &&
                   hasRole(session?.user.roles, UserRoles.SYSTEM_ADMIN) && (
                     <>
-                      <Button className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
+                      <Button
+                        onClick={() => {
+                          router.push(pageRouters.SKILL_MAP.href);
+                        }}
+                        className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
                         <ImageRound
                           src="/icons/skill-map.svg"
                           name="Extend box"
@@ -181,7 +188,15 @@ const DetailProfileMemberModal = memo(
                         />
                         <span>スキルマップ</span>
                       </Button>
-                      <Button className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2 ">
+                      <Button
+                        onClick={() => {
+                          router.push(
+                            pageRouters.DAILY_REPORT_DETAIL.href(
+                              String(userDetail?.id),
+                            ),
+                          );
+                        }}
+                        className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2 ">
                         <ImageRound
                           src="/icons/daily-report.svg"
                           name="Extend box"

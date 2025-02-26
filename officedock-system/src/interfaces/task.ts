@@ -195,6 +195,7 @@ export interface CreationDataTask {
     id: number;
     name: string;
     uuid: string;
+    color?: string;
   }[];
   organizations: {
     id: number;

@@ -1,32 +1,33 @@
 import React, { MutableRefObject, useContext, useEffect } from 'react';
 import { isSameDay } from 'date-fns';
+import { useRouter } from 'next/navigation';
+import Tippy from '@tippyjs/react';
+import { useSession } from 'next-auth/react';
 
 import ImageRound from '@components/common/ImageRound';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+
+import { NO_SETTING } from '@constants';
+import { pageRouters } from '@constants/routers';
+import {
+  ActionsEvent,
+  ItemStartType,
+  PermissionsSystem,
+} from '@constants/enums';
+import { DataDetailEventType } from '@interfaces/task';
+import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import {
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
 } from '@utils/date';
-import { useSession } from 'next-auth/react';
 import { hasPermissionInArray } from '@utils';
-import Tippy from '@tippyjs/react';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
-import { NO_SETTING } from '@constants';
-import { DataDetailEventType } from '@interfaces/task';
-import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { ActionsEvent, PermissionsSystem } from '@constants/enums';
 
 type Props = {
   dataEvent: DataDetailEventType;
   isStart: boolean;
   popoverRef: MutableRefObject<HTMLDivElement | null>;
-  handleSetEventParam: ({
-    id,
-    action,
-  }: {
-    id: string | null;
-    action: string;
-  }) => void;
+
   onClose: () => void;
   onDelete?: (values: EventEditFormData) => void;
 };
@@ -36,9 +37,10 @@ const DetailEventPlanModal = ({
   popoverRef,
   onClose,
   onDelete,
-  handleSetEventParam,
 }: Props) => {
   const { data: session } = useSession();
+
+  const router = useRouter();
 
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
@@ -90,7 +92,7 @@ const DetailEventPlanModal = ({
                     PermissionsSystem.MY_TASK_UPDATE,
                   ) && (
                     <Tippy
-                      content={'予定を編集'}
+                      content={'予定に移動'}
                       arrow={false}
                       delay={1000}
                       placement="top"
@@ -99,15 +101,15 @@ const DetailEventPlanModal = ({
                         className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer"
                         onClick={() => {
                           const newId = dataEvent.id.replace('event', '');
+
+                          router.push(
+                            `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${newId}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}`,
+                          );
                           onClose();
-                          handleSetEventParam({
-                            id: newId,
-                            action: ActionsEvent.EDIT,
-                          });
                         }}>
                         <ImageRound
-                          name="Edit"
-                          src={'/icons/edit-task.svg'}
+                          name="go to"
+                          src={'/icons/go.svg'}
                           className="w-[16px] h-[16px] hover:cursor-pointer"
                         />
                       </div>

@@ -40,7 +40,7 @@ const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
         <div className="flex items-center gap-[10px] w-fit">
           <GroupIconWithDynamicColor color={randomColor} />
 
-          <p className="text-[18px]">{item.name}</p>
+          <p className="text-[18px] ">{item.name}</p>
           <span className="text-[#77858F] text-[13px] ml-[10px]">
             メンバー{item.users.length}人
           </span>
@@ -71,7 +71,9 @@ const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
               }}
               className=" h-[76px] bg-white flex items-center gap-[10px]  p-5 justify-start cursor-pointer  rounded-lg">
               {renderBoxUser(`${user.id}`)}
-              <p className="text-[18px]">{user.fullName}</p>
+              <p className="text-[18px] break-all line-clamp-2">
+                {user.fullName}
+              </p>
             </div>
           ))}
         </div>
