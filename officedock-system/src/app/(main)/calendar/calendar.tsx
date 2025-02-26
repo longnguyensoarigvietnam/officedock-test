@@ -1879,6 +1879,7 @@ const EventCalendar = () => {
   const handleRemoveEventParam = () => {
     const params = new URLSearchParams(searchParams);
     params.delete('event');
+    params.delete('type');
     params.delete('action');
     router.replace(`?${params.toString()}`);
   };
