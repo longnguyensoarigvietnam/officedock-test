@@ -202,7 +202,8 @@ export function decodeHtml(str: string): string {
     .replace(/&#039;/g, "'");
 }
 // Split the input by new lines and wrap the parts in <p> tags
-export function formatWithParagraphTags(content: string): string {
+export function formatWithParagraphTags(content: string | null | undefined): string {
+  if (!content) return '';
   const parts = content.split('\n').map((line, index) => {
     return index === 0 ? line : `<p>${line}</p>`;
   });

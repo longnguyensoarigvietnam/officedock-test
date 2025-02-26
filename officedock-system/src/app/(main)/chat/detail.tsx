@@ -757,7 +757,7 @@ const ChatDetail = ({
       switch (data.action) {
         case SocketActions.MESSAGE:
           if (data.chatRoom.code === chatRoomCode) {
-            if (data.clientId && !data.clientId.includes(clientId)) {
+            if (!data.clientId || !data.clientId.includes(clientId)) {
               const chatFileList = data.chatMessage.chatFiles.map((file) => {
                 return {
                   ...file,
@@ -2003,6 +2003,8 @@ const ChatDetail = ({
               <div>
                 {initialLoad ? (
                   <div className="flex flex-col items-start ml-3">
+                    <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
+                    <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
                     <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
                     <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
                     <RowSkeleton

@@ -1,5 +1,12 @@
 'use client';
-import { Fragment, useCallback, useContext, useEffect, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { useMutation } from 'react-query';
 import { useInView } from 'react-intersection-observer';
@@ -12,6 +19,7 @@ import {
   Transition,
 } from '@headlessui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { debounce } from 'lodash';
 import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
@@ -828,6 +836,12 @@ const ListChatUsers = ({
     router.push(`/chat?${params.toString()}`, { scroll: false });
   };
 
+  const debouncedFetchChatRoomData = useRef(
+    debounce((item: ChatRoomItem) => {
+      handleSetChatRoomParam(`${item?.code}`);
+    }, 700),
+  ).current;
+
   return (
     <aside className="w-[350px] max-w-[350px] min-w-[350px] border-r-[2px] pr-3 pt-5">
       <div className="flex items-center justify-between mb-5">
@@ -957,7 +971,7 @@ const ListChatUsers = ({
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
-                    handleSetChatRoomParam(`${item?.code}`);
+                    debouncedFetchChatRoomData(item);
                     handleResetChatRoomUnreadMessages(item);
                     setSearchChatMsg('');
                     setIsReload(false);
@@ -988,8 +1002,7 @@ const ListChatUsers = ({
 
                   <div className="relative">{renderAvatar(item)}</div>
                   <div className="ml-2 flex gap-1 items-center">
-                    <p
-                      className={`text-sm break-words w-[260px] font-medium `}>
+                    <p className={`text-sm break-words w-[260px] font-medium `}>
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -1036,8 +1049,9 @@ const ListChatUsers = ({
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
-                    handleSetChatRoomParam(`${item?.code}`);
+                    debouncedFetchChatRoomData(item);
                     handleResetChatRoomUnreadMessages(item);
+                    setSearchChatMsg('');
                     setIsReload(false);
                   }}>
                   <div
