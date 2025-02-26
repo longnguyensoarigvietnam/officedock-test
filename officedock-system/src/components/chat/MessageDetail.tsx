@@ -25,11 +25,7 @@ import {
   REMOVE_MEMBER_TASK_MESSAGE,
   TASK_DELETED,
 } from '@constants';
-import {
-  ChatRoomType,
-  MessageType,
-  SubmitLevelStatus,
-} from '@constants/enums';
+import { ChatRoomType, MessageType, SubmitLevelStatus } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { MENTION_NAME_REGEX } from '@constants/regex';
 
@@ -40,10 +36,7 @@ import {
   ChatRoomDetail,
 } from '@interfaces/chat';
 
-import {
-  formatWithParagraphTags,
-  getChatFileURL,
-} from '@utils';
+import { formatWithParagraphTags, getChatFileURL } from '@utils';
 import {
   convertToCurrentTimezone,
   convertToTimeString,
@@ -1052,7 +1045,9 @@ export const MessageDetail = ({
                                       messageDetail.type ==
                                       MessageType.CREATE_SUBMIT_LEVEL_SKILL
                                     ) {
-                                      router.push(pageRouters.SUBMIT_LEVELS.href);
+                                      router.push(
+                                        pageRouters.SUBMIT_LEVELS.href,
+                                      );
                                     } else {
                                       router.push(
                                         pageRouters.DETAIL_SUBMIT_LEVELS.href(
@@ -1146,51 +1141,78 @@ export const MessageDetail = ({
                       </p>
                     </div>
                     <div className="text-[#5B6770] font-normal text-sm">
-                      {messageDetail.scheduleChanges?.new?.startDate &&
-                        messageDetail.scheduleChanges?.new?.endDate &&
-                        (isSameDay(
-                          new Date(
-                            messageDetail.scheduleChanges?.new?.startDate,
-                          ),
-                          new Date(messageDetail.scheduleChanges?.new?.endDate),
-                        ) ? (
-                          <p>
-                            {formatShowDeadline(
+                      <p>
+                        {messageDetail.scheduleChanges?.new?.startDate &&
+                          messageDetail.scheduleChanges?.new?.endDate &&
+                          (isSameDay(
+                            new Date(
                               messageDetail.scheduleChanges?.new?.startDate,
-                            )}{' '}
-                            {formatHoursAndMinutesForDateTime(
-                              new Date(
-                                messageDetail.scheduleChanges?.new?.startDate,
-                              ),
-                            )}{' '}
-                            ~{' '}
-                            {formatHoursAndMinutesForDateTime(
-                              new Date(
-                                messageDetail.scheduleChanges?.new?.endDate,
-                              ),
-                            )}
-                          </p>
-                        ) : (
-                          <p>
-                            {formatShowDeadline(
-                              messageDetail.scheduleChanges?.new?.startDate,
-                            )}{' '}
-                            {formatHoursAndMinutesForDateTime(
-                              new Date(
-                                messageDetail.scheduleChanges?.new?.startDate,
-                              ),
-                            )}{' '}
-                            ~{' '}
-                            {formatShowDeadline(
+                            ),
+                            new Date(
                               messageDetail.scheduleChanges?.new?.endDate,
-                            )}{' '}
-                            {formatHoursAndMinutesForDateTime(
-                              new Date(
-                                messageDetail.scheduleChanges?.new?.endDate,
-                              ),
-                            )}
-                          </p>
-                        ))}
+                            ),
+                          ) ? (
+                            <p>
+                              {formatShowDeadline(
+                                messageDetail.scheduleChanges?.new?.startDate,
+                              )}{' '}
+                              {messageDetail.schedule?.isAllDay ? (
+                                '終日'
+                              ) : (
+                                <>
+                                  {formatHoursAndMinutesForDateTime(
+                                    new Date(
+                                      messageDetail.scheduleChanges?.new?.startDate,
+                                    ),
+                                  )}{' '}
+                                  ~{' '}
+                                  {formatHoursAndMinutesForDateTime(
+                                    new Date(
+                                      messageDetail.scheduleChanges?.new?.endDate,
+                                    ),
+                                  )}
+                                </>
+                              )}
+                            </p>
+                          ) : (
+                            <p>
+                              {messageDetail.schedule?.isAllDay ? (
+                                <>
+                                  {formatShowDeadline(
+                                    messageDetail.scheduleChanges?.new
+                                      ?.startDate,
+                                  )}{' '}
+                                  ~{' '}
+                                  {formatShowDeadline(
+                                    messageDetail.scheduleChanges?.new?.endDate,
+                                  )}{' '}
+                                  終日
+                                </>
+                              ) : (
+                                <>
+                                  {formatShowDeadline(
+                                    messageDetail.scheduleChanges?.new
+                                      ?.startDate,
+                                  )}{' '}
+                                  {formatHoursAndMinutesForDateTime(
+                                    new Date(
+                                      messageDetail.scheduleChanges?.new?.startDate,
+                                    ),
+                                  )}{' '}
+                                  ~{' '}
+                                  {formatShowDeadline(
+                                    messageDetail.scheduleChanges?.new?.endDate,
+                                  )}{' '}
+                                  {formatHoursAndMinutesForDateTime(
+                                    new Date(
+                                      messageDetail.scheduleChanges?.new?.endDate,
+                                    ),
+                                  )}
+                                </>
+                              )}
+                            </p>
+                          ))}
+                      </p>
                     </div>
                     <p className="text-[#5B6770] font-normal text-sm">
                       {messageDetail.message}

@@ -53,6 +53,7 @@ export interface ChatMessageResponse {
   schedule?: {
     id: number;
     title: string;
+    isAllDay: boolean;
   };
   chatFiles: ChatFileResponse[];
   isEdited: boolean;

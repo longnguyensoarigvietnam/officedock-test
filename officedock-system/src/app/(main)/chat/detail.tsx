@@ -33,7 +33,7 @@ import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
-import { ChatMentionMembersModal } from '@components/modals/ChatMentionMembersModal';
+import { ChatMentionMembersList } from '@components/modals/ChatMentionMembersModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMemberModal';
@@ -205,17 +205,6 @@ const ChatDetail = ({
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [mentionMembers, setMentionMembers] = useState<ChatParticipant[]>([]);
   const [searchMentionMembers, setSearchMentionMembers] = useState<string>('');
-  const [openMentionMembersModal, setOpenMentionMembersModal] =
-    useState<boolean>(false);
-
-  const [mentionMemberModalPosition, setMentionMemberModalPosition] = useState<{
-    left: number;
-    top?: number;
-    bottom?: number;
-  }>({
-    left: 0,
-  });
-  const mentionIconRef = useRef<HTMLDivElement | null>(null);
 
   const [lastGotoMessageId, setLastGotoMessageId] = useState<number | null>();
   const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
@@ -634,6 +623,7 @@ const ChatDetail = ({
             message: trimUnnecessaryLineBreaks(
               `${data.chatMessage.message}`,
             ) as string,
+            mentions: data.chatMessage.mentions
           };
           return updatedDataMessageDetail;
         }
@@ -2128,32 +2118,24 @@ const ChatDetail = ({
                         <div className="flex gap-1 items-center">
                           {chatRoomDetail?.type == ChatRoomType.GROUP && (
                             <>
-                              <Tippy
-                                content={'メンション'}
-                                arrow={false}
-                                delay={1000}
-                                placement="top"
-                                offset={[0, 8]}>
-                                <div
-                                  ref={mentionIconRef}
-                                  className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer"
-                                  onClick={() => {
-                                    if (mentionIconRef.current) {
-                                      const rect =
-                                        mentionIconRef.current.getBoundingClientRect();
-                                      setMentionMemberModalPosition({
-                                        left: rect.left,
-                                      });
-                                    }
-                                    setOpenMentionMembersModal(true);
-                                  }}>
-                                  <ImageRound
-                                    name="Mention"
-                                    src="/icons/mention.svg"
-                                    className="w-[16px] h-[16px]"
-                                  />
-                                </div>
-                              </Tippy>
+                              <ChatMentionMembersList
+                                editor={editor}
+                                mentionMemberOptions={mentionMemberOptions}
+                                searchMentionMembers={searchMentionMembers}
+                                mentionMembers={mentionMembers}
+                                dashboardMembers={dashboardMembers}
+                                customModalPosition={
+                                  'left-[-125px] top-[-310px]'
+                                }
+                                customArrowPosition={
+                                  'after:top-full after:border-t-white'
+                                }
+                                setMentionMembers={setMentionMembers}
+                                handleCheckboxClick={handleCheckboxClick}
+                                setSearchMentionMembers={
+                                  setSearchMentionMembers
+                                }
+                              />
                             </>
                           )}
                           <input
@@ -2234,6 +2216,9 @@ const ChatDetail = ({
                                 variant="outline"
                                 onClick={() => {
                                   setMsgIdUpdated && setMsgIdUpdated(undefined);
+                                  setPreserveFiles([]);
+                                  setUploadFiles([]);
+                                  setMentionMembers([]);
                                   setMessage && setMessage('');
                                   if (!editor) return;
                                   editor.commands.clearContent();
@@ -2331,23 +2316,6 @@ const ChatDetail = ({
           }}
           handleBookmark={(data: { uuid: string; isBookmark: boolean }) => {
             bookMarkMsg(data);
-          }}
-        />
-      )}
-      {openMentionMembersModal && (
-        <ChatMentionMembersModal
-          editor={editor}
-          mentionMemberModalPosition={mentionMemberModalPosition}
-          mentionMemberOptions={mentionMemberOptions}
-          searchMentionMembers={searchMentionMembers}
-          mentionMembers={mentionMembers}
-          dashboardMembers={dashboardMembers}
-          setMentionMembers={setMentionMembers}
-          handleCheckboxClick={handleCheckboxClick}
-          setSearchMentionMembers={setSearchMentionMembers}
-          onClose={() => {
-            setOpenMentionMembersModal(false);
-            setSearchMentionMembers('');
           }}
         />
       )}
@@ -2560,12 +2528,10 @@ const ChatDetail = ({
           uploadFiles={uploadFiles}
           preserveFiles={preserveFiles}
           chatRoomDetail={chatRoomDetail}
-          setMentionMemberModalPosition={setMentionMemberModalPosition}
           setPreserveFiles={setPreserveFiles}
           setMessage={setMessage}
           setUploadFiles={setUploadFiles}
           handleFileChange={handleFileChange}
-          mentionMemberModalPosition={mentionMemberModalPosition}
           mentionMemberOptions={mentionMemberOptions}
           searchMentionMembers={searchMentionMembers}
           mentionMembers={mentionMembers}
@@ -2587,6 +2553,10 @@ const ChatDetail = ({
           onClose={() => {
             setOpenUploadFilesModal(false);
             setUploadFiles([]);
+            setPreserveFiles([]);
+            setMsgIdUpdated && setMsgIdUpdated(undefined);
+            setMentionMembers([]);
+            setMessage('')
           }}
         />
       )}
