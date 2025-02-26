@@ -33,7 +33,7 @@ from stat_data.serializers import DailyTaskSerializer, DailyEventSerializer
 from tasks.models import Task, TaskDuration
 from tasks.utils import split_date_range
 from users.models import User
-from users.serializers import DailyReportSerializer
+from users.serializers import DailyReportSerializer, BaseUserSerializer
 from roles.constants import Screens
 from base.permissions import ActionPermission
 
@@ -101,8 +101,10 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         prev_user = None
         next_user = None
+        organization = None
+        organization_id = request.query_params.get("organization_id")
         # Find previous and next user in organization by current user
-        if organization_id := request.query_params.get("organization_id"):
+        if organization_id:
             organization = Organization.objects.get(pk=organization_id)
             users = list(organization.users.all().order_by("created_at"))
             # Find the user's position in the list
@@ -385,6 +387,14 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         data["remark"] = DailyReportSerializer(
             user.daily_reports.filter(date=date).first()
         ).data
+        data["remark"].update(
+            {
+                "user": BaseUserSerializer(user).data,
+                "organization_name": organization.name
+                if organization
+                else None,
+            }
+        )
 
         return self.response_ok(data)
 
@@ -415,12 +425,17 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         datetime.combine(timezone.now().date(), time.min)
         end_of_day = datetime.combine(date, time.max)
 
-        for id in organization_ids_params.split(","):
-            try:
-                organization_ids.append(int(id))
-            except ValueError:
-                continue
-        data = []
+        if organization_ids_params is None:
+            organization_ids = request.user.organizations.all().values_list(
+                "id", flat=True
+            )
+        else:
+            for id in organization_ids_params.split(","):
+                try:
+                    organization_ids.append(int(id))
+                except ValueError:
+                    continue
+        data = {"list": []}
         if organization_ids:
             for organization_id in organization_ids:
                 organization = Organization.objects.get(id=organization_id)
@@ -490,7 +505,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         }
                     )
 
-                data.append(
+                data["list"].append(
                     {
                         "organization": {
                             "id": organization.id,
@@ -500,4 +515,4 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     }
                 )
 
-        return self.response_ok({"data": data})
+        return self.response_ok(data["list"])

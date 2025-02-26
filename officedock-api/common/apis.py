@@ -220,9 +220,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
         tags = request.user.company.tags.order_by("created_at").all()
         status = TaskStatus.objects.order_by("created_at").all()
-        organizations = request.user.company.organizations.order_by(
-            "created_at"
-        )
+        organizations = request.user.organizations.order_by("created_at")
         categories = StatisticCategory.objects.filter(
             company=request.user.company
         ).order_by("created_at")

@@ -305,6 +305,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             {
                 "id": obj.schedule_id,
                 "title": obj.schedule.title,
+                "is_all_day": obj.schedule.is_all_day,
             }
             if obj.schedule_id
             else None
