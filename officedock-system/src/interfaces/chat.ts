@@ -5,7 +5,13 @@ export interface ChatMessageResponse {
   uuid: string;
   message: string;
   isBookmark?: boolean;
-  chatRoomCode?: string;
+  chatRoom?: {
+    id: number,
+    name: string,
+    code: string,
+    type: string,
+    participants: ChatParticipant
+  }
   sender: {
     id: number;
     fullName: string;

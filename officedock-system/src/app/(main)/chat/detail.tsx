@@ -317,6 +317,9 @@ const ChatDetail = ({
 
           // Delete messageBookmarkId when go to from list bookmark
           if (messageBookmarkId) {
+            setHasMoreDetailOnScrollDown(true);
+            setLastGotoMessageId(variables.data.results[0].id);
+
             setGotoMessageId(parseInt(messageBookmarkId));
             params.delete('messageId');
 
@@ -1825,6 +1828,58 @@ const ChatDetail = ({
           : message,
       ),
     );
+  };
+
+  const handleResetChatRoomNotification = () => {
+    if (chatRoomNotifications && chatRoomNotifications?.notifications > 0) {
+      getChatRoomDetail({ code: chatRoomCode, isRead: true });
+    }
+    setTotalNotifications((prevTotalNotifications) => {
+      const chatRoomIndex = dataChatList.findIndex(
+        (room) => room.code == chatRoomCode,
+      );
+      if (
+        dataChatList &&
+        chatRoomIndex != -1 &&
+        dataChatList[chatRoomIndex] &&
+        dataChatList[chatRoomIndex].unreadMessages
+      ) {
+        return (
+          prevTotalNotifications - dataChatList[chatRoomIndex].unreadMessages
+        );
+      }
+      return prevTotalNotifications;
+    });
+    setDataChatList((prevDataChatList) => {
+      const newDataChatList = [...prevDataChatList];
+      const chatRoomIndex = newDataChatList.findIndex(
+        (room) => room.code == chatRoomCode,
+      );
+      if (
+        newDataChatList &&
+        chatRoomIndex != -1 &&
+        newDataChatList[chatRoomIndex] &&
+        newDataChatList[chatRoomIndex].unreadMessages
+      ) {
+        newDataChatList[chatRoomIndex].unreadMessages = 0;
+      }
+      return newDataChatList;
+    });
+    setFilteredChatList((prevFilterChatList) => {
+      const newFilterChatList = [...prevFilterChatList];
+      const chatRoomIndex = newFilterChatList.findIndex(
+        (room) => room.code == chatRoomCode,
+      );
+      if (
+        newFilterChatList &&
+        chatRoomIndex != -1 &&
+        newFilterChatList[chatRoomIndex] &&
+        newFilterChatList[chatRoomIndex].unreadMessages
+      ) {
+        newFilterChatList[chatRoomIndex].unreadMessages = 0;
+      }
+      return newFilterChatList;
+    });
     setChatRoomNotifications({
       notifications: 0,
       roomCode: chatRoomCode,
@@ -1836,65 +1891,7 @@ const ChatDetail = ({
       {chatRoomCode && (
         <div
           className="flex flex-col flex-grow w-[calc(100vw_-_600px)] !bg-[#F8FAFC] !h-[100vh]"
-          onClick={() => {
-            if (
-              chatRoomNotifications &&
-              chatRoomNotifications?.notifications > 0
-            ) {
-              getChatRoomDetail({ code: chatRoomCode, isRead: true });
-            }
-            setTotalNotifications((prevTotalNotifications) => {
-              const chatRoomIndex = dataChatList.findIndex(
-                (room) => room.code == chatRoomCode,
-              );
-              if (
-                dataChatList &&
-                chatRoomIndex != -1 &&
-                dataChatList[chatRoomIndex] &&
-                dataChatList[chatRoomIndex].unreadMessages
-              ) {
-                return (
-                  prevTotalNotifications -
-                  dataChatList[chatRoomIndex].unreadMessages
-                );
-              }
-              return prevTotalNotifications;
-            });
-            setDataChatList((prevDataChatList) => {
-              const newDataChatList = [...prevDataChatList];
-              const chatRoomIndex = newDataChatList.findIndex(
-                (room) => room.code == chatRoomCode,
-              );
-              if (
-                newDataChatList &&
-                chatRoomIndex != -1 &&
-                newDataChatList[chatRoomIndex] &&
-                newDataChatList[chatRoomIndex].unreadMessages
-              ) {
-                newDataChatList[chatRoomIndex].unreadMessages = 0;
-              }
-              return newDataChatList;
-            });
-            setFilteredChatList((prevFilterChatList) => {
-              const newFilterChatList = [...prevFilterChatList];
-              const chatRoomIndex = newFilterChatList.findIndex(
-                (room) => room.code == chatRoomCode,
-              );
-              if (
-                newFilterChatList &&
-                chatRoomIndex != -1 &&
-                newFilterChatList[chatRoomIndex] &&
-                newFilterChatList[chatRoomIndex].unreadMessages
-              ) {
-                newFilterChatList[chatRoomIndex].unreadMessages = 0;
-              }
-              return newFilterChatList;
-            });
-            setChatRoomNotifications({
-              notifications: 0,
-              roomCode: chatRoomCode,
-            });
-          }}>
+          onClick={handleResetChatRoomNotification}>
           <div
             className="flex justify-between items-center px-4 py-2 !w-full border-b-[2px] text-white"
             style={{
@@ -2110,6 +2107,7 @@ const ChatDetail = ({
                       }}
                       handleReactionClick={handleReactionClick}
                       handleRemoveReactionClick={handleRemoveReactionClick}
+                      handleResetChatRoomNotification={handleResetChatRoomNotification}
                     />
                   </div>
                 ))}
@@ -2166,6 +2164,7 @@ const ChatDetail = ({
                       }}
                       handleReactionClick={handleReactionClick}
                       handleRemoveReactionClick={handleRemoveReactionClick}
+                      handleResetChatRoomNotification={handleResetChatRoomNotification}
                     />
                   </div>
                 ))}
@@ -2375,11 +2374,14 @@ const ChatDetail = ({
             setSearchResultsPage(1);
             setSearchMessageResults(undefined);
           }}
-          onGotoMessage={(messageId) => {
+          onGotoMessage={(data: {
+            messageId: string | number;
+            chatRoomCode: string;
+          }) => {
             setOpenSearchMessagesModal(false);
-            setGotoMessageId(messageId);
+            setGotoMessageId(Number(data.messageId));
             gotoSelectedMessage({
-              bookmarkMessageId: messageId,
+              bookmarkMessageId: Number(data.messageId),
             });
           }}
           handleBookmark={(data: { uuid: string; isBookmark: boolean }) => {

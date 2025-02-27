@@ -15,7 +15,7 @@ const instance: AxiosInstance = axios.create({
 instance.interceptors.request.use(async (config) => {
   const session = await getSession();
 
-  if (session?.accessToken) {
+  if (session?.accessToken && new Date(session.expires) >= new Date()) {
     config.headers.Authorization = `Bearer ${session.accessToken}`;
   }
   return config;
