@@ -1,4 +1,9 @@
-import { ItemStartType, PermissionType, WorkItemType } from './enums';
+import {
+  ItemStartType,
+  PermissionType,
+  ReactionIconValue,
+  WorkItemType,
+} from './enums';
 
 // Define app name here for CSR
 export const APP_NAME_METADATA = 'Office Dock';
@@ -184,3 +189,58 @@ export const TASK_STARTING = 'タスク実行中';
 export const BOOKMARK_ROUTER_NAME = 'bookmark';
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024;
+
+export const REACTION_LIST = [
+  {
+    name: 'OK',
+    src: '/icons/ok-reaction.svg',
+    value: ReactionIconValue.OK,
+  },
+  {
+    name: 'LIKE',
+    src: '/icons/like-reaction.svg',
+    value: ReactionIconValue.LIKE,
+  },
+  {
+    name: 'THANK',
+    src: '/icons/thank-reaction.svg',
+    value: ReactionIconValue.THANK,
+  },
+  {
+    name: 'HAND',
+    src: '/icons/hand-reaction.svg',
+    value: ReactionIconValue.HAND,
+  },
+  {
+    name: 'SMILE',
+    src: '/icons/smile-reaction.svg',
+    value: ReactionIconValue.SMILE,
+  },
+];
+export const REACTION_LIST_SMALL = [
+  {
+    name: 'OK',
+    src: '/icons/reaction-small/ok-reaction.svg',
+    value: ReactionIconValue.OK,
+  },
+  {
+    name: 'LIKE',
+    src: '/icons/reaction-small/like-reaction.svg',
+    value: ReactionIconValue.LIKE,
+  },
+  {
+    name: 'THANK',
+    src: '/icons/reaction-small/thank-reaction.svg',
+    value: ReactionIconValue.THANK,
+  },
+  {
+    name: 'HAND',
+    src: '/icons/reaction-small/hand-reaction.svg',
+    value: ReactionIconValue.HAND,
+  },
+  {
+    name: 'SMILE',
+    src: '/icons/reaction-small/smile-reaction.svg',
+    value: ReactionIconValue.SMILE,
+  },
+];

@@ -1,17 +1,18 @@
 'use client';
 import { useSession } from 'next-auth/react';
 import Tippy from '@tippyjs/react';
+import { useMutation } from 'react-query';
+import { useEffect, useRef, useState } from 'react';
 import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 
 import { ChatRoomType, MessageType, PermissionsSystem } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
+import { REACTION_LIST } from '@constants';
 import { ChatMessageResponse, ChatRoomDetail } from '@interfaces/chat';
 import { hasPermissionInArray } from '@utils';
-import { useEffect, useState } from 'react';
 import api from '@base/api';
-import { apiRouters } from '@constants/routers';
-import { useMutation } from 'react-query';
 
 interface MessageHoverOptionsProps {
   messageDetail: ChatMessageResponse;
@@ -20,22 +21,42 @@ interface MessageHoverOptionsProps {
   handleOpenDeleteMsgModal: (id: string) => void;
   setDataMessageDetail: ({
     uuid,
-    isBookMark,
+    isBookmark,
   }: {
     uuid: string;
-    isBookMark: boolean;
+    isBookmark: boolean;
   }) => void;
+  handleReactionClick: (icon: string) => void;
+  handleRemoveReactionClick: (icon: string) => void;
 }
 
 export const MessageHoverOptions = ({
   messageDetail,
   chatRoomDetail,
+  handleReactionClick,
+  handleRemoveReactionClick,
   handleOpenEditForm,
   handleOpenDeleteMsgModal,
 }: MessageHoverOptionsProps) => {
+  const optionRef = useRef<HTMLDivElement | null>(null);
   const { data: session } = useSession();
+  const [isShowReaction, setShowReaction] = useState(false);
 
   const [isBookmark, setIsBookmark] = useState(messageDetail.isBookmark);
+
+  const [dataReactionMsg, setDataReactionMsg] = useState<
+    {
+      icon: string;
+      users: number[];
+    }[]
+  >([]);
+
+  useEffect(() => {
+    if (messageDetail && messageDetail.reactions) {
+      setDataReactionMsg(messageDetail.reactions);
+    }
+  }, [messageDetail]);
+
   useEffect(() => {
     if (messageDetail) {
       setIsBookmark(messageDetail.isBookmark);
@@ -65,30 +86,129 @@ export const MessageHoverOptions = ({
     },
   );
 
+  // Handle reaction icon
+  const handleReactionIcon = async (icon: string) => {
+    const { data: response } = await api.post(
+      apiRouters.REACTION_MESSAGE(`${messageDetail.uuid}`),
+      {
+        icon,
+      },
+    );
+    return response;
+  };
+
+  const { mutate: reactionIcon } = useMutation(
+    'reactionIconMsg',
+    handleReactionIcon,
+    {
+      onSuccess: async () => {},
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
+  // Handle reaction icon
+  const handleMoveReactionIcon = async (icon: string) => {
+    const { data: response } = await api.post(
+      apiRouters.REACTION_MESSAGE(`${messageDetail.uuid}`),
+      {
+        icon,
+      },
+    );
+    return response;
+  };
+
+  const { mutate: moveReactionIcon } = useMutation(
+    'moveReactionIcon',
+    handleMoveReactionIcon,
+    {
+      onSuccess: async () => {},
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (optionRef.current && !optionRef.current.contains(event.target)) {
+        setShowReaction(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div
-      className={`bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
-      <Tippy
-        content={'返信'}
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 5]}>
-        <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
-          <ImageRound
-            name="Reply"
-            src={'/icons/reply.svg'}
-            className="w-[17px] h-[15px] hover:cursor-pointer"
-          />
-        </div>
-      </Tippy>
+      ref={optionRef}
+      className={`bg-white ${isShowReaction ? '!flex' : ''}   group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-[70%] transform -translate-x-1/2 items-center gap-2`}>
+      <div className="relative">
+        <Tippy
+          content={'返信'}
+          arrow={false}
+          delay={1000}
+          placement="top"
+          offset={[0, 5]}>
+          <div className="bg-[#f0f1f1] relative  hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+            <ImageRound
+              name="Reply"
+              src={'/icons/reply.svg'}
+              className="w-[17px] h-[15px] hover:cursor-pointer"
+            />
+          </div>
+        </Tippy>
+        {isShowReaction && (
+          <div
+            style={{
+              boxShadow: '0px 4px 8px 0px #0000000F',
+            }}
+            className="w-[190px] h-[44px] absolute rounded-lg top-[-54px] bg-white flex items-center gap-1 justify-center left-[-24px]">
+            {REACTION_LIST.map((icon) => {
+              // Check Icon
+              const exists =
+                dataReactionMsg &&
+                dataReactionMsg.some((item) => item.icon === `${icon.value}`);
+              return (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+
+                    if (exists) {
+                      handleRemoveReactionClick(`${icon.value}`);
+                      moveReactionIcon(`${icon.value}`);
+                    } else {
+                      handleReactionClick(`${icon.value}`);
+                      reactionIcon(`${icon.value}`);
+                    }
+                  }}
+                  key={icon.name}
+                  className={`p-[6px] rounded-full ${exists && 'bg-gray-200'}`}>
+                  <ImageRound
+                    name={icon.name}
+                    src={icon.src}
+                    className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
       <Tippy
         content={'リアクション'}
         arrow={false}
         delay={1000}
         placement="top"
         offset={[0, 5]}>
-        <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowReaction(!isShowReaction);
+          }}
+          className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
           <ImageRound
             name="Reaction"
             src={'/icons/reaction.svg'}
@@ -118,7 +238,8 @@ export const MessageHoverOptions = ({
         placement="top"
         offset={[0, 5]}>
         <div
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             bookMarkMsg();
           }}
           className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[8px] py-[7px] hover:cursor-pointer">

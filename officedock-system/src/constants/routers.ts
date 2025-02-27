@@ -367,6 +367,9 @@ export const apiRouters = {
   BOOKMARK_LIST: '/messages/',
   BOOKMARK_MESSAGE: (uuid: string) => `/messages/${uuid}/bookmark/`,
 
+  // REACTION
+  REACTION_MESSAGE: (uuid: string) => `/messages/${uuid}/reaction/`,
+
   // SCHEDULE
   SCHEDULES: '/schedules/',
   SCHEDULE_DETAIL: (id: string) => `/schedules/${id}/`,
