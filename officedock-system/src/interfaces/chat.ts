@@ -61,6 +61,10 @@ export interface ChatMessageResponse {
   deletedAt: Date | null;
   type: MessageType;
   mentions?: number[];
+  reactions?: {
+    icon: string;
+    users: number[];
+  }[];
 }
 
 export interface TaskUserListChat {
@@ -68,13 +72,13 @@ export interface TaskUserListChat {
   title: string;
 }
 export interface ChatFileResponse {
-  compressedFile?: string,
+  compressedFile?: string;
   createdAt?: Date | string;
   id?: number;
   fileType: string;
-  fileSize: number
+  fileSize: number;
   fileName: string;
-  uuid: string
+  uuid: string;
 }
 
 export interface ChatDashboardMember {

@@ -619,11 +619,12 @@ const ChatDetail = ({
           updatedDataMessageDetail[updatedMessageItemIndex] = {
             ...updatedDataMessageDetail[updatedMessageItemIndex],
             isEdited: true,
+            reactions: data.chatMessage.reactions,
             chatFiles: chatFileList,
             message: trimUnnecessaryLineBreaks(
               `${data.chatMessage.message}`,
             ) as string,
-            mentions: data.chatMessage.mentions
+            mentions: data.chatMessage.mentions,
           };
           return updatedDataMessageDetail;
         }
@@ -1627,7 +1628,7 @@ const ChatDetail = ({
   const handleUpdateBookmark = (dataUuid: string, dataIsBookmark: boolean) => {
     setDataMessageDetail((prevMessages) =>
       prevMessages.map((item) =>
-        item.uuid === dataUuid ? { ...item, isBookMark: dataIsBookmark } : item,
+        item.uuid === dataUuid ? { ...item, isBookmark: dataIsBookmark } : item,
       ),
     );
   };
@@ -1656,7 +1657,7 @@ const ChatDetail = ({
                 ...prev,
                 results: prev.results.map((item) =>
                   item.uuid === bookmark.uuid
-                    ? { ...item, isBookMark: bookmark.isBookmark }
+                    ? { ...item, isBookmark: bookmark.isBookmark }
                     : item,
                 ),
               }
@@ -1766,6 +1767,69 @@ const ChatDetail = ({
       window.removeEventListener('drop', handleDropOutside);
     };
   }, [uploadFiles]);
+
+  const handleReactionClick = (msgUuid: string, icon: string) => {
+    setDataMessageDetail((prev) =>
+      prev.map((message) =>
+        message.uuid === msgUuid
+          ? {
+              ...message,
+              reactions: message.reactions?.some(
+                (reaction) => reaction.icon === icon,
+              )
+                ? message.reactions.map((reaction) =>
+                    reaction.icon === icon
+                      ? {
+                          ...reaction,
+                          users: reaction.users.includes(
+                            session?.user.id as number,
+                          )
+                            ? reaction.users
+                            : [...reaction.users, session?.user.id as number],
+                        }
+                      : reaction,
+                  )
+                : [
+                    ...(message.reactions || []),
+                    { icon, users: [session?.user.id as number] },
+                  ],
+            }
+          : message,
+      ),
+    );
+    setChatRoomNotifications({
+      notifications: 0,
+      roomCode: chatRoomCode,
+    });
+  };
+
+  const handleRemoveReactionClick = (msgUuid: string, icon: string) => {
+    setDataMessageDetail((prev) =>
+      prev.map((message) =>
+        message.uuid === msgUuid
+          ? {
+              ...message,
+              reactions: message.reactions
+                ?.map((reaction) =>
+                  reaction.icon === icon
+                    ? {
+                        ...reaction,
+                        users: reaction.users.filter(
+                          (id) => id !== (session?.user.id as number),
+                        ),
+                      }
+                    : reaction,
+                )
+                .filter((reaction) => reaction.users.length > 0),
+            }
+          : message,
+      ),
+    );
+    setChatRoomNotifications({
+      notifications: 0,
+      roomCode: chatRoomCode,
+    });
+  };
 
   return (
     <Fragment>
@@ -2037,13 +2101,15 @@ const ChatDetail = ({
                       }
                       setDataMessageDetail={({
                         uuid,
-                        isBookMark,
+                        isBookmark,
                       }: {
                         uuid: string;
-                        isBookMark: boolean;
+                        isBookmark: boolean;
                       }) => {
-                        handleUpdateBookmark(uuid, isBookMark);
+                        handleUpdateBookmark(uuid, isBookmark);
                       }}
+                      handleReactionClick={handleReactionClick}
+                      handleRemoveReactionClick={handleRemoveReactionClick}
                     />
                   </div>
                 ))}
@@ -2091,13 +2157,15 @@ const ChatDetail = ({
                       }
                       setDataMessageDetail={({
                         uuid,
-                        isBookMark,
+                        isBookmark,
                       }: {
                         uuid: string;
-                        isBookMark: boolean;
+                        isBookmark: boolean;
                       }) => {
-                        handleUpdateBookmark(uuid, isBookMark);
+                        handleUpdateBookmark(uuid, isBookmark);
                       }}
+                      handleReactionClick={handleReactionClick}
+                      handleRemoveReactionClick={handleRemoveReactionClick}
                     />
                   </div>
                 ))}
@@ -2556,7 +2624,7 @@ const ChatDetail = ({
             setPreserveFiles([]);
             setMsgIdUpdated && setMsgIdUpdated(undefined);
             setMentionMembers([]);
-            setMessage('')
+            setMessage('');
           }}
         />
       )}

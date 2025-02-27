@@ -383,3 +383,11 @@ export enum FilterTypeKanban {
   DEADLINE = '-deadline',
   IMPORTANT = '-is_important',
 }
+
+export enum ReactionIconValue {
+  OK = 1,
+  LIKE = 2,
+  THANK = 3,
+  HAND = 4,
+  SMILE = 5,
+}
