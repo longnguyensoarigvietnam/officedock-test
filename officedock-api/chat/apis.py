@@ -758,18 +758,19 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     )
                 participant.hidden_at = None
                 participant.save()
-                # Handle case realtime when send chat message
-                send_web_socket_event(
-                    {
-                        "client_id": client_id,
-                        "action": WebSocketEventType.MESSAGE.value,
-                        "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                            participant
-                        ).data,
-                        "chat_message": ChatMessageSerializer(message).data,
-                    },
-                    participant,
-                )
+                if participant.user_id != user.id:
+                    # Handle case realtime when send chat message
+                    send_web_socket_event(
+                        {
+                            "client_id": client_id,
+                            "action": WebSocketEventType.MESSAGE.value,
+                            "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                                participant
+                            ).data,
+                            "chat_message": ChatMessageSerializer(message).data,
+                        },
+                        participant,
+                    )
 
             return self.response_created(ChatMessageSerializer(message).data)
 
@@ -903,6 +904,7 @@ class ChatMessageViewSet(
         url_path="reaction",
         serializer_class=ReactionSerializer,
     )
+    @transaction.atomic()
     def reaction(self, request, uuid=None):
         """
         Bookmark message
@@ -912,9 +914,26 @@ class ChatMessageViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
-        instance.reactions.create(
-            company=user.company, user=user, icon=serializer_data.pop("icon")
-        )
+        icon = serializer_data.pop("icon")
+        if instance.reactions.filter(user=user, icon=icon).exists():
+            instance.reactions.filter(user=user, icon=icon).delete()
+        else:
+            instance.reactions.create(
+                company=user.company, user=user, icon=icon
+            )
+        participants = instance.chat_room.chat_rooms_participants.all()
+        for participant in participants:
+            if participant.user.id != user.id:
+                send_web_socket_event(
+                    {
+                        "action": WebSocketEventType.EDIT_MESSAGE.value,
+                        "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                            participant
+                        ).data,
+                        "chat_message": ChatMessageSerializer(instance).data,
+                    },
+                    participant.user,
+                )
 
         return self.response_ok()
 
