@@ -1,15 +1,21 @@
 /** @type {import('next').NextConfig} */
 
-const backendUrl = process.env.NEXT_PUBLIC_API_URL;
-
-const backendHost = new URL(backendUrl).hostname;
 
 const nextConfig = {
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
-  images: {
-    domains: [backendHost],
+  async rewrites() {
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: `${process.env.API_INTERNAL_URL}/api/v1/:path*/`,
+      },
+      {
+        source: '/media/:path*',
+        destination: `${process.env.API_INTERNAL_URL}/media/:path*/`,
+      }
+    ]
   },
 };
 
