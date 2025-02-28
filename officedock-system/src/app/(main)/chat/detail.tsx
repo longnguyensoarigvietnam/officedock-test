@@ -22,6 +22,8 @@ import { EditorContent, useEditor, Editor } from '@tiptap/react';
 import { Placeholder } from '@tiptap/extension-placeholder';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
+import StarterKit from '@tiptap/starter-kit';
+
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -46,6 +48,7 @@ import ErrorChatUploadFileValidationModal from '@components/modals/ErrorChatUplo
 import { MessageDetail } from '@components/chat/MessageDetail';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import ListTaskUserChat from '@components/chat/ListTaskUserChat';
+import { CustomReaction } from '@components/chat/CustomIcon';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -55,6 +58,7 @@ import {
   MENTION_ALL_MEMBERS,
   NO_OPTION_CATEGORY,
   PAGINATION_PAGE_SIZE_HIGHT,
+  REACTION_LIST,
 } from '@constants';
 import {
   SocketActions,
@@ -66,6 +70,7 @@ import {
   ActionsEvent,
   EventWorkCategory,
   PermissionsSystem,
+  ReactionIconValue,
 } from '@constants/enums';
 import {
   ERROR_CREATE_MESSAGE,
@@ -154,6 +159,8 @@ const ChatDetail = ({
 
   const messageBookmarkId = searchParams.get('messageId');
 
+  const optionIconRef = useRef<HTMLDivElement | null>(null);
+
   const router = useRouter();
   const showErrorToast = useErrorToast();
 
@@ -213,6 +220,9 @@ const ChatDetail = ({
     useState(false);
   const [gotoMessageId, setGotoMessageId] = useState<number | null>();
   const gotoMessageRef = useRef<HTMLDivElement | null>(null);
+
+  // Icon
+  const [isShowListIcon, setIsShowListIcon] = useState(false);
 
   // Upload files
   const [openUploadFilesModal, setOpenUploadFilesModal] =
@@ -1405,6 +1415,8 @@ const ChatDetail = ({
       Text,
       TextStyle,
       Color,
+      CustomReaction,
+      StarterKit,
       Mention.configure({
         HTMLAttributes: {
           class: 'mention text-[#0068B6]',
@@ -1890,7 +1902,40 @@ const ChatDetail = ({
       roomCode: chatRoomCode,
     });
   };
+  // Function to insert reaction into editor
+  const insertReaction = (reaction: {
+    name: string;
+    src: string;
+    value: ReactionIconValue;
+  }) => {
+    editor
+      ?.chain()
+      .focus()
+      .insertContent({
+        type: 'customReaction',
+        attrs: {
+          src: reaction.src,
+          name: reaction.name,
+        },
+      })
+      .run();
+  };
 
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (
+        optionIconRef.current &&
+        !optionIconRef.current.contains(event.target)
+      ) {
+        setIsShowListIcon(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   return (
     <Fragment>
       {chatRoomCode && (
@@ -2241,20 +2286,47 @@ const ChatDetail = ({
                               />
                             </div>
                           </Tippy>
-                          <Tippy
-                            content={'リアクション'}
-                            arrow={false}
-                            delay={1000}
-                            placement="top"
-                            offset={[0, 8]}>
-                            <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Smile"
-                                src="/icons/smile.svg"
-                                className="w-[16px] h-[16px]"
-                              />
-                            </div>
-                          </Tippy>
+                          <div
+                            onClick={() => setIsShowListIcon(!isShowListIcon)}
+                            className="relative">
+                            <Tippy
+                              content={'リアクション'}
+                              arrow={false}
+                              delay={1000}
+                              placement="top"
+                              offset={[0, 8]}>
+                              <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                                <ImageRound
+                                  name="Smile"
+                                  src="/icons/smile.svg"
+                                  className="w-[16px] h-[16px]"
+                                />
+                              </div>
+                            </Tippy>
+                            {isShowListIcon && (
+                              <div
+                                style={{
+                                  boxShadow: '0px 4px 8px 0px #0000000F',
+                                }}
+                                ref={optionIconRef}
+                                className="w-[190px] h-[44px] absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white rounded-lg top-[-54px] bg-white flex items-center gap-3 justify-center left-[-81px]">
+                                {REACTION_LIST.map((icon) => {
+                                  return (
+                                    <div
+                                      onClick={() => insertReaction(icon)}
+                                      key={icon.name}
+                                      className={` rounded-ful`}>
+                                      <ImageRound
+                                        name={icon.name}
+                                        src={icon.src}
+                                        className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                                      />
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
 
                           {session?.user.permissions &&
                             hasPermissionInArray(

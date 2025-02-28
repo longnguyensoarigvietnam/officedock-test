@@ -202,20 +202,50 @@ export const MessageDetail = ({
     );
   };
 
+  // Convert icon to image content
+  const parseReactionsToImages = (message: string): string => {
+    const div = document.createElement('div');
+    div.innerHTML = message;
+
+    div.querySelectorAll('span[data-custom-reaction]').forEach((span) => {
+      const src = span.getAttribute('src');
+      const name = span.getAttribute('name');
+
+      if (src) {
+        const img = document.createElement('img');
+        img.setAttribute('src', src);
+        img.setAttribute('alt', name || 'reaction');
+        img.setAttribute('title', name || 'reaction');
+
+        img.style.width = '20px';
+        img.style.height = '20px';
+        img.style.display = 'inline-block';
+        img.style.verticalAlign = 'text-bottom';
+
+        img.style.margin = '0 4px';
+
+        span.replaceWith(img);
+      }
+    });
+
+    return div.innerHTML;
+  };
+
   const highlightMentions = (message: string, mentions: number[]) => {
-    if (!mentions || mentions.length === 0) return message;
+    if (!mentions || mentions.length === 0)
+      return parseReactionsToImages(message);
 
     let processedHtml = '';
     let i = 0;
 
     while (i < message.length) {
-      if (message[i] == '@') {
+      if (message[i] === '@') {
         let j = i + 1;
         while (j < message.length && MENTION_NAME_REGEX.test(message[j])) j++;
 
         const mentionName = message.substring(i + 1, j).trim();
         if (
-          mentionName == MENTION_ALL_MEMBERS &&
+          mentionName === MENTION_ALL_MEMBERS &&
           chatRoomDetail?.participants.every((participant) =>
             [...mentions, Number(session?.user.id)].includes(
               Number(participant.id),
@@ -244,7 +274,7 @@ export const MessageDetail = ({
       i++;
     }
 
-    return processedHtml;
+    return parseReactionsToImages(processedHtml);
   };
 
   const renderSubmitLevelMessage = (

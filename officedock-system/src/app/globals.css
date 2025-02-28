@@ -223,22 +223,22 @@ html *::-webkit-scrollbar-track {
   }
 }
 
-.ProseMirror{
+.ProseMirror {
   height: 150px;
-  border: 1px solid #77858F !important;
+  border: 1px solid #77858f !important;
   border-radius: 6px !important;
-  padding: 14px
+  padding: 14px;
 }
 
-.ProseMirror-focused{
+.ProseMirror-focused {
   outline: none !important;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
-  color: #77858F !important;
+  color: #77858f !important;
   content: attr(data-placeholder);
   float: left;
   pointer-events: none;
-  height: 0; 
+  height: 0;
   font-size: 14px !important;
 }
