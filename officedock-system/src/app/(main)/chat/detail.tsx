@@ -20,6 +20,8 @@ import { Paragraph } from '@tiptap/extension-paragraph';
 import { Text } from '@tiptap/extension-text';
 import { EditorContent, useEditor, Editor } from '@tiptap/react';
 import { Placeholder } from '@tiptap/extension-placeholder';
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -1401,6 +1403,8 @@ const ChatDetail = ({
       Document,
       Paragraph,
       Text,
+      TextStyle,
+      Color,
       Mention.configure({
         HTMLAttributes: {
           class: 'mention text-[#0068B6]',
@@ -1675,15 +1679,16 @@ const ChatDetail = ({
   const handleQuoteTaskUser = (data: { id: number; title: string }[]) => {
     if (!editor) return;
 
-    const generateTaskMessages = (
-      selectedItems: { id: number; title: string }[],
-    ) => {
-      return selectedItems.map((item) => `[タスク] ${item.title}`).join('\n');
-    };
-    const taskMessages = generateTaskMessages(data);
+    const content = data
+      .map(
+        (item) =>
+          `<p><span class="quote-task-${item.id}"  style="color: #77858F;">[タスク]</span> <span style="color: #0068B7;">${item.title}</span></p>`,
+      )
+      .join('');
 
-    editor.chain().focus().insertContent(taskMessages).run();
+    editor.chain().focus().insertContent(content).run();
   };
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -2107,7 +2112,9 @@ const ChatDetail = ({
                       }}
                       handleReactionClick={handleReactionClick}
                       handleRemoveReactionClick={handleRemoveReactionClick}
-                      handleResetChatRoomNotification={handleResetChatRoomNotification}
+                      handleResetChatRoomNotification={
+                        handleResetChatRoomNotification
+                      }
                     />
                   </div>
                 ))}
@@ -2164,7 +2171,9 @@ const ChatDetail = ({
                       }}
                       handleReactionClick={handleReactionClick}
                       handleRemoveReactionClick={handleRemoveReactionClick}
-                      handleResetChatRoomNotification={handleResetChatRoomNotification}
+                      handleResetChatRoomNotification={
+                        handleResetChatRoomNotification
+                      }
                     />
                   </div>
                 ))}
