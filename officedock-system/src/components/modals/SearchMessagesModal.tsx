@@ -256,7 +256,7 @@ export const SearchMessagesModal = ({
                         setSearchResultsPage(1);
                         onGotoMessage({
                           messageId: Number(messageDetail.id),
-                          chatRoomCode: String(messageDetail.chatRoomCode),
+                          chatRoomCode: String(messageDetail.chatRoom?.code),
                         });
                       }}>
                       <ImageRound
