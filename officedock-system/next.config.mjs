@@ -9,7 +9,20 @@ const nextConfig = {
     missingSuspenseWithCSRBailout: false,
   },
   images: {
-    domains: [backendHost],
+    remotePatterns: [
+      {
+          protocol: 'https',
+          hostname: backendHost,
+          port: '',
+          pathname: '/**',
+      },
+      {
+          protocol: 'https',
+          hostname: 'storage.googleapis.com',
+          port: '',
+          pathname: '/**',
+      },
+  ],
   },
 };
 

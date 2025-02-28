@@ -45,7 +45,7 @@ interface SearchMessagesModalProps {
     >,
   ) => void;
   onSubmit: (searchChatMsg: string, page: number) => void;
-  onGotoMessage: (messageId: any) => void;
+  onGotoMessage: (data: { messageId: string | number; chatRoomCode: string }) => void;
   onClose: () => void;
   handleBookmark: (data: { uuid: string; isBookmark: boolean }) => void;
 }
@@ -254,7 +254,10 @@ export const SearchMessagesModal = ({
                       onClick={() => {
                         setSearchMessageResults(undefined);
                         setSearchResultsPage(1);
-                        onGotoMessage(messageDetail.id);
+                        onGotoMessage({
+                          messageId: Number(messageDetail.id),
+                          chatRoomCode: String(messageDetail.chatRoomCode),
+                        });
                       }}>
                       <ImageRound
                         name="Go to message"

@@ -100,6 +100,7 @@ export type MessageDetailProps = {
 
   handleReactionClick: (msgUuid: string, icon: string) => void;
   handleRemoveReactionClick: (msgUuid: string, icon: string) => void;
+  handleResetChatRoomNotification: () => void
 };
 
 export const MessageDetail = ({
@@ -120,6 +121,7 @@ export const MessageDetail = ({
   handleConfirmGetDataDetailEvent,
   handleReactionClick,
   handleRemoveReactionClick,
+  handleResetChatRoomNotification
 }: MessageDetailProps) => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -280,12 +282,14 @@ export const MessageDetail = ({
   const handleReactionClickDetail = (icon: string) => {
     if (dataMsgDetail) {
       handleReactionClick(dataMsgDetail?.uuid, icon);
+      handleResetChatRoomNotification()
     }
   };
 
   const handleRemoveReactionClickDetail = (icon: string) => {
     if (dataMsgDetail) {
       handleRemoveReactionClick(dataMsgDetail?.uuid, icon);
+      handleResetChatRoomNotification()
     }
   };
 
@@ -301,9 +305,9 @@ export const MessageDetail = ({
               {renderAvatar(dataMsgDetail.sender.id)}
               <div className={`ml-3 !w-full`}>
                 <div className="flex justify-between items-center">
-                  <div className="flex gap-2 font-semibold text-sm pb-2">
+                  <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
                     <p>{dataMsgDetail.sender.fullName} </p>
-                    <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
+                    <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
                       {dataMsgDetail.sender?.organizations?.name}
                     </p>
                   </div>
@@ -907,9 +911,9 @@ export const MessageDetail = ({
                   {messageDetail.type !== MessageType.MESSAGE ? (
                     <p className="font-semibold text-sm pb-2">タスクカード</p>
                   ) : (
-                    <div className="flex gap-2 font-semibold text-sm pb-2">
+                    <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
                       <p>{messageDetail.sender.fullName} </p>
-                      <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
+                      <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
                       </p>
                     </div>
@@ -1042,9 +1046,9 @@ export const MessageDetail = ({
               </div>
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">
-                  <div className="flex gap-2 items-center font-semibold text-sm pb-2">
+                  <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
                     <p>{messageDetail.sender.fullName} </p>
-                    <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
+                    <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
                       {messageDetail.sender?.organizations?.name}
                     </p>
                   </div>
@@ -1167,9 +1171,9 @@ export const MessageDetail = ({
               <div>{renderAvatar(messageDetail.sender.id)}</div>
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">
-                  <div className="flex gap-2 font-semibold text-sm pb-2">
+                  <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
                     <p>{messageDetail.sender.fullName}</p>
-                    <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
+                    <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
                       {messageDetail.sender?.organizations?.name}
                     </p>
                   </div>
