@@ -364,7 +364,11 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
                     > task_schedules[i + 1]["plan_start_date"]
                 ):
                     raise serializers.ValidationError(
-                        {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+                        {
+                            "task_schedules": ERROR_MESSAGES[
+                                "exists_task_schedule"
+                            ]
+                        }
                     )
             for task_schedule in task_schedules:
                 plan_start_date = task_schedule["plan_start_date"]
@@ -397,7 +401,11 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
 
                 if check_exists_schedule.exists():
                     raise serializers.ValidationError(
-                        {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+                        {
+                            "task_schedules": ERROR_MESSAGES[
+                                "exists_task_schedule"
+                            ]
+                        }
                     )
 
         return attrs
