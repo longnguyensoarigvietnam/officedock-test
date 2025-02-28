@@ -345,7 +345,7 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
     Chat message bookmark serializer
     """
 
-    chat_room_code = serializers.SerializerMethodField()
+    chat_room = ChatRoomSerializer(read_only=True)
     bookmark_at = serializers.SerializerMethodField()
 
     class Meta:
@@ -353,7 +353,7 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
         fields = [
             "id",
             "uuid",
-            "chat_room_code",
+            "chat_room",
             "message",
             "sender",
             "is_edited",
@@ -361,11 +361,17 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
             "deleted_at",
             "bookmark_at",
             "type",
+            "task",
+            "submit_level",
+            "schedule_changes",
+            "schedule",
+            "mentions",
+            "tasks",
+            "quote",
+            "reply",
+            "reactions",
+            "chat_files",
         ]
-
-    def get_chat_room_code(self, obj):
-        """Get chat room code"""
-        return obj.chat_room.code
 
     def get_bookmark_at(self, obj):
         """Get bookmark_at"""
