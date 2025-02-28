@@ -542,8 +542,12 @@ class TaskViewSet(
                 "countdown": remind_countdown,
             }
 
-        if (current_task.deadline != serializer_data.get("deadline")) or (
-            current_task.is_important != serializer_data.get("is_important")
+        if (
+            (current_task.status.name != TaskStatus.MY_ROUTINE.value)
+            and (current_task.deadline != serializer_data.get("deadline"))
+            or (
+                current_task.is_important != serializer_data.get("is_important")
+            )
         ):
             reset_sort_task(user)
 
