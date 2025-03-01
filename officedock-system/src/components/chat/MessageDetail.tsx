@@ -70,6 +70,7 @@ export type MessageDetailProps = {
   msgEditing?: string;
   dashboardMembers: ChatDashboardMember[];
   editor: Editor | null;
+  highlightedMessageId: string | null;
   setPreserveFiles: Dispatch<
     SetStateAction<
       {
@@ -97,14 +98,7 @@ export type MessageDetailProps = {
   setMsgEditing?: Dispatch<SetStateAction<string | undefined>>;
   handleConfirmUpdateMsg: (uuid: string) => void;
   handleConfirmGetDataDetailEvent: (id: string) => void;
-  setDataMessageDetail: ({
-    uuid,
-    isBookmark,
-  }: {
-    uuid: string;
-    isBookmark: boolean;
-  }) => void;
-
+  handleUpdateBookmark: (dataUuid: string) => void;
   handleReactionClick: (msgUuid: string, icon: string) => void;
   handleRemoveReactionClick: (msgUuid: string, icon: string) => void;
   handleResetChatRoomNotification: () => void;
@@ -118,6 +112,7 @@ export const MessageDetail = ({
   dashboardMembers,
   editor,
   chatContainerRef,
+  highlightedMessageId,
   setPreserveFiles,
   setOpenUploadFilesModal,
   setUploadFiles,
@@ -126,7 +121,7 @@ export const MessageDetail = ({
   setMsgIdUpdated,
   setOpenConfirmDeleteModal,
   setMsgIdDeleted,
-  setDataMessageDetail,
+  handleUpdateBookmark,
   handleConfirmGetDataDetailEvent,
   handleReactionClick,
   handleRemoveReactionClick,
@@ -340,7 +335,7 @@ export const MessageDetail = ({
             chatRoomDetail?.type === ChatRoomType.GROUP ||
             chatRoomDetail?.type === ChatRoomType.SELF) && (
             <div
-              className={`flex !box-border group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} py-1 ml-5 mr-3 group-hover:rounded-md`}>
               {renderAvatar(dataMsgDetail.sender.id)}
               <div className={`ml-3 !w-full`}>
                 <div className="flex justify-between items-center">
@@ -349,6 +344,13 @@ export const MessageDetail = ({
                     <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
                       {dataMsgDetail.sender?.organizations?.name}
                     </p>
+                    {dataMsgDetail.isBookmark && (
+                      <ImageRound
+                        name="Save"
+                        src="/icons/save-active.svg"
+                        className="w-[12px] h-[14px] hover:cursor-pointer"
+                      />
+                    )}
                   </div>
                   <div className={`flex items-start`}>
                     <p className="font-medium text-xs text-[#77858F] min-w-[80px]">
@@ -911,7 +913,7 @@ export const MessageDetail = ({
                             chatRoomDetail={chatRoomDetail}
                             handleOpenEditForm={handleOpenEditForm}
                             handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                            setDataMessageDetail={setDataMessageDetail}
+                            handleUpdateBookmark={handleUpdateBookmark}
                             handleReactionClick={handleReactionClickDetail}
                             handleRemoveReactionClick={
                               handleRemoveReactionClickDetail
@@ -922,14 +924,18 @@ export const MessageDetail = ({
                   </div>
                 </div>
                 {/* Data reaction */}
-                <div>
-                  <DetailReactionChat
-                    dataMsgDetail={dataMsgDetail}
-                    handleReactionClick={handleReactionClickDetail}
-                    handleRemoveReactionClick={handleRemoveReactionClickDetail}
-                    chatContainerRef={chatContainerRef}
-                  />
-                </div>
+                {!messageDetail.deletedAt && (
+                  <div>
+                    <DetailReactionChat
+                      dataMsgDetail={dataMsgDetail}
+                      handleReactionClick={handleReactionClickDetail}
+                      handleRemoveReactionClick={
+                        handleRemoveReactionClickDetail
+                      }
+                      chatContainerRef={chatContainerRef}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -956,6 +962,13 @@ export const MessageDetail = ({
                       <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
                       </p>
+                      {messageDetail.isBookmark && (
+                        <ImageRound
+                          name="Save"
+                          src="/icons/save-active.svg"
+                          className="w-[12px] h-[14px] hover:cursor-pointer"
+                        />
+                      )}
                     </div>
                   )}
                   <div className={`flex items-start`}>
@@ -1053,7 +1066,7 @@ export const MessageDetail = ({
                           chatRoomDetail={chatRoomDetail}
                           handleOpenEditForm={handleOpenEditForm}
                           handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                          setDataMessageDetail={setDataMessageDetail}
+                          handleUpdateBookmark={handleUpdateBookmark}
                           handleReactionClick={handleReactionClickDetail}
                           handleRemoveReactionClick={
                             handleRemoveReactionClickDetail
@@ -1064,14 +1077,18 @@ export const MessageDetail = ({
                   </div>
                 </div>
                 {/* Data reaction */}
-                <div>
-                  <DetailReactionChat
-                    dataMsgDetail={dataMsgDetail}
-                    handleReactionClick={handleReactionClickDetail}
-                    handleRemoveReactionClick={handleRemoveReactionClickDetail}
-                    chatContainerRef={chatContainerRef}
-                  />
-                </div>
+                {!messageDetail.deletedAt && (
+                  <div>
+                    <DetailReactionChat
+                      dataMsgDetail={dataMsgDetail}
+                      handleReactionClick={handleReactionClickDetail}
+                      handleRemoveReactionClick={
+                        handleRemoveReactionClickDetail
+                      }
+                      chatContainerRef={chatContainerRef}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1092,6 +1109,13 @@ export const MessageDetail = ({
                     <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
                       {messageDetail.sender?.organizations?.name}
                     </p>
+                    {messageDetail.isBookmark && (
+                      <ImageRound
+                        name="Save"
+                        src="/icons/save-active.svg"
+                        className="w-[12px] h-[14px] hover:cursor-pointer"
+                      />
+                    )}
                   </div>
                   <div className={`flex items-start`}>
                     <p className="font-medium text-xs text-[#77858F]">
@@ -1185,7 +1209,7 @@ export const MessageDetail = ({
                           chatRoomDetail={chatRoomDetail}
                           handleOpenEditForm={handleOpenEditForm}
                           handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                          setDataMessageDetail={setDataMessageDetail}
+                          handleUpdateBookmark={handleUpdateBookmark}
                           handleReactionClick={handleReactionClickDetail}
                           handleRemoveReactionClick={
                             handleRemoveReactionClickDetail
@@ -1196,14 +1220,19 @@ export const MessageDetail = ({
                   </div>
                 </div>
                 {/* Data reaction */}
-                <div>
-                  <DetailReactionChat
-                    dataMsgDetail={dataMsgDetail}
-                    handleReactionClick={handleReactionClickDetail}
-                    handleRemoveReactionClick={handleRemoveReactionClickDetail}
-                    chatContainerRef={chatContainerRef}
-                  />
-                </div>
+
+                {!messageDetail.deletedAt && (
+                  <div>
+                    <DetailReactionChat
+                      dataMsgDetail={dataMsgDetail}
+                      handleReactionClick={handleReactionClickDetail}
+                      handleRemoveReactionClick={
+                        handleRemoveReactionClickDetail
+                      }
+                      chatContainerRef={chatContainerRef}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1218,6 +1247,13 @@ export const MessageDetail = ({
                     <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
                       {messageDetail.sender?.organizations?.name}
                     </p>
+                    {messageDetail.isBookmark && (
+                      <ImageRound
+                        name="Save"
+                        src="/icons/save-active.svg"
+                        className="w-[12px] h-[14px] hover:cursor-pointer"
+                      />
+                    )}
                   </div>
                   <div className={`flex items-start`}>
                     <p className="font-medium text-xs text-[#77858F]">
@@ -1348,7 +1384,7 @@ export const MessageDetail = ({
                           chatRoomDetail={chatRoomDetail}
                           handleOpenEditForm={handleOpenEditForm}
                           handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
-                          setDataMessageDetail={setDataMessageDetail}
+                          handleUpdateBookmark={handleUpdateBookmark}
                           handleReactionClick={handleReactionClickDetail}
                           handleRemoveReactionClick={
                             handleRemoveReactionClickDetail
@@ -1359,14 +1395,18 @@ export const MessageDetail = ({
                   </div>
                 </div>
                 {/* Data reaction */}
-                <div>
-                  <DetailReactionChat
-                    dataMsgDetail={dataMsgDetail}
-                    handleReactionClick={handleReactionClickDetail}
-                    handleRemoveReactionClick={handleRemoveReactionClickDetail}
-                    chatContainerRef={chatContainerRef}
-                  />
-                </div>
+                {!messageDetail.deletedAt && (
+                  <div>
+                    <DetailReactionChat
+                      dataMsgDetail={dataMsgDetail}
+                      handleReactionClick={handleReactionClickDetail}
+                      handleRemoveReactionClick={
+                        handleRemoveReactionClickDetail
+                      }
+                      chatContainerRef={chatContainerRef}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
