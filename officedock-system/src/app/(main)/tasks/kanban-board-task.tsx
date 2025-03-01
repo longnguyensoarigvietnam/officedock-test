@@ -2801,15 +2801,17 @@ const KanbanBoardTask = () => {
                                 {allLabels.map((item, index) => (
                                   <div
                                     key={index}
-                                    onClick={() =>
+                                    onClick={() => {
+                                      setIsReadyToFetch(true);
+
                                       handleRemoveItem(
                                         item.category as
                                           | 'organization_ids'
                                           | 'tag_ids'
                                           | 'category_ids',
                                         item.value,
-                                      )
-                                    }
+                                      );
+                                    }}
                                     className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
                                     <span className="w-[71px] truncate">
                                       {item.label}

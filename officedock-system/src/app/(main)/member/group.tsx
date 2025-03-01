@@ -9,7 +9,7 @@ import { UserOrganization } from '@interfaces/user';
 
 type DataGroupMemberProps = {
   item: UserOrganization;
-  onClickMember: (id: string) => void;
+  onClickMember: (id: string, organizationId: string) => void;
 };
 
 const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
@@ -67,7 +67,7 @@ const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
                 width: expanded ? '265px' : '316px',
               }}
               onClick={() => {
-                onClickMember(String(user.id));
+                onClickMember(String(user.id), String(item.id));
               }}
               className=" h-[76px] bg-white flex items-center gap-[10px]  p-5 justify-start cursor-pointer  rounded-lg">
               {renderBoxUser(`${user.id}`)}

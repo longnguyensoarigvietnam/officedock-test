@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  MutableRefObject,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useSession } from 'next-auth/react';
 import { useMutation } from 'react-query';
 
@@ -9,15 +15,18 @@ import { apiRouters } from '@constants/routers';
 import { REACTION_LIST_SMALL } from '@constants';
 import { ChatMessageResponse } from '@interfaces/chat';
 import api from '@base/api';
+import { createPortal } from 'react-dom';
 
 type Props = {
   dataMsgDetail: ChatMessageResponse;
   handleReactionClick: (icon: string) => void;
   handleRemoveReactionClick: (icon: string) => void;
+  chatContainerRef: MutableRefObject<HTMLDivElement | null>;
 };
 
 const DetailReactionChat = ({
   dataMsgDetail,
+  chatContainerRef,
   handleReactionClick,
   handleRemoveReactionClick,
 }: Props) => {
@@ -110,6 +119,37 @@ const DetailReactionChat = ({
       onSettled: () => {},
     },
   );
+
+  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
+  const imageRef = useRef<HTMLDivElement | null>(null);
+
+  const handleShowModal = () => {
+    if (imageRef.current) {
+      const rect = imageRef.current.getBoundingClientRect();
+      setModalPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+      });
+      setIsShowModalDetail(true);
+    }
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsShowModalDetail(false);
+    };
+
+    if (isShowModalDetail && chatContainerRef.current) {
+      chatContainerRef.current.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (chatContainerRef.current) {
+        chatContainerRef.current.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [isShowModalDetail]);
+
   return (
     <div className="mt-5 flex items-center gap-[6px]">
       <div className="flex items-center gap-[6px]">
@@ -145,72 +185,79 @@ const DetailReactionChat = ({
       <div>
         {reactionSummary.length > 0 && (
           <div
-            onClick={() => setIsShowModalDetail(true)}
-            className="h-8 w-8 relative flex items-center justify-center rounded-full bg-[#EBF1F7]">
+            ref={imageRef}
+            onClick={handleShowModal}
+            className="h-8 w-8 relative flex items-center justify-center rounded-full  hover:bg-[#EBF1F7]">
             <ImageRound
               name={'user'}
               src="/icons/user-default.svg"
               className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
             />
-            {isShowModalDetail && (
-              <div
-                ref={optionRef}
-                style={{
-                  boxShadow: '0px 4px 8px 0px #0000000F',
-                }}
-                className="absolute top-0 left-0 min-w-[250px] w-fit h-[200px] rounded-lg bg-white p-[14px]">
-                <div className="flex gap-[6px] items-center">
-                  {reactionSummary.map((reaction) => {
-                    const iconSrc = REACTION_LIST_SMALL.find(
-                      (icon) => `${icon.value}` === reaction.icon,
-                    )?.src;
-                    return (
-                      <div
-                        key={reaction.icon}
-                        className={`${selectedIcon === reaction.icon ? 'bg-[#EBF1F7]' : 'bg-white'} h-8 min-w-[48px] px-2 flex items-center justify-center gap-[6px] rounded`}
-                        onClick={() => setSelectedIcon(reaction.icon)}>
-                        {iconSrc && (
-                          <ImageRound
-                            name={reaction.icon}
-                            src={iconSrc}
-                            className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
-                          />
-                        )}
-                        <span className="text-[13px] font-medium text-[#77858F]">
-                          {reaction.count}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-[14px] flex flex-col overflow-y-auto h-[130px] gap-[10px]">
-                  {selectedUsers.length > 0 &&
-                    selectedUsers.map((id) => {
-                      const avatarColor =
-                        dashboardMembersWithAvatars.find(
-                          (member) => member.id == id,
-                        )?.avatarColor || '';
-                      const name =
-                        dashboardMembersWithAvatars.find(
-                          (member) => member.id == id,
-                        )?.fullName || '';
+            {isShowModalDetail &&
+              createPortal(
+                <div
+                  ref={optionRef}
+                  style={{
+                    boxShadow: '0px 4px 8px 0px #0000000F',
+                    position: 'absolute',
+                    top: `${modalPosition.top}px`,
+                    left: `${modalPosition.left}px`,
+                    zIndex: 9999,
+                  }}
+                  className="absolute top-0 left-10 min-w-[250px] w-fit h-[200px] rounded-lg bg-white p-[14px]">
+                  <div className="flex gap-[6px] items-center">
+                    {reactionSummary.map((reaction) => {
+                      const iconSrc = REACTION_LIST_SMALL.find(
+                        (icon) => `${icon.value}` === reaction.icon,
+                      )?.src;
                       return (
-                        <div key={id} className="flex items-center gap-2">
-                          <AvatarIconWithDynamicColor
-                            color={avatarColor}
-                            size={29}
-                            customClassName="w-6 h-6"
-                          />
-                          <span className="text-sm font-medium text-black relative top-[-1px]">
-                            {name}
+                        <div
+                          key={reaction.icon}
+                          className={`${selectedIcon === reaction.icon ? 'bg-[#EBF1F7]' : 'bg-white'} h-8 min-w-[48px] px-2 flex items-center justify-center gap-[6px] rounded`}
+                          onClick={() => setSelectedIcon(reaction.icon)}>
+                          {iconSrc && (
+                            <ImageRound
+                              name={reaction.icon}
+                              src={iconSrc}
+                              className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                            />
+                          )}
+                          <span className="text-[13px] font-medium text-[#77858F]">
+                            {reaction.count}
                           </span>
                         </div>
                       );
                     })}
-                </div>
-              </div>
-            )}
+                  </div>
+
+                  <div className="mt-[14px] flex flex-col overflow-y-auto h-[130px] gap-[10px]">
+                    {selectedUsers.length > 0 &&
+                      selectedUsers.map((id) => {
+                        const avatarColor =
+                          dashboardMembersWithAvatars.find(
+                            (member) => member.id == id,
+                          )?.avatarColor || '';
+                        const name =
+                          dashboardMembersWithAvatars.find(
+                            (member) => member.id == id,
+                          )?.fullName || '';
+                        return (
+                          <div key={id} className="flex items-center gap-2">
+                            <AvatarIconWithDynamicColor
+                              color={avatarColor}
+                              size={29}
+                              customClassName="w-6 h-6"
+                            />
+                            <span className="text-sm font-medium text-black relative top-[-1px]">
+                              {name}
+                            </span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>,
+                document.body,
+              )}
           </div>
         )}
       </div>

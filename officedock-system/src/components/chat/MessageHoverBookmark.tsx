@@ -62,7 +62,7 @@ export const MessageHoverBookmark = ({
         </div>
       </Tippy>
       <Tippy
-        content={'ブックマーク'}
+        content={'ブックマークを外す'}
         arrow={false}
         delay={1000}
         placement="top"

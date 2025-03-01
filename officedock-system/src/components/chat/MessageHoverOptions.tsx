@@ -232,7 +232,7 @@ export const MessageHoverOptions = ({
         </div>
       </Tippy>
       <Tippy
-        content={'ブックマーク'}
+        content={isBookmark ? 'ブックマークを外す' : 'ブックマーク'}
         arrow={false}
         delay={1000}
         placement="top"
