@@ -756,7 +756,14 @@ export const MessageDetailBookmark = ({
             <div className={`ml-3 w-full pr-5`}>
               <div className="flex justify-between items-center">
                 {messageDetail.type !== MessageType.MESSAGE ? (
-                  <p className="font-semibold text-sm pb-2">タスクカード</p>
+                  <div className="flex gap-2 !items-center font-semibold text-[15px] pb-2">
+                    <p className="font-semibold text-sm">タスクカード</p>
+                    <ImageRound
+                      name="Save"
+                      src="/icons/save-active.svg"
+                      className="w-[10px] h-[12px] hover:cursor-pointer"
+                    />
+                  </div>
                 ) : (
                   <div className="flex items-center gap-2 font-semibold text-sm pb-2">
                     <p>{messageDetail.sender.fullName} </p>
