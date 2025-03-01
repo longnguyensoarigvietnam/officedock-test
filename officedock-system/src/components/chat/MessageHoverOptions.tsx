@@ -19,13 +19,7 @@ interface MessageHoverOptionsProps {
   chatRoomDetail: ChatRoomDetail;
   handleOpenEditForm: (id: string) => void;
   handleOpenDeleteMsgModal: (id: string) => void;
-  setDataMessageDetail: ({
-    uuid,
-    isBookmark,
-  }: {
-    uuid: string;
-    isBookmark: boolean;
-  }) => void;
+  handleUpdateBookmark: (dataUuid: string) => void
   handleReactionClick: (icon: string) => void;
   handleRemoveReactionClick: (icon: string) => void;
 }
@@ -33,6 +27,7 @@ interface MessageHoverOptionsProps {
 export const MessageHoverOptions = ({
   messageDetail,
   chatRoomDetail,
+  handleUpdateBookmark,
   handleReactionClick,
   handleRemoveReactionClick,
   handleOpenEditForm,
@@ -80,6 +75,7 @@ export const MessageHoverOptions = ({
     {
       onSuccess: async () => {
         setIsBookmark(!isBookmark);
+        handleUpdateBookmark(messageDetail.uuid);
       },
       onError: () => {},
       onSettled: () => {},

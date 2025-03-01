@@ -215,11 +215,13 @@ const ChatDetail = ({
   const [mentionMembers, setMentionMembers] = useState<ChatParticipant[]>([]);
   const [searchMentionMembers, setSearchMentionMembers] = useState<string>('');
 
+  // Jump to message
   const [lastGotoMessageId, setLastGotoMessageId] = useState<number | null>();
   const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
     useState(false);
   const [gotoMessageId, setGotoMessageId] = useState<number | null>();
   const gotoMessageRef = useRef<HTMLDivElement | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null)
 
   // Icon
   const [isShowListIcon, setIsShowListIcon] = useState(false);
@@ -292,7 +294,11 @@ const ChatDetail = ({
         behavior: 'smooth',
         block: 'end',
       });
+      setHighlightedMessageId(String(gotoMessageId))
       setGotoMessageId(null);
+      setTimeout(() => {
+        setHighlightedMessageId(null);
+      }, 5000);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataMessageDetail]);
@@ -1644,10 +1650,10 @@ const ChatDetail = ({
       ]
     : [];
 
-  const handleUpdateBookmark = (dataUuid: string, dataIsBookmark: boolean) => {
+  const handleUpdateBookmark = (dataUuid: string) => {
     setDataMessageDetail((prevMessages) =>
       prevMessages.map((item) =>
-        item.uuid === dataUuid ? { ...item, isBookmark: dataIsBookmark } : item,
+        item.uuid === dataUuid ? { ...item, isBookmark: !item.isBookmark } : item,
       ),
     );
   };
@@ -1936,6 +1942,8 @@ const ChatDetail = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  
   return (
     <Fragment>
       {chatRoomCode && (
@@ -2134,6 +2142,7 @@ const ChatDetail = ({
                       editor={editor}
                       chatContainerRef={chatContainerRef}
                       dashboardMembers={dashboardMembers}
+                      highlightedMessageId={highlightedMessageId}
                       setPreserveFiles={setPreserveFiles}
                       setOpenUploadFilesModal={setOpenUploadFilesModal}
                       setUploadFiles={setUploadFiles}
@@ -2147,15 +2156,7 @@ const ChatDetail = ({
                       handleConfirmGetDataDetailEvent={
                         handleConfirmGetDataDetailEvent
                       }
-                      setDataMessageDetail={({
-                        uuid,
-                        isBookmark,
-                      }: {
-                        uuid: string;
-                        isBookmark: boolean;
-                      }) => {
-                        handleUpdateBookmark(uuid, isBookmark);
-                      }}
+                      handleUpdateBookmark={handleUpdateBookmark}
                       handleReactionClick={handleReactionClick}
                       handleRemoveReactionClick={handleRemoveReactionClick}
                       handleResetChatRoomNotification={
@@ -2194,6 +2195,7 @@ const ChatDetail = ({
                       msgEditing={msgEditing}
                       chatContainerRef={chatContainerRef}
                       dashboardMembers={dashboardMembers}
+                      highlightedMessageId={highlightedMessageId}
                       setPreserveFiles={setPreserveFiles}
                       setOpenUploadFilesModal={setOpenUploadFilesModal}
                       setUploadFiles={setUploadFiles}
@@ -2207,15 +2209,7 @@ const ChatDetail = ({
                       handleConfirmGetDataDetailEvent={
                         handleConfirmGetDataDetailEvent
                       }
-                      setDataMessageDetail={({
-                        uuid,
-                        isBookmark,
-                      }: {
-                        uuid: string;
-                        isBookmark: boolean;
-                      }) => {
-                        handleUpdateBookmark(uuid, isBookmark);
-                      }}
+                      handleUpdateBookmark={handleUpdateBookmark}
                       handleReactionClick={handleReactionClick}
                       handleRemoveReactionClick={handleRemoveReactionClick}
                       handleResetChatRoomNotification={
