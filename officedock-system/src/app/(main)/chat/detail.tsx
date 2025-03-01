@@ -1,7 +1,7 @@
 'use client';
 
 import { AxiosError } from 'axios';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import {
   ChangeEvent,
   Fragment,
@@ -18,12 +18,17 @@ import { Document } from '@tiptap/extension-document';
 import { Mention } from '@tiptap/extension-mention';
 import { Paragraph } from '@tiptap/extension-paragraph';
 import { Text } from '@tiptap/extension-text';
-import { EditorContent, useEditor, Editor } from '@tiptap/react';
+import {
+  EditorContent,
+  useEditor,
+  Editor,
+  mergeAttributes,
+  Node,
+} from '@tiptap/react';
 import { Placeholder } from '@tiptap/extension-placeholder';
-import TextStyle from '@tiptap/extension-text-style';
-import Color from '@tiptap/extension-color';
-import StarterKit from '@tiptap/starter-kit';
 
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -48,7 +53,6 @@ import ErrorChatUploadFileValidationModal from '@components/modals/ErrorChatUplo
 import { MessageDetail } from '@components/chat/MessageDetail';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import ListTaskUserChat from '@components/chat/ListTaskUserChat';
-import { CustomReaction } from '@components/chat/CustomIcon';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -71,9 +75,9 @@ import {
   EventWorkCategory,
   PermissionsSystem,
   ReactionIconValue,
+  ItemStartType,
 } from '@constants/enums';
 import {
-  ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
   ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
@@ -158,6 +162,7 @@ const ChatDetail = ({
   const params = new URLSearchParams(searchParams);
 
   const messageBookmarkId = searchParams.get('messageId');
+  const queryClient = useQueryClient();
 
   const optionIconRef = useRef<HTMLDivElement | null>(null);
 
@@ -212,6 +217,8 @@ const ChatDetail = ({
   });
   const { authenticatedUser } = useAuthenticatedUser();
   const [loggedInUser, setLoggedInUser] = useState<User>();
+
+  // Mention
   const [mentionMembers, setMentionMembers] = useState<ChatParticipant[]>([]);
   const [searchMentionMembers, setSearchMentionMembers] = useState<string>('');
 
@@ -221,7 +228,14 @@ const ChatDetail = ({
     useState(false);
   const [gotoMessageId, setGotoMessageId] = useState<number | null>();
   const gotoMessageRef = useRef<HTMLDivElement | null>(null);
-  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null)
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
+
+  // Quote task
+  const [quoteTaskList, setQuoteTaskList] = useState<
+    { id: number; title: string }[]
+  >([]);
 
   // Icon
   const [isShowListIcon, setIsShowListIcon] = useState(false);
@@ -274,6 +288,9 @@ const ChatDetail = ({
     resetDataCategoryOptions?: () => void;
     reset?: () => void;
   }>({});
+  const actionType = searchParams.get('action');
+  const typeDetail = searchParams.get('type');
+  const taskDetailId = searchParams.get('task');
 
   // Handle get list and more data message
   const handleGetDataMessages = async (pageNumber: number) => {
@@ -294,7 +311,7 @@ const ChatDetail = ({
         behavior: 'smooth',
         block: 'end',
       });
-      setHighlightedMessageId(String(gotoMessageId))
+      setHighlightedMessageId(String(gotoMessageId));
       setGotoMessageId(null);
       setTimeout(() => {
         setHighlightedMessageId(null);
@@ -547,6 +564,94 @@ const ChatDetail = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMoreDetail, hasMoreDetailOnScrollDown]);
+
+  const TaskQuote = Node.create({
+    name: 'taskQuote',
+    group: 'inline',
+    inline: true,
+    atom: true,
+
+    addAttributes() {
+      return {
+        id: { default: null },
+        title: { default: '' },
+      };
+    },
+
+    parseHTML() {
+      return [
+        {
+          tag: 'span[data-task-id]',
+          getAttrs: (dom: HTMLElement) => ({
+            id: dom.getAttribute('data-task-id'),
+            title:
+              dom.getAttribute('data-title') ||
+              dom.textContent?.replace('[タスク] ', ''),
+          }),
+        },
+      ];
+    },
+
+    renderHTML({ HTMLAttributes }) {
+      return [
+        'span',
+        mergeAttributes(HTMLAttributes, {
+          'data-task-id': HTMLAttributes.id,
+          'data-title': HTMLAttributes.title,
+          class: 'inline-task-quote',
+        }),
+        ['span', { style: 'color: #77858F;' }, '[タスク]'],
+        ' ',
+        ['span', { style: 'color: #0068B7;' }, HTMLAttributes.title],
+      ];
+    },
+
+    renderText({ node }) {
+      return `[タスク] ${node.attrs.title}`;
+    },
+  });
+
+  const editor = useEditor({
+    extensions: [
+      Document,
+      TaskQuote,
+      Paragraph.extend({
+        addAttributes() {
+          return {
+            'data-task-id': {
+              default: null,
+              renderHTML(attributes) {
+                if (!attributes['data-task-id']) {
+                  return {};
+                }
+                return { 'data-task-id': attributes['data-task-id'] };
+              },
+              parseHTML(element) {
+                return {
+                  'data-task-id': element.getAttribute('data-task-id'),
+                };
+              },
+            },
+          };
+        },
+      }),
+      Text,
+      TextStyle,
+      Color,
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention text-[#0068B6]',
+        },
+      }),
+      Placeholder.configure({
+        placeholder: 'メッセージを入力',
+      }),
+    ],
+    content: message,
+    onUpdate: ({ editor }: { editor: Editor }) => {
+      setMessage(editor.getHTML());
+    },
+  });
 
   useEffect(() => {
     if (authenticatedUser) {
@@ -850,18 +955,21 @@ const ChatDetail = ({
     mentionIds,
     files,
     fileUuids,
+    taskIds
   }: {
     data: string;
     uuid: string;
     mentionIds: number[];
     files: File[];
     fileUuids: string[];
+    taskIds: number[]
   }) => {
     const formData = new FormData();
     formData.append('message', data);
     formData.append('uuid', uuid);
     formData.append('clientId', clientId);
     mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
+    taskIds.forEach((id) => formData.append('taskIds', id.toString()));
     fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
     if (files && files.length > 0) {
       files.forEach((file, index) => {
@@ -940,6 +1048,7 @@ const ChatDetail = ({
         uuid: file.uuid,
       };
     });
+    const taskIds = quoteTaskList.map((task) => task.id)
     setDataMessageDetail([
       {
         uuid: uuidMsg,
@@ -975,12 +1084,14 @@ const ChatDetail = ({
 
     editor.commands.clearContent();
     setMentionMembers([]);
+    setQuoteTaskList([])
     handleSendMsgChat({
       data: newMsg,
       uuid: uuidMsg,
       mentionIds,
       files: uploadFiles.map((file) => file.file),
       fileUuids: uploadFiles.map((file) => file.uuid),
+      taskIds: taskIds
     });
   };
 
@@ -999,6 +1110,19 @@ const ChatDetail = ({
   const handleConfirmDeleteMessage = () => {
     handleDeleteMsgChat();
   };
+
+  function cleanMessageHTML(html: string): string {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    container.querySelectorAll('p, div').forEach((el) => {
+      el.removeAttribute('data-task-id');
+      el.removeAttribute('data-title');
+    });
+
+    return container.innerHTML;
+  }
+
   // Update message
   const postUpdateMsg = async (data: {
     uuid: string;
@@ -1008,7 +1132,7 @@ const ChatDetail = ({
     fileUuids: string[];
   }) => {
     const formData = new FormData();
-    formData.append('message', data.message);
+    formData.append('message', cleanMessageHTML(data.message));
     formData.append('uuid', data.uuid);
     data.mentionIds.forEach((id) =>
       formData.append('mentionIds', id.toString()),
@@ -1093,18 +1217,46 @@ const ChatDetail = ({
     }
   };
 
-  // Function create  tasks
-  const handleConfirmCreateTask = (data: TaskFormData) => {
-    const peopleInChargeIds =
-      data.peopleInChargeIds &&
-      data.peopleInChargeIds
-        .filter((item) => item.value !== '')
-        .map((item) => ({ peopleInChargeId: item.value }));
+  const handleEditTask = async (data: TaskRequest) => {
+    setIsLoading(true);
+    return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
+  };
+  const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
+    onSuccess: async () => {
+      handleRemoveParam();
+      queryClient.refetchQueries(['getTaskHeaderStart']);
+      queryClient.refetchQueries(['getDataStatistic']);
+
+      showToast({
+        description: SUCCESS_UPDATE_MESSAGE,
+      });
+      setDataTaskEdit(null);
+      setShowModalTask(false);
+    },
+    onError: (error: AxiosError<any>) => {
+      if (error.response?.data.taskSchedules) {
+        showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+      } else showErrorToast(error, ERROR_UPDATE_MESSAGE);
+    },
+    onSettled: () => {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    },
+  });
+
+  const handleConfirmEditTask = (data: TaskFormData) => {
     const tagIds = data.tagIds
       ? data.tagIds
           .filter((item) => item.value !== '')
           .map((item) => ({ tagId: item.value }))
       : [];
+
+    const peopleInChargeIds =
+      data.peopleInChargeIds &&
+      data.peopleInChargeIds
+        .filter((item) => item.value !== '')
+        .map((item) => ({ peopleInChargeId: item.value }));
 
     const planList = data.plans
       ? data.plans
@@ -1128,6 +1280,7 @@ const ChatDetail = ({
       : null;
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
+
     const newWorkCategories = [];
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
@@ -1157,24 +1310,24 @@ const ChatDetail = ({
       });
     }
 
-    createTask({
-      title: data.title || '',
-      type: data.type ? data.type.value.toString() : '',
+    editTask({
+      id: data.id,
+      title: data.title,
       statusId: data.statusId ? (data.statusId.value as number) : null,
       priority: data.priority ? data.priority.value.toString() : '',
       deadline:
         data.deadlineDate && data.deadlineTime
           ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
           : null,
-      description: data.description || '',
+      description: data.description,
       tagIds: tagIds,
-      peopleInChargeIds: peopleInChargeIds,
+      categoryIds: newWorkCategories,
       isImportant: data.isImportant,
       todoList: todoListData,
-      taskSchedules: planList && planList.length ? planList : null,
-      chatRoomCode: chatRoomCode,
+      taskSchedules: planList && planList.length ? planList : [],
+      oldIdStatus: data.oldIdStatus,
       sendToChat: true,
-      categoryIds: newWorkCategories,
+      peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
@@ -1186,30 +1339,6 @@ const ChatDetail = ({
         : null,
     });
   };
-  //  Handle call api create task
-  const handleCreateTask = async (data: TaskRequest) => {
-    setIsLoading(true);
-    return await api.post(apiRouters.CREATE_TASK, data);
-  };
-  // Handle create task and response
-  const { mutate: createTask } = useMutation(
-    'postCreateTask',
-    handleCreateTask,
-    {
-      onSuccess: async () => {
-        setShowModalTask(false);
-      },
-      onError: (error: AxiosError<any>) => {
-        if (error.response?.data.taskSchedules) {
-          showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
-        }
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
-    },
-  );
 
   const handleConfirmEditEventCalendar = (
     data: EventEditFormData,
@@ -1413,30 +1542,6 @@ const ChatDetail = ({
       onSuccess: () => {},
     },
   );
-
-  const editor = useEditor({
-    extensions: [
-      Document,
-      Paragraph,
-      Text,
-      TextStyle,
-      Color,
-      CustomReaction,
-      StarterKit,
-      Mention.configure({
-        HTMLAttributes: {
-          class: 'mention text-[#0068B6]',
-        },
-      }),
-      Placeholder.configure({
-        placeholder: 'メッセージを入力',
-      }),
-    ],
-    content: message,
-    onUpdate: ({ editor }: { editor: Editor }) => {
-      setMessage(editor.getHTML());
-    },
-  });
 
   const handleCheckboxClick = (
     editor: Editor,
@@ -1653,7 +1758,9 @@ const ChatDetail = ({
   const handleUpdateBookmark = (dataUuid: string) => {
     setDataMessageDetail((prevMessages) =>
       prevMessages.map((item) =>
-        item.uuid === dataUuid ? { ...item, isBookmark: !item.isBookmark } : item,
+        item.uuid === dataUuid
+          ? { ...item, isBookmark: !item.isBookmark }
+          : item,
       ),
     );
   };
@@ -1697,15 +1804,88 @@ const ChatDetail = ({
   const handleQuoteTaskUser = (data: { id: number; title: string }[]) => {
     if (!editor) return;
 
-    const content = data
-      .map(
-        (item) =>
-          `<p><span class="quote-task-${item.id}"  style="color: #77858F;">[タスク]</span> <span style="color: #0068B7;">${item.title}</span></p>`,
-      )
-      .join('');
+    data.forEach((item, index) => {
+      if (index > 0) {
+        editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+      }
 
-    editor.chain().focus().insertContent(content).run();
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'taskQuote',
+          attrs: {
+            id: item.id.toString(),
+            title: item.title,
+          },
+        })
+        .run();
+
+      editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+    });
   };
+
+  const handleSetParam = ({
+    id,
+    action,
+  }: {
+    id: string | null;
+    action: string;
+  }) => {
+    if (id) {
+      params.set('task', id);
+    }
+    params.set('action', action);
+    params.set('type', ItemStartType.TASK);
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleActionEditTask = (id: number) => {
+    handleSetParam({
+      id: `${id}`,
+      action: ActionTask.EDIT,
+    });
+  };
+
+  const handleGetDataDetailTask = async (id: number) => {
+    setIsLoading(true);
+    const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
+    return response;
+  };
+
+  const { mutate: getDataDetailTask } = useMutation(
+    'getDetailTask',
+    handleGetDataDetailTask,
+    {
+      onSuccess: async (data) => {
+        setDataTaskEdit(data);
+        setShowModalTask(true);
+      },
+      onError: () => {
+        handleRemoveParam();
+      },
+      onSettled: () => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
+      },
+    },
+  );
+
+  useEffect(() => {
+    if (actionType && typeDetail === ItemStartType.TASK) {
+      if (taskDetailId) {
+        setShowModalTask(true);
+        getDataDetailTask(parseInt(taskDetailId));
+      } else {
+        setShowModalTask(true);
+      }
+    } else {
+      setShowModalTask(false);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getDataDetailTask, taskDetailId, actionType, typeDetail]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -1766,10 +1946,7 @@ const ChatDetail = ({
       e.preventDefault();
       e.stopPropagation();
 
-      if (
-        !e.relatedTarget ||
-        !document.body.contains(e.relatedTarget as Node)
-      ) {
+      if (!e.relatedTarget || !document.body.contains(e.relatedTarget as any)) {
         setOpenDroppingFileModal(false);
       }
     };
@@ -1943,7 +2120,6 @@ const ChatDetail = ({
     };
   }, []);
 
-  
   return (
     <Fragment>
       {chatRoomCode && (
@@ -2152,6 +2328,7 @@ const ChatDetail = ({
                       setMsgIdDeleted={setMsgIdDeleted}
                       setOpenConfirmDeleteModal={setOpenConfirmDeleteModal}
                       setMsgIdUpdated={setMsgIdUpdated}
+                      handleActionEditTask={handleActionEditTask}
                       handleConfirmUpdateMsg={handleConfirmUpdateMsg}
                       handleConfirmGetDataDetailEvent={
                         handleConfirmGetDataDetailEvent
@@ -2205,6 +2382,7 @@ const ChatDetail = ({
                       setMsgIdDeleted={setMsgIdDeleted}
                       setOpenConfirmDeleteModal={setOpenConfirmDeleteModal}
                       setMsgIdUpdated={setMsgIdUpdated}
+                      handleActionEditTask={handleActionEditTask}
                       handleConfirmUpdateMsg={handleConfirmUpdateMsg}
                       handleConfirmGetDataDetailEvent={
                         handleConfirmGetDataDetailEvent
@@ -2331,6 +2509,8 @@ const ChatDetail = ({
                             ) && (
                               // List task for user
                               <ListTaskUserChat
+                                quoteTaskList={quoteTaskList}
+                                setQuoteTaskList={setQuoteTaskList}
                                 handleQuoteTaskUser={handleQuoteTaskUser}
                               />
                             )}
@@ -2647,7 +2827,8 @@ const ChatDetail = ({
             });
             setOpenWarningCloseModal(true);
           }}
-          onSubmit={handleConfirmCreateTask}
+          onEdit={handleConfirmEditTask}
+          onSubmit={handleConfirmEditTask}
           dashboardMemberList={dashboardMemberList}
           creationDataTaskData={creationDataTaskData}
         />
