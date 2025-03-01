@@ -96,6 +96,7 @@ export type MessageDetailProps = {
   setOpenConfirmDeleteModal: Dispatch<SetStateAction<boolean>>;
   setMsgIdDeleted?: Dispatch<SetStateAction<string | undefined>>;
   setMsgEditing?: Dispatch<SetStateAction<string | undefined>>;
+  handleActionEditTask: (id: number) => void;
   handleConfirmUpdateMsg: (uuid: string) => void;
   handleConfirmGetDataDetailEvent: (id: string) => void;
   handleUpdateBookmark: (dataUuid: string) => void;
@@ -122,6 +123,7 @@ export const MessageDetail = ({
   setOpenConfirmDeleteModal,
   setMsgIdDeleted,
   handleUpdateBookmark,
+  handleActionEditTask,
   handleConfirmGetDataDetailEvent,
   handleReactionClick,
   handleRemoveReactionClick,
@@ -187,9 +189,34 @@ export const MessageDetail = ({
       setUploadFiles([]);
       setOpenUploadFilesModal(true);
     } else {
-      editor && editor.commands.setContent(messageDetail.message);
+      const cleanedMessage = cleanTaskQuoteHTML(messageDetail.message);
+      editor && editor.commands.setContent(cleanedMessage);
     }
   };
+
+  function cleanTaskQuoteHTML(html: string): string {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    container.querySelectorAll('.inline-task-quote').forEach((el) => {
+      const outer = el as HTMLElement;
+
+      const id = outer.getAttribute('data-task-id');
+      const title = outer.getAttribute('data-title');
+
+      const contentText = `[タスク] ${title}`;
+
+      const cleanedSpan = document.createElement('span');
+      cleanedSpan.className = 'inline-task-quote';
+      cleanedSpan.setAttribute('data-task-id', id || '');
+      cleanedSpan.setAttribute('data-title', title || '');
+      cleanedSpan.textContent = contentText;
+
+      outer.replaceWith(cleanedSpan);
+    });
+
+    return container.innerHTML;
+  }
 
   const renderAvatar = (senderId: number) => {
     const avatarColor =
@@ -279,6 +306,81 @@ export const MessageDetail = ({
     }
 
     return parseReactionsToImages(processedHtml);
+  };
+
+  const processMessage = (message: string, mentions: number[]) => {
+    const highlightedMessage = highlightMentions(message, mentions);
+
+    const dom = new DOMParser().parseFromString(
+      highlightedMessage,
+      'text/html',
+    );
+
+    const nodes = Array.from(dom.body.childNodes);
+
+    const processNode = (node: ChildNode, index: number) => {
+      if (node.nodeType === 1) {
+        const element = node as HTMLElement;
+
+        if (element.tagName === 'P') {
+          const taskQuote = element.querySelector('span[data-task-id]');
+
+          if (taskQuote) {
+            const taskId = taskQuote.getAttribute('data-task-id');
+            const restOfContent = element.innerHTML.replace(
+              taskQuote.outerHTML,
+              '',
+            );
+
+            return (
+              <>
+                <div
+                  key={`${index}-quote`}
+                  id={taskId || undefined}
+                  onClick={() => {
+                    if (taskId) {
+                      handleActionEditTask(Number(taskId));
+                    }
+                  }}
+                  className="flex mb-2 items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
+                  <ImageRound
+                    className="w-[15px] h-[14px]"
+                    name="Calendar icon"
+                    src="/icons/calendar-time.svg"
+                  />
+                  <span
+                    dangerouslySetInnerHTML={{ __html: taskQuote.innerHTML }}
+                  />
+                </div>
+
+                {restOfContent.trim() && (
+                  <p
+                    key={`${index}-rest`}
+                    className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]"
+                    dangerouslySetInnerHTML={{ __html: restOfContent }}
+                  />
+                )}
+              </>
+            );
+          }
+
+          return (
+            <p
+              key={index}
+              className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]">
+              <span dangerouslySetInnerHTML={{ __html: element.innerHTML }} />
+            </p>
+          );
+        }
+      } else if (node.nodeType === 3) {
+        return node.textContent?.trim() ? (
+          <span key={index}>{node.textContent}</span>
+        ) : null;
+      }
+      return null;
+    };
+
+    return nodes.map((node, index) => processNode(node, index));
   };
 
   const renderSubmitLevelMessage = (
@@ -385,14 +487,10 @@ export const MessageDetail = ({
                         <div className="w-[100%]">
                           {dataMsgDetail.type === MessageType.MESSAGE && (
                             <div className="!w-[100%]">
-                              <p
-                                className={`text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]  `}
-                                dangerouslySetInnerHTML={{
-                                  __html: highlightMentions(
-                                    dataMsgDetail.message,
-                                    dataMsgDetail.mentions || [],
-                                  ),
-                                }}></p>
+                              {processMessage(
+                                dataMsgDetail.message,
+                                dataMsgDetail.mentions || [],
+                              )}
                               {dataMsgDetail?.chatFiles &&
                               dataMsgDetail?.chatFiles.length > 0 &&
                               uploadFileStatus[dataMsgDetail.uuid]?.progress >

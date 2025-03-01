@@ -1,5 +1,11 @@
 import Tippy from '@tippyjs/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
@@ -12,6 +18,18 @@ import { TaskUserListChat } from '@interfaces/chat';
 import useDebounceText from '@hooks/useDebounceText';
 
 interface ListTaskUserProps {
+  quoteTaskList: {
+    id: number;
+    title: string;
+  }[];
+  setQuoteTaskList: Dispatch<
+    SetStateAction<
+      {
+        id: number;
+        title: string;
+      }[]
+    >
+  >;
   handleQuoteTaskUser: (
     data: {
       id: number;
@@ -20,7 +38,11 @@ interface ListTaskUserProps {
   ) => void;
 }
 
-const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
+const ListTaskUserChat = ({
+  quoteTaskList,
+  setQuoteTaskList,
+  handleQuoteTaskUser,
+}: ListTaskUserProps) => {
   const searchParams = useSearchParams();
 
   const room = searchParams.get('room');
@@ -124,25 +146,25 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
     };
   }, [hasNext, isShowList, searchTaskDebounce]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleClosePopover = (event: MouseEvent) => {
+    if (
+      boxListRef.current &&
+      !boxListRef.current.contains(event.target as Node)
+    ) {
+      setIsShowList(false);
+    }
+  };
+
   useEffect(() => {
-    const handleClickOutside = (event: any) => {
-      if (boxListRef.current && !boxListRef.current.contains(event.target)) {
-        setIsShowList(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClosePopover, true);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClosePopover, true);
     };
-  }, []);
-
-  const [selectedItems, setSelectedItems] = useState<
-    { id: number; title: string }[]
-  >([]);
+  }, [handleClosePopover]);
 
   const handleToggleSelect = (id: number, title: string) => {
-    setSelectedItems((prev) => {
+    setQuoteTaskList((prev) => {
       const exists = prev.some((item) => item.id === id);
       if (exists) {
         return prev.filter((item) => item.id !== id);
@@ -160,14 +182,15 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
         delay={1000}
         placement="top"
         offset={[0, 8]}>
-        <div className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer">
+        <div
+          className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer"
+          onClick={() => {
+            setIsShowList(true);
+          }}>
           <ImageRound
             name="Quote checker"
             src="/icons/quote-checker.svg"
             className="w-[18px] h-[18px]"
-            onClick={() => {
-              setIsShowList(true);
-            }}
           />
         </div>
       </Tippy>
@@ -193,13 +216,7 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
               マイタスク
             </Button>
             <Button
-              onClick={() => {
-                if (isMyTask) {
-                  setPage(1);
-                  setDataTaskList([]);
-                  setIsMyTask(false);
-                }
-              }}
+              disabled={true}
               variant={!isMyTask ? 'primary' : 'outline'}
               className={`${!isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'} !py-0 !px-0 font-bold w-[90px] h-6 !rounded-[20px] text-xs`}>
               チームタスク
@@ -207,7 +224,7 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
           </div>
           <div className="mb-[10px]">
             <InputSearch
-              placeholder="名前を検索"
+              placeholder="タスクを検索"
               inputClassName="!border-[#77858F] h-9"
               onChange={(e) => {
                 if (page !== 1) {
@@ -222,7 +239,7 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
               ref={listTaskUerSearchRef}
               className="h-[282px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
               {dataTaskSearch.map((item) => {
-                const isSelected = selectedItems.some(
+                const isSelected = quoteTaskList.some(
                   (selected) => selected.id === item.id,
                 );
 
@@ -254,7 +271,7 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
               ref={listTaskUerRef}
               className="h-[282px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
               {dataTaskList.map((item) => {
-                const isSelected = selectedItems.some(
+                const isSelected = quoteTaskList.some(
                   (selected) => selected.id === item.id,
                 );
 
@@ -282,7 +299,7 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
           <div className="flex items-center mt-[10px] justify-center">
             <Button
               onClick={() => {
-                handleQuoteTaskUser(selectedItems);
+                handleQuoteTaskUser(quoteTaskList);
               }}
               className="!py-0 !px-0 h-[38px] w-[150px] flex items-center justify-center">
               タスクを引用する

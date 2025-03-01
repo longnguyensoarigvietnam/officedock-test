@@ -98,7 +98,7 @@ export const SearchMessagesModal = ({
       if (
         resultsContainer &&
         hasMoreSearchResultDetail &&
-        resultsContainer.clientHeight + Math.abs(resultsContainer.scrollTop) ===
+        Math.round(resultsContainer.clientHeight + Math.abs(resultsContainer.scrollTop)) ===
           resultsContainer.scrollHeight
       ) {
         const updatedSearchResultsPage = searchResultsPage + 1;
