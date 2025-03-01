@@ -2,7 +2,14 @@ import Image from 'next/image';
 import { format, isSameDay } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Dispatch, Fragment, SetStateAction, useEffect, useState } from 'react';
+import {
+  Dispatch,
+  Fragment,
+  MutableRefObject,
+  SetStateAction,
+  useEffect,
+  useState,
+} from 'react';
 import { Editor } from '@tiptap/react';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
@@ -100,7 +107,8 @@ export type MessageDetailProps = {
 
   handleReactionClick: (msgUuid: string, icon: string) => void;
   handleRemoveReactionClick: (msgUuid: string, icon: string) => void;
-  handleResetChatRoomNotification: () => void
+  handleResetChatRoomNotification: () => void;
+  chatContainerRef: MutableRefObject<HTMLDivElement | null>;
 };
 
 export const MessageDetail = ({
@@ -109,6 +117,7 @@ export const MessageDetail = ({
   messageDetail,
   dashboardMembers,
   editor,
+  chatContainerRef,
   setPreserveFiles,
   setOpenUploadFilesModal,
   setUploadFiles,
@@ -121,7 +130,7 @@ export const MessageDetail = ({
   handleConfirmGetDataDetailEvent,
   handleReactionClick,
   handleRemoveReactionClick,
-  handleResetChatRoomNotification
+  handleResetChatRoomNotification,
 }: MessageDetailProps) => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -312,14 +321,14 @@ export const MessageDetail = ({
   const handleReactionClickDetail = (icon: string) => {
     if (dataMsgDetail) {
       handleReactionClick(dataMsgDetail?.uuid, icon);
-      handleResetChatRoomNotification()
+      handleResetChatRoomNotification();
     }
   };
 
   const handleRemoveReactionClickDetail = (icon: string) => {
     if (dataMsgDetail) {
       handleRemoveReactionClick(dataMsgDetail?.uuid, icon);
-      handleResetChatRoomNotification()
+      handleResetChatRoomNotification();
     }
   };
 
@@ -918,6 +927,7 @@ export const MessageDetail = ({
                     dataMsgDetail={dataMsgDetail}
                     handleReactionClick={handleReactionClickDetail}
                     handleRemoveReactionClick={handleRemoveReactionClickDetail}
+                    chatContainerRef={chatContainerRef}
                   />
                 </div>
               </div>
@@ -1059,6 +1069,7 @@ export const MessageDetail = ({
                     dataMsgDetail={dataMsgDetail}
                     handleReactionClick={handleReactionClickDetail}
                     handleRemoveReactionClick={handleRemoveReactionClickDetail}
+                    chatContainerRef={chatContainerRef}
                   />
                 </div>
               </div>
@@ -1190,6 +1201,7 @@ export const MessageDetail = ({
                     dataMsgDetail={dataMsgDetail}
                     handleReactionClick={handleReactionClickDetail}
                     handleRemoveReactionClick={handleRemoveReactionClickDetail}
+                    chatContainerRef={chatContainerRef}
                   />
                 </div>
               </div>
@@ -1352,6 +1364,7 @@ export const MessageDetail = ({
                     dataMsgDetail={dataMsgDetail}
                     handleReactionClick={handleReactionClickDetail}
                     handleRemoveReactionClick={handleRemoveReactionClickDetail}
+                    chatContainerRef={chatContainerRef}
                   />
                 </div>
               </div>

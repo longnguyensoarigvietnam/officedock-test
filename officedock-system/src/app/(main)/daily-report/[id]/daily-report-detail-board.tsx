@@ -135,7 +135,7 @@ const DailyReportDetailBoard = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
   const [dataDetailUser, setDataDetailUser] =
-    useState<DataUserDetailDailyType>();
+    useState<DataUserDetailDailyType | null>(null);
 
   const [remarkData, setRemarkData] = useState<string>('');
 
@@ -417,6 +417,38 @@ const DailyReportDetailBoard = () => {
         setIsLoading(false);
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
+      onSettled: () => {},
+    },
+  );
+
+  //  Handle call api confirm user daily
+  const handleActionConfirmUserDaily = async (dataUser: {
+    id: number;
+    isConfirmed: boolean;
+    categoryId: number;
+  }) => {
+    const { data } = await api.post(
+      `${apiRouters.CONFIRM_USER_DAILY(dataUser.id)}`,
+      {
+        isConfirmed: dataUser.isConfirmed,
+        date: formatDateServer(new Date()),
+      },
+    );
+    return data;
+  };
+  const { mutate: confirmUserDaily } = useMutation(
+    'postConfirmUserDaily',
+    handleActionConfirmUserDaily,
+    {
+      onSuccess: async (data, request) => {
+        setDataDetailUser((prev) => {
+          if (!prev) {
+            return null;
+          }
+          return { ...prev, isConfirmed: request.isConfirmed };
+        });
+      },
+      onError: () => {},
       onSettled: () => {},
     },
   );
@@ -2002,13 +2034,15 @@ const DailyReportDetailBoard = () => {
                 )}
                 <Checkbox
                   isChecked={dataDetailUser?.isConfirmed}
-                  // onChange={(e) => {
-                  //   confirmUserDaily({
-                  //     id: user.id,
-                  //     isConfirmed: e,
-                  //     categoryId: item.organization.id,
-                  //   });
-                  // }}
+                  onChange={(e) => {
+                    if (dataDetailUser?.id) {
+                      confirmUserDaily({
+                        id: dataDetailUser?.id,
+                        isConfirmed: e,
+                        categoryId: parseInt(`${organization}`),
+                      });
+                    }
+                  }}
                   className="flex justify-center"
                   classSize="w-4 h-4"
                   boxLabelClass="!m-0"

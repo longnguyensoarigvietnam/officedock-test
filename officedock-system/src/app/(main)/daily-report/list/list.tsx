@@ -147,7 +147,7 @@ const ListData = () => {
   };
 
   return (
-    <div>
+    <div className="mb-10">
       <header className="flex justify-between my-[30px] pr-10 ">
         <div className="flex gap-5 items-center">
           <span className="text-2xl font-medium ">日報</span>
@@ -178,10 +178,10 @@ const ListData = () => {
               name="right"
             />
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-[10px]">
             <Button
               variant="outline"
-              className="border-none h-[34px] w-[48px] !px-0 !py-0"
+              className="border-none h-[34px] !rounded-md w-[48px] !px-0 !py-0"
               onClick={() => {
                 if (!isYesterdaySchedule(currentDate)) {
                   handleYesterDay();
@@ -191,7 +191,7 @@ const ListData = () => {
             </Button>
             <Button
               variant="outline"
-              className="border-none h-[34px] w-[48px] !px-0 !py-0"
+              className="border-none h-[34px] w-[48px] !rounded-md !px-0 !py-0"
               onClick={() => {
                 if (!isTodaySchedule(currentDate)) {
                   handleCurrentDay();
@@ -205,7 +205,7 @@ const ListData = () => {
       <div className="w-[220px] mb-[30px]">
         <Dropdown options={[]} className="!h-[34px]" />
       </div>
-      <div>
+      <div className="flex flex-col gap-5">
         {dataListDailyReport &&
           dataListDailyReport.map((item, index) => {
             return (
@@ -261,7 +261,9 @@ const ListData = () => {
                               color={avatarColor}
                               size={33}
                             />
-                            <span className="text-black">{user.fullName}</span>
+                            <span className="text-black break-all line-clamp-2 max-w-[200px]">
+                              {user.fullName}
+                            </span>
                           </div>
                         </div>
                         <div className="text-xs font-medium flex items-center gap-[14px]">
