@@ -715,6 +715,8 @@ class DailyReportSerializer(serializers.ModelSerializer):
     Serializer for daily report
     """
 
+    is_confirmed = serializers.BooleanField(required=False, allow_null=True)
+
     class Meta:
         model = DailyReport
         fields = ["id", "date", "remark", "is_submit", "is_confirmed"]

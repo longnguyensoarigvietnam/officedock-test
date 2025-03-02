@@ -387,12 +387,23 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         data["remark"] = DailyReportSerializer(
             user.daily_reports.filter(date=date).first()
         ).data
+        confirm_report = False
+        if request.user != user:
+            confirm_report = (
+                user.reported_confirmations.filter(
+                    date=date, confirm_by=request.user
+                )
+                .values_list("is_confirmed", flat=True)
+                .first()
+            ) or False
+
         data["remark"].update(
             {
                 "user": BaseUserSerializer(user).data,
                 "organization_name": organization.name
                 if organization
                 else None,
+                "is_confirmed": confirm_report,
             }
         )
 
@@ -411,6 +422,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         organization_ids_params = request.query_params.get("organization_ids")
         organization_ids = []
         date = request.query_params.get("date", None)
+        request_user = request.user
 
         # Validate date format using regex
         if not date or not re.match(DATE_REGEX, date):
@@ -426,7 +438,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         end_of_day = datetime.combine(date, time.max)
 
         if organization_ids_params is None:
-            organization_ids = request.user.organizations.all().values_list(
+            organization_ids = request_user.organizations.all().values_list(
                 "id", flat=True
             )
         else:
@@ -493,13 +505,15 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         total_duration += time_to_timedelta(
                             task["total_duration"]
                         )
-                    daily_report = user.daily_reports.filter(date=date).first()
+                    confirm_report = user.reported_confirmations.filter(
+                        date=date, confirm_by=request_user
+                    ).first()
                     user_list.append(
                         {
                             "id": user.id,
                             "full_name": user.profile.full_name,
-                            "is_confirmed": daily_report.is_confirmed
-                            if daily_report
+                            "is_confirmed": confirm_report.is_confirmed
+                            if confirm_report
                             else False,
                             "total_duration": format_duration(total_duration),
                         }
