@@ -20,6 +20,10 @@ import { Paragraph } from '@tiptap/extension-paragraph';
 import { Text } from '@tiptap/extension-text';
 import { EditorContent, useEditor, Editor } from '@tiptap/react';
 import { Placeholder } from '@tiptap/extension-placeholder';
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import StarterKit from '@tiptap/starter-kit';
+
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -33,7 +37,7 @@ import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
-import { ChatMentionMembersModal } from '@components/modals/ChatMentionMembersModal';
+import { ChatMentionMembersList } from '@components/modals/ChatMentionMembersModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMemberModal';
@@ -44,6 +48,7 @@ import ErrorChatUploadFileValidationModal from '@components/modals/ErrorChatUplo
 import { MessageDetail } from '@components/chat/MessageDetail';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import ListTaskUserChat from '@components/chat/ListTaskUserChat';
+import { CustomReaction } from '@components/chat/CustomIcon';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -53,6 +58,7 @@ import {
   MENTION_ALL_MEMBERS,
   NO_OPTION_CATEGORY,
   PAGINATION_PAGE_SIZE_HIGHT,
+  REACTION_LIST,
 } from '@constants';
 import {
   SocketActions,
@@ -64,6 +70,7 @@ import {
   ActionsEvent,
   EventWorkCategory,
   PermissionsSystem,
+  ReactionIconValue,
 } from '@constants/enums';
 import {
   ERROR_CREATE_MESSAGE,
@@ -77,9 +84,9 @@ import {
 } from '@constants/message';
 
 import useChatRoomDetail from '@hooks/useChatRoomDetail';
+import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
-import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import { addTimeToDate, getCurrentTimeInJapan } from '@utils/date';
 import {
   getChatFileURL,
@@ -152,6 +159,8 @@ const ChatDetail = ({
 
   const messageBookmarkId = searchParams.get('messageId');
 
+  const optionIconRef = useRef<HTMLDivElement | null>(null);
+
   const router = useRouter();
   const showErrorToast = useErrorToast();
 
@@ -205,23 +214,15 @@ const ChatDetail = ({
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [mentionMembers, setMentionMembers] = useState<ChatParticipant[]>([]);
   const [searchMentionMembers, setSearchMentionMembers] = useState<string>('');
-  const [openMentionMembersModal, setOpenMentionMembersModal] =
-    useState<boolean>(false);
-
-  const [mentionMemberModalPosition, setMentionMemberModalPosition] = useState<{
-    left: number;
-    top?: number;
-    bottom?: number;
-  }>({
-    left: 0,
-  });
-  const mentionIconRef = useRef<HTMLDivElement | null>(null);
 
   const [lastGotoMessageId, setLastGotoMessageId] = useState<number | null>();
   const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
     useState(false);
   const [gotoMessageId, setGotoMessageId] = useState<number | null>();
   const gotoMessageRef = useRef<HTMLDivElement | null>(null);
+
+  // Icon
+  const [isShowListIcon, setIsShowListIcon] = useState(false);
 
   // Upload files
   const [openUploadFilesModal, setOpenUploadFilesModal] =
@@ -328,6 +329,9 @@ const ChatDetail = ({
 
           // Delete messageBookmarkId when go to from list bookmark
           if (messageBookmarkId) {
+            setHasMoreDetailOnScrollDown(true);
+            setLastGotoMessageId(variables.data.results[0].id);
+
             setGotoMessageId(parseInt(messageBookmarkId));
             params.delete('messageId');
 
@@ -630,10 +634,12 @@ const ChatDetail = ({
           updatedDataMessageDetail[updatedMessageItemIndex] = {
             ...updatedDataMessageDetail[updatedMessageItemIndex],
             isEdited: true,
+            reactions: data.chatMessage.reactions,
             chatFiles: chatFileList,
             message: trimUnnecessaryLineBreaks(
               `${data.chatMessage.message}`,
             ) as string,
+            mentions: data.chatMessage.mentions,
           };
           return updatedDataMessageDetail;
         }
@@ -757,7 +763,7 @@ const ChatDetail = ({
       switch (data.action) {
         case SocketActions.MESSAGE:
           if (data.chatRoom.code === chatRoomCode) {
-            if (data.clientId && !data.clientId.includes(clientId)) {
+            if (!data.clientId || !data.clientId.includes(clientId)) {
               const chatFileList = data.chatMessage.chatFiles.map((file) => {
                 return {
                   ...file,
@@ -1407,6 +1413,10 @@ const ChatDetail = ({
       Document,
       Paragraph,
       Text,
+      TextStyle,
+      Color,
+      CustomReaction,
+      StarterKit,
       Mention.configure({
         HTMLAttributes: {
           class: 'mention text-[#0068B6]',
@@ -1637,7 +1647,7 @@ const ChatDetail = ({
   const handleUpdateBookmark = (dataUuid: string, dataIsBookmark: boolean) => {
     setDataMessageDetail((prevMessages) =>
       prevMessages.map((item) =>
-        item.uuid === dataUuid ? { ...item, isBookMark: dataIsBookmark } : item,
+        item.uuid === dataUuid ? { ...item, isBookmark: dataIsBookmark } : item,
       ),
     );
   };
@@ -1666,7 +1676,7 @@ const ChatDetail = ({
                 ...prev,
                 results: prev.results.map((item) =>
                   item.uuid === bookmark.uuid
-                    ? { ...item, isBookMark: bookmark.isBookmark }
+                    ? { ...item, isBookmark: bookmark.isBookmark }
                     : item,
                 ),
               }
@@ -1681,15 +1691,16 @@ const ChatDetail = ({
   const handleQuoteTaskUser = (data: { id: number; title: string }[]) => {
     if (!editor) return;
 
-    const generateTaskMessages = (
-      selectedItems: { id: number; title: string }[],
-    ) => {
-      return selectedItems.map((item) => `[タスク] ${item.title}`).join('\n');
-    };
-    const taskMessages = generateTaskMessages(data);
+    const content = data
+      .map(
+        (item) =>
+          `<p><span class="quote-task-${item.id}"  style="color: #77858F;">[タスク]</span> <span style="color: #0068B7;">${item.title}</span></p>`,
+      )
+      .join('');
 
-    editor.chain().focus().insertContent(taskMessages).run();
+    editor.chain().focus().insertContent(content).run();
   };
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -1777,70 +1788,160 @@ const ChatDetail = ({
     };
   }, [uploadFiles]);
 
+  const handleReactionClick = (msgUuid: string, icon: string) => {
+    setDataMessageDetail((prev) =>
+      prev.map((message) =>
+        message.uuid === msgUuid
+          ? {
+              ...message,
+              reactions: message.reactions?.some(
+                (reaction) => reaction.icon === icon,
+              )
+                ? message.reactions.map((reaction) =>
+                    reaction.icon === icon
+                      ? {
+                          ...reaction,
+                          users: reaction.users.includes(
+                            session?.user.id as number,
+                          )
+                            ? reaction.users
+                            : [...reaction.users, session?.user.id as number],
+                        }
+                      : reaction,
+                  )
+                : [
+                    ...(message.reactions || []),
+                    { icon, users: [session?.user.id as number] },
+                  ],
+            }
+          : message,
+      ),
+    );
+    setChatRoomNotifications({
+      notifications: 0,
+      roomCode: chatRoomCode,
+    });
+  };
+
+  const handleRemoveReactionClick = (msgUuid: string, icon: string) => {
+    setDataMessageDetail((prev) =>
+      prev.map((message) =>
+        message.uuid === msgUuid
+          ? {
+              ...message,
+              reactions: message.reactions
+                ?.map((reaction) =>
+                  reaction.icon === icon
+                    ? {
+                        ...reaction,
+                        users: reaction.users.filter(
+                          (id) => id !== (session?.user.id as number),
+                        ),
+                      }
+                    : reaction,
+                )
+                .filter((reaction) => reaction.users.length > 0),
+            }
+          : message,
+      ),
+    );
+  };
+
+  const handleResetChatRoomNotification = () => {
+    if (chatRoomNotifications && chatRoomNotifications?.notifications > 0) {
+      getChatRoomDetail({ code: chatRoomCode, isRead: true });
+    }
+    setTotalNotifications((prevTotalNotifications) => {
+      const chatRoomIndex = dataChatList.findIndex(
+        (room) => room.code == chatRoomCode,
+      );
+      if (
+        dataChatList &&
+        chatRoomIndex != -1 &&
+        dataChatList[chatRoomIndex] &&
+        dataChatList[chatRoomIndex].unreadMessages
+      ) {
+        return (
+          prevTotalNotifications - dataChatList[chatRoomIndex].unreadMessages
+        );
+      }
+      return prevTotalNotifications;
+    });
+    setDataChatList((prevDataChatList) => {
+      const newDataChatList = [...prevDataChatList];
+      const chatRoomIndex = newDataChatList.findIndex(
+        (room) => room.code == chatRoomCode,
+      );
+      if (
+        newDataChatList &&
+        chatRoomIndex != -1 &&
+        newDataChatList[chatRoomIndex] &&
+        newDataChatList[chatRoomIndex].unreadMessages
+      ) {
+        newDataChatList[chatRoomIndex].unreadMessages = 0;
+      }
+      return newDataChatList;
+    });
+    setFilteredChatList((prevFilterChatList) => {
+      const newFilterChatList = [...prevFilterChatList];
+      const chatRoomIndex = newFilterChatList.findIndex(
+        (room) => room.code == chatRoomCode,
+      );
+      if (
+        newFilterChatList &&
+        chatRoomIndex != -1 &&
+        newFilterChatList[chatRoomIndex] &&
+        newFilterChatList[chatRoomIndex].unreadMessages
+      ) {
+        newFilterChatList[chatRoomIndex].unreadMessages = 0;
+      }
+      return newFilterChatList;
+    });
+    setChatRoomNotifications({
+      notifications: 0,
+      roomCode: chatRoomCode,
+    });
+  };
+  // Function to insert reaction into editor
+  const insertReaction = (reaction: {
+    name: string;
+    src: string;
+    value: ReactionIconValue;
+  }) => {
+    editor
+      ?.chain()
+      .focus()
+      .insertContent({
+        type: 'customReaction',
+        attrs: {
+          src: reaction.src,
+          name: reaction.name,
+        },
+      })
+      .run();
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (
+        optionIconRef.current &&
+        !optionIconRef.current.contains(event.target)
+      ) {
+        setIsShowListIcon(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   return (
     <Fragment>
       {chatRoomCode && (
         <div
           className="flex flex-col flex-grow w-[calc(100vw_-_600px)] !bg-[#F8FAFC] !h-[100vh]"
-          onClick={() => {
-            if (
-              chatRoomNotifications &&
-              chatRoomNotifications?.notifications > 0
-            ) {
-              getChatRoomDetail({ code: chatRoomCode, isRead: true });
-            }
-            setTotalNotifications((prevTotalNotifications) => {
-              const chatRoomIndex = dataChatList.findIndex(
-                (room) => room.code == chatRoomCode,
-              );
-              if (
-                dataChatList &&
-                chatRoomIndex != -1 &&
-                dataChatList[chatRoomIndex] &&
-                dataChatList[chatRoomIndex].unreadMessages
-              ) {
-                return (
-                  prevTotalNotifications -
-                  dataChatList[chatRoomIndex].unreadMessages
-                );
-              }
-              return prevTotalNotifications;
-            });
-            setDataChatList((prevDataChatList) => {
-              const newDataChatList = [...prevDataChatList];
-              const chatRoomIndex = newDataChatList.findIndex(
-                (room) => room.code == chatRoomCode,
-              );
-              if (
-                newDataChatList &&
-                chatRoomIndex != -1 &&
-                newDataChatList[chatRoomIndex] &&
-                newDataChatList[chatRoomIndex].unreadMessages
-              ) {
-                newDataChatList[chatRoomIndex].unreadMessages = 0;
-              }
-              return newDataChatList;
-            });
-            setFilteredChatList((prevFilterChatList) => {
-              const newFilterChatList = [...prevFilterChatList];
-              const chatRoomIndex = newFilterChatList.findIndex(
-                (room) => room.code == chatRoomCode,
-              );
-              if (
-                newFilterChatList &&
-                chatRoomIndex != -1 &&
-                newFilterChatList[chatRoomIndex] &&
-                newFilterChatList[chatRoomIndex].unreadMessages
-              ) {
-                newFilterChatList[chatRoomIndex].unreadMessages = 0;
-              }
-              return newFilterChatList;
-            });
-            setChatRoomNotifications({
-              notifications: 0,
-              roomCode: chatRoomCode,
-            });
-          }}>
+          onClick={handleResetChatRoomNotification}>
           <div
             className="flex justify-between items-center px-4 py-2 !w-full border-b-[2px] text-white"
             style={{
@@ -2005,6 +2106,8 @@ const ChatDetail = ({
                   <div className="flex flex-col items-start ml-3">
                     <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
                     <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
+                    <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
+                    <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
                     <RowSkeleton
                       numberOfRows={4}
                       className="!h-[50px] w-[700px]"
@@ -2045,13 +2148,18 @@ const ChatDetail = ({
                       }
                       setDataMessageDetail={({
                         uuid,
-                        isBookMark,
+                        isBookmark,
                       }: {
                         uuid: string;
-                        isBookMark: boolean;
+                        isBookmark: boolean;
                       }) => {
-                        handleUpdateBookmark(uuid, isBookMark);
+                        handleUpdateBookmark(uuid, isBookmark);
                       }}
+                      handleReactionClick={handleReactionClick}
+                      handleRemoveReactionClick={handleRemoveReactionClick}
+                      handleResetChatRoomNotification={
+                        handleResetChatRoomNotification
+                      }
                     />
                   </div>
                 ))}
@@ -2099,13 +2207,18 @@ const ChatDetail = ({
                       }
                       setDataMessageDetail={({
                         uuid,
-                        isBookMark,
+                        isBookmark,
                       }: {
                         uuid: string;
-                        isBookMark: boolean;
+                        isBookmark: boolean;
                       }) => {
-                        handleUpdateBookmark(uuid, isBookMark);
+                        handleUpdateBookmark(uuid, isBookmark);
                       }}
+                      handleReactionClick={handleReactionClick}
+                      handleRemoveReactionClick={handleRemoveReactionClick}
+                      handleResetChatRoomNotification={
+                        handleResetChatRoomNotification
+                      }
                     />
                   </div>
                 ))}
@@ -2126,32 +2239,24 @@ const ChatDetail = ({
                         <div className="flex gap-1 items-center">
                           {chatRoomDetail?.type == ChatRoomType.GROUP && (
                             <>
-                              <Tippy
-                                content={'メンション'}
-                                arrow={false}
-                                delay={1000}
-                                placement="top"
-                                offset={[0, 8]}>
-                                <div
-                                  ref={mentionIconRef}
-                                  className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer"
-                                  onClick={() => {
-                                    if (mentionIconRef.current) {
-                                      const rect =
-                                        mentionIconRef.current.getBoundingClientRect();
-                                      setMentionMemberModalPosition({
-                                        left: rect.left,
-                                      });
-                                    }
-                                    setOpenMentionMembersModal(true);
-                                  }}>
-                                  <ImageRound
-                                    name="Mention"
-                                    src="/icons/mention.svg"
-                                    className="w-[16px] h-[16px]"
-                                  />
-                                </div>
-                              </Tippy>
+                              <ChatMentionMembersList
+                                editor={editor}
+                                mentionMemberOptions={mentionMemberOptions}
+                                searchMentionMembers={searchMentionMembers}
+                                mentionMembers={mentionMembers}
+                                dashboardMembers={dashboardMembers}
+                                customModalPosition={
+                                  'left-[-125px] top-[-310px]'
+                                }
+                                customArrowPosition={
+                                  'after:top-full after:border-t-white'
+                                }
+                                setMentionMembers={setMentionMembers}
+                                handleCheckboxClick={handleCheckboxClick}
+                                setSearchMentionMembers={
+                                  setSearchMentionMembers
+                                }
+                              />
                             </>
                           )}
                           <input
@@ -2181,20 +2286,47 @@ const ChatDetail = ({
                               />
                             </div>
                           </Tippy>
-                          <Tippy
-                            content={'リアクション'}
-                            arrow={false}
-                            delay={1000}
-                            placement="top"
-                            offset={[0, 8]}>
-                            <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Smile"
-                                src="/icons/smile.svg"
-                                className="w-[16px] h-[16px]"
-                              />
-                            </div>
-                          </Tippy>
+                          <div
+                            onClick={() => setIsShowListIcon(!isShowListIcon)}
+                            className="relative">
+                            <Tippy
+                              content={'リアクション'}
+                              arrow={false}
+                              delay={1000}
+                              placement="top"
+                              offset={[0, 8]}>
+                              <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                                <ImageRound
+                                  name="Smile"
+                                  src="/icons/smile.svg"
+                                  className="w-[16px] h-[16px]"
+                                />
+                              </div>
+                            </Tippy>
+                            {isShowListIcon && (
+                              <div
+                                style={{
+                                  boxShadow: '0px 4px 8px 0px #0000000F',
+                                }}
+                                ref={optionIconRef}
+                                className="w-[190px] h-[44px] absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white rounded-lg top-[-54px] bg-white flex items-center gap-3 justify-center left-[-81px]">
+                                {REACTION_LIST.map((icon) => {
+                                  return (
+                                    <div
+                                      onClick={() => insertReaction(icon)}
+                                      key={icon.name}
+                                      className={` rounded-ful`}>
+                                      <ImageRound
+                                        name={icon.name}
+                                        src={icon.src}
+                                        className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                                      />
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
 
                           {session?.user.permissions &&
                             hasPermissionInArray(
@@ -2232,6 +2364,9 @@ const ChatDetail = ({
                                 variant="outline"
                                 onClick={() => {
                                   setMsgIdUpdated && setMsgIdUpdated(undefined);
+                                  setPreserveFiles([]);
+                                  setUploadFiles([]);
+                                  setMentionMembers([]);
                                   setMessage && setMessage('');
                                   if (!editor) return;
                                   editor.commands.clearContent();
@@ -2320,32 +2455,18 @@ const ChatDetail = ({
             setSearchResultsPage(1);
             setSearchMessageResults(undefined);
           }}
-          onGotoMessage={(messageId) => {
+          onGotoMessage={(data: {
+            messageId: string | number;
+            chatRoomCode: string;
+          }) => {
             setOpenSearchMessagesModal(false);
-            setGotoMessageId(messageId);
+            setGotoMessageId(Number(data.messageId));
             gotoSelectedMessage({
-              bookmarkMessageId: messageId,
+              bookmarkMessageId: Number(data.messageId),
             });
           }}
           handleBookmark={(data: { uuid: string; isBookmark: boolean }) => {
             bookMarkMsg(data);
-          }}
-        />
-      )}
-      {openMentionMembersModal && (
-        <ChatMentionMembersModal
-          editor={editor}
-          mentionMemberModalPosition={mentionMemberModalPosition}
-          mentionMemberOptions={mentionMemberOptions}
-          searchMentionMembers={searchMentionMembers}
-          mentionMembers={mentionMembers}
-          dashboardMembers={dashboardMembers}
-          setMentionMembers={setMentionMembers}
-          handleCheckboxClick={handleCheckboxClick}
-          setSearchMentionMembers={setSearchMentionMembers}
-          onClose={() => {
-            setOpenMentionMembersModal(false);
-            setSearchMentionMembers('');
           }}
         />
       )}
@@ -2558,12 +2679,10 @@ const ChatDetail = ({
           uploadFiles={uploadFiles}
           preserveFiles={preserveFiles}
           chatRoomDetail={chatRoomDetail}
-          setMentionMemberModalPosition={setMentionMemberModalPosition}
           setPreserveFiles={setPreserveFiles}
           setMessage={setMessage}
           setUploadFiles={setUploadFiles}
           handleFileChange={handleFileChange}
-          mentionMemberModalPosition={mentionMemberModalPosition}
           mentionMemberOptions={mentionMemberOptions}
           searchMentionMembers={searchMentionMembers}
           mentionMembers={mentionMembers}
@@ -2585,6 +2704,10 @@ const ChatDetail = ({
           onClose={() => {
             setOpenUploadFilesModal(false);
             setUploadFiles([]);
+            setPreserveFiles([]);
+            setMsgIdUpdated && setMsgIdUpdated(undefined);
+            setMentionMembers([]);
+            setMessage('');
           }}
         />
       )}

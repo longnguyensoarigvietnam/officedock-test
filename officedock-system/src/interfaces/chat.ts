@@ -5,7 +5,13 @@ export interface ChatMessageResponse {
   uuid: string;
   message: string;
   isBookmark?: boolean;
-  chatRoomCode?: string;
+  chatRoom?: {
+    id: number,
+    name: string,
+    code: string,
+    type: string,
+    participants: ChatParticipant
+  }
   sender: {
     id: number;
     fullName: string;
@@ -43,13 +49,17 @@ export interface ChatMessageResponse {
     comment: string | null;
     id: number;
     organization: number;
-    skill: number;
+    skill: {
+      id: number,
+      name: string
+    };
     staff: number;
     status: SubmitLevelStatus;
   };
   schedule?: {
     id: number;
     title: string;
+    isAllDay: boolean;
   };
   chatFiles: ChatFileResponse[];
   isEdited: boolean;
@@ -57,6 +67,10 @@ export interface ChatMessageResponse {
   deletedAt: Date | null;
   type: MessageType;
   mentions?: number[];
+  reactions?: {
+    icon: string;
+    users: number[];
+  }[];
 }
 
 export interface TaskUserListChat {
@@ -64,13 +78,13 @@ export interface TaskUserListChat {
   title: string;
 }
 export interface ChatFileResponse {
-  compressedFile?: string,
+  compressedFile?: string;
   createdAt?: Date | string;
   id?: number;
   fileType: string;
-  fileSize: number
+  fileSize: number;
   fileName: string;
-  uuid: string
+  uuid: string;
 }
 
 export interface ChatDashboardMember {

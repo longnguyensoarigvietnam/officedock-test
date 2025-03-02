@@ -542,8 +542,12 @@ class TaskViewSet(
                 "countdown": remind_countdown,
             }
 
-        if (current_task.deadline != serializer_data.get("deadline")) or (
-            current_task.is_important != serializer_data.get("is_important")
+        if (
+            (current_task.status.name != TaskStatus.MY_ROUTINE.value)
+            and (current_task.deadline != serializer_data.get("deadline"))
+            or (
+                current_task.is_important != serializer_data.get("is_important")
+            )
         ):
             reset_sort_task(user)
 
@@ -1250,16 +1254,24 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         user = request.user
         queryset = self.filter_queryset(self.get_queryset())
         ordering = request.query_params.get("ordering", None)
+        status_id = request.query_params.get("status_id", None)
         if ordering:
-            tasks = queryset.all()
-            for idx, task in enumerate(tasks):
-                task_index = task.task_index.first()
-                if task_index.pin_at:
-                    task.task_index.update(
-                        pin_at=timezone.now()
-                        - timedelta(seconds=INITIAL_INDEX_VALUE + idx)
-                    )
-                task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
+            task_routine_status = TaskStatusModel.objects.filter(
+                name=TaskStatus.MY_ROUTINE.value
+            ).first()
+            if not (
+                "deadline" in ordering
+                and int(status_id) == task_routine_status.id
+            ):
+                tasks = queryset.all()
+                for idx, task in enumerate(tasks):
+                    task_index = task.task_index.first()
+                    if task_index.pin_at:
+                        task.task_index.update(
+                            pin_at=timezone.now()
+                            - timedelta(seconds=INITIAL_INDEX_VALUE + idx)
+                        )
+                    task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
 
             task_pin = TaskIndex.objects.filter(
                 task=OuterRef("pk"), user_id=user.id

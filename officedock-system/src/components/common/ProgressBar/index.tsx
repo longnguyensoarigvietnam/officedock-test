@@ -16,6 +16,7 @@ export const ProgressBar = ({ value }: ProgressBarProps) => {
           backgroundImage: 'linear-gradient(to right, #0068B6, #0088C3)',
           borderRadius: 0,
           height: 10,
+          animation: 'pulse 2s infinite',
         }}
         railStyle={{
           backgroundColor: 'transparent',

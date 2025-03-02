@@ -105,6 +105,7 @@ const ActionFilterTask = ({
         creationDataTaskData.categories.map((org) => ({
           label: org.name,
           value: org.id,
+          largeColor: org.color,
         })),
       );
     }
@@ -116,6 +117,7 @@ const ActionFilterTask = ({
       tag_ids: getValues('tagIds'),
       organization_ids: getValues('organizationIds'),
     });
+    handleClose();
   };
 
   return (
@@ -177,7 +179,7 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
-              labelOptionClass="break-words max-w-[324px]"
+              labelOptionClass="break-words max-w-[310px]"
               options={dataOptionsCategoryIds}
               selectedOptions={watch('categoryIds') ?? []}
               customLabel="カテゴリー"

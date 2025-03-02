@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 
-
 const nextConfig = {
   experimental: {
     missingSuspenseWithCSRBailout: false,
@@ -14,8 +13,18 @@ const nextConfig = {
       {
         source: '/media/:path*',
         destination: `${process.env.API_INTERNAL_URL}/media/:path*/`,
-      }
-    ]
+      },
+    ];
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 };
 

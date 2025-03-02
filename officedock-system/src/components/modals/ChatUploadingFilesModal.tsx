@@ -5,7 +5,6 @@ import {
   memo,
   SetStateAction,
   useRef,
-  useState,
 } from 'react';
 import { Editor, EditorContent, useEditor } from '@tiptap/react';
 import { Paragraph } from '@tiptap/extension-paragraph';
@@ -27,8 +26,8 @@ import {
   ChatRoomDetail,
 } from '@interfaces/chat';
 
-import { ChatMentionMembersModal } from './ChatMentionMembersModal';
 import { trimUnnecessaryLineBreaks } from '@utils';
+import { ChatMentionMembersList } from './ChatMentionMembersModal';
 
 export type ChatUploadingFilesModalProps = {
   message: string;
@@ -43,11 +42,6 @@ export type ChatUploadingFilesModalProps = {
       name: string;
     };
   }[];
-  mentionMemberModalPosition: {
-    left: number;
-    top?: number;
-    bottom?: number;
-  };
   mentionMemberOptions: (
     | ChatParticipant
     | {
@@ -65,13 +59,6 @@ export type ChatUploadingFilesModalProps = {
     type: string,
   ) => void;
   setSearchMentionMembers: Dispatch<SetStateAction<string>>;
-  setMentionMemberModalPosition: Dispatch<
-    SetStateAction<{
-      left: number;
-      top?: number;
-      bottom?: number;
-    }>
-  >;
   setPreserveFiles: Dispatch<
     SetStateAction<
       {
@@ -103,7 +90,6 @@ const ChatUploadingFilesModal = memo(
     uploadFiles,
     preserveFiles,
     chatRoomDetail,
-    mentionMemberModalPosition,
     mentionMemberOptions,
     searchMentionMembers,
     mentionMembers,
@@ -111,7 +97,6 @@ const ChatUploadingFilesModal = memo(
     setMentionMembers,
     handleCheckboxClick,
     setSearchMentionMembers,
-    setMentionMemberModalPosition,
     setPreserveFiles,
     setMessage,
     setUploadFiles,
@@ -121,8 +106,6 @@ const ChatUploadingFilesModal = memo(
     onSubmit,
   }: ChatUploadingFilesModalProps) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const [openMentionMembersModal, setOpenMentionMembersModal] =
-      useState<boolean>(false);
 
     const editor = useEditor({
       extensions: [
@@ -162,28 +145,18 @@ const ChatUploadingFilesModal = memo(
           <div className="flex gap-1 mb-4">
             {chatRoomDetail?.type == ChatRoomType.GROUP && (
               <>
-                <Tippy
-                  content={'メンション'}
-                  arrow={false}
-                  delay={1000}
-                  placement="top"
-                  offset={[0, 8]}>
-                  <div
-                    className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer"
-                    onClick={() => {
-                      setMentionMemberModalPosition({
-                        left: 20,
-                        top: 125,
-                      });
-                      setOpenMentionMembersModal(true);
-                    }}>
-                    <ImageRound
-                      name="Mention"
-                      src="/icons/mention.svg"
-                      className="w-[16px] h-[16px]"
-                    />
-                  </div>
-                </Tippy>
+                <ChatMentionMembersList
+                  editor={editor}
+                  mentionMemberOptions={mentionMemberOptions}
+                  searchMentionMembers={searchMentionMembers}
+                  mentionMembers={mentionMembers}
+                  dashboardMembers={dashboardMembers}
+                  customModalPosition={'left-[-110px] top-[35px]'}
+                  customArrowPosition={'after:bottom-full after:border-b-white'}
+                  setMentionMembers={setMentionMembers}
+                  handleCheckboxClick={handleCheckboxClick}
+                  setSearchMentionMembers={setSearchMentionMembers}
+                />
               </>
             )}
             <Tippy
@@ -292,23 +265,6 @@ const ChatUploadingFilesModal = memo(
             </Button>
           </div>
         </div>
-        {openMentionMembersModal && (
-          <ChatMentionMembersModal
-            editor={editor}
-            mentionMemberModalPosition={mentionMemberModalPosition}
-            mentionMemberOptions={mentionMemberOptions}
-            searchMentionMembers={searchMentionMembers}
-            mentionMembers={mentionMembers}
-            dashboardMembers={dashboardMembers}
-            setMentionMembers={setMentionMembers}
-            handleCheckboxClick={handleCheckboxClick}
-            setSearchMentionMembers={setSearchMentionMembers}
-            onClose={() => {
-              setOpenMentionMembersModal(false);
-              setSearchMentionMembers('');
-            }}
-          />
-        )}
       </Modal>
     );
   },

@@ -11,6 +11,7 @@ import { UserOrganization } from '@interfaces/user';
 
 interface UseMemberOrganizationListHooksProps {
   conditions?: boolean[];
+  search: string;
   onSuccess?: (success: UserOrganization[]) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -18,6 +19,7 @@ interface UseMemberOrganizationListHooksProps {
 
 const useMemberOrganizationList = ({
   conditions,
+  search,
   onSuccess,
   onError,
   onSettled,
@@ -30,7 +32,7 @@ const useMemberOrganizationList = ({
   // Handle call API get list member organization
   const getListMemberOrganization = async () => {
     setIsLoading(true);
-    const apiUrl = apiRouters.MEMBER_ORGANIZATION_LIST;
+    const apiUrl = `${apiRouters.MEMBER_ORGANIZATION_LIST}${search && `?search=${search}`}`;
 
     const { data } = await api.get<UserOrganization[]>(apiUrl);
     return data;
@@ -42,7 +44,7 @@ const useMemberOrganizationList = ({
     refetch: refetchListMemberOrganization,
     isFetched: isFetchedListMemberOrganization,
   } = useQuery({
-    queryKey: ['getListMemberOrganization'],
+    queryKey: ['getListMemberOrganization', search],
     queryFn: getListMemberOrganization,
     retry: 0,
     enabled: !!token && conditions?.every(Boolean),

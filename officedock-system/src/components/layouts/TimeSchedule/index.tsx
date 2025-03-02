@@ -902,7 +902,7 @@ const TimeSchedule = memo(
               planEndDate: item.planEndDate as string,
               isMyTask: dataItemUpdateSchedule.isMyTask,
               taskId: parseInt(`${dataItemUpdateSchedule.id}`),
-              type: dataItemUpdateSchedule.type,
+              type: ItemStartType.TASK,
               title: dataItemUpdateSchedule.title
                 ? dataItemUpdateSchedule.title
                 : '',
@@ -2166,8 +2166,8 @@ const TimeSchedule = memo(
 
     const handleRemoveEventParam = () => {
       const params = new URLSearchParams(searchParams);
-      params.delete('event');
       params.delete('type');
+      params.delete('event');
       params.delete('action');
       router.replace(`?${params.toString()}`);
     };
@@ -3060,7 +3060,6 @@ const TimeSchedule = memo(
             isStart={false}
             popoverRef={popoverRef}
             dataEvent={EventInfo}
-            handleSetEventParam={handleSetEventParam}
             onClose={() => setEventInfo(null)}
             onDelete={(data) => {
               setDataEventEditLocal(data);

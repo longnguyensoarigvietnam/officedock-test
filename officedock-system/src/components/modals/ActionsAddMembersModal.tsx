@@ -97,7 +97,9 @@ const ActionsAddMembersModal = memo(
     };
 
     const isSaveButtonDisabled =
-      watch('groupParticipant').length >= 2 && ((watch('groupName') && !watch('groupName').trim() )|| !watch('groupName'));
+      watch('groupParticipant').length >= 2 &&
+      ((watch('groupName') && !watch('groupName').trim()) ||
+        !watch('groupName'));
 
     const renderAvatar = (memberId: number) => {
       const avatarColor =
@@ -114,6 +116,7 @@ const ActionsAddMembersModal = memo(
         </div>
       );
     };
+
     return (
       <Modal
         open={open}
@@ -272,8 +275,14 @@ const ActionsAddMembersModal = memo(
                     </div>
 
                     {renderAvatar(member.id)}
-                    <p className="font-normal text-sm truncate max-w-[350px] text-black">
-                      {member.fullName}
+                    <p
+                      className={`truncate font-medium text-[15px] max-w-[430px] text-black`}>
+                      <span className="font-normal text-sm text-black">
+                        {member.fullName}
+                      </span>
+                      <span className="font-normal text-xs text-[#77858F] ml-2">
+                        {member?.organizations?.name}
+                      </span>
                     </p>
                   </div>
                 );

@@ -1,5 +1,6 @@
 import { Tags } from './tag';
 import { TodoItem } from './task';
+import { User } from './user';
 
 export interface TaskTimeStatistic {
   start: Date;
@@ -47,7 +48,12 @@ export interface dataStatisticResponse {
     date: string | null;
     remark: string;
     isSubmit: boolean;
+    isConfirmed: boolean;
+    user: User;
+    organizationName: string;
   };
+  nextUser?: number;
+  prevUser?: number;
   totalDuration: string;
   organizationCategories: OrganizationCategories;
 }
@@ -155,4 +161,19 @@ export interface DataActualDetail {
   end: string;
   left?: number;
   top?: number;
+}
+
+export interface DataUserDetailDailyType {
+  id: number;
+  fullName: string;
+  isConfirmed: boolean;
+  totalDuration: string;
+  organizationName?: string;
+}
+export interface DataListDailyType {
+  organization: {
+    id: number;
+    name: string;
+  };
+  users: DataUserDetailDailyType[];
 }

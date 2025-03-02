@@ -169,14 +169,18 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Get list of member in organization
         """
         queryset = self.get_queryset()
+        search = request.query_params.get("search")
 
-        if search := request.query_params.get("search"):
+        if search:
             queryset = queryset.filter(
-                Q(name__icontains=search)
-                | Q(users__profile__full_name__icontains=search)
+                users__profile__full_name__icontains=search
             )
 
-        return self.response_ok(self.get_serializer(queryset, many=True).data)
+        return self.response_ok(
+            self.get_serializer(
+                queryset, many=True, context={"search": search}
+            ).data
+        )
 
     @action(
         methods=["GET", "POST", "DELETE"],

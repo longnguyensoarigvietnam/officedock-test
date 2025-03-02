@@ -15,6 +15,7 @@ from tags.serializers import BaseTagSerializer
 from users.models import User
 from tasks.models import Task
 from chat.models import ChatFile
+from skills.serializers import SkillSerializer
 
 
 class CreationDataUserForChatSerializer(serializers.ModelSerializer):
@@ -154,6 +155,8 @@ class SubmitLevelForChatMessageSerializer(serializers.ModelSerializer):
     """
     Submit Level serializer for chat message.
     """
+
+    skill = SkillSerializer(read_only=True)
 
     class Meta:
         model = SubmitLevelHistory
@@ -302,6 +305,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             {
                 "id": obj.schedule_id,
                 "title": obj.schedule.title,
+                "is_all_day": obj.schedule.is_all_day,
             }
             if obj.schedule_id
             else None
@@ -341,7 +345,7 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
     Chat message bookmark serializer
     """
 
-    chat_room_code = serializers.SerializerMethodField()
+    chat_room = ChatRoomSerializer(read_only=True)
     bookmark_at = serializers.SerializerMethodField()
 
     class Meta:
@@ -349,7 +353,7 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
         fields = [
             "id",
             "uuid",
-            "chat_room_code",
+            "chat_room",
             "message",
             "sender",
             "is_edited",
@@ -357,11 +361,17 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
             "deleted_at",
             "bookmark_at",
             "type",
+            "task",
+            "submit_level",
+            "schedule_changes",
+            "schedule",
+            "mentions",
+            "tasks",
+            "quote",
+            "reply",
+            "reactions",
+            "chat_files",
         ]
-
-    def get_chat_room_code(self, obj):
-        """Get chat room code"""
-        return obj.chat_room.code
 
     def get_bookmark_at(self, obj):
         """Get bookmark_at"""

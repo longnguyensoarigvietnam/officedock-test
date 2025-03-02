@@ -414,7 +414,7 @@ class OrganizationMemberSerializer(serializers.ModelSerializer):
     Serializer for mermber organization
     """
 
-    users = MemberSerializer(many=True)
+    users = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
@@ -423,6 +423,15 @@ class OrganizationMemberSerializer(serializers.ModelSerializer):
             "name",
             "users",
         ]
+
+    def get_users(self, obj):
+        """Get users in organization"""
+        users = obj.users.all()
+
+        if search := self.context.get("search"):
+            users = users.filter(profile__full_name__icontains=search)
+
+        return MemberSerializer(users, many=True).data
 
 
 class ListOrganizationSkillSerializer(serializers.Serializer):

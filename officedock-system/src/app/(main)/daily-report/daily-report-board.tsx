@@ -15,6 +15,7 @@ import Image from 'next/image';
 import jaLocale from '@fullcalendar/core/locales/ja';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import Link from 'next/link';
 
 import {
   useReactTable,
@@ -39,7 +40,11 @@ import { Table, TableBody } from '@components/common/Table';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import Input from '@components/common/Input';
 import ActionDetailDaily from '@components/daily/ActionDetailDaily';
-import TaskDailyCard from './taskDailyCard';
+import SingleSelect from '@components/common/SingleSelect';
+import ResizeTextArea from '@components/custom/resizeTextArea';
+import Dropdown from '@components/common/Dropdown';
+import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';
+import TaskDailyCard from '../../../components/daily/taskDailyCard';
 
 import {
   EventCalendarType,
@@ -50,12 +55,15 @@ import {
   StatusValueTask,
   UserRoles,
 } from '@constants/enums';
-import { apiRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
+import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 
 import './styles/daily-report.css';
 import useDataStatistic from '@hooks/useDataStatistic';
 import useCreationDataTask from '@hooks/useCreationDataTask';
+import { useErrorToast } from '@hooks/useErrorToast';
+
 import {
   ChildTask,
   DataActualDetail,
@@ -94,12 +102,6 @@ import { useWebSocket } from '@providers/WebSocketProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import api from '@base/api';
-import SingleSelect from '@components/common/SingleSelect';
-import ResizeTextArea from '@components/custom/resizeTextArea';
-import Dropdown from '@components/common/Dropdown';
-import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
-import { useErrorToast } from '@hooks/useErrorToast';
-import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';
 
 const DailyReportBoard = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -1929,7 +1931,9 @@ const DailyReportBoard = () => {
               </Button>
               {session &&
                 hasRole(session?.user.roles, UserRoles.SYSTEM_ADMIN) && (
-                  <div className="bg-white flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
+                  <Link
+                    href={pageRouters.DAILY_REPORT_LIST.href}
+                    className="bg-white flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
                     <span>チームの日報一覧</span>
                     <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
                       <ImageRound
@@ -1938,7 +1942,7 @@ const DailyReportBoard = () => {
                         name="right"
                       />
                     </div>
-                  </div>
+                  </Link>
                 )}
             </div>
           </div>

@@ -129,6 +129,7 @@ export enum MessageType {
   REMOVE_MEMBER_TASK = 'REMOVE_MEMBER_TASK',
   ADD_MEMBER_TASK = 'ADD_MEMBER_TASK',
   SUBMIT_LEVEL_SKILL = 'SUBMIT_LEVEL_SKILL',
+  CREATE_SUBMIT_LEVEL_SKILL = 'CREATE_SUBMIT_LEVEL_SKILL'
 }
 export enum SocketActions {
   MESSAGE = 'MESSAGE',
@@ -381,4 +382,12 @@ export enum TimeType {
 export enum FilterTypeKanban {
   DEADLINE = '-deadline',
   IMPORTANT = '-is_important',
+}
+
+export enum ReactionIconValue {
+  OK = 1,
+  LIKE = 2,
+  THANK = 3,
+  HAND = 4,
+  SMILE = 5,
 }

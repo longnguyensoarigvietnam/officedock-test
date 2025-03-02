@@ -758,18 +758,19 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     )
                 participant.hidden_at = None
                 participant.save()
-                # Handle case realtime when send chat message
-                send_web_socket_event(
-                    {
-                        "client_id": client_id,
-                        "action": WebSocketEventType.MESSAGE.value,
-                        "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                            participant
-                        ).data,
-                        "chat_message": ChatMessageSerializer(message).data,
-                    },
-                    participant,
-                )
+                if participant.user_id != user.id:
+                    # Handle case realtime when send chat message
+                    send_web_socket_event(
+                        {
+                            "client_id": client_id,
+                            "action": WebSocketEventType.MESSAGE.value,
+                            "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                                participant
+                            ).data,
+                            "chat_message": ChatMessageSerializer(message).data,
+                        },
+                        participant,
+                    )
 
             return self.response_created(ChatMessageSerializer(message).data)
 
@@ -845,25 +846,23 @@ class ChatMessageViewSet(
         Get a list of chat rooms.
         """
         user = request.user
-        messages = []
-        if is_bookmark := request.query_params.get("is_bookmark"):
-            messages = (
-                user.bookmark_messages.filter(deleted_at__isnull=True)
-                .order_by("bookmarks__bookmark_at")
-                .distinct()
-            )
+        messages = self.get_queryset().filter(deleted_at__isnull=True)
 
         if message := request.query_params.get("message"):
             messages = (
-                ChatMessage.objects.annotate(
-                    clean_message=StripTags(F("message"))
-                )
-                .filter(
-                    Q(clean_message__icontains=message)
-                    & Q(deleted_at__isnull=True)
-                )
+                messages.annotate(clean_message=StripTags(F("message")))
+                .filter(clean_message__icontains=message)
                 .order_by("-created_at")
             )
+
+        if is_bookmark := request.query_params.get("is_bookmark"):
+            messages = (
+                messages.filter(bookmark_users=user)
+                .order_by("bookmarks__bookmark_at")
+                .distinct()
+            )
+        else:
+            messages = messages.order_by("-created_at")
 
         return self.response_pagination(
             request, messages, ChatMessageBookMarkSerializer
@@ -903,6 +902,7 @@ class ChatMessageViewSet(
         url_path="reaction",
         serializer_class=ReactionSerializer,
     )
+    @transaction.atomic()
     def reaction(self, request, uuid=None):
         """
         Bookmark message
@@ -912,9 +912,26 @@ class ChatMessageViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
-        instance.reactions.create(
-            company=user.company, user=user, icon=serializer_data.pop("icon")
-        )
+        icon = serializer_data.pop("icon")
+        if instance.reactions.filter(user=user, icon=icon).exists():
+            instance.reactions.filter(user=user, icon=icon).delete()
+        else:
+            instance.reactions.create(
+                company=user.company, user=user, icon=icon
+            )
+        participants = instance.chat_room.chat_rooms_participants.all()
+        for participant in participants:
+            if participant.user.id != user.id:
+                send_web_socket_event(
+                    {
+                        "action": WebSocketEventType.EDIT_MESSAGE.value,
+                        "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                            participant
+                        ).data,
+                        "chat_message": ChatMessageSerializer(instance).data,
+                    },
+                    participant.user,
+                )
 
         return self.response_ok()
 

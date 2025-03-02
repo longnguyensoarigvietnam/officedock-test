@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import Link from 'next/link';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
@@ -8,9 +8,19 @@ import GroupMember from './group';
 import { pageRouters } from '@constants/routers';
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
 import DetailProfileMemberModal from '@components/modals/DetailProfileMemberModal';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import useDebounceText from '@hooks/useDebounceText';
 
 const ListMember = () => {
-  const { listMemberOrganization } = useMemberOrganizationList({});
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+
+  const [searchData, setSearchData] = useState<string>('');
+
+  const searchTermDebounce = useDebounceText(searchData, 1000);
+
+  const { listMemberOrganization } = useMemberOrganizationList({
+    search: searchTermDebounce,
+  });
 
   const [isShowModalDetail, setIsShowModalDetail] = useState(false);
   const [userId, setUserId] = useState<string>('');
@@ -25,11 +35,9 @@ const ListMember = () => {
             className="w-[34px] h-[34px]"
           />
           <p className="">会社名</p>
-          <Link
-            href={pageRouters.USERS_MANAGEMENT}
-            className="text-[#77858F] text-[13px] ml-[10px]">
-            全メンバー50人
-          </Link>
+          <div className="text-[#77858F] text-[13px] ml-[10px]">
+            全メンバー{dashboardMembersWithAvatars.length}人
+          </div>
         </div>
         <div className="flex items-center">
           <InputSearch
@@ -37,17 +45,22 @@ const ListMember = () => {
             inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm"
             iconClassName="w-[14px] h-[14px]"
             placeholder="名前を検索"
+            onChange={(e) => {
+              setSearchData(e.target.value);
+            }}
           />
           <p className="text-[#77858F] text-sm font-normal ml-[30px]">
             ユーザー管理へ
           </p>
-          <div className="h-[18px] w-[18px] flex items-center justify-center bg-white rounded-full ml-[6px]">
+          <Link
+            href={pageRouters.USERS_MANAGEMENT.href}
+            className="h-[18px] w-[18px] flex items-center justify-center bg-white rounded-full ml-[6px]">
             <ImageRound
               className=" h-[8px] w-fit cursor-pointer"
               src="/icons/right-statistic.svg"
               name="right"
             />
-          </div>
+          </Link>
         </div>
       </div>
       <div className="mt-[30px] flex flex-col gap-[30px]">
