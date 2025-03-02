@@ -4,7 +4,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 
@@ -19,7 +18,6 @@ import {
   Transition,
 } from '@headlessui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { debounce } from 'lodash';
 import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
@@ -829,18 +827,13 @@ const ListChatUsers = ({
       </div>
     );
   };
+
   const goToBookmark = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('room', 'bookmark');
 
     router.push(`/chat?${params.toString()}`, { scroll: false });
   };
-
-  const debouncedFetchChatRoomData = useRef(
-    debounce((item: ChatRoomItem) => {
-      handleSetChatRoomParam(`${item?.code}`);
-    }, 700),
-  ).current;
 
   return (
     <aside className="w-[350px] max-w-[350px] min-w-[350px] border-r-[2px] pr-3 pt-5">
@@ -971,7 +964,7 @@ const ListChatUsers = ({
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
-                    debouncedFetchChatRoomData(item);
+                    handleSetChatRoomParam(item.code)
                     handleResetChatRoomUnreadMessages(item);
                     setSearchChatMsg('');
                     setIsReload(false);
@@ -1049,7 +1042,7 @@ const ListChatUsers = ({
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
-                    debouncedFetchChatRoomData(item);
+                    handleSetChatRoomParam(item.code)
                     handleResetChatRoomUnreadMessages(item);
                     setSearchChatMsg('');
                     setIsReload(false);

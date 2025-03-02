@@ -292,33 +292,52 @@ const ChatDetail = ({
   const typeDetail = searchParams.get('type');
   const taskDetailId = searchParams.get('task');
 
-  // Handle get list and more data message
+  const controllerRef = useRef<AbortController | null>(null);
+
   const handleGetDataMessages = async (pageNumber: number) => {
     if (chatRoomCode) {
       setInitialLoad(true);
+
+      // Cancel any previous request
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+
+      // Create new controller for the new request
+      const controller = new AbortController();
+      controllerRef.current = controller;
+
       const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${lastItemId ? `&message_id=${lastItemId}` : ''}${messageBookmarkId ? `&bookmark_message_id=${messageBookmarkId}` : ''}`;
-      return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
+
+      const response = await api.get<BasePagination<ChatMessageResponse[]>>(
+        apiUrl,
+        {
+          signal: controller.signal,
+        },
+      );
+      return response;
     }
   };
 
   useEffect(() => {
-    if (
-      dataMessageDetail.length > 0 &&
-      gotoMessageId &&
-      gotoMessageRef.current
-    ) {
-      gotoMessageRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-      });
-      setHighlightedMessageId(String(gotoMessageId));
-      setGotoMessageId(null);
-      setTimeout(() => {
-        setHighlightedMessageId(null);
-      }, 5000);
+    if (gotoMessageId) {
+      const timer = setTimeout(() => {
+        const targetElement = document.querySelector(
+          `[data-message-id="${gotoMessageId}"]`,
+        );
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'end',
+          });
+          setHighlightedMessageId(String(gotoMessageId));
+          setGotoMessageId(null);
+          setTimeout(() => setHighlightedMessageId(null), 5000);
+        }
+      }, 200);
+      return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataMessageDetail]);
+  }, [gotoMessageId, dataMessageDetail]);
 
   const { mutate: getDataListMessages } = useMutation(
     'getDataListMessages',
@@ -525,7 +544,11 @@ const ChatDetail = ({
     if (chatRoomCode) {
       getDataListMessages(page);
     }
-
+    return () => {
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatRoomCode]);
 
@@ -537,16 +560,16 @@ const ChatDetail = ({
       if (
         chatContainer &&
         hasMoreDetail &&
-        chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) ===
-          chatContainer.scrollHeight
+        Math.round(chatContainer.clientHeight + Math.abs(chatContainer.scrollTop)) ==
+          Math.round(chatContainer.scrollHeight)
       ) {
         getDataListMessages(page);
       } else if (
         chatContainer &&
         hasMoreDetailOnScrollDown &&
-        Math.abs(chatContainer.scrollTop) == 0
+        Math.floor(Math.abs(chatContainer.scrollTop)) == 0
       ) {
-        chatContainer.scrollTop = -10;
+        chatContainer.scrollTop = -50;
         getDataListMessagesOnScrollDown({ pageNumber: page, sorting: true });
       }
     };
@@ -955,14 +978,14 @@ const ChatDetail = ({
     mentionIds,
     files,
     fileUuids,
-    taskIds
+    taskIds,
   }: {
     data: string;
     uuid: string;
     mentionIds: number[];
     files: File[];
     fileUuids: string[];
-    taskIds: number[]
+    taskIds: number[];
   }) => {
     const formData = new FormData();
     formData.append('message', data);
@@ -1048,7 +1071,7 @@ const ChatDetail = ({
         uuid: file.uuid,
       };
     });
-    const taskIds = quoteTaskList.map((task) => task.id)
+    const taskIds = quoteTaskList.map((task) => task.id);
     setDataMessageDetail([
       {
         uuid: uuidMsg,
@@ -1084,14 +1107,14 @@ const ChatDetail = ({
 
     editor.commands.clearContent();
     setMentionMembers([]);
-    setQuoteTaskList([])
+    setQuoteTaskList([]);
     handleSendMsgChat({
       data: newMsg,
       uuid: uuidMsg,
       mentionIds,
       files: uploadFiles.map((file) => file.file),
       fileUuids: uploadFiles.map((file) => file.uuid),
-      taskIds: taskIds
+      taskIds: taskIds,
     });
   };
 
@@ -2309,6 +2332,7 @@ const ChatDetail = ({
                 .map((item) => (
                   <div
                     key={item.id}
+                    data-message-id={item.id}
                     ref={item.id == gotoMessageId ? gotoMessageRef : null}>
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
@@ -2363,6 +2387,7 @@ const ChatDetail = ({
                 .map((item) => (
                   <div
                     key={item.id}
+                    data-message-id={item.id}
                     ref={item.id == gotoMessageId ? gotoMessageRef : null}>
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}

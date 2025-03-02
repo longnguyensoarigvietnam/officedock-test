@@ -45,7 +45,10 @@ interface SearchMessagesModalProps {
     >,
   ) => void;
   onSubmit: (searchChatMsg: string, page: number) => void;
-  onGotoMessage: (data: { messageId: string | number; chatRoomCode: string }) => void;
+  onGotoMessage: (data: {
+    messageId: string | number;
+    chatRoomCode: string;
+  }) => void;
   onClose: () => void;
   handleBookmark: (data: { uuid: string; isBookmark: boolean }) => void;
 }
@@ -98,8 +101,9 @@ export const SearchMessagesModal = ({
       if (
         resultsContainer &&
         hasMoreSearchResultDetail &&
-        Math.round(resultsContainer.clientHeight + Math.abs(resultsContainer.scrollTop)) ===
-          resultsContainer.scrollHeight
+        Math.round(
+          resultsContainer.clientHeight + Math.abs(resultsContainer.scrollTop),
+        ) === resultsContainer.scrollHeight
       ) {
         const updatedSearchResultsPage = searchResultsPage + 1;
         onSubmit(searchChatMsg, updatedSearchResultsPage);
@@ -223,11 +227,18 @@ export const SearchMessagesModal = ({
                   </div>
                   <div className="flex justify-between !w-full items-start">
                     <div className="w-[88%]">
-                      <div className="flex gap-2 font-semibold text-sm pb-2">
+                      <div className="flex items-center gap-2 font-semibold text-sm pb-2">
                         <p>{messageDetail.sender.fullName} </p>
                         <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
                           {messageDetail.sender?.organizations?.name}
                         </p>
+                        {messageDetail.isBookmark && (
+                          <ImageRound
+                            name="Book mark"
+                            src={`/icons/${messageDetail.isBookmark ? 'save-active.svg' : 'save-chat.svg'}`}
+                            className="w-[10px] h-[12px] hover:cursor-pointer"
+                          />
+                        )}
                       </div>
                       <p
                         className="text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]"

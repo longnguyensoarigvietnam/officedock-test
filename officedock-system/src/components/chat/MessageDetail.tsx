@@ -432,7 +432,7 @@ export const MessageDetail = ({
   return (
     <Fragment>
       {dataMsgDetail && (
-        <div className="group my-6">
+        <div className="group my-2">
           {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
             chatRoomDetail?.type === ChatRoomType.GROUP ||
             chatRoomDetail?.type === ChatRoomType.SELF) && (
@@ -450,7 +450,7 @@ export const MessageDetail = ({
                       <ImageRound
                         name="Save"
                         src="/icons/save-active.svg"
-                        className="w-[12px] h-[14px] hover:cursor-pointer"
+                        className="w-[10px] h-[12px] hover:cursor-pointer"
                       />
                     )}
                   </div>
@@ -1053,22 +1053,25 @@ export const MessageDetail = ({
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">
                   {messageDetail.type !== MessageType.MESSAGE ? (
-                    <p className="font-semibold text-sm pb-2">タスクカード</p>
+                    <div className="flex gap-2 !items-center font-semibold text-[15px] pb-2">
+                      <p className="font-semibold text-sm">タスクカード</p>
+                      {messageDetail.isBookmark && (
+                        <ImageRound
+                          name="Save"
+                          src="/icons/save-active.svg"
+                          className="w-[10px] h-[12px] hover:cursor-pointer"
+                        />
+                      )}
+                    </div>
                   ) : (
                     <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
                       <p>{messageDetail.sender.fullName} </p>
                       <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
                       </p>
-                      {messageDetail.isBookmark && (
-                        <ImageRound
-                          name="Save"
-                          src="/icons/save-active.svg"
-                          className="w-[12px] h-[14px] hover:cursor-pointer"
-                        />
-                      )}
                     </div>
                   )}
+
                   <div className={`flex items-start`}>
                     <p className="font-medium text-xs text-[#77858F]">
                       {messageDetail.createdAt &&
@@ -1211,7 +1214,7 @@ export const MessageDetail = ({
                       <ImageRound
                         name="Save"
                         src="/icons/save-active.svg"
-                        className="w-[12px] h-[14px] hover:cursor-pointer"
+                        className="w-[10px] h-[12px] hover:cursor-pointer"
                       />
                     )}
                   </div>
@@ -1349,7 +1352,7 @@ export const MessageDetail = ({
                       <ImageRound
                         name="Save"
                         src="/icons/save-active.svg"
-                        className="w-[12px] h-[14px] hover:cursor-pointer"
+                        className="w-[10px] h-[12px] hover:cursor-pointer"
                       />
                     )}
                   </div>
