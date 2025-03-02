@@ -169,7 +169,7 @@ const DetailReactionChat = ({
                   reactionIcon(reaction.icon);
                 }
               }}
-              className={`flex cursor-pointer gap-[6px] pl-2 pr-[11px] h-8 items-center bg-[#EBF1F7] rounded border border-[#D2DBE1] ${reaction.hasReacted && '!border-[#0068B6]'}`}>
+              className={`flex cursor-pointer gap-[6px] pl-2 pr-[11px] h-8 items-center bg-white rounded border border-[#D2DBE1] ${reaction.hasReacted && '!border-[#0068B6] !bg-[#EBF1F7]'}`}>
               <ImageRound
                 name={reaction.icon}
                 src={iconSrc}

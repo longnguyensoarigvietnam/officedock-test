@@ -120,13 +120,21 @@ const ActionFilterTask = ({
     handleClose();
   };
 
+  const handleReset = () => {
+    setOrderingOptions({
+      category_ids: [],
+      organization_ids: [],
+      tag_ids: [],
+    });
+  };
+
   return (
     <>
       <div className="w-full pt-[10px] pl-5 pr-[10px] pb-5 bg-white rounded-lg shadow-common p-1 flex flex-col gap-1 text-sm">
         <div className="text-xs font-medium text-[#77858F] flex justify-between items-center">
           <span>絞り込み</span>
           <div className="flex items-center gap-x-[10px]">
-            <span onClick={() => reset()} className="cursor-pointer">
+            <span onClick={handleReset} className="cursor-pointer">
               選択をクリア
             </span>
             <div

@@ -57,7 +57,11 @@ import {
 import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 
 import { apiRouters, pageRouters } from '@constants/routers';
-import { ERROR_UPDATE_MESSAGE } from '@constants/message';
+import {
+  ERROR_DELETE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
+} from '@constants/message';
 
 import './../styles/daily-report.css';
 import useDataStatistic from '@hooks/useDataStatistic';
@@ -178,6 +182,7 @@ const DailyReportDetailBoard = () => {
       ?.avatarColor || '';
 
   const handleShowEventsInModal = (data: {
+    uuid: string;
     largeColor?: string;
     start: string;
     end: string;
@@ -187,6 +192,7 @@ const DailyReportDetailBoard = () => {
     clientY: number;
   }) => {
     setPopoverInfo({
+      uuid: data.uuid,
       largeColor: data.largeColor ? data.largeColor : '',
       title: data.title,
       end: data.end,
@@ -207,6 +213,9 @@ const DailyReportDetailBoard = () => {
       largeColor: clickInfo.event.extendedProps.largeColor
         ? clickInfo.event.extendedProps.largeColor
         : '',
+      uuid: clickInfo.event.extendedProps.uuid
+        ? clickInfo.event.extendedProps.uuid
+        : '',
       start: clickInfo.event.start,
       end: clickInfo.event.end,
       eventList: taskTimeStatisticList,
@@ -222,6 +231,7 @@ const DailyReportDetailBoard = () => {
     return tasks.flatMap((task) =>
       task.taskDurations.map((duration) => ({
         id: `${duration.id}`,
+        uuid: duration.uuid,
         title: task.title ? task.title : '',
         startedAt: duration.startedAt
           ? new Date(duration.startedAt)
@@ -421,6 +431,32 @@ const DailyReportDetailBoard = () => {
     },
   );
 
+  // Handle delete Actual task
+  const handleDeleteActualTask = async (uuid: string) => {
+    const { data: response } = await api.delete(
+      apiRouters.UPDATE_TASK_ACTUAL(uuid),
+    );
+    return response;
+  };
+
+  const { mutate: deleteActualTask } = useMutation(
+    'deleteActualTask',
+    handleDeleteActualTask,
+    {
+      onSuccess: async () => {
+        setPopoverInfo(null);
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        refetchDataStatistic();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
+      },
+      onSettled: () => {},
+    },
+  );
+
   //  Handle call api confirm user daily
   const handleActionConfirmUserDaily = async (dataUser: {
     id: number;
@@ -431,7 +467,7 @@ const DailyReportDetailBoard = () => {
       `${apiRouters.CONFIRM_USER_DAILY(dataUser.id)}`,
       {
         isConfirmed: dataUser.isConfirmed,
-        date: formatDateServer(new Date()),
+        date: formatDateServer(currentDate),
       },
     );
     return data;
@@ -2582,6 +2618,7 @@ const DailyReportDetailBoard = () => {
           popoverInfo={popoverInfo}
           popoverRef={popoverRef}
           onClose={() => setPopoverInfo(null)}
+          deleteActualTask={(uuid: string) => deleteActualTask(uuid)}
         />
       )}
     </div>
