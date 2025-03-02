@@ -1,6 +1,8 @@
 'use client';
 import {
+  Dispatch,
   Fragment,
+  SetStateAction,
   useCallback,
   useContext,
   useEffect,
@@ -64,6 +66,7 @@ interface dataProps {
   >;
   setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setHasMore: React.Dispatch<React.SetStateAction<boolean>>;
+  setHasMoreDetailOnScrollDown: Dispatch<SetStateAction<boolean>>
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleSetChatRoomParam: (code: string) => void;
   handleRemoveChatRoomParam: () => void;
@@ -79,6 +82,7 @@ const ListChatUsers = ({
   setDataChatList,
   setFilteredChatList,
   setHasMore,
+  setHasMoreDetailOnScrollDown,
   setSearchChatMsg,
   handleSetChatRoomParam,
   handleRemoveChatRoomParam,
@@ -968,6 +972,7 @@ const ListChatUsers = ({
                     handleResetChatRoomUnreadMessages(item);
                     setSearchChatMsg('');
                     setIsReload(false);
+                    setHasMoreDetailOnScrollDown(false)
                   }}>
                   <Tippy
                     content={item.pinAt ? 'ピンを外す' : 'ピン留め'}

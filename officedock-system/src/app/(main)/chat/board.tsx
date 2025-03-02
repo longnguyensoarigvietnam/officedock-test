@@ -37,6 +37,8 @@ const BoardChat = () => {
   const [lastItemId, setLastItemId] = useState<number | null>();
   const [hasMoreDetail, setHasMoreDetail] = useState<boolean>(true);
   const [hasMore, setHasMore] = useState<boolean>(true);
+  const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
+    useState(false);
   const [dataChatList, setDataChatList] = useState<ChatRoomItem[]>([]);
   const [filteredChatList, setFilteredChatList] = useState<ChatRoomItem[]>([]);
   const [searchChatMsg, setSearchChatMsg] = useState('');
@@ -354,6 +356,7 @@ const BoardChat = () => {
         setDataChatList={setDataChatList}
         setFilteredChatList={setFilteredChatList}
         setHasMore={setHasMore}
+        setHasMoreDetailOnScrollDown={setHasMoreDetailOnScrollDown}
         setSearchChatMsg={setSearchChatMsg}
         handleSetChatRoomParam={handleSetChatRoomParam}
         handleRemoveChatRoomParam={handleRemoveChatRoomParam}
@@ -370,6 +373,8 @@ const BoardChat = () => {
           dashboardMembers={dashboardMembers}
           creationDataTaskData={creationDataTaskData}
           searchChatMsg={searchChatMsg}
+          hasMoreDetailOnScrollDown={hasMoreDetailOnScrollDown}
+          setHasMoreDetailOnScrollDown={setHasMoreDetailOnScrollDown}
           setSearchChatMsg={setSearchChatMsg}
           setFilteredChatList={setFilteredChatList}
           setLastItemId={setLastItemId}

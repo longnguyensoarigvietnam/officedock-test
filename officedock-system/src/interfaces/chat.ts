@@ -6,12 +6,12 @@ export interface ChatMessageResponse {
   message: string;
   isBookmark?: boolean;
   chatRoom?: {
-    id: number,
-    name: string,
-    code: string,
-    type: string,
-    participants: ChatParticipant
-  }
+    id: number;
+    name: string;
+    code: string;
+    type: string;
+    participants: ChatParticipant;
+  };
   sender: {
     id: number;
     fullName: string;
@@ -50,8 +50,8 @@ export interface ChatMessageResponse {
     id: number;
     organization: number;
     skill: {
-      id: number,
-      name: string
+      id: number;
+      name: string;
     };
     staff: number;
     status: SubmitLevelStatus;
@@ -70,6 +70,10 @@ export interface ChatMessageResponse {
   reactions?: {
     icon: string;
     users: number[];
+  }[];
+  tasks?: {
+    id: number;
+    title: string;
   }[];
 }
 
