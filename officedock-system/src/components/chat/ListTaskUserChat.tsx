@@ -151,7 +151,6 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
       }
     });
   };
-
   return (
     <div className="relative z-20">
       <Tippy
@@ -231,7 +230,7 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
                     key={item.id}
                     onClick={() => handleToggleSelect(item.id, item.title)}
                     className={`${
-                      isSelected ? 'border border-[#0068B6]' : ' '
+                      isSelected ? 'border !border-[#0068B6]' : ' '
                     } px-4 break-all py-[11px] border border-transparent text-sm text-black font-medium rounded-md bg-[#EBF1F7]`}>
                     {item.title}
                   </p>

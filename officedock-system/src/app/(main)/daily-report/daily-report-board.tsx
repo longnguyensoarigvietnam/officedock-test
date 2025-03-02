@@ -56,7 +56,11 @@ import {
   UserRoles,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { ERROR_UPDATE_MESSAGE } from '@constants/message';
+import {
+  ERROR_DELETE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
+} from '@constants/message';
 import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 
 import './styles/daily-report.css';
@@ -159,10 +163,12 @@ const DailyReportBoard = () => {
     eventList: any[];
     clientX: number;
     clientY: number;
+    uuid: string;
   }) => {
     setPopoverInfo({
       largeColor: data.largeColor ? data.largeColor : '',
       title: data.title,
+      uuid: data.uuid,
       end: data.end,
       start: data.start,
       left: adjustPositionForViewportSchedule({
@@ -186,6 +192,9 @@ const DailyReportBoard = () => {
       eventList: taskTimeStatisticList,
       clientX: clickInfo.jsEvent.clientX,
       clientY: clickInfo.jsEvent.clientY,
+      uuid: clickInfo.event.extendedProps.uuid
+        ? clickInfo.event.extendedProps.uuid
+        : '',
     });
   };
 
@@ -196,6 +205,7 @@ const DailyReportBoard = () => {
     return tasks.flatMap((task) =>
       task.taskDurations.map((duration) => ({
         id: `${duration.id}`,
+        uuid: duration.uuid,
         title: task.title ? task.title : '',
         startedAt: duration.startedAt
           ? new Date(duration.startedAt)
@@ -383,6 +393,32 @@ const DailyReportBoard = () => {
       onError: (error: AxiosError<any>) => {
         setIsLoading(false);
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {},
+    },
+  );
+
+  // Handle delete Actual task
+  const handleDeleteActualTask = async (uuid: string) => {
+    const { data: response } = await api.delete(
+      apiRouters.UPDATE_TASK_ACTUAL(uuid),
+    );
+    return response;
+  };
+
+  const { mutate: deleteActualTask } = useMutation(
+    'deleteActualTask',
+    handleDeleteActualTask,
+    {
+      onSuccess: async () => {
+        setPopoverInfo(null);
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        refetchDataStatistic();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
       },
       onSettled: () => {},
     },
@@ -2448,6 +2484,7 @@ const DailyReportBoard = () => {
           popoverInfo={popoverInfo}
           popoverRef={popoverRef}
           onClose={() => setPopoverInfo(null)}
+          deleteActualTask={(uuid: string) => deleteActualTask(uuid)}
         />
       )}
     </div>

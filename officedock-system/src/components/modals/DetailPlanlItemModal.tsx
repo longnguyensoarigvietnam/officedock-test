@@ -276,7 +276,7 @@ const DetailPlanItemModal = ({
             <div className="flex gap-x-[6px] items-center justify-center">
               <div
                 onClick={() => setIsShowAction(!isShowAction)}
-                className={`rounded-full cursor-pointer w-6 h-6  flex items-center justify-center bg-[#E3EAED]`}>
+                className={`rounded-full cursor-pointer w-6 h-6  flex items-center justify-center  ${isShowAction && 'bg-[#E3EAED]'}`}>
                 <ImageRound
                   src={`/icons/more-black.svg`}
                   name="more"
