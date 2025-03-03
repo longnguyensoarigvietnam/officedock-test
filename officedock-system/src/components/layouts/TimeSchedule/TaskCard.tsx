@@ -172,7 +172,7 @@ const TaskCard = ({
         if (!data.isAnotherTaskStarted) {
           calculateDurationTask({
             id: isEvent
-              ? event.event.id.replace(/[^0-9]/g, '').slice(0, 4)
+              ? event.event.extendedProps.scheduleId
               : event.event.extendedProps.taskId,
             type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
           });
@@ -184,7 +184,7 @@ const TaskCard = ({
           });
           setDataRunning({
             id: isEvent
-              ? event.event.id.replace(/[^0-9]/g, '').slice(0, 4)
+              ? event.event.extendedProps.scheduleId
               : event.event.extendedProps.taskId,
             type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
           });
@@ -230,9 +230,7 @@ const TaskCard = ({
         });
         resolve();
       });
-      handleConfirmCheckStartTask(
-        `${event.event.id.replace(/[^0-9]/g, '').slice(0, 4)}`,
-      );
+      handleConfirmCheckStartTask(`${event.event.extendedProps.scheduleId}`);
     } else {
       await new Promise<void>((resolve) => {
         setTaskSelectedToStart({
@@ -264,7 +262,7 @@ const TaskCard = ({
     calculateDurationTask({
       id:
         event.event.extendedProps.type === ItemStartType.SCHEDULE
-          ? `${event.event.id.replace(/[^0-9]/g, '').slice(0, 4)}`
+          ? `${event.event.extendedProps.scheduleId}`
           : event.event.extendedProps.taskId,
       type:
         event.event.extendedProps.type === ItemStartType.SCHEDULE
@@ -274,7 +272,7 @@ const TaskCard = ({
     setShowWarningStartModal(false);
 
     setDataRunning({
-      id: `${event.event.id.replace(/[^0-9]/g, '').slice(0, 4)}`,
+      id: `${event.event.extendedProps.scheduleId}`,
       type:
         event.event.extendedProps.type === ItemStartType.SCHEDULE
           ? ItemStartType.SCHEDULE
