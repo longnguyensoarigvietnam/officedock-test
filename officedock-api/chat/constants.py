@@ -89,4 +89,4 @@ ROOM_TYPES = [
     (ChatRoomTypes.CALENDAR, ChatRoomNames.CALENDAR),
 ]
 
-CHAT_FILES_FOLDER_UPLOAD = "chat"
+CHAT_FILES_FOLDER_UPLOAD = "chats"
