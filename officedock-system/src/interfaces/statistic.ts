@@ -180,3 +180,9 @@ export interface DataListDailyType {
   };
   users: DataUserDetailDailyType[];
 }
+
+export interface dataRequestConfirmType {
+  id: number;
+  isConfirmed: boolean;
+  categoryId: number;
+}
