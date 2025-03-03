@@ -159,7 +159,7 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
-              labelOptionClass="break-words max-w-[324px]"
+              labelOptionClass="break-words max-w-[300px] line-clamp-2"
               options={dataOptionsOrganizations}
               selectedOptions={watch('organizationIds') ?? []}
               customLabel="チーム"
@@ -187,7 +187,7 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
-              labelOptionClass="break-words max-w-[310px]"
+              labelOptionClass="break-words max-w-[300px] line-clamp-2"
               options={dataOptionsCategoryIds}
               selectedOptions={watch('categoryIds') ?? []}
               customLabel="カテゴリー"
@@ -215,7 +215,7 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
-              labelOptionClass="break-words max-w-[324px]"
+              labelOptionClass="break-words max-w-[300px] line-clamp-2"
               options={dataOptionsTagIds}
               selectedOptions={watch('tagIds') ?? []}
               customLabel="タグ"
@@ -237,9 +237,12 @@ const ActionFilterTask = ({
             />
           </div>
         </div>
-        <div className="flex justify-end mt-4">
-          <Button onClick={handleSearch} className="h-8">
-            絞り込み
+        <div className="flex justify-center gap-[10px] mt-4 ">
+          <Button variant="outline" onClick={handleClose} className="h-9">
+            キャンセル
+          </Button>
+          <Button onClick={handleSearch} className="h-9">
+            絞り込む
           </Button>
         </div>
       </div>

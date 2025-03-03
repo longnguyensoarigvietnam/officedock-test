@@ -66,6 +66,8 @@ const PieChart = ({
             tooltipEl.style.background = 'white';
             tooltipEl.style.width = '167px';
             tooltipEl.style.color = 'black';
+            tooltipEl.style.fontSize = '14px';
+            tooltipEl.style.fontWeight = '500';
             tooltipEl.style.padding = '20px';
             tooltipEl.style.borderRadius = '6px';
             tooltipEl.style.pointerEvents = 'none';
@@ -131,7 +133,7 @@ const PieChart = ({
         color: '#fff',
         font: {
           weight: 'bold',
-          size: 10,
+          size: 14,
         },
         align: 'center',
         anchor: 'center',
