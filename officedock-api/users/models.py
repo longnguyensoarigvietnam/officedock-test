@@ -133,6 +133,9 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
         through="UserRole",
         related_name="users",
     )
+    confirm_reports = models.ManyToManyField(
+        "ConfirmReport", related_name="users"
+    )
 
     def save(self, *args, **kwargs):
         """
@@ -478,6 +481,43 @@ class DailyReport(BaseModel):
     company = models.ForeignKey(
         "companies.Company",
         related_name="daily_reports",
+        on_delete=models.CASCADE,
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Set default company
+        """
+        if self.user:
+            self.company = self.user.company
+
+        super().save(*args, **kwargs)
+
+
+class ConfirmReport(BaseModel):
+    """
+    Confirm report of user
+    """
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="reported_confirmations",
+    )
+    confirm_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="confirmed_reports",
+    )
+    date = models.DateField(auto_now=False, auto_now_add=False)
+    is_confirmed = models.BooleanField(default=False)
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="confirm_reports",
         on_delete=models.CASCADE,
     )
 

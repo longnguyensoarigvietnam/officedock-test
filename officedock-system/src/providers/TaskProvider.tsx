@@ -57,6 +57,11 @@ interface ContextValue {
     id: StatusValueTask;
     status: boolean;
   }[];
+  orderingOptions: {
+    category_ids: OptionDropdownType[];
+    tag_ids: OptionDropdownType[];
+    organization_ids: OptionDropdownType[];
+  } | null;
   setColumnWidth: Dispatch<SetStateAction<number>>;
   setWidthCalendar: Dispatch<SetStateAction<number>>;
   setIsLoadingDataTask: (isLoading: boolean) => void;
@@ -78,6 +83,13 @@ interface ContextValue {
       id: string;
       type: string;
     }>
+  >;
+  setOrderingOptions: Dispatch<
+    SetStateAction<{
+      category_ids: OptionDropdownType[];
+      tag_ids: OptionDropdownType[];
+      organization_ids: OptionDropdownType[];
+    } | null>
   >;
   setMemberSelected: Dispatch<SetStateAction<string | number>>;
   setSearchValue: Dispatch<SetStateAction<string>>;
@@ -176,6 +188,7 @@ const defaultValue: ContextValue = {
   idTaskEditSelected: '',
   showEditTaskModal: false,
   orderingRequest: '',
+  orderingOptions: null,
   showWarningStartTaskModal: false,
   currentDate: new Date(),
   isLoadingDataTask: false,
@@ -219,6 +232,7 @@ const defaultValue: ContextValue = {
     throw new Error('');
   },
   setSelectedOptionZoom: () => {},
+  setOrderingOptions: () => {},
 };
 
 export const TaskContext = createContext<ContextValue>(defaultValue);
@@ -323,6 +337,12 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const [idTaskEditSelected, setIdTaskEditSelected] = useState<string>('');
   const [showEditTaskModal, setShowEditTaskModal] = useState<boolean>(false);
   const [orderingRequest, setOrderingRequest] = useState<string>('');
+  const [orderingOptions, setOrderingOptions] = useState<{
+    category_ids: OptionDropdownType[];
+    tag_ids: OptionDropdownType[];
+    organization_ids: OptionDropdownType[];
+  } | null>(null);
+
   const [showWarningStartTaskModal, setShowWarningStartTaskModal] =
     useState<boolean>(false);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -381,6 +401,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     isLoadingDataTask,
     widthCalendar,
     extendByStatus,
+    orderingOptions,
     setExtendByStatus,
     setWidthCalendar,
     setIsLoadingDataTask,
@@ -410,6 +431,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     calculateFontSizeTitle,
     calculateFontSizeContent,
     setSelectedOptionZoom,
+    setOrderingOptions,
   };
 
   return (

@@ -59,7 +59,6 @@ const DetailPlanItemModal = ({
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const router = useRouter();
-  const isEvent = popoverInfo?.type === ItemStartType.SCHEDULE;
 
   const {
     idTaskStarting,
@@ -109,9 +108,9 @@ const DetailPlanItemModal = ({
           },
         ]);
       handleUpdateItemStart({
-        id: isEvent ? (popoverInfo.id as string) : `${popoverInfo?.taskId}`,
+        id: `${popoverInfo?.taskId}`,
         isStart: !isStart,
-        type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+        type: ItemStartType.TASK,
       });
 
       taskSelectedToStart &&
@@ -170,22 +169,18 @@ const DetailPlanItemModal = ({
       onSuccess: async ({ data }, task) => {
         if (!data.isAnotherTaskStarted) {
           calculateDurationTask({
-            id: isEvent
-              ? popoverInfo.id.replace('event', '')
-              : `${popoverInfo.taskId}`,
-            type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+            id: `${popoverInfo.taskId}`,
+            type: ItemStartType.TASK,
           });
           setTaskSelectedAction({
-            id: isEvent ? popoverInfo.id : popoverInfo.taskId,
+            id: popoverInfo.taskId,
             isStart: !isStart,
             title: popoverInfo.title,
-            type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+            type: ItemStartType.TASK,
           });
           setDataRunning({
-            id: isEvent
-              ? popoverInfo.id.replace('event', '')
-              : `${popoverInfo.taskId}`,
-            type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+            id: `${popoverInfo.taskId}`,
+            type: ItemStartType.TASK,
           });
         } else {
           setDataClickTask({
@@ -208,33 +203,22 @@ const DetailPlanItemModal = ({
   const handleConfirmCheckStartTask = (id: string) => {
     checkTask({
       id: id,
-      type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+      type: ItemStartType.TASK,
     });
   };
 
   const handleStartStopTask = async (e: any) => {
     e.stopPropagation();
-    if (isEvent) {
-      await new Promise<void>((resolve) => {
-        setTaskSelectedToStart({
-          id: parseInt(popoverInfo.id),
-          title: popoverInfo.title,
-          type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
-        });
-        resolve();
+
+    await new Promise<void>((resolve) => {
+      setTaskSelectedToStart({
+        id: parseInt(`${popoverInfo.taskId}`),
+        title: popoverInfo.title,
+        type: ItemStartType.TASK,
       });
-      handleConfirmCheckStartTask(`${popoverInfo.id.replace('event', '')}`);
-    } else {
-      await new Promise<void>((resolve) => {
-        setTaskSelectedToStart({
-          id: parseInt(`${popoverInfo.taskId}`),
-          title: popoverInfo.title,
-          type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
-        });
-        resolve();
-      });
-      handleConfirmCheckStartTask(`${popoverInfo.taskId}`);
-    }
+      resolve();
+    });
+    handleConfirmCheckStartTask(`${popoverInfo.taskId}`);
   };
 
   const handleConfirmStartNewTask = async () => {
@@ -247,16 +231,14 @@ const DetailPlanItemModal = ({
       type: idTaskStarting.type,
     });
     calculateDurationTask({
-      id: isEvent
-        ? `${popoverInfo.id.replace('event', '')}`
-        : `${popoverInfo.taskId}`,
-      type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+      id: `${popoverInfo.taskId}`,
+      type: ItemStartType.TASK,
     });
     setShowWarningStartModal(false);
 
     setDataRunning({
       id: `${popoverInfo.id.replace('event', '')}`,
-      type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
+      type: ItemStartType.TASK,
     });
   };
 
@@ -294,7 +276,7 @@ const DetailPlanItemModal = ({
             <div className="flex gap-x-[6px] items-center justify-center">
               <div
                 onClick={() => setIsShowAction(!isShowAction)}
-                className={`rounded-full cursor-pointer w-6 h-6  flex items-center justify-center bg-[#E3EAED]`}>
+                className={`rounded-full cursor-pointer w-6 h-6  flex items-center justify-center  ${isShowAction && 'bg-[#E3EAED]'}`}>
                 <ImageRound
                   src={`/icons/more-black.svg`}
                   name="more"
@@ -373,12 +355,6 @@ const DetailPlanItemModal = ({
           {/* Action detail */}
           {isShowAction && popoverInfo.resource === ItemScheduleType.PLANS && (
             <div className="absolute top-10 right-[-105px] bg-[#5B6770] w-[168px] rounded-md py-[6px] text-white font-medium text-sm">
-              <p
-                // TODO: BE update with QA
-                // onClick={() => copyPlanTime(popoverInfo.uuid)}
-                className="py-[10px] px-[14px] hover:bg-[#7D8A94] cursor-pointer">
-                予定内のタスクを複製
-              </p>
               <p
                 onClick={() => deletePlanTask(popoverInfo.uuid)}
                 className="py-[10px] px-[14px] hover:bg-[#7D8A94] cursor-pointer">

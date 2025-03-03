@@ -1,0 +1,15 @@
+.custom-progress-bar .rc-slider-handle {
+  border: none !important;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 2px rgba(0, 104, 182, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(0, 104, 182, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 3px rgba(0, 104, 182, 0.5);
+  }
+}

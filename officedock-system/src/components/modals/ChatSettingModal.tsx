@@ -235,8 +235,14 @@ const ChatSettingModal = memo(
                     key={member.id}>
                     <div className="flex gap-2 items-center">
                       {renderAvatar(member.id)}
-                      <p className="font-medium text-[15px] truncate max-w-[220px] text-black">
-                        {member.fullName}
+                      <p
+                        className={`truncate font-medium text-[15px] max-w-[300px] text-black`}>
+                        <span className="font-normal text-sm text-black">
+                          {member.fullName}
+                        </span>
+                        <span className="font-normal text-xs text-[#77858F] ml-2">
+                          {member?.organizations?.name}
+                        </span>
                       </p>
                     </div>
                     <div className="flex gap-3 items-center">

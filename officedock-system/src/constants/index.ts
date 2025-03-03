@@ -1,4 +1,9 @@
-import { ItemStartType, PermissionType, WorkItemType } from './enums';
+import {
+  ItemStartType,
+  PermissionType,
+  ReactionIconValue,
+  WorkItemType,
+} from './enums';
 
 // Define app name here for CSR
 export const APP_NAME_METADATA = 'Office Dock';
@@ -40,11 +45,11 @@ export const MESSAGE_DELETED = 'このメッセージが削除されました';
 
 export const TASK_DELETED = 'タスクが削除されました';
 
-export const EVENT_DELETED = 'があなたに予定を削除されました。';
+export const EVENT_DELETED = 'が予定を削除しました。';
 
 export const EVENT_CREATED = 'があなたに予定を割り振りしました。';
 
-export const EVENT_EDITED = 'があなたに予定を更新されました。';
+export const EVENT_EDITED = 'が予定を更新しました。';
 
 export const EVENT_BEFORE_EDITED = '変更前の実施予定日時：';
 
@@ -175,4 +180,67 @@ export const NO_OPTION_CATEGORY = '未選択';
 
 export const MY_TEMPLATE = 'マイテンプレート';
 
-export const MENTION_ALL_MEMBERS = 'すべてのメンバー'
+export const MENTION_ALL_MEMBERS = 'すべてのメンバー';
+
+export const NO_EVENT_MEMBER = '特になし';
+
+export const TASK_STARTING = 'タスク実行中';
+
+export const BOOKMARK_ROUTER_NAME = 'bookmark';
+
+export const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024;
+
+export const REACTION_LIST = [
+  {
+    name: 'OK',
+    src: '/icons/ok-reaction.svg',
+    value: ReactionIconValue.OK,
+  },
+  {
+    name: 'LIKE',
+    src: '/icons/like-reaction.svg',
+    value: ReactionIconValue.LIKE,
+  },
+  {
+    name: 'THANK',
+    src: '/icons/thank-reaction.svg',
+    value: ReactionIconValue.THANK,
+  },
+  {
+    name: 'HAND',
+    src: '/icons/hand-reaction.svg',
+    value: ReactionIconValue.HAND,
+  },
+  {
+    name: 'SMILE',
+    src: '/icons/smile-reaction.svg',
+    value: ReactionIconValue.SMILE,
+  },
+];
+export const REACTION_LIST_SMALL = [
+  {
+    name: 'OK',
+    src: '/icons/reaction-small/ok-reaction.svg',
+    value: ReactionIconValue.OK,
+  },
+  {
+    name: 'LIKE',
+    src: '/icons/reaction-small/like-reaction.svg',
+    value: ReactionIconValue.LIKE,
+  },
+  {
+    name: 'THANK',
+    src: '/icons/reaction-small/thank-reaction.svg',
+    value: ReactionIconValue.THANK,
+  },
+  {
+    name: 'HAND',
+    src: '/icons/reaction-small/hand-reaction.svg',
+    value: ReactionIconValue.HAND,
+  },
+  {
+    name: 'SMILE',
+    src: '/icons/reaction-small/smile-reaction.svg',
+    value: ReactionIconValue.SMILE,
+  },
+];

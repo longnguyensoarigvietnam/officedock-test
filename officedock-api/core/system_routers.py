@@ -8,6 +8,7 @@ from tasks.apis import (
     TaskBoardViewSet,
     TaskCalendarViewSet,
     TaskScheduleViewSet,
+    TaskTeamdockViewSet,
     TaskViewSet,
     TodoListViewSet,
 )
@@ -25,7 +26,7 @@ from dashboard.apis import (
     DashboardViewSet,
     DurationViewSet,
 )
-from chat.apis import ChatMessageViewSet, ChatRoomViewSet
+from chat.apis import ChatFileViewSet, ChatMessageViewSet, ChatRoomViewSet
 from roles.apis import RoleViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
@@ -54,6 +55,9 @@ api_router.register("tasks/board", TaskBoardViewSet, basename="tasks_board")
 api_router.register(
     "tasks/schedules", TaskScheduleViewSet, basename="task_schedule"
 )
+api_router.register(
+    "tasks/teamdock", TaskTeamdockViewSet, basename="task_teamdock"
+)
 api_router.register("tasks", TaskViewSet, basename="tasks")
 api_router.register("todo-list", TodoListViewSet, basename="todo_list")
 api_router.register("dashboard", DashboardViewSet, basename="dashboard")
@@ -79,6 +83,7 @@ api_router.register(
 )
 api_router.register("roles", RoleViewSet, basename="roles")
 api_router.register("cron-jobs", CronJobViewSet, basename="cron_jobs")
+api_router.register("chat-files", ChatFileViewSet, basename="chat_files")
 
 # Add api router urls
 urlpatterns = []

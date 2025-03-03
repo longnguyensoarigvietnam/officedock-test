@@ -49,6 +49,7 @@ const ConfirmActionsEventModal = memo(
     return (
       <Modal
         open={open}
+        isOutSideAction={false}
         className="font-primary bg-white w-[515px] !rounded-2xl py-4"
         onClose={onClose}
         title={modalTitle}>

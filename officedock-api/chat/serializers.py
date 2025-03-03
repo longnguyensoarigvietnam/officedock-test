@@ -1,5 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Count
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 
 from base.messages import ERROR_MESSAGES
 from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
@@ -12,6 +14,8 @@ from submit_levels.models import SubmitLevelHistory
 from tags.serializers import BaseTagSerializer
 from users.models import User
 from tasks.models import Task
+from chat.models import ChatFile
+from skills.serializers import SkillSerializer
 
 
 class CreationDataUserForChatSerializer(serializers.ModelSerializer):
@@ -152,6 +156,8 @@ class SubmitLevelForChatMessageSerializer(serializers.ModelSerializer):
     Submit Level serializer for chat message.
     """
 
+    skill = SkillSerializer(read_only=True)
+
     class Meta:
         model = SubmitLevelHistory
         fields = [
@@ -165,20 +171,80 @@ class SubmitLevelForChatMessageSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class ChatFileSerializer(serializers.ModelSerializer):
+    """Serializer for chat file"""
+
+    class Meta:
+        model = ChatFile
+        fields = [
+            "id",
+            "uuid",
+            "file_name",
+            "compressed_file",
+            "file_type",
+            "file_size",
+            "created_at",
+        ]
+
+    def to_representation(self, instance):
+        """Override file URL representation to ensure consistency"""
+        representation = super().to_representation(instance)
+
+        if instance.compressed_file:
+            representation["compressed_file"] = instance.compressed_file.url
+
+        return representation
+
+
+class ChatFileDetailSerializer(serializers.ModelSerializer):
+    """Serializer for chat file detail"""
+
+    images = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatFile
+        fields = [
+            "id",
+            "file_name",
+            "original_file",
+            "file_type",
+            "file_size",
+            "created_at",
+            "images",
+        ]
+
+    def get_images(self, obj):
+        """Get next or previous image"""
+
+        if obj.file_type.startswith("image"):
+            chat_files = ChatFile.objects.filter(
+                file_type__icontains="image", chat_room=obj.chat_room
+            ).order_by("id")
+            next_file = chat_files.filter(id__gt=obj.id).first()
+            previous_file = chat_files.filter(id__lt=obj.id).last()
+
+            return {
+                "next_id": next_file.id if next_file else None,
+                "previous_id": previous_file.id if previous_file else None,
+            }
+
+        return None
+
+
 class ChatMessageSerializer(serializers.ModelSerializer):
     """
     Serializer for Chat massage
     """
 
+    is_bookmark = serializers.SerializerMethodField()
     message = serializers.SerializerMethodField()
     schedule = serializers.SerializerMethodField(read_only=True)
     sender = CreationDataUserWithMainOrganizationSerializer()
     task = TaskForChatMessageSerializer()
     submit_level = SubmitLevelForChatMessageSerializer()
-    mentions = CreationDataUserWithMainOrganizationSerializer(
-        many=True, read_only=True
-    )
     tasks = TaskForChatMessageSerializer(many=True, read_only=True)
+    reactions = serializers.SerializerMethodField(read_only=True)
+    chat_files = ChatFileSerializer(many=True, read_only=True)
 
     class Meta:
         model = ChatMessage
@@ -188,6 +254,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "message",
             "sender",
             "is_edited",
+            "is_bookmark",
             "created_at",
             "deleted_at",
             "task",
@@ -197,8 +264,32 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "type",
             "mentions",
             "tasks",
+            "quote",
+            "reply",
+            "reactions",
+            "chat_files",
         ]
         read_only_fields = ["id", "uuid"]
+
+    def to_representation(self, instance):
+        """To representation field"""
+        representation = super().to_representation(instance)
+
+        if instance.quote:
+            message = ChatMessage.objects.filter(
+                uuid=instance.quote["message_uuid"]
+            ).first()
+            representation["quote"]["message_content"] = instance.quote[
+                "message"
+            ]
+            representation["quote"]["message"] = ChatMessageSerializer(
+                message
+            ).data
+            representation["quote"].pop("message_uuid")
+        if instance.reply:
+            representation["reply"] = ChatMessageSerializer(instance.reply).data
+
+        return representation
 
     def get_message(self, obj):
         """
@@ -214,10 +305,39 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             {
                 "id": obj.schedule_id,
                 "title": obj.schedule.title,
+                "is_all_day": obj.schedule.is_all_day,
             }
             if obj.schedule_id
             else None
         )
+
+    def get_reactions(self, obj):
+        """
+        Returns reactions of message
+        """
+        reacts = (
+            obj.reactions.values("icon")
+            .annotate(users=Count("user"))
+            .order_by("icon")
+        )
+
+        response_data = []
+        for react in reacts:
+            users = obj.reactions.filter(icon=react["icon"]).values_list(
+                "user", flat=True
+            )
+            response_data.append({"icon": react["icon"], "users": list(users)})
+
+        return response_data
+
+    def get_is_bookmark(self, obj):
+        """Get is bookmark"""
+        request = self.context.get("request")
+        if not request:
+            return False
+
+        bookmark = obj.bookmarks.filter(user=request.user).first()
+        return bool(bookmark and bookmark.bookmark_at)
 
 
 class ChatMessageBookMarkSerializer(ChatMessageSerializer):
@@ -225,14 +345,15 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
     Chat message bookmark serializer
     """
 
-    chat_room_code = serializers.SerializerMethodField()
+    chat_room = ChatRoomSerializer(read_only=True)
+    bookmark_at = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
         fields = [
             "id",
             "uuid",
-            "chat_room_code",
+            "chat_room",
             "message",
             "sender",
             "is_edited",
@@ -240,11 +361,26 @@ class ChatMessageBookMarkSerializer(ChatMessageSerializer):
             "deleted_at",
             "bookmark_at",
             "type",
+            "task",
+            "submit_level",
+            "schedule_changes",
+            "schedule",
+            "mentions",
+            "tasks",
+            "quote",
+            "reply",
+            "reactions",
+            "chat_files",
         ]
 
-    def get_chat_room_code(self, obj):
-        """Get chat room code"""
-        return obj.chat_room.code
+    def get_bookmark_at(self, obj):
+        """Get bookmark_at"""
+        request = self.context.get("request")
+        if not request:
+            return None
+
+        bookmark = obj.bookmarks.filter(user=request.user).first()
+        return bookmark.bookmark_at if bookmark else None
 
 
 class BookMarkSerializer(serializers.Serializer):
@@ -255,11 +391,43 @@ class BookMarkSerializer(serializers.Serializer):
     bookmark_at = serializers.DateTimeField(allow_null=True, required=False)
 
 
+class QuoteMessageSerializer(serializers.Serializer):
+    """
+    Quote message serializer
+    """
+
+    message_uuid = serializers.UUIDField(
+        required=True,
+    )
+    message = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        """Validate quote"""
+        message_uuid = attrs.get("message_uuid")
+        if not ChatMessage.objects.filter(uuid=message_uuid).exists():
+            raise NotFound({"detail": ERROR_MESSAGES["message_not_exists"]})
+        attrs["message_uuid"] = str(message_uuid)
+
+        return attrs
+
+
+class ReactionSerializer(serializers.Serializer):
+    """
+    Reaction serializer
+    """
+
+    icon = serializers.CharField(max_length=255, required=True)
+
+
 class SendMessageSerializer(serializers.ModelSerializer):
     """
     Serializer for send message
     """
 
+    file_uuids = serializers.ListField(
+        required=False, child=serializers.UUIDField()
+    )
+    files = serializers.ListField(required=False, child=serializers.FileField())
     mentions = CreationDataUserWithMainOrganizationSerializer(
         many=True, read_only=True
     )
@@ -280,6 +448,8 @@ class SendMessageSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=False,
     )
+    quote = QuoteMessageSerializer(required=False, allow_null=True)
+    reply_uuid = serializers.UUIDField(required=False, allow_null=True)
 
     class Meta:
         model = ChatMessage
@@ -291,7 +461,22 @@ class SendMessageSerializer(serializers.ModelSerializer):
             "mention_ids",
             "tasks",
             "task_ids",
+            "quote",
+            "reply_uuid",
+            "file_uuids",
+            "files",
         ]
+
+    def validate(self, attrs):
+        """Validate send message"""
+        reply_uuid = attrs.pop("reply_uuid", None)
+        if reply_uuid:
+            if message := ChatMessage.objects.filter(uuid=reply_uuid).first():
+                attrs["reply"] = message
+            else:
+                raise NotFound({"detail": ERROR_MESSAGES["message_not_exists"]})
+
+        return attrs
 
     def update(self, instance, validated_data):
         validated_data.pop("uuid", None)  # Remove uuid when update

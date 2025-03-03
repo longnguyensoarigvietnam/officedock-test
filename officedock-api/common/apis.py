@@ -21,12 +21,14 @@ from organizations.serializers import StatisticCategorySerializer
 from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
-from users.models import Role, RoleDetail
+from users.models import Role, RoleDetail, User
 from tasks.models import TaskStatus, Task, TaskDuration
 from tasks.constants import TASK_WORK_TYPES, TaskPriorities, TaskTypes
 from skills.serializers import SkillSerializer
 from organizations.models import OrganizationsSkills
 from roles.constants import Actions, Screens, SelectionResultOptions
+from organizations.models import Organization
+from chat.models import ChatRoom
 from .serializers import (
     CreationDataOrganizationSerializer,
     CreationDataTaskListSerializer,
@@ -174,6 +176,11 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             self.get_serializer(organizations, many=True).data
         )
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=str, required=False),
+        ],
+    )
     @action(
         methods=["GET"],
         detail=False,
@@ -185,7 +192,19 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Get creation data for people in charge
         """
 
-        users = request.user.company.users.order_by("created_at").all()
+        if organization_id := request.query_params.get("organization_id"):
+            users = (
+                User.objects.filter(organizations__id=organization_id)
+                .order_by("created_at")
+                .all()
+            )
+        else:
+            users = (
+                User.objects.filter(company=request.user.company)
+                .order_by("created_at")
+                .all()
+            )
+
         return self.response_ok(self.get_serializer(users, many=True).data)
 
     @action(
@@ -201,9 +220,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
         tags = request.user.company.tags.order_by("created_at").all()
         status = TaskStatus.objects.order_by("created_at").all()
-        organizations = request.user.company.organizations.order_by(
-            "created_at"
-        )
+        organizations = request.user.organizations.order_by("created_at")
         categories = StatisticCategory.objects.filter(
             company=request.user.company
         ).order_by("created_at")
@@ -225,28 +242,72 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
         return self.response_ok(data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("page_size", type=int, required=False),
+            OpenApiParameter("page", type=int, required=False),
+            OpenApiParameter("search", type=str, required=False),
+            OpenApiParameter("user_ids", type=str, required=False),
+            OpenApiParameter("chat_room_code", type=str, required=False),
+        ],
+    )
     @action(
         methods=["GET"],
         detail=False,
         url_path="tasks",
-        serializer_class=CreationDataTaskSerializer,
+        serializer_class=CreationDataTaskListSerializer,
     )
-    def tasks(self, request):
+    def task_list_options(self, request):
         """
-        Get creation data for task option
+        Get task list of the option
         """
 
-        organizations = request.user.organizations.order_by("created_at")
-        tasks = (
-            Task.objects.filter(
-                Q(organization__in=organizations) | Q(created_by=request.user)
-            )
-            .exclude(type=TaskTypes.MY_TEMPLATE.value)
-            .order_by("-created_at")
+        tasks = Task.objects.exclude(type=TaskTypes.MY_TEMPLATE.value).order_by(
+            "-created_at"
         )
 
-        return self.response_ok(
-            CreationDataTaskListSerializer(tasks, many=True).data
+        # Get list of tasks by room code
+        if chat_room_code := request.query_params.get("chat_room_code"):
+            chat_room = ChatRoom.objects.filter(code=chat_room_code).first()
+            if chat_room and (
+                ids := chat_room.participants.values_list("id", flat=True)
+            ):
+                org_ids = Organization.objects.filter(
+                    users__id__in=ids
+                ).values_list("id", flat=True)
+                tasks = tasks.filter(
+                    Q(organization_id__in=org_ids) | Q(created_by_id__in=ids)
+                )
+
+        # Get list of tasks by user ids
+        elif user_ids := request.query_params.get("user_ids"):
+            ids = []
+            for id in user_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                org_ids = Organization.objects.filter(
+                    users__id__in=ids
+                ).values_list("id", flat=True)
+                tasks = tasks.filter(
+                    Q(organization_id__in=org_ids) | Q(created_by_id__in=ids)
+                )
+
+        # Get list of tasks by user logged in
+        else:
+            organizations = request.user.organizations.order_by("created_at")
+            tasks = tasks.filter(
+                Q(organization__in=organizations) | Q(created_by=request.user)
+            )
+
+        # Filter input keyword
+        if search_query := request.query_params.get("search"):
+            tasks = tasks.filter(title__icontains=search_query)
+
+        return self.response_pagination(
+            request, tasks, CreationDataTaskListSerializer
         )
 
     @action(methods=["GET"], detail=False, url_path="schedule")

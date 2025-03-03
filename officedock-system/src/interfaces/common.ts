@@ -4,6 +4,7 @@ export interface OptionDropdownType {
   imgUrl?: string;
   type?: string;
   totalData?: string;
+  largeColor?: string;
 }
 
 export interface BasePagination<T> {

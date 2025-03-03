@@ -195,6 +195,7 @@ export interface CreationDataTask {
     id: number;
     name: string;
     uuid: string;
+    color?: string;
   }[];
   organizations: {
     id: number;
@@ -297,9 +298,19 @@ export interface DataDetailTaskType {
   resource: string;
   left?: number;
   top?: number;
-  type: string;
   taskId: string | number;
   isImportant?: boolean | null;
   deadline?: string;
   uuid: string;
+}
+export interface DataDetailEventType {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  left?: number;
+  top?: number;
+  participants?: EventParticipant[];
+  address?: string;
+  isAllDay: boolean;
 }

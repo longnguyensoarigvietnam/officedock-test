@@ -91,6 +91,7 @@ import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 
 import api from '@base/api';
 import {
+  DataDetailEventType,
   DataDetailTaskType,
   Task,
   TaskActualType,
@@ -100,6 +101,7 @@ import {
 import {
   EventCalendarProps,
   EventEditFormData,
+  EventParticipant,
   EventRequest,
 } from '@interfaces/calendar';
 import { OptionDropdownType } from '@interfaces/common';
@@ -131,6 +133,7 @@ import ScheduleDaySkeleton from '@components/skeleton/ScheduleDaySkeleton';
 import RangeSlider from '@components/common/RangeSlider';
 import { useErrorToast } from '@hooks/useErrorToast';
 import DetailPlanItemModal from '@components/modals/DetailPlanlItemModal';
+import DetailEventPlanModal from '@components/modals/DetailEventPlanModal';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -224,6 +227,9 @@ const TimeSchedule = memo(
       { id: ItemScheduleType.PLANS, title: ItemScheduleTitleType.PLANS },
     ]);
     const [popoverInfo, setPopoverInfo] = useState<DataDetailTaskType | null>(
+      null,
+    );
+    const [EventInfo, setEventInfo] = useState<DataDetailEventType | null>(
       null,
     );
 
@@ -406,6 +412,7 @@ const TimeSchedule = memo(
                     name: '',
                     id: null,
                   },
+                  scheduleId: parseInt(`${event.id}`),
                   uuid: uuidv4(),
                   planStartDate: `${event.startDate}`,
                   planEndDate: `${event.endDate}`,
@@ -895,7 +902,7 @@ const TimeSchedule = memo(
               planEndDate: item.planEndDate as string,
               isMyTask: dataItemUpdateSchedule.isMyTask,
               taskId: parseInt(`${dataItemUpdateSchedule.id}`),
-              type: dataItemUpdateSchedule.type,
+              type: ItemStartType.TASK,
               title: dataItemUpdateSchedule.title
                 ? dataItemUpdateSchedule.title
                 : '',
@@ -1974,9 +1981,8 @@ const TimeSchedule = memo(
       return true;
     };
 
-    const handleShowEventsInModal = (data: {
+    const handleShowTaskInModal = (data: {
       id: string;
-      type: string;
       taskId: string | number;
       uuid: string;
       isImportant?: boolean | null;
@@ -1992,7 +1998,6 @@ const TimeSchedule = memo(
     }) => {
       setPopoverInfo({
         id: data.id,
-        type: data.type,
         taskId: data.taskId,
         resource: data.resource,
         largeColor: data.largeColor ? data.largeColor : '',
@@ -2012,6 +2017,35 @@ const TimeSchedule = memo(
         }).top,
       });
     };
+    const handleShowEventInModal = (data: {
+      id: string;
+      start: string;
+      end: string;
+      title: string;
+      address?: string;
+      isAllDay: boolean;
+      participants: EventParticipant[];
+      clientX: number;
+      clientY: number;
+    }) => {
+      setEventInfo({
+        id: data.id,
+        start: data.start,
+        end: data.end,
+        left: adjustPositionForViewportSchedule({
+          top: Number(data.clientY),
+          left: Number(data.clientX),
+        }).left,
+        top: adjustPositionForViewportSchedule({
+          top: Number(data.clientY),
+          left: Number(data.clientX),
+        }).top,
+        title: data.title,
+        address: data.address,
+        isAllDay: data.isAllDay,
+        participants: data.participants,
+      });
+    };
 
     // Event click card
     const handleEventClick = (clickInfo?: any) => {
@@ -2021,26 +2055,42 @@ const TimeSchedule = memo(
         clickInfo.event._def.resourceIds[0] === ItemScheduleType.PLANS;
       setIsStartPopupDetail(clickInfo.event.extendedProps.isStart);
 
-      handleShowEventsInModal({
-        title: clickInfo.event.title,
-        id: clickInfo.event.id,
-        type: clickInfo.event.extendedProps.type,
-        taskId: clickInfo.event.extendedProps.taskId,
-        isImportant: clickInfo.event.extendedProps.isImportant,
-        deadline: clickInfo.event.extendedProps.deadline,
-        uuid: clickInfo.event.extendedProps.uuid,
-        resource: resourcePlan
-          ? ItemScheduleType.PLANS
-          : ItemScheduleType.ACTUAL,
-        largeColor: clickInfo.event.extendedProps.largeColor
-          ? clickInfo.event.extendedProps.largeColor
-          : '',
-        start: clickInfo.event.start,
-        end: clickInfo.event.end,
-        eventList: taskTimeScheduleList,
-        clientX: clickInfo.jsEvent.clientX,
-        clientY: clickInfo.jsEvent.clientY,
-      });
+      if (
+        clickInfo.event.extendedProps.type === ItemStartType.TASK ||
+        !resourcePlan
+      ) {
+        handleShowTaskInModal({
+          title: clickInfo.event.title,
+          id: clickInfo.event.id,
+          taskId: clickInfo.event.extendedProps.taskId,
+          isImportant: clickInfo.event.extendedProps.isImportant,
+          deadline: clickInfo.event.extendedProps.deadline,
+          uuid: clickInfo.event.extendedProps.uuid,
+          resource: resourcePlan
+            ? ItemScheduleType.PLANS
+            : ItemScheduleType.ACTUAL,
+          largeColor: clickInfo.event.extendedProps.largeColor
+            ? clickInfo.event.extendedProps.largeColor
+            : '',
+          start: clickInfo.event.start,
+          end: clickInfo.event.end,
+          eventList: taskTimeScheduleList,
+          clientX: clickInfo.jsEvent.clientX,
+          clientY: clickInfo.jsEvent.clientY,
+        });
+      } else {
+        handleShowEventInModal({
+          title: clickInfo.event.title,
+          id: clickInfo.event.id,
+          start: clickInfo.event.start,
+          end: clickInfo.event.end,
+          clientX: clickInfo.jsEvent.clientX,
+          clientY: clickInfo.jsEvent.clientY,
+          isAllDay: clickInfo.event.extendedProps.isAllDay,
+          address: clickInfo.event.extendedProps.address,
+          participants: clickInfo.event.extendedProps.participants,
+        });
+      }
     };
 
     // Event action
@@ -2116,8 +2166,8 @@ const TimeSchedule = memo(
 
     const handleRemoveEventParam = () => {
       const params = new URLSearchParams(searchParams);
-      params.delete('event');
       params.delete('type');
+      params.delete('event');
       params.delete('action');
       router.replace(`?${params.toString()}`);
     };
@@ -2317,7 +2367,7 @@ const TimeSchedule = memo(
           setActionsEventMessage('');
 
           const updatedTaskList = taskTimeScheduleList.filter(
-            (item) => item.id !== `${task.id}event`,
+            (item) => item.id !== `${task.id.replace('event', '')}event`,
           );
 
           const deleteEventList = updatedTaskList.filter(
@@ -3003,6 +3053,20 @@ const TimeSchedule = memo(
             deleteActualTask={(uuid: string) => deleteActualTask(uuid)}
             onClose={() => setPopoverInfo(null)}
             handleUpdateItemStart={handleUpdateItemStart}
+          />
+        )}
+        {EventInfo && (
+          <DetailEventPlanModal
+            isStart={false}
+            popoverRef={popoverRef}
+            dataEvent={EventInfo}
+            onClose={() => setEventInfo(null)}
+            onDelete={(data) => {
+              setDataEventEditLocal(data);
+              setConfirmEventDataToEdit(data);
+              setOpenCreateEventModal(false);
+              setOpenConfirmDeleteEventModal(true);
+            }}
           />
         )}
       </>

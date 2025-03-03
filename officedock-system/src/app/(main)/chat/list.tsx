@@ -1,10 +1,25 @@
 'use client';
-import { Fragment, useCallback, useContext, useEffect, useState } from 'react';
+import {
+  Dispatch,
+  Fragment,
+  SetStateAction,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 import { useMutation } from 'react-query';
 import { useInView } from 'react-intersection-observer';
 import { useSession } from 'next-auth/react';
 import Tippy from '@tippyjs/react';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
@@ -23,11 +38,12 @@ import {
   PermissionsSystem,
   SocketActions,
 } from '@constants/enums';
-import { PAGINATION_PAGE_SIZE_MEDIUM } from '@constants';
+import { BOOKMARK_ROUTER_NAME, PAGINATION_PAGE_SIZE_MEDIUM } from '@constants';
 
 import { encodeFormatDateISO } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import { ChatContext } from '@providers/ChatProvider';
+import { useWebSocket } from '@providers/WebSocketProvider';
 import {
   ChatDashboardMember,
   ChatRoomItem,
@@ -35,14 +51,7 @@ import {
 } from '@interfaces/chat';
 import { BasePagination } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
-import { useWebSocket } from '@providers/WebSocketProvider';
 import api from '@base/api';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
 
 interface dataProps {
   dataChatList: ChatRoomItem[];
@@ -57,6 +66,7 @@ interface dataProps {
   >;
   setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setHasMore: React.Dispatch<React.SetStateAction<boolean>>;
+  setHasMoreDetailOnScrollDown: Dispatch<SetStateAction<boolean>>
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleSetChatRoomParam: (code: string) => void;
   handleRemoveChatRoomParam: () => void;
@@ -72,6 +82,7 @@ const ListChatUsers = ({
   setDataChatList,
   setFilteredChatList,
   setHasMore,
+  setHasMoreDetailOnScrollDown,
   setSearchChatMsg,
   handleSetChatRoomParam,
   handleRemoveChatRoomParam,
@@ -82,6 +93,12 @@ const ListChatUsers = ({
   const { ref: listSearchRoomRef, inView: inViewListSearchRoom } = useInView({
     threshold: 0.2,
   });
+
+  const router = useRouter();
+
+  const searchParams = useSearchParams();
+
+  const room = searchParams.get('room');
 
   const { data: session } = useSession();
 
@@ -269,7 +286,14 @@ const ListChatUsers = ({
         }
       }
     },
-    [hasMore, hasMoreSearch, searchTerm, searchRoomType, setDataChatList, setFilteredChatList],
+    [
+      hasMore,
+      hasMoreSearch,
+      searchTerm,
+      searchRoomType,
+      setDataChatList,
+      setFilteredChatList,
+    ],
   );
   const handleUpdateDataHide = useCallback(
     (data: ChatRoomItem) => {
@@ -658,11 +682,11 @@ const ListChatUsers = ({
   const handleGetDataSearchRoomChat = async ({
     page,
     name,
-    showLastMessageAt
+    showLastMessageAt,
   }: {
     page: number;
     name: string;
-    showLastMessageAt?: boolean
+    showLastMessageAt?: boolean;
   }) => {
     setInitialLoadSearch(true);
     const apiUrl = `${apiRouters.CHAT_LIST}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${name ? `&name=${encodeURIComponent(name)}` : ''}${lastMsgItemRoomSearch && showLastMessageAt ? `&last_message_at=${lastMsgItemRoomSearch}` : ''}${lastPinAtSearch ? `&pin_at=${lastPinAtSearch}` : ''}${searchRoomType ? `&type=${searchRoomType}` : ''}`;
@@ -717,7 +741,7 @@ const ListChatUsers = ({
       getDataSearchRoomChat({
         name: searchTermDebounce,
         page: 1,
-        showLastMessageAt: false
+        showLastMessageAt: false,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -732,7 +756,7 @@ const ListChatUsers = ({
       getDataSearchRoomChat({
         name: searchTermDebounce,
         page: 1,
-        showLastMessageAt: true
+        showLastMessageAt: true,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -808,6 +832,13 @@ const ListChatUsers = ({
     );
   };
 
+  const goToBookmark = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('room', 'bookmark');
+
+    router.push(`/chat?${params.toString()}`, { scroll: false });
+  };
+
   return (
     <aside className="w-[350px] max-w-[350px] min-w-[350px] border-r-[2px] pr-3 pt-5">
       <div className="flex items-center justify-between mb-5">
@@ -824,13 +855,17 @@ const ListChatUsers = ({
         />
       </div>
       <div className="flex items-center mb-5 px-3">
-        <div className="flex items-center gap-1 w-4/5">
+        <div
+          onClick={goToBookmark}
+          className={`${room === BOOKMARK_ROUTER_NAME && 'bg-white'} h-[36px] p-3 cursor-pointer rounded-md flex items-center gap-1 w-4/5`}>
           <ImageRound
             src="/icons/save-chat.svg"
             name="Save chat icon"
             className="!w-3 !h-3.5 text-gray-400 cursor-pointer"
           />
-          <p className="text-[#77858F] text-[14px] font-medium">ブックマーク</p>
+          <p className={` text-[#77858F] text-[14px] font-medium`}>
+            ブックマーク
+          </p>
         </div>
         <div className="flex items-center w-1/5 justify-between">
           <Popover className="relative">
@@ -890,9 +925,6 @@ const ListChatUsers = ({
                           }}>
                           個人チャット
                         </p>
-                        <p className="py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer">
-                          チームメンバーのチャット
-                        </p>
                       </div>
                     </PopoverPanel>
                   </Transition>
@@ -936,10 +968,11 @@ const ListChatUsers = ({
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
-                    handleSetChatRoomParam(`${item?.code}`);
+                    handleSetChatRoomParam(item.code)
                     handleResetChatRoomUnreadMessages(item);
                     setSearchChatMsg('');
                     setIsReload(false);
+                    setHasMoreDetailOnScrollDown(false)
                   }}>
                   <Tippy
                     content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
@@ -967,8 +1000,7 @@ const ListChatUsers = ({
 
                   <div className="relative">{renderAvatar(item)}</div>
                   <div className="ml-2 flex gap-1 items-center">
-                    <p className={`text-sm ${(item.type == ChatRoomType.PRIVATE ||
-                        item.type == ChatRoomType.SELF) ? 'max-w-[200px] truncate' : 'break-words w-[265px]'} font-medium `}>
+                    <p className={`text-sm break-words w-[260px] font-medium `}>
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -977,16 +1009,6 @@ const ListChatUsers = ({
                             (room) => room.roomCode === item.code,
                           )?.roomName
                         : item?.name || ''}
-                    </p>
-                    <p className="text-[#77858F] text-[12px] min-w-[calc(100%_-_200px)] truncate font-medium">
-                      {((item.type == ChatRoomType.PRIVATE ||
-                        item.type == ChatRoomType.SELF) &&
-                        item.participants.find((participant) =>
-                          item.type == ChatRoomType.PRIVATE
-                            ? participant.id != session?.user.id
-                            : participant.id == session?.user.id,
-                        )?.organizations?.name) ||
-                        ''}
                     </p>
                   </div>
                   {item?.unreadMessages > 0 && (
@@ -1025,8 +1047,9 @@ const ListChatUsers = ({
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
-                    handleSetChatRoomParam(`${item?.code}`);
+                    handleSetChatRoomParam(item.code)
                     handleResetChatRoomUnreadMessages(item);
+                    setSearchChatMsg('');
                     setIsReload(false);
                   }}>
                   <div
@@ -1047,7 +1070,7 @@ const ListChatUsers = ({
                   </div>
                   <div className="relative">{renderAvatar(item)}</div>
                   <div className="ml-2 flex gap-1 items-center">
-                    <p className="text-sm max-w-[160px] font-medium truncate">
+                    <p className="text-sm break-words w-[260px] font-medium">
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -1056,16 +1079,6 @@ const ListChatUsers = ({
                             (room) => room.roomCode === item.code,
                           )?.roomName
                         : item?.name || ''}
-                    </p>
-                    <p className="text-[#77858F] text-[12px] max-w-[80px] font-medium truncate">
-                      {((item.type == ChatRoomType.PRIVATE ||
-                        item.type == ChatRoomType.SELF) &&
-                        item.participants.find((participant) =>
-                          item.type == ChatRoomType.PRIVATE
-                            ? participant.id != session?.user.id
-                            : participant.id == session?.user.id,
-                        )?.organizations?.name) ||
-                        ''}
                     </p>
                   </div>
                   {item?.unreadMessages > 0 && (

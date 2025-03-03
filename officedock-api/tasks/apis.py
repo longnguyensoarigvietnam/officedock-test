@@ -60,6 +60,7 @@ from tasks.utils import (
 from roles.constants import Screens
 from users.utils import reset_sort_task
 from users.models import Setting
+from users.models import User
 from .models import (
     PeopleInChargeTasks,
     Task,
@@ -76,6 +77,7 @@ from .serializers import (
     TaskIndexForCreationSerializer,
     TaskScheduleForCreationSerializer,
     TaskSerializer,
+    TaskTeamdockSerializer,
     TodoListSerializer,
     TaskIndexSerializer,
     TaskIndexPinAtSerializer,
@@ -540,8 +542,12 @@ class TaskViewSet(
                 "countdown": remind_countdown,
             }
 
-        if (current_task.deadline != serializer_data.get("deadline")) or (
-            current_task.is_important != serializer_data.get("is_important")
+        if (
+            (current_task.status.name != TaskStatus.MY_ROUTINE.value)
+            and (current_task.deadline != serializer_data.get("deadline"))
+            or (
+                current_task.is_important != serializer_data.get("is_important")
+            )
         ):
             reset_sort_task(user)
 
@@ -1248,16 +1254,24 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         user = request.user
         queryset = self.filter_queryset(self.get_queryset())
         ordering = request.query_params.get("ordering", None)
+        status_id = request.query_params.get("status_id", None)
         if ordering:
-            tasks = queryset.all()
-            for idx, task in enumerate(tasks):
-                task_index = task.task_index.first()
-                if task_index.pin_at:
-                    task.task_index.update(
-                        pin_at=timezone.now()
-                        - timedelta(seconds=INITIAL_INDEX_VALUE + idx)
-                    )
-                task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
+            task_routine_status = TaskStatusModel.objects.filter(
+                name=TaskStatus.MY_ROUTINE.value
+            ).first()
+            if not (
+                "deadline" in ordering
+                and int(status_id) == task_routine_status.id
+            ):
+                tasks = queryset.all()
+                for idx, task in enumerate(tasks):
+                    task_index = task.task_index.first()
+                    if task_index.pin_at:
+                        task.task_index.update(
+                            pin_at=timezone.now()
+                            - timedelta(seconds=INITIAL_INDEX_VALUE + idx)
+                        )
+                    task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
 
             task_pin = TaskIndex.objects.filter(
                 task=OuterRef("pk"), user_id=user.id
@@ -1295,6 +1309,48 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 )
 
         return self.response_pagination(request, queryset, TaskBoardSerializer)
+
+
+@extend_schema(tags=["System > Task"])
+class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
+    """
+    API endpoint to show Tasks to the Teamdock.
+    """
+
+    queryset = User.objects.order_by("created_at")
+    serializer_class = TaskTeamdockSerializer
+
+    def get_queryset(self):
+        """Filter queryset"""
+        queryset = (
+            super().get_queryset().filter(company=self.request.user.company)
+        )
+
+        # Filter by organization id
+        if organization_id := self.request.query_params.get("organization_id"):
+            queryset = queryset.filter(organizations__id=organization_id)
+
+        # Filter by user ids
+        if user_ids := self.request.query_params.get("user_ids"):
+            ids = []
+            for id in user_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                queryset = queryset.filter(id__in=ids)
+
+        return queryset
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=str, required=False),
+            OpenApiParameter("user_ids", type=str, required=False),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 @extend_schema(tags=["System > Task > Todo List"])

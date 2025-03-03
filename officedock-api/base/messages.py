@@ -78,6 +78,7 @@ _ERROR_MESSAGES = {
         "task_and_event_not_exists": "Task and event are not exists.",
         "date_invalid": "Format date is invalid.",
         "end_date_greate_than_now": "The end date cannot greate than now",
+        "message_not_exists": _("This message does not exist."),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -134,6 +135,7 @@ _ERROR_MESSAGES = {
         "task_and_event_not_exists": _("タスクと予定は存在しません。"),
         "date_invalid": _("日は無効です。"),
         "end_date_greate_than_now": _("計測時間は未来の時刻で登録できません。"),
+        "message_not_exists": _("このメッセージが存在していません。"),
     },
 }
 

@@ -160,6 +160,7 @@ const KanbanBoardTask = () => {
   const { data: session } = useSession();
   const {
     searchValue,
+    orderingOptions,
     taskSelectedAction,
     memberSelected,
     tagSelected,
@@ -187,6 +188,7 @@ const KanbanBoardTask = () => {
     setDataActualAddSchedule,
     setIdTaskDelete,
     setColumnWidth,
+    setOrderingOptions,
     setDataTaskEditKanban,
   } = useContext(TaskContext);
   const { isExtendCalendar, expanded } = useContext(GlobalStateContext);
@@ -226,7 +228,6 @@ const KanbanBoardTask = () => {
 
   const [dataErrorTask, setDataErrorTask] = useState<TaskErrorPerson>();
 
-  const [_isDragging, setIsDragging] = useState<boolean>(false);
   const [dataItemAddSchedule, setDataItemAddSchedule] = useState<Task>();
 
   const [dataItemResizeSchedule, setDataItemResizeSchedule] =
@@ -234,9 +235,6 @@ const KanbanBoardTask = () => {
 
   const [dataItemChangeInline, setDataItemChangeInline] = useState<Task>();
   const [dataItemUpdateSchedule, setDataItemUpdateSchedule] = useState<Task>();
-
-  const [sortType, _setSortType] = useState<'asc' | 'desc'>('asc');
-  const [columnSort, _setColumnSort] = useState<string>('');
   const [columnId, setColumnId] = useState<string>('');
   const [peopleDefaultId, setPeopleDefaultId] = useState<string>('');
 
@@ -290,6 +288,7 @@ const KanbanBoardTask = () => {
     orderingRequest,
     statusTask,
     isReadyToFetch,
+    orderingOptions,
   );
   useEffect(() => {
     if (numberPages) {
@@ -524,7 +523,7 @@ const KanbanBoardTask = () => {
             const updatedCurrentItems = prevData[currentStatusId].items.filter(
               (item) => item.id !== newItem.id,
             );
-            if (orderingRequest || searchValue.length > 0) {
+            if (searchValue.length > 0) {
               return {
                 ...prevData,
                 [currentStatusId]: {
@@ -561,7 +560,7 @@ const KanbanBoardTask = () => {
             const lastItem = column.items[column.items.length - 1];
             isLastItemPinned = !!lastItem.pinAt;
           }
-          if (orderingRequest || searchValue.length > 0) {
+          if (searchValue.length > 0) {
             if (matchedPageData && matchedPageData.hasMores) {
               setNumberPagesData((prevNumberPages) =>
                 prevNumberPages.map((item) =>
@@ -1150,13 +1149,6 @@ const KanbanBoardTask = () => {
     }
   }, [handleUpdateItemStart, taskSelectedAction]);
 
-  // Handle click sort item
-  useEffect(() => {
-    setOrderingRequest(
-      !columnSort ? '' : sortType === 'desc' ? columnSort : `-${columnSort}`,
-    );
-  }, [sortType, columnSort, setOrderingRequest]);
-
   //  Handle call api update index task when drag and drop
   const handleUpdateTaskIndex = async (data: {
     tasks: UpdateTaskKanbanRequest[];
@@ -1169,9 +1161,7 @@ const KanbanBoardTask = () => {
     'postUpdateTaskIndex',
     handleUpdateTaskIndex,
     {
-      onSuccess: async () => {
-        setIsDragging(false);
-      },
+      onSuccess: async () => {},
       onError: () => {
         // When an error occurs, change the state to re-render the kanban board to its old state
         setResetInitialColumnsData(!resetInitialColumnsData);
@@ -1217,9 +1207,7 @@ const KanbanBoardTask = () => {
   // Function handle when drag and drop item is end. Instant, execute function (mutation above) update index task
   const handleChangeBoard = useCallback(
     async (data: Columns, dataItemDrop: DropResult) => {
-      setIsDragging(true);
-
-      if (orderingRequest || searchValue) {
+      if (searchValue) {
         updateTaskStatus({
           id: dataItemDrop.draggableId,
           data: { statusId: Number(dataItemDrop.destination?.droppableId) },
@@ -1263,7 +1251,6 @@ const KanbanBoardTask = () => {
     },
     [
       memberSelected,
-      orderingRequest,
       tagSelected,
       searchValue,
       session?.user.id,
@@ -1354,7 +1341,6 @@ const KanbanBoardTask = () => {
       const itemDataTask = sourceColumn.items[source.index];
 
       if (!itemDataTask) return;
-      setIsDragging(true);
 
       try {
         if (type === KanbanType.COLUMN) {
@@ -1573,8 +1559,6 @@ const KanbanBoardTask = () => {
         }
       } catch (error) {
         // TODO: Handle error
-      } finally {
-        setIsDragging(false);
       }
     },
     [columnsKanbanData],
@@ -2581,9 +2565,10 @@ const KanbanBoardTask = () => {
     if (authenticatedUser) {
       if (authenticatedUser.setting?.isSortingTaskByImportant) {
         setDataOrderRing(FilterTypeKanban.IMPORTANT);
-      }
-      if (authenticatedUser.setting?.isSortingTaskByDeadline) {
+      } else if (authenticatedUser.setting?.isSortingTaskByDeadline) {
         setDataOrderRing(FilterTypeKanban.DEADLINE);
+      } else {
+        setDataOrderRing('');
       }
       setIsReadyToFetch(true);
     }
@@ -2607,6 +2592,43 @@ const KanbanBoardTask = () => {
       socketEventEmitter.off('message', handleSocketMessage);
     };
   }, []);
+
+  // Show data filter
+  const allLabels = orderingOptions
+    ? [
+        ...orderingOptions.organization_ids.map((item) => ({
+          ...item,
+          category: 'organization_ids',
+        })),
+        ...orderingOptions.tag_ids.map((item) => ({
+          ...item,
+          category: 'tag_ids',
+        })),
+        ...orderingOptions.category_ids.map((item) => ({
+          ...item,
+          category: 'category_ids',
+        })),
+      ]
+    : [];
+
+  const firstThree = allLabels.slice(0, 3);
+
+  const remainingCount = allLabels.length - firstThree.length;
+
+  const handleRemoveItem = (
+    category: 'organization_ids' | 'tag_ids' | 'category_ids',
+    value: string | number,
+  ) => {
+    setOrderingOptions((prevData) => {
+      if (!prevData) return prevData;
+
+      return {
+        ...prevData,
+        [category]:
+          prevData[category]?.filter((item) => item.value !== value) || [],
+      };
+    });
+  };
 
   return (
     <>
@@ -2745,6 +2767,64 @@ const KanbanBoardTask = () => {
                                 className="w-[14px] h-[14px] ml-2"
                               />
                             </PopoverButton>
+                            {allLabels.length > 3 ? (
+                              <>
+                                {firstThree.slice(0, 3).map((item, index) => (
+                                  <div
+                                    key={index}
+                                    onClick={() =>
+                                      handleRemoveItem(
+                                        item.category as
+                                          | 'organization_ids'
+                                          | 'tag_ids'
+                                          | 'category_ids',
+                                        item.value,
+                                      )
+                                    }
+                                    className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                                    <span className="w-[71px] truncate">
+                                      {item.label}
+                                    </span>
+                                    <ImageRound
+                                      src={`/icons/close.svg`}
+                                      name="close"
+                                      className="w-fit h-fit cursor-pointer"
+                                    />
+                                  </div>
+                                ))}
+                                <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                                  +{remainingCount}
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                {allLabels.map((item, index) => (
+                                  <div
+                                    key={index}
+                                    onClick={() => {
+                                      setIsReadyToFetch(true);
+
+                                      handleRemoveItem(
+                                        item.category as
+                                          | 'organization_ids'
+                                          | 'tag_ids'
+                                          | 'category_ids',
+                                        item.value,
+                                      );
+                                    }}
+                                    className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                                    <span className="w-[71px] truncate">
+                                      {item.label}
+                                    </span>
+                                    <ImageRound
+                                      src={`/icons/close.svg`}
+                                      name="close"
+                                      className="w-fit h-fit cursor-pointer"
+                                    />
+                                  </div>
+                                ))}
+                              </>
+                            )}
                           </div>
                           <Transition
                             as={Fragment}

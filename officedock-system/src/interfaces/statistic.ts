@@ -1,7 +1,9 @@
 import { Tags } from './tag';
 import { TodoItem } from './task';
+import { User } from './user';
 
 export interface TaskTimeStatistic {
+  uuid: string;
   start: Date;
   end: Date;
   id: string;
@@ -47,7 +49,12 @@ export interface dataStatisticResponse {
     date: string | null;
     remark: string;
     isSubmit: boolean;
+    isConfirmed: boolean;
+    user: User;
+    organizationName: string;
   };
+  nextUser?: number;
+  prevUser?: number;
   totalDuration: string;
   organizationCategories: OrganizationCategories;
 }
@@ -74,6 +81,7 @@ export interface dataTaskDaily {
   organization: number;
   tags: Omit<Tags, 'peopleInCharge' | 'responsiblePerson'>[];
   taskDurations: {
+    uuid: string;
     id: number;
     duration: string;
     startedAt: string;
@@ -155,4 +163,26 @@ export interface DataActualDetail {
   end: string;
   left?: number;
   top?: number;
+  uuid: string;
+}
+
+export interface DataUserDetailDailyType {
+  id: number;
+  fullName: string;
+  isConfirmed: boolean;
+  totalDuration: string;
+  organizationName?: string;
+}
+export interface DataListDailyType {
+  organization: {
+    id: number;
+    name: string;
+  };
+  users: DataUserDetailDailyType[];
+}
+
+export interface dataRequestConfirmType {
+  id: number;
+  isConfirmed: boolean;
+  categoryId: number;
 }

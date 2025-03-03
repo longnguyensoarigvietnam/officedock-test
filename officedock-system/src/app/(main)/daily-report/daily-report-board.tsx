@@ -15,6 +15,7 @@ import Image from 'next/image';
 import jaLocale from '@fullcalendar/core/locales/ja';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import Link from 'next/link';
 
 import {
   useReactTable,
@@ -39,7 +40,11 @@ import { Table, TableBody } from '@components/common/Table';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import Input from '@components/common/Input';
 import ActionDetailDaily from '@components/daily/ActionDetailDaily';
-import TaskDailyCard from './taskDailyCard';
+import SingleSelect from '@components/common/SingleSelect';
+import ResizeTextArea from '@components/custom/resizeTextArea';
+import Dropdown from '@components/common/Dropdown';
+import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';
+import TaskDailyCard from '../../../components/daily/taskDailyCard';
 
 import {
   EventCalendarType,
@@ -48,13 +53,21 @@ import {
   ScreenName,
   SocketActions,
   StatusValueTask,
+  UserRoles,
 } from '@constants/enums';
-import { apiRouters } from '@constants/routers';
-import { ERROR_UPDATE_MESSAGE } from '@constants/message';
+import { apiRouters, pageRouters } from '@constants/routers';
+import {
+  ERROR_DELETE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
+} from '@constants/message';
+import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 
 import './styles/daily-report.css';
 import useDataStatistic from '@hooks/useDataStatistic';
 import useCreationDataTask from '@hooks/useCreationDataTask';
+import { useErrorToast } from '@hooks/useErrorToast';
+
 import {
   ChildTask,
   DataActualDetail,
@@ -86,18 +99,13 @@ import {
 import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
+  hasRole,
   transformDataTaskDailyToTable,
 } from '@utils';
 import { useWebSocket } from '@providers/WebSocketProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import api from '@base/api';
-import SingleSelect from '@components/common/SingleSelect';
-import ResizeTextArea from '@components/custom/resizeTextArea';
-import Dropdown from '@components/common/Dropdown';
-import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
-import { useErrorToast } from '@hooks/useErrorToast';
-import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';
 
 const DailyReportBoard = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -155,10 +163,12 @@ const DailyReportBoard = () => {
     eventList: any[];
     clientX: number;
     clientY: number;
+    uuid: string;
   }) => {
     setPopoverInfo({
       largeColor: data.largeColor ? data.largeColor : '',
       title: data.title,
+      uuid: data.uuid,
       end: data.end,
       start: data.start,
       left: adjustPositionForViewportSchedule({
@@ -182,6 +192,9 @@ const DailyReportBoard = () => {
       eventList: taskTimeStatisticList,
       clientX: clickInfo.jsEvent.clientX,
       clientY: clickInfo.jsEvent.clientY,
+      uuid: clickInfo.event.extendedProps.uuid
+        ? clickInfo.event.extendedProps.uuid
+        : '',
     });
   };
 
@@ -192,6 +205,7 @@ const DailyReportBoard = () => {
     return tasks.flatMap((task) =>
       task.taskDurations.map((duration) => ({
         id: `${duration.id}`,
+        uuid: duration.uuid,
         title: task.title ? task.title : '',
         startedAt: duration.startedAt
           ? new Date(duration.startedAt)
@@ -379,6 +393,32 @@ const DailyReportBoard = () => {
       onError: (error: AxiosError<any>) => {
         setIsLoading(false);
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {},
+    },
+  );
+
+  // Handle delete Actual task
+  const handleDeleteActualTask = async (uuid: string) => {
+    const { data: response } = await api.delete(
+      apiRouters.UPDATE_TASK_ACTUAL(uuid),
+    );
+    return response;
+  };
+
+  const { mutate: deleteActualTask } = useMutation(
+    'deleteActualTask',
+    handleDeleteActualTask,
+    {
+      onSuccess: async () => {
+        setPopoverInfo(null);
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        refetchDataStatistic();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
       },
       onSettled: () => {},
     },
@@ -1925,6 +1965,21 @@ const DailyReportBoard = () => {
                 }}>
                 今日
               </Button>
+              {session &&
+                hasRole(session?.user.roles, UserRoles.SYSTEM_ADMIN) && (
+                  <Link
+                    href={pageRouters.DAILY_REPORT_LIST.href}
+                    className="bg-white flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
+                    <span>チームの日報一覧</span>
+                    <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+                      <ImageRound
+                        className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                        src="/icons/right-statistic.svg"
+                        name="right"
+                      />
+                    </div>
+                  </Link>
+                )}
             </div>
           </div>
 
@@ -2429,6 +2484,7 @@ const DailyReportBoard = () => {
           popoverInfo={popoverInfo}
           popoverRef={popoverRef}
           onClose={() => setPopoverInfo(null)}
+          deleteActualTask={(uuid: string) => deleteActualTask(uuid)}
         />
       )}
     </div>

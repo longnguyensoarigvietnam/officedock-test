@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import ImageRound from '@components/common/ImageRound';
@@ -6,6 +6,8 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { CreationDataTask } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
+import Button from '@components/common/Button';
+import { TaskContext } from '@providers/TaskProvider';
 
 type ActionTaskFilterProp = {
   creationDataTaskData: CreationDataTask | undefined;
@@ -16,6 +18,8 @@ const ActionFilterTask = ({
   creationDataTaskData,
   handleClose,
 }: ActionTaskFilterProp) => {
+  const { orderingOptions, setOrderingOptions } = useContext(TaskContext);
+
   const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
     OptionDropdownType[]
   >([]);
@@ -26,14 +30,62 @@ const ActionFilterTask = ({
     OptionDropdownType[]
   >([]);
 
-  const { getValues, setValue, reset } = useForm<{
-    organizationIds?: OptionDropdownType[];
-    tagIds?: OptionDropdownType[];
+  const { getValues, setValue, watch, reset } = useForm<{
+    organizationIds: OptionDropdownType[];
+    tagIds: OptionDropdownType[];
     categoryIds: OptionDropdownType[];
   }>({
     mode: 'onSubmit',
     defaultValues: {},
   });
+
+  const defaultValues = useMemo<{
+    organizationIds: OptionDropdownType[];
+    tagIds: OptionDropdownType[];
+    categoryIds: OptionDropdownType[];
+  }>(() => {
+    const value: {
+      organizationIds: OptionDropdownType[];
+      tagIds: OptionDropdownType[];
+      categoryIds: OptionDropdownType[];
+    } = {
+      tagIds: [],
+      categoryIds: [],
+      organizationIds: [],
+    };
+
+    if (orderingOptions) {
+      if (orderingOptions.tag_ids) {
+        value.tagIds = orderingOptions.tag_ids.map((tag) => {
+          return {
+            value: tag.value,
+            label: tag.label,
+          };
+        });
+      }
+      if (orderingOptions.category_ids) {
+        value.categoryIds = orderingOptions.category_ids.map((tag) => {
+          return {
+            value: tag.value,
+            label: tag.label,
+          };
+        });
+      }
+      if (orderingOptions.organization_ids) {
+        value.organizationIds = orderingOptions.organization_ids.map((tag) => {
+          return {
+            value: tag.value,
+            label: tag.label,
+          };
+        });
+      }
+    }
+    return value;
+  }, [orderingOptions]);
+
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, reset]);
 
   useEffect(() => {
     if (creationDataTaskData) {
@@ -53,10 +105,28 @@ const ActionFilterTask = ({
         creationDataTaskData.categories.map((org) => ({
           label: org.name,
           value: org.id,
+          largeColor: org.color,
         })),
       );
     }
   }, [creationDataTaskData]);
+
+  const handleSearch = () => {
+    setOrderingOptions({
+      category_ids: getValues('categoryIds'),
+      tag_ids: getValues('tagIds'),
+      organization_ids: getValues('organizationIds'),
+    });
+    handleClose();
+  };
+
+  const handleReset = () => {
+    setOrderingOptions({
+      category_ids: [],
+      organization_ids: [],
+      tag_ids: [],
+    });
+  };
 
   return (
     <>
@@ -64,7 +134,7 @@ const ActionFilterTask = ({
         <div className="text-xs font-medium text-[#77858F] flex justify-between items-center">
           <span>絞り込み</span>
           <div className="flex items-center gap-x-[10px]">
-            <span onClick={() => reset()} className="cursor-pointer">
+            <span onClick={handleReset} className="cursor-pointer">
               選択をクリア
             </span>
             <div
@@ -91,7 +161,7 @@ const ActionFilterTask = ({
               optionClassName="!border-[1px] !border-[#77858F]"
               labelOptionClass="break-words max-w-[324px]"
               options={dataOptionsOrganizations}
-              selectedOptions={[]}
+              selectedOptions={watch('organizationIds') ?? []}
               customLabel="チーム"
               onChange={(selected) => {
                 let updatedTagIds = [];
@@ -117,9 +187,9 @@ const ActionFilterTask = ({
               labelClass="!min-h-0"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
               optionClassName="!border-[1px] !border-[#77858F]"
-              labelOptionClass="break-words max-w-[324px]"
+              labelOptionClass="break-words max-w-[310px]"
               options={dataOptionsCategoryIds}
-              selectedOptions={[]}
+              selectedOptions={watch('categoryIds') ?? []}
               customLabel="カテゴリー"
               onChange={(selected) => {
                 let updatedTagIds = [];
@@ -147,7 +217,7 @@ const ActionFilterTask = ({
               optionClassName="!border-[1px] !border-[#77858F]"
               labelOptionClass="break-words max-w-[324px]"
               options={dataOptionsTagIds}
-              selectedOptions={[]}
+              selectedOptions={watch('tagIds') ?? []}
               customLabel="タグ"
               onChange={(selected) => {
                 let updatedTagIds = [];
@@ -166,6 +236,11 @@ const ActionFilterTask = ({
               }}
             />
           </div>
+        </div>
+        <div className="flex justify-end mt-4">
+          <Button onClick={handleSearch} className="h-8">
+            絞り込み
+          </Button>
         </div>
       </div>
     </>

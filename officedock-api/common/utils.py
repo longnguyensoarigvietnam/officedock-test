@@ -1,5 +1,5 @@
 import io
-from datetime import timedelta
+from datetime import datetime, timedelta
 import random
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -350,3 +350,12 @@ def generate_random_color():
 class StripTags(Func):
     function = "regexp_replace"
     template = "%(function)s(%(expressions)s, {}, '', 'g')".format(STRIP_TAGS)
+
+
+def generate_file_name(format: str = "png") -> str:
+    """
+    Generate file name.
+    """
+    current_time = datetime.now().strftime("%Y%m%d%H%M%S%f")
+    random_number = random.randint(10000, 99999)
+    return f"{current_time}{random_number}.{format}"

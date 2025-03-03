@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import transaction
 from django.db.models import (
     DateTimeField,
@@ -33,9 +34,16 @@ from chat.constants import (
     WebSocketEventType,
     TypeChatGroup,
 )
-from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
+from chat.models import (
+    ChatMessage,
+    ChatRoom,
+    ChatRoomsParticipants,
+    ChatFile,
+    Bookmark,
+)
 from chat.serializers import (
     BookMarkSerializer,
+    ChatFileDetailSerializer,
     ChatMessageSerializer,
     ChatMessageBookMarkSerializer,
     ChatRoomDetailSerializer,
@@ -44,8 +52,10 @@ from chat.serializers import (
     ChatRoomsParticipantsSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
     SendMessageSerializer,
+    ReactionSerializer,
 )
-from common.utils import send_web_socket_event, StripTags
+from chat.utils import remove_chat_files
+from common.utils import StripTags, send_web_socket_event
 from base.permissions import ActionPermission
 from roles.constants import Screens
 
@@ -723,9 +733,23 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             client_id = request.data.pop("client_id", None)
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
+            serializer_data = serializer.validated_data
+            files = serializer_data.pop("files", None)
+            file_uuids = serializer_data.pop("file_uuids", [])
             message = serializer.save(
                 sender=user, chat_room=chat_room, company=user.company
             )
+
+            if files:
+                # Create chat files
+                ChatFile.create_files(
+                    company=chat_room.company,
+                    room=chat_room,
+                    message=message,
+                    files=files,
+                    uuids=file_uuids,
+                )
+
             chat_room_participants = chat_room.chat_rooms_participants.all()
             for participant in chat_room_participants:
                 if participant.user_id != user.id:
@@ -734,18 +758,19 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     )
                 participant.hidden_at = None
                 participant.save()
-                # Handle case realtime when send chat message
-                send_web_socket_event(
-                    {
-                        "client_id": client_id,
-                        "action": WebSocketEventType.MESSAGE.value,
-                        "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                            participant
-                        ).data,
-                        "chat_message": ChatMessageSerializer(message).data,
-                    },
-                    participant,
-                )
+                if participant.user_id != user.id:
+                    # Handle case realtime when send chat message
+                    send_web_socket_event(
+                        {
+                            "client_id": client_id,
+                            "action": WebSocketEventType.MESSAGE.value,
+                            "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                                participant
+                            ).data,
+                            "chat_message": ChatMessageSerializer(message).data,
+                        },
+                        participant,
+                    )
 
             return self.response_created(ChatMessageSerializer(message).data)
 
@@ -793,8 +818,13 @@ class ChatMessageViewSet(
         Filtering chat messages by user.
         """
 
+        queryset = super().get_queryset()
         user = self.request.user
-        return super().get_queryset().filter(sender=user)
+
+        if self.action in ["destroy", "perform_update"]:
+            return queryset.filter(sender=user)
+
+        return queryset.filter(company=user.company)
 
     def get_serializer_class(self):
         """
@@ -816,23 +846,23 @@ class ChatMessageViewSet(
         Get a list of chat rooms.
         """
         user = request.user
-        messages = []
-        if is_bookmark := request.query_params.get("is_bookmark"):
-            messages = ChatMessage.objects.filter(
-                sender=user, bookmark_at__isnull=False
-            ).order_by("bookmark_at")
+        messages = self.get_queryset().filter(deleted_at__isnull=True)
 
         if message := request.query_params.get("message"):
             messages = (
-                ChatMessage.objects.annotate(
-                    clean_message=StripTags(F("message"))
-                )
-                .filter(
-                    Q(clean_message__icontains=message)
-                    & Q(deleted_at__isnull=True)
-                )
+                messages.annotate(clean_message=StripTags(F("message")))
+                .filter(clean_message__icontains=message)
                 .order_by("-created_at")
             )
+
+        if is_bookmark := request.query_params.get("is_bookmark"):
+            messages = (
+                messages.filter(bookmark_users=user)
+                .order_by("bookmarks__bookmark_at")
+                .distinct()
+            )
+        else:
+            messages = messages.order_by("-created_at")
 
         return self.response_pagination(
             request, messages, ChatMessageBookMarkSerializer
@@ -852,30 +882,107 @@ class ChatMessageViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
-        instance.bookmark_at = serializer_data.pop("bookmark_at", None)
-        instance.save()
+        bookmark_at = serializer_data.pop("bookmark_at", None)
+        if bookmark_at:
+            Bookmark.objects.get_or_create(
+                chat_message=instance,
+                user=request.user,
+                defaults={"bookmark_at": datetime.now()},
+            )
+        else:
+            Bookmark.objects.filter(
+                chat_message=instance, user=request.user
+            ).delete()
 
         return self.response_ok()
 
-    def update(self, request, *args, **kwargs):
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="reaction",
+        serializer_class=ReactionSerializer,
+    )
+    @transaction.atomic()
+    def reaction(self, request, uuid=None):
+        """
+        Bookmark message
+        """
+        user = request.user
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        icon = serializer_data.pop("icon")
+        if instance.reactions.filter(user=user, icon=icon).exists():
+            instance.reactions.filter(user=user, icon=icon).delete()
+        else:
+            instance.reactions.create(
+                company=user.company, user=user, icon=icon
+            )
+        participants = instance.chat_room.chat_rooms_participants.all()
+        for participant in participants:
+            if participant.user.id != user.id:
+                send_web_socket_event(
+                    {
+                        "action": WebSocketEventType.EDIT_MESSAGE.value,
+                        "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                            participant
+                        ).data,
+                        "chat_message": ChatMessageSerializer(instance).data,
+                    },
+                    participant.user,
+                )
+
+        return self.response_ok()
+
+    @transaction.atomic
+    def perform_update(self, serializer):
         """
         Handle update message.
         """
-        instance = self.get_object()
+
+        instance = serializer.instance
+        serializer_data = serializer.validated_data
+        files = serializer_data.pop("files", None)
+        file_uuids = serializer_data.pop("file_uuids", [])
+
         if (
             instance.type != ChatMessageTypes.MESSAGE.value
             or instance.deleted_at is not None
         ):
             raise ValidationError({"detail": ERROR_MESSAGES["cannot_updated"]})
 
-        # Perform the update operation
-        super().update(request, *args, **kwargs)
+        if not isinstance(file_uuids, list):
+            file_uuids = [file_uuids]
 
-        # Fetch the updated message
-        instance.refresh_from_db()
+        # Get uuids not exists in files
+        uuids_exists = instance.chat_files.filter(
+            uuid__in=file_uuids
+        ).values_list("uuid", flat=True)
+        uuids_to_create = []
+        for uuid in file_uuids:
+            if uuid not in uuids_to_create and uuid not in uuids_exists:
+                uuids_to_create.append(uuid)
+
+        # Delete chat files
+        chat_files = instance.chat_files.exclude(uuid__in=file_uuids).all()
+        remove_chat_files(chat_files)
+
+        # Perform the update operation
+        instance = serializer.save()
+
+        chat_room = instance.chat_room
+        if files:
+            # Create chat files
+            ChatFile.create_files(
+                company=instance.company,
+                room=chat_room,
+                message=instance,
+                files=files,
+                uuids=uuids_to_create,
+            )
 
         # Handle case realtime when edit chat message
-        chat_room = instance.chat_room
         send_web_socket_event(
             {
                 "action": WebSocketEventType.EDIT_MESSAGE.value,
@@ -885,8 +992,6 @@ class ChatMessageViewSet(
             chat_room=chat_room,
         )
 
-        return self.response_ok()
-
     def destroy(self, request, *args, **kwargs):
         """
         Handle soft delete message
@@ -894,6 +999,9 @@ class ChatMessageViewSet(
 
         message = self.get_object()
         message.soft_delete()
+
+        # Delete chat files
+        remove_chat_files(message.chat_files.all())
 
         # Handle case realtime when delete chat message
         chat_room = message.chat_room
@@ -907,3 +1015,31 @@ class ChatMessageViewSet(
         )
 
         return self.response_ok()
+
+
+@extend_schema(tags=["System > Chat Message > File"])
+class ChatFileViewSet(
+    BaseAPIViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin
+):
+    """
+    API endpoint for chat file.
+    """
+
+    queryset = ChatFile.objects.order_by("created_at")
+    serializer_class = ChatFileDetailSerializer
+    permission_classes = [ActionPermission]
+    screen_name = Screens.CHAT.value
+
+    def get_queryset(self):
+        return super().get_queryset().filter(company=self.request.user.company)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("chat_room_code", type=str, required=False),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if chat_room_code := request.query_params.get("chat_room_code"):
+            queryset = queryset.filter(chat_room__code=chat_room_code)
+        return super().list(request, *args, **kwargs)

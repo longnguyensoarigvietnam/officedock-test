@@ -133,6 +133,14 @@ export const pageRouters = {
     name: '日報',
     href: '/daily-report',
   },
+  DAILY_REPORT_LIST: {
+    name: '日報一覧',
+    href: '/daily-report/list',
+  },
+  DAILY_REPORT_DETAIL: {
+    name: '日報',
+    href: (id: string) => `/daily-report/${id}`,
+  },
   // CATEGORY
   CATEGORY_MANAGEMENT: {
     name: '集計カテゴリ',
@@ -303,6 +311,7 @@ export const apiRouters = {
   SKILL_CREATION: '/creation-data/organization-skills/',
   TAG_CREATION: '/creation-data/tags/',
   CATEGORY_FILTER_CREATION: '/creation-data/category-filters/',
+  TASK_LIST_CHAT: '/creation-data/tasks/',
 
   // USER
   USER_LIST: '/users/',
@@ -354,6 +363,13 @@ export const apiRouters = {
   SOCKET_ACTION: (token: string) => `/system/ws/chat/?token=${token}`,
   CHAT_SETTING: '/users/chat-setting/',
 
+  // BOOKMARK
+  BOOKMARK_LIST: '/messages/',
+  BOOKMARK_MESSAGE: (uuid: string) => `/messages/${uuid}/bookmark/`,
+
+  // REACTION
+  REACTION_MESSAGE: (uuid: string) => `/messages/${uuid}/reaction/`,
+
   // SCHEDULE
   SCHEDULES: '/schedules/',
   SCHEDULE_DETAIL: (id: string) => `/schedules/${id}/`,
@@ -401,4 +417,8 @@ export const apiRouters = {
 
   // MEMBER ORGANIZATION
   MEMBER_ORGANIZATION_LIST: '/organizations/members/',
+
+  // STAT DATA
+  STAT_DATA: '/stat-data/',
+  CONFIRM_USER_DAILY: (id: number) => `/users/${id}/report/`,
 };

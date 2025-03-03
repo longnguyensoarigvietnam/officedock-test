@@ -15,6 +15,7 @@ import { formatTime24h } from './date';
 import { Task } from '@interfaces/task';
 import { MAX_HEX_COLOR_VALUE } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
+import { UserRoleType } from '@interfaces/user';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -201,7 +202,8 @@ export function decodeHtml(str: string): string {
     .replace(/&#039;/g, "'");
 }
 // Split the input by new lines and wrap the parts in <p> tags
-export function formatWithParagraphTags(content: string): string {
+export function formatWithParagraphTags(content: string | null | undefined): string {
+  if (!content) return '';
   const parts = content.split('\n').map((line, index) => {
     return index === 0 ? line : `<p>${line}</p>`;
   });
@@ -625,3 +627,17 @@ export function generateOptionsCount(
     value: index + 1,
   }));
 }
+// Check has role need
+export function hasRole(roles: UserRoleType[], roleName: string): boolean {
+  return roles.some((role) => role.name === roleName);
+}
+
+export const getChatFileURL = (url: string) => {
+  if (url && typeof url === 'string') {
+    if (url.includes('https://') || url.includes('http://')) {
+      return url;
+    }
+    return process.env.NEXT_PUBLIC_API_URL + url;
+  }
+  return '';
+};

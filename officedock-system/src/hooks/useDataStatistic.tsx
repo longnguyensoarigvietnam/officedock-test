@@ -1,12 +1,11 @@
 'use client';
+import { AxiosError } from 'axios';
+import { useSession } from 'next-auth/react';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { useContext } from 'react';
 
-import { apiRouters, pageRouters } from '@constants/routers';
-import { ServerStatusCode } from '@constants/enums';
-import { ResponseError } from '@interfaces/response';
+import { apiRouters } from '@constants/routers';
+
 import { dataStatisticResponse } from '@interfaces/statistic';
 
 import api from '@base/api';
@@ -14,19 +13,27 @@ import { LoadingContext } from '@providers/LoadingProvider';
 
 interface useDataStatisticProps {
   date?: string;
+  userId?: string;
+  organizationId?: string;
   condition?: boolean[];
+  onError?: (error: AxiosError) => void;
 }
 
-const useDataStatistic = ({ date, condition }: useDataStatisticProps) => {
+const useDataStatistic = ({
+  date,
+  userId,
+  organizationId,
+  condition,
+  onError,
+}: useDataStatisticProps) => {
   const { data: session } = useSession();
   const { setIsLoading } = useContext(LoadingContext);
 
-  const router = useRouter();
   const token = session?.accessToken;
 
   // Handle call API get task calendar
   const getDataStatistic = async () => {
-    const apiUrl = `${apiRouters.DATA_DAILY_STATISTIC}?${date && `date=${date}`}`;
+    const apiUrl = `${apiRouters.DATA_DAILY_STATISTIC}?${date ? `date=${date}&` : ''}${userId ? `user_id=${userId}&` : ''}${organizationId ? `organization_id=${organizationId}` : ''}`;
     const { data } = await api.get<dataStatisticResponse>(apiUrl);
     return data;
   };
@@ -37,19 +44,14 @@ const useDataStatistic = ({ date, condition }: useDataStatisticProps) => {
     refetch: refetchDataStatistic,
     isFetched: isFetchedDataStatistic,
   } = useQuery({
-    queryKey: ['getDataStatistic', [date]],
+    queryKey: ['getDataStatistic', [date, userId, organizationId]],
     queryFn: getDataStatistic,
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onError: ({ response }: ResponseError<any>) => {
-      if (response?.status === ServerStatusCode.UNAUTHORIZED) {
-        if (session) {
-          signOut();
-          router.push(pageRouters.LOGIN.href);
-        }
-      }
+    onError: (error: AxiosError) => {
+      onError && onError(error);
     },
     onSettled: () => {
       setIsLoading(false);
