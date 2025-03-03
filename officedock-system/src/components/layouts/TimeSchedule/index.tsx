@@ -70,7 +70,7 @@ import {
   DEFAULT_START_TIME,
   NO_OPTION_CATEGORY,
 } from '@constants';
-import { apiRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ActionsEvent,
   CalendarViewOptions,
@@ -224,6 +224,7 @@ const TimeSchedule = memo(
     const today = new Date();
 
     const [isStartPopupDetail, setIsStartPopupDetail] = useState(false);
+    const [idBackToEvent, setIdBackToEvent] = useState<string>('');
 
     const [currentResources, setCurrentResources] = useState<
       {
@@ -2070,6 +2071,7 @@ const TimeSchedule = memo(
       participants: EventParticipant[];
       clientX: number;
       clientY: number;
+      type: OptionDropdownType;
     }) => {
       setEventInfo({
         id: data.id,
@@ -2087,6 +2089,7 @@ const TimeSchedule = memo(
         address: data.address,
         isAllDay: data.isAllDay,
         participants: data.participants,
+        type: data.type,
       });
     };
 
@@ -2097,7 +2100,6 @@ const TimeSchedule = memo(
         clickInfo.event._def.resourceIds?.length &&
         clickInfo.event._def.resourceIds[0] === ItemScheduleType.PLANS;
       setIsStartPopupDetail(clickInfo.event.extendedProps.isStart);
-
       if (
         clickInfo.event.extendedProps.type === ItemStartType.TASK ||
         !resourcePlan
@@ -2122,6 +2124,7 @@ const TimeSchedule = memo(
           clientY: clickInfo.jsEvent.clientY,
         });
       } else {
+        setIdBackToEvent(clickInfo.event.extendedProps.scheduleId);
         handleShowEventInModal({
           title: clickInfo.event.title,
           id: clickInfo.event.extendedProps.scheduleId,
@@ -2134,6 +2137,10 @@ const TimeSchedule = memo(
           isAllDay: clickInfo.event.extendedProps.isAllDay,
           address: clickInfo.event.extendedProps.address,
           participants: clickInfo.event.extendedProps.participants,
+          type: {
+            label: clickInfo.event.extendedProps.eventType,
+            value: clickInfo.event.extendedProps.eventType,
+          },
         });
       }
     };
@@ -2441,7 +2448,6 @@ const TimeSchedule = memo(
         `${apiRouters.SCHEDULE_DETAIL(newId)}?message=${actionsEventMessage}${data.sendToChat ? '&send_to_chat=true' : ''}`,
       );
     };
-
     const { mutate: deleteEventCalendar } = useMutation(
       'deleteEventCalendar',
       handleDeleteEventCalendar,
@@ -3111,11 +3117,9 @@ const TimeSchedule = memo(
               setActionsEventMessage('');
             }}
             onBackToEditModal={() => {
-              setOpenCreateEventModal(true);
-              setOpenConfirmDeleteEventModal(false);
-              setDataEventEditLocal(confirmEventDataToEdit);
-              setBackToEditing(true);
-              setActionsEventMessage('');
+              router.push(
+                `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}`,
+              );
             }}
           />
         )}
