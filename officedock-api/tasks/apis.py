@@ -533,7 +533,7 @@ class TaskViewSet(
                             }
                         )
 
-        if serializer_data.get("deadline") and remind_countdown and remind_type:
+        if serializer_data.get("deadline"):
             serializer_data["remind_at"] = calculate_new_time(
                 serializer_data["deadline"], remind_countdown, remind_type
             )
