@@ -87,6 +87,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "type",
             "send_to_chat",
             "message",
+            "is_start",
         ]
         read_only_fields = ["id"]
 
