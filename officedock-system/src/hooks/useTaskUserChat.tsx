@@ -12,6 +12,7 @@ import { TaskUserListChat } from '@interfaces/chat';
 interface UseTaskUserChatHooksProps {
   page: number;
   roomCode: string;
+  isShowList: boolean;
   search?: string;
   onSuccess?: (success: BasePagination<TaskUserListChat[]>) => void;
   onError?: (error: AxiosError) => void;
@@ -22,6 +23,7 @@ const useTaskUserChat = ({
   page,
   roomCode,
   search,
+  isShowList,
   onSuccess,
   onError,
   onSettled,
@@ -43,7 +45,7 @@ const useTaskUserChat = ({
     refetch: refetchTaskUserChat,
     isFetched: isFetchedTaskUserChat,
   } = useQuery({
-    queryKey: ['getTaskUserChat', page, search, roomCode],
+    queryKey: ['getTaskUserChat', page, search, roomCode, isShowList],
     queryFn: getTaskUserChat,
     retry: 0,
     enabled: !!token,

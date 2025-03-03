@@ -438,7 +438,8 @@ const TaskCard = ({
                 top: `${(slotHeight / baseHeight) * 8}px`,
               }}
               className={`absolute resize-icon w-[14px] h-[14px]  right-2 hover:cursor-pointer ${isCalculation && 'hidden'}`}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setIsShowEditActual(true);
               }}
             />
