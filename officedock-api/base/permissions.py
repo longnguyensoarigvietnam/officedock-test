@@ -218,7 +218,7 @@ class IsCronJob(BasePermission):
     """
 
     def has_permission(self, request, view):
-        CRONJOB_KEY_DOTENV = settings.CRONJOB_KEY
+        CRONJOB_KEY_DOTENV = settings.SECRET_KEY_FOR_CRONJOB
         cronjob_key_request = request.query_params.get("cronjob_key")
         if not CRONJOB_KEY_DOTENV or CRONJOB_KEY_DOTENV != cronjob_key_request:
             return False
