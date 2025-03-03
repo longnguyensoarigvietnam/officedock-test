@@ -1266,11 +1266,11 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             ):
                 tasks = queryset.all()
                 for idx, task in enumerate(tasks):
-                    task_index = task.task_index.first()
+                    task_index = task.task_index.filter(user=user).first()
                     if task_index.pin_at:
                         task.task_index.update(
                             pin_at=timezone.now()
-                            - timedelta(seconds=INITIAL_INDEX_VALUE + idx)
+                            - timedelta(minutes=INITIAL_INDEX_VALUE + idx)
                         )
                     task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
 
