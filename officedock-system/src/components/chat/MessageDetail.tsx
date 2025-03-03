@@ -332,6 +332,16 @@ export const MessageDetail = ({
               '',
             );
 
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(
+              taskQuote.innerHTML,
+              'text/html',
+            );
+
+            const spans = doc.querySelectorAll('span');
+
+            const targetSpan = spans[1]?.outerHTML || '';
+
             return (
               <>
                 <div
@@ -344,12 +354,13 @@ export const MessageDetail = ({
                   }}
                   className="flex mb-2 items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
                   <ImageRound
-                    className="w-[15px] h-[14px]"
-                    name="Calendar icon"
-                    src="/icons/calendar-time.svg"
+                    className="w-[14px] h-[14px]"
+                    name="Task icon"
+                    src="/icons/gray-checkbox.svg"
                   />
                   <span
-                    dangerouslySetInnerHTML={{ __html: taskQuote.innerHTML }}
+                    className="text-sm font-medium"
+                    dangerouslySetInnerHTML={{ __html: targetSpan }}
                   />
                 </div>
 

@@ -22,8 +22,6 @@ import {
   EditorContent,
   useEditor,
   Editor,
-  mergeAttributes,
-  Node,
 } from '@tiptap/react';
 import { Placeholder } from '@tiptap/extension-placeholder';
 
@@ -118,6 +116,8 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
+import { debounce } from 'lodash';
+import { TaskQuote } from '@components/chat/CustomTaskQuote';
 
 interface dataProps {
   clientId: string;
@@ -126,10 +126,12 @@ interface dataProps {
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
   creationDataTaskData: CreationDataTask | undefined;
+  hasMoreDetailOnScrollDown: boolean
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
   setHasMoreDetail: React.Dispatch<React.SetStateAction<boolean>>;
+  setHasMoreDetailOnScrollDown: React.Dispatch<React.SetStateAction<boolean>>
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   hasMore: boolean;
   handleRemoveChatRoomParam: () => void;
@@ -146,6 +148,8 @@ const ChatDetail = ({
   hasMoreDetail,
   dashboardMemberList,
   dashboardMembers,
+  hasMoreDetailOnScrollDown,
+  setHasMoreDetailOnScrollDown,
   setFilteredChatList,
   setHasMoreDetail,
   setLastItemId,
@@ -217,6 +221,8 @@ const ChatDetail = ({
   });
   const { authenticatedUser } = useAuthenticatedUser();
   const [loggedInUser, setLoggedInUser] = useState<User>();
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [isLoadingNewer, setIsLoadingNewer] = useState(false);
 
   // Mention
   const [mentionMembers, setMentionMembers] = useState<ChatParticipant[]>([]);
@@ -224,8 +230,7 @@ const ChatDetail = ({
 
   // Jump to message
   const [lastGotoMessageId, setLastGotoMessageId] = useState<number | null>();
-  const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
-    useState(false);
+  
   const [gotoMessageId, setGotoMessageId] = useState<number | null>();
   const gotoMessageRef = useRef<HTMLDivElement | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<
@@ -380,6 +385,7 @@ const ChatDetail = ({
             router.replace(`?${params.toString()}`);
           }
         }
+        setIsLoadingOlder(false)
       },
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
@@ -493,6 +499,7 @@ const ChatDetail = ({
             setLastGotoMessageId(null);
           }
         }
+        setIsLoadingNewer(false)
       },
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
@@ -548,6 +555,8 @@ const ChatDetail = ({
       if (controllerRef.current) {
         controllerRef.current.abort();
       }
+      setIsLoadingOlder && setIsLoadingOlder(false)
+      setIsLoadingNewer && setIsLoadingNewer(false)
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatRoomCode]);
@@ -555,26 +564,28 @@ const ChatDetail = ({
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const chatContainer = chatContainerRef.current;
-      if (
-        chatContainer &&
-        hasMoreDetail &&
-        Math.round(chatContainer.clientHeight + Math.abs(chatContainer.scrollTop)) ==
-          Math.round(chatContainer.scrollHeight)
-      ) {
+    const chatContainer = chatContainerRef.current;
+
+    const handleScroll = debounce(() => {
+      if (!chatContainer) return;
+
+      const isAtTop =
+        Math.round(
+          chatContainer.clientHeight + Math.abs(chatContainer.scrollTop),
+        ) >=
+        Math.round(0.9 * chatContainer.scrollHeight);
+
+      const isAtBottom = Math.floor(Math.abs(chatContainer.scrollTop)) <= 10;
+
+      if (isAtTop && hasMoreDetail) {
+        setIsLoadingOlder(true);
         getDataListMessages(page);
-      } else if (
-        chatContainer &&
-        hasMoreDetailOnScrollDown &&
-        Math.floor(Math.abs(chatContainer.scrollTop)) == 0
-      ) {
-        chatContainer.scrollTop = -50;
+      } else if (isAtBottom && hasMoreDetailOnScrollDown) {
+        chatContainer.scrollTop = -20;
+        setIsLoadingNewer(true);
         getDataListMessagesOnScrollDown({ pageNumber: page, sorting: true });
       }
-    };
-
-    const chatContainer = chatContainerRef.current;
+    }, 200); 
 
     if (chatContainer) {
       chatContainer.addEventListener('scroll', handleScroll);
@@ -584,55 +595,25 @@ const ChatDetail = ({
       if (chatContainer) {
         chatContainer.removeEventListener('scroll', handleScroll);
       }
+      handleScroll.cancel?.(); 
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMoreDetail, hasMoreDetailOnScrollDown]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMoreDetail, hasMoreDetailOnScrollDown, page]);
 
-  const TaskQuote = Node.create({
-    name: 'taskQuote',
-    group: 'inline',
-    inline: true,
-    atom: true,
-
-    addAttributes() {
-      return {
-        id: { default: null },
-        title: { default: '' },
-      };
-    },
-
-    parseHTML() {
-      return [
-        {
-          tag: 'span[data-task-id]',
-          getAttrs: (dom: HTMLElement) => ({
-            id: dom.getAttribute('data-task-id'),
-            title:
-              dom.getAttribute('data-title') ||
-              dom.textContent?.replace('[タスク] ', ''),
-          }),
-        },
-      ];
-    },
-
-    renderHTML({ HTMLAttributes }) {
-      return [
-        'span',
-        mergeAttributes(HTMLAttributes, {
-          'data-task-id': HTMLAttributes.id,
-          'data-title': HTMLAttributes.title,
-          class: 'inline-task-quote',
-        }),
-        ['span', { style: 'color: #77858F;' }, '[タスク]'],
-        ' ',
-        ['span', { style: 'color: #0068B7;' }, HTMLAttributes.title],
-      ];
-    },
-
-    renderText({ node }) {
-      return `[タスク] ${node.attrs.title}`;
-    },
-  });
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    if (!chatContainer) return;
+  
+    if (isLoadingOlder || isLoadingNewer) {
+      chatContainer.style.overflow = 'hidden';
+    } else {
+      chatContainer.style.overflow = 'auto';
+    }
+  
+    return () => {
+      if (chatContainer) chatContainer.style.overflow = 'auto';
+    };
+  }, [isLoadingOlder, isLoadingNewer]);
 
   const editor = useEditor({
     extensions: [
@@ -1896,7 +1877,11 @@ const ChatDetail = ({
   );
 
   useEffect(() => {
-    if (actionType && typeDetail === ItemStartType.TASK) {
+    if (
+      actionType &&
+      typeDetail === ItemStartType.TASK &&
+      dataTaskEdit != null
+    ) {
       if (taskDetailId) {
         setShowModalTask(true);
         getDataDetailTask(parseInt(taskDetailId));
@@ -2307,6 +2292,12 @@ const ChatDetail = ({
           <div
             ref={chatContainerRef}
             className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
+            {isLoadingNewer && (
+              <div className="flex flex-col items-start ml-3">
+                <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
+                <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+              </div>
+            )}
             <div className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
               <div>
                 {initialLoad ? (
@@ -2421,6 +2412,12 @@ const ChatDetail = ({
                     />
                   </div>
                 ))}
+            {isLoadingOlder && (
+              <div className="flex flex-col items-start ml-3">
+                <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
+                <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+              </div>
+            )}
           </div>
           {chatRoomDetail ? (
             <>
@@ -2610,7 +2607,7 @@ const ChatDetail = ({
           ) : (
             <div className="flex flex-col items-start ml-3">
               <RowSkeleton className="!h-[50px] w-[700px] mb-2" />
-              <RowSkeleton className="!h-[80] w-[600px] mb-2" />
+              <RowSkeleton className="!h-[80px] w-[600px] mb-2" />
               <RowSkeleton className="!h-[100px] w-[720px] mb-2" />
             </div>
           )}
