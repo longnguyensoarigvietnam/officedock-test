@@ -2040,11 +2040,11 @@ const DailyReportBoard = () => {
               locale="ja"
             />
           </div>
-          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_177px)] overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
+          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_177px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
             <div className="h-[325px] overflow-y-auto">
-              <p>カテゴリーの割合</p>
+              <p className="text-base ">カテゴリーの割合</p>
               <div className="flex pt-5">
-                <section className="flex-1">
+                <section className="flex-1 max-w-[360px]">
                   {chartData?.data && (
                     <PieChart
                       colors={chartData.colors}
@@ -2083,14 +2083,16 @@ const DailyReportBoard = () => {
                               backgroundColor: item.color,
                             }}
                             className={`w-3 h-3 mt-[7px] `}></div>
-                          <span className="max-w-[200px] break-all">
+                          <span className="w-[200px] break-all">
                             {item.categoryName}
                           </span>
                         </div>
-                        <div className="ml-[30px] flex items-start">
-                          {convertToJapaneseTime(item.duration)}
+                        <div className="flex items-center gap-5">
+                          <div className="ml-[30px] w-[100px] flex items-start">
+                            {convertToJapaneseTime(item.duration)}
+                          </div>
+                          <div>{item.percent}%</div>
                         </div>
-                        <div>{item.percent}%</div>
                       </div>
                     );
                   })}

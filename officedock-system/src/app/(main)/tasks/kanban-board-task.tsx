@@ -2227,6 +2227,10 @@ const KanbanBoardTask = () => {
       remindType: data.deadlineRemindType?.value
         ? `${data.deadlineRemindType?.value}`
         : null,
+      remind_at:
+        !data.deadlineRemindCountdown?.value && !data.deadlineRemindType?.value
+          ? null
+          : undefined,
     });
   };
 
