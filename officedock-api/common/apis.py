@@ -510,9 +510,7 @@ class CronJobViewSet(BaseAPIViewSet):
                         task_duration.save()
                     diff_time = timezone.now() - task_schedule.plan_end_date
                     if (
-                        timedelta(minutes=30)
-                        <= diff_time
-                        <= timedelta(minutes=32)
+                        timedelta(minutes=30) <= diff_time
                         and task_duration.is_cancel_alert is False
                         and (
                             next_task_schedule is None
@@ -536,7 +534,7 @@ class CronJobViewSet(BaseAPIViewSet):
             ):
                 users = related_obj.participants.all()
                 diff_time = timezone.now() - related_obj.end_date
-                if timedelta(minutes=30) <= diff_time <= timedelta(minutes=32):
+                if timedelta(minutes=30) <= diff_time:
                     is_send_sk = True
                     is_over_estimate = True
 
