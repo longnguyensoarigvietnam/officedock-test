@@ -313,4 +313,5 @@ export interface DataDetailEventType {
   participants?: EventParticipant[];
   address?: string;
   isAllDay: boolean;
+  type: OptionDropdownType
 }

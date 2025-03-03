@@ -639,7 +639,8 @@ const TaskPageDataHeader = () => {
                 dataOverTimeWarning &&
                 dataOverTimeWarning?.isOverEstimate &&
                 taskSelected.type === dataOverTimeWarning.type &&
-                `${taskSelected.value}` === dataOverTimeWarning.id && (
+                `${String(taskSelected.value).replace('event', '')}` ===
+                  dataOverTimeWarning.id && (
                   <div className="flex gap-1 items-center text-xs font-normal text-[#C32E2E] mt-[2px]">
                     <ImageRound
                       src={`/icons/overlap-task.svg`}

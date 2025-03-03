@@ -9,7 +9,7 @@ import ActionActualSchedule from '@components/modals/ActionActualSchedule';
 
 import { apiRouters } from '@constants/routers';
 import { NO_SETTING } from '@constants';
-import { ItemScheduleType, ItemStartType } from '@constants/enums';
+import { ItemScheduleType, ItemStartType, ViewOptions } from '@constants/enums';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
@@ -23,6 +23,7 @@ import {
   isMoreThanThirtyMinutes,
 } from '@utils/date';
 import { TaskActualType, TaskTimeSchedule } from '@interfaces/task';
+import { useSearchParams } from 'next/navigation';
 
 interface TaskCardProps {
   event: EventContentArg;
@@ -65,6 +66,9 @@ const TaskCard = ({
     setDataActualAddSchedule,
   } = useContext(TaskContext);
 
+  const searchParams = useSearchParams();
+  const view = searchParams.get('view');
+
   const [isShowEditActual, setIsShowEditActual] = useState(false);
 
   const resourcePlan =
@@ -104,7 +108,9 @@ const TaskCard = ({
           },
         ]);
       handleUpdateItemStart({
-        id: isEvent ? event.event.id : event.event.extendedProps.taskId,
+        id: isEvent
+          ? event.event.extendedProps.scheduleId
+          : event.event.extendedProps.taskId,
         isStart: !isStart,
         type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
       });
@@ -166,7 +172,7 @@ const TaskCard = ({
         if (!data.isAnotherTaskStarted) {
           calculateDurationTask({
             id: isEvent
-              ? event.event.id.replace('event', '')
+              ? event.event.id.replace(/[^0-9]/g, '').slice(0, 4)
               : event.event.extendedProps.taskId,
             type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
           });
@@ -178,7 +184,7 @@ const TaskCard = ({
           });
           setDataRunning({
             id: isEvent
-              ? event.event.id.replace('event', '')
+              ? event.event.id.replace(/[^0-9]/g, '').slice(0, 4)
               : event.event.extendedProps.taskId,
             type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
           });
@@ -224,7 +230,9 @@ const TaskCard = ({
         });
         resolve();
       });
-      handleConfirmCheckStartTask(`${event.event.id.replace('event', '')}`);
+      handleConfirmCheckStartTask(
+        `${event.event.id.replace(/[^0-9]/g, '').slice(0, 4)}`,
+      );
     } else {
       await new Promise<void>((resolve) => {
         setTaskSelectedToStart({
@@ -256,7 +264,7 @@ const TaskCard = ({
     calculateDurationTask({
       id:
         event.event.extendedProps.type === ItemStartType.SCHEDULE
-          ? `${event.event.id.replace('event', '')}`
+          ? `${event.event.id.replace(/[^0-9]/g, '').slice(0, 4)}`
           : event.event.extendedProps.taskId,
       type:
         event.event.extendedProps.type === ItemStartType.SCHEDULE
@@ -266,7 +274,7 @@ const TaskCard = ({
     setShowWarningStartModal(false);
 
     setDataRunning({
-      id: `${event.event.id.replace('event', '')}`,
+      id: `${event.event.id.replace(/[^0-9]/g, '').slice(0, 4)}`,
       type:
         event.event.extendedProps.type === ItemStartType.SCHEDULE
           ? ItemStartType.SCHEDULE
@@ -366,7 +374,15 @@ const TaskCard = ({
         className={`h-full ${largeColor && resourcePlan && 'border border-l-2'}  group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}>
         <div className="flex w-full relative h-full justify-between overflow-hidden">
           <div className="flex overflow-hidden flex-col gap-2 w-[95%]">
-            <p className="font-bold min-h-[20px] text-sm truncate block w-full  ">
+            <p
+              style={{
+                width: event.event?.extendedProps.isAllDay
+                  ? view === ViewOptions.WEEK
+                    ? '100%'
+                    : '100px'
+                  : '100%',
+              }}
+              className="font-bold min-h-[20px] text-sm truncate block w-full  ">
               {event?.event instanceof Error
                 ? ''
                 : event?.event?.title
@@ -374,10 +390,10 @@ const TaskCard = ({
                   : NO_SETTING}
             </p>
             <div className="text-[11px] flex gap-2">
-              <p className=" h-full">
+              <p className=" h-full w-full">
                 {!isCalculation ? (
-                  !event.timeText && isEvent ? (
-                    <>
+                  event.timeText && isEvent ? (
+                    <p className="w-[80%] break-all">
                       {event.event?.extendedProps &&
                         convertToTimeString(
                           event.event?.extendedProps.planStartDate,
@@ -387,11 +403,11 @@ const TaskCard = ({
                         convertToTimeString(
                           event.event?.extendedProps.planEndDate,
                         )}{' '}
-                    </>
+                    </p>
                   ) : (
                     event.timeText &&
                     differentTime &&
-                    event.timeText.replace(' - ', ' ~ ')
+                    event.timeText.replace(' - ', ' ~')
                   )
                 ) : (
                   <>{convertToTimeString(`${event.event.start}`)} ~ 計測中</>
