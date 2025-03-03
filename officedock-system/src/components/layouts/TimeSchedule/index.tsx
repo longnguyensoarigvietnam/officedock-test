@@ -20,7 +20,15 @@ import { debounce, throttle } from 'lodash';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
-import { format, addDays, isSameDay, parseISO } from 'date-fns';
+import {
+  format,
+  addDays,
+  isSameDay,
+  parseISO,
+  eachDayOfInterval,
+  startOfDay,
+  endOfDay,
+} from 'date-fns';
 import interactionPlugin, {
   EventDragStopArg,
   EventReceiveArg,
@@ -387,9 +395,39 @@ const TimeSchedule = memo(
       {
         onSuccess: (data) => {
           if (data) {
+            const splitMultiDayEvent = (event: TaskTimeSchedule) => {
+              const startDate = parseISO(String(event.startDate));
+              const endDate = parseISO(String(event.endDate));
+
+              if (isSameDay(startDate, endDate)) {
+                return [{ ...event }];
+              }
+              if (event.isAllDay) {
+                return [{ ...event, uuid: uuidv4() }];
+              }
+
+              const days = eachDayOfInterval({
+                start: startDate,
+                end: endDate,
+              });
+
+              return days.map((day, index) => {
+                const start = index === 0 ? startDate : startOfDay(day);
+                const end = index === days.length - 1 ? endDate : endOfDay(day);
+
+                return {
+                  ...event,
+                  start,
+                  end,
+                  id: `${event.id}-split-${index}`,
+                  uuid: uuidv4(),
+                };
+              });
+            };
+
             const eventsTimeSchedule = data
               .filter((event) => event.startDate && event.endDate)
-              .map((event) => {
+              .flatMap((event) => {
                 const startDate = parseISO(`${event.startDate}`);
                 const endDate = parseISO(`${event.endDate}`);
                 const adjustedEndDate =
@@ -402,10 +440,16 @@ const TimeSchedule = memo(
                     (item) => item.type === EventWorkCategory.LARGE,
                   )?.color;
 
-                return {
+                const newEvent = {
                   ...event,
                   start: startDate,
-                  end: adjustedEndDate,
+                  // Fake show data allday
+                  end: event.isAllDay
+                    ? new Date(
+                        new Date(String(event.endDate)).setHours(24, 0, 0, 0),
+                      )
+                    : adjustedEndDate,
+
                   id: `${event.id}event`,
                   peopleInCharge: [],
                   status: {
@@ -427,6 +471,8 @@ const TimeSchedule = memo(
                   isAllDay: event.isAllDay,
                   participants: event.participants,
                 };
+
+                return splitMultiDayEvent(newEvent);
               });
 
             setTaskTimeScheduleList((prevEvents) => {
@@ -971,7 +1017,7 @@ const TimeSchedule = memo(
       if (dataItemChangeInline) {
         const updatedList = taskTimeScheduleList.map((item) => {
           if (dataItemChangeInline.type === ItemStartType.SCHEDULE) {
-            if (`${item.id}` === `${dataItemChangeInline.id}event`) {
+            if (`${item.scheduleId}` === `${dataItemChangeInline.id}`) {
               return {
                 ...item,
                 isStart:
@@ -1251,10 +1297,7 @@ const TimeSchedule = memo(
         ) {
           event.end = new Date(start.getTime() + 15 * 60 * 1000);
         }
-        if (
-          start.getDate() !== end.getDate() &&
-          event.type === ItemStartType.SCHEDULE
-        ) {
+        if (event.isAllDay && event.type === ItemStartType.SCHEDULE) {
           event.allDay = true;
         } else {
           event.allDay = false;
@@ -2081,9 +2124,11 @@ const TimeSchedule = memo(
       } else {
         handleShowEventInModal({
           title: clickInfo.event.title,
-          id: clickInfo.event.id,
+          id: clickInfo.event.extendedProps.scheduleId,
           start: clickInfo.event.start,
-          end: clickInfo.event.end,
+          end: clickInfo.event.extendedProps.isAllDay
+            ? clickInfo.event.extendedProps.endDate
+            : clickInfo.event.end,
           clientX: clickInfo.jsEvent.clientX,
           clientY: clickInfo.jsEvent.clientY,
           isAllDay: clickInfo.event.extendedProps.isAllDay,
@@ -2301,23 +2346,65 @@ const TimeSchedule = memo(
       handleEditEventCalendar,
       {
         onSuccess: async ({ data }) => {
-          setTaskTimeScheduleList((prevEvents) =>
-            prevEvents.map((event) => {
-              if (event.id === `${data.id}event`) {
-                const largeColor =
-                  data.categories &&
-                  data.categories.find(
-                    (item: any) => item.type === EventWorkCategory.LARGE,
-                  )?.color;
+          setTaskTimeScheduleList((prevEvents) => {
+            const filteredEvents = prevEvents.filter(
+              (event) => event.scheduleId !== data.id,
+            );
+
+            const splitMultiDayEvent = (event: TaskTimeSchedule) => {
+              const startDate = parseISO(String(event.startDate));
+              const endDate = parseISO(String(event.endDate));
+              if (event.isAllDay)
+                return [{ ...event, id: `${event.id}event`, uuid: uuidv4() }];
+
+              if (isSameDay(startDate, endDate)) {
+                return [
+                  {
+                    ...event,
+                    start: startDate,
+                    end: endDate,
+                    id: `${event.id}event`,
+                    uuid: uuidv4(),
+                  },
+                ];
+              }
+
+              const days = eachDayOfInterval({
+                start: startDate,
+                end: endDate,
+              });
+
+              return days.map((day, index) => {
+                const start = index === 0 ? startDate : startOfDay(day);
+                const end = index === days.length - 1 ? endDate : endOfDay(day);
+
                 return {
                   ...event,
-                  largeColor: largeColor,
+                  start,
+                  end,
+                  id: `${event.id}-split-${index}`,
+                  uuid: uuidv4(),
                 };
-              } else {
-                return event;
-              }
-            }),
-          );
+              });
+            };
+
+            const largeColor = data.categories?.find(
+              (item: any) => item.type === EventWorkCategory.LARGE,
+            )?.color;
+
+            const newEvents = splitMultiDayEvent({
+              ...data,
+              largeColor,
+              isStart: data.isStart,
+              scheduleId: data.id,
+              resourceId: ItemScheduleType.PLANS,
+              type: ItemStartType.SCHEDULE,
+              planStartDate: `${data.startDate}`,
+              planEndDate: `${data.endDate}`,
+            });
+
+            return [...filteredEvents, ...newEvents];
+          });
 
           handleRemoveEventParam();
           setOpenConfirmEditEventModal(false);
