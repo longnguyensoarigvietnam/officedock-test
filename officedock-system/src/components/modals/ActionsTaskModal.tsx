@@ -472,7 +472,7 @@ const ActionsTaskModal = ({
       }
     }
     return value;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     action,
     dataTask,
@@ -917,6 +917,12 @@ const ActionsTaskModal = ({
             todoList: todoList,
             tagIds: filteredTagIds,
             oldIdStatus: `${dataTask?.status?.id}`,
+            deadlineRemindType: isShowFieldRemind
+              ? data.deadlineRemindType
+              : null,
+            deadlineRemindCountdown: isShowFieldRemind
+              ? data.deadlineRemindCountdown
+              : null,
           });
       }
       if (action === ActionTask.CREATE) {
@@ -926,6 +932,12 @@ const ActionsTaskModal = ({
             todoList: todoList,
             tagIds: filteredTagIds,
             oldIdStatus: `${dataTask?.status?.id}`,
+            deadlineRemindType: isShowFieldRemind
+              ? data.deadlineRemindType
+              : null,
+            deadlineRemindCountdown: isShowFieldRemind
+              ? data.deadlineRemindCountdown
+              : null,
           });
       }
       if (action === ActionTask.COPY) {
@@ -935,6 +947,12 @@ const ActionsTaskModal = ({
             todoList: todoList,
             tagIds: filteredTagIds,
             oldIdStatus: `${dataTask?.status?.id}`,
+            deadlineRemindType: isShowFieldRemind
+              ? data.deadlineRemindType
+              : null,
+            deadlineRemindCountdown: isShowFieldRemind
+              ? data.deadlineRemindCountdown
+              : null,
           });
       }
     }
@@ -1516,8 +1534,8 @@ const ActionsTaskModal = ({
                           <Dropdown
                             className="h-[34px] !py-1 !px-0 text-xs !border-[#77858F] rounded-md"
                             classNameTextData="!text-xs !ml-0"
-                            labelOptionClass="!ml-0 !px-0 text-center w-full "
-                            classNameOption="!text-xs "
+                            labelOptionClass="!ml-0 !px-0 !pl-2 text-start w-full "
+                            classNameOption="!text-xs !border border-[#77858F] !rounded-md"
                             classNameError="!text-xs"
                             classActive="justify-between"
                             labelClass="w-[80%]"
@@ -1546,9 +1564,9 @@ const ActionsTaskModal = ({
                           <Dropdown
                             className="h-[34px] !py-1 !pr-2 text-xs !border-[#77858F] rounded-md"
                             classNameTextData="!text-xs"
-                            classNameOption="!text-xs !ml-0"
+                            classNameOption="!text-xs !ml-0 !border border-[#77858F] !rounded-md"
                             classNameError="!text-xs"
-                            labelOptionClass="!ml-0 !px-0 text-center w-full"
+                            labelOptionClass="!ml-0 !px-0 !pl-2 text-start w-full  "
                             classActive=" justify-between"
                             labelClass="w-[80%]"
                             disabled={

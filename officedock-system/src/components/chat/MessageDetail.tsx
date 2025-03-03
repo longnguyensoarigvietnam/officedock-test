@@ -450,7 +450,7 @@ export const MessageDetail = ({
             <div
               className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} py-1 ml-5 mr-3 group-hover:rounded-md`}>
               {renderAvatar(dataMsgDetail.sender.id)}
-              <div className={`ml-3 !w-full`}>
+              <div className={`ml-3 !w-[96%]`}>
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
                     <p>{dataMsgDetail.sender.fullName} </p>
@@ -495,9 +495,9 @@ export const MessageDetail = ({
                           {MESSAGE_DELETED}
                         </p>
                       ) : (
-                        <div className="w-[100%]">
+                        <div>
                           {dataMsgDetail.type === MessageType.MESSAGE && (
-                            <div className="!w-[100%]">
+                            <div className="break-words">
                               {processMessage(
                                 dataMsgDetail.message,
                                 dataMsgDetail.mentions || [],

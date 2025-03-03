@@ -18,11 +18,7 @@ import { Document } from '@tiptap/extension-document';
 import { Mention } from '@tiptap/extension-mention';
 import { Paragraph } from '@tiptap/extension-paragraph';
 import { Text } from '@tiptap/extension-text';
-import {
-  EditorContent,
-  useEditor,
-  Editor,
-} from '@tiptap/react';
+import { EditorContent, useEditor, Editor } from '@tiptap/react';
 import { Placeholder } from '@tiptap/extension-placeholder';
 
 import { TextStyle } from '@tiptap/extension-text-style';
@@ -126,12 +122,12 @@ interface dataProps {
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
   creationDataTaskData: CreationDataTask | undefined;
-  hasMoreDetailOnScrollDown: boolean
+  hasMoreDetailOnScrollDown: boolean;
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
   setHasMoreDetail: React.Dispatch<React.SetStateAction<boolean>>;
-  setHasMoreDetailOnScrollDown: React.Dispatch<React.SetStateAction<boolean>>
+  setHasMoreDetailOnScrollDown: React.Dispatch<React.SetStateAction<boolean>>;
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   hasMore: boolean;
   handleRemoveChatRoomParam: () => void;
@@ -230,7 +226,7 @@ const ChatDetail = ({
 
   // Jump to message
   const [lastGotoMessageId, setLastGotoMessageId] = useState<number | null>();
-  
+
   const [gotoMessageId, setGotoMessageId] = useState<number | null>();
   const gotoMessageRef = useRef<HTMLDivElement | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<
@@ -385,7 +381,7 @@ const ChatDetail = ({
             router.replace(`?${params.toString()}`);
           }
         }
-        setIsLoadingOlder(false)
+        setIsLoadingOlder(false);
       },
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
@@ -499,7 +495,7 @@ const ChatDetail = ({
             setLastGotoMessageId(null);
           }
         }
-        setIsLoadingNewer(false)
+        setIsLoadingNewer(false);
       },
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
@@ -555,8 +551,8 @@ const ChatDetail = ({
       if (controllerRef.current) {
         controllerRef.current.abort();
       }
-      setIsLoadingOlder && setIsLoadingOlder(false)
-      setIsLoadingNewer && setIsLoadingNewer(false)
+      setIsLoadingOlder && setIsLoadingOlder(false);
+      setIsLoadingNewer && setIsLoadingNewer(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatRoomCode]);
@@ -572,8 +568,7 @@ const ChatDetail = ({
       const isAtTop =
         Math.round(
           chatContainer.clientHeight + Math.abs(chatContainer.scrollTop),
-        ) >=
-        Math.round(0.9 * chatContainer.scrollHeight);
+        ) >= Math.round(0.9 * chatContainer.scrollHeight);
 
       const isAtBottom = Math.floor(Math.abs(chatContainer.scrollTop)) <= 10;
 
@@ -585,7 +580,7 @@ const ChatDetail = ({
         setIsLoadingNewer(true);
         getDataListMessagesOnScrollDown({ pageNumber: page, sorting: true });
       }
-    }, 200); 
+    }, 200);
 
     if (chatContainer) {
       chatContainer.addEventListener('scroll', handleScroll);
@@ -595,21 +590,21 @@ const ChatDetail = ({
       if (chatContainer) {
         chatContainer.removeEventListener('scroll', handleScroll);
       }
-      handleScroll.cancel?.(); 
+      handleScroll.cancel?.();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMoreDetail, hasMoreDetailOnScrollDown, page]);
 
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
     if (!chatContainer) return;
-  
+
     if (isLoadingOlder || isLoadingNewer) {
       chatContainer.style.overflow = 'hidden';
     } else {
       chatContainer.style.overflow = 'auto';
     }
-  
+
     return () => {
       if (chatContainer) chatContainer.style.overflow = 'auto';
     };
@@ -1767,6 +1762,7 @@ const ChatDetail = ({
           : item,
       ),
     );
+    handleResetChatRoomNotification();
   };
 
   const handleBookMarkMsg = async (data: {
