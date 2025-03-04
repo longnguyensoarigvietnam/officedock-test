@@ -2367,7 +2367,17 @@ const TimeSchedule = memo(
               const startDate = parseISO(String(event.startDate));
               const endDate = parseISO(String(event.endDate));
               if (event.isAllDay)
-                return [{ ...event, id: `${event.id}event`, uuid: uuidv4() }];
+                return [
+                  {
+                    ...event,
+                    start: new Date(String(event.startDate)),
+                    end: new Date(
+                      new Date(String(event.endDate)).setHours(24, 0, 0, 0),
+                    ),
+                    id: `${event.id}event`,
+                    uuid: uuidv4(),
+                  },
+                ];
 
               if (isSameDay(startDate, endDate)) {
                 return [
@@ -2415,7 +2425,7 @@ const TimeSchedule = memo(
               planEndDate: `${data.endDate}`,
             });
 
-            return [...filteredEvents,...actualDataList,  ...newEvents];
+            return [...filteredEvents, ...actualDataList, ...newEvents];
           });
 
           handleRemoveEventParam();
