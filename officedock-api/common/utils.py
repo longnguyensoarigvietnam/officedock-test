@@ -1,10 +1,11 @@
 import io
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import random
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Sum, Func
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from djangorestframework_camel_case.parser import CamelCaseJSONParser
@@ -369,3 +370,69 @@ def generate_file_name(format: str = "png") -> str:
     current_time = datetime.now().strftime("%Y%m%d%H%M%S%f")
     random_number = random.randint(10000, 99999)
     return f"{current_time}{random_number}.{format}"
+
+
+def check_task_overtime(task, task_duration, limit_time=None):
+    """
+    Handle return boolean if task run overtime or not.
+    """
+    start_of_today = datetime.combine(timezone.now().date(), time.min)
+    is_over_estimate = False
+    is_send_sk = False
+
+    task_schedules = (
+        task.task_schedules.filter(plan_start_date__gte=start_of_today)
+        .all()
+        .order_by("plan_start_date")
+    )
+    for idx, task_schedule in enumerate(task_schedules):
+        if idx + 1 < len(
+            task_schedules
+        ):  # Ensure next task exists before accessing
+            next_task_schedule = task_schedules[idx + 1].plan_start_date
+        else:
+            next_task_schedule = None  # No next task
+
+        prev_task_schedule = task_schedules[idx - 1] if idx > 0 else None
+        if (
+            prev_task_schedule
+            and task_duration.is_cancel_alert
+            and prev_task_schedule.plan_end_date
+            < timezone.now()
+            >= task_schedule.plan_start_date
+        ):
+            task_duration.is_cancel_alert = False
+            is_send_sk = True
+            task_duration.save()
+        if limit_time:
+            diff_time = (
+                timedelta(minutes=30)
+                <= (timezone.now() - task_schedule.plan_end_date)
+                <= limit_time
+            )
+        else:
+            diff_time = timedelta(minutes=30) <= (
+                timezone.now() - task_schedule.plan_end_date
+            )
+
+        if (
+            diff_time
+            and task_duration.is_cancel_alert is False
+            and (
+                next_task_schedule is None
+                or timezone.now() <= next_task_schedule
+            )
+        ):
+            is_send_sk = True
+            is_over_estimate = True
+            break
+        elif (
+            timedelta(minutes=2)
+            >= timezone.now() - task_schedule.plan_start_date
+            >= timedelta(minutes=0)
+        ):
+            is_send_sk = True
+            is_over_estimate = False
+            break
+
+    return is_send_sk, is_over_estimate
