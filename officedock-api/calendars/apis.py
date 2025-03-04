@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, time, timedelta
 
 from django.db import transaction
 from django.db.models import Q, QuerySet
+from django.utils import timezone
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiParameter,
@@ -11,7 +12,7 @@ from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
-from calendars.constants import ScheduleFields
+from calendars.constants import ScheduleFields, CalendarTypes
 from calendars.models import Schedule
 from calendars.filters import TaskScheduleForCalendarFilter
 from calendars.serializers import (
@@ -31,7 +32,7 @@ from common.utils import (
     create_categories_by_model,
     get_common_categories,
 )
-from tasks.models import TaskSchedule
+from tasks.models import TaskSchedule, TaskDuration
 from base.permissions import ActionPermission
 from roles.constants import Screens
 from users.models import User
@@ -247,7 +248,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     "start_date": instance.start_date.isoformat(),
                     "end_date": instance.end_date.isoformat(),
                 }
-        serializer.save()
+        schedule = serializer.save()
 
         if participants is not None:
             instance.participants.clear()
@@ -282,6 +283,27 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if categories is not None:
             create_categories_by_model(instance, categories)
+
+        # Check is event run overtime or not
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        task_duration = TaskDuration.objects.filter(
+            started_at__gte=start_of_today,
+            paused_at__isnull=True,
+            schedule=schedule,
+        ).first()
+        if task_duration:
+            for user in schedule.participants.all():
+                send_web_socket_event(
+                    {
+                        "id": schedule.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": timedelta(minutes=30)
+                        <= timezone.now() - schedule.end_date,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.SCHEDULE.value,
+                    },
+                    user=user,
+                )
 
     @transaction.atomic()
     @extend_schema(

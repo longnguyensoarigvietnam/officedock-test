@@ -47,7 +47,7 @@ from .serializers import (
     CreationDataUserWithOrganizationSerializer,
     OrganizationWithUserNotHaveSkillMapSerializer,
 )
-from .utils import send_web_socket_event, transform_statistic_categories
+from .utils import send_web_socket_event, transform_statistic_categories, check_task_overtime
 
 
 @extend_schema(tags=["System > Creation Data"])
@@ -498,64 +498,17 @@ class CronJobViewSet(BaseAPIViewSet):
                 else task_duration.schedule
             )
             if isinstance(related_obj, Task):
-                task_schedules = (
-                    related_obj.task_schedules.filter(
-                        plan_start_date__gte=start_of_today
-                    )
-                    .all()
-                    .order_by("plan_start_date")
-                )
                 users = related_obj.people_in_charge.all()
-                for idx, task_schedule in enumerate(task_schedules):
-                    if idx + 1 < len(
-                        task_schedules
-                    ):  # Ensure next task exists before accessing
-                        next_task_schedule = task_schedules[
-                            idx + 1
-                        ].plan_start_date
-                    else:
-                        next_task_schedule = None  # No next task
-
-                    prev_task_schedule = (
-                        task_schedules[idx - 1] if idx > 0 else None
-                    )
-                    if (
-                        prev_task_schedule
-                        and task_duration.is_cancel_alert
-                        and prev_task_schedule.plan_end_date
-                        < timezone.now()
-                        >= task_schedule.plan_start_date
-                    ):
-                        task_duration.is_cancel_alert = False
-                        is_send_sk = True
-                        task_duration.save()
-                    diff_time = timezone.now() - task_schedule.plan_end_date
-                    if (
-                        timedelta(minutes=30) <= diff_time
-                        and task_duration.is_cancel_alert is False
-                        and (
-                            next_task_schedule is None
-                            or timezone.now() <= next_task_schedule
-                        )
-                    ):
-                        is_send_sk = True
-                        is_over_estimate = True
-                        break
-                    elif (
-                        timedelta(minutes=2)
-                        >= timezone.now() - task_schedule.plan_start_date
-                        >= timedelta(minutes=0)
-                    ):
-                        is_send_sk = True
-                        is_over_estimate = False
-                        break
+                is_send_sk, is_over_estimate = check_task_overtime(
+                    related_obj, task_duration, timedelta(minutes=35)
+                )
             elif (
                 isinstance(related_obj, Schedule)
                 and task_duration.is_cancel_alert is False
             ):
                 users = related_obj.participants.all()
                 diff_time = timezone.now() - related_obj.end_date
-                if timedelta(minutes=30) <= diff_time:
+                if timedelta(minutes=30) <= diff_time <= timedelta(minutes=35):
                     is_send_sk = True
                     is_over_estimate = True
 

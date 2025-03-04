@@ -29,6 +29,7 @@ from base.apis import BaseAPIViewSet
 from base.constants import REPLACE_NULL_DATE
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission
+from calendars.constants import CalendarTypes
 from chat.constants import (
     WebSocketEventType,
     ChatMessageTypes,
@@ -40,7 +41,11 @@ from chat.serializers import (
     ChatRoomsParticipantsWebSocketSerializer,
 )
 from common.filters import CustomOrderFilter
-from common.utils import send_web_socket_event, create_categories_by_model
+from common.utils import (
+    send_web_socket_event,
+    create_categories_by_model,
+    check_task_overtime,
+)
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
     TaskPriorities,
@@ -733,6 +738,27 @@ class TaskViewSet(
         if categories is not None:
             create_categories_by_model(task, categories)
 
+        # Check is task run overtime or not
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        task_duration = TaskDuration.objects.filter(
+            started_at__gte=start_of_today, paused_at__isnull=True, task=task
+        ).first()
+        if task_duration:
+            is_send_sk, is_over_estimate = check_task_overtime(
+                task, task_duration
+            )
+            for user in task.people_in_charge.all():
+                send_web_socket_event(
+                    {
+                        "id": task.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": is_over_estimate,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.TASK.value,
+                    },
+                    user=user,
+                )
+
     def destroy(self, request, *args, **kwargs):
         """
         Handle destroying the task with send message realtime.
@@ -1029,6 +1055,46 @@ class TaskScheduleViewSet(
             return TaskScheduleForCreationSerializer
 
         return super().get_serializer_class()
+
+    def _check_overtime(self, task_schedule):
+        """
+        Check overtime of task schedule
+        """
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        task_duration = TaskDuration.objects.filter(
+            started_at__gte=start_of_today,
+            paused_at__isnull=True,
+            task=task_schedule.task,
+        ).first()
+        if task_duration:
+            is_send_sk, is_over_estimate = check_task_overtime(
+                task_schedule.task, task_duration
+            )
+            for user in task_schedule.task.people_in_charge.all():
+                send_web_socket_event(
+                    {
+                        "id": task_schedule.task.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": is_over_estimate,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.TASK.value,
+                    },
+                    user=user,
+                )
+
+    def perform_create(self, serializer):
+        """
+        Handle create task schedule
+        """
+        task_schedule = serializer.save()
+        self._check_overtime(task_schedule)
+
+    def perform_update(self, serializer):
+        """
+        Handle update task schedule
+        """
+        task_schedule = serializer.save()
+        self._check_overtime(task_schedule)
 
 
 @extend_schema(tags=["System > Task"])
