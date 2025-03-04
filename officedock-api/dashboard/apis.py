@@ -190,9 +190,9 @@ class DashboardViewSet(BaseAPIViewSet):
 
         # Get data event in schedule
         events = Schedule.objects.filter(
-            start_date__gte=start_date,
-            end_date__lte=end_date,
-            participants_schedules__user=request.user,
+            Q(start_date__lte=end_date)
+            & Q(end_date__gte=start_date)
+            & Q(participants_schedules__user=request.user)
         ).all()
         data = self._append_data_to_cards(data, events, request)
 
