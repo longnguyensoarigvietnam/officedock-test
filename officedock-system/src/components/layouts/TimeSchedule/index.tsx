@@ -2355,7 +2355,12 @@ const TimeSchedule = memo(
         onSuccess: async ({ data }) => {
           setTaskTimeScheduleList((prevEvents) => {
             const filteredEvents = prevEvents.filter(
-              (event) => event.scheduleId !== data.id,
+              (event) =>
+                event.scheduleId !== data.id &&
+                event.resourceId === ItemScheduleType.PLANS,
+            );
+            const actualDataList = prevEvents.filter(
+              (event) => event.resourceId === ItemScheduleType.ACTUAL,
             );
 
             const splitMultiDayEvent = (event: TaskTimeSchedule) => {
@@ -2410,7 +2415,7 @@ const TimeSchedule = memo(
               planEndDate: `${data.endDate}`,
             });
 
-            return [...filteredEvents, ...newEvents];
+            return [...filteredEvents,...actualDataList,  ...newEvents];
           });
 
           handleRemoveEventParam();

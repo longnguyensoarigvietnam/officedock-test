@@ -504,7 +504,7 @@ export const MessageDetail = ({
                               )}
                               {dataMsgDetail?.chatFiles &&
                               dataMsgDetail?.chatFiles.length > 0 &&
-                              uploadFileStatus[dataMsgDetail.uuid]?.progress >
+                              uploadFileStatus[dataMsgDetail.uuid]?.progress >=
                                 0 &&
                               uploadFileStatus[dataMsgDetail.uuid]?.progress <
                                 100 ? (
@@ -1014,7 +1014,7 @@ export const MessageDetail = ({
                     <>
                       {!dataMsgDetail.deletedAt &&
                         !(
-                          uploadFileStatus[dataMsgDetail.uuid]?.progress > 0 &&
+                          uploadFileStatus[dataMsgDetail.uuid]?.progress >= 0 &&
                           uploadFileStatus[dataMsgDetail.uuid]?.progress < 100
                         ) && (
                           <MessageHoverOptions

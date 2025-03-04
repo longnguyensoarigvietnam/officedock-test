@@ -2,7 +2,7 @@
 
 const backendUrl = process.env.NEXT_PUBLIC_API_URL;
 
-const backendHost = new URL(backendUrl).hostname;
+const { hostname, protocol, port } = new URL(backendUrl);
 
 const nextConfig = {
   experimental: {
@@ -11,18 +11,18 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-          protocol: 'https',
-          hostname: backendHost,
-          port: '',
-          pathname: '/**',
+        protocol: protocol.replace(':', ''),
+        hostname,
+        port: port || '',
+        pathname: '/**',
       },
       {
-          protocol: 'https',
-          hostname: 'storage.googleapis.com',
-          port: '',
-          pathname: '/**',
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/**',
       },
-  ],
+    ],
   },
 };
 
