@@ -509,13 +509,14 @@ const ChatDetail = ({
   const handleSearchMessagesInChatRoom = async (data: {
     searchChatMsg: string;
     pageNumber: number;
+    roomType: string;
   }) => {
     if (chatRoomCode) {
       if (data.pageNumber == 1) setIsLoading(true);
       const encodedQuery = encodeURIComponent(data.searchChatMsg);
       const apiUrl = `${apiRouters.CHAT_MESSAGES(chatRoomCode)}?${
         data.searchChatMsg ? `message=${encodedQuery}` : ''
-      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}`;
+      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}${data.roomType ? `&chatroom_type=${data.roomType}` : ''}`;
 
       return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
     }
@@ -1008,7 +1009,7 @@ const ChatDetail = ({
         [variables.uuid]: { progress: 100 },
       }));
     },
-    onError: (error: AxiosError<any>, variables, ) => {
+    onError: (error: AxiosError<any>, variables) => {
       setUploadFileStatus((prev) => ({
         ...prev,
         [variables.uuid]: { progress: 0 },
@@ -1927,9 +1928,11 @@ const ChatDetail = ({
     setOpenDroppingFileModal(false);
     const droppedFiles = Array.from(e.dataTransfer.files);
     if (droppedFiles.length > 0) {
-      const totalDroppedFilesSize = droppedFiles.reduce((acc, file) => acc + file.size, 0);
-      const totalPreviousFilesSize =
-      uploadFiles.reduce(
+      const totalDroppedFilesSize = droppedFiles.reduce(
+        (acc, file) => acc + file.size,
+        0,
+      );
+      const totalPreviousFilesSize = uploadFiles.reduce(
         (acc, uploadedFile) => acc + uploadedFile.file.size,
         0,
       );
@@ -2253,7 +2256,16 @@ const ChatDetail = ({
                 onChange={(e) => setSearchChatMsg(e.target.value)}
                 onKeyDown={(e: any) => {
                   if (e.keyCode == 13 && e.target.value !== '') {
-                    searchMessagesInChatRoom({ searchChatMsg, pageNumber: 1 });
+                    searchMessagesInChatRoom({
+                      searchChatMsg,
+                      pageNumber: 1,
+                      roomType:
+                        chatRoomDetail?.type == ChatRoomType.CALENDAR ||
+                        chatRoomDetail?.type == ChatRoomType.SKILL ||
+                        chatRoomDetail?.type == ChatRoomType.TASK
+                          ? chatRoomDetail?.type || ''
+                          : '',
+                    });
                     setOpenSearchMessagesModal(true);
                   }
                 }}
@@ -2647,13 +2659,19 @@ const ChatDetail = ({
           dashboardMembers={dashboardMembers}
           searchMessageResults={searchMessageResults}
           searchChatMsg={searchChatMsg}
+          chatRoomDetail={chatRoomDetail}
           setSearchChatMsg={setSearchChatMsg}
           searchResultsPage={searchResultsPage}
           setSearchMessageResults={setSearchMessageResults}
           setSearchResultsPage={setSearchResultsPage}
+          handleConfirmGetDataDetailEvent={handleConfirmGetDataDetailEvent}
           hasMoreSearchResultDetail={hasMoreSearchResultDetail}
-          onSubmit={(searchChatMsg: string, page: number) => {
-            searchMessagesInChatRoom({ searchChatMsg, pageNumber: page });
+          onSubmit={(searchChatMsg: string, page: number, roomType: string) => {
+            searchMessagesInChatRoom({
+              searchChatMsg,
+              pageNumber: page,
+              roomType,
+            });
           }}
           onClose={() => {
             setOpenSearchMessagesModal(false);
