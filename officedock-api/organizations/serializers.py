@@ -21,8 +21,7 @@ class StatisticCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StatisticCategory
-        # FIXME: Check spec implement color of category
-        fields = ["id", "name", "uuid", "color"]
+        fields = ["id", "name", "uuid"]
         read_only_fields = ["id"]
 
     def validate(self, attrs):
@@ -77,6 +76,7 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
             "small_statistic_category",
             "index",
             "skills",
+            "color",
         ]
 
     def get_skills(self, obj):

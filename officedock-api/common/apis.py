@@ -17,13 +17,21 @@ from calendars.constants import (
 from calendars.models import Schedule
 from chat.constants import WebSocketEventType
 from skills.models import StatisticCategory
-from organizations.serializers import StatisticCategorySerializer
+from organizations.serializers import (
+    StatisticCategorySerializer,
+    OrganizationDetailSerializer,
+)
 from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
 from users.models import Role, RoleDetail, User
 from tasks.models import TaskStatus, Task, TaskDuration
-from tasks.constants import TASK_WORK_TYPES, TaskPriorities, TaskTypes
+from tasks.constants import (
+    TASK_WORK_TYPES,
+    TaskPriorities,
+    TaskTypes,
+    TaskCategoryTypes,
+)
 from skills.serializers import SkillSerializer
 from organizations.models import OrganizationsSkills
 from roles.constants import Actions, Screens, SelectionResultOptions
@@ -39,7 +47,7 @@ from .serializers import (
     CreationDataUserWithOrganizationSerializer,
     OrganizationWithUserNotHaveSkillMapSerializer,
 )
-from .utils import send_web_socket_event
+from .utils import send_web_socket_event, transform_statistic_categories
 
 
 @extend_schema(tags=["System > Creation Data"])
@@ -221,9 +229,24 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         tags = request.user.company.tags.order_by("created_at").all()
         status = TaskStatus.objects.order_by("created_at").all()
         organizations = request.user.organizations.order_by("created_at")
-        categories = StatisticCategory.objects.filter(
-            company=request.user.company
-        ).order_by("created_at")
+        list_cats = []
+        for organization in organizations:
+            organization_categories = OrganizationDetailSerializer(
+                organization
+            ).data["statistic_categories"]
+            categories = transform_statistic_categories(organization_categories)
+            list_cats.append(
+                {
+                    "organization": CreationDataOrganizationSerializer(
+                        organization
+                    ).data,
+                    "categories": [
+                        cat[TaskCategoryTypes.LARGE.value]
+                        for cat in categories
+                        if cat.get(TaskCategoryTypes.LARGE.value) is not None
+                    ],
+                }
+            )
 
         data = {
             "tags": CreationDataTagSerializer(
@@ -235,9 +258,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             "organizations": CreationDataOrganizationSerializer(
                 organizations, many=True
             ).data,
-            "categories": StatisticCategorySerializer(
-                categories, many=True
-            ).data,
+            "organization_categories": list_cats,
         }
 
         return self.response_ok(data)

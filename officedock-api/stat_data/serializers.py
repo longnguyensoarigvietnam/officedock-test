@@ -91,7 +91,7 @@ class DailyTaskSerializer(TaskCommonSerializer):
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first())
+        return get_common_categories(obj.categories.first(), obj)
 
     def get_task_durations(self, obj):
         """
@@ -188,7 +188,7 @@ class DailyEventSerializer(serializers.ModelSerializer):
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first())
+        return get_common_categories(obj.categories.first(), obj)
 
     def get_task_durations(self, obj):
         """
