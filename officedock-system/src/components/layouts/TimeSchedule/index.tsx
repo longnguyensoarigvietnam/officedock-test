@@ -2030,6 +2030,7 @@ const TimeSchedule = memo(
       taskId: string | number;
       uuid: string;
       isImportant?: boolean | null;
+      isRunning?: boolean;
       deadline?: string;
       largeColor?: string;
       resource: string;
@@ -2051,6 +2052,7 @@ const TimeSchedule = memo(
         uuid: data.uuid,
         deadline: data.deadline,
         start: data.start,
+        isRunning: data.isRunning,
         left: adjustPositionForViewportSchedule({
           top: Number(data.clientY),
           left: Number(data.clientX),
@@ -2109,6 +2111,7 @@ const TimeSchedule = memo(
           id: clickInfo.event.id,
           taskId: clickInfo.event.extendedProps.taskId,
           isImportant: clickInfo.event.extendedProps.isImportant,
+          isRunning: clickInfo.event.extendedProps.isCalculation,
           deadline: clickInfo.event.extendedProps.deadline,
           uuid: clickInfo.event.extendedProps.uuid,
           resource: resourcePlan

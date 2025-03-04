@@ -379,6 +379,11 @@ const TaskCard = ({
                     ? '100%'
                     : '100px'
                   : '100%',
+                paddingRight: event.event?.extendedProps.isAllDay
+                  ? view === ViewOptions.WEEK
+                    ? '44px'
+                    : '0'
+                  : '0',
               }}
               className="font-bold min-h-[20px] text-sm truncate block w-full  ">
               {event?.event instanceof Error
@@ -388,7 +393,11 @@ const TaskCard = ({
                   : NO_SETTING}
             </p>
             <div className="text-[11px] flex gap-2">
-              <p className=" h-full w-full">
+              <p
+                style={{
+                  width: resourcePlan ? '100%' : 'fit-content',
+                }}
+                className=" h-full w-fit">
                 {!isCalculation ? (
                   event.timeText && isEvent ? (
                     <p className="w-[80%] break-all">
