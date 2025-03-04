@@ -75,6 +75,7 @@ import {
   ERROR_DELETE_MESSAGE,
   ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
+  ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -1007,11 +1008,12 @@ const ChatDetail = ({
         [variables.uuid]: { progress: 100 },
       }));
     },
-    onError: (_data, variables) => {
+    onError: (error: AxiosError<any>, variables, ) => {
       setUploadFileStatus((prev) => ({
         ...prev,
         [variables.uuid]: { progress: 0 },
       }));
+      showErrorToast(error, ERROR_SAVE_MESSAGE);
     },
     onSettled: () => {},
   });
@@ -1896,7 +1898,13 @@ const ChatDetail = ({
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) {
+
+    const totalSize =
+      uploadFiles.reduce(
+        (acc, uploadedFile) => acc + uploadedFile.file.size,
+        0,
+      ) + file.size;
+    if (totalSize > MAX_FILE_SIZE) {
       setOpenErrorUploadFileModal(true);
       return;
     }
@@ -1919,11 +1927,14 @@ const ChatDetail = ({
     setOpenDroppingFileModal(false);
     const droppedFiles = Array.from(e.dataTransfer.files);
     if (droppedFiles.length > 0) {
-      const invalidFiles = droppedFiles.filter(
-        (file) => file.size > MAX_FILE_SIZE,
+      const totalDroppedFilesSize = droppedFiles.reduce((acc, file) => acc + file.size, 0);
+      const totalPreviousFilesSize =
+      uploadFiles.reduce(
+        (acc, uploadedFile) => acc + uploadedFile.file.size,
+        0,
       );
 
-      if (invalidFiles.length > 0) {
+      if (totalDroppedFilesSize + totalPreviousFilesSize > MAX_FILE_SIZE) {
         setOpenErrorUploadFileModal(true);
         return;
       }
