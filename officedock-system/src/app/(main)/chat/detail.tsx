@@ -1008,7 +1008,7 @@ const ChatDetail = ({
         [variables.uuid]: { progress: 100 },
       }));
     },
-    onError: (error: AxiosError<any>, variables, ) => {
+    onError: (error: AxiosError<any>, variables) => {
       setUploadFileStatus((prev) => ({
         ...prev,
         [variables.uuid]: { progress: 0 },
@@ -1080,6 +1080,10 @@ const ChatDetail = ({
 
       ...dataMessageDetail,
     ]);
+    setUploadFileStatus((prev) => ({
+      ...prev,
+      [uuidMsg]: { progress: 0 },
+    }));
     setMessage('');
     if (!editor) return;
 
@@ -1208,6 +1212,10 @@ const ChatDetail = ({
         mentionIds = mentionMembers.map((member) => Number(member.id)) || [];
       }
       setMentionMembers([]);
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [uuid]: { progress: 0 },
+      }));
       handleUpdateMsgChat({
         message: trimUnnecessaryLineBreaks(`${message}`) as string,
         uuid: uuid,
@@ -1927,9 +1935,11 @@ const ChatDetail = ({
     setOpenDroppingFileModal(false);
     const droppedFiles = Array.from(e.dataTransfer.files);
     if (droppedFiles.length > 0) {
-      const totalDroppedFilesSize = droppedFiles.reduce((acc, file) => acc + file.size, 0);
-      const totalPreviousFilesSize =
-      uploadFiles.reduce(
+      const totalDroppedFilesSize = droppedFiles.reduce(
+        (acc, file) => acc + file.size,
+        0,
+      );
+      const totalPreviousFilesSize = uploadFiles.reduce(
         (acc, uploadedFile) => acc + uploadedFile.file.size,
         0,
       );
