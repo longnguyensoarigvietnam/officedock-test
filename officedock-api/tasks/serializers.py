@@ -415,7 +415,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first())
+        return get_common_categories(obj.categories.first(), obj)
 
     def to_representation(self, instance):
         """
@@ -464,7 +464,6 @@ class TaskBoardSerializer(TaskCommonSerializer):
     index = serializers.SerializerMethodField(read_only=True)
     pin_at = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
-    # FIXME: Check spec implement color of category
     categories = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -485,13 +484,12 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "categories",
         ]
 
-    # FIXME: Check spec implement color of category
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first())
+        return get_common_categories(obj.categories.first(), obj)
 
     def get_index(self, instance):
         """
@@ -547,13 +545,12 @@ class TaskCalendarSerializer(TaskCommonSerializer):
         """
         return CalendarTypes.TASK.value
 
-    # FIXME: Check spec implement color of category
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first())
+        return get_common_categories(obj.categories.first(), obj)
 
 
 class TaskScheduleForCreationSerializer(serializers.ModelSerializer):

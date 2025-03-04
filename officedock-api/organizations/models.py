@@ -96,6 +96,7 @@ class OrganizationsStatisticCategories(BaseModel):
         related_name="organizations_small_statistic_categories",
     )
     index = models.IntegerField(null=True, default=1)
+    color = models.CharField(max_length=20, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         """

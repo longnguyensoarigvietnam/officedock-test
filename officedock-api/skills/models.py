@@ -20,8 +20,6 @@ class StatisticCategory(BaseModel):
     name = models.CharField(
         max_length=255,
     )
-    # FIXME: Check spec implement color of category
-    color = models.CharField(max_length=20, blank=True, null=True)
 
 
 class Skill(BaseModel):

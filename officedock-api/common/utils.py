@@ -14,6 +14,7 @@ from base.messages import ERROR_MESSAGES
 from calendars.constants import ScheduleCategoryTypes
 from chat.constants import USER_ACTION_GROUP, WebSocketEventType
 from common.constants import STRIP_TAGS
+from organizations.models import OrganizationsStatisticCategories
 from roles.constants import SelectionResultOptions
 from users.models import User, RoleDetail
 
@@ -179,6 +180,7 @@ def transform_statistic_categories(statistic_categories):
             large_id = large_obj["id"]
             # Initialize large category entry if not present
             if large_id not in large_category_dict:
+                large_obj["color"] = item.get("color")
                 large_category_dict[large_id] = {
                     ScheduleCategoryTypes.LARGE.value: large_obj,
                     ScheduleCategoryTypes.MEDIUM.value: [],
@@ -294,20 +296,28 @@ def transform_statistic_categories(statistic_categories):
     return result
 
 
-def get_common_categories(category):
+def get_common_categories(category, obj=None):
     """Handle transform common category"""
     category_types = [
         ("large_statistic_category", ScheduleCategoryTypes.LARGE.value),
         ("medium_statistic_category", ScheduleCategoryTypes.MEDIUM.value),
         ("small_statistic_category", ScheduleCategoryTypes.SMALL.value),
     ]
-
+    color = None
+    if obj:
+        color = (
+            OrganizationsStatisticCategories.objects.filter(
+                organization_id=obj.organization_id,
+                large_statistic_category=category.large_statistic_category,
+            )
+            .values_list("color", flat=True)
+            .first()
+        )
     return [
         {
             "id": getattr(category, attr).id,
             "name": getattr(category, attr).name,
-            # FIXME: Check spec implement color of category
-            "color": getattr(category, attr).color
+            "color": color
             if type_value == ScheduleCategoryTypes.LARGE.value
             else None,
             "type": type_value,
