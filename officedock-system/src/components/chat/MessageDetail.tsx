@@ -1050,7 +1050,7 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.TASK && (
             <div
-              className={`flex !box-border group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border  ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               {messageDetail.type !== MessageType.MESSAGE ? (
                 <ImageRound
                   className="w-10 h-10"
@@ -1206,7 +1206,7 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.SKILL && (
             <div
-              className={`flex !box-border group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border  ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
               <div>
                 {renderAvatar(
                   messageDetail.type == MessageType.CREATE_SUBMIT_LEVEL_SKILL
@@ -1350,7 +1350,7 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.CALENDAR && (
             <div
-              className={`flex !box-border group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               <div>{renderAvatar(messageDetail.sender.id)}</div>
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">

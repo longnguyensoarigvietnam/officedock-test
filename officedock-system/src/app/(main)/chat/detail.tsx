@@ -509,13 +509,14 @@ const ChatDetail = ({
   const handleSearchMessagesInChatRoom = async (data: {
     searchChatMsg: string;
     pageNumber: number;
+    roomType: string;
   }) => {
     if (chatRoomCode) {
       if (data.pageNumber == 1) setIsLoading(true);
       const encodedQuery = encodeURIComponent(data.searchChatMsg);
       const apiUrl = `${apiRouters.CHAT_MESSAGES(chatRoomCode)}?${
         data.searchChatMsg ? `message=${encodedQuery}` : ''
-      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}`;
+      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}${data.roomType ? `&chatroom_type=${data.roomType}` : ''}`;
 
       return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
     }
@@ -2263,7 +2264,16 @@ const ChatDetail = ({
                 onChange={(e) => setSearchChatMsg(e.target.value)}
                 onKeyDown={(e: any) => {
                   if (e.keyCode == 13 && e.target.value !== '') {
-                    searchMessagesInChatRoom({ searchChatMsg, pageNumber: 1 });
+                    searchMessagesInChatRoom({
+                      searchChatMsg,
+                      pageNumber: 1,
+                      roomType:
+                        chatRoomDetail?.type == ChatRoomType.CALENDAR ||
+                        chatRoomDetail?.type == ChatRoomType.SKILL ||
+                        chatRoomDetail?.type == ChatRoomType.TASK
+                          ? chatRoomDetail?.type || ''
+                          : '',
+                    });
                     setOpenSearchMessagesModal(true);
                   }
                 }}
@@ -2657,13 +2667,19 @@ const ChatDetail = ({
           dashboardMembers={dashboardMembers}
           searchMessageResults={searchMessageResults}
           searchChatMsg={searchChatMsg}
+          chatRoomDetail={chatRoomDetail}
           setSearchChatMsg={setSearchChatMsg}
           searchResultsPage={searchResultsPage}
           setSearchMessageResults={setSearchMessageResults}
           setSearchResultsPage={setSearchResultsPage}
+          handleConfirmGetDataDetailEvent={handleConfirmGetDataDetailEvent}
           hasMoreSearchResultDetail={hasMoreSearchResultDetail}
-          onSubmit={(searchChatMsg: string, page: number) => {
-            searchMessagesInChatRoom({ searchChatMsg, pageNumber: page });
+          onSubmit={(searchChatMsg: string, page: number, roomType: string) => {
+            searchMessagesInChatRoom({
+              searchChatMsg,
+              pageNumber: page,
+              roomType,
+            });
           }}
           onClose={() => {
             setOpenSearchMessagesModal(false);
