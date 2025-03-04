@@ -302,6 +302,7 @@ export interface DataDetailTaskType {
   isImportant?: boolean | null;
   deadline?: string;
   uuid: string;
+  isRunning?: boolean;
 }
 export interface DataDetailEventType {
   id: string;
@@ -313,5 +314,5 @@ export interface DataDetailEventType {
   participants?: EventParticipant[];
   address?: string;
   isAllDay: boolean;
-  type: OptionDropdownType
+  type: OptionDropdownType;
 }
