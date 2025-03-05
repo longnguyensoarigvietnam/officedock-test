@@ -5,6 +5,7 @@ export interface OptionDropdownType {
   type?: string;
   totalData?: string;
   largeColor?: string;
+  teamId?: number;
 }
 
 export interface BasePagination<T> {
