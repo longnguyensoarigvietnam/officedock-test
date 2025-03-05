@@ -35,7 +35,6 @@ from tasks.constants import (
 from skills.serializers import SkillSerializer
 from organizations.models import OrganizationsSkills
 from roles.constants import Actions, Screens, SelectionResultOptions
-from organizations.models import Organization
 from chat.models import ChatRoom
 from .serializers import (
     CreationDataOrganizationSerializer,
@@ -47,7 +46,11 @@ from .serializers import (
     CreationDataUserWithOrganizationSerializer,
     OrganizationWithUserNotHaveSkillMapSerializer,
 )
-from .utils import send_web_socket_event, transform_statistic_categories, check_task_overtime
+from .utils import (
+    send_web_socket_event,
+    transform_statistic_categories,
+    check_task_overtime,
+)
 
 
 @extend_schema(tags=["System > Creation Data"])
@@ -293,11 +296,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             if chat_room and (
                 ids := chat_room.participants.values_list("id", flat=True)
             ):
-                org_ids = Organization.objects.filter(
-                    users__id__in=ids
-                ).values_list("id", flat=True)
                 tasks = tasks.filter(
-                    Q(organization_id__in=org_ids) | Q(created_by_id__in=ids)
+                    Q(people_in_charge__id__in=ids) | Q(created_by_id__in=ids)
                 )
 
         # Get list of tasks by user ids
@@ -309,18 +309,15 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 except ValueError:
                     continue
             if ids:
-                org_ids = Organization.objects.filter(
-                    users__id__in=ids
-                ).values_list("id", flat=True)
                 tasks = tasks.filter(
-                    Q(organization_id__in=org_ids) | Q(created_by_id__in=ids)
+                    Q(people_in_charge__id__in=ids) | Q(created_by_id__in=ids)
                 )
 
         # Get list of tasks by user logged in
         else:
-            organizations = request.user.organizations.order_by("created_at")
+            user_logged = request.user
             tasks = tasks.filter(
-                Q(organization__in=organizations) | Q(created_by=request.user)
+                Q(people_in_charge=user_logged) | Q(created_by=user_logged)
             )
 
         # Filter input keyword
@@ -328,7 +325,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             tasks = tasks.filter(title__icontains=search_query)
 
         return self.response_pagination(
-            request, tasks, CreationDataTaskListSerializer
+            request, tasks.distinct(), CreationDataTaskListSerializer
         )
 
     @action(methods=["GET"], detail=False, url_path="schedule")
