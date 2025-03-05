@@ -3,6 +3,7 @@ import { OptionDropdownType } from './common';
 import { PeopleInCharge, TagId, Tags } from './tag';
 import { Organizations } from './organization';
 import { EventParticipant } from './calendar';
+import { Category } from './category';
 
 export interface TaskRequest {
   id?: number | string;
@@ -202,6 +203,12 @@ export interface CreationDataTask {
     name: string;
     superior: { id: number; name: string } | null;
   }[];
+  organizationCategories: Team[];
+}
+
+export interface Team {
+  organization: Organizations;
+  categories: Category[];
 }
 
 export interface UpdateTaskKanbanRequest {
