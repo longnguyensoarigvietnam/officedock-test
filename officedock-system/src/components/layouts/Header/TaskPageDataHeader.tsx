@@ -587,7 +587,11 @@ const TaskPageDataHeader = () => {
                 </Tippy>
               )}
 
-              {taskSelected.value && parseInt(String(taskSelected.value)) ? (
+              {taskSelected.value &&
+              parseInt(String(taskSelected.value)) &&
+              optionsTaskMe.find(
+                (element) => element.value === taskSelected.value,
+              ) ? (
                 <div className="flex gap-x-4">
                   <ShowTimeCounter statusTaskSelected={statusTaskSelected} />
                   <div className="flex items-center justify-center text-xs font-medium text-[#A7B7C2] gap-x-1 min-w-[146px]">

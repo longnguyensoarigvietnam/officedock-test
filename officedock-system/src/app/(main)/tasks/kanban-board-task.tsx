@@ -2651,7 +2651,7 @@ const KanbanBoardTask = () => {
           setDataItemChangeInline={setDataItemChangeInline}
           handleEditShowClockItem={handleEditShowClockItem}
         />
-        <div className="w-full pl-10">
+        <div className="flex-1 pl-10">
           <DragDropContext onDragStart={() => {}} onDragEnd={onDragEnd}>
             <div
               ref={exEvents}
@@ -2662,7 +2662,7 @@ const KanbanBoardTask = () => {
                     : `calc(${Math.max(viewportWidth, 1280)}px - 700px)`
                   : isExtendCalendar
                     ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 120}px)`
-                    : `calc(${Math.max(viewportWidth, 1280)}px - 700px)`,
+                    : `calc(${Math.max(viewportWidth, 1280)}px - 600px)`,
                 maxWidth: expanded
                   ? widthCalendar < 100
                     ? '100%'
