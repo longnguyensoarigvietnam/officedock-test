@@ -1192,11 +1192,8 @@ const TimeSchedule = memo(
           e._def &&
           e._def.resourceIds?.length &&
           e._def.resourceIds[0] === ItemScheduleType.PLANS;
-        const isSameType =
-          e.extendedProps.type === EventCalendarType.SCHEDULE &&
-          extendedProps.type === EventCalendarType.SCHEDULE;
 
-        if (!eResourceId || isSameType) return false;
+        if (!eResourceId) return false;
         return (
           e.start.getTime() < event.end!.getTime() &&
           e.end.getTime() > event.start!.getTime()

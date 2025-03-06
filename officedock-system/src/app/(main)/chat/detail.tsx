@@ -47,6 +47,8 @@ import ErrorChatUploadFileValidationModal from '@components/modals/ErrorChatUplo
 import { MessageDetail } from '@components/chat/MessageDetail';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import ListTaskUserChat from '@components/chat/ListTaskUserChat';
+import { TaskQuote } from '@components/chat/CustomTaskQuote';
+import { CustomReaction } from '@components/chat/CustomIcon';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -114,7 +116,6 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
 import { debounce } from 'lodash';
-import { TaskQuote } from '@components/chat/CustomTaskQuote';
 
 interface dataProps {
   clientId: string;
@@ -647,6 +648,7 @@ const ChatDetail = ({
       Placeholder.configure({
         placeholder: 'メッセージを入力',
       }),
+      CustomReaction
     ],
     content: message,
     onUpdate: ({ editor }: { editor: Editor }) => {
@@ -2667,7 +2669,7 @@ const ChatDetail = ({
           dashboardMembers={dashboardMembers}
           searchMessageResults={searchMessageResults}
           searchChatMsg={searchChatMsg}
-          chatRoomDetail={chatRoomDetail}
+          chatRoomType={chatRoomDetail?.type || ''}
           setSearchChatMsg={setSearchChatMsg}
           searchResultsPage={searchResultsPage}
           setSearchMessageResults={setSearchMessageResults}
