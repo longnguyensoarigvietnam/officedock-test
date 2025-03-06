@@ -867,15 +867,9 @@ class ChatMessageViewSet(
         """
         user = request.user
         messages = self.get_queryset().filter(deleted_at__isnull=True)
+        is_bookmark = request.query_params.get("is_bookmark")
 
-        if message := request.query_params.get("message"):
-            messages = (
-                messages.annotate(clean_message=StripTags(F("message")))
-                .filter(clean_message__icontains=message)
-                .order_by("-created_at")
-            )
-
-        if is_bookmark := request.query_params.get("is_bookmark"):
+        if is_bookmark:
             messages = (
                 messages.filter(bookmark_users=user)
                 .order_by("bookmarks__bookmark_at")
@@ -883,6 +877,27 @@ class ChatMessageViewSet(
             )
         else:
             messages = messages.order_by("-created_at")
+
+        if message := request.query_params.get("message"):
+            if is_bookmark:
+                messages = (
+                    messages.filter(
+                        Q(task__title__icontains=message)
+                        | Q(
+                            Q(schedule__title__icontains=message)
+                            | Q(message__icontains=message)
+                        )
+                        | Q(Q(submit_level__skill__name__icontains=message))
+                    )
+                    .order_by("bookmarks__bookmark_at")
+                    .distinct()
+                )
+            else:
+                messages = (
+                    messages.annotate(clean_message=StripTags(F("message")))
+                    .filter(clean_message__icontains=message)
+                    .order_by("-created_at")
+                )
 
         return self.response_pagination(
             request, messages, ChatMessageBookMarkSerializer
