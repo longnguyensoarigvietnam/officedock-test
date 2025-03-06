@@ -1,5 +1,6 @@
 from django.db import models
 from base.models import BaseModel
+from organizations.constants import CategoryColors
 
 
 class Organization(BaseModel):
@@ -103,6 +104,10 @@ class OrganizationsStatisticCategories(BaseModel):
         Set default company
         """
         self.company = self.organization.company
+        # FIXME: Remove this line later
+        if self.color is None:
+            self.color = CategoryColors.random()
+
         super().save(*args, **kwargs)
 
 

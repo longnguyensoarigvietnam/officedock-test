@@ -376,15 +376,11 @@ def check_task_overtime(task, task_duration, limit_time=None):
     """
     Handle return boolean if task run overtime or not.
     """
-    start_of_today = datetime.combine(timezone.now().date(), time.min)
+    datetime.combine(timezone.now().date(), time.min)
     is_over_estimate = False
     is_send_sk = False
 
-    task_schedules = (
-        task.task_schedules.filter(plan_start_date__gte=start_of_today)
-        .all()
-        .order_by("plan_start_date")
-    )
+    task_schedules = task.task_schedules.all().order_by("plan_start_date")
     for idx, task_schedule in enumerate(task_schedules):
         if idx + 1 < len(
             task_schedules
