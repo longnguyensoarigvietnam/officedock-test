@@ -1,4 +1,4 @@
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
@@ -34,7 +34,17 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         user = self.request.user
         company = user.company
-        return super().get_queryset().filter(company=company)
+        queryset = super().get_queryset().filter(company=company)
+
+        return queryset
+
+    def get_serializer_context(self):
+        """
+        Add request to context
+        """
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
     @transaction.atomic
     def perform_create(self, serializer):
@@ -42,14 +52,14 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Custom logic for creating a new Tag instance.
         """
         serializer_data = serializer.validated_data
-        people_in_charge_data = serializer_data.pop("people_in_charge_ids")
+        organizations = serializer_data.pop("organizations")
 
         company = self.request.user.company
         tag = serializer.save(company=company)
 
-        for item in people_in_charge_data:
-            tag.people_in_charge.add(
-                item["people_in_charge"], through_defaults={"company": company}
+        for organization in organizations:
+            tag.organizations.add(
+                organization, through_defaults={"company": company}
             )
 
     @transaction.atomic
@@ -60,22 +70,46 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Pop people_in_charge_ids from validated data
         serializer_data = serializer.validated_data
-        people_in_charge_data = serializer_data.pop("people_in_charge_ids")
+        organizations = serializer_data.pop("organizations", None)
 
         # Update the tag instance
         tag = serializer.save()
-        people_in_charge_ids = []
-        tag.people_in_charge.clear()
-        for item in people_in_charge_data:
-            # Update the people_in_charge relationship for the tag
-            tag.people_in_charge.add(
-                item["people_in_charge"],
-                through_defaults={"company": self.request.user.company},
-            )
-            people_in_charge_ids.append(item["people_in_charge"].id)
 
-        # Update to remove people in charge of task if it has removed in tag
-        for task in tag.tasks.all():
-            for people_in_charge in task.people_in_charge.all():
-                if people_in_charge.id not in people_in_charge_ids:
-                    task.people_in_charge.remove(people_in_charge)
+        if organizations:
+            tag.organizations.clear()
+            for organization in organizations:
+                tag.organizations.add(
+                    organization, through_defaults={"company": tag.company}
+                )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_ids", type=str),
+            OpenApiParameter("is_hidden", type=bool),
+        ]
+    )
+    def list(self, request):
+        """
+        Return list of tag
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+
+        if request.query_params.get("is_hidden") == "true":
+            queryset = queryset.filter(is_hidden=True)
+        else:
+            queryset = queryset.filter(is_hidden=False)
+
+        organization_ids = request.query_params.get("organization_ids")
+        if organization_ids:
+            ids = []
+            for id in organization_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                queryset = queryset.filter(organizations__id__in=ids)
+
+        return self.response_pagination(
+            request, queryset.distinct(), TagSerializer
+        )
