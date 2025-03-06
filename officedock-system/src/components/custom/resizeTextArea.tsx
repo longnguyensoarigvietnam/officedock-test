@@ -52,7 +52,7 @@ const ResizeTextArea = ({
     remark?: string;
     isSubmit?: boolean;
   }) => {
-    const url = `${apiRouters.CONFIRM_USER_DAILY(parseInt(`${userId}`))}`;
+    const url = `${apiRouters.CONFIRM_USER_DAILY(parseInt(`${userId || session?.user.id}`))}`;
 
     return await api.post(url, data);
   };

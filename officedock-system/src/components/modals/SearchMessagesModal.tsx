@@ -31,11 +31,7 @@ import { HIGHLIGHT_SEARCH_TERM_REGEX } from '@constants/regex';
 import { ChatRoomType, MessageType, SubmitLevelStatus } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
-import {
-  ChatDashboardMember,
-  ChatMessageResponse,
-  ChatRoomDetail,
-} from '@interfaces/chat';
+import { ChatDashboardMember, ChatMessageResponse } from '@interfaces/chat';
 import {
   convertToCurrentTimezone,
   convertToTimeString,
@@ -61,7 +57,7 @@ interface SearchMessagesModalProps {
         hasNext?: boolean;
       }
     | undefined;
-  chatRoomDetail: ChatRoomDetail | undefined;
+  chatRoomType: string;
   handleConfirmGetDataDetailEvent: (id: string) => void;
   setSearchChatMsg: Dispatch<SetStateAction<string>>;
   setSearchResultsPage: Dispatch<SetStateAction<number>>;
@@ -91,7 +87,7 @@ export const SearchMessagesModal = ({
   searchMessageResults,
   hasMoreSearchResultDetail,
   searchResultsPage,
-  chatRoomDetail,
+  chatRoomType,
   handleConfirmGetDataDetailEvent,
   setSearchMessageResults,
   setSearchResultsPage,
@@ -180,10 +176,10 @@ export const SearchMessagesModal = ({
         onSubmit(
           searchChatMsg,
           updatedSearchResultsPage,
-          chatRoomDetail?.type == ChatRoomType.CALENDAR ||
-            chatRoomDetail?.type == ChatRoomType.SKILL ||
-            chatRoomDetail?.type == ChatRoomType.TASK
-            ? chatRoomDetail?.type || ''
+          chatRoomType == ChatRoomType.CALENDAR ||
+            chatRoomType == ChatRoomType.SKILL ||
+            chatRoomType == ChatRoomType.TASK
+            ? chatRoomType || ''
             : '',
         );
         setSearchResultsPage((prev) => prev + 1);
@@ -302,10 +298,10 @@ export const SearchMessagesModal = ({
                 onSubmit(
                   searchChatMsg,
                   1,
-                  chatRoomDetail?.type == ChatRoomType.CALENDAR ||
-                    chatRoomDetail?.type == ChatRoomType.SKILL ||
-                    chatRoomDetail?.type == ChatRoomType.TASK
-                    ? chatRoomDetail?.type || ''
+                  chatRoomType == ChatRoomType.CALENDAR ||
+                    chatRoomType == ChatRoomType.SKILL ||
+                    chatRoomType == ChatRoomType.TASK
+                    ? chatRoomType || ''
                     : '',
                 );
               }}>
@@ -329,7 +325,9 @@ export const SearchMessagesModal = ({
                   key={messageDetail.id}
                   className="flex gap-2 items-start group relative border-b-[1px] hover:bg-white hover:cursor-pointer border-[#D2DBE1] py-5 px-2">
                   <div className="">
-                    {chatRoomDetail?.type === ChatRoomType.TASK ? (
+                    {chatRoomType === ChatRoomType.TASK ||
+                    (chatRoomType == ChatRoomType.BOOKMARK &&
+                      messageDetail.chatRoom?.type == ChatRoomType.TASK) ? (
                       messageDetail.type !== MessageType.MESSAGE ? (
                         <ImageRound
                           className="w-10 h-10"
@@ -348,7 +346,10 @@ export const SearchMessagesModal = ({
                     <div className="w-[88%]">
                       <div className="flex items-center gap-2 font-semibold text-sm pb-2">
                         <p>
-                          {chatRoomDetail?.type === ChatRoomType.TASK ? (
+                          {chatRoomType === ChatRoomType.TASK ||
+                          (chatRoomType == ChatRoomType.BOOKMARK &&
+                            messageDetail.chatRoom?.type ==
+                              ChatRoomType.TASK) ? (
                             messageDetail.type !== MessageType.MESSAGE ? (
                               'タスクカード'
                             ) : (
@@ -359,7 +360,12 @@ export const SearchMessagesModal = ({
                           )}{' '}
                         </p>
                         <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
-                          {chatRoomDetail?.type != ChatRoomType.TASK && messageDetail.sender?.organizations?.name}
+                          {chatRoomType != ChatRoomType.TASK &&
+                            !(
+                              chatRoomType == ChatRoomType.BOOKMARK &&
+                              messageDetail.chatRoom?.type == ChatRoomType.TASK
+                            ) &&
+                            messageDetail.sender?.organizations?.name}
                         </p>
                         {messageDetail.isBookmark && (
                           <ImageRound
@@ -369,9 +375,17 @@ export const SearchMessagesModal = ({
                           />
                         )}
                       </div>
-                      {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
-                        chatRoomDetail?.type === ChatRoomType.GROUP ||
-                        chatRoomDetail?.type === ChatRoomType.SELF) && (
+                      {(chatRoomType === ChatRoomType.PRIVATE ||
+                        chatRoomType === ChatRoomType.GROUP ||
+                        chatRoomType === ChatRoomType.SELF ||
+                        (chatRoomType == ChatRoomType.BOOKMARK &&
+                          messageDetail.chatRoom?.type ==
+                            ChatRoomType.PRIVATE) ||
+                        (chatRoomType == ChatRoomType.BOOKMARK &&
+                          messageDetail.chatRoom?.type == ChatRoomType.GROUP) ||
+                        (chatRoomType == ChatRoomType.BOOKMARK &&
+                          messageDetail.chatRoom?.type ==
+                            ChatRoomType.SELF)) && (
                         <div className="flex flex-col">
                           {messageDetail.deletedAt ? (
                             <p
@@ -882,8 +896,11 @@ export const SearchMessagesModal = ({
                                         </h4>
                                         <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
                                           タスクのタイトル:{' '}
-                                          {messageDetail.task.title ||
-                                            NO_SETTING}
+                                          {highlightTitleBySearchTerm(
+                                            messageDetail.task.title ||
+                                              NO_SETTING,
+                                            searchChatMsg,
+                                          )}
                                         </h4>
                                         {messageDetail.type !==
                                           MessageType.REMOVE_MEMBER_TASK && (
@@ -918,7 +935,7 @@ export const SearchMessagesModal = ({
                           )}
                         </div>
                       )}
-                      {chatRoomDetail?.type === ChatRoomType.TASK && (
+                      {(chatRoomType === ChatRoomType.TASK || (chatRoomType == ChatRoomType.BOOKMARK && messageDetail.chatRoom?.type == ChatRoomType.TASK) )  && (
                         <div className="flex flex-col">
                           {messageDetail.deletedAt ? (
                             <p
@@ -991,7 +1008,7 @@ export const SearchMessagesModal = ({
                           )}
                         </div>
                       )}
-                      {chatRoomDetail?.type === ChatRoomType.SKILL && (
+                      {(chatRoomType === ChatRoomType.SKILL || (chatRoomType == ChatRoomType.BOOKMARK && messageDetail.chatRoom?.type == ChatRoomType.SKILL) ) && (
                         <div className="flex flex-col">
                           {messageDetail.deletedAt ||
                           (!messageDetail.submitLevel &&
@@ -1061,7 +1078,7 @@ export const SearchMessagesModal = ({
                           )}
                         </div>
                       )}
-                      {chatRoomDetail?.type === ChatRoomType.CALENDAR && (
+                      {(chatRoomType === ChatRoomType.CALENDAR || (chatRoomType == ChatRoomType.BOOKMARK && messageDetail.chatRoom?.type == ChatRoomType.CALENDAR) ) && (
                         <div className="flex flex-col gap-3">
                           <div
                             className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer"
