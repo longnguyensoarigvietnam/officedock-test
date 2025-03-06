@@ -81,6 +81,20 @@ class CreationDataTagSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
+class CreationDataOrganizationWithTagSerializer(
+    CreationDataOrganizationSerializer
+):
+    """
+    Serializer for Creation data Organization with User
+    """
+
+    tags = CreationDataTagSerializer(many=True)
+
+    class Meta:
+        model = Organization
+        fields = ["id", "name", "superior", "tags"]
+
+
 class CreationDataTaskListSerializer(serializers.ModelSerializer):
     """
     Serializer for Creation data Task

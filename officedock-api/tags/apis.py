@@ -1,7 +1,8 @@
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
+from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
 from base.permissions import ActionPermission
@@ -34,26 +35,34 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         user = self.request.user
         company = user.company
-        return super().get_queryset().filter(company=company)
+        queryset = super().get_queryset().filter(company=company)
+        if self.action == "list":
+            queryset = queryset.filter(is_hidden=False)
+
+        return queryset
+
+    def get_serializer_context(self):
+        """
+        Add request to context
+        """
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
     @transaction.atomic
     def perform_create(self, serializer):
         """
         Custom logic for creating a new Tag instance.
         """
-
-        # Pop people_in_charge_ids from validated data
         serializer_data = serializer.validated_data
-        people_in_charge_data = serializer_data.pop("people_in_charge_ids")
+        organizations = serializer_data.pop("organizations")
 
-        # Save the tag instance, automatically associating it with the company of the logged-in user
         company = self.request.user.company
         tag = serializer.save(company=company)
 
-        # Set the people_in_charge relationship for the tag
-        for item in people_in_charge_data:
-            tag.people_in_charge.add(
-                item["people_in_charge"], through_defaults={"company": company}
+        for organization in organizations:
+            tag.organizations.add(
+                organization, through_defaults={"company": company}
             )
 
     @transaction.atomic
@@ -64,23 +73,42 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Pop people_in_charge_ids from validated data
         serializer_data = serializer.validated_data
-        people_in_charge_data = serializer_data.pop("people_in_charge_ids")
+        organizations = serializer_data.pop("organizations", None)
 
         # Update the tag instance
         tag = serializer.save()
+        if organizations:
+            tag.organizations.clear()
+            for organization in organizations:
+                tag.organizations.add(
+                    organization, through_defaults={"company": tag.company}
+                )
 
-        people_in_charge_ids = []
-        tag.people_in_charge.clear()
-        for item in people_in_charge_data:
-            # Update the people_in_charge relationship for the tag
-            tag.people_in_charge.add(
-                item["people_in_charge"],
-                through_defaults={"company": self.request.user.company},
-            )
-            people_in_charge_ids.append(item["people_in_charge"].id)
+    @extend_schema(parameters=[OpenApiParameter("organization_ids", type=str)])
+    def list(self, request):
+        """
+        Return list of tag
+        """
+        queryset = self.get_queryset()
 
-        # Update to remove people in charge of task if it has removed in tag
-        for task in tag.tasks.all():
-            for people_in_charge in task.people_in_charge.all():
-                if people_in_charge.id not in people_in_charge_ids:
-                    task.people_in_charge.remove(people_in_charge)
+        organization_ids = request.query_params.get("organization_ids")
+        if organization_ids:
+            ids = []
+            for id in organization_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                queryset = queryset.filter(organizations__id__in=ids)
+
+        return self.response_pagination(request, queryset, TagSerializer)
+
+    @action(methods=["GET"], detail=False, url_path="list-hidden")
+    def list_hidden(self, request):
+        """
+        Handle return list tag hidden
+        """
+        return self.response_pagination(
+            request, self.get_queryset().filter(is_hidden=True), TagSerializer
+        )
