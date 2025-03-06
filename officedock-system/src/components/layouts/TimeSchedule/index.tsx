@@ -58,6 +58,10 @@ import ImageRound from '@components/common/ImageRound';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import DatePicker from '@components/common/DatePicker';
+import ScheduleDaySkeleton from '@components/skeleton/ScheduleDaySkeleton';
+import RangeSlider from '@components/common/RangeSlider';
+import DetailPlanItemModal from '@components/modals/DetailPlanItemModal';
+import DetailEventPlanModal from '@components/modals/DetailEventPlanModal';
 
 import TaskCard from './TaskCard';
 
@@ -95,6 +99,7 @@ import {
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 
 import api from '@base/api';
@@ -137,11 +142,6 @@ import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
 } from '@utils';
-import ScheduleDaySkeleton from '@components/skeleton/ScheduleDaySkeleton';
-import RangeSlider from '@components/common/RangeSlider';
-import { useErrorToast } from '@hooks/useErrorToast';
-import DetailPlanItemModal from '@components/modals/DetailPlanlItemModal';
-import DetailEventPlanModal from '@components/modals/DetailEventPlanModal';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -2131,10 +2131,10 @@ const TimeSchedule = memo(
         handleShowEventInModal({
           title: clickInfo.event.title,
           id: clickInfo.event.extendedProps.scheduleId,
-          start: clickInfo.event.start,
+          start: clickInfo.event.extendedProps.planStartDate,
           end: clickInfo.event.extendedProps.isAllDay
             ? clickInfo.event.extendedProps.endDate
-            : clickInfo.event.end,
+            : clickInfo.event.extendedProps.planEndDate,
           clientX: clickInfo.jsEvent.clientX,
           clientY: clickInfo.jsEvent.clientY,
           isAllDay: clickInfo.event.extendedProps.isAllDay,
@@ -2791,14 +2791,14 @@ const TimeSchedule = memo(
                 : '1040px'
               : '440px',
           }}
-          className={`schedule-page relative overflow-x-auto overflow-y-hidden `}
+          className={`${searchParams.get('view') == ViewOptions.DAY && 'w-[440px]'} schedule-page relative overflow-x-auto overflow-y-hidden `}
           ref={resizableElementRef}>
           <div
             className={`resizer absolute cursor-ew-resize right-[2px] z-[2] top-1/2 translate-x-1/2 -translate-y-1/2 h-full w-1 bg-transparent ${isExtendCalendar ? 'block' : 'hidden'}`}
             onMouseDown={handleMouseDown}
           />
           <div
-            className={`overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 px-4 `}>
+            className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 px-4 `}>
             <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
               <div className={`items-center gap-4 flex h-12 sticky z-20`}>
                 {!isExtendCalendar ? (
@@ -2905,7 +2905,8 @@ const TimeSchedule = memo(
                   </>
                 )}
               </div>
-              <div className="schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll">
+              <div
+                className={`schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll  `}>
                 <FullCalendar
                   ref={calendarRef}
                   plugins={[

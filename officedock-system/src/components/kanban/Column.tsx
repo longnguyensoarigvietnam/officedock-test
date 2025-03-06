@@ -392,6 +392,15 @@ const Column = ({
               placement="top"
               offset={[0, 5]}>
               <div
+                onClick={() => {
+                  setExtendByStatus((prev) =>
+                    prev.map((item) =>
+                      String(item.id) == String(columnId)
+                        ? { ...item, status: !item.status }
+                        : item,
+                    ),
+                  );
+                }}
                 style={{
                   padding: `${(columnWidth / 247) * 5}px`,
                 }}>
@@ -405,15 +414,6 @@ const Column = ({
                       : 'rotate-180'
                   }`}
                   name="extend"
-                  onClick={() => {
-                    setExtendByStatus((prev) =>
-                      prev.map((item) =>
-                        String(item.id) == String(columnId)
-                          ? { ...item, status: !item.status }
-                          : item,
-                      ),
-                    );
-                  }}
                   style={{
                     width: `8px`,
                     height: `12px`,
