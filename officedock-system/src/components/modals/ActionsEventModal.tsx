@@ -413,6 +413,24 @@ const ActionsEventModal = ({
     }
   }, [dataOrganizationCategories, largeCategoryValue, watch]);
 
+  const selectedOrganization = watch('organization') as OptionDropdownType;
+
+  useEffect(() => {
+    if (selectedOrganization && creationDataEventCalendar) {
+      const organizationTags =
+        creationDataEventCalendar.organizations.find(
+          (org) => org.id === selectedOrganization.value,
+        )?.tags || [];
+
+      setDataOptionsTagIds(
+        organizationTags.map((tag) => ({
+          label: tag.name,
+          value: tag.id,
+        })),
+      );
+    }
+  }, [selectedOrganization, creationDataEventCalendar, setValue]);
+
   useMemo(() => {
     if (!dataOrganizationCategories || !watch('mediumCategory.value')) {
       setDataOptionsCategorySmall([]);
@@ -931,6 +949,8 @@ const ActionsEventModal = ({
                         setDataOptionsCategorySmall([]);
                         setDataOptionsCategoryMedium([]);
                       }
+                      setValue('tagIds', []);
+
                       onChange(e);
                     }}
                   />

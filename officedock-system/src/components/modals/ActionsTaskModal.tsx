@@ -665,6 +665,24 @@ const ActionsTaskModal = ({
     }
   }, [creationDataTaskData]);
 
+  const selectedOrganization = watch('organization');
+
+  useEffect(() => {
+    if (selectedOrganization && creationDataTaskData) {
+      const organizationTags =
+        creationDataTaskData.organizations.find(
+          (org) => org.id === selectedOrganization.value,
+        )?.tags || [];
+
+      setDataOptionsTagIds(
+        organizationTags.map((tag) => ({
+          label: tag.name,
+          value: tag.id,
+        })),
+      );
+    }
+  }, [selectedOrganization, creationDataTaskData, setValue]);
+
   useEffect(() => {
     if (dataTask) {
       if (dataTask.taskSchedules?.length) {
@@ -1147,6 +1165,7 @@ const ActionsTaskModal = ({
                         setDataOptionsCategoryMedium([]);
                       }
                       setIsFormTouched(true);
+                      setValue('tagIds', []);
                       onChange(e);
                     }}
                   />
