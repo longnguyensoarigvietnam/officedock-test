@@ -8,35 +8,35 @@ class Tag(BaseModel):
     """
 
     name = models.CharField(max_length=255)
-    organizations = models.ManyToManyField(
-        "organizations.Organization",
-        through="OrganizationsTags",
+    responsible_person = models.ForeignKey(
+        "users.User",
         related_name="tags",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    people_in_charge = models.ManyToManyField(
+        "users.User",
+        through="PeopleInChargeTags",
+        related_name="in_charge_tags",
     )
     company = models.ForeignKey(
         "companies.Company",
         related_name="tags",
         on_delete=models.CASCADE,
     )
-    is_hidden = models.BooleanField(default=False)
 
 
-class OrganizationsTags(BaseModel):
+class PeopleInChargeTags(BaseModel):
     """
-    The organizations of the tags
+    The people in charge of the tags
     """
 
-    organization = models.ForeignKey(
-        "organizations.Organization",
-        on_delete=models.CASCADE,
-        related_name="organization_tags",
-    )
-    tag = models.ForeignKey(
-        "Tag", on_delete=models.CASCADE, related_name="organization_tags"
-    )
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    tag = models.ForeignKey("Tag", on_delete=models.CASCADE)
     company = models.ForeignKey(
         "companies.Company",
-        related_name="organization_tags",
+        related_name="people_in_charge_tags",
         on_delete=models.CASCADE,
     )
 
@@ -44,5 +44,5 @@ class OrganizationsTags(BaseModel):
         """
         Set default company
         """
-        self.company = self.organization.company
+        self.company = self.user.company
         super().save(*args, **kwargs)
