@@ -28,6 +28,9 @@ import {
   eachDayOfInterval,
   startOfDay,
   endOfDay,
+  getHours,
+  getMinutes,
+  subSeconds,
 } from 'date-fns';
 import interactionPlugin, {
   EventDragStopArg,
@@ -398,7 +401,11 @@ const TimeSchedule = memo(
           if (data) {
             const splitMultiDayEvent = (event: TaskTimeSchedule) => {
               const startDate = parseISO(String(event.startDate));
-              const endDate = parseISO(String(event.endDate));
+              let endDate = parseISO(String(event.endDate));
+
+              if (getHours(endDate) === 0 && getMinutes(endDate) === 0) {
+                endDate = subSeconds(endDate, 1);
+              }
 
               if (isSameDay(startDate, endDate)) {
                 return [{ ...event }];
@@ -3027,8 +3034,9 @@ const TimeSchedule = memo(
             placement="top"
             offset={[0, 5]}>
             <div
-              className="p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer "
+              className={`${isLoadingSchedule && 'opacity-50'} p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer `}
               onClick={() => {
+                if (isLoadingSchedule) return;
                 if (!isExtendCalendar) {
                   setIsScroll(true);
                   handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);

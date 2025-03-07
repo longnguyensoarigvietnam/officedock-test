@@ -72,6 +72,7 @@ import {
   ERROR_DELETE_MESSAGE,
   ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_SAVE_MESSAGE,
+  ERROR_SAVE_ZOOM,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -174,6 +175,7 @@ const KanbanBoardTask = () => {
     widthCalendar,
     columnWidth,
     selectedOptionZoom,
+    setExtendByStatus,
     setSelectedOptionZoom,
     setStatusTaskSelected,
     setDataRunning,
@@ -299,6 +301,30 @@ const KanbanBoardTask = () => {
   useEffect(() => {
     if (authenticatedUser) {
       setLoggedInUser(authenticatedUser);
+      if (authenticatedUser.setting?.kanbanZoom) {
+        setSelectedOptionZoom({
+          label: `${authenticatedUser.setting?.kanbanZoom}%`,
+          value: authenticatedUser.setting?.kanbanZoom,
+        });
+        if (authenticatedUser.setting?.kanbanZoom === 25) {
+          setColumnWidth(calculateWidth(247, 50));
+        } else {
+          setColumnWidth(
+            calculateWidth(
+              247,
+              authenticatedUser.setting?.kanbanZoom as number,
+            ),
+          );
+        }
+      }
+      if (authenticatedUser.setting?.tabVisibility) {
+        setExtendByStatus((prev) =>
+          prev.map((item) => ({
+            ...item,
+            status: authenticatedUser.setting?.tabVisibility?.[item.id] ?? true,
+          })),
+        );
+      }
     }
   }, [authenticatedUser]);
 
@@ -2634,6 +2660,26 @@ const KanbanBoardTask = () => {
     });
   };
 
+  // Handle save zoom
+  const handleSaveZoomKanban = async (kanbanZoom: number) => {
+    const { data: response } = await api.post(apiRouters.USER_SETTING, {
+      kanbanZoom,
+    });
+    return response;
+  };
+
+  const { mutate: saveZoomKanban } = useMutation(
+    'saeZoomKanban',
+    handleSaveZoomKanban,
+    {
+      onSuccess: () => {},
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_SAVE_ZOOM);
+      },
+      onSettled: () => {},
+    },
+  );
+
   return (
     <>
       <div className="flex flex-row flex-grow h-[calc(100vh_-_76px)] gap-0 bg-[#F8FAFC] ">
@@ -3127,6 +3173,7 @@ const KanbanBoardTask = () => {
               ]}
               onChange={(selectedOption) => {
                 setSelectedOptionZoom(selectedOption);
+                saveZoomKanban(selectedOption.value as number);
                 if (selectedOption.value === 25) {
                   setColumnWidth(calculateWidth(247, 50));
                 } else {
