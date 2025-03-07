@@ -60,6 +60,9 @@ export interface User {
     isEnterSendMessage?: boolean;
     isSortingTaskByDeadline?: boolean;
     isSortingTaskByImportant?: boolean;
+    scheduleZoom?: number;
+    kanbanZoom?: number;
+    tabVisibility?: Record<string, boolean>;
   };
   actions?: {
     update: boolean;

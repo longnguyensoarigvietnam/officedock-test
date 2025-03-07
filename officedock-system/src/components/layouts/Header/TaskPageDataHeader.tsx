@@ -568,17 +568,23 @@ const TaskPageDataHeader = () => {
                             const selectedTask = taskSelected.value;
 
                             if (!selectedTask) return;
+                            if (
+                              optionsTaskMe.find(
+                                (element) =>
+                                  element.value === taskSelected.value,
+                              )
+                            ) {
+                              setTaskSelectedToStart({
+                                title: taskSelected.label,
+                                id: taskSelected.value,
+                                type: taskSelected.type as string,
+                              });
 
-                            setTaskSelectedToStart({
-                              title: taskSelected.label,
-                              id: taskSelected.value,
-                              type: taskSelected.type as string,
-                            });
-
-                            checkTask({
-                              id: `${selectedTask}`.replace('event', ''),
-                              type: `${taskSelected.type}`,
-                            });
+                              checkTask({
+                                id: `${selectedTask}`.replace('event', ''),
+                                type: `${taskSelected.type}`,
+                              });
+                            }
                           }}
                         />
                       </div>
@@ -670,8 +676,10 @@ const TaskPageDataHeader = () => {
                 className="whitespace-nowrap mt-1 min-w-[22px]  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"
                 onClick={() => {
                   if (
-                    taskSelected.value &&
-                    parseInt(String(taskSelected.value))
+                    parseInt(String(taskSelected.value)) &&
+                    optionsTaskMe.find(
+                      (element) => element.value === taskSelected.value,
+                    )
                   ) {
                     if (taskSelected.type === ItemStartType.SCHEDULE) {
                       handleSetEventParam({

@@ -81,6 +81,9 @@ export const ERROR_PERSON_IN_CHART_START =
   'この担当者が別のタスクを実施しています。';
 export const ERROR_NOT_FOUND_EVENT = '予定が見つかりません。';
 
+export const ERROR_SAVE_ZOOM = '拡大縮小のエラーが出ました。';
+export const ERROR_EXTEND_COLUMN = 'タブの拡大縮小のエラーが出ました。';
+
 // Toast message
 export const SUCCESS_TITLE_MESSAGE = '成功';
 export const WARNING_TITLE_MESSAGE = '警告';

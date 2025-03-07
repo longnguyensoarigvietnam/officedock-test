@@ -78,6 +78,7 @@ interface ColumnProps {
     >
   >;
   pinItemToTop: (itemId: string | number) => void;
+  saveExtendColumn: (data: Record<string, boolean>) => void;
 }
 const Column = ({
   columnId,
@@ -100,13 +101,12 @@ const Column = ({
   handleConfirmCopyTask,
   handleUpdateItemInline,
   setNumberPagesData,
+  saveExtendColumn,
 }: ColumnProps) => {
   const { data: session } = useSession();
   const isMyRoutine = columnId === `${StatusValueTask.MY_ROUTINE}`;
 
-  const { columnWidth } = useContext(TaskContext);
-
-  const { extendByStatus, orderingOptions, setExtendByStatus } =
+  const { columnWidth, extendByStatus, orderingOptions, setExtendByStatus } =
     useContext(TaskContext);
 
   const [hasMore, setHasMore] = useState(true);
@@ -356,7 +356,7 @@ const Column = ({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             {session?.user.permissions &&
               hasPermissionInArray(
                 session?.user.permissions,
@@ -392,21 +392,30 @@ const Column = ({
               placement="top"
               offset={[0, 5]}>
               <div
-                onClick={() => {
-                  setExtendByStatus((prev) =>
-                    prev.map((item) =>
-                      String(item.id) == String(columnId)
-                        ? { ...item, status: !item.status }
-                        : item,
-                    ),
+                onClick={async () => {
+                  const newList = extendByStatus.map((item) =>
+                    String(item.id) == String(columnId)
+                      ? { ...item, status: !item.status }
+                      : item,
                   );
+                  const dataExtend: Record<string, boolean> = newList.reduce(
+                    (acc, item) => {
+                      acc[item.id] = item.status;
+                      return acc;
+                    },
+                    {} as Record<string, boolean>,
+                  );
+                  setExtendByStatus(newList);
+                  saveExtendColumn && saveExtendColumn(dataExtend);
                 }}
+                className="h-full flex items-center cursor-pointer  "
                 style={{
                   padding: `${(columnWidth / 247) * 5}px`,
+                  paddingLeft: `${(columnWidth / 247) * 12}px`,
                 }}>
                 <ImageRound
                   src={`/icons/extend-column.svg`}
-                  className={`${
+                  className={` ${
                     extendByStatus.find(
                       (list) => String(list.id) == String(columnId),
                     )?.status
@@ -521,6 +530,7 @@ const Column = ({
           <div
             style={{
               padding: `${(columnWidth / 247) * 5}px`,
+              paddingLeft: `${(columnWidth / 247) * 12}px`,
             }}>
             <ImageRound
               src={`/icons/extend-column.svg`}
@@ -532,18 +542,25 @@ const Column = ({
                   : 'rotate-180'
               } cursor-pointer`}
               name="extend"
-              onClick={() => {
-                setExtendByStatus((prev) =>
-                  prev.map((item) =>
-                    String(item.id) == String(columnId)
-                      ? { ...item, status: !item.status }
-                      : item,
-                  ),
+              onClick={async () => {
+                const newList = extendByStatus.map((item) =>
+                  String(item.id) == String(columnId)
+                    ? { ...item, status: !item.status }
+                    : item,
                 );
+                const dataExtend: Record<string, boolean> = newList.reduce(
+                  (acc, item) => {
+                    acc[item.id] = item.status;
+                    return acc;
+                  },
+                  {} as Record<string, boolean>,
+                );
+                setExtendByStatus(newList);
+                saveExtendColumn(dataExtend);
               }}
               style={{
-                width: `${(columnWidth / 247) * 8}px`,
-                height: `${(columnWidth / 247) * 12}px`,
+                width: `8px`,
+                height: `12px`,
               }}
             />
           </div>
@@ -557,7 +574,7 @@ const Column = ({
         {Number(columnId) != StatusValueTask.MY_ROUTINE ? (
           <p
             style={{
-              fontSize: `${(columnWidth / 247) * 14}px`,
+              fontSize: `14px`,
             }}
             className="text-[#77858F] w-full text-center text-sm">
             {count}
@@ -565,7 +582,7 @@ const Column = ({
         ) : (
           <p
             style={{
-              fontSize: `${(columnWidth / 247) * 14}px`,
+              fontSize: `14px`,
             }}
             className="text-[#77858F] w-full text-center text-sm h-5"></p>
         )}
