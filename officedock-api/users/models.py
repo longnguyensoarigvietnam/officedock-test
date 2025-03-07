@@ -294,6 +294,9 @@ class Setting(BaseModel):
     is_enter_send_message = models.BooleanField(default=False)
     is_sorting_task_by_deadline = models.BooleanField(default=False)
     is_sorting_task_by_important = models.BooleanField(default=False)
+    kanban_zoom = models.IntegerField(default=100)
+    schedule_zoom = models.IntegerField(default=100)
+    tab_visibility = models.JSONField(default=dict, blank=True, null=True)
 
     user = models.OneToOneField(
         "User", related_name="setting", on_delete=models.CASCADE

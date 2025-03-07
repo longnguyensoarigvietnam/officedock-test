@@ -1027,6 +1027,12 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def setting(self, request):
+        """
+        Handle store setting of user
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.validated_data
         user = request.user
         setting = request.data
         user.set_setting(setting)
