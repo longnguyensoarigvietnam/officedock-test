@@ -12,6 +12,7 @@ export type CheckboxProps = {
   descriptionInline?: boolean;
   checkboxOnRight?: boolean;
   disable?: boolean;
+  boxLabelClass?: string;
   onChange?: (selectedValues: boolean) => void;
 };
 
@@ -26,6 +27,7 @@ const Checkbox = ({
   descriptionInline = false,
   checkboxOnRight = false,
   disable = false,
+  boxLabelClass,
   onChange,
   ...props
 }: CheckboxProps) => {
@@ -58,7 +60,7 @@ const Checkbox = ({
         />
       </div>
       <div
-        className={`${checkboxOnRight ? '' : 'ml-3'} text-sm leading-6 flex ${descriptionInline ? 'flex-row' : 'flex-col'}`}>
+        className={`${checkboxOnRight ? '' : 'ml-3'} text-sm leading-6 flex ${descriptionInline ? 'flex-row' : 'flex-col'} ${boxLabelClass}`}>
         <label
           htmlFor={id}
           className={`font-medium text-gray-900 ${classLabel}`}>

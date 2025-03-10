@@ -1,20 +1,25 @@
 import { UseMutateAsyncFunction } from 'react-query';
 import { useSession } from 'next-auth/react';
-import { Dispatch, SetStateAction } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
 
-import { EventCalendarType } from '@constants/enums';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { CalendarDashboardMember } from '@interfaces/calendar';
+import { NO_DATA_AVAILABLE } from '@constants';
 
 export type CalendarSidebarProps = {
   selectedScheduleUserIds: string;
   removeMyselfOption: boolean;
-  filterMyEvent: boolean;
-  filterMyTask: boolean;
   searchName: string;
   setShowSidebar: Dispatch<SetStateAction<boolean>>;
   setSearchName: Dispatch<SetStateAction<string>>;
@@ -28,11 +33,9 @@ export type CalendarSidebarProps = {
       }[]
     >
   >;
-  dashboardMembers: CalendarDashboardMember[];
   handleGetAllMemberSchedules: () => void;
   handleRemoveAllMemberSchedules: () => void;
   handleFilterScheduleByUserIds: (userId: number) => void;
-  handleToggleFilterOptions: (state: boolean, type: string) => void;
   getEventCalendarByUsers: UseMutateAsyncFunction<
     any,
     unknown,
@@ -54,9 +57,6 @@ export const CalendarSidebar = ({
   removeMyselfOption,
   selectedScheduleUserIds,
   searchName,
-  filterMyEvent,
-  filterMyTask,
-  dashboardMembers,
   setSearchName,
   setShowSidebar,
   setRemoveMyselfOption,
@@ -65,14 +65,25 @@ export const CalendarSidebar = ({
   handleGetAllMemberSchedules,
   handleRemoveAllMemberSchedules,
   handleFilterScheduleByUserIds,
-  handleToggleFilterOptions,
   getEventCalendarByUsers,
 }: CalendarSidebarProps) => {
   const { data: session } = useSession();
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="overflow-y-auto">
-      <div className="flex flex-col mb-7">
+      <div className="flex flex-col mb-5">
         <div className="flex items-center">
           <ImageRound
             className="w-10 h-10"
@@ -93,30 +104,7 @@ export const CalendarSidebar = ({
             />
           </div>
         </div>
-
-        <p className="font-normal text-gray-500 mb-2 mt-8 text-sm">
-          表示する項目
-        </p>
-        <Checkbox
-          label="マイスケジュール"
-          isChecked={filterMyEvent}
-          onChange={(state) =>
-            handleToggleFilterOptions(state, EventCalendarType.SCHEDULE)
-          }
-        />
-        <Checkbox
-          label="マイタスク"
-          className="mr-3"
-          isChecked={filterMyTask}
-          onChange={(state) =>
-            handleToggleFilterOptions(state, EventCalendarType.TASK)
-          }
-        />
-        <Checkbox label="会社の予定" />
       </div>
-      <p className="font-normal mb-2 text-sm text-gray-500">
-        メンバーの予定を見る
-      </p>
       <div className="py-3 mb-2 rounded-md shadow-md bg-white">
         <InputSearch
           placeholder="名前で検索"
@@ -136,9 +124,17 @@ export const CalendarSidebar = ({
             全てのチェックをクリア
           </p>
         </div>
-        <div className="pt-3 mb-3 max-h-[250px] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
-          {dashboardMembers &&
-            dashboardMembers
+        <div className="pt-3 max-h-[calc(85vh_-_200px)] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
+          {dashboardMembersWithAvatars &&
+            dashboardMembersWithAvatars.filter((member) =>
+              member.fullName.toLowerCase().includes(searchName.toLowerCase()),
+            ).length == 0 && (
+              <p className="text-center text-[#6B7280] text-[14px]">
+                {NO_DATA_AVAILABLE}
+              </p>
+            )}
+          {dashboardMembersWithAvatars &&
+            dashboardMembersWithAvatars
               .filter((member) =>
                 member.fullName
                   .toLowerCase()
@@ -152,7 +148,11 @@ export const CalendarSidebar = ({
                 (
                   prev: CalendarDashboardMember,
                   next: CalendarDashboardMember,
-                ) => prev.fullName.localeCompare(next.fullName),
+                ) => {
+                  if (prev.id === session?.user.id) return -1;
+                  if (next.id === session?.user.id) return 1;
+                  return prev.fullName.localeCompare(next.fullName);
+                },
               )
               .map((member) => {
                 return (
@@ -174,14 +174,41 @@ export const CalendarSidebar = ({
                       />
                     </div>
                     <div
-                      className={`flex gap-3 items-center p-1.5 hover:cursor-pointer`}>
-                      {AvatarIconWithDynamicColor({
-                        color: member.avatarColor,
-                        size: 36,
-                      })}
-                      <p className="font-medium text-[15px] truncate max-w-[200px] text-black">
-                        {member.fullName}
-                      </p>
+                      className={`flex flex-1 gap-3 items-center p-1.5 hover:cursor-pointer`}>
+                      {dashboardMembersWithAvatars &&
+                      dashboardMembersWithAvatars.find(
+                        (memberWithAvatar) => memberWithAvatar.id == member.id,
+                      ) ? (
+                        <>
+                          {AvatarIconWithDynamicColor({
+                            color:
+                              dashboardMembersWithAvatars?.find(
+                                (memberWithAvatar) =>
+                                  memberWithAvatar.id == member.id,
+                              )?.avatarColor || '#0068B6',
+                            size: 36,
+                          })}
+                        </>
+                      ) : (
+                        <ImageRound
+                          className="w-8 h-8"
+                          src="/images/avatar-default.svg"
+                          border="full"
+                          name="Avatar user"
+                        />
+                      )}
+                      <div className="!w-full">
+                        <p
+                          style={{
+                            maxWidth: `calc(${Math.max(viewportWidth, 1280) / 8 - 10}px )`,
+                          }}
+                          className={`truncate font-medium text-[15px] text-black`}>
+                          <span>{member.fullName}</span>
+                          <span className="text-[#77858F] text-xs ml-1">
+                            {member.mainOrganization}
+                          </span>
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
@@ -196,8 +223,6 @@ export const CalendarSidebar = ({
             setRemoveMyselfOption(state);
             setCurrentResources((prevCurrentResources) => {
               if (
-                !filterMyEvent &&
-                !filterMyTask &&
                 prevCurrentResources.find(
                   (resource) => resource.id == String(session?.user.id),
                 )
@@ -215,22 +240,12 @@ export const CalendarSidebar = ({
               const userIdStr = String(session?.user.id);
               updatedUserIds = updatedUserIds.filter((id) => id !== userIdStr);
               setSelectedScheduleUserIds(updatedUserIds.join(','));
-              if (filterMyEvent) {
-                updatedUserIds.push(userIdStr);
-                getEventCalendarByUsers({
-                  userId:
-                    `${updatedUserIds.join(',')}`.length > 0
-                      ? `${updatedUserIds.join(',')}`
-                      : ``,
-                });
-              } else {
-                getEventCalendarByUsers({
-                  userId:
-                    `${updatedUserIds.join(',')}`.length > 0
-                      ? `${updatedUserIds.join(',')}`
-                      : ``,
-                });
-              }
+              getEventCalendarByUsers({
+                userId:
+                  `${updatedUserIds.join(',')}`.length > 0
+                    ? `${updatedUserIds.join(',')}`
+                    : ``,
+              });
             }
           }}
         />

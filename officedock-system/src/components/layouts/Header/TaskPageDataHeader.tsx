@@ -8,6 +8,7 @@ import 'tippy.js/dist/tippy.css';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
+import socketEventEmitter from '@components/socket/socketEventEmitter';
 import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 
 import {
@@ -15,6 +16,7 @@ import {
   ItemScheduleType,
   ItemStartType,
   PermissionsSystem,
+  SocketActions,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ERROR_TIME_START_MESSAGE } from '@constants/message';
@@ -27,6 +29,7 @@ import useDataHeaderTaskList from '@hooks/useDataHeaderTask';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { TaskDuration } from '@interfaces/task';
+import { WebSocketMessageDataOverTime } from '@interfaces/chat';
 import { TaskContext } from '@providers/TaskProvider';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
@@ -88,6 +91,12 @@ const TaskPageDataHeader = () => {
   } = useContext(TaskContext);
 
   const [optionsTaskMe, setOptionsTaskMe] = useState<OptionDropdownType[]>([]);
+  const [dataOverTimeWarning, setDataOverTimeWarning] = useState<{
+    id: string;
+    type: string;
+    isOverEstimate: boolean;
+    taskDurationRunningUuid: string;
+  } | null>();
   const today = new Date();
   const startOfDay = new Date(
     today.getFullYear(),
@@ -106,12 +115,54 @@ const TaskPageDataHeader = () => {
 
   const { dataTaskHeaderStart, refetchTaskHeaderStart } = useTaskHeaderStart({
     userId: `${userIdTask}`,
+    onSuccess: (data) => {
+      if (data.isOverEstimate) {
+        setDataOverTimeWarning({
+          id: `${data.id}`,
+          type: data.type,
+          isOverEstimate: true,
+          taskDurationRunningUuid: data.taskDurationRunningUuid,
+        });
+      } else {
+        setDataOverTimeWarning(null);
+      }
+    },
   });
+
   const { dataTaskHeaderList, refetchDataHeaderTaskList } =
     useDataHeaderTaskList({
       start_date: formatQueryStartDateForCalendar(startOfDay),
       end_date: formatQueryStartDateForCalendar(endOfDay),
     });
+
+  useEffect(() => {
+    const handleSocketMessage = (data: WebSocketMessageDataOverTime) => {
+      switch (data.action) {
+        case SocketActions.DURATION_OVERTIME_WARNING:
+          if (data.isOverEstimate) {
+            setDataOverTimeWarning({
+              id: `${data.id}`,
+              type: data.type,
+              isOverEstimate: true,
+              taskDurationRunningUuid: data.taskDurationRunningUuid,
+            });
+          } else {
+            setDataOverTimeWarning(null);
+          }
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    socketEventEmitter.on('message', handleSocketMessage);
+
+    return () => {
+      socketEventEmitter.off('message', handleSocketMessage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isTaskPage) {
@@ -292,7 +343,7 @@ const TaskPageDataHeader = () => {
       });
       refetchTaskDurationDetail();
       refetchTaskHeaderStart();
-      if (pathname === pageRouters.STATISTICS_MANAGEMENT.href) {
+      if (pathname === pageRouters.DAILY_REPORT_MANAGEMENT.href) {
         queryClient.refetchQueries(['getDataStatistic']);
       }
 
@@ -440,6 +491,12 @@ const TaskPageDataHeader = () => {
     },
   );
 
+  const timeTaskSelect = dataTaskHeaderList?.find(
+    (item) =>
+      item.id === parseInt(String(taskSelected.value).replace('event', '')) &&
+      item.type === taskSelected.type,
+  );
+
   return (
     <>
       <div className="flex justify-between flex-grow">
@@ -511,17 +568,23 @@ const TaskPageDataHeader = () => {
                             const selectedTask = taskSelected.value;
 
                             if (!selectedTask) return;
+                            if (
+                              optionsTaskMe.find(
+                                (element) =>
+                                  element.value === taskSelected.value,
+                              )
+                            ) {
+                              setTaskSelectedToStart({
+                                title: taskSelected.label,
+                                id: taskSelected.value,
+                                type: taskSelected.type as string,
+                              });
 
-                            setTaskSelectedToStart({
-                              title: taskSelected.label,
-                              id: taskSelected.value,
-                              type: taskSelected.type as string,
-                            });
-
-                            checkTask({
-                              id: `${selectedTask}`.replace('event', ''),
-                              type: `${taskSelected.type}`,
-                            });
+                              checkTask({
+                                id: `${selectedTask}`.replace('event', ''),
+                                type: `${taskSelected.type}`,
+                              });
+                            }
                           }}
                         />
                       </div>
@@ -530,7 +593,11 @@ const TaskPageDataHeader = () => {
                 </Tippy>
               )}
 
-              {taskSelected.value && parseInt(String(taskSelected.value)) ? (
+              {taskSelected.value &&
+              parseInt(String(taskSelected.value)) &&
+              optionsTaskMe.find(
+                (element) => element.value === taskSelected.value,
+              ) ? (
                 <div className="flex gap-x-4">
                   <ShowTimeCounter statusTaskSelected={statusTaskSelected} />
                   <div className="flex items-center justify-center text-xs font-medium text-[#A7B7C2] gap-x-1 min-w-[146px]">
@@ -539,18 +606,7 @@ const TaskPageDataHeader = () => {
                       {statusTaskSelected?.isStart && taskSelected.value
                         ? formatTimeTask(`${dataTaskHeaderStart?.startedAt}`)
                         : formatTimeTask(
-                            `${
-                              dataTaskHeaderList?.find(
-                                (item) =>
-                                  item.id ===
-                                    parseInt(
-                                      String(taskSelected.value).replace(
-                                        'event',
-                                        '',
-                                      ),
-                                    ) && item.type === taskSelected.type,
-                              )?.startedAt
-                            }`,
+                            `${timeTaskSelect ? timeTaskSelect.startedAt : ''}`,
                           )}
                     </p>
                     <p className="px-[2px]">~</p>
@@ -559,7 +615,7 @@ const TaskPageDataHeader = () => {
                       <>
                         <p>終了</p>
                         <p className="text-xs font-normal text-[#77858F]">
-                          ----
+                          計測中
                         </p>
                       </>
                     ) : (
@@ -590,7 +646,11 @@ const TaskPageDataHeader = () => {
               )}
               {statusTaskSelected?.isStart &&
                 taskSelected.value &&
-                dataTaskHeaderStart?.isOverEstimate && (
+                dataOverTimeWarning &&
+                dataOverTimeWarning?.isOverEstimate &&
+                taskSelected.type === dataOverTimeWarning.type &&
+                `${String(taskSelected.value).replace('event', '')}` ===
+                  dataOverTimeWarning.id && (
                   <div className="flex gap-1 items-center text-xs font-normal text-[#C32E2E] mt-[2px]">
                     <ImageRound
                       src={`/icons/overlap-task.svg`}
@@ -602,7 +662,7 @@ const TaskPageDataHeader = () => {
                       name="icon cancel"
                       onClick={() => {
                         cancelAlert({
-                          uuid: dataTaskHeaderStart.taskDurationRunningUuid,
+                          uuid: dataOverTimeWarning.taskDurationRunningUuid,
                           isCancelAlert: true,
                         });
                       }}
@@ -616,8 +676,10 @@ const TaskPageDataHeader = () => {
                 className="whitespace-nowrap mt-1 min-w-[22px]  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"
                 onClick={() => {
                   if (
-                    taskSelected.value &&
-                    parseInt(String(taskSelected.value))
+                    parseInt(String(taskSelected.value)) &&
+                    optionsTaskMe.find(
+                      (element) => element.value === taskSelected.value,
+                    )
                   ) {
                     if (taskSelected.type === ItemStartType.SCHEDULE) {
                       handleSetEventParam({
@@ -644,14 +706,18 @@ const TaskPageDataHeader = () => {
               </Button>
             </div>
           )}
-        {isTaskPage && (
-          <div className="flex flex-col gap-1 text-xs font-medium text-[#A7B7C2]">
-            <p className="break-keep">本日の作業時間</p>
-            <p className="text-base font-normal text-[#77858F] w-full text-center">
-              {dataTaskHeaderList ? calculateTotalTime(optionsTaskMe) : ''}
-            </p>
-          </div>
-        )}
+        {session?.user.permissions &&
+          hasPermissionInArray(
+            session?.user.permissions,
+            PermissionsSystem.MY_TASK_VIEW,
+          ) && (
+            <div className="flex flex-col gap-1 text-xs font-medium text-[#A7B7C2]">
+              <p className="break-keep">本日の作業時間</p>
+              <p className="text-base font-normal text-[#77858F] w-full text-center">
+                {dataTaskHeaderList ? calculateTotalTime(optionsTaskMe) : ''}
+              </p>
+            </div>
+          )}
       </div>
       {showWarningStartTaskModal && !isTaskPage && (
         <WarningStartTaskModal

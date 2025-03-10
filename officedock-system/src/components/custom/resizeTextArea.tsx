@@ -13,6 +13,7 @@ import { formatDateServer } from '@utils/date';
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useSession } from 'next-auth/react';
+import { useParams } from 'next/navigation';
 
 interface ResizeType {
   currentDate: Date;
@@ -27,6 +28,9 @@ const ResizeTextArea = ({
 }: ResizeType) => {
   const textAreaRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(200);
+
+  const params = useParams();
+  const userId = params.id;
 
   const { showToast } = useToast();
 
@@ -48,7 +52,9 @@ const ResizeTextArea = ({
     remark?: string;
     isSubmit?: boolean;
   }) => {
-    return await api.post(apiRouters.DATA_REMARK_DAILY, data);
+    const url = `${apiRouters.CONFIRM_USER_DAILY(parseInt(`${userId || session?.user.id}`))}`;
+
+    return await api.post(url, data);
   };
   const { mutate: editRemark } = useMutation(
     'postEditRemark',
@@ -111,7 +117,7 @@ const ResizeTextArea = ({
         userSelect: 'none',
         overflow: 'hidden',
       }}
-      className="py-3 pr-3">
+      className="py-3 pr-3 ">
       <TextArea
         value={remarkData}
         disabled={
@@ -133,7 +139,8 @@ const ResizeTextArea = ({
             });
           }
         }}
-        className="h-full resize-none"
+        placeholder="コメントを書く"
+        className="h-full resize-none border !border-[#77858F]"
       />
       {/* Nút resize */}
       <div

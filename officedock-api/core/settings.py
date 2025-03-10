@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 with contextlib.suppress(google.auth.exceptions.DefaultCredentialsError):
-    _, GOOGLE_CLOUD_PROJECT_ID = google.auth.default()
+    GOOGLE_CLOUD_CREDENTIALS, GOOGLE_CLOUD_PROJECT_ID = google.auth.default()
     if GOOGLE_CLOUD_PROJECT_ID is not None:
         os.environ["GOOGLE_CLOUD_PROJECT_ID"] = GOOGLE_CLOUD_PROJECT_ID
 
@@ -58,6 +58,25 @@ if GOOGLE_CLOUD_PROJECT_ID := os.environ.get("GOOGLE_CLOUD_PROJECT_ID", None):
 
     DEBUG = env("DEBUG", default=False)
     DATABASES = {"default": env.db()}
+
+    # Config google cloud storage
+    # https://django-storages.readthedocs.io/en/latest/backends/gcloud.html
+
+    GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME", None)
+    GS_EXPIRATION = 60 * 60 * 24 * 7  # Expires in 7 days
+    GS_CREDENTIALS = GOOGLE_CLOUD_CREDENTIALS
+    GS_QUERYSTRING_AUTH = True
+    GS_DEFAULT_ACL = None
+    GS_FILE_OVERWRITE = False
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+            "OPTIONS": {},
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+        },
+    }
 else:
     # SECURITY WARNING: keep the secret key used in production secret!
     SECRET_KEY = os.getenv("SECRET_KEY")
@@ -100,6 +119,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "django_filters",
+    "storages",
     # Add application
     "core",
     "base",
@@ -120,27 +140,32 @@ INSTALLED_APPS = [
 ]
 
 # Get REDIS_URL from environment variable or install directly
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-parsed_redis_url = urlparse(REDIS_URL)
+REDIS_URL = os.getenv("REDIS_URL", None)
 
 # Channels
 ASGI_APPLICATION = "core.asgi.application"
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-        # TODO: Handle case Redis Channel Layer
-        # "BACKEND": "channels_redis.core.RedisChannelLayer",
-        # "CONFIG": {
-        #     "hosts": [
-        #         (
-        #             parsed_redis_url.hostname,
-        #             parsed_redis_url.port,
-        #             {"password": parsed_redis_url.password},
-        #         )
-        #     ],
-        # },
-    },
-}
+
+if REDIS_URL:
+    parsed_redis_url = urlparse(REDIS_URL)
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
+            "CONFIG": {
+                "hosts": [
+                    {
+                        "host": parsed_redis_url.hostname,
+                        "port": parsed_redis_url.port,
+                        "password": parsed_redis_url.password,
+                        "username": parsed_redis_url.username,
+                    }
+                ],
+            },
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
+    }
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -185,6 +210,7 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", None)
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", None)
 EMAIL_SENDER = os.getenv("EMAIL_SENDER", EMAIL_HOST_USER)
 NAME_SENDER = os.getenv("NAME_SENDER", "OfficeDock")
+SECRET_KEY_FOR_CRONJOB = os.getenv("SECRET_KEY_FOR_CRONJOB", None)
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
@@ -255,6 +281,8 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": DEFAULT_RENDERER_CLASSES,
     "DEFAULT_PARSER_CLASSES": (
         "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+        "djangorestframework_camel_case.parser.CamelCaseFormParser",
+        "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
         "rest_framework.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
@@ -285,7 +313,14 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "The Office Dock use Python, Django, DRF and development with Docker Compose.",
     "VERSION": "v1",
     "SERVE_INCLUDE_SCHEMA": False,
-    "PARSER_WHITELIST": ["rest_framework.parsers.JSONParser"],
+    "PARSER_WHITELIST": [
+        "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+        "djangorestframework_camel_case.parser.CamelCaseFormParser",
+        "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
+    ],
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields"
     ],

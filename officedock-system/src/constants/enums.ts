@@ -85,6 +85,7 @@ export enum AvatarChat {
   SELF = 'SELF',
   TASK = 'TASK',
   SKILL = 'SKILL',
+  CALENDAR = 'CALENDAR',
 }
 
 // TODO: The state is not fixed, so defining the state using an enum is not appropriate,
@@ -115,6 +116,9 @@ export enum ChatRoomType {
   SELF = 'SELF',
   TASK = 'TASK',
   SKILL = 'SKILL',
+  CALENDAR = 'CALENDAR',
+  UNREAD = 'UNREAD',
+  BOOKMARK = 'BOOKMARK',
 }
 export enum MessageType {
   MESSAGE = 'MESSAGE',
@@ -126,6 +130,7 @@ export enum MessageType {
   REMOVE_MEMBER_TASK = 'REMOVE_MEMBER_TASK',
   ADD_MEMBER_TASK = 'ADD_MEMBER_TASK',
   SUBMIT_LEVEL_SKILL = 'SUBMIT_LEVEL_SKILL',
+  CREATE_SUBMIT_LEVEL_SKILL = 'CREATE_SUBMIT_LEVEL_SKILL',
 }
 export enum SocketActions {
   MESSAGE = 'MESSAGE',
@@ -145,6 +150,9 @@ export enum SocketActions {
   TOTAL_UNREAD_MESSAGE = 'TOTAL_UNREAD_MESSAGE',
   CHANGE_TASK_STATUS = 'CHANGE_TASK_STATUS',
   CHANGE_ROLE = 'CHANGE_ROLE',
+  REMIND_TASK = 'REMIND_TASK',
+  RESET_STATUS_SORT_TASK = 'RESET_STATUS_SORT_TASK',
+  DURATION_OVERTIME_WARNING = 'DURATION_OVERTIME_WARNING',
 }
 
 export enum WebSocketState {
@@ -365,4 +373,22 @@ export enum OrganizationType {
 export enum TabType {
   MY_DOC = 'マイドック',
   TEAM_DOCK = 'チームドック',
+}
+
+export enum TimeType {
+  HOURS = '時間前',
+  DAY = '日前',
+  WEEK = '週間前',
+}
+export enum FilterTypeKanban {
+  DEADLINE = '-deadline',
+  IMPORTANT = '-is_important',
+}
+
+export enum ReactionIconValue {
+  OK = 1,
+  LIKE = 2,
+  THANK = 3,
+  HAND = 4,
+  SMILE = 5,
 }

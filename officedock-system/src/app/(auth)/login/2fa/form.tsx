@@ -207,19 +207,20 @@ const LoginForm2FA = () => {
     }
   };
   return (
-    <div className="w-[500px] bg-gray-50 rounded-2xl p-6 flex flex-col gap-6">
+    <div className="w-[500px] rounded-2xl p-6 flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-bold">ログイン</h1>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-2">
           <Input
-            className="no-number-arrows"
+            className="no-number-arrows !border-[#77858F]"
             placeholder="入力してください"
             label="認証コード"
             name="otpCode"
             type="text"
             maxLength={6}
+            labelClassName='text-[#77858F] font-medium'
             error={errors.otpCode?.message}
             register={register('otpCode', {
               required: OTP_CODE_REQUIRED_MESSAGE,
@@ -233,7 +234,7 @@ const LoginForm2FA = () => {
         {isSendOTP ? (
           <div className="space-y-3 flex flex-col">
             <div>
-              <div className="flex justify-center text-sm">
+              <div className="flex text-[#77858F] text-sm font-medium">
                 <p>
                   メールが届かない場合{' '}
                   <Button
@@ -261,8 +262,8 @@ const LoginForm2FA = () => {
           </div>
         ) : (
           <>
-            <div className="flex justify-center">
-              <p className="text-sm">
+            <div className="flex">
+              <p className="text-sm text-[#77858F] font-medium">
                 メールが届かない場合{' '}
                 <Button
                   variant="text"

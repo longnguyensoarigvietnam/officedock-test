@@ -40,6 +40,11 @@ export interface User {
   loginType: string;
   username: string;
   email: string;
+  currentEvent?: {
+    id: number;
+    title: string;
+    type: string;
+  };
   twoFactorAuthEmail: string;
   roles: UserRoleType[];
   profile: Profile;
@@ -53,6 +58,11 @@ export interface User {
     isCheckSelfSchedule?: boolean;
     isCheckCompanySchedule?: boolean;
     isEnterSendMessage?: boolean;
+    isSortingTaskByDeadline?: boolean;
+    isSortingTaskByImportant?: boolean;
+    scheduleZoom?: number;
+    kanbanZoom?: number;
+    tabVisibility?: Record<string, boolean>;
   };
   actions?: {
     update: boolean;
@@ -65,6 +75,10 @@ export interface Profile {
   fullName: string;
   birthday: string;
   gender: string;
+  organizations?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
 export interface CreateUserFormRequest {
@@ -108,4 +122,12 @@ export interface UserFilterFormData {
 export interface MemoDetailData {
   content: string;
   isOpen: boolean;
+}
+export interface UserOrganization {
+  id: number;
+  name: string;
+  users: {
+    id: number;
+    fullName: string;
+  }[];
 }

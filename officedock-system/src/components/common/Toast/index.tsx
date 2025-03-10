@@ -91,10 +91,10 @@ const Toast = ({
           leaveTo="opacity-0">
           <div className="pointer-events-auto overflow-hidden rounded-lg bg-gray-50 shadow-common">
             <div className="p-4">
-              <div className={`flex items-start ${className}`}>
+              <div className={`flex items-center ${className}`}>
                 <div className="flex-shrink-0">
                   <ImageRound
-                    className="w-12 h-12"
+                    className="w-10 h-10"
                     src={variantIcon}
                     border="full"
                     name="Toast status icon"
@@ -106,7 +106,7 @@ const Toast = ({
                   </p>
                   <p className="mt-1 text-sm text-gray-500">{description}</p>
                 </div>
-                <div className="ml-4 flex flex-shrink-0">
+                <div className="ml-4 self-start flex flex-shrink-0">
                   <button
                     type="button"
                     className="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"

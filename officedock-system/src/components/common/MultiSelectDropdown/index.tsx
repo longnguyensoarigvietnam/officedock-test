@@ -22,6 +22,7 @@ type Props = {
   labelClass?: string;
   valueClassName?: string;
   optionClassName?: string;
+  labelOptionClass?: string;
   customLabel?: string;
   placeholder?: string;
   searchOption?: boolean;
@@ -39,6 +40,7 @@ const MultiSelectDropdown = ({
   customLabel,
   className,
   labelClass,
+  labelOptionClass,
   valueClassName,
   optionClassName,
   selectedOptions,
@@ -102,23 +104,35 @@ const MultiSelectDropdown = ({
         <Spinner className="!h-fit py-3" />
       ) : options?.length ? (
         options.map((option) => (
-          <div
-            key={option.value}
-            className={`relative hover:cursor-pointer select-none hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}>
-            <Checkbox
-              label={option.label}
-              onChange={() => {
-                handleOptionClick(option);
-              }}
-              isChecked={
-                selected?.find(
-                  (selectedOption) => selectedOption.value == option.value,
-                )
-                  ? true
-                  : false
-              }
-            />
-          </div>
+          <>
+            <div
+              key={option.value}
+              className={`relative hover:cursor-pointer flex items-start justify-between  select-none hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}>
+              <div className="max-w-[80%]">
+                <Checkbox
+                  label={option.label}
+                  onChange={() => {
+                    handleOptionClick(option);
+                  }}
+                  classLabel={labelOptionClass}
+                  isChecked={
+                    selected?.find(
+                      (selectedOption) => selectedOption.value == option.value,
+                    )
+                      ? true
+                      : false
+                  }
+                />
+              </div>
+              {option.largeColor && (
+                <div
+                  style={{
+                    backgroundColor: option.largeColor,
+                  }}
+                  className="w-3 h-3 rounded-sm relative top-[6px]"></div>
+              )}
+            </div>
+          </>
         ))
       ) : (
         <div className="block py-2 px-3 text-sm text-gray-500">

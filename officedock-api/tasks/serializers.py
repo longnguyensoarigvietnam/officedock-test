@@ -1,11 +1,19 @@
 from datetime import datetime, timedelta
 
-from django.db.models import Q
+from django.db.models import (
+    OuterRef,
+    Subquery,
+    Q,
+    Value,
+    DateTimeField,
+)
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework import serializers
 
 from base.messages import ERROR_MESSAGES
+from base.constants import REPLACE_NULL_DATE
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 from chat.constants import ChatMessageTypes
 from common.serializers import CreationDataUserSerializer
@@ -22,8 +30,9 @@ from tasks.models import (
     TaskStatus,
     TodoList,
 )
-from tasks.constants import INITIAL_INDEX_VALUE
-from users.serializers import UsersForCreationSerializer
+from tasks.constants import INITIAL_INDEX_VALUE, DatetimeUnitTypes
+from users.serializers import ProfileSerializer, UsersForCreationSerializer
+from users.models import User
 
 
 class TaskDurationSerializer(serializers.ModelSerializer):
@@ -163,39 +172,6 @@ class TaskScheduleSerializer(serializers.ModelSerializer):
         """
         return instance.task.is_start
 
-    def validate(self, attrs):
-        # Retrieve values from validated data
-        plan_start_date = attrs.get("plan_start_date")
-        plan_end_date = attrs.get("plan_end_date")
-        if (
-            plan_start_date
-            and plan_end_date
-            and plan_start_date >= plan_end_date
-        ):
-            raise serializers.ValidationError(
-                {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
-            )
-
-        check_exists_schedule = TaskSchedule.objects.filter(
-            Q(plan_start_date__lt=plan_end_date)
-            & Q(plan_end_date__gt=plan_start_date)
-            | (
-                Q(plan_start_date__lte=plan_start_date)
-                & Q(plan_end_date__gte=plan_end_date)
-            )
-        )
-        if self.instance:
-            check_exists_schedule = check_exists_schedule.exclude(
-                id=self.instance.id
-            )
-
-        if check_exists_schedule.exists():
-            raise serializers.ValidationError(
-                {"detail": ERROR_MESSAGES["exists_task_schedule"]}
-            )
-
-        return attrs
-
 
 class TodoListSerializer(serializers.ModelSerializer):
     """
@@ -244,18 +220,21 @@ class TodoListSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-def get_task_index(instance, request):
+def get_task_index(instance, request, user_id=None):
     """
-    Return task index of task
+    Return the last TaskIndex for the given task and user.
     """
-    if user_id := request.query_params.get("user_id"):
-        last_task = TaskIndex.objects.filter(
-            task=instance, user_id=user_id
-        ).last()
-    else:
-        user = request.user
-        last_task = TaskIndex.objects.filter(task=instance, user=user).last()
-    return last_task
+    user_id = (
+        user_id
+        or request.query_params.get("user_id")
+        or getattr(request.user, "id", None)
+    )
+
+    return (
+        TaskIndex.objects.filter(task=instance, user_id=user_id).last()
+        if user_id
+        else None
+    )
 
 
 class CategoryForCreationTaskSerializer(serializers.Serializer):
@@ -320,6 +299,10 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         allow_null=True,
         required=False,
     )
+    remind_countdown = serializers.IntegerField(allow_null=True, required=False)
+    remind_type = serializers.ChoiceField(
+        allow_null=True, required=False, choices=DatetimeUnitTypes.choices()
+    )
 
     class Meta:
         model = Task
@@ -336,6 +319,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "is_my_task",
             "priority",
             "deadline",
+            "remind_at",
             "description",
             "tags",
             "tag_ids",
@@ -354,6 +338,8 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "category_ids",
             "copy_task_id",
             "is_schedule_in_today",
+            "remind_countdown",
+            "remind_type",
         ]
 
         read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
@@ -361,36 +347,66 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
     def validate(self, attrs):
         """Validation data"""
         task_schedules = attrs.get("task_schedules")
+        people_in_charge_ids = attrs.get("people_in_charge_ids")
+        instance = self.instance
 
         # Sort list by plan start date
-        task_schedules.sort(key=lambda x: x["plan_start_date"])
+        if task_schedules:
+            task_schedules.sort(key=lambda x: x["plan_start_date"])
+            current_task_schedules = []
+            if instance:
+                current_task_schedules = instance.task_schedules.values_list(
+                    "id", flat=True
+                )
+            for i in range(len(task_schedules) - 1):
+                if (
+                    task_schedules[i]["plan_end_date"]
+                    > task_schedules[i + 1]["plan_start_date"]
+                ):
+                    raise serializers.ValidationError(
+                        {
+                            "task_schedules": ERROR_MESSAGES[
+                                "exists_task_schedule"
+                            ]
+                        }
+                    )
+            for task_schedule in task_schedules:
+                plan_start_date = task_schedule["plan_start_date"]
+                plan_end_date = task_schedule["plan_end_date"]
 
-        for i in range(len(task_schedules) - 1):
-            if (
-                task_schedules[i]["plan_end_date"]
-                > task_schedules[i + 1]["plan_start_date"]
-            ):
-                raise serializers.ValidationError(
-                    {"detail": ERROR_MESSAGES["exists_task_schedule"]}
+                check_exists_schedule = TaskSchedule.objects.filter(
+                    Q(
+                        Q(plan_start_date__lt=plan_end_date)
+                        | Q(plan_start_date__lte=plan_start_date)
+                    )
+                    & Q(
+                        Q(plan_end_date__gt=plan_start_date)
+                        | Q(plan_end_date__gte=plan_end_date)
+                    )
+                    & Q(
+                        task__people_in_charge_tasks__user__in=[
+                            user["people_in_charge"]
+                            for user in people_in_charge_ids
+                        ]
+                    )
                 )
-        for task_schedule in task_schedules:
-            check_exists_schedule = TaskSchedule.objects.filter(
-                Q(plan_start_date__lt=task_schedule["plan_end_date"])
-                & Q(plan_end_date__gt=task_schedule["plan_start_date"])
-                | (
-                    Q(plan_start_date__lte=task_schedule["plan_start_date"])
-                    & Q(plan_end_date__gte=task_schedule["plan_end_date"])
-                )
-            )
-            if task_schedule.get("schedule_id"):
-                check_exists_schedule = check_exists_schedule.exclude(
-                    id=task_schedule.get("schedule_id").id
-                )
+                if current_task_schedules:
+                    check_exists_schedule = check_exists_schedule.exclude(
+                        id__in=current_task_schedules
+                    )
+                elif task_schedule.get("schedule_id"):
+                    check_exists_schedule = check_exists_schedule.exclude(
+                        id=task_schedule.get("schedule_id").id
+                    )
 
-            if check_exists_schedule.exists():
-                raise serializers.ValidationError(
-                    {"detail": ERROR_MESSAGES["exists_task_schedule"]}
-                )
+                if check_exists_schedule.exists():
+                    raise serializers.ValidationError(
+                        {
+                            "task_schedules": ERROR_MESSAGES[
+                                "exists_task_schedule"
+                            ]
+                        }
+                    )
 
         return attrs
 
@@ -399,7 +415,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first())
+        return get_common_categories(obj.categories.first(), obj)
 
     def to_representation(self, instance):
         """
@@ -415,20 +431,27 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         representation["people_in_charge"] = CreationDataUserSerializer(
             sorted_users, many=True
         ).data
+        if instance.reminds:
+            representation["remind_countdown"] = instance.reminds["countdown"]
+            representation["remind_type"] = instance.reminds["type"]
         return representation
 
     def get_index(self, instance):
         """
         Return index of task
         """
-        last_task = get_task_index(instance, self.context.get("request"))
+        last_task = get_task_index(
+            instance, self.context.get("request"), self.context.get("user_id")
+        )
         return last_task.index if last_task else INITIAL_INDEX_VALUE
 
     def get_pin_at(self, instance):
         """
         Return pin time of task
         """
-        last_task = get_task_index(instance, self.context.get("request"))
+        last_task = get_task_index(
+            instance, self.context.get("request"), self.context.get("user_id")
+        )
 
         return last_task.pin_at if last_task else None
 
@@ -441,6 +464,7 @@ class TaskBoardSerializer(TaskCommonSerializer):
     index = serializers.SerializerMethodField(read_only=True)
     pin_at = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
+    categories = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Task
@@ -457,20 +481,32 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "index",
             "pin_at",
             "type",
+            "categories",
         ]
+
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Task."""
+        if not obj.categories.exists():
+            return []
+
+        return get_common_categories(obj.categories.first(), obj)
 
     def get_index(self, instance):
         """
         Return index of task
         """
-        last_task = get_task_index(instance, self.context.get("request"))
+        last_task = get_task_index(
+            instance, self.context.get("request"), self.context.get("user_id")
+        )
         return last_task.index if last_task else INITIAL_INDEX_VALUE
 
     def get_pin_at(self, instance):
         """
         Return pin time of task
         """
-        last_task = get_task_index(instance, self.context.get("request"))
+        last_task = get_task_index(
+            instance, self.context.get("request"), self.context.get("user_id")
+        )
         return last_task.pin_at if last_task else None
 
     def get_type(self, instance):
@@ -486,6 +522,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
     """
 
     type = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
     task_schedules = TaskScheduleSerializer(many=True)
 
     class Meta:
@@ -494,9 +531,12 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "id",
             "title",
             "is_start",
+            "is_important",
+            "deadline",
             "is_my_task",
             "task_schedules",
             "type",
+            "categories",
         ]
 
     def get_type(self, instance):
@@ -504,6 +544,13 @@ class TaskCalendarSerializer(TaskCommonSerializer):
         Return task type for calendar event
         """
         return CalendarTypes.TASK.value
+
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Task."""
+        if not obj.categories.exists():
+            return []
+
+        return get_common_categories(obj.categories.first(), obj)
 
 
 class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
@@ -531,6 +578,7 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
         """Validation"""
         plan_start_date = attrs.get("plan_start_date")
         plan_end_date = attrs.get("plan_end_date")
+        task = attrs.get("task")
         if (
             plan_start_date
             and plan_end_date
@@ -539,20 +587,30 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
             )
-
         check_exists_schedule = TaskSchedule.objects.filter(
-            Q(plan_start_date__lt=plan_end_date)
-            & Q(plan_end_date__gt=plan_start_date)
-            | (
-                Q(plan_start_date__lte=plan_start_date)
-                & Q(plan_end_date__gte=plan_end_date)
+            Q(
+                Q(plan_start_date__lt=plan_end_date)
+                | Q(plan_start_date__lte=plan_start_date)
             )
-        ).exists()
+            & Q(
+                Q(plan_end_date__gt=plan_start_date)
+                | Q(plan_end_date__gte=plan_end_date)
+            )
+        )
 
-        if check_exists_schedule:
+        if task:
+            check_exists_schedule = check_exists_schedule.filter(
+                task__people_in_charge_tasks__user__in=task.people_in_charge_tasks.values_list(
+                    "user", flat=True
+                )
+            )
+
+        if check_exists_schedule.exists():
             raise serializers.ValidationError(
                 {"detail": ERROR_MESSAGES["exists_task_schedule"]}
             )
+
+        return attrs
 
     def get_task(self, obj):
         return {
@@ -611,3 +669,68 @@ class TaskTemplateSerializer(serializers.ModelSerializer):
             "title",
         ]
         read_only_fields = ["id"]
+
+
+class TaskTeamdockSerializer(serializers.ModelSerializer):
+    """
+    Serializer for task in teamdock
+    """
+
+    profile = ProfileSerializer(read_only=True)
+    status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "profile",
+            "status",
+        ]
+
+    def get_status(self, obj):
+        """
+        Retrieve the task status along with tasks assigned to the user.
+        """
+        per_page = 5
+        request = self.context.get("request")
+        statuses = TaskStatus.objects.order_by("id")
+        results = []
+
+        for status in statuses:
+            tasks = obj.in_charge_tasks.filter(status=status)
+            tasks_total = tasks.count()
+
+            # Fetch task index and pinned status for the user
+            task_pin = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=obj.id
+            ).values("pin_at")[:1]
+            task_index = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=obj.id
+            ).values("index")[:1]
+
+            # Annotate tasks with task index and pin timestamp
+            tasks = tasks.annotate(
+                index=Subquery(task_index),
+                coalesced_pin_at=Coalesce(
+                    Subquery(task_pin),
+                    Value(REPLACE_NULL_DATE),
+                    output_field=DateTimeField(),
+                ),
+            ).order_by("-coalesced_pin_at", "-index")[:per_page]
+
+            # Append formatted status data
+            results.append(
+                {
+                    "id": status.id,
+                    "name": status.name,
+                    "total": tasks_total,
+                    "has_next": tasks_total > per_page,
+                    "tasks": TaskBoardSerializer(
+                        tasks,
+                        many=True,
+                        context={"request": request, "user_id": obj.id},
+                    ).data,
+                }
+            )
+
+        return results

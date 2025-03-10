@@ -38,6 +38,7 @@ class DurationSerializer(serializers.ModelSerializer):
     plan_start_date = serializers.SerializerMethodField()
     plan_end_date = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
 
     class Meta:
         model = TaskDuration
@@ -53,8 +54,17 @@ class DurationSerializer(serializers.ModelSerializer):
             "plan_end_date",
             "type",
             "is_cancel_alert",
+            "categories",
         ]
         read_only_fields = ["id"]
+
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Task."""
+        model = obj.task or obj.schedule
+        if not model.categories.exists():
+            return []
+
+        return get_common_categories(model.categories.first(), model)
 
     def get_task_id(self, instance):
         """
@@ -292,7 +302,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         if not model.categories.exists():
             return []
 
-        return get_common_categories(model.categories.first())
+        return get_common_categories(model.categories.first(), model)
 
     def validate(self, data):
         """Validate data"""
@@ -401,7 +411,7 @@ class ActualDurationListSerializer(serializers.ModelSerializer):
         if not model.categories.exists():
             return []
 
-        return get_common_categories(model.categories.first())
+        return get_common_categories(model.categories.first(), model)
 
     def get_staffs(self, obj):
         """Get staffs of task or event"""

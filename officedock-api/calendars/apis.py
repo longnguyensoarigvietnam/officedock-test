@@ -1,17 +1,24 @@
-from datetime import datetime
+from datetime import datetime, time, timedelta
 
 from django.db import transaction
 from django.db.models import Q, QuerySet
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from django.utils import timezone
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiParameter,
+    OpenApiResponse,
+)
 from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
-from calendars.constants import ScheduleFields
+from calendars.constants import ScheduleFields, CalendarTypes
 from calendars.models import Schedule
 from calendars.filters import TaskScheduleForCalendarFilter
 from calendars.serializers import (
     ScheduleSerializer,
     BaseScheduleSerializer,
+    ScheduleTeamdockSerializer,
     TaskScheduleForCalendarSerializer,
 )
 from chat.constants import ChatRoomTypes, ChatMessageTypes, WebSocketEventType
@@ -25,9 +32,10 @@ from common.utils import (
     create_categories_by_model,
     get_common_categories,
 )
-from tasks.models import TaskSchedule
+from tasks.models import TaskSchedule, TaskDuration
 from base.permissions import ActionPermission
 from roles.constants import Screens
+from users.models import User
 
 
 @extend_schema(tags=["System > Schedule"])
@@ -97,7 +105,15 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.CREATION_SCHEDULE.value,
                     )
-
+                if send_to_chat:
+                    self._send_to_calendar_room(
+                        participant,
+                        schedule,
+                        data,
+                        schedule_message,
+                        client_id,
+                        ChatMessageTypes.CREATION_SCHEDULE.value,
+                    )
                 schedule.participants.add(
                     participant, through_defaults={"company": company}
                 )
@@ -232,7 +248,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     "start_date": instance.start_date.isoformat(),
                     "end_date": instance.end_date.isoformat(),
                 }
-        serializer.save()
+        schedule = serializer.save()
 
         if participants is not None:
             instance.participants.clear()
@@ -248,6 +264,16 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.EDIT_SCHEDULE.value,
                     )
+                if send_to_chat:
+                    self._send_to_calendar_room(
+                        participant,
+                        instance,
+                        data,
+                        schedule_message,
+                        client_id,
+                        ChatMessageTypes.EDIT_SCHEDULE.value,
+                    )
+
                 instance.participants.add(
                     participant, through_defaults={"company": company}
                 )
@@ -257,6 +283,27 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if categories is not None:
             create_categories_by_model(instance, categories)
+
+        # Check is event run overtime or not
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        task_duration = TaskDuration.objects.filter(
+            started_at__gte=start_of_today,
+            paused_at__isnull=True,
+            schedule=schedule,
+        ).first()
+        if task_duration:
+            for user in schedule.participants.all():
+                send_web_socket_event(
+                    {
+                        "id": schedule.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": timedelta(minutes=30)
+                        <= timezone.now() - schedule.end_date,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.SCHEDULE.value,
+                    },
+                    user=user,
+                )
 
     @transaction.atomic()
     @extend_schema(
@@ -295,6 +342,15 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         client_id,
                         ChatMessageTypes.REMOVE_SCHEDULE.value,
                     )
+                if send_to_chat:
+                    self._send_to_calendar_room(
+                        participant,
+                        instance,
+                        data,
+                        schedule_message,
+                        client_id,
+                        ChatMessageTypes.REMOVE_SCHEDULE.value,
+                    )
 
         self.perform_destroy(instance)
 
@@ -318,6 +374,55 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 for user in users
             ],
         }
+
+    def _send_to_calendar_room(
+        self,
+        user,
+        schedule,
+        chat_data,
+        schedule_message,
+        client_id,
+        type,
+    ):
+        """
+        Send a chat message to participants regarding the schedule change.
+        """
+        calendar_room_participant = user.chat_rooms_participants.filter(
+            chat_room__type=ChatRoomTypes.CALENDAR.value
+        ).first()
+        if not calendar_room_participant:
+            return
+        chat_room = calendar_room_participant.chat_room
+        calendar_room_participant.unread_messages = (
+            calendar_room_participant.unread_messages + 1
+        )
+        calendar_room_participant.save()
+
+        action = WebSocketEventType.MESSAGE.value
+
+        message_data = {
+            "sender": user,
+            "company": user.company,
+            "schedule": schedule,
+            "type": type,
+            "schedule_changes": chat_data,
+        }
+        if schedule_message and schedule_message != "":
+            message_data["message"] = schedule_message
+
+        message_obj = chat_room.chat_messages.create(**message_data)
+        # Send WebSocket event for real-time updates
+        send_web_socket_event(
+            {
+                "client_id": client_id,
+                "action": action,
+                "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                    calendar_room_participant
+                ).data,
+                "chat_message": ChatMessageSerializer(message_obj).data,
+            },
+            user,
+        )
 
     def _send_chat_message(
         self,
@@ -458,6 +563,61 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             BaseScheduleSerializer(
                 queryset, many=True, context={"request": request}
             ).data
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("page_size", type=int),
+            OpenApiParameter("page", type=int),
+            OpenApiParameter("organization_id", type=str),
+            OpenApiParameter("user_ids", type=str),
+            OpenApiParameter("start_date", type=datetime),
+            OpenApiParameter("end_date", type=datetime),
+            OpenApiParameter("search", type=str),
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=ScheduleTeamdockSerializer(many=True)
+            )
+        },
+    )
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="teamdock",
+        serializer_class=ScheduleTeamdockSerializer,
+    )
+    @transaction.atomic()
+    def teamdock(self, request):
+        """
+        Get list of schedules in teamdock.
+        """
+        organization_id = self.request.query_params.get("organization_id")
+        users = []
+
+        if not organization_id:
+            return self.response_pagination(
+                request, users, ScheduleTeamdockSerializer
+            )
+
+        # Filter by organization id
+        users = User.objects.filter(organizations__id=organization_id).order_by(
+            "created_at"
+        )
+
+        # Filter by user ids
+        if user_ids := self.request.query_params.get("user_ids"):
+            ids = []
+            for id in user_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                users = users.filter(id__in=ids)
+
+        return self.response_pagination(
+            request, users, ScheduleTeamdockSerializer
         )
 
 

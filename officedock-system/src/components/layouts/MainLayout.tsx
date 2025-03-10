@@ -26,7 +26,7 @@ const MainLayout = ({
   permission,
   showFooter = true,
 }: MainLayoutProps) => {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
 
   const [isShow, setIsShow] = useState(false);
@@ -35,6 +35,7 @@ const MainLayout = ({
     await signOut({
       redirect: false,
     });
+    await update();
     window.location.href = pageRouters.LOGIN.href;
   };
 

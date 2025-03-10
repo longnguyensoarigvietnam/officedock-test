@@ -4,13 +4,13 @@ import { pageRouters } from '@constants/routers';
 
 const ForgotPasswordPage = () => {
   return (
-    <AuthenticationLayout title={pageRouters.FORGOT_PASSWORD.name}>
-      <div className="w-[550px] bg-gray-50 rounded-2xl p-6 flex flex-col gap-6">
-        <div className="flex flex-col items-center gap-4">
-          <h1 className="text-3xl font-bold">
+    <AuthenticationLayout title={pageRouters.FORGOT_PASSWORD.name} showFooter={false}>
+      <div className="w-[550px] rounded-2xl p-6 flex flex-col gap-6">
+        <div className="flex flex-col items-start gap-4">
+          <h1 className="text-[26px] font-medium">
             {pageRouters.FORGOT_PASSWORD.name}
           </h1>
-          <div className="flex flex-col text-sm text-center">
+          <div className="flex flex-col text-sm">
             <p>
               ご登録のメールアドレスを入力して
               <span className="text-primary">「送信」</span>

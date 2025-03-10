@@ -1,6 +1,6 @@
 'use client';
 import { useContext, useEffect, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Disclosure,
@@ -24,7 +24,6 @@ import { pageRouters } from '@constants/routers';
 import { MenuItem } from '@interfaces/menu';
 import { OptionTabType } from '@interfaces/common';
 
-import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useDashboardUnreadMessages from '@hooks/useDashboardUnreadMessages';
 
 import { TaskContext } from '@providers/TaskProvider';
@@ -40,7 +39,7 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
   return menuItems.map((item) => {
     const updatedItem = { ...item };
 
-    if (updatedItem.href && pathname.startsWith(updatedItem.href)) {
+    if (updatedItem.href && pathname == updatedItem.href) {
       updatedItem.current = true;
     } else if (updatedItem.children) {
       const childWithMatchingHref = updatedItem.children.find((child) =>
@@ -60,9 +59,6 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
 const Sidebar = ({ className }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const userIdTask = searchParams.get('user');
 
   const { data: session } = useSession();
   const today = new Date();
@@ -71,7 +67,6 @@ const Sidebar = ({ className }: Props) => {
     useContext(TaskContext);
   const { totalNotifications, expanded, setExpanded, setTotalNotifications } =
     useContext(GlobalStateContext);
-  const { dashboardMemberList } = useDashboardMemberList();
   const { dashboardUnreadMessages } = useDashboardUnreadMessages();
 
   const MENU_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
@@ -142,6 +137,10 @@ const Sidebar = ({ className }: Props) => {
     }
   }, [session]);
 
+  const memberOption = menuItems.find(
+    (item) => item.href == pageRouters.MEMBER_MANAGEMENT.href,
+  );
+
   return (
     <aside
       className={`overflow-x-hidden ${hour} overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px]' : 'w-20 min-w-[70px]'} flex flex-col ${className}`}
@@ -157,13 +156,17 @@ const Sidebar = ({ className }: Props) => {
         showNotificationDot={true}
         full
         className="h-full [&_.tab-button]:!text-xs [&_.tab-button]:!font-bold [&_.tab-button]:!py-[unset] [&_.tab-button]:!px-[unset] [&_.tab-button>span]:py-2">
-        <TabPanel key={0}>
-          <nav className="flex flex-col flex-1 w-full mb-5">
-            <ul role="list" className="flex flex-1 flex-col gap-y-6 list-none">
+        <TabPanel key={0} className={'h-full relative'}>
+          <nav className="flex flex-col  w-full mb-5  h-full max-h-[70%]">
+            <ul role="list" className="flex flex-col gap-y-6 list-none">
               <li className="flex-1">
                 <ul role="list" className="list-none pl-2">
                   {menuItems
-                    .filter((item) => item.companyMenu == false)
+                    .filter(
+                      (item) =>
+                        item.companyMenu == false &&
+                        item.href !== pageRouters.MEMBER_MANAGEMENT.href,
+                    )
                     .map((item) => (
                       <Tippy
                         content={`${item.name}`}
@@ -179,6 +182,11 @@ const Sidebar = ({ className }: Props) => {
                               className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                               onClick={() => {
                                 if (isHasTerm) return;
+                                if (
+                                  item.href ===
+                                  pageRouters.STATISTIC_MANAGEMENT.href
+                                )
+                                  return;
                                 if (
                                   item.href ===
                                   pageRouters.TASKS_MANAGEMENT.href
@@ -276,44 +284,62 @@ const Sidebar = ({ className }: Props) => {
                 </ul>
               </li>
             </ul>
-            <div className="flex flex-col bg-white mx-2 rounded-md invisible">
-              {dashboardMemberList?.length
-                ? dashboardMemberList.map((element, index) => (
-                    <div
-                      key={index}
-                      className={`${element.id === session?.user.id && 'hidden'} w-full flex justify-between items-center p-3 hover:cursor-pointer ${userIdTask ? (parseInt(userIdTask) === element.id ? 'bg-gray-100 text-primary' : 'hover:bg-gray-200') : ''} ${memberSelected === element.id ? 'bg-gray-100 text-primary' : 'hover:bg-gray-200'} `}
-                      onClick={() => {
-                        setMemberSelected(element.id);
-                        setTagSelected('');
-                        const url = `${pageRouters.TASKS_MANAGEMENT.href}?user=${element.id}`;
-                        router.push(url);
-                      }}>
-                      <div className="flex-grow flex items-center gap-[6px]">
-                        <div
-                          className="w-6 h-6 overflow-hidden rounded-full"
-                          style={{ backgroundColor: '#0068B6' }}>
-                          <ImageRound
-                            name={`${element.id} icon`}
-                            src={`/icons/personal.svg`}
-                            className="w-6 h-6"
-                            border="full"
-                          />
-                        </div>
-                        <span className="w-[115px] text-xs font-medium whitespace-nowrap truncate">
-                          {element.fullName}
-                        </span>
-                      </div>
-                      {/* TODO: Waiting for BE update data notification */}
-                      {/* {element.notification && (
-                      <p className="rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4">
-                        {element.notification}
-                      </p>
-                    )} */}
-                    </div>
-                  ))
-                : null}
-            </div>
           </nav>
+          {memberOption && (
+            <div
+              className={`absolute ${expanded ? 'bottom-[135px]' : 'bottom-[165px]'}  left-0 w-full`}>
+              <ul
+                role="list"
+                className="flex max-h-20 flex-col gap-y-6 list-none">
+                <li className="flex-1">
+                  <ul role="list" className="list-none pl-2">
+                    <Tippy
+                      content={`${memberOption.name}`}
+                      disabled={expanded}
+                      arrow={false}
+                      delay={1000}
+                      key={memberOption.name}
+                      placement="right"
+                      offset={[0, 0]}>
+                      <li
+                        key={memberOption.name}
+                        className={`text-sm relative`}>
+                        <div
+                          className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
+                          onClick={() => {
+                            if (isHasTerm) return;
+
+                            router.push(memberOption.href);
+                          }}>
+                          {memberOption.iconUrl && (
+                            <ImageRound
+                              className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
+                              src={memberOption.iconUrl(memberOption.current)}
+                              name={`Icon ${memberOption.name} menu`}
+                            />
+                          )}
+                          {!expanded &&
+                            memberOption.iconUrl &&
+                            memberOption.iconUrl(true).includes('chat') &&
+                            totalNotifications > 0 && (
+                              <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                            )}
+                          {expanded && (
+                            <>
+                              <p
+                                className={`opacity-100 text-left font-medium w-fit text-white ${memberOption.current && !memberSelected && !tagSelected && '!text-black'}`}>
+                                {memberOption.name}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </li>
+                    </Tippy>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          )}
         </TabPanel>
         <TabPanel key={1}></TabPanel>
         <Tippy

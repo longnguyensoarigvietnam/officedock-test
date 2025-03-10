@@ -434,24 +434,62 @@ export function formatShowDeadline(date: string | Date): string {
 
   inputDate.setHours(0, 0, 0, 0);
 
+  const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  return `${month}月${day}日`;
+}
+export function formatShowDeadlineTask(date: string | Date): string {
+  const inputDate = new Date(date);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  inputDate.setHours(0, 0, 0, 0);
+
   if (inputDate.getTime() === today.getTime()) {
     return '今日';
-  } else if (inputDate.getTime() === tomorrow.getTime()) {
-    return '明日';
-  } else {
-    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-    const day = String(inputDate.getDate()).padStart(2, '0');
-    return `${month}月${day}日`;
   }
+
+  if (inputDate.getTime() === tomorrow.getTime()) {
+    return '明日';
+  }
+
+  const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  return `${month}月${day}日`;
 }
 
-export const compareWithCurrentTime = (inputDate: Date | string): boolean => {
-  const currentTime = new Date();
+export function formatShowDeadlineAllDayEvent(date: string | Date): string {
+  const inputDate = new Date(date);
+  const today = new Date();
 
-  const compareDate =
-    typeof inputDate === 'string' ? new Date(inputDate) : inputDate;
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
 
-  return compareDate.getTime() >= currentTime.getTime();
+  inputDate.setHours(0, 0, 0, 0);
+
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  return `${day}日`;
+}
+
+export const compareWithCurrentDate = (inputDate: Date | string): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let compareDate: Date;
+  if (typeof inputDate === 'string') {
+    compareDate = new Date(inputDate);
+    if (isNaN(compareDate.getTime())) return false;
+  } else {
+    compareDate = inputDate;
+  }
+
+  compareDate.setHours(0, 0, 0, 0);
+
+  return compareDate.getTime() >= today.getTime();
 };
 
 export function getRandomDateTimeBetween(
@@ -712,6 +750,11 @@ export const getSubmitLevelFormattedDate = (date: Date) => {
   return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
 };
 
+// Format hours and minutes for event start and end time
+export const formatHoursAndMinutesForDateTime = (date: Date) => {
+  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+};
+
 // Calculate task and event's duration
 export function calculateActualDuration(
   startedAt: string,
@@ -724,6 +767,26 @@ export function calculateActualDuration(
 
   const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
   const hours = Math.floor(durationMs / (1000 * 60 * 60));
+  return `${hours}時間 ${minutes}分`;
+}
+export function calculateActualDurationDaily(
+  start: string,
+  end: string,
+): string {
+  const [startHour, startMinute] = start.split(':').map(Number);
+  const [endHour, endMinute] = end.split(':').map(Number);
+
+  const startDate = new Date();
+  startDate.setHours(startHour, startMinute, 0, 0);
+
+  const endDate = new Date();
+  endDate.setHours(endHour, endMinute, 0, 0);
+
+  const durationMs = endDate.getTime() - startDate.getTime();
+
+  const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
+  const hours = Math.floor(durationMs / (1000 * 60 * 60));
+
   return `${hours}時間 ${minutes}分`;
 }
 

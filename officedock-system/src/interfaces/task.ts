@@ -2,6 +2,8 @@ import { EventCalendarType } from '@constants/enums';
 import { OptionDropdownType } from './common';
 import { PeopleInCharge, TagId, Tags } from './tag';
 import { Organizations } from './organization';
+import { EventParticipant } from './calendar';
+import { Category } from './category';
 
 export interface TaskRequest {
   id?: number | string;
@@ -38,6 +40,9 @@ export interface TaskRequest {
   action?: string;
   copyTaskId?: string | null;
   organizationId?: number | null;
+  remindCountdown?: string | null;
+  remindType?: string | null;
+  remind_at?: string | null;
 }
 export interface TaskFormData {
   id?: string;
@@ -47,6 +52,8 @@ export interface TaskFormData {
   priority?: OptionDropdownType;
   deadlineDate?: Date | null;
   deadlineTime?: string | null;
+  deadlineRemindCountdown?: OptionDropdownType | null;
+  deadlineRemindType?: OptionDropdownType | null;
   planStartDate?: Date | null;
   planStartTime?: string | null;
   planEndDate?: Date | null;
@@ -120,6 +127,7 @@ export interface Task {
     name: string;
     type: string;
     id: number;
+    color: string;
   }[];
   resourceId?: string;
   isImportant?: boolean;
@@ -133,6 +141,8 @@ export interface Task {
     planEndDate?: string | null;
   }[];
   organization?: Organizations;
+  remindCountdown?: string | null;
+  remindType?: string | null;
 }
 export interface TaskRunningType {
   id: number;
@@ -156,6 +166,12 @@ export interface TaskActualType {
   planStartDate: string | null;
   planEndDate?: string | null;
   type?: string;
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+    color: string;
+  }[];
 }
 export interface peopleInChargeType {
   id: number | string;
@@ -177,15 +193,22 @@ export interface CreationDataTask {
   types: string[];
   priorities: string[];
   categories: {
-    LARGE: string[];
-    MEDIUM: string[];
-    SMALL: string[];
-  };
+    id: number;
+    name: string;
+    uuid: string;
+    color?: string;
+  }[];
   organizations: {
     id: number;
     name: string;
     superior: { id: number; name: string } | null;
   }[];
+  organizationCategories: Team[];
+}
+
+export interface Team {
+  organization: Organizations;
+  categories: Category[];
 }
 
 export interface UpdateTaskKanbanRequest {
@@ -234,6 +257,12 @@ export interface TaskTimeSchedule {
   planStartDate: string | null;
   planEndDate: string | null;
   isCalculation?: boolean;
+  largeColor?: string;
+  isImportant?: boolean;
+  deadline?: string;
+  address?: string;
+  participants?: EventParticipant[];
+  isAllDay?: boolean;
 }
 export interface TaskErrorPerson {
   id: string;
@@ -266,4 +295,31 @@ export interface TaskActualCalculationType {
   title: string;
   uuid: string;
   type: string;
+}
+export interface DataDetailTaskType {
+  id: string;
+  largeColor: string;
+  title: string;
+  start: string;
+  end: string;
+  resource: string;
+  left?: number;
+  top?: number;
+  taskId: string | number;
+  isImportant?: boolean | null;
+  deadline?: string;
+  uuid: string;
+  isRunning?: boolean;
+}
+export interface DataDetailEventType {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  left?: number;
+  top?: number;
+  participants?: EventParticipant[];
+  address?: string;
+  isAllDay: boolean;
+  type: OptionDropdownType;
 }

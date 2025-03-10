@@ -34,7 +34,6 @@ import {
 } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
-import { encodeFormatDateISO } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import { TaskContext } from '@providers/TaskProvider';
 import { OptionDropdownType } from '@interfaces/common';
@@ -79,6 +78,7 @@ interface ColumnProps {
     >
   >;
   pinItemToTop: (itemId: string | number) => void;
+  saveExtendColumn: (data: Record<string, boolean>) => void;
 }
 const Column = ({
   columnId,
@@ -89,7 +89,6 @@ const Column = ({
   userId,
   totalCount,
   matchingTaskIds,
-  orderingRequest,
   columnsKanbanData,
   creationDataTaskData,
   showFrequentlyTasks,
@@ -102,17 +101,16 @@ const Column = ({
   handleConfirmCopyTask,
   handleUpdateItemInline,
   setNumberPagesData,
+  saveExtendColumn,
 }: ColumnProps) => {
   const { data: session } = useSession();
   const isMyRoutine = columnId === `${StatusValueTask.MY_ROUTINE}`;
 
-  const { columnWidth } = useContext(TaskContext);
-  const { extendByStatus, setExtendByStatus } = useContext(TaskContext);
+  const { columnWidth, extendByStatus, orderingOptions, setExtendByStatus } =
+    useContext(TaskContext);
 
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
-  const [taskLast, setTaskLast] = useState<number | null>(null);
-  const [deadlineLast, setDeadlineLast] = useState<string | null>(null);
   const [pinAtLast, setPinAtLast] = useState<string | null>(null);
 
   const [page, setPage] = useState<number>(1);
@@ -156,13 +154,7 @@ const Column = ({
     if (pinAtLast) {
       apiUrl += `&pin_at=${pinAtLast}`;
     }
-    if (orderingRequest) {
-      if (orderingRequest === 'deadline') {
-        apiUrl += `&ordering=${orderingRequest}${idTasks ? `&ids=${idTasks}` : ''}&task_id=${taskLast}${deadlineLast ? `&deadline=${encodeFormatDateISO(new Date(deadlineLast))}` : ''}`;
-      } else {
-        apiUrl += `&ordering=${orderingRequest}${idTasks ? `&ids=${idTasks}` : ''}&task_id=${taskLast}`;
-      }
-    } else if (lastIndex) {
+    if (lastIndex) {
       apiUrl += `&index=${lastIndex}`;
     }
 
@@ -172,6 +164,17 @@ const Column = ({
 
     if (searchValue) {
       apiUrl += `&search=${searchValue}${idTasks ? `&ids=${idTasks}` : ''}`;
+    }
+    if (orderingOptions?.organization_ids?.length) {
+      apiUrl += `&organization_ids=${orderingOptions.organization_ids.map((item) => item.value).join(',')}`;
+    }
+
+    if (orderingOptions?.category_ids?.length) {
+      apiUrl += `&category_ids=${orderingOptions.category_ids.map((item) => item.value).join(',')}`;
+    }
+
+    if (orderingOptions?.tag_ids?.length) {
+      apiUrl += `&tag_ids=${orderingOptions.tag_ids.map((item) => item.value).join(',')}`;
     }
 
     return await api.get<KanbanDataResponse>(apiUrl);
@@ -252,15 +255,6 @@ const Column = ({
       }
       if (items.length > PAGINATION_PAGE_SIZE_KANBAN - 1) {
         setChange(true);
-      }
-      if (orderingRequest) {
-        if (items.length) {
-          setDeadlineLast(items[items.length - 1].deadline);
-          setTaskLast(parseInt(`${items[items.length - 1].id}`));
-        } else {
-          setDeadlineLast(null);
-          setTaskLast(null);
-        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -362,7 +356,7 @@ const Column = ({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             {session?.user.permissions &&
               hasPermissionInArray(
                 session?.user.permissions,
@@ -398,12 +392,30 @@ const Column = ({
               placement="top"
               offset={[0, 5]}>
               <div
+                onClick={async () => {
+                  const newList = extendByStatus.map((item) =>
+                    String(item.id) == String(columnId)
+                      ? { ...item, status: !item.status }
+                      : item,
+                  );
+                  const dataExtend: Record<string, boolean> = newList.reduce(
+                    (acc, item) => {
+                      acc[item.id] = item.status;
+                      return acc;
+                    },
+                    {} as Record<string, boolean>,
+                  );
+                  setExtendByStatus(newList);
+                  saveExtendColumn && saveExtendColumn(dataExtend);
+                }}
+                className="h-full flex items-center cursor-pointer  "
                 style={{
                   padding: `${(columnWidth / 247) * 5}px`,
+                  paddingLeft: `${(columnWidth / 247) * 12}px`,
                 }}>
                 <ImageRound
                   src={`/icons/extend-column.svg`}
-                  className={`${
+                  className={` ${
                     extendByStatus.find(
                       (list) => String(list.id) == String(columnId),
                     )?.status
@@ -411,15 +423,6 @@ const Column = ({
                       : 'rotate-180'
                   }`}
                   name="extend"
-                  onClick={() => {
-                    setExtendByStatus((prev) =>
-                      prev.map((item) =>
-                        String(item.id) == String(columnId)
-                          ? { ...item, status: !item.status }
-                          : item,
-                      ),
-                    );
-                  }}
                   style={{
                     width: `8px`,
                     height: `12px`,
@@ -527,6 +530,7 @@ const Column = ({
           <div
             style={{
               padding: `${(columnWidth / 247) * 5}px`,
+              paddingLeft: `${(columnWidth / 247) * 12}px`,
             }}>
             <ImageRound
               src={`/icons/extend-column.svg`}
@@ -538,18 +542,25 @@ const Column = ({
                   : 'rotate-180'
               } cursor-pointer`}
               name="extend"
-              onClick={() => {
-                setExtendByStatus((prev) =>
-                  prev.map((item) =>
-                    String(item.id) == String(columnId)
-                      ? { ...item, status: !item.status }
-                      : item,
-                  ),
+              onClick={async () => {
+                const newList = extendByStatus.map((item) =>
+                  String(item.id) == String(columnId)
+                    ? { ...item, status: !item.status }
+                    : item,
                 );
+                const dataExtend: Record<string, boolean> = newList.reduce(
+                  (acc, item) => {
+                    acc[item.id] = item.status;
+                    return acc;
+                  },
+                  {} as Record<string, boolean>,
+                );
+                setExtendByStatus(newList);
+                saveExtendColumn(dataExtend);
               }}
               style={{
-                width: `${(columnWidth / 247) * 8}px`,
-                height: `${(columnWidth / 247) * 12}px`,
+                width: `8px`,
+                height: `12px`,
               }}
             />
           </div>
@@ -563,7 +574,7 @@ const Column = ({
         {Number(columnId) != StatusValueTask.MY_ROUTINE ? (
           <p
             style={{
-              fontSize: `${(columnWidth / 247) * 14}px`,
+              fontSize: `14px`,
             }}
             className="text-[#77858F] w-full text-center text-sm">
             {count}
@@ -571,7 +582,7 @@ const Column = ({
         ) : (
           <p
             style={{
-              fontSize: `${(columnWidth / 247) * 14}px`,
+              fontSize: `14px`,
             }}
             className="text-[#77858F] w-full text-center text-sm h-5"></p>
         )}

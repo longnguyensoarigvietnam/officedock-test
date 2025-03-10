@@ -1,6 +1,5 @@
 'use client';
 import { useContext, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from 'react-query';
 import { EventContentArg } from '@fullcalendar/core/index.js';
 
@@ -10,12 +9,7 @@ import ActionActualSchedule from '@components/modals/ActionActualSchedule';
 
 import { apiRouters } from '@constants/routers';
 import { NO_SETTING } from '@constants';
-import {
-  ActionsEvent,
-  ActionTask,
-  ItemScheduleType,
-  ItemStartType,
-} from '@constants/enums';
+import { ItemScheduleType, ItemStartType, ViewOptions } from '@constants/enums';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
@@ -29,6 +23,7 @@ import {
   isMoreThanThirtyMinutes,
 } from '@utils/date';
 import { TaskActualType, TaskTimeSchedule } from '@interfaces/task';
+import { useSearchParams } from 'next/navigation';
 
 interface TaskCardProps {
   event: EventContentArg;
@@ -56,7 +51,6 @@ const TaskCard = ({
   event,
   slotHeight,
   isOptionZoomSchedule,
-  handleSetEventParam,
   handleUpdateItemStart,
   setTaskTimeScheduleList,
 }: TaskCardProps) => {
@@ -67,16 +61,16 @@ const TaskCard = ({
     setDataClickTask,
     setIdTaskStarting,
     setTaskSelectedToStart,
-    setIdTaskEditSelected,
     setTaskSelectedAction,
     setTaskSelected,
     setDataActualAddSchedule,
   } = useContext(TaskContext);
 
+  const searchParams = useSearchParams();
+  const view = searchParams.get('view');
+
   const [isShowEditActual, setIsShowEditActual] = useState(false);
 
-  const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
   const resourcePlan =
     event.event._def &&
     event.event._def.resourceIds?.length &&
@@ -85,20 +79,20 @@ const TaskCard = ({
   let isStart = false;
   let isEvent = false;
   let isCalculation = false;
+  let largeColor = '';
 
   try {
     const extendedProps = event?.event?.extendedProps;
     isStart = extendedProps?.isStart ?? false;
     isEvent = extendedProps?.type === ItemStartType.SCHEDULE;
     isCalculation = extendedProps?.isCalculation ?? false;
+    largeColor = extendedProps.largeColor;
   } catch (error) {
     // Handle Error
   }
 
   const [showWarningStartModal, setShowWarningStartModal] =
     useState<boolean>(false);
-
-  const router = useRouter();
 
   const queryClient = useQueryClient();
 
@@ -114,7 +108,9 @@ const TaskCard = ({
           },
         ]);
       handleUpdateItemStart({
-        id: isEvent ? event.event.id : event.event.extendedProps.taskId,
+        id: isEvent
+          ? event.event.extendedProps.scheduleId
+          : event.event.extendedProps.taskId,
         isStart: !isStart,
         type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
       });
@@ -176,7 +172,7 @@ const TaskCard = ({
         if (!data.isAnotherTaskStarted) {
           calculateDurationTask({
             id: isEvent
-              ? event.event.id.replace('event', '')
+              ? event.event.extendedProps.scheduleId
               : event.event.extendedProps.taskId,
             type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
           });
@@ -188,7 +184,7 @@ const TaskCard = ({
           });
           setDataRunning({
             id: isEvent
-              ? event.event.id.replace('event', '')
+              ? event.event.extendedProps.scheduleId
               : event.event.extendedProps.taskId,
             type: isEvent ? ItemStartType.SCHEDULE : ItemStartType.TASK,
           });
@@ -234,7 +230,7 @@ const TaskCard = ({
         });
         resolve();
       });
-      handleConfirmCheckStartTask(`${event.event.id.replace('event', '')}`);
+      handleConfirmCheckStartTask(`${event.event.extendedProps.scheduleId}`);
     } else {
       await new Promise<void>((resolve) => {
         setTaskSelectedToStart({
@@ -249,21 +245,6 @@ const TaskCard = ({
       });
       handleConfirmCheckStartTask(`${event.event.extendedProps.taskId}`);
     }
-  };
-
-  const handleSetParam = ({
-    id,
-    action,
-  }: {
-    id: string | null;
-    action: string;
-  }) => {
-    if (id) {
-      params.set('task', id);
-    }
-    params.set('type', ItemStartType.TASK);
-    params.set('action', action);
-    router.push(`?${params.toString()}`);
   };
 
   const differentTime =
@@ -281,7 +262,7 @@ const TaskCard = ({
     calculateDurationTask({
       id:
         event.event.extendedProps.type === ItemStartType.SCHEDULE
-          ? `${event.event.id.replace('event', '')}`
+          ? `${event.event.extendedProps.scheduleId}`
           : event.event.extendedProps.taskId,
       type:
         event.event.extendedProps.type === ItemStartType.SCHEDULE
@@ -291,7 +272,7 @@ const TaskCard = ({
     setShowWarningStartModal(false);
 
     setDataRunning({
-      id: `${event.event.id.replace('event', '')}`,
+      id: `${event.event.extendedProps.scheduleId}`,
       type:
         event.event.extendedProps.type === ItemStartType.SCHEDULE
           ? ItemStartType.SCHEDULE
@@ -374,7 +355,6 @@ const TaskCard = ({
       : isOptionZoomSchedule === '01:00:00'
         ? 90
         : 46;
-  const extendedProps = event.event?.extendedProps;
 
   return (
     <>
@@ -382,28 +362,30 @@ const TaskCard = ({
         style={{
           paddingTop: `${(slotHeight / baseHeight) * 7}px`,
           paddingBottom: `${(slotHeight / baseHeight) * 8}px`,
+          borderLeftColor: resourcePlan ? largeColor : '',
+          backgroundColor: resourcePlan
+            ? 'white'
+            : largeColor
+              ? largeColor
+              : '#A7B9C2',
         }}
-        className={`h-full group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && '!bg-[#A7B9C2] !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}
-        onClick={() => {
-          if (event.event.extendedProps.type === ItemStartType.SCHEDULE) {
-            const newId = event.event.id.replace('event', '');
-            handleSetEventParam({
-              id: newId,
-              action: ActionsEvent.EDIT,
-            });
-          } else {
-            if (resourcePlan) {
-              setIdTaskEditSelected(`${event.event.extendedProps.taskId}`);
-              handleSetParam({
-                id: `${event.event.extendedProps.taskId}`,
-                action: ActionTask.EDIT,
-              });
-            }
-          }
-        }}>
+        className={`h-full ${largeColor && resourcePlan && 'border border-l-2'}  group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}>
         <div className="flex w-full relative h-full justify-between overflow-hidden">
           <div className="flex overflow-hidden flex-col gap-2 w-[95%]">
-            <p className="font-bold min-h-[20px] text-sm truncate block w-full  ">
+            <p
+              style={{
+                width: event.event?.extendedProps.isAllDay
+                  ? view === ViewOptions.WEEK
+                    ? '100%'
+                    : '100px'
+                  : '100%',
+                paddingRight: event.event?.extendedProps.isAllDay
+                  ? view === ViewOptions.WEEK
+                    ? '44px'
+                    : '0'
+                  : '0',
+              }}
+              className="font-bold min-h-[20px] text-sm truncate block w-full  ">
               {event?.event instanceof Error
                 ? ''
                 : event?.event?.title
@@ -411,20 +393,28 @@ const TaskCard = ({
                   : NO_SETTING}
             </p>
             <div className="text-[11px] flex gap-2">
-              <p className=" h-full">
+              <p
+                style={{
+                  width: resourcePlan ? '100%' : 'fit-content',
+                }}
+                className=" h-full w-fit">
                 {!isCalculation ? (
-                  !event.timeText && isEvent ? (
-                    <>
-                      {extendedProps &&
-                        convertToTimeString(extendedProps.planStartDate)}
+                  event.timeText && isEvent ? (
+                    <p className="w-[80%] break-all">
+                      {event.event?.extendedProps &&
+                        convertToTimeString(
+                          event.event?.extendedProps.planStartDate,
+                        )}
                       ~
-                      {extendedProps &&
-                        convertToTimeString(extendedProps.planEndDate)}{' '}
-                    </>
+                      {event.event?.extendedProps &&
+                        convertToTimeString(
+                          event.event?.extendedProps.planEndDate,
+                        )}{' '}
+                    </p>
                   ) : (
                     event.timeText &&
                     differentTime &&
-                    event.timeText.replace(' - ', ' ~ ')
+                    event.timeText.replace(' - ', ' ~')
                   )
                 ) : (
                   <>{convertToTimeString(`${event.event.start}`)} ~ 計測中</>
@@ -436,36 +426,33 @@ const TaskCard = ({
             </div>
           </div>
           {resourcePlan ? (
-            isEvent ? (
-              <>
+            <s>
+              {isEvent && (
                 <ImageRound
                   src={`/icons/lock.svg`}
                   name="icon lock"
                   style={{
-                    bottom: `${(slotHeight / baseHeight) * 8}px`,
+                    bottom: `${(slotHeight / baseHeight) * 13}px`,
                   }}
-                  className="absolute w-3 h-3 bottom-2 right-2 "
+                  className="absolute w-3 h-3 bottom-1 right-9 "
                 />
-              </>
-            ) : (
-              <>
-                <ImageRound
-                  src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
-                  name="Start task"
-                  style={{
-                    bottom: `${(slotHeight / baseHeight) * 8}px`,
-                  }}
-                  hidden={
-                    !isMoreThanFifteenMinutes(
-                      `${event.event.start}`,
-                      `${event.event.end}`,
-                    ) && isOptionZoomSchedule === '01:00:00'
-                  }
-                  className="absolute  w-[20px] h-[20px] bottom-2 right-2  hover:cursor-pointer"
-                  onClick={handleStartStopTask}
-                />
-              </>
-            )
+              )}
+              <ImageRound
+                src={`/icons/${isStart ? 'pause' : 'play'}.svg`}
+                name="Start task"
+                style={{
+                  bottom: `${(slotHeight / baseHeight) * 8}px`,
+                }}
+                hidden={
+                  !isMoreThanFifteenMinutes(
+                    `${event.event.start}`,
+                    `${event.event.end}`,
+                  ) && isOptionZoomSchedule === '01:00:00'
+                }
+                className="absolute  w-[20px] h-[20px] bottom-2 right-2  hover:cursor-pointer"
+                onClick={handleStartStopTask}
+              />
+            </s>
           ) : (
             <ImageRound
               src={`/icons/edit.svg`}
@@ -474,19 +461,12 @@ const TaskCard = ({
                 top: `${(slotHeight / baseHeight) * 8}px`,
               }}
               className={`absolute resize-icon w-[14px] h-[14px]  right-2 hover:cursor-pointer ${isCalculation && 'hidden'}`}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setIsShowEditActual(true);
               }}
             />
           )}
-        </div>
-
-        <div className="absolute opacity-0 group-hover:opacity-100 bottom-[-20px] left-1/2 -translate-x-1/2 z-50">
-          <ImageRound
-            src={`/icons/resize-task.svg`}
-            name="icon resize"
-            className=""
-          />
         </div>
       </div>
       {showWarningStartModal && (

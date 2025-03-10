@@ -712,14 +712,18 @@ const ListActualDurations = () => {
                       ) : (
                         <div className="w-6 h-6"></div>
                       )}
-                      <ImageRound
-                        name="Delete"
-                        src={'/icons/delete.svg'}
-                        className={`w-6 h-6 hover:cursor-pointer`}
-                        onClick={() =>
-                          handleOpenDeleteActualDurationModal(element)
-                        }
-                      />
+                      {element.pausedAt ? (
+                        <ImageRound
+                          name="Delete"
+                          src={'/icons/delete.svg'}
+                          className={`w-6 h-6 hover:cursor-pointer`}
+                          onClick={() =>
+                            handleOpenDeleteActualDurationModal(element)
+                          }
+                        />
+                      ) : (
+                        <div className="w-6 h-6"></div>
+                      )}
                     </div>
                   </div>
                 </div>

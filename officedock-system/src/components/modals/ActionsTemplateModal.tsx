@@ -674,7 +674,7 @@ const ActionsTemplateModal = ({
               disabled={isCheckActionPermission}
               autoCompleteInput
               placeholder="タスクのタイトル"
-              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-centers !py-0 h-[46px] focus:!shadow-none focus:border border-[#77858F] rounded-md"
+              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-centers !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] rounded-md"
               register={register('title', {
                 required: watch('title') !== null ? true : false,
               })}
@@ -753,7 +753,7 @@ const ActionsTemplateModal = ({
                   return (
                     <Dropdown
                       placeholder="大カテゴリ"
-                      className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md"
+                      className="h-[34px] !py-1 text-xs !border-[#77858F] rounded-md"
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
@@ -845,6 +845,7 @@ const ActionsTemplateModal = ({
                 <div className="w-[461px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
+                    valueClassName="!border-[#77858F]"
                     disabled={isCheckActionPermission}
                     options={dataOptionsTagIds}
                     customLabel={

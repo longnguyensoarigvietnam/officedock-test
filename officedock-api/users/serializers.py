@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from base.messages import ERROR_MESSAGES
+from calendars.constants import CalendarTypes
 from companies.serializers import CompanySerializer
 from organizations.models import UsersOrganizations, Organization
 from organizations.serializers import (
@@ -14,6 +15,7 @@ from organizations.serializers import (
 )
 from roles.constants import Actions, Screens, SelectionResultOptions
 from roles.utils import has_permission
+from tasks.models import TaskStatus
 from terms.constants import TermTypes, TermStatus
 from terms.models import Term
 from users.models import (
@@ -201,6 +203,15 @@ class SettingSerializer(serializers.ModelSerializer):
     Serializer for the Role model.
     """
 
+    tab_visibility = serializers.JSONField(default=dict)
+    kanban_zoom = serializers.IntegerField(
+        min_value=0, max_value=100, default=100
+    )
+
+    schedule_zoom = serializers.IntegerField(
+        min_value=0, max_value=100, default=100
+    )
+
     class Meta:
         model = Setting
         fields = [
@@ -208,7 +219,40 @@ class SettingSerializer(serializers.ModelSerializer):
             "is_check_self_schedule",
             "is_check_company_schedule",
             "is_enter_send_message",
+            "is_sorting_task_by_deadline",
+            "is_sorting_task_by_important",
+            "is_sorting_task_by_important",
+            "kanban_zoom",
+            "schedule_zoom",
+            "tab_visibility",
         ]
+
+    def validate_tab_visibility(self, value):
+        """Validate element in tab visibility"""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError(
+                ERROR_MESSAGES["must_be_dictionary"]
+            )
+
+        all_statuses = TaskStatus.objects.values_list("id", flat=True)
+        for key, val in value.items():
+            try:
+                key_int = int(key)
+            except ValueError:
+                raise serializers.ValidationError(
+                    ERROR_MESSAGES["status_invalid"].format(key=key)
+                )
+
+            if key_int not in all_statuses:
+                raise serializers.ValidationError(
+                    ERROR_MESSAGES["status_invalid"].format(key=key)
+                )
+            if not isinstance(val, bool):
+                raise serializers.ValidationError(
+                    ERROR_MESSAGES["boolean_field"].format(key=key)
+                )
+
+        return value
 
 
 class OrganizationForUserSerializer(OrganizationSerializer):
@@ -268,6 +312,7 @@ class UserSerializer(BaseUserSerializer):
     setting = SettingSerializer(read_only=True)
     unread_terms = serializers.SerializerMethodField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
+    current_event = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -285,6 +330,7 @@ class UserSerializer(BaseUserSerializer):
             "login_type",
             "setting",
             "unread_terms",
+            "current_event",
         ]
 
     def get_permissions(self, obj):
@@ -350,6 +396,24 @@ class UserSerializer(BaseUserSerializer):
                 data.append({"id": privacy_policy.id})
 
             return data
+
+    def get_current_event(self, obj):
+        """Get current event starting"""
+        if task := obj.in_charge_tasks.filter(is_start=True).first():
+            return {
+                "type": CalendarTypes.TASK.value,
+                "id": task.id,
+                "title": task.title,
+            }
+
+        if schedule := obj.schedules.filter(is_start=True).first():
+            return {
+                "type": CalendarTypes.SCHEDULE.value,
+                "id": schedule.id,
+                "title": schedule.title,
+            }
+
+        return None
 
 
 class UserLoginSerializer(BaseUserSerializer):
@@ -692,7 +756,9 @@ class DailyReportSerializer(serializers.ModelSerializer):
     Serializer for daily report
     """
 
+    is_confirmed = serializers.BooleanField(required=False, allow_null=True)
+
     class Meta:
         model = DailyReport
-        fields = ["id", "date", "remark", "is_submit"]
+        fields = ["id", "date", "remark", "is_submit", "is_confirmed"]
         read_only_fields = ["id"]

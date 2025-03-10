@@ -22,7 +22,9 @@ class Migration(migrations.Migration):
             name="uuid",
             field=models.UUIDField(unique=True, null=True),
         ),
-        migrations.RunPython(generate_unique_uuid),
+        migrations.RunPython(
+            generate_unique_uuid, reverse_code=migrations.RunPython.noop
+        ),
         migrations.AlterField(
             model_name="taskduration",
             name="uuid",

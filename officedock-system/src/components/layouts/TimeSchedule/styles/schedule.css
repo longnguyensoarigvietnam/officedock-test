@@ -1,3 +1,6 @@
+.schedule-custom .fc-resourceTimeGridDay-view .fc-scroller-harness {
+  overflow: visible;
+}
 .schedule-custom .scroll-container {
   position: relative;
   overflow-x: auto;
@@ -373,6 +376,10 @@
   z-index: 2; /* Ensure event sits above the divider */
   padding: 0 12px 0 !important;
 }
+.schedule-custom .fc-timeGridWeek-view .fc-event {
+  z-index: 2; /* Ensure event sits above the divider */
+  padding: 0 18px 0 !important;
+}
 
 /* Day */
 
@@ -457,7 +464,8 @@
   border-bottom: none !important;
 }
 .schedule-custom .fc-timegrid-body {
-  overflow: hidden;
+  overflow: unset;
+  overflow-x: clip;
 }
 .schedule-custom .fc-timegrid-divider.fc-cell-shaded {
   border: none !important;
@@ -487,21 +495,11 @@
   position: absolute;
   height: 1px;
   width: 100%;
-  top: 5px;
+  top: -3px;
   background-color: #d2dbe1;
   transform: -translateX(50%);
 }
-.schedule-custom
-  .fc-timeGridWeek-view
-  .fc-timegrid-slot.fc-timegrid-slot-lane::after {
-  content: '';
-  position: absolute;
-  height: 1px;
-  width: 100%;
-  top: 5px;
-  background-color: #d2dbe1;
-  transform: -translateX(50%);
-}
+
 .schedule-custom
   .fc-resourceTimeGridDay-view
   .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
@@ -521,14 +519,7 @@
   position: relative;
   top: -5px;
 }
-.schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-col-frame {
-  position: relative;
-  top: 6px;
-}
-.schedule-custom .fc-timeGridWeek-view .fc-timegrid-col-frame {
-  position: relative;
-  top: 11px;
-}
+
 .schedule-custom
   .fc-timeGridWeek-view
   .fc-timegrid-slot.fc-timegrid-slot-lane::after {
@@ -536,22 +527,22 @@
   position: absolute;
   height: 1px;
   width: 100%;
-  top: 5px;
   background-color: #d2dbe1;
   transform: -translateX(50%);
+  top: 14px;
 }
 
 .schedule-custom
   .fc-resourceTimeGridDay-view
   .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
   position: relative;
-  top: -9px;
+  top: -18px;
 }
 .schedule-custom
   .fc-timeGridWeek-view
   .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
   position: relative;
-  top: -9px;
+  top: -10px;
 }
 .schedule-custom
   .fc-timeGridWeek-view
@@ -561,11 +552,11 @@
 }
 .schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-col-frame {
   position: relative;
-  top: 6px;
+  top: -3px;
 }
 .schedule-custom .fc-timeGridWeek-view .fc-timegrid-col-frame {
   position: relative;
-  top: 6px;
+  top: 14px;
 }
 
 .schedule-custom
@@ -619,4 +610,16 @@
 
 .schedule-custom .fc-day.fc-day-sun.fc-day-today.fc-daygrid-day.fc-resource {
   border-bottom: none !important;
+}
+.schedule-custom .fc-v-event:not(.fc-event-selected) .fc-event-resizer-end {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: url('/icons/resize-task.svg') no-repeat center;
+  background-size: contain;
+  cursor: pointer !important;
+  opacity: 1;
 }

@@ -1,10 +1,25 @@
 'use client';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import {
+  Dispatch,
+  Fragment,
+  SetStateAction,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 import { useMutation } from 'react-query';
 import { useInView } from 'react-intersection-observer';
 import { useSession } from 'next-auth/react';
 import Tippy from '@tippyjs/react';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
@@ -12,6 +27,7 @@ import InputSearch from '@components/common/InputSearch';
 import ActionsAddMembersModal from '@components/modals/ActionsAddMembersModal';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 import useDebounceText from '@hooks/useDebounceText';
 
@@ -22,11 +38,12 @@ import {
   PermissionsSystem,
   SocketActions,
 } from '@constants/enums';
-import { PAGINATION_PAGE_SIZE_MEDIUM } from '@constants';
+import { BOOKMARK_ROUTER_NAME, PAGINATION_PAGE_SIZE_MEDIUM } from '@constants';
 
 import { encodeFormatDateISO } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import { ChatContext } from '@providers/ChatProvider';
+import { useWebSocket } from '@providers/WebSocketProvider';
 import {
   ChatDashboardMember,
   ChatRoomItem,
@@ -35,8 +52,6 @@ import {
 import { BasePagination } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
 import api from '@base/api';
-import { useWebSocket } from '@providers/WebSocketProvider';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 interface dataProps {
   dataChatList: ChatRoomItem[];
@@ -51,6 +66,7 @@ interface dataProps {
   >;
   setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setHasMore: React.Dispatch<React.SetStateAction<boolean>>;
+  setHasMoreDetailOnScrollDown: Dispatch<SetStateAction<boolean>>
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleSetChatRoomParam: (code: string) => void;
   handleRemoveChatRoomParam: () => void;
@@ -66,6 +82,7 @@ const ListChatUsers = ({
   setDataChatList,
   setFilteredChatList,
   setHasMore,
+  setHasMoreDetailOnScrollDown,
   setSearchChatMsg,
   handleSetChatRoomParam,
   handleRemoveChatRoomParam,
@@ -77,15 +94,21 @@ const ListChatUsers = ({
     threshold: 0.2,
   });
 
+  const router = useRouter();
+
+  const searchParams = useSearchParams();
+
+  const room = searchParams.get('room');
+
   const { data: session } = useSession();
 
   const [hasMoreSearch, setHasMoreSearch] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState<boolean>(false);
   const [initialLoadSearch, setInitialLoadSearch] = useState<boolean>(false);
-  
 
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchRoomType, setSearchRoomType] = useState<string>('');
   const [lastPinAt, setLastPinAt] = useState<string | null>();
   const [lastMsgItemRoom, setLastMsItemRoom] = useState<string>('');
   const [lastPinAtSearch, setLastPinAtSearch] = useState<string | null>();
@@ -171,7 +194,7 @@ const ListChatUsers = ({
           );
           return [data, ...filteredList];
         });
-        if (searchTerm) {
+        if (searchTerm || searchRoomType) {
           setFilteredChatList((prevDataChatList) => {
             const filteredList = prevDataChatList.filter(
               (item) => item.code !== data.code,
@@ -200,15 +223,9 @@ const ListChatUsers = ({
           items.sort((currentItem, nextItem) => {
             if (currentItem.pinAt !== null && nextItem.pinAt !== null) {
               return 0;
-            } else if (
-              currentItem.pinAt !== null &&
-              nextItem.pinAt === null
-            ) {
+            } else if (currentItem.pinAt !== null && nextItem.pinAt === null) {
               return -1;
-            } else if (
-              currentItem.pinAt === null &&
-              nextItem.pinAt !== null
-            ) {
+            } else if (currentItem.pinAt === null && nextItem.pinAt !== null) {
               return 1;
             } else {
               const currentItemDate = currentItem.lastMessageAt
@@ -222,7 +239,7 @@ const ListChatUsers = ({
           });
           return items;
         });
-        if (searchTerm) {
+        if (searchTerm || searchRoomType) {
           setFilteredChatList((prevDataChatList) => {
             const filteredList = prevDataChatList.filter(
               (item) => item.code !== data.code,
@@ -269,7 +286,14 @@ const ListChatUsers = ({
         }
       }
     },
-    [hasMore, hasMoreSearch, searchTerm, setDataChatList, setFilteredChatList],
+    [
+      hasMore,
+      hasMoreSearch,
+      searchTerm,
+      searchRoomType,
+      setDataChatList,
+      setFilteredChatList,
+    ],
   );
   const handleUpdateDataHide = useCallback(
     (data: ChatRoomItem) => {
@@ -658,12 +682,14 @@ const ListChatUsers = ({
   const handleGetDataSearchRoomChat = async ({
     page,
     name,
+    showLastMessageAt,
   }: {
     page: number;
     name: string;
+    showLastMessageAt?: boolean;
   }) => {
     setInitialLoadSearch(true);
-    const apiUrl = `${apiRouters.CHAT_LIST}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${name ? `&name=${encodeURIComponent(name)}` : ''}${lastMsgItemRoomSearch ? `&last_message_at=${lastMsgItemRoomSearch}` : ''}${lastPinAtSearch ? `pin_at=${lastPinAtSearch}` : ''}`;
+    const apiUrl = `${apiRouters.CHAT_LIST}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_MEDIUM}${name ? `&name=${encodeURIComponent(name)}` : ''}${lastMsgItemRoomSearch && showLastMessageAt ? `&last_message_at=${lastMsgItemRoomSearch}` : ''}${lastPinAtSearch ? `&pin_at=${lastPinAtSearch}` : ''}${searchRoomType ? `&type=${searchRoomType}` : ''}`;
     return await api.get<BasePagination<ChatRoomItem[]>>(apiUrl);
   };
 
@@ -710,15 +736,16 @@ const ListChatUsers = ({
     },
   );
   useEffect(() => {
-    if (searchTermDebounce) {
+    if (searchTermDebounce || searchRoomType) {
       setFilteredChatList([]);
       getDataSearchRoomChat({
         name: searchTermDebounce,
         page: 1,
+        showLastMessageAt: false,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getDataSearchRoomChat, searchTermDebounce]);
+  }, [getDataSearchRoomChat, searchTermDebounce, searchRoomType]);
 
   useEffect(() => {
     if (
@@ -729,6 +756,7 @@ const ListChatUsers = ({
       getDataSearchRoomChat({
         name: searchTermDebounce,
         page: 1,
+        showLastMessageAt: true,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -770,6 +798,17 @@ const ListChatUsers = ({
       );
     }
 
+    if (item.type === AvatarChat.CALENDAR) {
+      return (
+        <ImageRound
+          className="w-8 h-8"
+          src="/icons/calendar-room.svg"
+          border="full"
+          name="Calendar"
+        />
+      );
+    }
+
     const avatarColor =
       dashboardMembers.find((member) => {
         if (item.type === AvatarChat.PRIVATE) {
@@ -793,6 +832,13 @@ const ListChatUsers = ({
     );
   };
 
+  const goToBookmark = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('room', 'bookmark');
+
+    router.push(`/chat?${params.toString()}`, { scroll: false });
+  };
+
   return (
     <aside className="w-[350px] max-w-[350px] min-w-[350px] border-r-[2px] pr-3 pt-5">
       <div className="flex items-center justify-between mb-5">
@@ -809,29 +855,83 @@ const ListChatUsers = ({
         />
       </div>
       <div className="flex items-center mb-5 px-3">
-        <div className="flex items-center gap-1 w-5/6">
+        <div
+          onClick={goToBookmark}
+          className={`${room === BOOKMARK_ROUTER_NAME && 'bg-white'} h-[36px] p-3 cursor-pointer rounded-md flex items-center gap-1 w-4/5`}>
           <ImageRound
             src="/icons/save-chat.svg"
             name="Save chat icon"
             className="!w-3 !h-3.5 text-gray-400 cursor-pointer"
           />
-          <p className="text-[#77858F] text-[14px] font-medium">ブックマーク</p>
+          <p className={` text-[#77858F] text-[14px] font-medium`}>
+            ブックマーク
+          </p>
         </div>
-        <div className="flex items-center w-1/6 justify-between">
-          <Tippy
-            content={'チャットルームの絞り込み'}
-            arrow={false}
-            delay={1000}
-            placement="top"
-            offset={[0, 5]}>
-            <div>
-              <ImageRound
-                src="/icons/filter.svg"
-                name="Filter icon"
-                className="!w-4 !h-4 text-gray-400 cursor-pointer"
-              />
-            </div>
-          </Tippy>
+        <div className="flex items-center w-1/5 justify-between">
+          <Popover className="relative">
+            {({ open }) => {
+              return (
+                <>
+                  <Tippy
+                    content={'チャットルームの絞り込み'}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    offset={[0, 5]}>
+                    <PopoverButton
+                      className={`focus:outline-none ${open && 'rounded-full bg-white'} w-[36px] h-[36px] flex items-center justify-center`}>
+                      <ImageRound
+                        src="/icons/filter.svg"
+                        name="Filter icon"
+                        className="!w-4 !h-4 text-gray-400 cursor-pointer"
+                      />
+                    </PopoverButton>
+                  </Tippy>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1">
+                    <PopoverPanel className="absolute left-0 z-10 min-w-[196px] max-w-[196px] transform">
+                      <div className="bg-[#5B6770] text-white rounded-[6px] py-[5px] mt-2 text-sm font-medium">
+                        <p
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
+                          onClick={() => {
+                            setSearchRoomType('');
+                          }}>
+                          すべてのチャット
+                        </p>
+                        <p
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
+                          onClick={() => {
+                            setSearchRoomType(ChatRoomType.UNREAD);
+                          }}>
+                          未読があるチャット
+                        </p>
+                        <p
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
+                          onClick={() => {
+                            setSearchRoomType(ChatRoomType.GROUP);
+                          }}>
+                          グループチャット
+                        </p>
+                        <p
+                          className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
+                          onClick={() => {
+                            setSearchRoomType(ChatRoomType.PRIVATE);
+                          }}>
+                          個人チャット
+                        </p>
+                      </div>
+                    </PopoverPanel>
+                  </Transition>
+                </>
+              );
+            }}
+          </Popover>
 
           {session?.user.permissions &&
             hasPermissionInArray(
@@ -856,7 +956,7 @@ const ListChatUsers = ({
             )}
         </div>
       </div>
-      {!searchTerm && (
+      {!searchTerm && !searchRoomType && (
         <>
           {' '}
           <div
@@ -868,10 +968,11 @@ const ListChatUsers = ({
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
-                    handleSetChatRoomParam(`${item?.code}`);
+                    handleSetChatRoomParam(item.code)
                     handleResetChatRoomUnreadMessages(item);
                     setSearchChatMsg('');
                     setIsReload(false);
+                    setHasMoreDetailOnScrollDown(false)
                   }}>
                   <Tippy
                     content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
@@ -898,8 +999,8 @@ const ListChatUsers = ({
                   </Tippy>
 
                   <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-3 flex flex-grow justify-between">
-                    <p className="text-sm max-w-[260px] font-medium truncate">
+                  <div className="ml-2 flex gap-1 items-center">
+                    <p className={`text-sm break-words w-[260px] font-medium `}>
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,
@@ -934,7 +1035,8 @@ const ListChatUsers = ({
           </div>
         </>
       )}
-      {searchTerm && searchTermDebounce === searchTerm && (
+      {((searchTerm && searchTermDebounce === searchTerm) ||
+        searchRoomType) && (
         <>
           <div
             className={`flex-grow w-[340px] mt-3 h-[calc(100vh_-_210px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
@@ -945,14 +1047,15 @@ const ListChatUsers = ({
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
-                    handleSetChatRoomParam(`${item?.code}`);
+                    handleSetChatRoomParam(item.code)
                     handleResetChatRoomUnreadMessages(item);
+                    setSearchChatMsg('');
                     setIsReload(false);
                   }}>
                   <div
                     className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
                     onClick={(e) => {
-                      e.stopPropagation()
+                      e.stopPropagation();
                       handlePinClick({
                         code: item.code,
                         isPin: item.pinAt !== null,
@@ -966,8 +1069,8 @@ const ListChatUsers = ({
                     />
                   </div>
                   <div className="relative">{renderAvatar(item)}</div>
-                  <div className="ml-3 flex flex-grow justify-between">
-                    <p className="text-sm max-w-[260px] font-medium truncate">
+                  <div className="ml-2 flex gap-1 items-center">
+                    <p className="text-sm break-words w-[260px] font-medium">
                       {item.code &&
                       chatRoomNameEditing.find(
                         (room) => room.roomCode === item.code,

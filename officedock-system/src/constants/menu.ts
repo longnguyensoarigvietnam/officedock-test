@@ -8,6 +8,10 @@ export const SETTING_MENU: SettingMenuItem[] = [
     href: pageRouters.CHANGE_PASSWORD.href,
   },
   {
+    name: '設定',
+    href: pageRouters.SETTING.href,
+  },
+  {
     name: 'ログアウト',
     iconUrl: '/icons/logout.svg',
   },
@@ -150,10 +154,22 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     requiredPermission: PermissionsSystem.CHAT_VIEW,
   },
   {
-    ...pageRouters.STATISTICS_MANAGEMENT,
-    name: pageRouters.STATISTICS_MANAGEMENT.name,
+    ...pageRouters.STATISTIC_MANAGEMENT,
+    name: pageRouters.STATISTIC_MANAGEMENT.name,
     iconUrl: (active: boolean) => {
       return active ? '/icons/statistic-active.svg' : '/icons/statistic.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.STATISTIC_VIEW,
+  },
+  {
+    ...pageRouters.DAILY_REPORT_MANAGEMENT,
+    name: pageRouters.DAILY_REPORT_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active
+        ? '/icons/daily-report-active.svg'
+        : '/icons/daily-report.svg';
     },
     current: false,
     companyMenu: false,
@@ -163,7 +179,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     ...pageRouters.SKILL_MAP,
     name: pageRouters.SKILL_MAP.name,
     iconUrl: (active: boolean) => {
-      return active ? '/icons/skills-map-active.svg' : '/icons/skills-map.svg';
+      return active ? '/icons/skill-room.svg' : '/icons/skill-map.svg';
     },
     current: false,
     companyMenu: false,
@@ -178,5 +194,15 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     current: false,
     companyMenu: true,
     requiredPermission: PermissionsSystem.VIEW_ALL,
+  },
+  {
+    ...pageRouters.MEMBER_MANAGEMENT,
+    name: pageRouters.MEMBER_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/team-active.svg' : '/icons/team.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.USER_VIEW,
   },
 ];

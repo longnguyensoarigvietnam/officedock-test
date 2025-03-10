@@ -9,7 +9,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.mixins import UpdateModelMixin
+from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
@@ -18,12 +18,13 @@ from calendars.constants import CalendarTypes
 from calendars.models import Schedule
 from common.serializers import (
     CreationDataTagSerializer,
-    CreationDataUserSerializer,
+    CreationDataUserWithMainOrganizationSerializer,
 )
 from common.utils import (
     get_total_unread_messages,
     format_duration,
     create_categories_by_model,
+    check_task_overtime,
 )
 from dashboard.filters import ActualDurationFilter
 from dashboard.serializers import (
@@ -51,7 +52,7 @@ class DashboardViewSet(BaseAPIViewSet):
         methods=["GET"],
         detail=False,
         url_path="members",
-        serializer_class=CreationDataUserSerializer,
+        serializer_class=CreationDataUserWithMainOrganizationSerializer,
     )
     def members(self, request):
         """
@@ -190,9 +191,9 @@ class DashboardViewSet(BaseAPIViewSet):
 
         # Get data event in schedule
         events = Schedule.objects.filter(
-            start_date__gte=start_date,
-            end_date__lte=end_date,
-            participants_schedules__user=request.user,
+            Q(start_date__lte=end_date)
+            & Q(end_date__gte=start_date)
+            & Q(participants_schedules__user=request.user)
         ).all()
         data = self._append_data_to_cards(data, events, request)
 
@@ -212,7 +213,7 @@ class DashboardViewSet(BaseAPIViewSet):
 
 
 @extend_schema(tags=["System > Duration"])
-class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
+class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
     """
     API endpoint for Dashboard.
     """
@@ -262,6 +263,18 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
             return [
                 DurationSerializer(instance, context={"request": request}).data
             ]
+
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        """
+        Handle delete actual duration
+        """
+        model = instance.task or instance.schedule
+        if model and model.is_start:
+            model.is_start = False
+            model.save()
+
+        instance.delete()
 
     def update(self, request, *args, **kwargs):
         """Override update to control the response"""
@@ -594,32 +607,9 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
                     paused_at__isnull=True,
                 ).first()
                 if isinstance(current_duration_start, Task):
-                    task_schedules = (
-                        current_duration_start.task_schedules.all().order_by(
-                            "plan_start_date"
-                        )
+                    is_send_sk, is_over_estimate = check_task_overtime(
+                        current_duration_start, task_running
                     )
-                    for idx, task_schedule in enumerate(task_schedules):
-                        if idx + 1 < len(
-                            task_schedules
-                        ):  # Ensure next task exists before accessing
-                            next_task_schedule = task_schedules[
-                                idx + 1
-                            ].plan_start_date
-                        else:
-                            next_task_schedule = None  # No next task
-
-                        if (
-                            timezone.now() - task_schedule.plan_end_date
-                            >= timedelta(minutes=30)
-                            and task_running.is_cancel_alert is False
-                            and (
-                                next_task_schedule is None
-                                or timezone.now() <= next_task_schedule
-                            )
-                        ):
-                            is_over_estimate = True
-                            break
                 elif isinstance(current_duration_start, Schedule):
                     if (
                         timezone.now() - current_duration_start.end_date
@@ -646,28 +636,6 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin):
             }
 
         return self.response_ok(data)
-
-    def _get_duration(self, obj):
-        """
-        Calculate task duration.
-        """
-        start_of_today = datetime.combine(timezone.now().date(), time.min)
-        end_of_today = datetime.combine(timezone.now().date(), time.max)
-        task_durations = obj.task_durations.filter(
-            Q(started_at__gte=start_of_today)
-            & Q(Q(paused_at__lte=end_of_today) | Q(paused_at__isnull=True))
-        ).all()
-        total_duration = timedelta()
-        # Calculate time between started and paused
-        for task_duration in task_durations:
-            paused_at = (
-                task_duration.paused_at
-                if task_duration.paused_at
-                else timezone.now()
-            )
-            total_duration += paused_at - task_duration.started_at
-
-        return format_duration(total_duration)
 
     def _separate_duration_while_keep_running(self, duration, end_date):
         """

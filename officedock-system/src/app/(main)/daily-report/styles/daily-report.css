@@ -285,22 +285,33 @@
 .daily-custom .fc-event-dragging .fc-event-main .card-schedule {
   background-color: rgba(167, 185, 193, 0.3) !important;
 }
+.daily-custom .css-19bb58m {
+  margin: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
 .daily-custom .css-19bb58m input {
+  margin: 0 !important;
   box-shadow: none !important;
 }
 .daily-custom .css-1nmdiq5-menu {
   width: fit-content;
 }
-.daily-custom .custom-statistic .css-czlyiw-control {
+.daily-custom .css-czlyiw-control {
   box-shadow: none !important;
   font-size: 12px;
-  height: 40px;
+  height: 30px;
+  min-height: 30px;
+  max-height: 30px;
+
   background-color: transparent !important;
 }
-.daily-custom .custom-statistic .css-1kmpks3-control {
+.daily-custom .css-1kmpks3-control {
   box-shadow: none !important;
   font-size: 12px;
-  height: 40px;
+  height: 30px;
+  margin: 0 !important;
+  min-height: 30px;
   background-color: transparent !important;
 }
 .daily-custom .custom-statistic .css-1ux9r8q-option {

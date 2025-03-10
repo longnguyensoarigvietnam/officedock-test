@@ -10,6 +10,12 @@ import {
 
 import { parseInt } from 'lodash';
 import { AxiosError } from 'axios';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import { useMutation, useQueryClient } from 'react-query';
 import { useSession } from 'next-auth/react';
@@ -30,7 +36,9 @@ import CardListView from '@components/kanban/CardListView';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import Button from '@components/common/Button';
 import InputSearch from '@components/common/InputSearch';
+import socketEventEmitter from '@components/socket/socketEventEmitter';
 import BoardKanban from '@components/kanban/Board';
+import ActionFilterTask from '@components/modals/ActionFilterTask';
 import FixedTaskData from './fixed-task';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
@@ -46,9 +54,11 @@ import { apiRouters } from '@constants/routers';
 import {
   ActionTask,
   EventWorkCategory,
+  FilterTypeKanban,
   ItemScheduleType,
   ItemStartType,
   KanbanType,
+  SocketActions,
   StatusValueTask,
   TemplateAction,
 } from '@constants/enums';
@@ -60,7 +70,9 @@ import {
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_SAVE_MESSAGE,
+  ERROR_SAVE_ZOOM,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -78,6 +90,7 @@ import {
   UpdateTaskKanbanRequest,
 } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
+import { WebSocketMessageSortKanban } from '@interfaces/chat';
 import {
   Template,
   TemplateFormData,
@@ -148,6 +161,7 @@ const KanbanBoardTask = () => {
   const { data: session } = useSession();
   const {
     searchValue,
+    orderingOptions,
     taskSelectedAction,
     memberSelected,
     tagSelected,
@@ -161,6 +175,7 @@ const KanbanBoardTask = () => {
     widthCalendar,
     columnWidth,
     selectedOptionZoom,
+    setExtendByStatus,
     setSelectedOptionZoom,
     setStatusTaskSelected,
     setDataRunning,
@@ -175,6 +190,7 @@ const KanbanBoardTask = () => {
     setDataActualAddSchedule,
     setIdTaskDelete,
     setColumnWidth,
+    setOrderingOptions,
     setDataTaskEditKanban,
   } = useContext(TaskContext);
   const { isExtendCalendar, expanded } = useContext(GlobalStateContext);
@@ -214,7 +230,6 @@ const KanbanBoardTask = () => {
 
   const [dataErrorTask, setDataErrorTask] = useState<TaskErrorPerson>();
 
-  const [_isDragging, setIsDragging] = useState<boolean>(false);
   const [dataItemAddSchedule, setDataItemAddSchedule] = useState<Task>();
 
   const [dataItemResizeSchedule, setDataItemResizeSchedule] =
@@ -222,9 +237,6 @@ const KanbanBoardTask = () => {
 
   const [dataItemChangeInline, setDataItemChangeInline] = useState<Task>();
   const [dataItemUpdateSchedule, setDataItemUpdateSchedule] = useState<Task>();
-
-  const [sortType, _setSortType] = useState<'asc' | 'desc'>('asc');
-  const [columnSort, _setColumnSort] = useState<string>('');
   const [columnId, setColumnId] = useState<string>('');
   const [peopleDefaultId, setPeopleDefaultId] = useState<string>('');
 
@@ -242,6 +254,8 @@ const KanbanBoardTask = () => {
   const [orderTaskSave, setOrderTaskSave] = useState<Task[]>([]);
   const [showTemplateModal, setShowTemplateModal] = useState<boolean>(false);
 
+  const [isReadyToFetch, setIsReadyToFetch] = useState(false);
+
   const { dashboardMemberList } = useDashboardMemberList();
   const { frequentlyTasks: frequentlyTasksList } = useFrequentlyTasks();
   const { templates: templateList } = useTemplateList();
@@ -249,6 +263,9 @@ const KanbanBoardTask = () => {
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [openWarningCloseModal, setOpenWarningCloseModal] =
     useState<boolean>(false);
+
+  const [dataOrderRing, setDataOrderRing] = useState<string>('');
+
   const [resetFunctions, setResetFunctions] = useState<{
     resetDataCategoryOptions?: () => void;
     reset?: () => void;
@@ -272,6 +289,8 @@ const KanbanBoardTask = () => {
     },
     orderingRequest,
     statusTask,
+    isReadyToFetch,
+    orderingOptions,
   );
   useEffect(() => {
     if (numberPages) {
@@ -282,6 +301,30 @@ const KanbanBoardTask = () => {
   useEffect(() => {
     if (authenticatedUser) {
       setLoggedInUser(authenticatedUser);
+      if (authenticatedUser.setting?.kanbanZoom) {
+        setSelectedOptionZoom({
+          label: `${authenticatedUser.setting?.kanbanZoom}%`,
+          value: authenticatedUser.setting?.kanbanZoom,
+        });
+        if (authenticatedUser.setting?.kanbanZoom === 25) {
+          setColumnWidth(calculateWidth(247, 50));
+        } else {
+          setColumnWidth(
+            calculateWidth(
+              247,
+              authenticatedUser.setting?.kanbanZoom as number,
+            ),
+          );
+        }
+      }
+      if (authenticatedUser.setting?.tabVisibility) {
+        setExtendByStatus((prev) =>
+          prev.map((item) => ({
+            ...item,
+            status: authenticatedUser.setting?.tabVisibility?.[item.id] ?? true,
+          })),
+        );
+      }
     }
   }, [authenticatedUser]);
 
@@ -506,7 +549,7 @@ const KanbanBoardTask = () => {
             const updatedCurrentItems = prevData[currentStatusId].items.filter(
               (item) => item.id !== newItem.id,
             );
-            if (orderingRequest || searchValue.length > 0) {
+            if (searchValue.length > 0) {
               return {
                 ...prevData,
                 [currentStatusId]: {
@@ -543,7 +586,7 @@ const KanbanBoardTask = () => {
             const lastItem = column.items[column.items.length - 1];
             isLastItemPinned = !!lastItem.pinAt;
           }
-          if (orderingRequest || searchValue.length > 0) {
+          if (searchValue.length > 0) {
             if (matchedPageData && matchedPageData.hasMores) {
               setNumberPagesData((prevNumberPages) =>
                 prevNumberPages.map((item) =>
@@ -1132,13 +1175,6 @@ const KanbanBoardTask = () => {
     }
   }, [handleUpdateItemStart, taskSelectedAction]);
 
-  // Handle click sort item
-  useEffect(() => {
-    setOrderingRequest(
-      !columnSort ? '' : sortType === 'desc' ? columnSort : `-${columnSort}`,
-    );
-  }, [sortType, columnSort, setOrderingRequest]);
-
   //  Handle call api update index task when drag and drop
   const handleUpdateTaskIndex = async (data: {
     tasks: UpdateTaskKanbanRequest[];
@@ -1151,9 +1187,7 @@ const KanbanBoardTask = () => {
     'postUpdateTaskIndex',
     handleUpdateTaskIndex,
     {
-      onSuccess: async () => {
-        setIsDragging(false);
-      },
+      onSuccess: async () => {},
       onError: () => {
         // When an error occurs, change the state to re-render the kanban board to its old state
         setResetInitialColumnsData(!resetInitialColumnsData);
@@ -1199,9 +1233,7 @@ const KanbanBoardTask = () => {
   // Function handle when drag and drop item is end. Instant, execute function (mutation above) update index task
   const handleChangeBoard = useCallback(
     async (data: Columns, dataItemDrop: DropResult) => {
-      setIsDragging(true);
-
-      if (orderingRequest || searchValue) {
+      if (searchValue) {
         updateTaskStatus({
           id: dataItemDrop.draggableId,
           data: { statusId: Number(dataItemDrop.destination?.droppableId) },
@@ -1245,7 +1277,6 @@ const KanbanBoardTask = () => {
     },
     [
       memberSelected,
-      orderingRequest,
       tagSelected,
       searchValue,
       session?.user.id,
@@ -1336,7 +1367,6 @@ const KanbanBoardTask = () => {
       const itemDataTask = sourceColumn.items[source.index];
 
       if (!itemDataTask) return;
-      setIsDragging(true);
 
       try {
         if (type === KanbanType.COLUMN) {
@@ -1555,8 +1585,6 @@ const KanbanBoardTask = () => {
         }
       } catch (error) {
         // TODO: Handle error
-      } finally {
-        setIsDragging(false);
       }
     },
     [columnsKanbanData],
@@ -1738,14 +1766,25 @@ const KanbanBoardTask = () => {
       });
       setDataTaskEdit(null);
     },
-    onError: ({ response }: ResponseError<{ detail: TaskErrorPerson }>) => {
+    onError: ({
+      response,
+    }: ResponseError<{
+      detail: TaskErrorPerson;
+      taskSchedules: TaskErrorPerson;
+    }>) => {
       if (response?.data.detail) {
         setDataErrorTask(response?.data.detail);
+      } else if (response?.data.taskSchedules) {
+        showToast({
+          variant: 'error',
+          description: ERROR_MESSAGE_OVERLAP_TASK,
+        });
+      } else {
+        showToast({
+          variant: 'error',
+          description: ERROR_UPDATE_MESSAGE,
+        });
       }
-      showToast({
-        variant: 'error',
-        description: ERROR_UPDATE_MESSAGE,
-      });
     },
     onSettled: () => {
       setTimeout(() => {
@@ -1874,6 +1913,12 @@ const KanbanBoardTask = () => {
       peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
+        : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
         : null,
     });
     const isCheckPeopleInCharge =
@@ -2202,6 +2247,16 @@ const KanbanBoardTask = () => {
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
+        : null,
+      remind_at:
+        !data.deadlineRemindCountdown?.value && !data.deadlineRemindType?.value
+          ? null
+          : undefined,
     });
   };
 
@@ -2256,7 +2311,11 @@ const KanbanBoardTask = () => {
         setShowEditTaskModal(false);
       },
       onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
+        if (error.response?.data.taskSchedules) {
+          showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+        } else {
+          showErrorToast(error, ERROR_CREATE_MESSAGE);
+        }
       },
       onSettled: () => {
         setPeopleDefaultId(`${session?.user.id}`);
@@ -2530,6 +2589,96 @@ const KanbanBoardTask = () => {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      if (authenticatedUser.setting?.isSortingTaskByImportant) {
+        setDataOrderRing(FilterTypeKanban.IMPORTANT);
+      } else if (authenticatedUser.setting?.isSortingTaskByDeadline) {
+        setDataOrderRing(FilterTypeKanban.DEADLINE);
+      } else {
+        setDataOrderRing('');
+      }
+      setIsReadyToFetch(true);
+    }
+  }, [authenticatedUser]);
+
+  // Socket
+  useEffect(() => {
+    const handleSocketMessage = (data: WebSocketMessageSortKanban) => {
+      switch (data.action) {
+        case SocketActions.RESET_STATUS_SORT_TASK:
+          setIsReadyToFetch(false);
+          setOrderingRequest('');
+          setDataOrderRing('');
+          break;
+      }
+    };
+
+    socketEventEmitter.on('message', handleSocketMessage);
+
+    return () => {
+      socketEventEmitter.off('message', handleSocketMessage);
+    };
+  }, []);
+
+  // Show data filter
+  const allLabels = orderingOptions
+    ? [
+        ...orderingOptions.organization_ids.map((item) => ({
+          ...item,
+          category: 'organization_ids',
+        })),
+        ...orderingOptions.tag_ids.map((item) => ({
+          ...item,
+          category: 'tag_ids',
+        })),
+        ...orderingOptions.category_ids.map((item) => ({
+          ...item,
+          category: 'category_ids',
+        })),
+      ]
+    : [];
+
+  const firstThree = allLabels.slice(0, 3);
+
+  const remainingCount = allLabels.length - firstThree.length;
+
+  const handleRemoveItem = (
+    category: 'organization_ids' | 'tag_ids' | 'category_ids',
+    value: string | number,
+  ) => {
+    setOrderingOptions((prevData) => {
+      if (!prevData) return prevData;
+
+      return {
+        ...prevData,
+        [category]:
+          prevData[category]?.filter((item) => item.value !== value) || [],
+      };
+    });
+  };
+
+  // Handle save zoom
+  const handleSaveZoomKanban = async (kanbanZoom: number) => {
+    const { data: response } = await api.post(apiRouters.USER_SETTING, {
+      kanbanZoom,
+    });
+    return response;
+  };
+
+  const { mutate: saveZoomKanban } = useMutation(
+    'saeZoomKanban',
+    handleSaveZoomKanban,
+    {
+      onSuccess: () => {},
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_SAVE_ZOOM);
+      },
+      onSettled: () => {},
+    },
+  );
 
   return (
     <>
@@ -2548,7 +2697,7 @@ const KanbanBoardTask = () => {
           setDataItemChangeInline={setDataItemChangeInline}
           handleEditShowClockItem={handleEditShowClockItem}
         />
-        <div className="w-full pl-10">
+        <div className="flex-1 pl-10">
           <DragDropContext onDragStart={() => {}} onDragEnd={onDragEnd}>
             <div
               ref={exEvents}
@@ -2559,7 +2708,7 @@ const KanbanBoardTask = () => {
                     : `calc(${Math.max(viewportWidth, 1280)}px - 700px)`
                   : isExtendCalendar
                     ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 120}px)`
-                    : `calc(${Math.max(viewportWidth, 1280)}px - 700px)`,
+                    : `calc(${Math.max(viewportWidth, 1280)}px - 600px)`,
                 maxWidth: expanded
                   ? widthCalendar < 100
                     ? '100%'
@@ -2609,19 +2758,144 @@ const KanbanBoardTask = () => {
                       name="Sort icon"
                       className="w-[18px] h-[14px]"
                     />
-                    <Button className="h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]">
-                      締切期間
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px] border-[#A7B7C2] !text-[#A7B7C2] ">
-                      重要
-                    </Button>
-                    <ImageRound
-                      src="/icons/filter.svg"
-                      name="Filter icon"
-                      className="w-[14px] h-[14px] ml-2"
-                    />
+                    <>
+                      <Button
+                        disabled={isLoadingDataTask}
+                        onClick={() => {
+                          if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
+                            setIsReadyToFetch(true);
+
+                            setDataOrderRing(FilterTypeKanban.DEADLINE);
+                            setOrderingRequest(FilterTypeKanban.DEADLINE);
+                          }
+                        }}
+                        variant={
+                          isLoadingDataTask
+                            ? 'outline'
+                            : dataOrderRing === FilterTypeKanban.DEADLINE
+                              ? 'primary'
+                              : 'outline'
+                        }
+                        className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                        締切期間
+                      </Button>
+                      <Button
+                        disabled={isLoadingDataTask}
+                        onClick={() => {
+                          if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+                            setIsReadyToFetch(true);
+
+                            setDataOrderRing(FilterTypeKanban.IMPORTANT);
+                            setOrderingRequest(FilterTypeKanban.IMPORTANT);
+                          }
+                        }}
+                        variant={
+                          isLoadingDataTask
+                            ? 'outline'
+                            : dataOrderRing === FilterTypeKanban.IMPORTANT
+                              ? 'primary'
+                              : 'outline'
+                        }
+                        className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                        重要
+                      </Button>
+                    </>
+
+                    {/* Filter option modal */}
+                    <Popover className="relative">
+                      {() => (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <PopoverButton
+                              onClick={() =>
+                                setIsOpenModalFilter(!isOpenModalFilter)
+                              }
+                              className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                              <ImageRound
+                                src="/icons/filter.svg"
+                                name="Filter icon"
+                                className="w-[14px] h-[14px] ml-2"
+                              />
+                            </PopoverButton>
+                            {allLabels.length > 3 ? (
+                              <>
+                                {firstThree.slice(0, 3).map((item, index) => (
+                                  <div
+                                    key={index}
+                                    onClick={() =>
+                                      handleRemoveItem(
+                                        item.category as
+                                          | 'organization_ids'
+                                          | 'tag_ids'
+                                          | 'category_ids',
+                                        item.value,
+                                      )
+                                    }
+                                    className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                                    <span className="w-[71px] truncate">
+                                      {item.label}
+                                    </span>
+                                    <ImageRound
+                                      src={`/icons/close.svg`}
+                                      name="close"
+                                      className="w-fit h-fit cursor-pointer"
+                                    />
+                                  </div>
+                                ))}
+                                <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                                  +{remainingCount}
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                {allLabels.map((item, index) => (
+                                  <div
+                                    key={index}
+                                    onClick={() => {
+                                      setIsReadyToFetch(true);
+
+                                      handleRemoveItem(
+                                        item.category as
+                                          | 'organization_ids'
+                                          | 'tag_ids'
+                                          | 'category_ids',
+                                        item.value,
+                                      );
+                                    }}
+                                    className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                                    <span className="w-[71px] truncate">
+                                      {item.label}
+                                    </span>
+                                    <ImageRound
+                                      src={`/icons/close.svg`}
+                                      name="close"
+                                      className="w-fit h-fit cursor-pointer"
+                                    />
+                                  </div>
+                                ))}
+                              </>
+                            )}
+                          </div>
+                          <Transition
+                            as={Fragment}
+                            show={isOpenModalFilter}
+                            enter="transition ease-out duration-200"
+                            enterFrom="opacity-0 translate-y-1"
+                            enterTo="opacity-100 translate-y-0"
+                            leave="transition ease-in duration-150"
+                            leaveFrom="opacity-100 translate-y-0"
+                            leaveTo="opacity-0 translate-y-1">
+                            <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
+                              <ActionFilterTask
+                                creationDataTaskData={creationDataTaskData}
+                                handleClose={() => setIsOpenModalFilter(false)}
+                              />
+                            </PopoverPanel>
+                          </Transition>
+                        </>
+                      )}
+                    </Popover>
+
                     <InputSearch
                       className="w-[300px] h-[34px] py-0 bg-[#EBF1F7] !rounded-[20px]"
                       inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm"
@@ -2899,6 +3173,7 @@ const KanbanBoardTask = () => {
               ]}
               onChange={(selectedOption) => {
                 setSelectedOptionZoom(selectedOption);
+                saveZoomKanban(selectedOption.value as number);
                 if (selectedOption.value === 25) {
                   setColumnWidth(calculateWidth(247, 50));
                 } else {

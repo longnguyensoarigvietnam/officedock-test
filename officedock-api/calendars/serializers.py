@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import serializers
 
 from base.messages import ERROR_MESSAGES
@@ -10,6 +11,7 @@ from skills.models import StatisticCategory
 from tags.models import Tag
 from tags.serializers import BaseTagSerializer
 from users.models import User
+from users.serializers import ProfileSerializer
 from tasks.models import PeopleInChargeTasks, TaskSchedule
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 
@@ -85,6 +87,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "type",
             "send_to_chat",
             "message",
+            "is_start",
         ]
         read_only_fields = ["id"]
 
@@ -93,7 +96,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first())
+        return get_common_categories(obj.categories.first(), obj)
 
     def validate(self, data):
         """
@@ -142,6 +145,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
     type = serializers.SerializerMethodField()
     event_type = serializers.SerializerMethodField()
     is_my_schedule = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
 
     class Meta:
         model = Schedule
@@ -151,12 +155,21 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "start_date",
             "end_date",
             "is_all_day",
+            "address",
             "type",
             "is_my_schedule",
             "participants",
             "is_start",
             "event_type",
+            "categories",
         ]
+
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Schedule."""
+        if not obj.categories.exists():
+            return []
+
+        return get_common_categories(obj.categories.first(), obj)
 
     def get_type(self, obj):
         """
@@ -306,3 +319,51 @@ class TaskScheduleForCalendarSerializer(serializers.ModelSerializer):
     def get_id(self, obj):
         """Return id of task"""
         return obj.task.id
+
+
+class ScheduleTeamdockSerializer(serializers.ModelSerializer):
+    """
+    Serializer for schedule in teamdock
+    """
+
+    profile = ProfileSerializer(read_only=True)
+    schedules = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "profile",
+            "schedules",
+        ]
+
+    def get_schedules(self, obj):
+        """
+        Retrieve the schedules along with schedules assigned to the user.
+        """
+        request = self.context.get("request")
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+        search = request.query_params.get("search")
+
+        if not start_date and not end_date:
+            schedules = []
+        else:
+            schedules = obj.schedules.order_by("start_date")
+
+            if search:
+                schedules = schedules.filter(title__icontains=search)
+
+            if start_date:
+                schedules = schedules.filter(
+                    Q(start_date__gte=start_date) | Q(end_date__gte=start_date)
+                )
+
+            if end_date:
+                schedules = schedules.filter(
+                    Q(start_date__lte=end_date) | Q(end_date__lte=end_date)
+                )
+
+        return BaseScheduleSerializer(
+            schedules, many=True, context={"request": request}
+        ).data

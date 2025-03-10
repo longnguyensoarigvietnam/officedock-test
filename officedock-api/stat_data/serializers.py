@@ -4,7 +4,10 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
 
+from calendars.constants import CalendarTypes
+from calendars.models import Schedule
 from common.utils import format_duration, get_common_categories
+from tags.serializers import BaseTagSerializer
 from tasks.models import TaskDuration, Task
 from tasks.serializers import TaskCommonSerializer, TodoListSerializer
 
@@ -59,6 +62,7 @@ class DailyTaskSerializer(TaskCommonSerializer):
     """
 
     task_durations = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
     total_duration = serializers.SerializerMethodField()
     todo_list = TodoListSerializer(many=True, required=False, allow_null=True)
     categories = serializers.SerializerMethodField(read_only=True)
@@ -75,14 +79,19 @@ class DailyTaskSerializer(TaskCommonSerializer):
             "todo_list",
             "categories",
             "organization",
+            "type",
         ]
+
+    def get_type(self, obj):
+        """Return type of model"""
+        return CalendarTypes.TASK.value
 
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first())
+        return get_common_categories(obj.categories.first(), obj)
 
     def get_task_durations(self, obj):
         """
@@ -137,3 +146,81 @@ class TotalDurationSerializer(DailyTaskSerializer):
             "todo_list",
             "categories",
         ]
+
+
+class DailyEventSerializer(serializers.ModelSerializer):
+    """
+    Daily task serializer
+    """
+
+    task_durations = serializers.SerializerMethodField()
+    total_duration = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField(read_only=True)
+    tags = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Schedule
+        fields = [
+            "id",
+            "title",
+            "tags",
+            "task_durations",
+            "total_duration",
+            "categories",
+            "organization",
+            "type",
+        ]
+
+    def get_tags(self, obj):
+        """
+        Handle sorted tags schedules id
+        """
+        sorted_tags = obj.tags.all().order_by("tags_schedules__id")
+        return BaseTagSerializer(sorted_tags, many=True).data
+
+    def get_type(self, obj):
+        """Return type of model"""
+        return CalendarTypes.SCHEDULE.value
+
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Task."""
+        if not obj.categories.exists():
+            return []
+
+        return get_common_categories(obj.categories.first(), obj)
+
+    def get_task_durations(self, obj):
+        """
+        Handle get task duration
+        """
+        start_of_day = self.context.get("start_of_day")
+        end_of_day = self.context.get("end_of_day")
+        durations = _get_list_durations(obj, start_of_day, end_of_day)
+
+        return DurationSerializer(
+            durations,
+            many=True,
+            context={"start_of_day": start_of_day, "end_of_day": end_of_day},
+        ).data
+
+    def get_total_duration(self, obj):
+        """
+        Handle get total duration
+        """
+        start_of_day = self.context.get("start_of_day")
+        end_of_day = self.context.get("end_of_day")
+        durations = _get_list_durations(obj, start_of_day, end_of_day)
+
+        total_duration = timedelta()
+        # Calculate time between started and paused
+        for task_duration in durations:
+            paused_at = (
+                task_duration.paused_at
+                if task_duration.paused_at
+                else timezone.now()
+            )
+            total_duration += paused_at - task_duration.started_at
+
+        # Format the output as desired (HH:MM:SS)
+        return format_duration(total_duration)

@@ -1,14 +1,24 @@
 import { MessageType, SubmitLevelStatus } from '@constants/enums';
-import { Organizations } from './organization';
 
 export interface ChatMessageResponse {
   id?: number;
   uuid: string;
   message: string;
+  isBookmark?: boolean;
+  chatRoom?: {
+    id: number;
+    name: string;
+    code: string;
+    type: string;
+    participants: ChatParticipant;
+  };
   sender: {
     id: number;
     fullName: string;
-    organizations?: Organizations[];
+    organizations?: {
+      id: number;
+      name: string;
+    } | null;
   };
   task: {
     id: number;
@@ -39,15 +49,46 @@ export interface ChatMessageResponse {
     comment: string | null;
     id: number;
     organization: number;
-    skill: number;
+    skill: {
+      id: number;
+      name: string;
+    };
     staff: number;
     status: SubmitLevelStatus;
   };
-  scheduleId?: number;
+  schedule?: {
+    id: number;
+    title: string;
+    isAllDay: boolean;
+  };
+  chatFiles: ChatFileResponse[];
   isEdited: boolean;
   createdAt: Date | string;
   deletedAt: Date | null;
   type: MessageType;
+  mentions?: number[];
+  reactions?: {
+    icon: string;
+    users: number[];
+  }[];
+  tasks?: {
+    id: number;
+    title: string;
+  }[];
+}
+
+export interface TaskUserListChat {
+  id: number;
+  title: string;
+}
+export interface ChatFileResponse {
+  compressedFile?: string;
+  createdAt?: Date | string;
+  id?: number;
+  fileType: string;
+  fileSize: number;
+  fileName: string;
+  uuid: string;
 }
 
 export interface ChatDashboardMember {
@@ -66,8 +107,12 @@ export interface OrganizationDetail {
 }
 
 export interface ChatParticipant {
-  id: number;
+  id: number | null;
   fullName: string;
+  organizations?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
 export interface ChatRoomDetail {
@@ -92,6 +137,7 @@ export interface ChatRoomItem {
 }
 
 export interface WebSocketMessageData {
+  id?: number;
   action: string;
   clientId: string | null;
   chatRoom: ChatRoomItem;
@@ -105,6 +151,22 @@ export interface WebSocketMessageData {
       name: string;
     };
   };
+  remindCountdown?: number;
+  remindType?: string;
+  title?: string;
+}
+export interface WebSocketMessageDataOverTime {
+  action: string;
+  isOverEstimate: boolean;
+  taskDurationRunningUuid: string;
+  type: string;
+  id: number;
+}
+
+export interface WebSocketMessageSortKanban {
+  action: string;
+  isSortingTaskByDeadline: boolean;
+  isSortingTaskByImportant: boolean;
 }
 
 export interface DataChatRoomSocket {

@@ -1,7 +1,7 @@
 'use client';
 import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 import Footer from './Footer';
 import Metadata from '@components/common/Metadata';
@@ -14,15 +14,24 @@ type AuthenticationLayoutProps = {
   children?: ReactNode;
   title?: string;
   className?: string;
+  showFooter?: boolean;
 };
 
 const AuthenticationLayout = ({
   children,
   className,
   title,
+  showFooter = true,
 }: AuthenticationLayoutProps) => {
-  const { status, data: session } = useSession();
+  const { status, data: session, update } = useSession();
   const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut({
+      redirect: false,
+    });
+    await update();
+  };
 
   useEffect(() => {
     if (
@@ -46,6 +55,13 @@ const AuthenticationLayout = ({
         }
       }
     }
+    if (
+      session &&
+      status === SessionStatus.AUTHENTICATED &&
+      new Date(session.expires) <= new Date()
+    ) {
+      handleSignOut();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session]);
 
@@ -58,7 +74,7 @@ const AuthenticationLayout = ({
           className={`flex-grow flex flex-col justify-center items-center gap-10 ${className}`}>
           {children}
         </main>
-        <Footer />
+        {showFooter && <Footer />}
       </div>
     </>
   );

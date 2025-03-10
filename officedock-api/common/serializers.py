@@ -4,7 +4,7 @@ from users.models import User
 from organizations.models import Organization
 from organizations.serializers import SuperiorSerializer
 from tags.models import Tag
-from tasks.models import TaskStatus
+from tasks.models import Task, TaskStatus
 
 
 class CreationDataUserSerializer(serializers.ModelSerializer):
@@ -81,6 +81,16 @@ class CreationDataTagSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
+class CreationDataTaskListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Creation data Task
+    """
+
+    class Meta:
+        model = Task
+        fields = ["id", "title"]
+
+
 class CreationDataTaskStatusSerializer(serializers.ModelSerializer):
     """
     Serializer for Creation data Task status
@@ -109,6 +119,8 @@ class EmptySerializer(serializers.Serializer):
 
 
 class CreationDataUserWithOrganizationSerializer(CreationDataUserSerializer):
+    """Creation date user with organization"""
+
     organizations = CreationDataOrganizationSerializer(
         many=True, read_only=True
     )
@@ -116,3 +128,27 @@ class CreationDataUserWithOrganizationSerializer(CreationDataUserSerializer):
     class Meta:
         model = User
         fields = ["id", "full_name", "organizations"]
+
+
+class CreationDataUserWithMainOrganizationSerializer(
+    CreationDataUserSerializer
+):
+    """Serializer for creation data user with main organization"""
+
+    organizations = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "full_name", "organizations"]
+
+    def get_organizations(self, obj):
+        """Return main organization of user"""
+        organization = obj.organizations.filter(
+            usersorganizations__is_main=True
+        ).first()
+
+        return (
+            CreationDataOrganizationSerializer(organization).data
+            if organization
+            else None
+        )

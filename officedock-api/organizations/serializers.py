@@ -6,6 +6,7 @@ from common.utils import compare_categories
 from roles.constants import Actions, Screens
 from roles.utils import has_permission
 from skills.models import StatisticCategory, Skill, SkillMap
+from users.models import User
 from .models import (
     Organization,
     OrganizationsStatisticCategories,
@@ -75,6 +76,7 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
             "small_statistic_category",
             "index",
             "skills",
+            "color",
         ]
 
     def get_skills(self, obj):
@@ -387,6 +389,49 @@ class ListOrganizationStatisticSerializer(serializers.Serializer):
     organization_statistic_categories = OrganizationStatisticCategorySerializer(
         many=True, write_only=True, required=False
     )
+
+
+class MemberSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user member
+    """
+
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "full_name"]
+
+    def get_full_name(self, obj):
+        """
+        Return full name of user.
+        """
+        return obj.profile.full_name
+
+
+class OrganizationMemberSerializer(serializers.ModelSerializer):
+    """
+    Serializer for mermber organization
+    """
+
+    users = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = [
+            "id",
+            "name",
+            "users",
+        ]
+
+    def get_users(self, obj):
+        """Get users in organization"""
+        users = obj.users.all()
+
+        if search := self.context.get("search"):
+            users = users.filter(profile__full_name__icontains=search)
+
+        return MemberSerializer(users, many=True).data
 
 
 class ListOrganizationSkillSerializer(serializers.Serializer):

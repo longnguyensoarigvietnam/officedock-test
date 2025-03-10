@@ -10,11 +10,16 @@ type Props = {
 const TaskDailyCard = ({ event, isDownload }: Props) => {
   const differentTime =
     event.timeText && isMoreThanSixtyMinutes(event.timeText);
+  const largeColor = event.event?.extendedProps.largeColor;
+
   return (
     <>
       <div
         key={event.event.id}
-        className={`h-full card-schedule item-schedule-shadow   text-black rounded-md  flex justify-between overflow-hidden p-2 bg-white border`}>
+        style={{
+          backgroundColor: largeColor ? largeColor : 'white',
+        }}
+        className={`h-full card-schedule item-schedule-shadow   text-white rounded-md  flex justify-between overflow-hidden p-2 bg-white border`}>
         <div className="flex flex-col gap-3 w-[80%]">
           <p
             className={`text-sm font-bold truncate block w-full ${isDownload ? '-translate-y-[50%] h-8' : ''} `}>

@@ -1,7 +1,9 @@
 import { Tags } from './tag';
 import { TodoItem } from './task';
+import { User } from './user';
 
 export interface TaskTimeStatistic {
+  uuid: string;
   start: Date;
   end: Date;
   id: string;
@@ -40,13 +42,19 @@ export interface dataStatisticResponse {
     categoryName: string;
     duration: string;
     percent: number;
+    categoryColor: string;
   }[];
   tasks: dataTaskDaily[];
   remark: {
     date: string | null;
     remark: string;
     isSubmit: boolean;
+    isConfirmed: boolean;
+    user: User;
+    organizationName: string;
   };
+  nextUser?: number;
+  prevUser?: number;
   totalDuration: string;
   organizationCategories: OrganizationCategories;
 }
@@ -64,6 +72,7 @@ export interface dataTaskDaily {
     id: number;
     name: string;
     type: string;
+    color: string;
   }[];
   status: {
     id: number;
@@ -72,11 +81,13 @@ export interface dataTaskDaily {
   organization: number;
   tags: Omit<Tags, 'peopleInCharge' | 'responsiblePerson'>[];
   taskDurations: {
+    uuid: string;
     id: number;
     duration: string;
     startedAt: string;
     pausedAt: string;
   }[];
+  type: string;
   todoList: TodoItem[];
   totalDuration: string;
 }
@@ -96,6 +107,7 @@ export interface ChildTask {
   startedAt: string;
   pausedAt: string;
   isRunning?: boolean;
+  type?: string;
   SMALL: {
     id: number | string;
     name: string;
@@ -142,4 +154,35 @@ export interface dataTaskDailyTable {
   pausedAt?: string;
   isRunning?: boolean;
   organization?: number;
+  type?: string;
+}
+export interface DataActualDetail {
+  largeColor: string;
+  title: string;
+  start: string;
+  end: string;
+  left?: number;
+  top?: number;
+  uuid: string;
+}
+
+export interface DataUserDetailDailyType {
+  id: number;
+  fullName: string;
+  isConfirmed: boolean;
+  totalDuration: string;
+  organizationName?: string;
+}
+export interface DataListDailyType {
+  organization: {
+    id: number;
+    name: string;
+  };
+  users: DataUserDetailDailyType[];
+}
+
+export interface dataRequestConfirmType {
+  id: number;
+  isConfirmed: boolean;
+  categoryId: number;
 }

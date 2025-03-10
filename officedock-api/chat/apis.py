@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import transaction
 from django.db.models import (
     DateTimeField,
@@ -9,6 +10,7 @@ from django.db.models import (
     CharField,
     F,
     Q,
+    Count,
 )
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -30,19 +32,30 @@ from chat.constants import (
     ChatMessageTypes,
     ChatRoomTypes,
     WebSocketEventType,
-    ChatRoomNames,
     TypeChatGroup,
 )
-from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
+from chat.models import (
+    ChatMessage,
+    ChatRoom,
+    ChatRoomsParticipants,
+    ChatFile,
+    Bookmark,
+)
 from chat.serializers import (
+    BookMarkSerializer,
+    ChatFileDetailSerializer,
     ChatMessageSerializer,
+    ChatMessageBookMarkSerializer,
     ChatRoomDetailSerializer,
+    ChatRoomMemoSerializer,
     ChatRoomSerializer,
     ChatRoomsParticipantsSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
     SendMessageSerializer,
+    ReactionSerializer,
 )
-from common.utils import send_web_socket_event
+from chat.utils import remove_chat_files
+from common.utils import StripTags, send_web_socket_event
 from base.permissions import ActionPermission
 from roles.constants import Screens
 
@@ -293,7 +306,11 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             OpenApiParameter(
                 "type",
                 type=str,
-                enum=[TypeChatGroup.CHAT.value, TypeChatGroup.NOTIFY.value],
+                enum=[
+                    TypeChatGroup.GROUP.value,
+                    TypeChatGroup.PRIVATE.value,
+                    TypeChatGroup.UNREAD.value,
+                ],
             ),
         ]
     )
@@ -304,32 +321,40 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         user = request.user
 
         # Get or create chat room type task
-        task_room = ChatRoom.objects.filter(
-            type=ChatRoomTypes.TASK.value,
-            participants=user,
-            company=user.company,
-            name=ChatRoomNames.TASK_CARD.value,
-        ).first()
-
-        # Get or create chat room type skill
-        skill_room = ChatRoom.objects.filter(
-            type=ChatRoomTypes.SKILL.value,
-            participants=user,
-            company=user.company,
-            name=ChatRoomNames.SKILL_UP.value,
-        ).first()
+        # FIXME: Remove later
+        # task_room = ChatRoom.objects.filter(
+        #     type=ChatRoomTypes.TASK.value,
+        #     participants=user,
+        #     company=user.company,
+        #     name=ChatRoomNames.TASK_CARD.value,
+        # ).first()
+        #
+        # # Get or create chat room type skill
+        # skill_room = ChatRoom.objects.filter(
+        #     type=ChatRoomTypes.SKILL.value,
+        #     participants=user,
+        #     company=user.company,
+        #     name=ChatRoomNames.SKILL_UP.value,
+        # ).first()
 
         # Use select_related to load related ForeignKey relationships
-        chat_rooms_participants = user.chat_rooms_participants.select_related(
-            "chat_room",
-        ).filter(hidden_at__isnull=True)
-
-        task_card_room = ChatRoomsParticipants.objects.filter(
-            chat_room=task_room, user=user
-        ).first()
-        skill_card_room = ChatRoomsParticipants.objects.filter(
-            chat_room=skill_room, user=user
-        ).first()
+        chat_rooms_participants = (
+            user.chat_rooms_participants.select_related("chat_room")
+            .annotate(
+                participant_count=Count("chat_room__chat_rooms_participants")
+            )
+            .filter(hidden_at__isnull=True)
+            .exclude(
+                chat_room__type=ChatRoomTypes.PRIVATE.value, participant_count=1
+            )
+        )
+        # FIXME: Remove later
+        # task_card_room = ChatRoomsParticipants.objects.filter(
+        #     chat_room=task_room, user=user
+        # ).first()
+        # skill_card_room = ChatRoomsParticipants.objects.filter(
+        #     chat_room=skill_room, user=user
+        # ).first()
 
         # Subquery to get the latest message
         latest_message_subquery = Subquery(
@@ -414,20 +439,16 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             "chat_room__participants",
             "chat_room__chat_messages",
         )
-        if request.query_params.get("type") == TypeChatGroup.CHAT.value:
-            updated_chat_rooms = chat_rooms.exclude(
-                chat_room__type__in=[
-                    ChatRoomTypes.TASK.value,
-                    ChatRoomTypes.SKILL.value,
-                ]
-            )
-        elif request.query_params.get("type") == TypeChatGroup.NOTIFY.value:
+        if request.query_params.get("type") == TypeChatGroup.PRIVATE.value:
             updated_chat_rooms = chat_rooms.filter(
-                chat_room__type__in=[
-                    ChatRoomTypes.TASK.value,
-                    ChatRoomTypes.SKILL.value,
-                ]
+                chat_room__type=ChatRoomTypes.PRIVATE.value
             )
+        elif request.query_params.get("type") == TypeChatGroup.GROUP.value:
+            updated_chat_rooms = chat_rooms.filter(
+                chat_room__type=ChatRoomTypes.GROUP.value
+            )
+        elif request.query_params.get("type") == TypeChatGroup.UNREAD.value:
+            updated_chat_rooms = chat_rooms.filter(unread_messages__gt=0)
         else:
             updated_chat_rooms = chat_rooms
             # FIXME: Remove later
@@ -615,6 +636,18 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 description=BasePagination.page_size_query_description,
             ),
             OpenApiParameter("message_id", type=int, required=False),
+            OpenApiParameter("message", type=str, required=False),
+            OpenApiParameter("sorting", type=str, required=False),
+            OpenApiParameter(
+                "chatroom_type",
+                type=str,
+                enum=[
+                    ChatRoomTypes.CALENDAR.value,
+                    ChatRoomTypes.TASK.value,
+                    ChatRoomTypes.SKILL.value,
+                ],
+            ),
+            OpenApiParameter("bookmark_message_id", type=int, required=False),
         ],
         responses={
             status.HTTP_200_OK: OpenApiResponse(
@@ -641,13 +674,77 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         if request.method == "GET":
+            page_size = request.query_params.get("page_size", 20)
+            sorting = request.query_params.get("sorting")
+            message_id = request.query_params.get("message_id")
+            message = request.query_params.get("message")
+            chatroom_type = request.query_params.get("chatroom_type")
+            bookmark_message_id = request.query_params.get(
+                "bookmark_message_id"
+            )
+
+            # Sorting message by asc or desc create_at
+            order_by_field = "created_at" if sorting else "-created_at"
             chat_messages = chat_room.chat_messages.order_by(
-                "-created_at"
+                order_by_field
             ).all()
 
-            if message_id := request.query_params.get("message_id"):
-                chat_messages = chat_messages.filter(id__lt=message_id)
+            # Filter message_id or bookmark_message_id
+            if bookmark_message_id:
+                bookmark_message_id = int(bookmark_message_id)
+                page_size = int(page_size)
 
+                # Check if list has more than page_size items
+                if len(chat_messages) > page_size:
+                    # Find the position of bookmark_message_id in the list
+                    bookmark_index = next(
+                        (
+                            i
+                            for i, msg in enumerate(chat_messages)
+                            if msg.id == bookmark_message_id
+                        ),
+                        None,
+                    )
+
+                    if bookmark_index is not None:
+                        start_index = max(bookmark_index - 5, 0)
+                        chat_messages_result = chat_messages[start_index:]
+
+                        # If the number of messages is not enough for page_size, get more from before
+                        if len(chat_messages_result) < page_size:
+                            remaining_items = page_size - len(
+                                chat_messages_result
+                            )
+                            extra_start = max(start_index - remaining_items, 0)
+                            chat_messages_result = chat_messages[extra_start:]
+
+                        chat_messages = chat_messages_result
+            elif message_id:
+                filter_field = "id__gt" if sorting else "id__lt"
+                chat_messages = chat_messages.filter(
+                    **{filter_field: message_id}
+                )
+            elif message:
+                if chatroom_type == ChatRoomTypes.TASK.value:
+                    chat_messages = chat_messages.filter(
+                        task__title__icontains=message
+                    )
+                elif chatroom_type == ChatRoomTypes.CALENDAR.value:
+                    chat_messages = chat_messages.filter(
+                        Q(schedule__title__icontains=message)
+                        | Q(message__icontains=message)
+                    )
+                elif chatroom_type == ChatRoomTypes.SKILL.value:
+                    chat_messages = chat_messages.filter(
+                        Q(submit_level__skill__name__icontains=message)
+                    )
+                else:
+                    chat_messages = chat_messages.annotate(
+                        clean_message=StripTags(F("message"))
+                    ).filter(Q(clean_message__icontains=message))
+                chat_messages = chat_messages.filter(
+                    deleted_at__isnull=True
+                ).order_by("-created_at")
             return self.response_pagination(
                 request, chat_messages, ChatMessageSerializer
             )
@@ -656,9 +753,23 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             client_id = request.data.pop("client_id", None)
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
+            serializer_data = serializer.validated_data
+            files = serializer_data.pop("files", None)
+            file_uuids = serializer_data.pop("file_uuids", [])
             message = serializer.save(
                 sender=user, chat_room=chat_room, company=user.company
             )
+
+            if files:
+                # Create chat files
+                ChatFile.create_files(
+                    company=chat_room.company,
+                    room=chat_room,
+                    message=message,
+                    files=files,
+                    uuids=file_uuids,
+                )
+
             chat_room_participants = chat_room.chat_rooms_participants.all()
             for participant in chat_room_participants:
                 if participant.user_id != user.id:
@@ -667,27 +778,50 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     )
                 participant.hidden_at = None
                 participant.save()
-                # Handle case realtime when send chat message
-                send_web_socket_event(
-                    {
-                        "client_id": client_id,
-                        "action": WebSocketEventType.MESSAGE.value,
-                        "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                            participant
-                        ).data,
-                        "chat_message": ChatMessageSerializer(message).data,
-                    },
-                    participant,
-                )
+                if participant.user_id != user.id:
+                    # Handle case realtime when send chat message
+                    send_web_socket_event(
+                        {
+                            "client_id": client_id,
+                            "action": WebSocketEventType.MESSAGE.value,
+                            "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                                participant
+                            ).data,
+                            "chat_message": ChatMessageSerializer(message).data,
+                        },
+                        participant,
+                    )
 
             return self.response_created(ChatMessageSerializer(message).data)
 
         return self.response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    @action(
+        methods=["PATCH"],
+        detail=True,
+        url_path="memo",
+        serializer_class=ChatRoomMemoSerializer,
+    )
+    def memo(self, request, code=None):
+        """
+        Update memo for chat room
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        instance.memo = serializer_data.pop("memo", None)
+        instance.save()
+
+        return self.response_ok()
+
 
 @extend_schema(tags=["System > Chat Message"])
 class ChatMessageViewSet(
-    BaseAPIViewSet, mixins.UpdateModelMixin, mixins.DestroyModelMixin
+    BaseAPIViewSet,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
 ):
     """
     API endpoint for Chat Message
@@ -704,28 +838,186 @@ class ChatMessageViewSet(
         Filtering chat messages by user.
         """
 
+        queryset = super().get_queryset()
         user = self.request.user
-        return super().get_queryset().filter(sender=user)
 
-    def update(self, request, *args, **kwargs):
+        if self.action in ["destroy", "perform_update"]:
+            return queryset.filter(sender=user)
+
+        return queryset.filter(company=user.company)
+
+    def get_serializer_class(self):
+        """
+        Serializer classification by action
+        """
+        if self.action == "list":
+            return ChatMessageBookMarkSerializer
+
+        return super().get_serializer_class()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("is_bookmark", type=bool, required=False),
+            OpenApiParameter("message", type=str, required=False),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """
+        Get a list of chat rooms.
+        """
+        user = request.user
+        messages = self.get_queryset().filter(deleted_at__isnull=True)
+        is_bookmark = request.query_params.get("is_bookmark")
+
+        if is_bookmark:
+            messages = (
+                messages.filter(bookmark_users=user)
+                .order_by("bookmarks__bookmark_at")
+                .distinct()
+            )
+        else:
+            messages = messages.order_by("-created_at")
+
+        if message := request.query_params.get("message"):
+            if is_bookmark:
+                messages = (
+                    messages.filter(
+                        Q(task__title__icontains=message)
+                        | Q(
+                            Q(schedule__title__icontains=message)
+                            | Q(message__icontains=message)
+                        )
+                        | Q(Q(submit_level__skill__name__icontains=message))
+                    )
+                    .order_by("bookmarks__bookmark_at")
+                    .distinct()
+                )
+            else:
+                messages = (
+                    messages.annotate(clean_message=StripTags(F("message")))
+                    .filter(clean_message__icontains=message)
+                    .order_by("-created_at")
+                )
+
+        return self.response_pagination(
+            request, messages, ChatMessageBookMarkSerializer
+        )
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="bookmark",
+        serializer_class=BookMarkSerializer,
+    )
+    def bookmark(self, request, uuid=None):
+        """
+        Bookmark message
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        bookmark_at = serializer_data.pop("bookmark_at", None)
+        if bookmark_at:
+            Bookmark.objects.get_or_create(
+                chat_message=instance,
+                user=request.user,
+                defaults={"bookmark_at": datetime.now()},
+            )
+        else:
+            Bookmark.objects.filter(
+                chat_message=instance, user=request.user
+            ).delete()
+
+        return self.response_ok()
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="reaction",
+        serializer_class=ReactionSerializer,
+    )
+    @transaction.atomic()
+    def reaction(self, request, uuid=None):
+        """
+        Bookmark message
+        """
+        user = request.user
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        icon = serializer_data.pop("icon")
+        if instance.reactions.filter(user=user, icon=icon).exists():
+            instance.reactions.filter(user=user, icon=icon).delete()
+        else:
+            instance.reactions.create(
+                company=user.company, user=user, icon=icon
+            )
+        participants = instance.chat_room.chat_rooms_participants.all()
+        for participant in participants:
+            if participant.user.id != user.id:
+                send_web_socket_event(
+                    {
+                        "action": WebSocketEventType.EDIT_MESSAGE.value,
+                        "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                            participant
+                        ).data,
+                        "chat_message": ChatMessageSerializer(instance).data,
+                    },
+                    participant.user,
+                )
+
+        return self.response_ok()
+
+    @transaction.atomic
+    def perform_update(self, serializer):
         """
         Handle update message.
         """
-        instance = self.get_object()
+
+        instance = serializer.instance
+        serializer_data = serializer.validated_data
+        files = serializer_data.pop("files", None)
+        file_uuids = serializer_data.pop("file_uuids", [])
+
         if (
             instance.type != ChatMessageTypes.MESSAGE.value
             or instance.deleted_at is not None
         ):
             raise ValidationError({"detail": ERROR_MESSAGES["cannot_updated"]})
 
-        # Perform the update operation
-        super().update(request, *args, **kwargs)
+        if not isinstance(file_uuids, list):
+            file_uuids = [file_uuids]
 
-        # Fetch the updated message
-        instance.refresh_from_db()
+        # Get uuids not exists in files
+        uuids_exists = instance.chat_files.filter(
+            uuid__in=file_uuids
+        ).values_list("uuid", flat=True)
+        uuids_to_create = []
+        for uuid in file_uuids:
+            if uuid not in uuids_to_create and uuid not in uuids_exists:
+                uuids_to_create.append(uuid)
+
+        # Delete chat files
+        chat_files = instance.chat_files.exclude(uuid__in=file_uuids).all()
+        remove_chat_files(chat_files)
+
+        # Perform the update operation
+        instance = serializer.save()
+
+        chat_room = instance.chat_room
+        if files:
+            # Create chat files
+            ChatFile.create_files(
+                company=instance.company,
+                room=chat_room,
+                message=instance,
+                files=files,
+                uuids=uuids_to_create,
+            )
 
         # Handle case realtime when edit chat message
-        chat_room = instance.chat_room
         send_web_socket_event(
             {
                 "action": WebSocketEventType.EDIT_MESSAGE.value,
@@ -735,8 +1027,6 @@ class ChatMessageViewSet(
             chat_room=chat_room,
         )
 
-        return self.response_ok()
-
     def destroy(self, request, *args, **kwargs):
         """
         Handle soft delete message
@@ -744,6 +1034,9 @@ class ChatMessageViewSet(
 
         message = self.get_object()
         message.soft_delete()
+
+        # Delete chat files
+        remove_chat_files(message.chat_files.all())
 
         # Handle case realtime when delete chat message
         chat_room = message.chat_room
@@ -757,3 +1050,31 @@ class ChatMessageViewSet(
         )
 
         return self.response_ok()
+
+
+@extend_schema(tags=["System > Chat Message > File"])
+class ChatFileViewSet(
+    BaseAPIViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin
+):
+    """
+    API endpoint for chat file.
+    """
+
+    queryset = ChatFile.objects.order_by("created_at")
+    serializer_class = ChatFileDetailSerializer
+    permission_classes = [ActionPermission]
+    screen_name = Screens.CHAT.value
+
+    def get_queryset(self):
+        return super().get_queryset().filter(company=self.request.user.company)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("chat_room_code", type=str, required=False),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if chat_room_code := request.query_params.get("chat_room_code"):
+            queryset = queryset.filter(chat_room__code=chat_room_code)
+        return super().list(request, *args, **kwargs)

@@ -4,7 +4,7 @@ import TermAgreeModal from '@components/modals/TermAgreeModal';
 
 const MainRootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <main className="w-full ">
+    <main className="w-full min-w-[1440px]">
       <TermAgreeModal />
       <div className={`relative h-screen flex flex-col min-w-[1280px]  w-full`}>
         <Header />

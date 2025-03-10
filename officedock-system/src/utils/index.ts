@@ -15,6 +15,7 @@ import { formatTime24h } from './date';
 import { Task } from '@interfaces/task';
 import { MAX_HEX_COLOR_VALUE } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
+import { UserRoleType } from '@interfaces/user';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -201,7 +202,8 @@ export function decodeHtml(str: string): string {
     .replace(/&#039;/g, "'");
 }
 // Split the input by new lines and wrap the parts in <p> tags
-export function formatWithParagraphTags(content: string): string {
+export function formatWithParagraphTags(content: string | null | undefined): string {
+  if (!content) return '';
   const parts = content.split('\n').map((line, index) => {
     return index === 0 ? line : `<p>${line}</p>`;
   });
@@ -287,6 +289,7 @@ export function transformDataTaskDailyToTable(
       organization: task.organization,
       status: task.status,
       tags: task.tags,
+      type: task.type,
       todoList: task.todoList,
       totalDuration: duration.duration,
       startedAt: formatTime24h(duration.startedAt),
@@ -322,6 +325,7 @@ export function transformDataTaskDailyToTable(
       tags: task.tags,
       taskDuration: task.totalDuration,
       children,
+      type: task.type,
       organization: task.organization,
       todoList: task.todoList,
       totalDuration: task.totalDuration,
@@ -362,7 +366,7 @@ export const adjustPositionForViewport = (
   numberOfEvents: number,
 ) => {
   let { top, left } = position;
-  const popupWidth = 330;
+  const popupWidth = 250;
   let popupHeight = 300;
   switch (true) {
     case numberOfEvents >= 10:
@@ -378,6 +382,31 @@ export const adjustPositionForViewport = (
       popupHeight = 300;
       break;
   }
+  const padding = 10;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  if (left + popupWidth + padding > viewportWidth) {
+    left = viewportWidth - popupWidth - padding;
+  }
+  if (top + popupHeight + padding > viewportHeight) {
+    top = viewportHeight - popupHeight - padding;
+  }
+  if (left < padding) {
+    left = padding;
+  }
+  if (top < padding) {
+    top = padding;
+  }
+  return { top, left };
+};
+export const adjustPositionForViewportSchedule = (position: {
+  top: number;
+  left: number;
+}) => {
+  let { top, left } = position;
+  const popupWidth = 250;
+  const popupHeight = 170;
+
   const padding = 10;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
@@ -545,7 +574,7 @@ export const showToggleButtonColorByTime = () => {
     hour12: false,
   }).format(new Date());
 
-  const hour = Number(hourStr.substring(0, hourStr.length - 1))
+  const hour = Number(hourStr.substring(0, hourStr.length - 1));
   let colorClassName = '';
   switch (true) {
     case hour >= 6 && hour < 11:
@@ -570,7 +599,7 @@ export const showModalHeaderBackgroundColorByTime = () => {
     hour12: false,
   }).format(new Date());
 
-  const hour = Number(hourStr.substring(0, hourStr.length - 1))
+  const hour = Number(hourStr.substring(0, hourStr.length - 1));
   let colorClassName = '';
 
   switch (true) {
@@ -587,4 +616,28 @@ export const showModalHeaderBackgroundColorByTime = () => {
       colorClassName = '#7988ae';
   }
   return colorClassName;
+};
+export function generateOptionsCount(
+  inputNumber: number,
+): OptionDropdownType[] {
+  if (inputNumber <= 0) return [];
+
+  return Array.from({ length: inputNumber }, (_, index) => ({
+    label: (index + 1).toString(),
+    value: index + 1,
+  }));
+}
+// Check has role need
+export function hasRole(roles: UserRoleType[], roleName: string): boolean {
+  return roles.some((role) => role.name === roleName);
+}
+
+export const getChatFileURL = (url: string) => {
+  if (url && typeof url === 'string') {
+    if (url.includes('https://') || url.includes('http://')) {
+      return url;
+    }
+    return url;
+  }
+  return '';
 };

@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from time import timezone
 
 from django.db import transaction
@@ -26,14 +26,14 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 
 from base.apis import BaseAPIViewSet
-from base.constants import REPLACE_NULL_DATE
+from base.constants import REPLACE_NULL_DATE, REPLACE_NULL_DATE_WITH_FUTURE
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission
+from calendars.constants import CalendarTypes
 from chat.constants import (
     WebSocketEventType,
     ChatMessageTypes,
     ChatRoomTypes,
-    ChatRoomNames,
 )
 from chat.models import ChatRoom
 from chat.serializers import (
@@ -41,7 +41,11 @@ from chat.serializers import (
     ChatRoomsParticipantsWebSocketSerializer,
 )
 from common.filters import CustomOrderFilter
-from common.utils import send_web_socket_event, create_categories_by_model
+from common.utils import (
+    send_web_socket_event,
+    create_categories_by_model,
+    check_task_overtime,
+)
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
     TaskPriorities,
@@ -56,8 +60,12 @@ from tasks.utils import (
     delete_todo_list_for_task,
     update_task_schedule,
     update_todo_list_for_task,
+    calculate_new_time,
 )
 from roles.constants import Screens
+from users.utils import reset_sort_task
+from users.models import Setting
+from users.models import User
 from .models import (
     PeopleInChargeTasks,
     Task,
@@ -74,6 +82,7 @@ from .serializers import (
     TaskIndexForCreationSerializer,
     TaskScheduleForCreationSerializer,
     TaskSerializer,
+    TaskTeamdockSerializer,
     TodoListSerializer,
     TaskIndexSerializer,
     TaskIndexPinAtSerializer,
@@ -124,6 +133,8 @@ class TaskViewSet(
         company = user.company
         categories = serializer_data.pop("category_ids", None)
         task_type = serializer_data.get("type", None)
+        remind_countdown = serializer_data.pop("remind_countdown", None)
+        remind_type = serializer_data.pop("remind_type", None)
 
         # Implement create task template base on T146
         if task_type == TaskTypes.MY_TEMPLATE.value:
@@ -136,7 +147,16 @@ class TaskViewSet(
         if serializer_data["status"] == TaskStatus.MY_ROUTINE.value:
             serializer_data["deadline"] = None
 
-        task = serializer.save(company=company)
+        if serializer_data.get("deadline") and remind_countdown and remind_type:
+            serializer_data["remind_at"] = calculate_new_time(
+                serializer_data["deadline"], remind_countdown, remind_type
+            )
+            serializer_data["reminds"] = {
+                "type": remind_type,
+                "countdown": remind_countdown,
+            }
+
+        task = serializer.save(company=company, created_by=user)
 
         # Handle task schedules creation
         if task_schedules is not None:
@@ -158,6 +178,7 @@ class TaskViewSet(
                     user,
                     through_defaults={"company": company},
                 )
+                reset_sort_task(user)
                 if copy_task:
                     current_task_index = copy_task.task_index.filter(
                         user=user
@@ -223,19 +244,11 @@ class TaskViewSet(
         """
         Handle send to task space
         """
-        task_room, created = ChatRoom.objects.get_or_create(
+        task_room = ChatRoom.objects.filter(
             type=ChatRoomTypes.TASK.value,
             chat_rooms_participants__user=user,
-            defaults={
-                "company": user.company,
-                "type": ChatRoomTypes.TASK.value,
-                "name": ChatRoomNames.TASK_CARD.value,
-            },
-        )
-        if created:
-            task_room.participants.set(
-                {user}, through_defaults={"company": user.company}
-            )
+            company=user.company,
+        ).first()
         task_message = task_room.chat_messages.create(**message)
         chat_room_participant = task_room.chat_rooms_participants.filter(
             user__id=user.id
@@ -486,6 +499,8 @@ class TaskViewSet(
         send_to_chat = serializer_data.pop("send_to_chat", None)
         chat_room_code = serializer_data.pop("chat_room_code", None)
         serializer_data.get("type", None)
+        remind_countdown = serializer_data.pop("remind_countdown", None)
+        remind_type = serializer_data.pop("remind_type", None)
 
         # Implement create task template base on T146
         if current_task.type == TaskTypes.MY_TEMPLATE.value:
@@ -522,6 +537,25 @@ class TaskViewSet(
                                 "detail": ERROR_MESSAGES["cannot_updated"],
                             }
                         )
+
+        if serializer_data.get("deadline"):
+            serializer_data["reminds"] = {
+                "type": remind_type,
+                "countdown": remind_countdown,
+            }
+            if remind_countdown and remind_type:
+                serializer_data["remind_at"] = calculate_new_time(
+                    serializer_data["deadline"], remind_countdown, remind_type
+                )
+
+        if (
+            (current_task.status.name != TaskStatus.MY_ROUTINE.value)
+            and (current_task.deadline != serializer_data.get("deadline"))
+            or (
+                current_task.is_important != serializer_data.get("is_important")
+            )
+        ):
+            reset_sort_task(user)
 
         # Update task
         task = serializer.save()
@@ -628,6 +662,7 @@ class TaskViewSet(
                 task_index = TaskIndex.objects.filter(
                     user=user, task=task
                 ).first()
+                reset_sort_task(user)
                 # Reset pin at to now
                 if task_index and task_index.pin_at:
                     task_index.pin_at = timezone.now()
@@ -703,6 +738,27 @@ class TaskViewSet(
         if categories is not None:
             create_categories_by_model(task, categories)
 
+        # Check is task run overtime or not
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        task_duration = TaskDuration.objects.filter(
+            started_at__gte=start_of_today, paused_at__isnull=True, task=task
+        ).first()
+        if task_duration:
+            is_send_sk, is_over_estimate = check_task_overtime(
+                task, task_duration
+            )
+            for user in task.people_in_charge.all():
+                send_web_socket_event(
+                    {
+                        "id": task.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": is_over_estimate,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.TASK.value,
+                    },
+                    user=user,
+                )
+
     def destroy(self, request, *args, **kwargs):
         """
         Handle destroying the task with send message realtime.
@@ -718,6 +774,7 @@ class TaskViewSet(
                 },
                 chat_room=message.chat_room,
             )
+        reset_sort_task(request.user)
 
         return super().destroy(request, *args, **kwargs)
 
@@ -832,6 +889,7 @@ class TaskViewSet(
                 TaskIndex.objects.update_or_create(
                     task=task, user=user, defaults=item
                 )
+                reset_sort_task(user)
             elif tag:
                 item.pop("user", None)
                 TaskIndex.objects.update_or_create(
@@ -909,6 +967,8 @@ class TaskViewSet(
             )
 
         task_index.save()
+        reset_sort_task(user)
+
         return self.response_ok(TaskIndexSerializer(task_index).data)
 
 
@@ -995,6 +1055,46 @@ class TaskScheduleViewSet(
             return TaskScheduleForCreationSerializer
 
         return super().get_serializer_class()
+
+    def _check_overtime(self, task_schedule):
+        """
+        Check overtime of task schedule
+        """
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        task_duration = TaskDuration.objects.filter(
+            started_at__gte=start_of_today,
+            paused_at__isnull=True,
+            task=task_schedule.task,
+        ).first()
+        if task_duration:
+            is_send_sk, is_over_estimate = check_task_overtime(
+                task_schedule.task, task_duration
+            )
+            for user in task_schedule.task.people_in_charge.all():
+                send_web_socket_event(
+                    {
+                        "id": task_schedule.task.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": is_over_estimate,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.TASK.value,
+                    },
+                    user=user,
+                )
+
+    def perform_create(self, serializer):
+        """
+        Handle create task schedule
+        """
+        task_schedule = serializer.save()
+        self._check_overtime(task_schedule)
+
+    def perform_update(self, serializer):
+        """
+        Handle update task schedule
+        """
+        task_schedule = serializer.save()
+        self._check_overtime(task_schedule)
 
 
 @extend_schema(tags=["System > Task"])
@@ -1185,8 +1285,6 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if ids:
                 queryset = queryset.filter(
                     Q(categories__large_statistic_category__in=ids)
-                    | Q(categories__medium_statistic_category__in=ids)
-                    | Q(categories__small_statistic_category__in=ids)
                 )
 
         if organization_ids := self.request.query_params.get(
@@ -1217,13 +1315,116 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         ],
     )
     def list(self, request, *args, **kwargs):
+        """
+        Handle get list tasks
+        """
+        user = request.user
         queryset = self.filter_queryset(self.get_queryset())
         ordering = request.query_params.get("ordering", None)
+        status_id = request.query_params.get("status_id", None)
         if ordering:
-            tasks = queryset.all()
-            for idx, task in enumerate(tasks):
-                task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
+            task_routine_status = TaskStatusModel.objects.filter(
+                name=TaskStatus.MY_ROUTINE.value
+            ).first()
+            if not (
+                "deadline" in ordering
+                and int(status_id) == task_routine_status.id
+            ):
+                tasks = queryset.all()
+                if "is_important" in ordering:
+                    tasks = tasks.annotate(
+                        coalesced_ordering_datetime=Coalesce(
+                            "deadline",
+                            Value(REPLACE_NULL_DATE_WITH_FUTURE),
+                            output_field=DateTimeField(),
+                        )
+                    ).order_by("-is_important", "coalesced_ordering_datetime")
+                for idx, task in enumerate(tasks):
+                    task_index = task.task_index.filter(user=user).first()
+                    if task_index.pin_at:
+                        task.task_index.update(
+                            pin_at=timezone.now()
+                            - timedelta(minutes=INITIAL_INDEX_VALUE + idx)
+                        )
+                    task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
 
+            task_pin = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=user.id
+            ).values("pin_at")[:1]
+            task_index = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=user.id
+            ).values("index")[:1]
+            # Annotate the queryset with the index from TaskIndex
+            queryset = queryset.annotate(
+                index=Subquery(task_index),
+                coalesced_pin_at=Coalesce(
+                    Subquery(task_pin),
+                    Value(REPLACE_NULL_DATE),
+                    output_field=DateTimeField(),
+                ),
+            ).order_by("-coalesced_pin_at", "-index")
+
+            if "deadline" in ordering:
+                Setting.objects.update_or_create(
+                    user=user,
+                    company=user.company,
+                    defaults={
+                        "is_sorting_task_by_deadline": True,
+                        "is_sorting_task_by_important": False,
+                    },
+                )
+            if "is_important" in ordering:
+                Setting.objects.update_or_create(
+                    user=user,
+                    company=user.company,
+                    defaults={
+                        "is_sorting_task_by_deadline": False,
+                        "is_sorting_task_by_important": True,
+                    },
+                )
+
+        return self.response_pagination(request, queryset, TaskBoardSerializer)
+
+
+@extend_schema(tags=["System > Task"])
+class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
+    """
+    API endpoint to show Tasks to the Teamdock.
+    """
+
+    queryset = User.objects.order_by("created_at")
+    serializer_class = TaskTeamdockSerializer
+
+    def get_queryset(self):
+        """Filter queryset"""
+        queryset = (
+            super().get_queryset().filter(company=self.request.user.company)
+        )
+
+        # Filter by organization id
+        if organization_id := self.request.query_params.get("organization_id"):
+            queryset = queryset.filter(organizations__id=organization_id)
+
+        # Filter by user ids
+        if user_ids := self.request.query_params.get("user_ids"):
+            ids = []
+            for id in user_ids.split(","):
+                try:
+                    ids.append(int(id))
+                except ValueError:
+                    continue
+            if ids:
+                queryset = queryset.filter(id__in=ids)
+
+        return queryset
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=str, required=False),
+            OpenApiParameter("user_ids", type=str, required=False),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
 

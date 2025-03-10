@@ -32,6 +32,8 @@ from submit_levels.serializers import (
     UpdateSubmitLevelSerializer,
     ListSubmitLevelSerializer,
 )
+from users.models import User
+from users.constants import RoleTypes
 
 
 @extend_schema(tags=["System > Submit Level"])
@@ -75,7 +77,7 @@ class SubmitLevelViewSet(
 
         return super().get_serializer(*args, **kwargs)
 
-    def _send_to_chat(self, user, submit_level):
+    def _send_to_chat(self, user, submit_level, is_create=False):
         """
         Handle send to chat of user
         """
@@ -83,41 +85,53 @@ class SubmitLevelViewSet(
             "sender": self.request.user,
             "company": user.company,
             "submit_level": submit_level,
-            "type": ChatMessageTypes.SUBMIT_LEVEL_SKILL.value,
+            "type": ChatMessageTypes.CREATE_SUBMIT_LEVEL_SKILL.value
+            if is_create
+            else ChatMessageTypes.SUBMIT_LEVEL_SKILL.value,
         }
 
-        skill_room, created = ChatRoom.objects.get_or_create(
-            type=ChatRoomTypes.SKILL.value,
-            chat_rooms_participants__user=user,
-            defaults={
-                "company": user.company,
-                "type": ChatRoomTypes.SKILL.value,
-                "name": ChatRoomNames.SKILL_UP.value,
-            },
-        )
-        if created:
-            skill_room.participants.set(
-                {user}, through_defaults={"company": user.company}
+        # Send to admins if create, send to creator if update
+        user_admins = User.objects.filter(
+            company=user.company,
+            roles__system_role=True,
+            roles__name=RoleTypes.SYSTEM_ADMIN.value,
+        ).all()
+        users = user_admins if is_create else [user]
+
+        for user in users:
+            skill_room, created = ChatRoom.objects.get_or_create(
+                type=ChatRoomTypes.SKILL.value,
+                chat_rooms_participants__user=user,
+                defaults={
+                    "company": user.company,
+                    "name": ChatRoomNames.SKILL_UP.value,
+                },
             )
-        skill_msg = skill_room.chat_messages.create(**message_data)
-        chat_room_participant = skill_room.chat_rooms_participants.filter(
-            user__id=user.id
-        ).first()
-        chat_room_participant.unread_messages = (
-            chat_room_participant.unread_messages + 1
-        )
-        chat_room_participant.save()
-        send_web_socket_event(
-            {
-                "client_id": None,
-                "action": WebSocketEventType.MESSAGE.value,
-                "chat_room": ChatRoomsParticipantsWebSocketSerializer(
-                    chat_room_participant
-                ).data,
-                "chat_message": ChatMessageSerializer(skill_msg).data,
-            },
-            chat_room_participant,
-        )
+            if created:
+                skill_room.participants.set(
+                    {user}, through_defaults={"company": user.company}
+                )
+            skill_msg = skill_room.chat_messages.create(**message_data)
+            chat_room_participant = skill_room.chat_rooms_participants.filter(
+                user_id=user.id
+            ).first()
+            chat_room_participant.unread_messages = (
+                chat_room_participant.unread_messages + 1
+            )
+            chat_room_participant.save()
+
+            # Send web socket to user role admin
+            send_web_socket_event(
+                {
+                    "client_id": None,
+                    "action": WebSocketEventType.MESSAGE.value,
+                    "chat_room": ChatRoomsParticipantsWebSocketSerializer(
+                        chat_room_participant
+                    ).data,
+                    "chat_message": ChatMessageSerializer(skill_msg).data,
+                },
+                chat_room_participant,
+            )
 
     @transaction.atomic
     def perform_update(self, serializer):
@@ -166,4 +180,7 @@ class SubmitLevelViewSet(
                 {"detail": ERROR_MESSAGES["permission_denied"]}
             )
 
-        serializer.save()
+        submit_level = serializer.save()
+
+        # Send websocket to chat
+        self._send_to_chat(staff, submit_level, is_create=True)

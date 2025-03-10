@@ -1,5 +1,5 @@
 'use client';
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
@@ -47,12 +47,15 @@ import {
   convertToTimeString,
   formatShowDateJapanese,
   formatTimeInput,
+  generateTimeOptionsAsObjects,
 } from '@utils/date';
 import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 export type ActionsEventModalProps = {
   open: boolean;
@@ -109,7 +112,9 @@ const ActionsEventModal = ({
   const [time, setTime] = useState<string>('');
   const [minDatePlan, setMinDatePlan] = useState<Date | null>();
   const { data: session } = useSession();
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const currentDate = new Date();
+  const optionTimeInput = generateTimeOptionsAsObjects();
 
   const {
     register,
@@ -599,7 +604,7 @@ const ActionsEventModal = ({
                 <Button
                   type="submit"
                   className="w-[82px] h-[36px] !text-[12px] !px-2">
-                  保存
+                  {action === ActionsEvent.EDIT ? '予定を編集' : '予定を作成'}
                 </Button>
               )}
             <Button
@@ -656,7 +661,7 @@ const ActionsEventModal = ({
                       />
                     </div>
                     {watch('isAllDay') === false && (
-                      <div className="w-[72px]">
+                      <div className="w-[72px] z-20">
                         <Input
                           isShowClockIcon={true}
                           register={register('startTime', {
@@ -689,6 +694,20 @@ const ActionsEventModal = ({
                           type="text"
                           className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                           disabled={isDisabled}
+                          options={optionTimeInput}
+                          onChangeDropdown={(e) => {
+                            setValue('startTime', e.label);
+                            if (getValues('startDate') === null) {
+                              setValue(
+                                'startDate',
+                                (() => {
+                                  const today: Date = new Date();
+                                  today.setHours(0, 0, 0, 0);
+                                  return today;
+                                })(),
+                              );
+                            }
+                          }}
                         />
                       </div>
                     )}
@@ -732,7 +751,7 @@ const ActionsEventModal = ({
                       />
                     </div>
                     {watch('isAllDay') === false && (
-                      <div className="w-[72px]">
+                      <div className="w-[72px] z-20">
                         <Input
                           isShowClockIcon={true}
                           register={register('endTime', {
@@ -799,6 +818,24 @@ const ActionsEventModal = ({
                           type="text"
                           className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
                           disabled={isDisabled}
+                          options={optionTimeInput}
+                          onChangeDropdown={(e) => {
+                            setValue('endTime', e.label);
+                            if (getValues('endDate') === null) {
+                              if (getValues('startDate') !== null) {
+                                setValue('endDate', getValues('startDate'));
+                              } else {
+                                setValue(
+                                  'endDate',
+                                  (() => {
+                                    const today: Date = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    return today;
+                                  })(),
+                                );
+                              }
+                            }
+                          }}
                         />
                       </div>
                     )}
@@ -831,7 +868,13 @@ const ActionsEventModal = ({
               variant="outline"
               className="w-[48px] h-[34px] ml-auto hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
               type="button"
-              name="Remove plan">
+              name="Remove plan"
+              onClick={() => {
+                setValue('endDate', null);
+                setValue('endTime', '');
+                setValue('startDate', null);
+                setValue('startTime', '');
+              }}>
               削除
             </Button>
           </div>
@@ -1129,6 +1172,7 @@ const ActionsEventModal = ({
               />
             </div>
           </div>
+          {/* Participants */}
           <div className="flex flex-col">
             <div className="flex justify-between items-start mb-3">
               <p className="w-fit font-medium text-[14px] mt-3">
@@ -1244,20 +1288,51 @@ const ActionsEventModal = ({
                               )}
                             />
                           </div>
-
-                          <ImageRound
-                            className="w-8 h-8"
-                            src="/images/avatar-default.svg"
-                            border="full"
-                            name="Avatar user"
-                          />
-                          <p className="text-[15px] truncate max-w-[350px] text-black">
+                          {dashboardMembersWithAvatars &&
+                          dashboardMembersWithAvatars.find(
+                            (memberWithAvatar) =>
+                              memberWithAvatar.id == member.id,
+                          ) ? (
+                            <>
+                              {AvatarIconWithDynamicColor({
+                                color:
+                                  dashboardMembersWithAvatars?.find(
+                                    (memberWithAvatar) =>
+                                      memberWithAvatar.id == member.id,
+                                  )?.avatarColor || '#0068B6',
+                                size: 34,
+                              })}
+                            </>
+                          ) : (
+                            <ImageRound
+                              className="w-8 h-8"
+                              src="/images/avatar-default.svg"
+                              border="full"
+                              name="Avatar user"
+                            />
+                          )}
+                          <p className="text-[15px] truncate max-w-[350px] text-black leading-normal">
                             {member.fullName}
                           </p>
                         </div>
                       );
                     })}
                 </div>
+                <Checkbox
+                  label="自分をメンバーから外す"
+                  className="px-3 mt-5"
+                  onChange={(state) => {
+                    if (state) {
+                      const currentParticipantList =
+                        watch('participantIds') || [];
+                      const filterParticipantList =
+                        currentParticipantList.filter(
+                          (participant) => participant !== session?.user.id,
+                        );
+                      setValue('participantIds', filterParticipantList);
+                    }
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -1271,6 +1346,23 @@ const ActionsEventModal = ({
               className="resize-none !border-1 !border-[#77858F] !h-[160px]"
             />
           </div>
+        </div>
+        <div className="flex justify-center mt-8">
+          {session?.user.permissions &&
+            ((action === ActionsEvent.EDIT &&
+              hasPermissionInArray(
+                session?.user.permissions,
+                PermissionsSystem.CALENDAR_UPDATE,
+              )) ||
+              (action === ActionsEvent.CREATE &&
+                hasPermissionInArray(
+                  session?.user.permissions,
+                  PermissionsSystem.CALENDAR_ADD,
+                ))) && (
+              <Button type="submit" className="w-[200px] h-[46px] !text-[15px]">
+                {action === ActionsEvent.EDIT ? '予定を編集' : '予定を作成'}
+              </Button>
+            )}
         </div>
       </form>
     </Drawer>

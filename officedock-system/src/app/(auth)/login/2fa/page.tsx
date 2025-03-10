@@ -4,7 +4,7 @@ import LoginForm2FA from './form';
 
 const Login2FAPage = () => {
   return (
-    <AuthenticationLayout title={pageRouters.LOGIN.name}>
+    <AuthenticationLayout title={pageRouters.LOGIN.name} showFooter={false}>
       <LoginForm2FA />
     </AuthenticationLayout>
   );

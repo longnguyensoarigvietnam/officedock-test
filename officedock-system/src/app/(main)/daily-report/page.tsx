@@ -1,21 +1,21 @@
 import React from 'react';
 
 import MainLayout from '@components/layouts/MainLayout';
-import StatisticBoard from './statistic-board';
+import DailyReportBoard from './daily-report-board';
 
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
 
-const StatisticPage = () => {
+const DailyReportPage = () => {
   return (
     <MainLayout
-      title={pageRouters.STATISTICS_MANAGEMENT.name}
+      title={pageRouters.DAILY_REPORT_MANAGEMENT.name}
       permission={PermissionsSystem.STATISTIC_VIEW}
-      className="!py-0"
+      className="!py-0 pl-10 pr-0 "
       showFooter={false}>
-      <StatisticBoard />
+      <DailyReportBoard />
     </MainLayout>
   );
 };
 
-export default StatisticPage;
+export default DailyReportPage;

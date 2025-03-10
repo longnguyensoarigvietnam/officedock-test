@@ -1,8 +1,9 @@
 'use client';
 
 import { AxiosError } from 'axios';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import {
+  ChangeEvent,
   Fragment,
   useCallback,
   useContext,
@@ -11,9 +12,17 @@ import {
   useState,
 } from 'react';
 import { useSession } from 'next-auth/react';
-import { useInView } from 'react-intersection-observer';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Document } from '@tiptap/extension-document';
+import { Mention } from '@tiptap/extension-mention';
+import { Paragraph } from '@tiptap/extension-paragraph';
+import { Text } from '@tiptap/extension-text';
+import { EditorContent, useEditor, Editor } from '@tiptap/react';
+import { Placeholder } from '@tiptap/extension-placeholder';
+
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -21,25 +30,35 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
-import Quill from '@components/common/Quill';
 import ActionsChatMembersModal from '@components/modals/ActionsChatMembersModal';
 import ChatSettingModal from '@components/modals/ChatSettingModal';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
+import { ChatMentionMembersList } from '@components/modals/ChatMentionMembersModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMemberModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
+import ChatUploadingFilesModal from '@components/modals/ChatUploadingFilesModal';
+import ChatDroppingFileModal from '@components/modals/ChatDroppingFileModal';
+import ErrorChatUploadFileValidationModal from '@components/modals/ErrorChatUploadFileValidationModal';
 import { MessageDetail } from '@components/chat/MessageDetail';
+import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
+import ListTaskUserChat from '@components/chat/ListTaskUserChat';
+import { TaskQuote } from '@components/chat/CustomTaskQuote';
+import { CustomReaction } from '@components/chat/CustomIcon';
 
 import { apiRouters } from '@constants/routers';
 import {
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
+  MAX_FILE_SIZE,
+  MENTION_ALL_MEMBERS,
   NO_OPTION_CATEGORY,
   PAGINATION_PAGE_SIZE_HIGHT,
+  REACTION_LIST,
 } from '@constants';
 import {
   SocketActions,
@@ -51,20 +70,30 @@ import {
   ActionsEvent,
   EventWorkCategory,
   PermissionsSystem,
+  ReactionIconValue,
+  ItemStartType,
 } from '@constants/enums';
 import {
-  ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
+  ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
+  UPLOAD_FILE_MAXIMUM_SZIE,
 } from '@constants/message';
 
 import useChatRoomDetail from '@hooks/useChatRoomDetail';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
+import { useErrorToast } from '@hooks/useErrorToast';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { addTimeToDate, getCurrentTimeInJapan } from '@utils/date';
-import { hasPermissionInArray, trimUnnecessaryLineBreaks } from '@utils';
+import {
+  getChatFileURL,
+  hasPermissionInArray,
+  trimUnnecessaryLineBreaks,
+} from '@utils';
 import {
   ChatDashboardMember,
   ChatMessageResponse,
@@ -86,8 +115,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
-import { useErrorToast } from '@hooks/useErrorToast';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import { debounce } from 'lodash';
 
 interface dataProps {
   clientId: string;
@@ -96,12 +124,12 @@ interface dataProps {
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
   creationDataTaskData: CreationDataTask | undefined;
-  handleUpdateLocalByCode: (data: ChatRoomItem) => void;
-  handleUpdateLocalByCodeMsg: (data: ChatRoomItem) => void;
+  hasMoreDetailOnScrollDown: boolean;
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
   setHasMoreDetail: React.Dispatch<React.SetStateAction<boolean>>;
+  setHasMoreDetailOnScrollDown: React.Dispatch<React.SetStateAction<boolean>>;
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   hasMore: boolean;
   handleRemoveChatRoomParam: () => void;
@@ -118,11 +146,11 @@ const ChatDetail = ({
   hasMoreDetail,
   dashboardMemberList,
   dashboardMembers,
+  hasMoreDetailOnScrollDown,
+  setHasMoreDetailOnScrollDown,
   setFilteredChatList,
   setHasMoreDetail,
   setLastItemId,
-  handleUpdateLocalByCode,
-  handleUpdateLocalByCodeMsg,
   setDataChatList,
   handleRemoveChatRoomParam,
   chatRoomCode,
@@ -131,12 +159,14 @@ const ChatDetail = ({
   setSearchChatMsg,
 }: dataProps) => {
   const { data: session } = useSession();
-  const { ref, inView } = useInView({
-    threshold: 0.2,
-  });
 
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
+
+  const messageBookmarkId = searchParams.get('messageId');
+  const queryClient = useQueryClient();
+
+  const optionIconRef = useRef<HTMLDivElement | null>(null);
 
   const router = useRouter();
   const showErrorToast = useErrorToast();
@@ -148,7 +178,6 @@ const ChatDetail = ({
   const [openAddMembersBoxFromSetting, setOpenAddMembersBoxFromSetting] =
     useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
-  const [messageSubmitted, setMessageSubmitted] = useState<boolean>(false);
   const [page, _setPage] = useState<number>(1);
   const [isShowModalTask, setShowModalTask] = useState<boolean>(false);
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
@@ -188,9 +217,71 @@ const ChatDetail = ({
   const { chatRoomDetail } = useChatRoomDetail({
     code: `${chatRoomCode}`,
   });
-  const activeRoomRef = useRef<string | null>(null);
   const { authenticatedUser } = useAuthenticatedUser();
   const [loggedInUser, setLoggedInUser] = useState<User>();
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [isLoadingNewer, setIsLoadingNewer] = useState(false);
+
+  // Mention
+  const [mentionMembers, setMentionMembers] = useState<ChatParticipant[]>([]);
+  const [searchMentionMembers, setSearchMentionMembers] = useState<string>('');
+
+  // Jump to message
+  const [lastGotoMessageId, setLastGotoMessageId] = useState<number | null>();
+
+  const [gotoMessageId, setGotoMessageId] = useState<number | null>();
+  const gotoMessageRef = useRef<HTMLDivElement | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
+
+  // Quote task
+  const [quoteTaskList, setQuoteTaskList] = useState<
+    { id: number; title: string }[]
+  >([]);
+
+  // Icon
+  const [isShowListIcon, setIsShowListIcon] = useState(false);
+
+  // Upload files
+  const [openUploadFilesModal, setOpenUploadFilesModal] =
+    useState<boolean>(false);
+  const [uploadFiles, setUploadFiles] = useState<
+    { uuid: string; file: File }[]
+  >([]);
+  const [preserveFiles, setPreserveFiles] = useState<
+    {
+      uuid: string;
+      file: {
+        name: string;
+      };
+    }[]
+  >([]);
+  const [openDroppingFileModal, setOpenDroppingFileModal] =
+    useState<boolean>(false);
+  const [uploadFileStatus, setUploadFileStatus] = useState<
+    Record<
+      string,
+      {
+        progress: number;
+        errorMsg?: string;
+      }
+    >
+  >({});
+  const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
+    useState(false);
+
+  // Search
+  const [openSearchMessagesModal, setOpenSearchMessagesModal] = useState(false);
+  const [searchResultsPage, setSearchResultsPage] = useState<number>(1);
+  const [hasMoreSearchResultDetail, setHasMoreSearchResultDetail] =
+    useState(false);
+  const [searchMessageResults, setSearchMessageResults] = useState<{
+    count: number;
+    numPages: number;
+    results: ChatMessageResponse[];
+    hasNext?: boolean;
+  }>();
 
   //Task
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
@@ -200,46 +291,152 @@ const ChatDetail = ({
     resetDataCategoryOptions?: () => void;
     reset?: () => void;
   }>({});
+  const actionType = searchParams.get('action');
+  const typeDetail = searchParams.get('type');
+  const taskDetailId = searchParams.get('task');
 
-  // Handle get list and more data message
+  const controllerRef = useRef<AbortController | null>(null);
+
   const handleGetDataMessages = async (pageNumber: number) => {
     if (chatRoomCode) {
       setInitialLoad(true);
-      const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${lastItemId ? `&message_id=${lastItemId}` : ''}`;
-      return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
+
+      // Cancel any previous request
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+
+      // Create new controller for the new request
+      const controller = new AbortController();
+      controllerRef.current = controller;
+
+      const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${lastItemId ? `&message_id=${lastItemId}` : ''}${messageBookmarkId ? `&bookmark_message_id=${messageBookmarkId}` : ''}`;
+
+      const response = await api.get<BasePagination<ChatMessageResponse[]>>(
+        apiUrl,
+        {
+          signal: controller.signal,
+        },
+      );
+      return response;
     }
   };
+
+  useEffect(() => {
+    if (gotoMessageId) {
+      const timer = setTimeout(() => {
+        const targetElement = document.querySelector(
+          `[data-message-id="${gotoMessageId}"]`,
+        );
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'end',
+          });
+          setHighlightedMessageId(String(gotoMessageId));
+          setGotoMessageId(null);
+          setTimeout(() => setHighlightedMessageId(null), 5000);
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [gotoMessageId, dataMessageDetail]);
 
   const { mutate: getDataListMessages } = useMutation(
     'getDataListMessages',
     handleGetDataMessages,
     {
       onSuccess: (variables) => {
-        if (activeRoomRef.current === chatRoomCode) {
-          if (variables) {
-            if (variables.data.results.length <= 0 || !variables.data.hasNext) {
-              setHasMoreDetail(false);
-            }
-            setDataMessageDetail((prev) => {
-              if (prev) {
-                return [...prev, ...variables.data.results];
-              } else {
-                return [...variables.data.results];
-              }
-            });
-            if (
-              variables.data.results.length > 0 &&
-              variables.data.results[variables.data.results.length - 1].id
-            ) {
-              setLastItemId &&
-                setLastItemId(
-                  variables.data.results[variables.data.results.length - 1].id,
-                );
-            } else {
-              setLastItemId(null);
-            }
+        if (variables) {
+          if (variables.data.results.length <= 0 || !variables.data.hasNext) {
+            setHasMoreDetail(false);
           }
-          activeRoomRef.current = null;
+          setDataMessageDetail((prev) => {
+            const newMessages = variables.data.results.filter(
+              (newMsg) =>
+                !(prev || []).some(
+                  (existingMsg) => existingMsg.id === newMsg.id,
+                ),
+            );
+            return [...(prev || []), ...newMessages];
+          });
+          if (
+            variables.data.results.length > 0 &&
+            variables.data.results[variables.data.results.length - 1].id
+          ) {
+            setLastItemId &&
+              setLastItemId(
+                variables.data.results[variables.data.results.length - 1].id,
+              );
+          } else {
+            setLastItemId(null);
+          }
+
+          // Delete messageBookmarkId when go to from list bookmark
+          if (messageBookmarkId) {
+            setHasMoreDetailOnScrollDown(true);
+            setLastGotoMessageId(variables.data.results[0].id);
+
+            setGotoMessageId(parseInt(messageBookmarkId));
+            params.delete('messageId');
+
+            router.replace(`?${params.toString()}`);
+          }
+        }
+        setIsLoadingOlder(false);
+      },
+      onError: ({ response }: AxiosError) => {
+        if (response?.status === ServerStatusCode.NOT_FOUND) {
+          handleRemoveChatRoomParam();
+        }
+      },
+      onSettled: () => {
+        setInitialLoad(false);
+      },
+    },
+  );
+
+  const handleGotoSelectedMessage = async (data: {
+    bookmarkMessageId?: number;
+  }) => {
+    if (chatRoomCode) {
+      setInitialLoad(true);
+      const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${page}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${data.bookmarkMessageId ? `&bookmark_message_id=${data.bookmarkMessageId}` : ''}`;
+
+      return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
+    }
+  };
+
+  const { mutate: gotoSelectedMessage } = useMutation(
+    'gotoSelectedMessage',
+    handleGotoSelectedMessage,
+    {
+      onSuccess: (data) => {
+        if (data) {
+          if (data.data.results.length <= 0 || !data.data.hasNext) {
+            setHasMoreDetail(false);
+          }
+          setHasMoreDetailOnScrollDown(true);
+          setDataMessageDetail(() => {
+            const uniqueMessages = [...data.data.results].filter(
+              (msg, index, self) =>
+                self.findIndex((m) => m.id === msg.id) === index,
+            );
+
+            return uniqueMessages;
+          });
+
+          setLastGotoMessageId(data.data.results[0].id);
+
+          if (
+            data.data.results.length > 0 &&
+            data.data.results[data.data.results.length - 1].id
+          ) {
+            setLastItemId &&
+              setLastItemId(data.data.results[data.data.results.length - 1].id);
+          } else {
+            setLastItemId(null);
+          }
         }
       },
       onError: ({ response }: AxiosError) => {
@@ -253,14 +450,211 @@ const ChatDetail = ({
     },
   );
 
+  const handleGetDataMessagesOnScrollDown = async (data: {
+    pageNumber: number;
+    sorting?: boolean;
+  }) => {
+    if (chatRoomCode) {
+      const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${data.pageNumber}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${lastGotoMessageId ? `&message_id=${lastGotoMessageId}` : ''}${data.sorting ? `&sorting=${data.sorting}` : ''}`;
+
+      return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
+    }
+  };
+
+  const { mutate: getDataListMessagesOnScrollDown } = useMutation(
+    'getDataListMessagesOnScrollDown',
+    handleGetDataMessagesOnScrollDown,
+    {
+      onSuccess: (data) => {
+        if (data) {
+          if (data.data.results.length <= 0 || !data.data.hasNext) {
+            setHasMoreDetailOnScrollDown(false);
+          }
+          setDataMessageDetail((prev) => {
+            if (prev) {
+              const newMessages = data.data.results.slice().reverse();
+
+              const filteredMessages = newMessages.filter(
+                (newMsg) =>
+                  !prev.some((existingMsg) => existingMsg.id === newMsg.id),
+              );
+
+              return [...filteredMessages, ...prev];
+            } else {
+              return [...data.data.results];
+            }
+          });
+
+          if (
+            data.data.results.length > 0 &&
+            data.data.results[data.data.results.length - 1].id
+          ) {
+            setLastGotoMessageId &&
+              setLastGotoMessageId(
+                data.data.results[data.data.results.length - 1].id,
+              );
+          } else {
+            setLastGotoMessageId(null);
+          }
+        }
+        setIsLoadingNewer(false);
+      },
+      onError: ({ response }: AxiosError) => {
+        if (response?.status === ServerStatusCode.NOT_FOUND) {
+          handleRemoveChatRoomParam();
+        }
+      },
+    },
+  );
+
+  const handleSearchMessagesInChatRoom = async (data: {
+    searchChatMsg: string;
+    pageNumber: number;
+    roomType: string;
+  }) => {
+    if (chatRoomCode) {
+      if (data.pageNumber == 1) setIsLoading(true);
+      const encodedQuery = encodeURIComponent(data.searchChatMsg);
+      const apiUrl = `${apiRouters.CHAT_MESSAGES(chatRoomCode)}?${
+        data.searchChatMsg ? `message=${encodedQuery}` : ''
+      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}${data.roomType ? `&chatroom_type=${data.roomType}` : ''}`;
+
+      return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
+    }
+  };
+
+  const { mutate: searchMessagesInChatRoom } = useMutation(
+    'searchMessagesInChatRoom',
+    handleSearchMessagesInChatRoom,
+    {
+      onSuccess: (data) => {
+        if (data) {
+          setSearchMessageResults((prev) => {
+            return {
+              count: data.data.count,
+              numPages: data.data.numPages,
+              results: [...(prev?.results || []), ...data.data.results],
+              hasNext: data.data.hasNext,
+            };
+          });
+          setHasMoreSearchResultDetail(data.data.hasNext || false);
+        }
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
   useEffect(() => {
-    if (inView && hasMoreDetail) {
-      activeRoomRef.current = chatRoomCode;
+    if (chatRoomCode) {
       getDataListMessages(page);
     }
-
+    return () => {
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+      setIsLoadingOlder && setIsLoadingOlder(false);
+      setIsLoadingNewer && setIsLoadingNewer(false);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inView, chatRoomCode, hasMoreDetail]);
+  }, [chatRoomCode]);
+
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+
+    const handleScroll = debounce(() => {
+      if (!chatContainer) return;
+
+      const isAtTop =
+        Math.round(
+          chatContainer.clientHeight + Math.abs(chatContainer.scrollTop),
+        ) >= Math.round(0.9 * chatContainer.scrollHeight);
+
+      const isAtBottom = Math.floor(Math.abs(chatContainer.scrollTop)) <= 10;
+
+      if (isAtTop && hasMoreDetail) {
+        setIsLoadingOlder(true);
+        getDataListMessages(page);
+      } else if (isAtBottom && hasMoreDetailOnScrollDown) {
+        chatContainer.scrollTop = -20;
+        setIsLoadingNewer(true);
+        getDataListMessagesOnScrollDown({ pageNumber: page, sorting: true });
+      }
+    }, 200);
+
+    if (chatContainer) {
+      chatContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (chatContainer) {
+        chatContainer.removeEventListener('scroll', handleScroll);
+      }
+      handleScroll.cancel?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMoreDetail, hasMoreDetailOnScrollDown, page]);
+
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    if (!chatContainer) return;
+
+    if (isLoadingOlder || isLoadingNewer) {
+      chatContainer.style.overflow = 'hidden';
+    } else {
+      chatContainer.style.overflow = 'auto';
+    }
+
+    return () => {
+      if (chatContainer) chatContainer.style.overflow = 'auto';
+    };
+  }, [isLoadingOlder, isLoadingNewer]);
+
+  const editor = useEditor({
+    extensions: [
+      Document,
+      TaskQuote,
+      Paragraph.extend({
+        addAttributes() {
+          return {
+            'data-task-id': {
+              default: null,
+              renderHTML(attributes) {
+                if (!attributes['data-task-id']) {
+                  return {};
+                }
+                return { 'data-task-id': attributes['data-task-id'] };
+              },
+              parseHTML(element) {
+                return {
+                  'data-task-id': element.getAttribute('data-task-id'),
+                };
+              },
+            },
+          };
+        },
+      }),
+      Text,
+      TextStyle,
+      Color,
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention text-[#0068B6]',
+        },
+      }),
+      Placeholder.configure({
+        placeholder: 'メッセージを入力',
+      }),
+      CustomReaction
+    ],
+    content: message,
+    onUpdate: ({ editor }: { editor: Editor }) => {
+      setMessage(editor.getHTML());
+    },
+  });
 
   useEffect(() => {
     if (authenticatedUser) {
@@ -288,7 +682,7 @@ const ChatDetail = ({
   ) => {
     if (participantsList) {
       const participantIds = [] as number[];
-      participantsList.map((member) => participantIds.push(member.id));
+      participantsList.map((member) => participantIds.push(Number(member.id)));
       return participantIds;
     }
   };
@@ -299,7 +693,7 @@ const ChatDetail = ({
         (room) => room.code === chatRoomCode,
       );
       if (initialRoomDetail) {
-        setMessageSubmitted(true);
+        setMessage('');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -308,9 +702,15 @@ const ChatDetail = ({
   useEffect(() => {
     if (chatRoomCode) {
       setDataMessageDetail([]);
+      setMsgIdUpdated(undefined);
       setLastItemId(null);
+      if (editor) {
+        editor.commands.clearContent();
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatRoomCode, setLastItemId]);
+
   const handleDeleteMessageLocal = useCallback(
     (data: WebSocketMessageData) => {
       setDataMessageDetail((prevDataMessageDetail) => {
@@ -333,6 +733,12 @@ const ChatDetail = ({
 
   const handleUpdateMessageLocal = useCallback(
     (data: WebSocketMessageData) => {
+      const chatFileList = data.chatMessage.chatFiles.map((file) => {
+        return {
+          ...file,
+          compressedFile: getChatFileURL(file.compressedFile || ''),
+        };
+      });
       setDataMessageDetail((prevDataMessageDetail) => {
         const updatedDataMessageDetail = [...prevDataMessageDetail];
         const updatedMessageItemIndex = updatedDataMessageDetail.findIndex(
@@ -342,9 +748,12 @@ const ChatDetail = ({
           updatedDataMessageDetail[updatedMessageItemIndex] = {
             ...updatedDataMessageDetail[updatedMessageItemIndex],
             isEdited: true,
+            reactions: data.chatMessage.reactions,
+            chatFiles: chatFileList,
             message: trimUnnecessaryLineBreaks(
               `${data.chatMessage.message}`,
             ) as string,
+            mentions: data.chatMessage.mentions,
           };
           return updatedDataMessageDetail;
         }
@@ -400,7 +809,7 @@ const ChatDetail = ({
         }
       });
       const list = [] as number[];
-      data.chatRoom.participants.map((member) => list.push(member.id));
+      data.chatRoom.participants.map((member) => list.push(Number(member.id)));
       setChatRoomParticipantsEditing((prevChatRoomParticipantsEditing) => {
         const updatedChatRoomParticipantsEditing = [
           ...(prevChatRoomParticipantsEditing ?? []),
@@ -468,16 +877,23 @@ const ChatDetail = ({
       switch (data.action) {
         case SocketActions.MESSAGE:
           if (data.chatRoom.code === chatRoomCode) {
-            if (data.clientId !== clientId) {
-              setDataMessageDetail([data.chatMessage, ...dataMessageDetail]);
+            if (!data.clientId || !data.clientId.includes(clientId)) {
+              const chatFileList = data.chatMessage.chatFiles.map((file) => {
+                return {
+                  ...file,
+                  compressedFile: getChatFileURL(file.compressedFile || ''),
+                };
+              });
+              setDataMessageDetail([
+                { ...data.chatMessage, chatFiles: chatFileList },
+                ...dataMessageDetail,
+              ]);
               setChatRoomNotifications({
                 notifications: data.chatRoom.unreadMessages,
                 roomCode: chatRoomCode,
               });
             }
           }
-          handleUpdateLocalByCodeMsg(data.chatRoom);
-          setMessageSubmitted(true);
           break;
         case SocketActions.CREATION_TASK:
           if (data.chatRoom.code === chatRoomCode) {
@@ -489,8 +905,6 @@ const ChatDetail = ({
               });
             }
           }
-          handleUpdateLocalByCode(data.chatRoom);
-          setMessageSubmitted(true);
           break;
         case SocketActions.DELETE_TASK:
           if (data.chatRoom.code === chatRoomCode) {
@@ -529,12 +943,10 @@ const ChatDetail = ({
   }, [
     chatRoomCode,
     dataMessageDetail,
-    handleUpdateLocalByCode,
     handleDeleteMessageLocal,
     handleUpdateMessageLocal,
     handleUpdateGroupLocal,
     handleRemoveParticipantsLocal,
-    handleUpdateLocalByCodeMsg,
     handleDeleteTaskLocal,
     clientId,
   ]);
@@ -543,29 +955,104 @@ const ChatDetail = ({
   const postSendMsg = async ({
     data,
     uuid,
+    mentionIds,
+    files,
+    fileUuids,
+    taskIds,
   }: {
     data: string;
     uuid: string;
+    mentionIds: number[];
+    files: File[];
+    fileUuids: string[];
+    taskIds: number[];
   }) => {
+    const formData = new FormData();
+    formData.append('message', data);
+    formData.append('uuid', uuid);
+    formData.append('clientId', clientId);
+    mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
+    taskIds.forEach((id) => formData.append('taskIds', id.toString()));
+    fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
+    if (files && files.length > 0) {
+      files.forEach((file, index) => {
+        formData.append(`files[${index}]`, file);
+      });
+    }
     const { data: response } = await api.post(
       apiRouters.CHAT_MESSAGES(`${chatRoomCode}`),
+      formData,
       {
-        message: data,
-        uuid: uuid,
-        clientId: clientId,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            let percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
+            if (percentCompleted >= 99) {
+              percentCompleted = 99;
+            }
+            setUploadFileStatus((prev) => ({
+              ...prev,
+              [uuid]: { progress: percentCompleted },
+            }));
+          }
+        },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       },
     );
     return response;
   };
   const { mutate: handleSendMsgChat } = useMutation(postSendMsg, {
-    onSuccess: async () => {},
-    onError: () => {},
+    onSuccess: async (_data, variables) => {
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [variables.uuid]: { progress: 100 },
+      }));
+    },
+    onError: (error: AxiosError<any>, variables) => {
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [variables.uuid]: { progress: 0 },
+      }));
+      showErrorToast(error, ERROR_SAVE_MESSAGE);
+    },
+    onSettled: () => {},
   });
 
   const handleConfirmSendMessage = () => {
-    setMessageSubmitted(true);
     const uuidMsg = uuidv4();
     const newMsg = trimUnnecessaryLineBreaks(message) as string;
+    const chatRoomMemberIds =
+      chatRoomDetail?.participants
+        ?.filter((participant) => participant.id !== session?.user.id)
+        .map((member) => Number(member.id)) || [];
+    let mentionIds = [];
+    const isMentionAllMembers = mentionMembers.find(
+      (mentionMember) =>
+        mentionMember.id == null &&
+        mentionMember.fullName == MENTION_ALL_MEMBERS,
+    );
+    if (isMentionAllMembers) {
+      mentionIds = [...chatRoomMemberIds];
+    } else {
+      mentionIds = mentionMembers.map((member) => Number(member.id)) || [];
+    }
+    const chatUploadFiles = uploadFiles.map((file) => {
+      const newFile = new File([file.file], file.file.name, {
+        type: file.file.type,
+      });
+      const fileUrl = URL.createObjectURL(newFile);
+      return {
+        compressedFile: fileUrl,
+        fileName: file.file.name,
+        fileType: file.file.type,
+        fileSize: file.file.size,
+        uuid: file.uuid,
+      };
+    });
+    const taskIds = quoteTaskList.map((task) => task.id);
     setDataMessageDetail([
       {
         uuid: uuidMsg,
@@ -578,15 +1065,41 @@ const ChatDetail = ({
         sender: {
           fullName: session?.user.profile.fullName || '',
           id: session?.user.id as number,
-          organizations: [],
+          organizations: {
+            id:
+              loggedInUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.id || 0,
+            name:
+              loggedInUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.name || '',
+          },
         },
+        mentions: mentionIds,
+        isBookmark: false,
+        chatFiles: chatUploadFiles,
       },
+
       ...dataMessageDetail,
     ]);
+    setUploadFileStatus((prev) => ({
+      ...prev,
+      [uuidMsg]: { progress: 0 },
+    }));
+    setMessage('');
+    if (!editor) return;
 
+    editor.commands.clearContent();
+    setMentionMembers([]);
+    setQuoteTaskList([]);
     handleSendMsgChat({
       data: newMsg,
       uuid: uuidMsg,
+      mentionIds,
+      files: uploadFiles.map((file) => file.file),
+      fileUuids: uploadFiles.map((file) => file.uuid),
+      taskIds: taskIds,
     });
   };
 
@@ -605,40 +1118,157 @@ const ChatDetail = ({
   const handleConfirmDeleteMessage = () => {
     handleDeleteMsgChat();
   };
+
+  function cleanMessageHTML(html: string): string {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    container.querySelectorAll('p, div').forEach((el) => {
+      el.removeAttribute('data-task-id');
+      el.removeAttribute('data-title');
+    });
+
+    return container.innerHTML;
+  }
+
   // Update message
-  const postUpdateMsg = async (data: { uuid: string; message: string }) => {
+  const postUpdateMsg = async (data: {
+    uuid: string;
+    message: string;
+    mentionIds: number[];
+    files: File[];
+    fileUuids: string[];
+  }) => {
+    const formData = new FormData();
+    formData.append('message', cleanMessageHTML(data.message));
+    formData.append('uuid', data.uuid);
+    data.mentionIds.forEach((id) =>
+      formData.append('mentionIds', id.toString()),
+    );
+    data.fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
+    if (data.files && data.files.length > 0) {
+      data.files.forEach((file) => {
+        formData.append('files', file);
+      });
+    }
+
     const { data: response } = await api.patch(
       apiRouters.CHAT_MESSAGES_DETAIL(data.uuid),
-      data,
+      formData,
+      {
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            let percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
+            if (percentCompleted >= 99) {
+              percentCompleted = 99;
+            }
+            setUploadFileStatus((prev) => ({
+              ...prev,
+              [data.uuid]: { progress: percentCompleted },
+            }));
+          }
+        },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
     );
     return response;
   };
   const { mutate: handleUpdateMsgChat } = useMutation(postUpdateMsg, {
-    onSuccess: async () => {},
-    onError: () => {},
+    onSuccess: async (_data, variables) => {
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [variables.uuid]: { progress: 100 },
+      }));
+    },
+    onError: (_data, variables) => {
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [variables.uuid]: { progress: 0 },
+      }));
+    },
+    onSettled: () => {
+      setMessage('');
+    },
   });
 
   const handleConfirmUpdateMsg = (uuid: string) => {
     if (uuid) {
+      if (!editor) return;
+      editor.commands.clearContent();
+      const chatRoomMemberIds =
+        chatRoomDetail?.participants
+          ?.filter((participant) => participant.id !== session?.user.id)
+          .map((member) => Number(member.id)) || [];
+      let mentionIds = [];
+      const isMentionAllMembers = mentionMembers.find(
+        (mentionMember) =>
+          mentionMember.id == null &&
+          mentionMember.fullName == MENTION_ALL_MEMBERS,
+      );
+      if (isMentionAllMembers) {
+        mentionIds = [...chatRoomMemberIds];
+      } else {
+        mentionIds = mentionMembers.map((member) => Number(member.id)) || [];
+      }
+      setMentionMembers([]);
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [uuid]: { progress: 0 },
+      }));
       handleUpdateMsgChat({
-        message: trimUnnecessaryLineBreaks(`${msgEditing}`) as string,
+        message: trimUnnecessaryLineBreaks(`${message}`) as string,
         uuid: uuid,
+        mentionIds,
+        files: uploadFiles.map((file) => file.file),
+        fileUuids: preserveFiles.map((file) => file.uuid),
       });
     }
   };
 
-  // Function create  tasks
-  const handleConfirmCreateTask = (data: TaskFormData) => {
-    const peopleInChargeIds =
-      data.peopleInChargeIds &&
-      data.peopleInChargeIds
-        .filter((item) => item.value !== '')
-        .map((item) => ({ peopleInChargeId: item.value }));
+  const handleEditTask = async (data: TaskRequest) => {
+    setIsLoading(true);
+    return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
+  };
+  const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
+    onSuccess: async () => {
+      handleRemoveParam();
+      queryClient.refetchQueries(['getTaskHeaderStart']);
+      queryClient.refetchQueries(['getDataStatistic']);
+
+      showToast({
+        description: SUCCESS_UPDATE_MESSAGE,
+      });
+      setDataTaskEdit(null);
+      setShowModalTask(false);
+    },
+    onError: (error: AxiosError<any>) => {
+      if (error.response?.data.taskSchedules) {
+        showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+      } else showErrorToast(error, ERROR_UPDATE_MESSAGE);
+    },
+    onSettled: () => {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    },
+  });
+
+  const handleConfirmEditTask = (data: TaskFormData) => {
     const tagIds = data.tagIds
       ? data.tagIds
           .filter((item) => item.value !== '')
           .map((item) => ({ tagId: item.value }))
       : [];
+
+    const peopleInChargeIds =
+      data.peopleInChargeIds &&
+      data.peopleInChargeIds
+        .filter((item) => item.value !== '')
+        .map((item) => ({ peopleInChargeId: item.value }));
 
     const planList = data.plans
       ? data.plans
@@ -662,6 +1292,7 @@ const ChatDetail = ({
       : null;
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
+
     const newWorkCategories = [];
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
@@ -691,50 +1322,35 @@ const ChatDetail = ({
       });
     }
 
-    createTask({
-      title: data.title || '',
-      type: data.type ? data.type.value.toString() : '',
+    editTask({
+      id: data.id,
+      title: data.title,
       statusId: data.statusId ? (data.statusId.value as number) : null,
       priority: data.priority ? data.priority.value.toString() : '',
       deadline:
         data.deadlineDate && data.deadlineTime
           ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
           : null,
-      description: data.description || '',
+      description: data.description,
       tagIds: tagIds,
-      peopleInChargeIds: peopleInChargeIds,
+      categoryIds: newWorkCategories,
       isImportant: data.isImportant,
       todoList: todoListData,
-      taskSchedules: planList && planList.length ? planList : null,
-      chatRoomCode: chatRoomCode,
+      taskSchedules: planList && planList.length ? planList : [],
+      oldIdStatus: data.oldIdStatus,
       sendToChat: true,
-      categoryIds: newWorkCategories,
+      peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
+        : null,
     });
   };
-  //  Handle call api create task
-  const handleCreateTask = async (data: TaskRequest) => {
-    setIsLoading(true);
-    return await api.post(apiRouters.CREATE_TASK, data);
-  };
-  // Handle create task and response
-  const { mutate: createTask } = useMutation(
-    'postCreateTask',
-    handleCreateTask,
-    {
-      onSuccess: async () => {
-        setShowModalTask(false);
-      },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
-    },
-  );
 
   const handleConfirmEditEventCalendar = (
     data: EventEditFormData,
@@ -939,19 +1555,36 @@ const ChatDetail = ({
     },
   );
 
-  const handleSetParam = ({
-    id,
-    action,
-  }: {
-    id: string | null;
-    action: string;
-  }) => {
-    if (id) {
-      params.set('task', id);
+  const handleCheckboxClick = (
+    editor: Editor,
+    member: ChatParticipant,
+    type: string,
+  ) => {
+    if (!editor) return;
+
+    if (type == 'remove') {
+      const { doc, tr } = editor.state;
+
+      doc.descendants((node, pos) => {
+        if (node.type.name === 'mention' && node.attrs.id === member.fullName) {
+          tr.delete(pos, pos + node.nodeSize);
+        }
+      });
+
+      editor.view.dispatch(tr);
+    } else {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'mention',
+          attrs: {
+            id: member.fullName,
+          },
+        })
+        .insertContent(' ')
+        .run();
     }
-    params.set('action', action);
-    router.push(`?${params.toString()}`);
-    setShowModalTask(true);
   };
 
   const handleRemoveParam = () => {
@@ -965,41 +1598,51 @@ const ChatDetail = ({
   };
 
   const renderImageRound = (type = '', participants: ChatParticipant[]) => {
-    if (type === ChatRoomType.GROUP) {
-      return (
-        <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-          <ImageRound
-            className="w-14 h-14 rounded-full"
-            src="/icons/multi-users.svg"
-            border="full"
-            name="Multi users"
-          />
-        </div>
-      );
-    }
-    if (type === ChatRoomType.TASK) {
-      return (
-        <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-          <ImageRound
-            className="w-14 h-14"
-            src="/icons/document.svg"
-            border="full"
-            name="Task"
-          />
-        </div>
-      );
-    }
-    if (type === ChatRoomType.SKILL) {
-      return (
-        <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-          <ImageRound
-            className="w-14 h-14"
-            src="/icons/skill-room.svg"
-            border="full"
-            name="Task"
-          />
-        </div>
-      );
+    switch (type) {
+      case ChatRoomType.GROUP:
+        return (
+          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+            <ImageRound
+              className="w-12 h-12 rounded-full"
+              src="/icons/multi-users.svg"
+              border="full"
+              name="Multi users"
+            />
+          </div>
+        );
+      case ChatRoomType.TASK:
+        return (
+          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+            <ImageRound
+              className="w-12 h-12"
+              src="/icons/document.svg"
+              border="full"
+              name="Task room"
+            />
+          </div>
+        );
+      case ChatRoomType.SKILL:
+        return (
+          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+            <ImageRound
+              className="w-12 h-12"
+              src="/icons/skill-room.svg"
+              border="full"
+              name="Skill room"
+            />
+          </div>
+        );
+      case ChatRoomType.CALENDAR:
+        return (
+          <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+            <ImageRound
+              className="w-12 h-12"
+              src="/icons/calendar-room.svg"
+              border="full"
+              name="Calendar room"
+            />
+          </div>
+        );
     }
 
     const avatarColor =
@@ -1016,11 +1659,12 @@ const ChatDetail = ({
       })?.avatarColor || '';
 
     return (
-      <div className="rounded-full w-[58px] h-[58px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-        <div className="scale-150 mt-[-4px]">
+      <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+        <div className="scale-150">
           {AvatarIconWithDynamicColor({
             color: avatarColor,
-            size: 36,
+            size: 33,
+            customClassName: 'mt-0.5 ml-0.5',
           })}
         </div>
       </div>
@@ -1040,8 +1684,14 @@ const ChatDetail = ({
             dashboardMembers.find((member) => member.id == participantId)
               ?.avatarColor || '';
           return (
-            <div className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]" key={index}>
-              {AvatarIconWithDynamicColor({ color: avatarColor, size: 33, customClassName: '!mt-0' })}
+            <div
+              className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
+              key={index}>
+              {AvatarIconWithDynamicColor({
+                color: avatarColor,
+                size: 33,
+                customClassName: '!mt-0',
+              })}
             </div>
           );
         })}
@@ -1083,108 +1733,467 @@ const ChatDetail = ({
     },
   );
 
+  useEffect(() => {
+    if (message.length) {
+      setMentionMembers((prevMentionMembers) =>
+        prevMentionMembers.filter((member) =>
+          message.includes(member.fullName),
+        ),
+      );
+    }
+  }, [message]);
+
+  const mentionMemberOptions = chatRoomDetail
+    ? [
+        {
+          id: null,
+          fullName: MENTION_ALL_MEMBERS,
+        },
+        ...(chatRoomParticipantsEditing.find(
+          (room) => room.roomCode === chatRoomDetail.code,
+        )
+          ? chatRoomParticipantsEditing
+              .find((room) => room.roomCode === chatRoomDetail.code)
+              ?.participantsList.map((participantId) => {
+                const member = dashboardMembers.find(
+                  (member) => member.id === participantId,
+                );
+                return {
+                  id: participantId,
+                  fullName: member?.fullName || '',
+                };
+              }) || []
+          : chatRoomDetail?.participants || []),
+      ]
+    : [];
+
+  const handleUpdateBookmark = (dataUuid: string) => {
+    setDataMessageDetail((prevMessages) =>
+      prevMessages.map((item) =>
+        item.uuid === dataUuid
+          ? { ...item, isBookmark: !item.isBookmark }
+          : item,
+      ),
+    );
+    handleResetChatRoomNotification();
+  };
+
+  const handleBookMarkMsg = async (data: {
+    uuid: string;
+    isBookmark: boolean;
+  }) => {
+    const { data: response } = await api.post(
+      apiRouters.BOOKMARK_MESSAGE(`${data.uuid}`),
+      {
+        bookmarkAt: data.isBookmark ? new Date() : null,
+      },
+    );
+    return response;
+  };
+
+  const { mutate: bookMarkMsg } = useMutation(
+    'bookMarkMsg',
+    handleBookMarkMsg,
+    {
+      onSuccess: async (data, bookmark) => {
+        setSearchMessageResults((prev) =>
+          prev
+            ? {
+                ...prev,
+                results: prev.results.map((item) =>
+                  item.uuid === bookmark.uuid
+                    ? { ...item, isBookmark: bookmark.isBookmark }
+                    : item,
+                ),
+              }
+            : prev,
+        );
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
+  const handleQuoteTaskUser = (data: { id: number; title: string }[]) => {
+    if (!editor) return;
+
+    data.forEach((item, index) => {
+      if (index > 0) {
+        editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+      }
+
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'taskQuote',
+          attrs: {
+            id: item.id.toString(),
+            title: item.title,
+          },
+        })
+        .run();
+
+      editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+    });
+  };
+
+  const handleSetParam = ({
+    id,
+    action,
+  }: {
+    id: string | null;
+    action: string;
+  }) => {
+    if (id) {
+      params.set('task', id);
+    }
+    params.set('action', action);
+    params.set('type', ItemStartType.TASK);
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleActionEditTask = (id: number) => {
+    handleSetParam({
+      id: `${id}`,
+      action: ActionTask.EDIT,
+    });
+  };
+
+  const handleGetDataDetailTask = async (id: number) => {
+    setIsLoading(true);
+    const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
+    return response;
+  };
+
+  const { mutate: getDataDetailTask } = useMutation(
+    'getDetailTask',
+    handleGetDataDetailTask,
+    {
+      onSuccess: async (data) => {
+        setDataTaskEdit(data);
+        setShowModalTask(true);
+      },
+      onError: () => {
+        handleRemoveParam();
+      },
+      onSettled: () => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
+      },
+    },
+  );
+
+  useEffect(() => {
+    if (
+      actionType &&
+      typeDetail === ItemStartType.TASK &&
+      dataTaskEdit != null
+    ) {
+      if (taskDetailId) {
+        setShowModalTask(true);
+        getDataDetailTask(parseInt(taskDetailId));
+      } else {
+        setShowModalTask(true);
+      }
+    } else {
+      setShowModalTask(false);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getDataDetailTask, taskDetailId, actionType, typeDetail]);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const totalSize =
+      uploadFiles.reduce(
+        (acc, uploadedFile) => acc + uploadedFile.file.size,
+        0,
+      ) + file.size;
+    if (totalSize > MAX_FILE_SIZE) {
+      setOpenErrorUploadFileModal(true);
+      return;
+    }
+    const newFile = new File([file], file.name, {
+      type: file.type,
+    });
+    setUploadFiles((prev) => [
+      ...prev,
+      {
+        file: newFile,
+        uuid: uuidv4(),
+      },
+    ]);
+    setOpenUploadFilesModal(true);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOpenDroppingFileModal(false);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
+      const totalDroppedFilesSize = droppedFiles.reduce(
+        (acc, file) => acc + file.size,
+        0,
+      );
+      const totalPreviousFilesSize = uploadFiles.reduce(
+        (acc, uploadedFile) => acc + uploadedFile.file.size,
+        0,
+      );
+
+      if (totalDroppedFilesSize + totalPreviousFilesSize > MAX_FILE_SIZE) {
+        setOpenErrorUploadFileModal(true);
+        return;
+      }
+
+      const filesWithUUID = droppedFiles.map((file) => ({
+        uuid: uuidv4(),
+        file,
+      }));
+
+      setUploadFiles((prevFiles) => [...prevFiles, ...filesWithUUID]);
+    }
+    setOpenUploadFilesModal(true);
+  };
+
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setOpenUploadFilesModal(false);
+      setOpenDroppingFileModal(true);
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!e.relatedTarget || !document.body.contains(e.relatedTarget as any)) {
+        setOpenDroppingFileModal(false);
+      }
+    };
+
+    const handleDropOutside = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (uploadFiles.length > 0) {
+        setOpenDroppingFileModal(false);
+        setOpenUploadFilesModal(true);
+      }
+    };
+
+    window.addEventListener('dragover', handleDragOver);
+    window.addEventListener('dragleave', handleDragLeave);
+    window.addEventListener('drop', handleDropOutside);
+
+    return () => {
+      window.removeEventListener('dragover', handleDragOver);
+      window.removeEventListener('dragleave', handleDragLeave);
+      window.removeEventListener('drop', handleDropOutside);
+    };
+  }, [uploadFiles]);
+
+  const handleReactionClick = (msgUuid: string, icon: string) => {
+    setDataMessageDetail((prev) =>
+      prev.map((message) =>
+        message.uuid === msgUuid
+          ? {
+              ...message,
+              reactions: message.reactions?.some(
+                (reaction) => reaction.icon === icon,
+              )
+                ? message.reactions.map((reaction) =>
+                    reaction.icon === icon
+                      ? {
+                          ...reaction,
+                          users: reaction.users.includes(
+                            session?.user.id as number,
+                          )
+                            ? reaction.users
+                            : [...reaction.users, session?.user.id as number],
+                        }
+                      : reaction,
+                  )
+                : [
+                    ...(message.reactions || []),
+                    { icon, users: [session?.user.id as number] },
+                  ],
+            }
+          : message,
+      ),
+    );
+    setChatRoomNotifications({
+      notifications: 0,
+      roomCode: chatRoomCode,
+    });
+  };
+
+  const handleRemoveReactionClick = (msgUuid: string, icon: string) => {
+    setDataMessageDetail((prev) =>
+      prev.map((message) =>
+        message.uuid === msgUuid
+          ? {
+              ...message,
+              reactions: message.reactions
+                ?.map((reaction) =>
+                  reaction.icon === icon
+                    ? {
+                        ...reaction,
+                        users: reaction.users.filter(
+                          (id) => id !== (session?.user.id as number),
+                        ),
+                      }
+                    : reaction,
+                )
+                .filter((reaction) => reaction.users.length > 0),
+            }
+          : message,
+      ),
+    );
+  };
+
+  const handleResetChatRoomNotification = () => {
+    if (chatRoomNotifications && chatRoomNotifications?.notifications > 0) {
+      getChatRoomDetail({ code: chatRoomCode, isRead: true });
+    }
+    setTotalNotifications((prevTotalNotifications) => {
+      const chatRoomIndex = dataChatList.findIndex(
+        (room) => room.code == chatRoomCode,
+      );
+      if (
+        dataChatList &&
+        chatRoomIndex != -1 &&
+        dataChatList[chatRoomIndex] &&
+        dataChatList[chatRoomIndex].unreadMessages
+      ) {
+        return (
+          prevTotalNotifications - dataChatList[chatRoomIndex].unreadMessages
+        );
+      }
+      return prevTotalNotifications;
+    });
+    setDataChatList((prevDataChatList) => {
+      const newDataChatList = [...prevDataChatList];
+      const chatRoomIndex = newDataChatList.findIndex(
+        (room) => room.code == chatRoomCode,
+      );
+      if (
+        newDataChatList &&
+        chatRoomIndex != -1 &&
+        newDataChatList[chatRoomIndex] &&
+        newDataChatList[chatRoomIndex].unreadMessages
+      ) {
+        newDataChatList[chatRoomIndex].unreadMessages = 0;
+      }
+      return newDataChatList;
+    });
+    setFilteredChatList((prevFilterChatList) => {
+      const newFilterChatList = [...prevFilterChatList];
+      const chatRoomIndex = newFilterChatList.findIndex(
+        (room) => room.code == chatRoomCode,
+      );
+      if (
+        newFilterChatList &&
+        chatRoomIndex != -1 &&
+        newFilterChatList[chatRoomIndex] &&
+        newFilterChatList[chatRoomIndex].unreadMessages
+      ) {
+        newFilterChatList[chatRoomIndex].unreadMessages = 0;
+      }
+      return newFilterChatList;
+    });
+    setChatRoomNotifications({
+      notifications: 0,
+      roomCode: chatRoomCode,
+    });
+  };
+  // Function to insert reaction into editor
+  const insertReaction = (reaction: {
+    name: string;
+    src: string;
+    value: ReactionIconValue;
+  }) => {
+    editor
+      ?.chain()
+      .focus()
+      .insertContent({
+        type: 'customReaction',
+        attrs: {
+          src: reaction.src,
+          name: reaction.name,
+        },
+      })
+      .run();
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (
+        optionIconRef.current &&
+        !optionIconRef.current.contains(event.target)
+      ) {
+        setIsShowListIcon(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <Fragment>
       {chatRoomCode && (
         <div
           className="flex flex-col flex-grow w-[calc(100vw_-_600px)] !bg-[#F8FAFC] !h-[100vh]"
-          onClick={() => {
-            if (
-              chatRoomNotifications &&
-              chatRoomNotifications?.notifications > 0
-            ) {
-              getChatRoomDetail({ code: chatRoomCode, isRead: true });
-            }
-            setTotalNotifications((prevTotalNotifications) => {
-              const chatRoomIndex = dataChatList.findIndex(
-                (room) => room.code == chatRoomCode,
-              );
-              if (
-                dataChatList &&
-                chatRoomIndex != -1 &&
-                dataChatList[chatRoomIndex] &&
-                dataChatList[chatRoomIndex].unreadMessages
-              ) {
-                return (
-                  prevTotalNotifications -
-                  dataChatList[chatRoomIndex].unreadMessages
-                );
-              }
-              return prevTotalNotifications;
-            });
-            setDataChatList((prevDataChatList) => {
-              const newDataChatList = [...prevDataChatList];
-              const chatRoomIndex = newDataChatList.findIndex(
-                (room) => room.code == chatRoomCode,
-              );
-              if (
-                newDataChatList &&
-                chatRoomIndex != -1 &&
-                newDataChatList[chatRoomIndex] &&
-                newDataChatList[chatRoomIndex].unreadMessages
-              ) {
-                newDataChatList[chatRoomIndex].unreadMessages = 0;
-              }
-              return newDataChatList;
-            });
-            setFilteredChatList((prevFilterChatList) => {
-              const newFilterChatList = [...prevFilterChatList];
-              const chatRoomIndex = newFilterChatList.findIndex(
-                (room) => room.code == chatRoomCode,
-              );
-              if (
-                newFilterChatList &&
-                chatRoomIndex != -1 &&
-                newFilterChatList[chatRoomIndex] &&
-                newFilterChatList[chatRoomIndex].unreadMessages
-              ) {
-                newFilterChatList[chatRoomIndex].unreadMessages = 0;
-              }
-              return newFilterChatList;
-            });
-            setChatRoomNotifications({
-              notifications: 0,
-              roomCode: chatRoomCode,
-            });
-          }}>
+          onClick={handleResetChatRoomNotification}>
           <div
             className="flex justify-between items-center px-4 py-2 !w-full border-b-[2px] text-white"
             style={{
               background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
             }}>
             <div className={`flex items-center w-[60%] gap-2`}>
-              <div className="!min-w-[50px]">
-                {renderImageRound(
-                  chatRoomDetail?.type,
-                  chatRoomDetail?.participants || [],
-                )}
-              </div>
               {chatRoomDetail && (
-                <p
-                  className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_370px)]'}   ml-3`}
-                  style={{
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                  }}>
-                  {chatRoomDetail
-                    ? chatRoomCode &&
-                      chatRoomNameEditing.find(
-                        (room) => room.roomCode === chatRoomCode,
-                      )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === chatRoomCode,
-                        )?.roomName
-                      : chatRoomDetail?.name
-                    : chatRoomCode &&
+                <>
+                  <div className="!min-w-[48px]">
+                    {renderImageRound(
+                      chatRoomDetail?.type,
+                      chatRoomDetail?.participants || [],
+                    )}
+                  </div>
+                  <p
+                    className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-[100%]' : 'max-w-[calc(100%_-_370px)]'}   ml-3`}
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}>
+                    {chatRoomDetail
+                      ? chatRoomCode &&
                         chatRoomNameEditing.find(
                           (room) => room.roomCode === chatRoomCode,
                         )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === chatRoomCode,
-                        )?.roomName
-                      : ''}
-                </p>
+                        ? chatRoomNameEditing.find(
+                            (room) => room.roomCode === chatRoomCode,
+                          )?.roomName
+                        : chatRoomDetail?.name
+                      : chatRoomCode &&
+                          chatRoomNameEditing.find(
+                            (room) => room.roomCode === chatRoomCode,
+                          )
+                        ? chatRoomNameEditing.find(
+                            (room) => room.roomCode === chatRoomCode,
+                          )?.roomName
+                        : ''}
+                  </p>
+                </>
               )}
               <div className="max-w-[280px] w-[280px] ml-3">
                 {chatRoomDetail &&
@@ -1255,6 +2264,21 @@ const ChatDetail = ({
                 inputClassName="!w-[290px] !py-2 !rounded-[30px] text-sm !bg-[#F6F9FA4D] border-none placeholder-white"
                 value={searchChatMsg}
                 onChange={(e) => setSearchChatMsg(e.target.value)}
+                onKeyDown={(e: any) => {
+                  if (e.keyCode == 13 && e.target.value !== '') {
+                    searchMessagesInChatRoom({
+                      searchChatMsg,
+                      pageNumber: 1,
+                      roomType:
+                        chatRoomDetail?.type == ChatRoomType.CALENDAR ||
+                        chatRoomDetail?.type == ChatRoomType.SKILL ||
+                        chatRoomDetail?.type == ChatRoomType.TASK
+                          ? chatRoomDetail?.type || ''
+                          : '',
+                    });
+                    setOpenSearchMessagesModal(true);
+                  }
+                }}
               />
               {session?.user.permissions &&
                 hasPermissionInArray(
@@ -1266,6 +2290,7 @@ const ChatDetail = ({
                       ChatRoomType.GROUP,
                       ChatRoomType.TASK,
                       ChatRoomType.SKILL,
+                      ChatRoomType.CALENDAR,
                     ].map(
                       (type) =>
                         chatRoomDetail?.code == chatRoomCode &&
@@ -1294,28 +2319,69 @@ const ChatDetail = ({
             </div>
           </div>
           <div
-            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
+            ref={chatContainerRef}
+            className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
+            {isLoadingNewer && (
+              <div className="flex flex-col items-start ml-3">
+                <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
+                <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+              </div>
+            )}
+            <div className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
+              <div>
+                {initialLoad ? (
+                  <div className="flex flex-col items-start ml-3">
+                    <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
+                    <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
+                    <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
+                    <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
+                    <RowSkeleton
+                      numberOfRows={4}
+                      className="!h-[50px] w-[700px]"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full"></div>
+                )}
+              </div>
+            </div>
             {dataMessageDetail &&
               chatRoomNotifications &&
               dataMessageDetail
                 .slice(0, chatRoomNotifications.notifications)
                 .map((item) => (
-                  <div key={item.id}>
+                  <div
+                    key={item.id}
+                    data-message-id={item.id}
+                    ref={item.id == gotoMessageId ? gotoMessageRef : null}>
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
+                      uploadFileStatus={uploadFileStatus}
                       messageDetail={item}
-                      messageSubmitted={messageSubmitted}
-                      msgIdUpdated={msgIdUpdated}
                       msgEditing={msgEditing}
+                      editor={editor}
+                      chatContainerRef={chatContainerRef}
                       dashboardMembers={dashboardMembers}
+                      highlightedMessageId={highlightedMessageId}
+                      setPreserveFiles={setPreserveFiles}
+                      setOpenUploadFilesModal={setOpenUploadFilesModal}
+                      setUploadFiles={setUploadFiles}
+                      setMentionMembers={setMentionMembers}
+                      setMessage={setMessage}
                       setMsgEditing={setMsgEditing}
-                      setMessageSubmitted={setMessageSubmitted}
                       setMsgIdDeleted={setMsgIdDeleted}
                       setOpenConfirmDeleteModal={setOpenConfirmDeleteModal}
                       setMsgIdUpdated={setMsgIdUpdated}
+                      handleActionEditTask={handleActionEditTask}
                       handleConfirmUpdateMsg={handleConfirmUpdateMsg}
                       handleConfirmGetDataDetailEvent={
                         handleConfirmGetDataDetailEvent
+                      }
+                      handleUpdateBookmark={handleUpdateBookmark}
+                      handleReactionClick={handleReactionClick}
+                      handleRemoveReactionClick={handleRemoveReactionClick}
+                      handleResetChatRoomNotification={
+                        handleResetChatRoomNotification
                       }
                     />
                   </div>
@@ -1339,44 +2405,48 @@ const ChatDetail = ({
                   dataMessageDetail.length,
                 )
                 .map((item) => (
-                  <div key={item.id}>
+                  <div
+                    key={item.id}
+                    data-message-id={item.id}
+                    ref={item.id == gotoMessageId ? gotoMessageRef : null}>
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
+                      uploadFileStatus={uploadFileStatus}
                       messageDetail={item}
-                      messageSubmitted={messageSubmitted}
-                      msgIdUpdated={msgIdUpdated}
+                      editor={editor}
                       msgEditing={msgEditing}
+                      chatContainerRef={chatContainerRef}
                       dashboardMembers={dashboardMembers}
+                      highlightedMessageId={highlightedMessageId}
+                      setPreserveFiles={setPreserveFiles}
+                      setOpenUploadFilesModal={setOpenUploadFilesModal}
+                      setUploadFiles={setUploadFiles}
+                      setMentionMembers={setMentionMembers}
+                      setMessage={setMessage}
                       setMsgEditing={setMsgEditing}
-                      setMessageSubmitted={setMessageSubmitted}
                       setMsgIdDeleted={setMsgIdDeleted}
                       setOpenConfirmDeleteModal={setOpenConfirmDeleteModal}
                       setMsgIdUpdated={setMsgIdUpdated}
+                      handleActionEditTask={handleActionEditTask}
                       handleConfirmUpdateMsg={handleConfirmUpdateMsg}
                       handleConfirmGetDataDetailEvent={
                         handleConfirmGetDataDetailEvent
                       }
+                      handleUpdateBookmark={handleUpdateBookmark}
+                      handleReactionClick={handleReactionClick}
+                      handleRemoveReactionClick={handleRemoveReactionClick}
+                      handleResetChatRoomNotification={
+                        handleResetChatRoomNotification
+                      }
                     />
                   </div>
                 ))}
-            <div
-              ref={ref}
-              className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
-              <div>
-                {initialLoad ? (
-                  <div className="flex flex-col items-start ml-3">
-                    <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
-                    <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
-                    <RowSkeleton
-                      numberOfRows={4}
-                      className="!h-[50px] w-[700px]"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-6"></div>
-                )}
+            {isLoadingOlder && (
+              <div className="flex flex-col items-start ml-3">
+                <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
+                <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
               </div>
-            </div>
+            )}
           </div>
           {chatRoomDetail ? (
             <>
@@ -1392,27 +2462,48 @@ const ChatDetail = ({
                       className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
                       <div className="flex justify-between items-center">
                         <div className="flex gap-1 items-center">
-                          <Tippy
-                            content={'メンション'}
-                            arrow={false}
-                            delay={1000}
-                            placement="top"
-                            offset={[0, 8]}>
-                            <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Mention"
-                                src="/icons/mention.svg"
-                                className="w-[16px] h-[16px]"
+                          {chatRoomDetail?.type == ChatRoomType.GROUP && (
+                            <>
+                              <ChatMentionMembersList
+                                editor={editor}
+                                mentionMemberOptions={mentionMemberOptions}
+                                searchMentionMembers={searchMentionMembers}
+                                mentionMembers={mentionMembers}
+                                dashboardMembers={dashboardMembers}
+                                customModalPosition={
+                                  'left-[-125px] top-[-310px]'
+                                }
+                                customArrowPosition={
+                                  'after:top-full after:border-t-white'
+                                }
+                                setMentionMembers={setMentionMembers}
+                                handleCheckboxClick={handleCheckboxClick}
+                                setSearchMentionMembers={
+                                  setSearchMentionMembers
+                                }
                               />
-                            </div>
-                          </Tippy>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={(e) => {
+                              handleFileChange(e);
+                            }}
+                          />
+
                           <Tippy
                             content={'ファイルを送信'}
                             arrow={false}
                             delay={1000}
                             placement="top"
                             offset={[0, 8]}>
-                            <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                            <div
+                              className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer"
+                              onClick={() => {
+                                fileInputRef.current?.click();
+                              }}>
                               <ImageRound
                                 name="Add file"
                                 src="/icons/add-file.svg"
@@ -1420,46 +2511,59 @@ const ChatDetail = ({
                               />
                             </div>
                           </Tippy>
-                          <Tippy
-                            content={'リアクション'}
-                            arrow={false}
-                            delay={1000}
-                            placement="top"
-                            offset={[0, 8]}>
-                            <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                              <ImageRound
-                                name="Smile"
-                                src="/icons/smile.svg"
-                                className="w-[16px] h-[16px]"
-                              />
-                            </div>
-                          </Tippy>
+                          <div
+                            onClick={() => setIsShowListIcon(!isShowListIcon)}
+                            className="relative">
+                            <Tippy
+                              content={'リアクション'}
+                              arrow={false}
+                              delay={1000}
+                              placement="top"
+                              offset={[0, 8]}>
+                              <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                                <ImageRound
+                                  name="Smile"
+                                  src="/icons/smile.svg"
+                                  className="w-[16px] h-[16px]"
+                                />
+                              </div>
+                            </Tippy>
+                            {isShowListIcon && (
+                              <div
+                                style={{
+                                  boxShadow: '0px 4px 8px 0px #0000000F',
+                                }}
+                                ref={optionIconRef}
+                                className="w-[190px] h-[44px] absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white rounded-lg top-[-54px] bg-white flex items-center gap-3 justify-center left-[-81px]">
+                                {REACTION_LIST.map((icon) => {
+                                  return (
+                                    <div
+                                      onClick={() => insertReaction(icon)}
+                                      key={icon.name}
+                                      className={` rounded-ful`}>
+                                      <ImageRound
+                                        name={icon.name}
+                                        src={icon.src}
+                                        className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                                      />
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
 
                           {session?.user.permissions &&
                             hasPermissionInArray(
                               session?.user.permissions,
                               PermissionsSystem.MY_TASK_ADD,
                             ) && (
-                              <Tippy
-                                content={'タスクを引用'}
-                                arrow={false}
-                                delay={1000}
-                                placement="top"
-                                offset={[0, 8]}>
-                                <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
-                                  <ImageRound
-                                    name="Quote checker"
-                                    src="/icons/quote-checker.svg"
-                                    className="w-[18px] h-[18px]"
-                                    onClick={() => {
-                                      handleSetParam({
-                                        id: null,
-                                        action: ActionTask.CREATE,
-                                      });
-                                    }}
-                                  />
-                                </div>
-                              </Tippy>
+                              // List task for user
+                              <ListTaskUserChat
+                                quoteTaskList={quoteTaskList}
+                                setQuoteTaskList={setQuoteTaskList}
+                                handleQuoteTaskUser={handleQuoteTaskUser}
+                              />
                             )}
                           <Tippy
                             content={'書式設定'}
@@ -1475,7 +2579,28 @@ const ChatDetail = ({
                           </Tippy>
                         </div>
 
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-3">
+                          {session?.user.permissions &&
+                            hasPermissionInArray(
+                              session?.user.permissions,
+                              PermissionsSystem.CHAT_UPDATE,
+                            ) &&
+                            msgIdUpdated && (
+                              <Button
+                                className="w-[120px]"
+                                variant="outline"
+                                onClick={() => {
+                                  setMsgIdUpdated && setMsgIdUpdated(undefined);
+                                  setPreserveFiles([]);
+                                  setUploadFiles([]);
+                                  setMentionMembers([]);
+                                  setMessage && setMessage('');
+                                  if (!editor) return;
+                                  editor.commands.clearContent();
+                                }}>
+                                キャンセル
+                              </Button>
+                            )}
                           {session?.user.permissions &&
                             hasPermissionInArray(
                               session?.user.permissions,
@@ -1484,7 +2609,13 @@ const ChatDetail = ({
                               <Button
                                 className="w-[100px]"
                                 type="submit"
-                                onClick={handleConfirmSendMessage}
+                                onClick={() => {
+                                  if (msgIdUpdated) {
+                                    handleConfirmUpdateMsg(msgIdUpdated);
+                                  } else {
+                                    handleConfirmSendMessage();
+                                  }
+                                }}
                                 disabled={
                                   trimUnnecessaryLineBreaks(
                                     message as string,
@@ -1495,14 +2626,8 @@ const ChatDetail = ({
                             )}
                         </div>
                       </div>
-                      <div className="mt-[-10px]">
-                        <Quill
-                          text={message}
-                          setText={setMessage}
-                          messageSubmitted={messageSubmitted}
-                          setMessageSubmitted={setMessageSubmitted}
-                          placeholder="メッセージを入力"
-                        />
+                      <div className="mt-5">
+                        <EditorContent editor={editor} />
                       </div>
                     </div>
                   ),
@@ -1511,11 +2636,72 @@ const ChatDetail = ({
           ) : (
             <div className="flex flex-col items-start ml-3">
               <RowSkeleton className="!h-[50px] w-[700px] mb-2" />
-              <RowSkeleton className="!h-[80] w-[600px] mb-2" />
+              <RowSkeleton className="!h-[80px] w-[600px] mb-2" />
               <RowSkeleton className="!h-[100px] w-[720px] mb-2" />
             </div>
           )}
         </div>
+      )}
+      {openErrorUploadFileModal && (
+        <ErrorChatUploadFileValidationModal
+          open={true}
+          message={UPLOAD_FILE_MAXIMUM_SZIE}
+          onClose={() => {
+            setOpenErrorUploadFileModal(false);
+          }}
+        />
+      )}
+      {openDroppingFileModal && (
+        <ChatDroppingFileModal
+          open={true}
+          onDropFile={handleDrop}
+          onClose={() => {
+            setOpenDroppingFileModal(false);
+          }}
+          onUploadFile={(e: ChangeEvent<HTMLInputElement>) => {
+            handleFileChange(e);
+          }}
+        />
+      )}
+      {openSearchMessagesModal && (
+        <SearchMessagesModal
+          open={true}
+          dashboardMembers={dashboardMembers}
+          searchMessageResults={searchMessageResults}
+          searchChatMsg={searchChatMsg}
+          chatRoomType={chatRoomDetail?.type || ''}
+          setSearchChatMsg={setSearchChatMsg}
+          searchResultsPage={searchResultsPage}
+          setSearchMessageResults={setSearchMessageResults}
+          setSearchResultsPage={setSearchResultsPage}
+          handleConfirmGetDataDetailEvent={handleConfirmGetDataDetailEvent}
+          hasMoreSearchResultDetail={hasMoreSearchResultDetail}
+          onSubmit={(searchChatMsg: string, page: number, roomType: string) => {
+            searchMessagesInChatRoom({
+              searchChatMsg,
+              pageNumber: page,
+              roomType,
+            });
+          }}
+          onClose={() => {
+            setOpenSearchMessagesModal(false);
+            setSearchResultsPage(1);
+            setSearchMessageResults(undefined);
+          }}
+          onGotoMessage={(data: {
+            messageId: string | number;
+            chatRoomCode: string;
+          }) => {
+            setOpenSearchMessagesModal(false);
+            setGotoMessageId(Number(data.messageId));
+            gotoSelectedMessage({
+              bookmarkMessageId: Number(data.messageId),
+            });
+          }}
+          handleBookmark={(data: { uuid: string; isBookmark: boolean }) => {
+            bookMarkMsg(data);
+          }}
+        />
       )}
       {openSettingBox && (
         <ChatSettingModal
@@ -1698,7 +2884,8 @@ const ChatDetail = ({
             });
             setOpenWarningCloseModal(true);
           }}
-          onSubmit={handleConfirmCreateTask}
+          onEdit={handleConfirmEditTask}
+          onSubmit={handleConfirmEditTask}
           dashboardMemberList={dashboardMemberList}
           creationDataTaskData={creationDataTaskData}
         />
@@ -1717,6 +2904,44 @@ const ChatDetail = ({
             setIsLoading(false);
             resetFunctions.resetDataCategoryOptions?.();
             resetFunctions.reset?.();
+          }}
+        />
+      )}
+      {openUploadFilesModal && (
+        <ChatUploadingFilesModal
+          message={message}
+          uploadFiles={uploadFiles}
+          preserveFiles={preserveFiles}
+          chatRoomDetail={chatRoomDetail}
+          setPreserveFiles={setPreserveFiles}
+          setMessage={setMessage}
+          setUploadFiles={setUploadFiles}
+          handleFileChange={handleFileChange}
+          mentionMemberOptions={mentionMemberOptions}
+          searchMentionMembers={searchMentionMembers}
+          mentionMembers={mentionMembers}
+          dashboardMembers={dashboardMembers}
+          setMentionMembers={setMentionMembers}
+          handleCheckboxClick={handleCheckboxClick}
+          setSearchMentionMembers={setSearchMentionMembers}
+          open={true}
+          onSubmit={() => {
+            if (msgIdUpdated) {
+              handleConfirmUpdateMsg(msgIdUpdated);
+              setPreserveFiles([]);
+            } else {
+              handleConfirmSendMessage();
+            }
+            setUploadFiles([]);
+            setOpenUploadFilesModal(false);
+          }}
+          onClose={() => {
+            setOpenUploadFilesModal(false);
+            setUploadFiles([]);
+            setPreserveFiles([]);
+            setMsgIdUpdated && setMsgIdUpdated(undefined);
+            setMentionMembers([]);
+            setMessage('');
           }}
         />
       )}

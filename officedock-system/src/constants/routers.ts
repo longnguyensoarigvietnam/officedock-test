@@ -20,6 +20,11 @@ export const pageRouters = {
     name: 'ログイン認証',
     href: '/login/2fa',
   },
+  // Setting
+  SETTING: {
+    name: '設定',
+    href: '/settings',
+  },
   // User
   USERS_MANAGEMENT: {
     name: 'ユーザー管理',
@@ -73,7 +78,6 @@ export const pageRouters = {
     name: '組織詳細',
     href: (id: string) => `/organizations/${id}`,
   },
-
   // TAG
   TAGS_MANAGEMENT: {
     name: '集計タグ管理',
@@ -118,11 +122,24 @@ export const pageRouters = {
     name: 'チャット詳細',
     href: (code: string) => `/chat/${code}`,
   },
-
   // STATISTIC
-  STATISTICS_MANAGEMENT: {
+  STATISTIC_MANAGEMENT: {
     name: '集計',
-    href: '/statistics',
+    href: '/statistic',
+  },
+
+  // DAILY REPORT
+  DAILY_REPORT_MANAGEMENT: {
+    name: '日報',
+    href: '/daily-report',
+  },
+  DAILY_REPORT_LIST: {
+    name: '日報一覧',
+    href: '/daily-report/list',
+  },
+  DAILY_REPORT_DETAIL: {
+    name: '日報',
+    href: (id: string) => `/daily-report/${id}`,
   },
   // CATEGORY
   CATEGORY_MANAGEMENT: {
@@ -254,6 +271,10 @@ export const pageRouters = {
     name: '実績管理詳細',
     href: (id: string) => `/actual-durations/${id}`,
   },
+  MEMBER_MANAGEMENT: {
+    name: 'メンバー一覧',
+    href: `/member`,
+  },
 };
 
 // For the API routers
@@ -290,6 +311,7 @@ export const apiRouters = {
   SKILL_CREATION: '/creation-data/organization-skills/',
   TAG_CREATION: '/creation-data/tags/',
   CATEGORY_FILTER_CREATION: '/creation-data/category-filters/',
+  TASK_LIST_CHAT: '/creation-data/tasks/',
 
   // USER
   USER_LIST: '/users/',
@@ -318,6 +340,7 @@ export const apiRouters = {
   TASK_DETAIL: (id: string) => `/tasks/${id}/`,
   TASK_SCHEDULE_DETAIL: (id: string) => `/tasks/schedules/${id}/`,
   TASK_PLAN_SCHEDULE_DETAIL: (uuid: string) => `/tasks/schedules/${uuid}/`,
+  TASK_SCHEDULE_COPY: (uuid: string) => `tasks/schedules/${uuid}/copy`,
 
   TASK_COPY: (id: string) => `/tasks/${id}/copy/`,
   TASK_PIN: (id: string) => `/tasks/${id}/pin/`,
@@ -339,6 +362,13 @@ export const apiRouters = {
   CHAT_HIDE: (code: string) => `/chat/${code}/hide/`,
   SOCKET_ACTION: (token: string) => `/system/ws/chat/?token=${token}`,
   CHAT_SETTING: '/users/chat-setting/',
+
+  // BOOKMARK
+  BOOKMARK_LIST: '/messages/',
+  BOOKMARK_MESSAGE: (uuid: string) => `/messages/${uuid}/bookmark/`,
+
+  // REACTION
+  REACTION_MESSAGE: (uuid: string) => `/messages/${uuid}/reaction/`,
 
   // SCHEDULE
   SCHEDULES: '/schedules/',
@@ -384,4 +414,11 @@ export const apiRouters = {
 
   // TEMPLATES
   TEMPLATE_LIST: '/tasks/template/',
+
+  // MEMBER ORGANIZATION
+  MEMBER_ORGANIZATION_LIST: '/organizations/members/',
+
+  // STAT DATA
+  STAT_DATA: '/stat-data/',
+  CONFIRM_USER_DAILY: (id: number) => `/users/${id}/report/`,
 };

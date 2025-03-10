@@ -140,6 +140,19 @@ const ChatSettingModal = memo(
       );
     };
 
+    const showRoomAvatar = (type: string) => {
+      switch (type) {
+        case ChatRoomType.GROUP:
+          return '/icons/multi-users.svg';
+        case ChatRoomType.TASK:
+          return '/icons/document.svg';
+        case ChatRoomType.SKILL:
+          return '/icons/skill-room.svg';
+        case ChatRoomType.CALENDAR:
+          return '/icons/calendar-room.svg';
+      }
+    };
+
     return (
       <Modal
         open={open}
@@ -157,7 +170,7 @@ const ChatSettingModal = memo(
           <div className="flex gap-4 items-center pb-3">
             <ImageRound
               className="w-20 h-20"
-              src={`${chatRoomDetail?.type == ChatRoomType.GROUP ? '/icons/multi-users.svg' : chatRoomDetail?.type == ChatRoomType.TASK ? '/icons/document.svg' : '/icons/skill-room.svg'}`}
+              src={`${showRoomAvatar(chatRoomDetail?.type || '')}`}
               border="full"
               name="Multi users"
             />
@@ -222,8 +235,14 @@ const ChatSettingModal = memo(
                     key={member.id}>
                     <div className="flex gap-2 items-center">
                       {renderAvatar(member.id)}
-                      <p className="font-medium text-[15px] truncate max-w-[220px] text-black">
-                        {member.fullName}
+                      <p
+                        className={`truncate font-medium text-[15px] max-w-[300px] text-black`}>
+                        <span className="font-normal text-sm text-black">
+                          {member.fullName}
+                        </span>
+                        <span className="font-normal text-xs text-[#77858F] ml-2">
+                          {member?.organizations?.name}
+                        </span>
                       </p>
                     </div>
                     <div className="flex gap-3 items-center">
