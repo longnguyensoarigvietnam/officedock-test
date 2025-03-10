@@ -637,7 +637,7 @@ export const getChatFileURL = (url: string) => {
     if (url.includes('https://') || url.includes('http://')) {
       return url;
     }
-    return process.env.NEXT_PUBLIC_API_URL + url;
+    return url;
   }
   return '';
 };
