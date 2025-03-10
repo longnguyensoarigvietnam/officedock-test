@@ -26,9 +26,10 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 
 from base.apis import BaseAPIViewSet
-from base.constants import REPLACE_NULL_DATE
+from base.constants import REPLACE_NULL_DATE, REPLACE_NULL_DATE_WITH_FUTURE
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission
+from calendars.constants import CalendarTypes
 from chat.constants import (
     WebSocketEventType,
     ChatMessageTypes,
@@ -40,7 +41,11 @@ from chat.serializers import (
     ChatRoomsParticipantsWebSocketSerializer,
 )
 from common.filters import CustomOrderFilter
-from common.utils import send_web_socket_event, create_categories_by_model
+from common.utils import (
+    send_web_socket_event,
+    create_categories_by_model,
+    check_task_overtime,
+)
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
     TaskPriorities,
@@ -533,14 +538,15 @@ class TaskViewSet(
                             }
                         )
 
-        if serializer_data.get("deadline") and remind_countdown and remind_type:
-            serializer_data["remind_at"] = calculate_new_time(
-                serializer_data["deadline"], remind_countdown, remind_type
-            )
+        if serializer_data.get("deadline"):
             serializer_data["reminds"] = {
                 "type": remind_type,
                 "countdown": remind_countdown,
             }
+            if remind_countdown and remind_type:
+                serializer_data["remind_at"] = calculate_new_time(
+                    serializer_data["deadline"], remind_countdown, remind_type
+                )
 
         if (
             (current_task.status.name != TaskStatus.MY_ROUTINE.value)
@@ -731,6 +737,27 @@ class TaskViewSet(
         # Create or update categories
         if categories is not None:
             create_categories_by_model(task, categories)
+
+        # Check is task run overtime or not
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        task_duration = TaskDuration.objects.filter(
+            started_at__gte=start_of_today, paused_at__isnull=True, task=task
+        ).first()
+        if task_duration:
+            is_send_sk, is_over_estimate = check_task_overtime(
+                task, task_duration
+            )
+            for user in task.people_in_charge.all():
+                send_web_socket_event(
+                    {
+                        "id": task.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": is_over_estimate,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.TASK.value,
+                    },
+                    user=user,
+                )
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -1029,6 +1056,46 @@ class TaskScheduleViewSet(
 
         return super().get_serializer_class()
 
+    def _check_overtime(self, task_schedule):
+        """
+        Check overtime of task schedule
+        """
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        task_duration = TaskDuration.objects.filter(
+            started_at__gte=start_of_today,
+            paused_at__isnull=True,
+            task=task_schedule.task,
+        ).first()
+        if task_duration:
+            is_send_sk, is_over_estimate = check_task_overtime(
+                task_schedule.task, task_duration
+            )
+            for user in task_schedule.task.people_in_charge.all():
+                send_web_socket_event(
+                    {
+                        "id": task_schedule.task.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": is_over_estimate,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.TASK.value,
+                    },
+                    user=user,
+                )
+
+    def perform_create(self, serializer):
+        """
+        Handle create task schedule
+        """
+        task_schedule = serializer.save()
+        self._check_overtime(task_schedule)
+
+    def perform_update(self, serializer):
+        """
+        Handle update task schedule
+        """
+        task_schedule = serializer.save()
+        self._check_overtime(task_schedule)
+
 
 @extend_schema(tags=["System > Task"])
 class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
@@ -1264,12 +1331,20 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 and int(status_id) == task_routine_status.id
             ):
                 tasks = queryset.all()
+                if "is_important" in ordering:
+                    tasks = tasks.annotate(
+                        coalesced_ordering_datetime=Coalesce(
+                            "deadline",
+                            Value(REPLACE_NULL_DATE_WITH_FUTURE),
+                            output_field=DateTimeField(),
+                        )
+                    ).order_by("-is_important", "coalesced_ordering_datetime")
                 for idx, task in enumerate(tasks):
-                    task_index = task.task_index.first()
+                    task_index = task.task_index.filter(user=user).first()
                     if task_index.pin_at:
                         task.task_index.update(
                             pin_at=timezone.now()
-                            - timedelta(seconds=INITIAL_INDEX_VALUE + idx)
+                            - timedelta(minutes=INITIAL_INDEX_VALUE + idx)
                         )
                     task.task_index.update(index=INITIAL_INDEX_VALUE - idx)
 

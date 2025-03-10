@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import ImageRound from '@components/common/ImageRound';
 import { ActionTask, ItemScheduleType, ItemStartType } from '@constants/enums';
+import { ERROR_DELETE_TASK_RUNNING } from '@constants/message';
 import { DataDetailTaskType } from '@interfaces/task';
 import {
   compareWithCurrentDate,
@@ -23,6 +24,7 @@ import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 import WarningStartTaskModal from './WarningStartTaskModal';
+import { useToast } from '@providers/ToastProvider';
 
 type Props = {
   popoverInfo: DataDetailTaskType;
@@ -59,6 +61,7 @@ const DetailPlanItemModal = ({
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const router = useRouter();
+  const { showToast } = useToast();
 
   const {
     idTaskStarting,
@@ -276,7 +279,7 @@ const DetailPlanItemModal = ({
             <div className="flex gap-x-[6px] items-center justify-center">
               <div
                 onClick={() => setIsShowAction(!isShowAction)}
-                className={`rounded-full cursor-pointer w-6 h-6  flex items-center justify-center bg-[#E3EAED]`}>
+                className={`rounded-full cursor-pointer w-6 h-6  flex items-center justify-center  ${isShowAction && 'bg-[#E3EAED]'}`}>
                 <ImageRound
                   src={`/icons/more-black.svg`}
                   name="more"
@@ -356,7 +359,9 @@ const DetailPlanItemModal = ({
           {isShowAction && popoverInfo.resource === ItemScheduleType.PLANS && (
             <div className="absolute top-10 right-[-105px] bg-[#5B6770] w-[168px] rounded-md py-[6px] text-white font-medium text-sm">
               <p
-                onClick={() => deletePlanTask(popoverInfo.uuid)}
+                onClick={() => {
+                  deletePlanTask(popoverInfo.uuid);
+                }}
                 className="py-[10px] px-[14px] hover:bg-[#7D8A94] cursor-pointer">
                 予定からタスクを削除
               </p>
@@ -377,7 +382,16 @@ const DetailPlanItemModal = ({
           {isShowAction && popoverInfo.resource === ItemScheduleType.ACTUAL && (
             <div className="absolute top-10 right-[-105px] bg-[#5B6770] w-[126px] rounded-md py-[6px] text-white font-medium text-sm">
               <p
-                onClick={() => deleteActualTask(popoverInfo.uuid)}
+                onClick={() => {
+                  if (popoverInfo.isRunning) {
+                    showToast({
+                      variant: 'error',
+                      description: ERROR_DELETE_TASK_RUNNING,
+                    });
+                  } else {
+                    deleteActualTask(popoverInfo.uuid);
+                  }
+                }}
                 className="py-[10px] px-[14px] hover:bg-[#7D8A94] cursor-pointer">
                 この実績を削除
               </p>

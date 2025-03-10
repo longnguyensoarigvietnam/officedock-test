@@ -638,6 +638,15 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             OpenApiParameter("message_id", type=int, required=False),
             OpenApiParameter("message", type=str, required=False),
             OpenApiParameter("sorting", type=str, required=False),
+            OpenApiParameter(
+                "chatroom_type",
+                type=str,
+                enum=[
+                    ChatRoomTypes.CALENDAR.value,
+                    ChatRoomTypes.TASK.value,
+                    ChatRoomTypes.SKILL.value,
+                ],
+            ),
             OpenApiParameter("bookmark_message_id", type=int, required=False),
         ],
         responses={
@@ -669,6 +678,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             sorting = request.query_params.get("sorting")
             message_id = request.query_params.get("message_id")
             message = request.query_params.get("message")
+            chatroom_type = request.query_params.get("chatroom_type")
             bookmark_message_id = request.query_params.get(
                 "bookmark_message_id"
             )
@@ -715,16 +725,26 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     **{filter_field: message_id}
                 )
             elif message:
-                chat_messages = (
-                    chat_messages.annotate(
+                if chatroom_type == ChatRoomTypes.TASK.value:
+                    chat_messages = chat_messages.filter(
+                        task__title__icontains=message
+                    )
+                elif chatroom_type == ChatRoomTypes.CALENDAR.value:
+                    chat_messages = chat_messages.filter(
+                        Q(schedule__title__icontains=message)
+                        | Q(message__icontains=message)
+                    )
+                elif chatroom_type == ChatRoomTypes.SKILL.value:
+                    chat_messages = chat_messages.filter(
+                        Q(submit_level__skill__name__icontains=message)
+                    )
+                else:
+                    chat_messages = chat_messages.annotate(
                         clean_message=StripTags(F("message"))
-                    )
-                    .filter(
-                        Q(clean_message__icontains=message)
-                        & Q(deleted_at__isnull=True)
-                    )
-                    .order_by("-created_at")
-                )
+                    ).filter(Q(clean_message__icontains=message))
+                chat_messages = chat_messages.filter(
+                    deleted_at__isnull=True
+                ).order_by("-created_at")
             return self.response_pagination(
                 request, chat_messages, ChatMessageSerializer
             )
@@ -847,15 +867,9 @@ class ChatMessageViewSet(
         """
         user = request.user
         messages = self.get_queryset().filter(deleted_at__isnull=True)
+        is_bookmark = request.query_params.get("is_bookmark")
 
-        if message := request.query_params.get("message"):
-            messages = (
-                messages.annotate(clean_message=StripTags(F("message")))
-                .filter(clean_message__icontains=message)
-                .order_by("-created_at")
-            )
-
-        if is_bookmark := request.query_params.get("is_bookmark"):
+        if is_bookmark:
             messages = (
                 messages.filter(bookmark_users=user)
                 .order_by("bookmarks__bookmark_at")
@@ -863,6 +877,27 @@ class ChatMessageViewSet(
             )
         else:
             messages = messages.order_by("-created_at")
+
+        if message := request.query_params.get("message"):
+            if is_bookmark:
+                messages = (
+                    messages.filter(
+                        Q(task__title__icontains=message)
+                        | Q(
+                            Q(schedule__title__icontains=message)
+                            | Q(message__icontains=message)
+                        )
+                        | Q(Q(submit_level__skill__name__icontains=message))
+                    )
+                    .order_by("bookmarks__bookmark_at")
+                    .distinct()
+                )
+            else:
+                messages = (
+                    messages.annotate(clean_message=StripTags(F("message")))
+                    .filter(clean_message__icontains=message)
+                    .order_by("-created_at")
+                )
 
         return self.response_pagination(
             request, messages, ChatMessageBookMarkSerializer

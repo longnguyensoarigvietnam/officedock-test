@@ -1,10 +1,12 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { UseMutateFunction } from 'react-query';
+import { UseMutateFunction, useMutation } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 
 import Column from '@components/kanban/Column';
 
+import { apiRouters } from '@constants/routers';
+import { ERROR_EXTEND_COLUMN } from '@constants/message';
 import { INITIAL_INDEX_VALUE } from '@constants';
 
 import { convertDateStringFull, getRandomDateTimeBetween } from '@utils/date';
@@ -18,6 +20,8 @@ import {
   TaskRequest,
 } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
+import api from '@base/api';
+import { useToast } from '@providers/ToastProvider';
 
 interface PropsDataFixedTask {
   data: ColumnType;
@@ -84,6 +88,7 @@ const FixedTaskData = ({
   handleConfirmDrop,
 }: PropsDataFixedTask) => {
   const { data: session } = useSession();
+  const { showToast } = useToast();
 
   const [column, setColumn] = useState<ColumnType>(data);
 
@@ -211,6 +216,28 @@ const FixedTaskData = ({
     handleConfirmDrop(result);
   };
 
+  const handleExtendColumn = async (tabVisibility: Record<string, boolean>) => {
+    const { data: response } = await api.post(apiRouters.USER_SETTING, {
+      tabVisibility,
+    });
+    return response;
+  };
+
+  const { mutate: saveExtendColumn } = useMutation(
+    'saveExtendColumn',
+    handleExtendColumn,
+    {
+      onSuccess: () => {},
+      onError: () => {
+        showToast({
+          variant: 'error',
+          description: ERROR_EXTEND_COLUMN,
+        });
+      },
+      onSettled: () => {},
+    },
+  );
+
   return (
     <div>
       {column && (
@@ -240,6 +267,9 @@ const FixedTaskData = ({
               pinItemToTop={pinItemToTop}
               creationDataTaskData={creationDataTaskData}
               selectedOptionZoom={selectedOptionZoom}
+              saveExtendColumn={(data: Record<string, boolean>) => {
+                saveExtendColumn(data);
+              }}
             />
           </div>
         </DragDropContext>

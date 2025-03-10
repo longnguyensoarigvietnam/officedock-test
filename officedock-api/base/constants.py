@@ -35,4 +35,9 @@ OTP_TOKEN_MINUTES_EXPIRATION = (
     OTP_TOKEN_SECONDS_EXPIRATION / 60
 )  # Show expired by minutes
 
-REPLACE_NULL_DATE = timezone.now() - timedelta(days=365 * 1000)
+REPLACE_NULL_DATE = timezone.now() - timedelta(
+    days=365 * 1000
+)  # Datetime in the past
+REPLACE_NULL_DATE_WITH_FUTURE = timezone.now() + timedelta(
+    days=365 * 1000
+)  # Datetime in the future

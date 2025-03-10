@@ -58,14 +58,13 @@ class DurationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id"]
 
-    # FIXME: Check spec implement color of category
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
         model = obj.task or obj.schedule
         if not model.categories.exists():
             return []
 
-        return get_common_categories(model.categories.first())
+        return get_common_categories(model.categories.first(), model)
 
     def get_task_id(self, instance):
         """
@@ -303,7 +302,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         if not model.categories.exists():
             return []
 
-        return get_common_categories(model.categories.first())
+        return get_common_categories(model.categories.first(), model)
 
     def validate(self, data):
         """Validate data"""
@@ -412,7 +411,7 @@ class ActualDurationListSerializer(serializers.ModelSerializer):
         if not model.categories.exists():
             return []
 
-        return get_common_categories(model.categories.first())
+        return get_common_categories(model.categories.first(), model)
 
     def get_staffs(self, obj):
         """Get staffs of task or event"""

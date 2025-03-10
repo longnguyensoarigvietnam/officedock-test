@@ -44,7 +44,8 @@ export const START_DATE_REQUIRED_SELECTED = '実施予定日時を設定して�
 
 export const START_DATE_WRONG_SELECTED = '実施予定日時を入力してください。';
 export const DATE_REQUIRED_DURATION = '計測時間を入力してください。';
-export const UPLOAD_FILE_MAXIMUM_SZIE = '5GB以下のファイルをアップロードしてください。'
+export const UPLOAD_FILE_MAXIMUM_SZIE =
+  '5GB以下のファイルをアップロードしてください。';
 
 // Success message
 export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました。';
@@ -63,6 +64,8 @@ export const INVALID_URL_MESSAGE = 'URLの形式で入力してください。';
 export const ERROR_UPDATE_MESSAGE = '更新に失敗しました。';
 export const ERROR_SAVE_MESSAGE = '保存に失敗しました。';
 export const ERROR_TIME_START_MESSAGE = '予定時間をオーバーしています';
+export const ERROR_DELETE_TASK_RUNNING =
+  '計測中のカードを削除することができません。';
 
 export const OTP_CODE_INVALID =
   '認証コードが無効であるか、有効期限が切れています。';
@@ -77,6 +80,9 @@ export const ERROR_EMAIL_AVAILABLE_MESSAGE =
 export const ERROR_PERSON_IN_CHART_START =
   'この担当者が別のタスクを実施しています。';
 export const ERROR_NOT_FOUND_EVENT = '予定が見つかりません。';
+
+export const ERROR_SAVE_ZOOM = '拡大縮小のエラーが出ました。';
+export const ERROR_EXTEND_COLUMN = 'タブの拡大縮小のエラーが出ました。';
 
 // Toast message
 export const SUCCESS_TITLE_MESSAGE = '成功';

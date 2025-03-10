@@ -47,6 +47,7 @@ from users.models import (
     User,
     UserVerification,
     DailyReport,
+    ConfirmReport,
 )
 from users.serializers import (
     AdminLoginSerializer,
@@ -1026,6 +1027,12 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def setting(self, request):
+        """
+        Handle store setting of user
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.validated_data
         user = request.user
         setting = request.data
         user.set_setting(setting)
@@ -1042,25 +1049,31 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     @transaction.atomic()
     def report(self, request, pk):
         user = self.get_object()
+        request_user = request.user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        if (
-            DailyReport.objects.filter(
-                user=user, date=serializer.validated_data["date"]
-            ).count()
-            > 1
-        ):
-            DailyReport.objects.filter(
-                user=user, date=serializer.validated_data["date"]
-            ).first().delete()
+        serializer_data = serializer.validated_data
+        date = serializer_data.get("date")
+        is_confirmed = serializer_data.pop("is_confirmed", None)
 
-        daily, created = DailyReport.objects.update_or_create(
-            user=user,
-            date=serializer.validated_data["date"],
-            defaults=serializer.validated_data,
-        )
+        while DailyReport.objects.filter(user=user, date=date).count() > 1:
+            DailyReport.objects.filter(user=user, date=date).first().delete()
+        if is_confirmed is not None:
+            ConfirmReport.objects.update_or_create(
+                date=date,
+                confirm_by=request_user,
+                user=user,
+                defaults={"is_confirmed": is_confirmed},
+            )
+            return self.response_ok()
+        else:
+            daily, created = DailyReport.objects.update_or_create(
+                user=user,
+                date=date,
+                defaults=serializer.validated_data,
+            )
 
-        return self.response_ok(self.get_serializer(daily).data)
+            return self.response_ok(self.get_serializer(daily).data)
 
 
 @extend_schema(tags=["System > Users"])

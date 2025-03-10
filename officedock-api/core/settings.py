@@ -64,8 +64,9 @@ if GOOGLE_CLOUD_PROJECT_ID := os.environ.get("GOOGLE_CLOUD_PROJECT_ID", None):
     # https://django-storages.readthedocs.io/en/latest/backends/gcloud.html
 
     GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME", None)
+    GS_EXPIRATION = 60 * 60 * 24 * 7  # Expires in 7 days
     GS_CREDENTIALS = GOOGLE_CLOUD_CREDENTIALS
-    GS_QUERYSTRING_AUTH = False
+    GS_QUERYSTRING_AUTH = True
     GS_DEFAULT_ACL = None
     GS_FILE_OVERWRITE = False
     STORAGES = {
@@ -213,7 +214,7 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", None)
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", None)
 EMAIL_SENDER = os.getenv("EMAIL_SENDER", EMAIL_HOST_USER)
 NAME_SENDER = os.getenv("NAME_SENDER", "OfficeDock")
-CRONJOB_KEY = os.getenv("CRONJOB_KEY", None)
+SECRET_KEY_FOR_CRONJOB = os.getenv("SECRET_KEY_FOR_CRONJOB", None)
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")

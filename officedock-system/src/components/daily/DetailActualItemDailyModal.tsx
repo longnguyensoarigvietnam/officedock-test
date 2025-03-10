@@ -1,24 +1,28 @@
 import ImageRound from '@components/common/ImageRound';
 import { DataActualDetail } from '@interfaces/statistic';
 import { formatTime24h } from '@utils/date';
-import React, { MutableRefObject } from 'react';
+import React, { MutableRefObject, useState } from 'react';
 
 type Props = {
   popoverInfo: DataActualDetail | null;
   popoverRef: MutableRefObject<HTMLDivElement | null>;
   onClose: () => void;
+  deleteActualTask: (uuid: string) => void;
 };
 
 const DetailActualItemDailyModal = ({
   popoverInfo,
   popoverRef,
   onClose,
+  deleteActualTask,
 }: Props) => {
+  const [isShowAction, setIsShowAction] = useState(false);
+
   return (
     <>
       {popoverInfo && (
         <div
-          className={`w-[250px] z-[10] h-fit rounded-md pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}
+          className={`w-[250px] z-[10] h-fit relative rounded-md pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}
           ref={popoverRef}
           style={{
             position: 'absolute',
@@ -29,7 +33,9 @@ const DetailActualItemDailyModal = ({
           <div className="flex justify-between items-center">
             <span>実績</span>
             <div className="flex gap-x-[6px] items-center justify-center">
-              <div className={`rounded-full cursor-pointer w-fit h-fit `}>
+              <div
+                onClick={() => setIsShowAction(!isShowAction)}
+                className={`rounded-full cursor-pointer w-6 h-6  flex items-center justify-center  ${isShowAction && 'bg-[#E3EAED]'}`}>
                 <ImageRound
                   src={`/icons/more-black.svg`}
                   name="more"
@@ -75,6 +81,15 @@ const DetailActualItemDailyModal = ({
               </span>
             </div>
           </div>
+          {isShowAction && (
+            <div className="absolute top-10 right-[-105px] bg-[#5B6770] w-[126px] rounded-md py-[6px] text-white font-medium text-sm">
+              <p
+                onClick={() => deleteActualTask(popoverInfo.uuid)}
+                className="py-[10px] px-[14px] hover:bg-[#7D8A94] cursor-pointer">
+                この実績を削除
+              </p>
+            </div>
+          )}
         </div>
       )}
     </>

@@ -1,7 +1,8 @@
 from rest_framework import serializers
+
 from users.models import User
 from users.serializers import BaseUserSerializer, UsersForCreationSerializer
-from .models import PeopleInChargeTags, Tag
+from .models import Tag, PeopleInChargeTags
 
 
 class BaseTagSerializer(serializers.ModelSerializer):
@@ -57,6 +58,7 @@ class TagSerializer(serializers.ModelSerializer):
         representation["people_in_charge"] = BaseUserSerializer(
             sorted_users, many=True
         ).data
+
         return representation
 
 

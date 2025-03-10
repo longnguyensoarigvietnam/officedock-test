@@ -20,7 +20,18 @@ import { debounce, throttle } from 'lodash';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
-import { format, addDays, isSameDay, parseISO } from 'date-fns';
+import {
+  format,
+  addDays,
+  isSameDay,
+  parseISO,
+  eachDayOfInterval,
+  startOfDay,
+  endOfDay,
+  getHours,
+  getMinutes,
+  subSeconds,
+} from 'date-fns';
 import interactionPlugin, {
   EventDragStopArg,
   EventReceiveArg,
@@ -50,6 +61,10 @@ import ImageRound from '@components/common/ImageRound';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import DatePicker from '@components/common/DatePicker';
+import ScheduleDaySkeleton from '@components/skeleton/ScheduleDaySkeleton';
+import RangeSlider from '@components/common/RangeSlider';
+import DetailPlanItemModal from '@components/modals/DetailPlanItemModal';
+import DetailEventPlanModal from '@components/modals/DetailEventPlanModal';
 
 import TaskCard from './TaskCard';
 
@@ -62,7 +77,7 @@ import {
   DEFAULT_START_TIME,
   NO_OPTION_CATEGORY,
 } from '@constants';
-import { apiRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ActionsEvent,
   CalendarViewOptions,
@@ -87,6 +102,7 @@ import {
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 
 import api from '@base/api';
@@ -129,11 +145,6 @@ import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
 } from '@utils';
-import ScheduleDaySkeleton from '@components/skeleton/ScheduleDaySkeleton';
-import RangeSlider from '@components/common/RangeSlider';
-import { useErrorToast } from '@hooks/useErrorToast';
-import DetailPlanItemModal from '@components/modals/DetailPlanlItemModal';
-import DetailEventPlanModal from '@components/modals/DetailEventPlanModal';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -216,6 +227,7 @@ const TimeSchedule = memo(
     const today = new Date();
 
     const [isStartPopupDetail, setIsStartPopupDetail] = useState(false);
+    const [idBackToEvent, setIdBackToEvent] = useState<string>('');
 
     const [currentResources, setCurrentResources] = useState<
       {
@@ -387,9 +399,43 @@ const TimeSchedule = memo(
       {
         onSuccess: (data) => {
           if (data) {
+            const splitMultiDayEvent = (event: TaskTimeSchedule) => {
+              const startDate = parseISO(String(event.startDate));
+              let endDate = parseISO(String(event.endDate));
+
+              if (getHours(endDate) === 0 && getMinutes(endDate) === 0) {
+                endDate = subSeconds(endDate, 1);
+              }
+
+              if (isSameDay(startDate, endDate)) {
+                return [{ ...event }];
+              }
+              if (event.isAllDay) {
+                return [{ ...event, uuid: uuidv4() }];
+              }
+
+              const days = eachDayOfInterval({
+                start: startDate,
+                end: endDate,
+              });
+
+              return days.map((day, index) => {
+                const start = index === 0 ? startDate : startOfDay(day);
+                const end = index === days.length - 1 ? endDate : endOfDay(day);
+
+                return {
+                  ...event,
+                  start,
+                  end,
+                  id: `${event.id}-split-${index}`,
+                  uuid: uuidv4(),
+                };
+              });
+            };
+
             const eventsTimeSchedule = data
               .filter((event) => event.startDate && event.endDate)
-              .map((event) => {
+              .flatMap((event) => {
                 const startDate = parseISO(`${event.startDate}`);
                 const endDate = parseISO(`${event.endDate}`);
                 const adjustedEndDate =
@@ -402,10 +448,16 @@ const TimeSchedule = memo(
                     (item) => item.type === EventWorkCategory.LARGE,
                   )?.color;
 
-                return {
+                const newEvent = {
                   ...event,
                   start: startDate,
-                  end: adjustedEndDate,
+                  // Fake show data allday
+                  end: event.isAllDay
+                    ? new Date(
+                        new Date(String(event.endDate)).setHours(24, 0, 0, 0),
+                      )
+                    : adjustedEndDate,
+
                   id: `${event.id}event`,
                   peopleInCharge: [],
                   status: {
@@ -427,6 +479,8 @@ const TimeSchedule = memo(
                   isAllDay: event.isAllDay,
                   participants: event.participants,
                 };
+
+                return splitMultiDayEvent(newEvent);
               });
 
             setTaskTimeScheduleList((prevEvents) => {
@@ -971,7 +1025,7 @@ const TimeSchedule = memo(
       if (dataItemChangeInline) {
         const updatedList = taskTimeScheduleList.map((item) => {
           if (dataItemChangeInline.type === ItemStartType.SCHEDULE) {
-            if (`${item.id}` === `${dataItemChangeInline.id}event`) {
+            if (`${item.scheduleId}` === `${dataItemChangeInline.id}`) {
               return {
                 ...item,
                 isStart:
@@ -1145,11 +1199,8 @@ const TimeSchedule = memo(
           e._def &&
           e._def.resourceIds?.length &&
           e._def.resourceIds[0] === ItemScheduleType.PLANS;
-        const isSameType =
-          e.extendedProps.type === EventCalendarType.SCHEDULE &&
-          extendedProps.type === EventCalendarType.SCHEDULE;
 
-        if (!eResourceId || isSameType) return false;
+        if (!eResourceId) return false;
         return (
           e.start.getTime() < event.end!.getTime() &&
           e.end.getTime() > event.start!.getTime()
@@ -1251,10 +1302,7 @@ const TimeSchedule = memo(
         ) {
           event.end = new Date(start.getTime() + 15 * 60 * 1000);
         }
-        if (
-          start.getDate() !== end.getDate() &&
-          event.type === ItemStartType.SCHEDULE
-        ) {
+        if (event.isAllDay && event.type === ItemStartType.SCHEDULE) {
           event.allDay = true;
         } else {
           event.allDay = false;
@@ -1986,6 +2034,7 @@ const TimeSchedule = memo(
       taskId: string | number;
       uuid: string;
       isImportant?: boolean | null;
+      isRunning?: boolean;
       deadline?: string;
       largeColor?: string;
       resource: string;
@@ -2007,6 +2056,7 @@ const TimeSchedule = memo(
         uuid: data.uuid,
         deadline: data.deadline,
         start: data.start,
+        isRunning: data.isRunning,
         left: adjustPositionForViewportSchedule({
           top: Number(data.clientY),
           left: Number(data.clientX),
@@ -2027,6 +2077,7 @@ const TimeSchedule = memo(
       participants: EventParticipant[];
       clientX: number;
       clientY: number;
+      type: OptionDropdownType;
     }) => {
       setEventInfo({
         id: data.id,
@@ -2044,6 +2095,7 @@ const TimeSchedule = memo(
         address: data.address,
         isAllDay: data.isAllDay,
         participants: data.participants,
+        type: data.type,
       });
     };
 
@@ -2054,7 +2106,6 @@ const TimeSchedule = memo(
         clickInfo.event._def.resourceIds?.length &&
         clickInfo.event._def.resourceIds[0] === ItemScheduleType.PLANS;
       setIsStartPopupDetail(clickInfo.event.extendedProps.isStart);
-
       if (
         clickInfo.event.extendedProps.type === ItemStartType.TASK ||
         !resourcePlan
@@ -2064,6 +2115,7 @@ const TimeSchedule = memo(
           id: clickInfo.event.id,
           taskId: clickInfo.event.extendedProps.taskId,
           isImportant: clickInfo.event.extendedProps.isImportant,
+          isRunning: clickInfo.event.extendedProps.isCalculation,
           deadline: clickInfo.event.extendedProps.deadline,
           uuid: clickInfo.event.extendedProps.uuid,
           resource: resourcePlan
@@ -2079,16 +2131,23 @@ const TimeSchedule = memo(
           clientY: clickInfo.jsEvent.clientY,
         });
       } else {
+        setIdBackToEvent(clickInfo.event.extendedProps.scheduleId);
         handleShowEventInModal({
           title: clickInfo.event.title,
-          id: clickInfo.event.id,
-          start: clickInfo.event.start,
-          end: clickInfo.event.end,
+          id: clickInfo.event.extendedProps.scheduleId,
+          start: clickInfo.event.extendedProps.planStartDate,
+          end: clickInfo.event.extendedProps.isAllDay
+            ? clickInfo.event.extendedProps.endDate
+            : clickInfo.event.extendedProps.planEndDate,
           clientX: clickInfo.jsEvent.clientX,
           clientY: clickInfo.jsEvent.clientY,
           isAllDay: clickInfo.event.extendedProps.isAllDay,
           address: clickInfo.event.extendedProps.address,
           participants: clickInfo.event.extendedProps.participants,
+          type: {
+            label: clickInfo.event.extendedProps.eventType,
+            value: clickInfo.event.extendedProps.eventType,
+          },
         });
       }
     };
@@ -2301,23 +2360,80 @@ const TimeSchedule = memo(
       handleEditEventCalendar,
       {
         onSuccess: async ({ data }) => {
-          setTaskTimeScheduleList((prevEvents) =>
-            prevEvents.map((event) => {
-              if (event.id === `${data.id}event`) {
-                const largeColor =
-                  data.categories &&
-                  data.categories.find(
-                    (item: any) => item.type === EventWorkCategory.LARGE,
-                  )?.color;
+          setTaskTimeScheduleList((prevEvents) => {
+            const filteredEvents = prevEvents.filter(
+              (event) =>
+                event.scheduleId !== data.id &&
+                event.resourceId === ItemScheduleType.PLANS,
+            );
+            const actualDataList = prevEvents.filter(
+              (event) => event.resourceId === ItemScheduleType.ACTUAL,
+            );
+
+            const splitMultiDayEvent = (event: TaskTimeSchedule) => {
+              const startDate = parseISO(String(event.startDate));
+              const endDate = parseISO(String(event.endDate));
+              if (event.isAllDay)
+                return [
+                  {
+                    ...event,
+                    start: new Date(String(event.startDate)),
+                    end: new Date(
+                      new Date(String(event.endDate)).setHours(24, 0, 0, 0),
+                    ),
+                    id: `${event.id}event`,
+                    uuid: uuidv4(),
+                  },
+                ];
+
+              if (isSameDay(startDate, endDate)) {
+                return [
+                  {
+                    ...event,
+                    start: startDate,
+                    end: endDate,
+                    id: `${event.id}event`,
+                    uuid: uuidv4(),
+                  },
+                ];
+              }
+
+              const days = eachDayOfInterval({
+                start: startDate,
+                end: endDate,
+              });
+
+              return days.map((day, index) => {
+                const start = index === 0 ? startDate : startOfDay(day);
+                const end = index === days.length - 1 ? endDate : endOfDay(day);
+
                 return {
                   ...event,
-                  largeColor: largeColor,
+                  start,
+                  end,
+                  id: `${event.id}-split-${index}`,
+                  uuid: uuidv4(),
                 };
-              } else {
-                return event;
-              }
-            }),
-          );
+              });
+            };
+
+            const largeColor = data.categories?.find(
+              (item: any) => item.type === EventWorkCategory.LARGE,
+            )?.color;
+
+            const newEvents = splitMultiDayEvent({
+              ...data,
+              largeColor,
+              isStart: data.isStart,
+              scheduleId: data.id,
+              resourceId: ItemScheduleType.PLANS,
+              type: ItemStartType.SCHEDULE,
+              planStartDate: `${data.startDate}`,
+              planEndDate: `${data.endDate}`,
+            });
+
+            return [...filteredEvents, ...actualDataList, ...newEvents];
+          });
 
           handleRemoveEventParam();
           setOpenConfirmEditEventModal(false);
@@ -2354,7 +2470,6 @@ const TimeSchedule = memo(
         `${apiRouters.SCHEDULE_DETAIL(newId)}?message=${actionsEventMessage}${data.sendToChat ? '&send_to_chat=true' : ''}`,
       );
     };
-
     const { mutate: deleteEventCalendar } = useMutation(
       'deleteEventCalendar',
       handleDeleteEventCalendar,
@@ -2680,14 +2795,14 @@ const TimeSchedule = memo(
                 : '1040px'
               : '440px',
           }}
-          className={`schedule-page relative overflow-x-auto overflow-y-hidden `}
+          className={`${searchParams.get('view') == ViewOptions.DAY && 'w-[440px]'} schedule-page relative overflow-x-auto overflow-y-hidden `}
           ref={resizableElementRef}>
           <div
             className={`resizer absolute cursor-ew-resize right-[2px] z-[2] top-1/2 translate-x-1/2 -translate-y-1/2 h-full w-1 bg-transparent ${isExtendCalendar ? 'block' : 'hidden'}`}
             onMouseDown={handleMouseDown}
           />
           <div
-            className={`overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 px-4 `}>
+            className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 px-4 `}>
             <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
               <div className={`items-center gap-4 flex h-12 sticky z-20`}>
                 {!isExtendCalendar ? (
@@ -2794,7 +2909,8 @@ const TimeSchedule = memo(
                   </>
                 )}
               </div>
-              <div className="schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll">
+              <div
+                className={`schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll  `}>
                 <FullCalendar
                   ref={calendarRef}
                   plugins={[
@@ -2918,8 +3034,9 @@ const TimeSchedule = memo(
             placement="top"
             offset={[0, 5]}>
             <div
-              className="p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer "
+              className={`${isLoadingSchedule && 'opacity-50'} p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer `}
               onClick={() => {
+                if (isLoadingSchedule) return;
                 if (!isExtendCalendar) {
                   setIsScroll(true);
                   handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
@@ -3024,11 +3141,9 @@ const TimeSchedule = memo(
               setActionsEventMessage('');
             }}
             onBackToEditModal={() => {
-              setOpenCreateEventModal(true);
-              setOpenConfirmDeleteEventModal(false);
-              setDataEventEditLocal(confirmEventDataToEdit);
-              setBackToEditing(true);
-              setActionsEventMessage('');
+              router.push(
+                `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}`,
+              );
             }}
           />
         )}

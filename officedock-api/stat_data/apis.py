@@ -27,7 +27,7 @@ from common.utils import (
     transform_statistic_categories,
     generate_random_color,
 )
-from organizations.models import Organization
+from organizations.models import Organization, OrganizationsStatisticCategories
 from organizations.serializers import OrganizationDetailSerializer
 from stat_data.serializers import DailyTaskSerializer, DailyEventSerializer
 from tasks.models import Task, TaskDuration
@@ -282,7 +282,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 )
                 .values(
                     "categories__large_statistic_category__name",
-                    "categories__large_statistic_category__color",
+                    "organization__id",
                 )
                 .annotate(duration=Sum("duration"))
             )
@@ -316,7 +316,15 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         for card in combine_cards:
             category_name = card["categories__large_statistic_category__name"]
-            category_color = card["categories__large_statistic_category__color"]
+            organization_id = card["organization__id"]
+            category_color = (
+                OrganizationsStatisticCategories.objects.filter(
+                    organization_id=organization_id,
+                    large_statistic_category__name=category_name,
+                )
+                .values_list("color", flat=True)
+                .first()
+            )
             duration = card["duration"]
 
             if category_name in category_dict:
@@ -331,7 +339,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if task_without_large_durations:
             category_dict["empty_category"] = {
                 "category_name": None,
-                "category_color": generate_random_color(),  # FXIME: Maybe remove later when not accept use random for unsetting category
+                "category_color": generate_random_color(),
                 "duration": timedelta(0),
             }
             for task in task_without_large_durations:
@@ -340,7 +348,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if category_dict.get("empty_category") is None:
                 category_dict["empty_category"] = {
                     "category_name": None,
-                    "category_color": generate_random_color(),  # FXIME: Maybe remove later when not accept use random for unsetting category
+                    "category_color": generate_random_color(),
                     "duration": timedelta(0),
                 }
             for event in event_without_large_durations:
@@ -387,12 +395,23 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         data["remark"] = DailyReportSerializer(
             user.daily_reports.filter(date=date).first()
         ).data
+        confirm_report = False
+        if request.user != user:
+            confirm_report = (
+                user.reported_confirmations.filter(
+                    date=date, confirm_by=request.user
+                )
+                .values_list("is_confirmed", flat=True)
+                .first()
+            ) or False
+
         data["remark"].update(
             {
                 "user": BaseUserSerializer(user).data,
                 "organization_name": organization.name
                 if organization
                 else None,
+                "is_confirmed": confirm_report,
             }
         )
 
@@ -411,6 +430,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         organization_ids_params = request.query_params.get("organization_ids")
         organization_ids = []
         date = request.query_params.get("date", None)
+        request_user = request.user
 
         # Validate date format using regex
         if not date or not re.match(DATE_REGEX, date):
@@ -426,7 +446,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         end_of_day = datetime.combine(date, time.max)
 
         if organization_ids_params is None:
-            organization_ids = request.user.organizations.all().values_list(
+            organization_ids = request_user.organizations.all().values_list(
                 "id", flat=True
             )
         else:
@@ -493,13 +513,15 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         total_duration += time_to_timedelta(
                             task["total_duration"]
                         )
-                    daily_report = user.daily_reports.filter(date=date).first()
+                    confirm_report = user.reported_confirmations.filter(
+                        date=date, confirm_by=request_user
+                    ).first()
                     user_list.append(
                         {
                             "id": user.id,
                             "full_name": user.profile.full_name,
-                            "is_confirmed": daily_report.is_confirmed
-                            if daily_report
+                            "is_confirmed": confirm_report.is_confirmed
+                            if confirm_report
                             else False,
                             "total_duration": format_duration(total_duration),
                         }

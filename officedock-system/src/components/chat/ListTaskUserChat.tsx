@@ -1,5 +1,11 @@
 import Tippy from '@tippyjs/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
@@ -10,8 +16,21 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { TaskUserListChat } from '@interfaces/chat';
 import useDebounceText from '@hooks/useDebounceText';
+import { NO_DATA_AVAILABLE } from '@constants';
 
 interface ListTaskUserProps {
+  quoteTaskList: {
+    id: number;
+    title: string;
+  }[];
+  setQuoteTaskList: Dispatch<
+    SetStateAction<
+      {
+        id: number;
+        title: string;
+      }[]
+    >
+  >;
   handleQuoteTaskUser: (
     data: {
       id: number;
@@ -20,7 +39,11 @@ interface ListTaskUserProps {
   ) => void;
 }
 
-const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
+const ListTaskUserChat = ({
+  quoteTaskList,
+  setQuoteTaskList,
+  handleQuoteTaskUser,
+}: ListTaskUserProps) => {
   const searchParams = useSearchParams();
 
   const room = searchParams.get('room');
@@ -47,15 +70,22 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
     page: searchTaskDebounce ? pageSearch : page,
     roomCode: isMyTask ? '' : (room as string),
     search: searchTaskDebounce,
+    isShowList: true,
     onSuccess: (data) => {
       if (searchTaskDebounce) {
-        setDataTaskSearch((prev) => {
-          const newMessages = data.results.filter(
-            (newMsg) =>
-              !(prev || []).some((existingMsg) => existingMsg.id === newMsg.id),
-          );
-          return [...(prev || []), ...newMessages];
-        });
+        if (pageSearch > 1) {
+          setDataTaskSearch((prev) => {
+            const newMessages = data.results.filter(
+              (newMsg) =>
+                !(prev || []).some(
+                  (existingMsg) => existingMsg.id === newMsg.id,
+                ),
+            );
+            return [...(prev || []), ...newMessages];
+          });
+        } else {
+          setDataTaskSearch(data.results);
+        }
       } else {
         setDataTaskList((prev) => {
           const newMessages = data.results.filter(
@@ -68,6 +98,16 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
       setHasNext(data.hasNext as boolean);
     },
   });
+
+  useEffect(() => {
+    if (!isShowList) {
+      setDataTaskSearch([]);
+      setSearchTask('');
+      setPageSearch(1);
+      setPage(1);
+      setQuoteTaskList([]);
+    }
+  }, [isShowList]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -124,25 +164,27 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
     };
   }, [hasNext, isShowList, searchTaskDebounce]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleClosePopover = (event: MouseEvent) => {
+    if (
+      boxListRef.current &&
+      !boxListRef.current.contains(event.target as Node)
+    ) {
+      setDataTaskSearch([]);
+      setIsShowList(false);
+      setSearchTask('');
+    }
+  };
+
   useEffect(() => {
-    const handleClickOutside = (event: any) => {
-      if (boxListRef.current && !boxListRef.current.contains(event.target)) {
-        setIsShowList(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClosePopover, true);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClosePopover, true);
     };
-  }, []);
-
-  const [selectedItems, setSelectedItems] = useState<
-    { id: number; title: string }[]
-  >([]);
+  }, [handleClosePopover]);
 
   const handleToggleSelect = (id: number, title: string) => {
-    setSelectedItems((prev) => {
+    setQuoteTaskList((prev) => {
       const exists = prev.some((item) => item.id === id);
       if (exists) {
         return prev.filter((item) => item.id !== id);
@@ -151,7 +193,6 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
       }
     });
   };
-
   return (
     <div className="relative z-20">
       <Tippy
@@ -160,101 +201,101 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
         delay={1000}
         placement="top"
         offset={[0, 8]}>
-        <div className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer">
+        <div
+          className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer"
+          onClick={() => {
+            setIsShowList(true);
+          }}>
           <ImageRound
             name="Quote checker"
             src="/icons/quote-checker.svg"
             className="w-[18px] h-[18px]"
-            onClick={() => {
-              setIsShowList(true);
-            }}
           />
         </div>
       </Tippy>
-      {isShowList && (
-        <div
-          ref={boxListRef}
-          style={{
-            boxShadow: '0px 4px 8px 0px #0000000F',
-          }}
-          className="absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white  left-[-158px] p-[10px] top-[-479px] w-[350px] h-[470px] rounded-lg bg-white">
-          <div className="flex justify-center items-center gap-2 py-5">
-            <Button
-              onClick={() => {
-                if (!isMyTask) {
-                  setPage(1);
-                  setDataTaskList([]);
-                  setIsMyTask(true);
-                }
-              }}
-              variant={isMyTask ? 'primary' : 'outline'}
-              className={`!py-0 !px-0 font-bold w-[90px] h-6 
-              !rounded-[20px] text-xs  ${isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'}`}>
-              マイタスク
-            </Button>
-            <Button
-              onClick={() => {
-                if (isMyTask) {
-                  setPage(1);
-                  setDataTaskList([]);
-                  setIsMyTask(false);
-                }
-              }}
-              variant={!isMyTask ? 'primary' : 'outline'}
-              className={`${!isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'} !py-0 !px-0 font-bold w-[90px] h-6 !rounded-[20px] text-xs`}>
-              チームタスク
-            </Button>
-          </div>
-          <div className="mb-[10px]">
-            <InputSearch
-              placeholder="名前を検索"
-              inputClassName="!border-[#77858F] h-9"
-              onChange={(e) => {
-                if (page !== 1) {
-                  setPage(1);
-                }
-                setSearchTask(e.target.value);
-              }}
-            />
-          </div>
-          {searchTaskDebounce && (
-            <div
-              ref={listTaskUerSearchRef}
-              className="h-[282px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
-              {dataTaskSearch.map((item) => {
-                const isSelected = selectedItems.some(
-                  (selected) => selected.id === item.id,
-                );
 
-                return (
-                  <p
-                    key={item.id}
-                    onClick={() => handleToggleSelect(item.id, item.title)}
-                    className={`${
-                      isSelected ? 'border border-[#0068B6]' : ' '
-                    } px-4 break-all py-[11px] border border-transparent text-sm text-black font-medium rounded-md bg-[#EBF1F7]`}>
-                    {item.title}
-                  </p>
-                );
-              })}
-              <div>
-                {hasNext ? (
-                  <RowSkeleton
-                    numberOfRows={pageSearch > 1 ? 6 : 2}
-                    className="!h-[50px]"
-                  />
-                ) : (
-                  <div className="w-full"></div>
-                )}
-              </div>
+      <div
+        ref={boxListRef}
+        style={{
+          boxShadow: '0px 4px 8px 0px #0000000F',
+        }}
+        className={`${!isShowList && '!hidden'} absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white  left-[-158px] p-[10px] top-[-479px] w-[350px] h-[470px] rounded-lg bg-white`}>
+        <div className="flex justify-center items-center gap-2 py-5">
+          <Button
+            onClick={() => {
+              if (!isMyTask) {
+                setPage(1);
+                setDataTaskList([]);
+                setIsMyTask(true);
+              }
+            }}
+            variant={isMyTask ? 'primary' : 'outline'}
+            className={`!py-0 !px-0 font-bold w-[90px] h-6 
+              !rounded-[20px] text-xs  ${isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'}`}>
+            マイタスク
+          </Button>
+          <Button
+            disabled={true}
+            variant={!isMyTask ? 'primary' : 'outline'}
+            className={`${!isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'} !py-0 !px-0 font-bold w-[90px] h-6 !rounded-[20px] text-xs`}>
+            チームタスク
+          </Button>
+        </div>
+        <div className="mb-[10px]">
+          <InputSearch
+            placeholder="タスクを検索"
+            value={searchTask}
+            inputClassName="!border-[#77858F] h-9"
+            onChange={(e) => {
+              if (page !== 1) {
+                setPage(1);
+              }
+              setPageSearch(1);
+              setSearchTask(e.target.value);
+            }}
+          />
+        </div>
+        {searchTask && (
+          <div
+            ref={listTaskUerSearchRef}
+            className="h-[282px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
+            {dataTaskSearch.length > 0
+              ? dataTaskSearch.map((item) => {
+                  const isSelected = quoteTaskList.some(
+                    (selected) => selected.id === item.id,
+                  );
+
+                  return (
+                    <p
+                      key={item.id}
+                      onClick={() => handleToggleSelect(item.id, item.title)}
+                      className={`${
+                        isSelected ? 'border !border-[#0068B6]' : ' '
+                      } px-4 break-all py-[11px] border border-transparent text-sm text-black font-medium rounded-md bg-[#EBF1F7]`}>
+                      {item.title}
+                    </p>
+                  );
+                })
+              : !hasNext && <p className="text-center">{NO_DATA_AVAILABLE}</p>}
+            <div>
+              {hasNext ? (
+                <RowSkeleton
+                  numberOfRows={pageSearch > 1 ? 6 : 2}
+                  className="!h-[50px]"
+                />
+              ) : (
+                <div className="w-full"></div>
+              )}
             </div>
-          )}
-          {!searchTaskDebounce && (
-            <div
-              ref={listTaskUerRef}
-              className="h-[282px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
-              {dataTaskList.map((item) => {
-                const isSelected = selectedItems.some(
+          </div>
+        )}
+        {!searchTask && (
+          <div
+            ref={listTaskUerRef}
+            className="h-[282px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
+            {dataTaskList.length > 0 ? (
+              dataTaskList.map((item) => {
+                const isSelected = quoteTaskList.some(
                   (selected) => selected.id === item.id,
                 );
 
@@ -268,28 +309,30 @@ const ListTaskUserChat = ({ handleQuoteTaskUser }: ListTaskUserProps) => {
                     {item.title}
                   </p>
                 );
-              })}
-              <div>
-                {hasNext ? (
-                  <RowSkeleton numberOfRows={2} className="!h-[50px]" />
-                ) : (
-                  <div className="w-full"></div>
-                )}
-              </div>
+              })
+            ) : (
+              <p className="text-center">{NO_DATA_AVAILABLE}</p>
+            )}
+            <div>
+              {hasNext ? (
+                <RowSkeleton numberOfRows={2} className="!h-[50px]" />
+              ) : (
+                <div className="w-full"></div>
+              )}
             </div>
-          )}
-
-          <div className="flex items-center mt-[10px] justify-center">
-            <Button
-              onClick={() => {
-                handleQuoteTaskUser(selectedItems);
-              }}
-              className="!py-0 !px-0 h-[38px] w-[150px] flex items-center justify-center">
-              タスクを引用する
-            </Button>
           </div>
+        )}
+
+        <div className="flex items-center mt-[10px] justify-center">
+          <Button
+            onClick={() => {
+              handleQuoteTaskUser(quoteTaskList);
+            }}
+            className="!py-0 !px-0 h-[38px] w-[150px] flex items-center justify-center">
+            タスクを引用する
+          </Button>
         </div>
-      )}
+      </div>
     </div>
   );
 };

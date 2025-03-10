@@ -3,6 +3,7 @@ import { TodoItem } from './task';
 import { User } from './user';
 
 export interface TaskTimeStatistic {
+  uuid: string;
   start: Date;
   end: Date;
   id: string;
@@ -80,6 +81,7 @@ export interface dataTaskDaily {
   organization: number;
   tags: Omit<Tags, 'peopleInCharge' | 'responsiblePerson'>[];
   taskDurations: {
+    uuid: string;
     id: number;
     duration: string;
     startedAt: string;
@@ -161,6 +163,7 @@ export interface DataActualDetail {
   end: string;
   left?: number;
   top?: number;
+  uuid: string;
 }
 
 export interface DataUserDetailDailyType {
@@ -176,4 +179,10 @@ export interface DataListDailyType {
     name: string;
   };
   users: DataUserDetailDailyType[];
+}
+
+export interface dataRequestConfirmType {
+  id: number;
+  isConfirmed: boolean;
+  categoryId: number;
 }

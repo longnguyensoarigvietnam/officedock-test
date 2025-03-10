@@ -131,7 +131,7 @@ const LoginForm = () => {
             label="ID｜メールアドレス"
             placeholder="入力してください"
             error={errors.username?.message}
-            className='!border-[#77858F]'
+            className="!border-[#77858F]"
             labelClassName="!text-[#77858F]"
             autoCompleteInput
             register={register('username', {
@@ -143,7 +143,7 @@ const LoginForm = () => {
             label="パスワード"
             autoCompleteInput
             error={errors.password?.message}
-            className='!border-[#77858F]'
+            className="!border-[#77858F]"
             labelClassName="!text-[#77858F]"
             register={register('password', passwordLoginRules(true))}
             placeholder="入力してください"

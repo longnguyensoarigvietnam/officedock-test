@@ -79,6 +79,9 @@ _ERROR_MESSAGES = {
         "date_invalid": "Format date is invalid.",
         "end_date_greate_than_now": "The end date cannot greate than now",
         "message_not_exists": _("This message does not exist."),
+        "must_be_dictionary": _("This field is must be dictionary."),
+        "status_invalid": _("Status {key} is invalid"),
+        "boolean_field": _("Status of tab {key} should be True or False"),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -136,6 +139,9 @@ _ERROR_MESSAGES = {
         "date_invalid": _("日は無効です。"),
         "end_date_greate_than_now": _("計測時間は未来の時刻で登録できません。"),
         "message_not_exists": _("このメッセージが存在していません。"),
+        "must_be_dictionary": _("このフィールドはオブジェクトでなければなりません。"),
+        "status_invalid": _("{key}ステータスは無効です。"),
+        "boolean_field": _("{key}タブのステータスは「True」 か「 False」でなければなりません。"),
     },
 }
 

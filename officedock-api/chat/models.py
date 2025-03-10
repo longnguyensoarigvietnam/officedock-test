@@ -1,5 +1,4 @@
 import io
-import mimetypes
 import uuid
 from PIL import Image
 from django.core.files.base import ContentFile
@@ -240,9 +239,9 @@ class ChatFile(BaseModel):
         chat_files = []
         for index, file in enumerate(files):
             file_name = file.name
+            file_type = file.content_type
             ext = file_name.split(".")[-1] if "." in file_name else "bin"
             file.name = generate_file_name(ext)  # Set custom file name
-            file_type, _ = mimetypes.guess_type(file_name)
             file_size = file.size / (1024 * 1024)
             compressed_file = None
             if file_type and file_type.startswith("image"):
