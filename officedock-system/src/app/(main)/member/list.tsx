@@ -24,6 +24,7 @@ const ListMember = () => {
 
   const [isShowModalDetail, setIsShowModalDetail] = useState(false);
   const [userId, setUserId] = useState<string>('');
+  const [organizationId, setOrganizationId] = useState<string>('');
 
   return (
     <div className="px-6 py-[14px] text-black font-medium text-[26px] ">
@@ -70,9 +71,10 @@ const ListMember = () => {
               <GroupMember
                 key={item.id}
                 item={item}
-                onClickMember={(id: string) => {
+                onClickMember={(id: string, organizationId: string) => {
                   setUserId(id);
                   setIsShowModalDetail(true);
+                  setOrganizationId(organizationId);
                 }}
               />
             );
@@ -82,6 +84,7 @@ const ListMember = () => {
         <DetailProfileMemberModal
           open={isShowModalDetail}
           userId={userId}
+          organizationId={organizationId}
           type={''}
           onConfirm={function (): void {
             throw new Error('Function not implemented.');

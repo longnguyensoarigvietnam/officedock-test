@@ -1,7 +1,7 @@
 'use client';
 
 import { AxiosError } from 'axios';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import {
   ChangeEvent,
   Fragment,
@@ -20,10 +20,9 @@ import { Paragraph } from '@tiptap/extension-paragraph';
 import { Text } from '@tiptap/extension-text';
 import { EditorContent, useEditor, Editor } from '@tiptap/react';
 import { Placeholder } from '@tiptap/extension-placeholder';
-import TextStyle from '@tiptap/extension-text-style';
-import Color from '@tiptap/extension-color';
-import StarterKit from '@tiptap/starter-kit';
 
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -48,6 +47,7 @@ import ErrorChatUploadFileValidationModal from '@components/modals/ErrorChatUplo
 import { MessageDetail } from '@components/chat/MessageDetail';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import ListTaskUserChat from '@components/chat/ListTaskUserChat';
+import { TaskQuote } from '@components/chat/CustomTaskQuote';
 import { CustomReaction } from '@components/chat/CustomIcon';
 
 import { apiRouters } from '@constants/routers';
@@ -71,12 +71,13 @@ import {
   EventWorkCategory,
   PermissionsSystem,
   ReactionIconValue,
+  ItemStartType,
 } from '@constants/enums';
 import {
-  ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
   ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
+  ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -114,6 +115,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
+import { debounce } from 'lodash';
 
 interface dataProps {
   clientId: string;
@@ -122,10 +124,12 @@ interface dataProps {
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dashboardMembers: ChatDashboardMember[];
   creationDataTaskData: CreationDataTask | undefined;
+  hasMoreDetailOnScrollDown: boolean;
   setLastItemId: React.Dispatch<
     React.SetStateAction<number | null | undefined>
   >;
   setHasMoreDetail: React.Dispatch<React.SetStateAction<boolean>>;
+  setHasMoreDetailOnScrollDown: React.Dispatch<React.SetStateAction<boolean>>;
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   hasMore: boolean;
   handleRemoveChatRoomParam: () => void;
@@ -142,6 +146,8 @@ const ChatDetail = ({
   hasMoreDetail,
   dashboardMemberList,
   dashboardMembers,
+  hasMoreDetailOnScrollDown,
+  setHasMoreDetailOnScrollDown,
   setFilteredChatList,
   setHasMoreDetail,
   setLastItemId,
@@ -158,6 +164,7 @@ const ChatDetail = ({
   const params = new URLSearchParams(searchParams);
 
   const messageBookmarkId = searchParams.get('messageId');
+  const queryClient = useQueryClient();
 
   const optionIconRef = useRef<HTMLDivElement | null>(null);
 
@@ -212,14 +219,26 @@ const ChatDetail = ({
   });
   const { authenticatedUser } = useAuthenticatedUser();
   const [loggedInUser, setLoggedInUser] = useState<User>();
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [isLoadingNewer, setIsLoadingNewer] = useState(false);
+
+  // Mention
   const [mentionMembers, setMentionMembers] = useState<ChatParticipant[]>([]);
   const [searchMentionMembers, setSearchMentionMembers] = useState<string>('');
 
+  // Jump to message
   const [lastGotoMessageId, setLastGotoMessageId] = useState<number | null>();
-  const [hasMoreDetailOnScrollDown, setHasMoreDetailOnScrollDown] =
-    useState(false);
+
   const [gotoMessageId, setGotoMessageId] = useState<number | null>();
   const gotoMessageRef = useRef<HTMLDivElement | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
+
+  // Quote task
+  const [quoteTaskList, setQuoteTaskList] = useState<
+    { id: number; title: string }[]
+  >([]);
 
   // Icon
   const [isShowListIcon, setIsShowListIcon] = useState(false);
@@ -272,30 +291,56 @@ const ChatDetail = ({
     resetDataCategoryOptions?: () => void;
     reset?: () => void;
   }>({});
+  const actionType = searchParams.get('action');
+  const typeDetail = searchParams.get('type');
+  const taskDetailId = searchParams.get('task');
 
-  // Handle get list and more data message
+  const controllerRef = useRef<AbortController | null>(null);
+
   const handleGetDataMessages = async (pageNumber: number) => {
     if (chatRoomCode) {
       setInitialLoad(true);
+
+      // Cancel any previous request
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+
+      // Create new controller for the new request
+      const controller = new AbortController();
+      controllerRef.current = controller;
+
       const apiUrl = `${apiRouters.CHAT_MESSAGES(`${chatRoomCode}`)}?page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_HIGHT}${lastItemId ? `&message_id=${lastItemId}` : ''}${messageBookmarkId ? `&bookmark_message_id=${messageBookmarkId}` : ''}`;
-      return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
+
+      const response = await api.get<BasePagination<ChatMessageResponse[]>>(
+        apiUrl,
+        {
+          signal: controller.signal,
+        },
+      );
+      return response;
     }
   };
 
   useEffect(() => {
-    if (
-      dataMessageDetail.length > 0 &&
-      gotoMessageId &&
-      gotoMessageRef.current
-    ) {
-      gotoMessageRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-      });
-      setGotoMessageId(null);
+    if (gotoMessageId) {
+      const timer = setTimeout(() => {
+        const targetElement = document.querySelector(
+          `[data-message-id="${gotoMessageId}"]`,
+        );
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'end',
+          });
+          setHighlightedMessageId(String(gotoMessageId));
+          setGotoMessageId(null);
+          setTimeout(() => setHighlightedMessageId(null), 5000);
+        }
+      }, 200);
+      return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataMessageDetail]);
+  }, [gotoMessageId, dataMessageDetail]);
 
   const { mutate: getDataListMessages } = useMutation(
     'getDataListMessages',
@@ -338,6 +383,7 @@ const ChatDetail = ({
             router.replace(`?${params.toString()}`);
           }
         }
+        setIsLoadingOlder(false);
       },
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
@@ -451,6 +497,7 @@ const ChatDetail = ({
             setLastGotoMessageId(null);
           }
         }
+        setIsLoadingNewer(false);
       },
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
@@ -463,13 +510,14 @@ const ChatDetail = ({
   const handleSearchMessagesInChatRoom = async (data: {
     searchChatMsg: string;
     pageNumber: number;
+    roomType: string;
   }) => {
     if (chatRoomCode) {
       if (data.pageNumber == 1) setIsLoading(true);
       const encodedQuery = encodeURIComponent(data.searchChatMsg);
       const apiUrl = `${apiRouters.CHAT_MESSAGES(chatRoomCode)}?${
         data.searchChatMsg ? `message=${encodedQuery}` : ''
-      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}`;
+      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}${data.roomType ? `&chatroom_type=${data.roomType}` : ''}`;
 
       return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
     }
@@ -502,33 +550,40 @@ const ChatDetail = ({
     if (chatRoomCode) {
       getDataListMessages(page);
     }
-
+    return () => {
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+      setIsLoadingOlder && setIsLoadingOlder(false);
+      setIsLoadingNewer && setIsLoadingNewer(false);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatRoomCode]);
 
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const chatContainer = chatContainerRef.current;
-      if (
-        chatContainer &&
-        hasMoreDetail &&
-        chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) ===
-          chatContainer.scrollHeight
-      ) {
+    const chatContainer = chatContainerRef.current;
+
+    const handleScroll = debounce(() => {
+      if (!chatContainer) return;
+
+      const isAtTop =
+        Math.round(
+          chatContainer.clientHeight + Math.abs(chatContainer.scrollTop),
+        ) >= Math.round(0.9 * chatContainer.scrollHeight);
+
+      const isAtBottom = Math.floor(Math.abs(chatContainer.scrollTop)) <= 10;
+
+      if (isAtTop && hasMoreDetail) {
+        setIsLoadingOlder(true);
         getDataListMessages(page);
-      } else if (
-        chatContainer &&
-        hasMoreDetailOnScrollDown &&
-        Math.abs(chatContainer.scrollTop) == 0
-      ) {
-        chatContainer.scrollTop = -10;
+      } else if (isAtBottom && hasMoreDetailOnScrollDown) {
+        chatContainer.scrollTop = -20;
+        setIsLoadingNewer(true);
         getDataListMessagesOnScrollDown({ pageNumber: page, sorting: true });
       }
-    };
-
-    const chatContainer = chatContainerRef.current;
+    }, 200);
 
     if (chatContainer) {
       chatContainer.addEventListener('scroll', handleScroll);
@@ -538,9 +593,68 @@ const ChatDetail = ({
       if (chatContainer) {
         chatContainer.removeEventListener('scroll', handleScroll);
       }
+      handleScroll.cancel?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMoreDetail, hasMoreDetailOnScrollDown]);
+  }, [hasMoreDetail, hasMoreDetailOnScrollDown, page]);
+
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    if (!chatContainer) return;
+
+    if (isLoadingOlder || isLoadingNewer) {
+      chatContainer.style.overflow = 'hidden';
+    } else {
+      chatContainer.style.overflow = 'auto';
+    }
+
+    return () => {
+      if (chatContainer) chatContainer.style.overflow = 'auto';
+    };
+  }, [isLoadingOlder, isLoadingNewer]);
+
+  const editor = useEditor({
+    extensions: [
+      Document,
+      TaskQuote,
+      Paragraph.extend({
+        addAttributes() {
+          return {
+            'data-task-id': {
+              default: null,
+              renderHTML(attributes) {
+                if (!attributes['data-task-id']) {
+                  return {};
+                }
+                return { 'data-task-id': attributes['data-task-id'] };
+              },
+              parseHTML(element) {
+                return {
+                  'data-task-id': element.getAttribute('data-task-id'),
+                };
+              },
+            },
+          };
+        },
+      }),
+      Text,
+      TextStyle,
+      Color,
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention text-[#0068B6]',
+        },
+      }),
+      Placeholder.configure({
+        placeholder: 'メッセージを入力',
+      }),
+      CustomReaction
+    ],
+    content: message,
+    onUpdate: ({ editor }: { editor: Editor }) => {
+      setMessage(editor.getHTML());
+    },
+  });
 
   useEffect(() => {
     if (authenticatedUser) {
@@ -844,18 +958,21 @@ const ChatDetail = ({
     mentionIds,
     files,
     fileUuids,
+    taskIds,
   }: {
     data: string;
     uuid: string;
     mentionIds: number[];
     files: File[];
     fileUuids: string[];
+    taskIds: number[];
   }) => {
     const formData = new FormData();
     formData.append('message', data);
     formData.append('uuid', uuid);
     formData.append('clientId', clientId);
     mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
+    taskIds.forEach((id) => formData.append('taskIds', id.toString()));
     fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
     if (files && files.length > 0) {
       files.forEach((file, index) => {
@@ -894,11 +1011,12 @@ const ChatDetail = ({
         [variables.uuid]: { progress: 100 },
       }));
     },
-    onError: (_data, variables) => {
+    onError: (error: AxiosError<any>, variables) => {
       setUploadFileStatus((prev) => ({
         ...prev,
         [variables.uuid]: { progress: 0 },
       }));
+      showErrorToast(error, ERROR_SAVE_MESSAGE);
     },
     onSettled: () => {},
   });
@@ -934,6 +1052,7 @@ const ChatDetail = ({
         uuid: file.uuid,
       };
     });
+    const taskIds = quoteTaskList.map((task) => task.id);
     setDataMessageDetail([
       {
         uuid: uuidMsg,
@@ -964,17 +1083,23 @@ const ChatDetail = ({
 
       ...dataMessageDetail,
     ]);
+    setUploadFileStatus((prev) => ({
+      ...prev,
+      [uuidMsg]: { progress: 0 },
+    }));
     setMessage('');
     if (!editor) return;
 
     editor.commands.clearContent();
     setMentionMembers([]);
+    setQuoteTaskList([]);
     handleSendMsgChat({
       data: newMsg,
       uuid: uuidMsg,
       mentionIds,
       files: uploadFiles.map((file) => file.file),
       fileUuids: uploadFiles.map((file) => file.uuid),
+      taskIds: taskIds,
     });
   };
 
@@ -993,6 +1118,19 @@ const ChatDetail = ({
   const handleConfirmDeleteMessage = () => {
     handleDeleteMsgChat();
   };
+
+  function cleanMessageHTML(html: string): string {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    container.querySelectorAll('p, div').forEach((el) => {
+      el.removeAttribute('data-task-id');
+      el.removeAttribute('data-title');
+    });
+
+    return container.innerHTML;
+  }
+
   // Update message
   const postUpdateMsg = async (data: {
     uuid: string;
@@ -1002,7 +1140,7 @@ const ChatDetail = ({
     fileUuids: string[];
   }) => {
     const formData = new FormData();
-    formData.append('message', data.message);
+    formData.append('message', cleanMessageHTML(data.message));
     formData.append('uuid', data.uuid);
     data.mentionIds.forEach((id) =>
       formData.append('mentionIds', id.toString()),
@@ -1077,6 +1215,10 @@ const ChatDetail = ({
         mentionIds = mentionMembers.map((member) => Number(member.id)) || [];
       }
       setMentionMembers([]);
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [uuid]: { progress: 0 },
+      }));
       handleUpdateMsgChat({
         message: trimUnnecessaryLineBreaks(`${message}`) as string,
         uuid: uuid,
@@ -1087,18 +1229,46 @@ const ChatDetail = ({
     }
   };
 
-  // Function create  tasks
-  const handleConfirmCreateTask = (data: TaskFormData) => {
-    const peopleInChargeIds =
-      data.peopleInChargeIds &&
-      data.peopleInChargeIds
-        .filter((item) => item.value !== '')
-        .map((item) => ({ peopleInChargeId: item.value }));
+  const handleEditTask = async (data: TaskRequest) => {
+    setIsLoading(true);
+    return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
+  };
+  const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
+    onSuccess: async () => {
+      handleRemoveParam();
+      queryClient.refetchQueries(['getTaskHeaderStart']);
+      queryClient.refetchQueries(['getDataStatistic']);
+
+      showToast({
+        description: SUCCESS_UPDATE_MESSAGE,
+      });
+      setDataTaskEdit(null);
+      setShowModalTask(false);
+    },
+    onError: (error: AxiosError<any>) => {
+      if (error.response?.data.taskSchedules) {
+        showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+      } else showErrorToast(error, ERROR_UPDATE_MESSAGE);
+    },
+    onSettled: () => {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    },
+  });
+
+  const handleConfirmEditTask = (data: TaskFormData) => {
     const tagIds = data.tagIds
       ? data.tagIds
           .filter((item) => item.value !== '')
           .map((item) => ({ tagId: item.value }))
       : [];
+
+    const peopleInChargeIds =
+      data.peopleInChargeIds &&
+      data.peopleInChargeIds
+        .filter((item) => item.value !== '')
+        .map((item) => ({ peopleInChargeId: item.value }));
 
     const planList = data.plans
       ? data.plans
@@ -1122,6 +1292,7 @@ const ChatDetail = ({
       : null;
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
+
     const newWorkCategories = [];
     if (data.categories.LARGE?.value) {
       newWorkCategories.push({
@@ -1151,24 +1322,24 @@ const ChatDetail = ({
       });
     }
 
-    createTask({
-      title: data.title || '',
-      type: data.type ? data.type.value.toString() : '',
+    editTask({
+      id: data.id,
+      title: data.title,
       statusId: data.statusId ? (data.statusId.value as number) : null,
       priority: data.priority ? data.priority.value.toString() : '',
       deadline:
         data.deadlineDate && data.deadlineTime
           ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
           : null,
-      description: data.description || '',
+      description: data.description,
       tagIds: tagIds,
-      peopleInChargeIds: peopleInChargeIds,
+      categoryIds: newWorkCategories,
       isImportant: data.isImportant,
       todoList: todoListData,
-      taskSchedules: planList && planList.length ? planList : null,
-      chatRoomCode: chatRoomCode,
+      taskSchedules: planList && planList.length ? planList : [],
+      oldIdStatus: data.oldIdStatus,
       sendToChat: true,
-      categoryIds: newWorkCategories,
+      peopleInChargeIds: peopleInChargeIds,
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
@@ -1180,30 +1351,6 @@ const ChatDetail = ({
         : null,
     });
   };
-  //  Handle call api create task
-  const handleCreateTask = async (data: TaskRequest) => {
-    setIsLoading(true);
-    return await api.post(apiRouters.CREATE_TASK, data);
-  };
-  // Handle create task and response
-  const { mutate: createTask } = useMutation(
-    'postCreateTask',
-    handleCreateTask,
-    {
-      onSuccess: async () => {
-        setShowModalTask(false);
-      },
-      onError: (error: AxiosError<any>) => {
-        if (error.response?.data.taskSchedules) {
-          showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
-        }
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
-    },
-  );
 
   const handleConfirmEditEventCalendar = (
     data: EventEditFormData,
@@ -1407,30 +1554,6 @@ const ChatDetail = ({
       onSuccess: () => {},
     },
   );
-
-  const editor = useEditor({
-    extensions: [
-      Document,
-      Paragraph,
-      Text,
-      TextStyle,
-      Color,
-      CustomReaction,
-      StarterKit,
-      Mention.configure({
-        HTMLAttributes: {
-          class: 'mention text-[#0068B6]',
-        },
-      }),
-      Placeholder.configure({
-        placeholder: 'メッセージを入力',
-      }),
-    ],
-    content: message,
-    onUpdate: ({ editor }: { editor: Editor }) => {
-      setMessage(editor.getHTML());
-    },
-  });
 
   const handleCheckboxClick = (
     editor: Editor,
@@ -1644,12 +1767,15 @@ const ChatDetail = ({
       ]
     : [];
 
-  const handleUpdateBookmark = (dataUuid: string, dataIsBookmark: boolean) => {
+  const handleUpdateBookmark = (dataUuid: string) => {
     setDataMessageDetail((prevMessages) =>
       prevMessages.map((item) =>
-        item.uuid === dataUuid ? { ...item, isBookmark: dataIsBookmark } : item,
+        item.uuid === dataUuid
+          ? { ...item, isBookmark: !item.isBookmark }
+          : item,
       ),
     );
+    handleResetChatRoomNotification();
   };
 
   const handleBookMarkMsg = async (data: {
@@ -1691,22 +1817,105 @@ const ChatDetail = ({
   const handleQuoteTaskUser = (data: { id: number; title: string }[]) => {
     if (!editor) return;
 
-    const content = data
-      .map(
-        (item) =>
-          `<p><span class="quote-task-${item.id}"  style="color: #77858F;">[タスク]</span> <span style="color: #0068B7;">${item.title}</span></p>`,
-      )
-      .join('');
+    data.forEach((item, index) => {
+      if (index > 0) {
+        editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+      }
 
-    editor.chain().focus().insertContent(content).run();
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'taskQuote',
+          attrs: {
+            id: item.id.toString(),
+            title: item.title,
+          },
+        })
+        .run();
+
+      editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+    });
   };
+
+  const handleSetParam = ({
+    id,
+    action,
+  }: {
+    id: string | null;
+    action: string;
+  }) => {
+    if (id) {
+      params.set('task', id);
+    }
+    params.set('action', action);
+    params.set('type', ItemStartType.TASK);
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleActionEditTask = (id: number) => {
+    handleSetParam({
+      id: `${id}`,
+      action: ActionTask.EDIT,
+    });
+  };
+
+  const handleGetDataDetailTask = async (id: number) => {
+    setIsLoading(true);
+    const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
+    return response;
+  };
+
+  const { mutate: getDataDetailTask } = useMutation(
+    'getDetailTask',
+    handleGetDataDetailTask,
+    {
+      onSuccess: async (data) => {
+        setDataTaskEdit(data);
+        setShowModalTask(true);
+      },
+      onError: () => {
+        handleRemoveParam();
+      },
+      onSettled: () => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
+      },
+    },
+  );
+
+  useEffect(() => {
+    if (
+      actionType &&
+      typeDetail === ItemStartType.TASK &&
+      dataTaskEdit != null
+    ) {
+      if (taskDetailId) {
+        setShowModalTask(true);
+        getDataDetailTask(parseInt(taskDetailId));
+      } else {
+        setShowModalTask(true);
+      }
+    } else {
+      setShowModalTask(false);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getDataDetailTask, taskDetailId, actionType, typeDetail]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) {
+
+    const totalSize =
+      uploadFiles.reduce(
+        (acc, uploadedFile) => acc + uploadedFile.file.size,
+        0,
+      ) + file.size;
+    if (totalSize > MAX_FILE_SIZE) {
       setOpenErrorUploadFileModal(true);
       return;
     }
@@ -1729,11 +1938,16 @@ const ChatDetail = ({
     setOpenDroppingFileModal(false);
     const droppedFiles = Array.from(e.dataTransfer.files);
     if (droppedFiles.length > 0) {
-      const invalidFiles = droppedFiles.filter(
-        (file) => file.size > MAX_FILE_SIZE,
+      const totalDroppedFilesSize = droppedFiles.reduce(
+        (acc, file) => acc + file.size,
+        0,
+      );
+      const totalPreviousFilesSize = uploadFiles.reduce(
+        (acc, uploadedFile) => acc + uploadedFile.file.size,
+        0,
       );
 
-      if (invalidFiles.length > 0) {
+      if (totalDroppedFilesSize + totalPreviousFilesSize > MAX_FILE_SIZE) {
         setOpenErrorUploadFileModal(true);
         return;
       }
@@ -1760,10 +1974,7 @@ const ChatDetail = ({
       e.preventDefault();
       e.stopPropagation();
 
-      if (
-        !e.relatedTarget ||
-        !document.body.contains(e.relatedTarget as Node)
-      ) {
+      if (!e.relatedTarget || !document.body.contains(e.relatedTarget as any)) {
         setOpenDroppingFileModal(false);
       }
     };
@@ -1936,6 +2147,7 @@ const ChatDetail = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
   return (
     <Fragment>
       {chatRoomCode && (
@@ -2054,7 +2266,16 @@ const ChatDetail = ({
                 onChange={(e) => setSearchChatMsg(e.target.value)}
                 onKeyDown={(e: any) => {
                   if (e.keyCode == 13 && e.target.value !== '') {
-                    searchMessagesInChatRoom({ searchChatMsg, pageNumber: 1 });
+                    searchMessagesInChatRoom({
+                      searchChatMsg,
+                      pageNumber: 1,
+                      roomType:
+                        chatRoomDetail?.type == ChatRoomType.CALENDAR ||
+                        chatRoomDetail?.type == ChatRoomType.SKILL ||
+                        chatRoomDetail?.type == ChatRoomType.TASK
+                          ? chatRoomDetail?.type || ''
+                          : '',
+                    });
                     setOpenSearchMessagesModal(true);
                   }
                 }}
@@ -2100,6 +2321,12 @@ const ChatDetail = ({
           <div
             ref={chatContainerRef}
             className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_380px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex flex-col-reverse scroll-smooth`}>
+            {isLoadingNewer && (
+              <div className="flex flex-col items-start ml-3">
+                <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
+                <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+              </div>
+            )}
             <div className="h-[calc(100vh)] mt-3 w-full bg-[rgb(229, 231, 235)] relative">
               <div>
                 {initialLoad ? (
@@ -2125,6 +2352,7 @@ const ChatDetail = ({
                 .map((item) => (
                   <div
                     key={item.id}
+                    data-message-id={item.id}
                     ref={item.id == gotoMessageId ? gotoMessageRef : null}>
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
@@ -2132,7 +2360,9 @@ const ChatDetail = ({
                       messageDetail={item}
                       msgEditing={msgEditing}
                       editor={editor}
+                      chatContainerRef={chatContainerRef}
                       dashboardMembers={dashboardMembers}
+                      highlightedMessageId={highlightedMessageId}
                       setPreserveFiles={setPreserveFiles}
                       setOpenUploadFilesModal={setOpenUploadFilesModal}
                       setUploadFiles={setUploadFiles}
@@ -2142,19 +2372,12 @@ const ChatDetail = ({
                       setMsgIdDeleted={setMsgIdDeleted}
                       setOpenConfirmDeleteModal={setOpenConfirmDeleteModal}
                       setMsgIdUpdated={setMsgIdUpdated}
+                      handleActionEditTask={handleActionEditTask}
                       handleConfirmUpdateMsg={handleConfirmUpdateMsg}
                       handleConfirmGetDataDetailEvent={
                         handleConfirmGetDataDetailEvent
                       }
-                      setDataMessageDetail={({
-                        uuid,
-                        isBookmark,
-                      }: {
-                        uuid: string;
-                        isBookmark: boolean;
-                      }) => {
-                        handleUpdateBookmark(uuid, isBookmark);
-                      }}
+                      handleUpdateBookmark={handleUpdateBookmark}
                       handleReactionClick={handleReactionClick}
                       handleRemoveReactionClick={handleRemoveReactionClick}
                       handleResetChatRoomNotification={
@@ -2184,6 +2407,7 @@ const ChatDetail = ({
                 .map((item) => (
                   <div
                     key={item.id}
+                    data-message-id={item.id}
                     ref={item.id == gotoMessageId ? gotoMessageRef : null}>
                     <MessageDetail
                       chatRoomDetail={chatRoomDetail}
@@ -2191,7 +2415,9 @@ const ChatDetail = ({
                       messageDetail={item}
                       editor={editor}
                       msgEditing={msgEditing}
+                      chatContainerRef={chatContainerRef}
                       dashboardMembers={dashboardMembers}
+                      highlightedMessageId={highlightedMessageId}
                       setPreserveFiles={setPreserveFiles}
                       setOpenUploadFilesModal={setOpenUploadFilesModal}
                       setUploadFiles={setUploadFiles}
@@ -2201,19 +2427,12 @@ const ChatDetail = ({
                       setMsgIdDeleted={setMsgIdDeleted}
                       setOpenConfirmDeleteModal={setOpenConfirmDeleteModal}
                       setMsgIdUpdated={setMsgIdUpdated}
+                      handleActionEditTask={handleActionEditTask}
                       handleConfirmUpdateMsg={handleConfirmUpdateMsg}
                       handleConfirmGetDataDetailEvent={
                         handleConfirmGetDataDetailEvent
                       }
-                      setDataMessageDetail={({
-                        uuid,
-                        isBookmark,
-                      }: {
-                        uuid: string;
-                        isBookmark: boolean;
-                      }) => {
-                        handleUpdateBookmark(uuid, isBookmark);
-                      }}
+                      handleUpdateBookmark={handleUpdateBookmark}
                       handleReactionClick={handleReactionClick}
                       handleRemoveReactionClick={handleRemoveReactionClick}
                       handleResetChatRoomNotification={
@@ -2222,6 +2441,12 @@ const ChatDetail = ({
                     />
                   </div>
                 ))}
+            {isLoadingOlder && (
+              <div className="flex flex-col items-start ml-3">
+                <RowSkeleton className="!h-[30px] w-[700px] mb-2" />
+                <RowSkeleton className="!h-[50px] w-[600px] mb-2" />
+              </div>
+            )}
           </div>
           {chatRoomDetail ? (
             <>
@@ -2335,6 +2560,8 @@ const ChatDetail = ({
                             ) && (
                               // List task for user
                               <ListTaskUserChat
+                                quoteTaskList={quoteTaskList}
+                                setQuoteTaskList={setQuoteTaskList}
                                 handleQuoteTaskUser={handleQuoteTaskUser}
                               />
                             )}
@@ -2409,7 +2636,7 @@ const ChatDetail = ({
           ) : (
             <div className="flex flex-col items-start ml-3">
               <RowSkeleton className="!h-[50px] w-[700px] mb-2" />
-              <RowSkeleton className="!h-[80] w-[600px] mb-2" />
+              <RowSkeleton className="!h-[80px] w-[600px] mb-2" />
               <RowSkeleton className="!h-[100px] w-[720px] mb-2" />
             </div>
           )}
@@ -2442,13 +2669,19 @@ const ChatDetail = ({
           dashboardMembers={dashboardMembers}
           searchMessageResults={searchMessageResults}
           searchChatMsg={searchChatMsg}
+          chatRoomType={chatRoomDetail?.type || ''}
           setSearchChatMsg={setSearchChatMsg}
           searchResultsPage={searchResultsPage}
           setSearchMessageResults={setSearchMessageResults}
           setSearchResultsPage={setSearchResultsPage}
+          handleConfirmGetDataDetailEvent={handleConfirmGetDataDetailEvent}
           hasMoreSearchResultDetail={hasMoreSearchResultDetail}
-          onSubmit={(searchChatMsg: string, page: number) => {
-            searchMessagesInChatRoom({ searchChatMsg, pageNumber: page });
+          onSubmit={(searchChatMsg: string, page: number, roomType: string) => {
+            searchMessagesInChatRoom({
+              searchChatMsg,
+              pageNumber: page,
+              roomType,
+            });
           }}
           onClose={() => {
             setOpenSearchMessagesModal(false);
@@ -2651,7 +2884,8 @@ const ChatDetail = ({
             });
             setOpenWarningCloseModal(true);
           }}
-          onSubmit={handleConfirmCreateTask}
+          onEdit={handleConfirmEditTask}
+          onSubmit={handleConfirmEditTask}
           dashboardMemberList={dashboardMemberList}
           creationDataTaskData={creationDataTaskData}
         />

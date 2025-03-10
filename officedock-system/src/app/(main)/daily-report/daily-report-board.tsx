@@ -56,7 +56,11 @@ import {
   UserRoles,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { ERROR_UPDATE_MESSAGE } from '@constants/message';
+import {
+  ERROR_DELETE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
+} from '@constants/message';
 import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 
 import './styles/daily-report.css';
@@ -159,10 +163,12 @@ const DailyReportBoard = () => {
     eventList: any[];
     clientX: number;
     clientY: number;
+    uuid: string;
   }) => {
     setPopoverInfo({
       largeColor: data.largeColor ? data.largeColor : '',
       title: data.title,
+      uuid: data.uuid,
       end: data.end,
       start: data.start,
       left: adjustPositionForViewportSchedule({
@@ -186,6 +192,9 @@ const DailyReportBoard = () => {
       eventList: taskTimeStatisticList,
       clientX: clickInfo.jsEvent.clientX,
       clientY: clickInfo.jsEvent.clientY,
+      uuid: clickInfo.event.extendedProps.uuid
+        ? clickInfo.event.extendedProps.uuid
+        : '',
     });
   };
 
@@ -196,6 +205,7 @@ const DailyReportBoard = () => {
     return tasks.flatMap((task) =>
       task.taskDurations.map((duration) => ({
         id: `${duration.id}`,
+        uuid: duration.uuid,
         title: task.title ? task.title : '',
         startedAt: duration.startedAt
           ? new Date(duration.startedAt)
@@ -383,6 +393,32 @@ const DailyReportBoard = () => {
       onError: (error: AxiosError<any>) => {
         setIsLoading(false);
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {},
+    },
+  );
+
+  // Handle delete Actual task
+  const handleDeleteActualTask = async (uuid: string) => {
+    const { data: response } = await api.delete(
+      apiRouters.UPDATE_TASK_ACTUAL(uuid),
+    );
+    return response;
+  };
+
+  const { mutate: deleteActualTask } = useMutation(
+    'deleteActualTask',
+    handleDeleteActualTask,
+    {
+      onSuccess: async () => {
+        setPopoverInfo(null);
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        refetchDataStatistic();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
       },
       onSettled: () => {},
     },
@@ -2004,11 +2040,11 @@ const DailyReportBoard = () => {
               locale="ja"
             />
           </div>
-          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_177px)] overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
+          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_177px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
             <div className="h-[325px] overflow-y-auto">
-              <p>カテゴリーの割合</p>
+              <p className="text-base ">カテゴリーの割合</p>
               <div className="flex pt-5">
-                <section className="flex-1">
+                <section className="flex-1 max-w-[360px]">
                   {chartData?.data && (
                     <PieChart
                       colors={chartData.colors}
@@ -2047,14 +2083,16 @@ const DailyReportBoard = () => {
                               backgroundColor: item.color,
                             }}
                             className={`w-3 h-3 mt-[7px] `}></div>
-                          <span className="max-w-[200px] break-all">
+                          <span className="w-[200px] break-all">
                             {item.categoryName}
                           </span>
                         </div>
-                        <div className="ml-[30px] flex items-start">
-                          {convertToJapaneseTime(item.duration)}
+                        <div className="flex items-center gap-5">
+                          <div className="ml-[30px] w-[100px] flex items-start">
+                            {convertToJapaneseTime(item.duration)}
+                          </div>
+                          <div>{item.percent}%</div>
                         </div>
-                        <div>{item.percent}%</div>
                       </div>
                     );
                   })}
@@ -2448,6 +2486,7 @@ const DailyReportBoard = () => {
           popoverInfo={popoverInfo}
           popoverRef={popoverRef}
           onClose={() => setPopoverInfo(null)}
+          deleteActualTask={(uuid: string) => deleteActualTask(uuid)}
         />
       )}
     </div>

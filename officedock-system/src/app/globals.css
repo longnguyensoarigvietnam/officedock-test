@@ -228,6 +228,8 @@ html *::-webkit-scrollbar-track {
   border: 1px solid #77858f !important;
   border-radius: 6px !important;
   padding: 14px;
+  overflow-y: auto;
+  max-height: 150px !important;
 }
 
 .ProseMirror-focused {

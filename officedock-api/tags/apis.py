@@ -41,16 +41,12 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Custom logic for creating a new Tag instance.
         """
-
-        # Pop people_in_charge_ids from validated data
         serializer_data = serializer.validated_data
         people_in_charge_data = serializer_data.pop("people_in_charge_ids")
 
-        # Save the tag instance, automatically associating it with the company of the logged-in user
         company = self.request.user.company
         tag = serializer.save(company=company)
 
-        # Set the people_in_charge relationship for the tag
         for item in people_in_charge_data:
             tag.people_in_charge.add(
                 item["people_in_charge"], through_defaults={"company": company}
@@ -68,7 +64,6 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Update the tag instance
         tag = serializer.save()
-
         people_in_charge_ids = []
         tag.people_in_charge.clear()
         for item in people_in_charge_data:

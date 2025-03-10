@@ -93,7 +93,8 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
 };
 
 const Header = ({ className }: HeaderProps) => {
-  const { setDataEventEdit, setIdEventDelete } = useContext(TaskContext);
+  const { setDataEventEdit, setIdEventDelete, setOrderingOptions } =
+    useContext(TaskContext);
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -245,6 +246,15 @@ const Header = ({ className }: HeaderProps) => {
     actionType,
     typeDetail,
   ]);
+  useEffect(() => {
+    if (pathname !== pageRouters.TASKS_MANAGEMENT.href) {
+      setOrderingOptions({
+        category_ids: [],
+        tag_ids: [],
+        organization_ids: [],
+      });
+    }
+  }, [pathname]);
 
   const handleSetParam = ({
     id,

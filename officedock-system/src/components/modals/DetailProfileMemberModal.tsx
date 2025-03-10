@@ -25,6 +25,7 @@ export type DetailProfileMemberProps = {
   userId: string;
   open: boolean;
   type: string;
+  organizationId: string;
   onConfirm: () => void;
   onClose: () => void;
 };
@@ -43,7 +44,7 @@ const ViewDetail = ({ label, value }: { label: string; value: string }) => {
 };
 
 const DetailProfileMemberModal = memo(
-  ({ userId, onClose }: DetailProfileMemberProps) => {
+  ({ userId, organizationId, onClose }: DetailProfileMemberProps) => {
     const router = useRouter();
     const { data: session } = useSession();
     const [isCalling, setIsCalling] = useState(true);
@@ -191,9 +192,9 @@ const DetailProfileMemberModal = memo(
                       <Button
                         onClick={() => {
                           router.push(
-                            pageRouters.DAILY_REPORT_DETAIL.href(
+                            `${pageRouters.DAILY_REPORT_DETAIL.href(
                               String(userDetail?.id),
-                            ),
+                            )}?organization=${organizationId}`,
                           );
                         }}
                         className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2 ">

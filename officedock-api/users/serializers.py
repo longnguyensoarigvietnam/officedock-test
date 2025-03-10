@@ -15,6 +15,7 @@ from organizations.serializers import (
 )
 from roles.constants import Actions, Screens, SelectionResultOptions
 from roles.utils import has_permission
+from tasks.models import TaskStatus
 from terms.constants import TermTypes, TermStatus
 from terms.models import Term
 from users.models import (
@@ -202,6 +203,15 @@ class SettingSerializer(serializers.ModelSerializer):
     Serializer for the Role model.
     """
 
+    tab_visibility = serializers.JSONField(default=dict)
+    kanban_zoom = serializers.IntegerField(
+        min_value=0, max_value=100, default=100
+    )
+
+    schedule_zoom = serializers.IntegerField(
+        min_value=0, max_value=100, default=100
+    )
+
     class Meta:
         model = Setting
         fields = [
@@ -211,7 +221,38 @@ class SettingSerializer(serializers.ModelSerializer):
             "is_enter_send_message",
             "is_sorting_task_by_deadline",
             "is_sorting_task_by_important",
+            "is_sorting_task_by_important",
+            "kanban_zoom",
+            "schedule_zoom",
+            "tab_visibility",
         ]
+
+    def validate_tab_visibility(self, value):
+        """Validate element in tab visibility"""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError(
+                ERROR_MESSAGES["must_be_dictionary"]
+            )
+
+        all_statuses = TaskStatus.objects.values_list("id", flat=True)
+        for key, val in value.items():
+            try:
+                key_int = int(key)
+            except ValueError:
+                raise serializers.ValidationError(
+                    ERROR_MESSAGES["status_invalid"].format(key=key)
+                )
+
+            if key_int not in all_statuses:
+                raise serializers.ValidationError(
+                    ERROR_MESSAGES["status_invalid"].format(key=key)
+                )
+            if not isinstance(val, bool):
+                raise serializers.ValidationError(
+                    ERROR_MESSAGES["boolean_field"].format(key=key)
+                )
+
+        return value
 
 
 class OrganizationForUserSerializer(OrganizationSerializer):
@@ -714,6 +755,8 @@ class DailyReportSerializer(serializers.ModelSerializer):
     """
     Serializer for daily report
     """
+
+    is_confirmed = serializers.BooleanField(required=False, allow_null=True)
 
     class Meta:
         model = DailyReport

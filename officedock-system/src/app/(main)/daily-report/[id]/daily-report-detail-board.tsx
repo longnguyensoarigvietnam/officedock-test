@@ -57,7 +57,11 @@ import {
 import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 
 import { apiRouters, pageRouters } from '@constants/routers';
-import { ERROR_UPDATE_MESSAGE } from '@constants/message';
+import {
+  ERROR_DELETE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
+} from '@constants/message';
 
 import './../styles/daily-report.css';
 import useDataStatistic from '@hooks/useDataStatistic';
@@ -135,7 +139,7 @@ const DailyReportDetailBoard = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
   const [dataDetailUser, setDataDetailUser] =
-    useState<DataUserDetailDailyType>();
+    useState<DataUserDetailDailyType | null>(null);
 
   const [remarkData, setRemarkData] = useState<string>('');
 
@@ -178,6 +182,7 @@ const DailyReportDetailBoard = () => {
       ?.avatarColor || '';
 
   const handleShowEventsInModal = (data: {
+    uuid: string;
     largeColor?: string;
     start: string;
     end: string;
@@ -187,6 +192,7 @@ const DailyReportDetailBoard = () => {
     clientY: number;
   }) => {
     setPopoverInfo({
+      uuid: data.uuid,
       largeColor: data.largeColor ? data.largeColor : '',
       title: data.title,
       end: data.end,
@@ -207,6 +213,9 @@ const DailyReportDetailBoard = () => {
       largeColor: clickInfo.event.extendedProps.largeColor
         ? clickInfo.event.extendedProps.largeColor
         : '',
+      uuid: clickInfo.event.extendedProps.uuid
+        ? clickInfo.event.extendedProps.uuid
+        : '',
       start: clickInfo.event.start,
       end: clickInfo.event.end,
       eventList: taskTimeStatisticList,
@@ -222,6 +231,7 @@ const DailyReportDetailBoard = () => {
     return tasks.flatMap((task) =>
       task.taskDurations.map((duration) => ({
         id: `${duration.id}`,
+        uuid: duration.uuid,
         title: task.title ? task.title : '',
         startedAt: duration.startedAt
           ? new Date(duration.startedAt)
@@ -417,6 +427,64 @@ const DailyReportDetailBoard = () => {
         setIsLoading(false);
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
+      onSettled: () => {},
+    },
+  );
+
+  // Handle delete Actual task
+  const handleDeleteActualTask = async (uuid: string) => {
+    const { data: response } = await api.delete(
+      apiRouters.UPDATE_TASK_ACTUAL(uuid),
+    );
+    return response;
+  };
+
+  const { mutate: deleteActualTask } = useMutation(
+    'deleteActualTask',
+    handleDeleteActualTask,
+    {
+      onSuccess: async () => {
+        setPopoverInfo(null);
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        refetchDataStatistic();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
+      },
+      onSettled: () => {},
+    },
+  );
+
+  //  Handle call api confirm user daily
+  const handleActionConfirmUserDaily = async (dataUser: {
+    id: number;
+    isConfirmed: boolean;
+    categoryId: number;
+  }) => {
+    const { data } = await api.post(
+      `${apiRouters.CONFIRM_USER_DAILY(dataUser.id)}`,
+      {
+        isConfirmed: dataUser.isConfirmed,
+        date: formatDateServer(currentDate),
+      },
+    );
+    return data;
+  };
+  const { mutate: confirmUserDaily } = useMutation(
+    'postConfirmUserDaily',
+    handleActionConfirmUserDaily,
+    {
+      onSuccess: async (data, request) => {
+        setDataDetailUser((prev) => {
+          if (!prev) {
+            return null;
+          }
+          return { ...prev, isConfirmed: request.isConfirmed };
+        });
+      },
+      onError: () => {},
       onSettled: () => {},
     },
   );
@@ -2002,13 +2070,15 @@ const DailyReportDetailBoard = () => {
                 )}
                 <Checkbox
                   isChecked={dataDetailUser?.isConfirmed}
-                  // onChange={(e) => {
-                  //   confirmUserDaily({
-                  //     id: user.id,
-                  //     isConfirmed: e,
-                  //     categoryId: item.organization.id,
-                  //   });
-                  // }}
+                  onChange={(e) => {
+                    if (dataDetailUser?.id) {
+                      confirmUserDaily({
+                        id: dataDetailUser?.id,
+                        isConfirmed: e,
+                        categoryId: parseInt(`${organization}`),
+                      });
+                    }
+                  }}
                   className="flex justify-center"
                   classSize="w-4 h-4"
                   boxLabelClass="!m-0"
@@ -2104,11 +2174,11 @@ const DailyReportDetailBoard = () => {
               locale="ja"
             />
           </div>
-          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_260px)] overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
+          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_260px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[14px]">
             <div className="h-[325px] overflow-y-auto">
-              <p>カテゴリーの割合</p>
+              <p className="text-base">カテゴリーの割合</p>
               <div className="flex pt-5">
-                <section className="flex-1">
+                <section className="flex-1  max-w-[360px]">
                   {chartData?.data && (
                     <PieChart
                       colors={chartData.colors}
@@ -2147,11 +2217,11 @@ const DailyReportDetailBoard = () => {
                               backgroundColor: item.color,
                             }}
                             className={`w-3 h-3 mt-[7px] `}></div>
-                          <span className="max-w-[200px] break-all">
+                          <span className="w-[200px] break-all">
                             {item.categoryName}
                           </span>
                         </div>
-                        <div className="ml-[30px] flex items-start">
+                        <div className="ml-[30px] w-[100px] flex items-start">
                           {convertToJapaneseTime(item.duration)}
                         </div>
                         <div>{item.percent}%</div>
@@ -2548,6 +2618,7 @@ const DailyReportDetailBoard = () => {
           popoverInfo={popoverInfo}
           popoverRef={popoverRef}
           onClose={() => setPopoverInfo(null)}
+          deleteActualTask={(uuid: string) => deleteActualTask(uuid)}
         />
       )}
     </div>

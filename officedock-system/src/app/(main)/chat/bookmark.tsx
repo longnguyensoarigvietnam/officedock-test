@@ -15,6 +15,7 @@ import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import { apiRouters } from '@constants/routers';
 import {
   ActionsEvent,
+  ChatRoomType,
   EventWorkCategory,
   PermissionsSystem,
   ServerStatusCode,
@@ -603,6 +604,7 @@ const BookmarkList = ({
       {openSearchMessagesModal && (
         <SearchMessagesModal
           open={true}
+          chatRoomType={ChatRoomType.BOOKMARK}
           dashboardMembers={dashboardMembers}
           searchMessageResults={searchMessageResults}
           searchChatMsg={searchChatMsg}
@@ -611,6 +613,7 @@ const BookmarkList = ({
           setSearchMessageResults={setSearchMessageResults}
           setSearchResultsPage={setSearchResultsPage}
           hasMoreSearchResultDetail={hasMoreSearchResultDetail}
+          handleConfirmGetDataDetailEvent={handleConfirmGetDataDetailEvent}
           onSubmit={(searchChatMsg: string, page: number) => {
             searchMessagesInChatRoom({ searchChatMsg, pageNumber: page });
           }}

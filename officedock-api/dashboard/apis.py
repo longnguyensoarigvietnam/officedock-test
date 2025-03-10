@@ -24,6 +24,7 @@ from common.utils import (
     get_total_unread_messages,
     format_duration,
     create_categories_by_model,
+    check_task_overtime,
 )
 from dashboard.filters import ActualDurationFilter
 from dashboard.serializers import (
@@ -190,9 +191,9 @@ class DashboardViewSet(BaseAPIViewSet):
 
         # Get data event in schedule
         events = Schedule.objects.filter(
-            start_date__gte=start_date,
-            end_date__lte=end_date,
-            participants_schedules__user=request.user,
+            Q(start_date__lte=end_date)
+            & Q(end_date__gte=start_date)
+            & Q(participants_schedules__user=request.user)
         ).all()
         data = self._append_data_to_cards(data, events, request)
 
@@ -606,34 +607,9 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                     paused_at__isnull=True,
                 ).first()
                 if isinstance(current_duration_start, Task):
-                    task_schedules = (
-                        current_duration_start.task_schedules.filter(
-                            plan_start_date__gte=start_of_today
-                        )
-                        .all()
-                        .order_by("plan_start_date")
+                    is_send_sk, is_over_estimate = check_task_overtime(
+                        current_duration_start, task_running
                     )
-                    for idx, task_schedule in enumerate(task_schedules):
-                        if idx + 1 < len(
-                            task_schedules
-                        ):  # Ensure next task exists before accessing
-                            next_task_schedule = task_schedules[
-                                idx + 1
-                            ].plan_start_date
-                        else:
-                            next_task_schedule = None  # No next task
-
-                        if (
-                            timezone.now() - task_schedule.plan_end_date
-                            >= timedelta(minutes=30)
-                            and task_running.is_cancel_alert is False
-                            and (
-                                next_task_schedule is None
-                                or timezone.now() <= next_task_schedule
-                            )
-                        ):
-                            is_over_estimate = True
-                            break
                 elif isinstance(current_duration_start, Schedule):
                     if (
                         timezone.now() - current_duration_start.end_date

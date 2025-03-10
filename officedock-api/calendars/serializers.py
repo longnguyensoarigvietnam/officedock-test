@@ -87,6 +87,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "type",
             "send_to_chat",
             "message",
+            "is_start",
         ]
         read_only_fields = ["id"]
 
@@ -95,7 +96,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first())
+        return get_common_categories(obj.categories.first(), obj)
 
     def validate(self, data):
         """
@@ -163,13 +164,12 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "categories",
         ]
 
-    # FIXME: Check spec implement color of category
     def get_categories(self, obj):
         """Handle retrieving categories of a Schedule."""
         if not obj.categories.exists():
             return []
 
-        return get_common_categories(obj.categories.first())
+        return get_common_categories(obj.categories.first(), obj)
 
     def get_type(self, obj):
         """

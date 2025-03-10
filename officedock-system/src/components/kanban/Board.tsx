@@ -1,8 +1,15 @@
-import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
+import { useSearchParams } from 'next/navigation';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
-import Column from './Column';
-import { TaskContext } from '@providers/TaskProvider';
 import { Dispatch, SetStateAction, useContext } from 'react';
+import { UseMutateFunction, useMutation } from 'react-query';
+
+import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
+import Column from './Column';
+
+import { ERROR_EXTEND_COLUMN } from '@constants/message';
+import { KanbanType, StatusValueTask } from '@constants/enums';
+import { TaskContext } from '@providers/TaskProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import {
   Columns,
   CreationDataTask,
@@ -10,12 +17,11 @@ import {
   TaskErrorPerson,
   TaskRequest,
 } from '@interfaces/task';
-import { KanbanType, StatusValueTask } from '@constants/enums';
-import { useSearchParams } from 'next/navigation';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { UseMutateFunction } from 'react-query';
 import { ResponseError } from '@interfaces/response';
 import { OptionDropdownType } from '@interfaces/common';
+import api from '@base/api';
+import { apiRouters } from '@constants/routers';
+import { useToast } from '@providers/ToastProvider';
 
 interface BoardKanbanProps {
   columnsKanbanData: Columns | undefined;
@@ -73,6 +79,8 @@ const BoardKanban = ({
   addTask,
   selectedOptionZoom,
 }: BoardKanbanProps) => {
+  const { showToast } = useToast();
+
   const searchParams = useSearchParams();
 
   const userIdTask = searchParams.get('user');
@@ -93,6 +101,29 @@ const BoardKanban = ({
         ([key]) => key !== `${StatusValueTask.MY_ROUTINE}`,
       ),
     );
+
+  const handleExtendColumn = async (tabVisibility: Record<string, boolean>) => {
+    const { data: response } = await api.post(apiRouters.USER_SETTING, {
+      tabVisibility,
+    });
+    return response;
+  };
+
+  const { mutate: saveExtendColumn } = useMutation(
+    'saveExtendColumn',
+    handleExtendColumn,
+    {
+      onSuccess: () => {},
+      onError: () => {
+        showToast({
+          variant: 'error',
+          description: ERROR_EXTEND_COLUMN,
+        });
+      },
+      onSettled: () => {},
+    },
+  );
+
   return columnsKanbanData && !isLoadingDataTask ? (
     <Droppable
       droppableId="columns"
@@ -156,6 +187,9 @@ const BoardKanban = ({
                           addTask={addTask}
                           setNumberPagesData={setNumberPagesData}
                           selectedOptionZoom={selectedOptionZoom}
+                          saveExtendColumn={(data: Record<string, boolean>) => {
+                            saveExtendColumn(data);
+                          }}
                         />
                       </div>
                     )}
