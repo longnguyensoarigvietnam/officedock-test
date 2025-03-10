@@ -56,7 +56,7 @@ _ERROR_MESSAGES = {
         "cannot_delete": _("Cannot delete this model"),
         "cannot_create": _("Cannot create"),
         "exists_struct": _("There are duplicate records, please check again."),
-        "cannot_delete_term": _("This {type} cannot be deleted."),
+        "cannot_delete_type": _("This {type} cannot be deleted."),
         "read_term": _("This {type} agreed or over period."),
         "exists_index": _("This position exists"),
         "statistic_category_not_exists": _(
@@ -117,8 +117,8 @@ _ERROR_MESSAGES = {
         "schedule_not_exists": _("この予定が存在しません。"),
         "cannot_hide_room": _("グループチャットは非表示できません。"),
         "same_period": _("有効期間が重複しています。"),
-        "cannot_delete": _("このモデルを削除できません。"),
-        "cannot_delete_term": _("この{type}を削除できません。"),
+        "cannot_delete": _("削除できません。"),
+        "cannot_delete_type": _("この{type}を削除できません。"),
         "read_term": _("この{type}は同意済か有効期限が切れています。"),
         "cannot_create": _("作成できません。"),
         "exists_struct": _("重複しているレコードがあります。再度確認してください。"),
@@ -150,8 +150,20 @@ _KEYWORDS = {
         "term_of_use": "Term of use",
         "privacy_policy": "Privacy policy",
         "comma": ",",
+        "organization": "Organization",
+        "category": "Category",
+        "skill": "Skill",
+        "skill_map": "Skill map",
     },
-    "ja": {"term_of_use": "利用規約", "privacy_policy": "プライバシーポリシー", "comma": "、"},
+    "ja": {
+        "term_of_use": "利用規約",
+        "privacy_policy": "プライバシーポリシー",
+        "comma": "、",
+        "organization": "組織",
+        "category": "カテゴリー",
+        "skill": "スキル",
+        "skill_map": "スキルマップ",
+    },
 }
 
 ERROR_MESSAGES = _ERROR_MESSAGES[settings.LANGUAGE_CODE]

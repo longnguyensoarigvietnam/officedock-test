@@ -50,7 +50,7 @@ class AdminTermViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         ):
             raise ValidationError(
                 {
-                    "detail": ERROR_MESSAGES["cannot_delete_term"].format(
+                    "detail": ERROR_MESSAGES["cannot_delete_type"].format(
                         type=KEYWORDS[lower(instance.type)]
                     )
                 }
