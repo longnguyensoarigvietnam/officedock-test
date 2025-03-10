@@ -16,6 +16,7 @@ from users.models import User
 from tasks.models import Task
 from chat.models import ChatFile
 from skills.serializers import SkillSerializer
+from common.utils import get_signed_url
 
 
 class CreationDataUserForChatSerializer(serializers.ModelSerializer):
@@ -191,7 +192,9 @@ class ChatFileSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         if instance.compressed_file:
-            representation["compressed_file"] = instance.compressed_file.url
+            representation["compressed_file"] = get_signed_url(
+                instance.compressed_file
+            )
 
         return representation
 

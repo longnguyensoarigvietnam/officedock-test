@@ -3,13 +3,17 @@ from datetime import datetime, timedelta, time
 import random
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.core.files.storage import default_storage, FileSystemStorage
 from django.db.models import Sum, Func
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from djangorestframework_camel_case.parser import CamelCaseJSONParser
 from rest_framework.exceptions import ValidationError
+from google.auth.transport.requests import Request
+from google.cloud import storage
 
 from base.messages import ERROR_MESSAGES
 from calendars.constants import ScheduleCategoryTypes
@@ -18,6 +22,61 @@ from common.constants import STRIP_TAGS
 from organizations.models import OrganizationsStatisticCategories
 from roles.constants import SelectionResultOptions
 from users.models import User, RoleDetail
+
+
+def get_signed_url(file, expiration_seconds=None):
+    """
+    Checks if the default storage is a local file system to generate a signed URL for a given file.
+    """
+
+    # Get file in local disk
+    if isinstance(default_storage, FileSystemStorage):
+        return default_storage.url(file.name)
+
+    # Get file in GCS
+    return generate_signed_url(file.name, expiration_seconds)
+
+
+def generate_signed_url(blob_name: str, expiration_seconds=None) -> str:
+    """
+    Generate a signed URL for the given blob in the specified Google Cloud Storage bucket.
+    """
+    # Retrieve the credentials from the Django settings
+    credentials = settings.GOOGLE_CLOUD_CREDENTIALS
+
+    # Refresh the credentials to ensure we have a valid access token
+    # This is necessary if the token is currently None or expired
+    if (
+        credentials.token is None
+        or not credentials.valid
+        or credentials.expired
+    ):
+        credentials.refresh(Request())
+
+    # Create a Google Cloud Storage client
+    client = storage.Client()
+
+    # Get the specified bucket using its name from settings
+    bucket = client.get_bucket(settings.GS_BUCKET_NAME)
+
+    # Create a blob (reference) for the file in the bucket using the blob name
+    blob = bucket.blob(blob_name)
+
+    # Generate a signed URL for the blob that is valid for a specified duration
+    signed_url = blob.generate_signed_url(
+        version="v4",  # Use version 4 of the signed URL
+        service_account_email=credentials.service_account_email,  # Email of the service account
+        access_token=credentials.token,  # Current access token for authorization
+        expiration=timedelta(
+            seconds=expiration_seconds
+            if expiration_seconds
+            else settings.GS_EXPIRATION
+        ),  # Expiration time for the signed URL
+        method="GET",  # HTTP method that the signed URL allows
+    )
+
+    # Return the signed URL, optionally disabling the toolbar in the viewer
+    return f"{signed_url}#toolbar=0"
 
 
 def generate_unique_code(model, field, length=10):
