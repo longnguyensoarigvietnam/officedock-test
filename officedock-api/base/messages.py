@@ -82,6 +82,7 @@ _ERROR_MESSAGES = {
         "must_be_dictionary": _("This field is must be dictionary."),
         "status_invalid": _("Status {key} is invalid"),
         "boolean_field": _("Status of tab {key} should be True or False"),
+        "max_file_size": _("File size must not exceed 5GB."),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -142,6 +143,7 @@ _ERROR_MESSAGES = {
         "must_be_dictionary": _("このフィールドはオブジェクトでなければなりません。"),
         "status_invalid": _("{key}ステータスは無効です。"),
         "boolean_field": _("{key}タブのステータスは「True」 か「 False」でなければなりません。"),
+        "max_file_size": _("5GB以下のファイルをアップロードしてください。"),
     },
 }
 
