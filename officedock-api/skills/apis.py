@@ -52,13 +52,19 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     ]
     filterset_class = StatisticCategoryFilter
     screen_name = Screens.CATEGORY.value
+    lookup_field = "uuid"
 
     def get_queryset(self):
         """
         Filtering skill by company
         """
         company = self.request.user.company
-        return super().get_queryset().filter(company=company).order_by("id")
+        queryset = super().get_queryset().filter(company=company)
+
+        if self.action == "list":
+            return queryset.order_by("-id")
+
+        return queryset.order_by("id")
 
     def get_serializer_context(self):
         """

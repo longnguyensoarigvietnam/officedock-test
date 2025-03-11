@@ -26,7 +26,8 @@ services:
       - POSTGRES_PASSWORD=officedock
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
-      - SECRET_KEY=${SECRET_KEY}
+    env_file:
+      - .env
     depends_on:
       - db
     networks:
