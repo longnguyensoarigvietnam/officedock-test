@@ -103,6 +103,8 @@ const BoardKanban = ({
     );
 
   const handleExtendColumn = async (tabVisibility: Record<string, boolean>) => {
+    return null;
+    // TODO: Update save extend
     const { data: response } = await api.post(apiRouters.USER_SETTING, {
       tabVisibility,
     });

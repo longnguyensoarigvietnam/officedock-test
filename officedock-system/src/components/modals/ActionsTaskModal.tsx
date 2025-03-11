@@ -1428,6 +1428,577 @@ const ActionsTaskModal = ({
               />
             </div>
           </div>
+          {/* Deadline */}
+          <div
+            style={{ zIndex: planFields.length + 1 }}
+            className="flex  relative gap-[10px] items-center">
+            <div className="w-full max-w-[100px] text-[14px] font-medium">
+              締切日時
+            </div>
+            <div className="w-full max-w-[515px] items-start flex gap-1 justify-between">
+              <div className="max-w-[250px]">
+                <div className="flex gap-1 items-center">
+                  <div className="w-[140px]">
+                    <Controller
+                      control={control}
+                      name="deadlineDate"
+                      render={({ field: { value, onChange } }) => (
+                        <DatePickerCustom
+                          disabled={
+                            isCheckActionPermission ||
+                            watch('statusId')?.value ===
+                              StatusValueTask.MY_ROUTINE
+                          }
+                          className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
+                          selected={value ? new Date(value) : null}
+                          onChange={(e) => {
+                            setIsFormTouched(true);
+                            onChange(e);
+                            if (!getValues('deadlineTime')) {
+                              setValue(
+                                'deadlineTime',
+                                convertToTimeString(`${currentDate}`),
+                              );
+                            }
+                          }}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="w-[72px] relative z-20">
+                    <Input
+                      isShowClockIcon={true}
+                      type="text"
+                      disabled={
+                        isCheckActionPermission ||
+                        watch('statusId')?.value === StatusValueTask.MY_ROUTINE
+                      }
+                      register={register('deadlineTime', {
+                        required: watch('deadlineDate') !== null ? true : false,
+                        onChange: (e) => {
+                          setIsFormTouched(true);
+                          handleChange(e, 'deadlineTime');
+                          if (getValues('deadlineDate') === null) {
+                            setValue(
+                              'deadlineDate',
+                              (() => {
+                                const today: Date = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                return today;
+                              })(),
+                            );
+                          }
+                        },
+                        onBlur: () => {
+                          if (time) {
+                            setValue('deadlineTime', formatTimeInput(time));
+                          }
+                          setTime('');
+                        },
+                      })}
+                      options={optionTimeInput}
+                      onChangeDropdown={(e) => {
+                        setValue('deadlineTime', e.label);
+                        if (getValues('deadlineDate') === null) {
+                          setValue(
+                            'deadlineDate',
+                            (() => {
+                              const today: Date = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              return today;
+                            })(),
+                          );
+                        }
+                      }}
+                      className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                    />
+                  </div>
+                  <div className="ml-2">
+                    <ImageRound
+                      onClick={() => setIsShowFieldRemind(!isShowFieldRemind)}
+                      src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell-white.svg'}`}
+                      name="Bell icon"
+                      className="h-4 w-4"
+                    />
+                  </div>
+                </div>
+                <ErrorMessage
+                  error={errors.deadlineTime?.message}
+                  className="mt-[6px] text-xs"
+                />
+              </div>
+              {isShowFieldRemind ? (
+                <div className="max-w-[250px]">
+                  <div className="flex items-center gap-1">
+                    <div className="w-[56px]">
+                      <Controller
+                        control={control}
+                        name="deadlineRemindCountdown"
+                        render={({ field: { value, onChange } }) => (
+                          <Dropdown
+                            className="h-[34px] !py-1 !px-0 text-xs !border-[#77858F] rounded-md"
+                            classNameTextData="!text-xs !ml-0"
+                            labelOptionClass="!ml-0 !px-0 !pl-2 text-start w-full "
+                            classNameOption="!text-xs !border border-[#77858F] !rounded-md"
+                            classNameError="!text-xs"
+                            classActive="justify-between"
+                            labelClass="w-[80%]"
+                            disabled={
+                              isCheckActionPermission ||
+                              watch('statusId')?.value ===
+                                StatusValueTask.MY_ROUTINE
+                            }
+                            options={optionsCountDown}
+                            selectedOption={optionsCountDown.find(
+                              (element) => element.value === value?.value,
+                            )}
+                            onChange={(e) => {
+                              onChange(e);
+                            }}
+                            error={errors.statusId?.message}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="w-[82px] ">
+                      <Controller
+                        control={control}
+                        name="deadlineRemindType"
+                        render={({ field: { value, onChange } }) => (
+                          <Dropdown
+                            className="h-[34px] !py-1 !pr-2 text-xs !border-[#77858F] rounded-md"
+                            classNameTextData="!text-xs"
+                            classNameOption="!text-xs !ml-0 !border border-[#77858F] !rounded-md"
+                            classNameError="!text-xs"
+                            labelOptionClass="!ml-0 !px-0 !pl-2 text-start w-full  "
+                            classActive=" justify-between"
+                            labelClass="w-[80%]"
+                            disabled={
+                              isCheckActionPermission ||
+                              watch('statusId')?.value ===
+                                StatusValueTask.MY_ROUTINE
+                            }
+                            options={optionsCountType}
+                            selectedOption={optionsCountType.find(
+                              (element) => element.value === value?.value,
+                            )}
+                            onChange={(e) => {
+                              onChange(e);
+                            }}
+                            error={errors.statusId?.message}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="w-[60px]">に通知</div>
+                  </div>
+                  <ErrorMessage
+                    error={errors.deadlineTime?.message}
+                    className="mt-[6px] text-xs"
+                  />
+                </div>
+              ) : (
+                <div className="w-fit"></div>
+              )}
+
+              <div>
+                {!isCheckActionPermission && (
+                  <Button
+                    sz="sm"
+                    variant="outline"
+                    className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                    type="button"
+                    name="Remove deadline"
+                    onClick={() => {
+                      setIsFormTouched(true);
+                      setValue('deadlineTime', '');
+                      setValue('deadlineDate', null);
+                      setValue('deadlineRemindCountdown', null);
+                      setValue('deadlineRemindType', null);
+                    }}>
+                    削除
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Plan date */}
+          <div className="flex  gap-[10px] items-start">
+            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+              実施予定日時
+            </div>
+            <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
+              {planFields.map((field, index) => {
+                return (
+                  <div
+                    key={field.id}
+                    style={{ zIndex: planFields.length - index }}
+                    className="w-full max-w-[515px] flex gap-2 items-start">
+                    <div className="max-w-[220px]">
+                      <div className="flex gap-1">
+                        <div className="w-[140px]">
+                          <Controller
+                            control={control}
+                            name={`plans.${index}.planStartDate`}
+                            rules={{
+                              required: watch(`plans.${index}.planEndDate`)
+                                ? START_DATE_REQUIRED_SELECTED
+                                : false,
+                            }}
+                            render={({ field: { value, onChange } }) => {
+                              return (
+                                <DatePickerCustom
+                                  className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
+                                  selected={
+                                    value
+                                      ? new Date(value)
+                                      : watch(`plans.${index}.planStartDate`)
+                                  }
+                                  disabled={isCheckActionPermission}
+                                  onChange={(e) => {
+                                    setIsFormTouched(true);
+                                    onChange(e);
+                                    if (e !== null) {
+                                      const newDate = new Date(e.getTime());
+                                      updateMinDatePlan(index, newDate);
+                                    } else {
+                                      updateMinDatePlan(index, null);
+                                    }
+                                    if (
+                                      !getValues(`plans.${index}.planStartTime`)
+                                    ) {
+                                      setValue(
+                                        `plans.${index}.planStartTime`,
+                                        convertToTimeString(`${currentDate}`),
+                                      );
+                                    }
+                                    setValue(
+                                      `plans.${index}.planEndDate`,
+                                      null,
+                                    );
+                                    setValue(`plans.${index}.planEndTime`, '');
+                                  }}
+                                />
+                              );
+                            }}
+                          />
+                        </div>
+                        <div className="w-[72px] relative">
+                          <Input
+                            isShowClockIcon={true}
+                            autoFocus={false}
+                            disabled={isCheckActionPermission}
+                            register={register(`plans.${index}.planStartTime`, {
+                              required:
+                                watch(`plans.${index}.planStartDate`) !== null
+                                  ? true
+                                  : false,
+                              onChange: (e) => {
+                                setIsFormTouched(true);
+                                handleChange(e, `plans.${index}.planStartTime`);
+                                if (
+                                  getValues(`plans.${index}.planStartDate`) ===
+                                  null
+                                ) {
+                                  setValue(
+                                    `plans.${index}.planStartDate`,
+                                    (() => {
+                                      const today: Date = new Date();
+                                      today.setHours(0, 0, 0, 0);
+                                      return today;
+                                    })(),
+                                  );
+                                  setValue(`plans.${index}.planEndDate`, null);
+                                  setValue(`plans.${index}.planEndTime`, '');
+                                  updateMinDatePlan(index, new Date());
+                                }
+                              },
+                              onBlur: () => {
+                                if (time) {
+                                  setValue(
+                                    `plans.${index}.planStartTime`,
+                                    formatTimeInput(time),
+                                  );
+                                }
+                                setTime('');
+                              },
+                            })}
+                            type="text"
+                            options={optionTimeInput}
+                            onChangeDropdown={(e) => {
+                              setValue(`plans.${index}.planStartTime`, e.label);
+                              if (
+                                getValues(`plans.${index}.planStartDate`) ===
+                                null
+                              ) {
+                                setValue(
+                                  `plans.${index}.planStartDate`,
+                                  (() => {
+                                    const today: Date = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    return today;
+                                  })(),
+                                );
+
+                                updateMinDatePlan(index, new Date());
+                              }
+                            }}
+                            className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                          />
+                        </div>
+                      </div>
+                      <ErrorMessage
+                        error={errors.planStartDate?.message}
+                        className="mt-[6px] text-xs"
+                      />
+                    </div>
+                    <div className="h-[34px] flex items-center">〜</div>
+                    <div className="max-w-[220px]">
+                      <div className="flex gap-1">
+                        <div className="w-[140px]">
+                          <Controller
+                            rules={{
+                              required: watch(`plans.${index}.planStartDate`)
+                                ? END_DATE_WRONG_SELECTED
+                                : false,
+                            }}
+                            control={control}
+                            name={`plans.${index}.planEndDate`}
+                            render={({ field: { value, onChange } }) => (
+                              <DatePickerCustom
+                                className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2 !pl-[30px] !text-xs !pt-2 text-center"
+                                selected={
+                                  value
+                                    ? new Date(value)
+                                    : watch(`plans.${index}.planEndDate`)
+                                }
+                                disabled={isCheckActionPermission}
+                                minDate={
+                                  watch(`plans.${index}.planStartDate`) ||
+                                  minDatePlans[index]
+                                }
+                                onChange={(e) => {
+                                  setIsFormTouched(true);
+                                  onChange(e);
+                                  if (
+                                    !getValues(`plans.${index}.planEndTime`)
+                                  ) {
+                                    setValue(
+                                      `plans.${index}.planEndTime`,
+                                      convertToTimeString(`${currentDate}`),
+                                    );
+                                  }
+                                }}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="w-[72px] relative">
+                          <Input
+                            isShowClockIcon={true}
+                            disabled={isCheckActionPermission}
+                            register={register(`plans.${index}.planEndTime`, {
+                              required:
+                                watch(`plans.${index}.planEndDate`) !== null
+                                  ? true
+                                  : false,
+                              validate: (value) => {
+                                if (
+                                  watch(
+                                    `plans.${index}.planEndDate`,
+                                  )?.getTime() ===
+                                    watch(
+                                      `plans.${index}.planStartDate`,
+                                    )?.getTime() &&
+                                  watch(`plans.${index}.planEndDate`) !== null
+                                ) {
+                                  return (
+                                    (value &&
+                                      watch(`plans.${index}.planStartTime`) &&
+                                      convertToMinutes(value) >
+                                        convertToMinutes(
+                                          `${watch(`plans.${index}.planStartTime`)}`,
+                                        )) ||
+                                    END_DATE_WRONG_SELECTED
+                                  );
+                                }
+                                return true;
+                              },
+                              onChange: (e) => {
+                                setIsFormTouched(true);
+                                handleChange(e, `plans.${index}.planEndTime`);
+                                if (
+                                  getValues(`plans.${index}.planEndDate`) ===
+                                  null
+                                ) {
+                                  if (
+                                    getValues(
+                                      `plans.${index}.planStartDate`,
+                                    ) !== null
+                                  ) {
+                                    setValue(
+                                      `plans.${index}.planEndDate`,
+                                      getValues(`plans.${index}.planStartDate`),
+                                    );
+                                  } else {
+                                    setValue(
+                                      `plans.${index}.planEndDate`,
+                                      (() => {
+                                        const today: Date = new Date();
+                                        today.setHours(0, 0, 0, 0);
+                                        return today;
+                                      })(),
+                                    );
+                                  }
+                                }
+                              },
+                              onBlur: (e) => {
+                                if (time) {
+                                  setValue(
+                                    `plans.${index}.planEndTime`,
+                                    formatTimeInput(time),
+                                  );
+                                }
+                                if (
+                                  watch(
+                                    `plans.${index}.planEndDate`,
+                                  )?.getTime() ===
+                                    watch(
+                                      `plans.${index}.planStartDate`,
+                                    )?.getTime() &&
+                                  watch(`plans.${index}.planEndDate`) !== null
+                                ) {
+                                  if (
+                                    e.target.value &&
+                                    watch(`plans.${index}.planStartTime`) &&
+                                    convertToMinutes(e.target.value) >
+                                      convertToMinutes(
+                                        `${watch(`plans.${index}.planStartTime`)}`,
+                                      )
+                                  ) {
+                                    setError(`plans.${index}.planEndTime`, {
+                                      message: '',
+                                    });
+                                  } else {
+                                    setError(`plans.${index}.planEndTime`, {
+                                      message: END_DATE_WRONG_SELECTED,
+                                    });
+                                  }
+                                }
+
+                                setTime('');
+                              },
+                            })}
+                            options={optionTimeInput}
+                            onChangeDropdown={(e) => {
+                              setValue(`plans.${index}.planEndTime`, e.label);
+                              if (
+                                getValues(`plans.${index}.planEndDate`) === null
+                              ) {
+                                if (
+                                  getValues(`plans.${index}.planStartDate`) !==
+                                  null
+                                ) {
+                                  setValue(
+                                    `plans.${index}.planEndDate`,
+                                    getValues(`plans.${index}.planStartDate`),
+                                  );
+                                } else {
+                                  setValue(
+                                    `plans.${index}.planEndDate`,
+                                    (() => {
+                                      const today: Date = new Date();
+                                      today.setHours(0, 0, 0, 0);
+                                      return today;
+                                    })(),
+                                  );
+                                }
+                              }
+                              if (
+                                watch(
+                                  `plans.${index}.planEndDate`,
+                                )?.getTime() ===
+                                  watch(
+                                    `plans.${index}.planStartDate`,
+                                  )?.getTime() &&
+                                watch(`plans.${index}.planEndDate`) !== null
+                              ) {
+                                if (
+                                  e.label &&
+                                  watch(`plans.${index}.planStartTime`) &&
+                                  convertToMinutes(e.label) >
+                                    convertToMinutes(
+                                      `${watch(`plans.${index}.planStartTime`)}`,
+                                    )
+                                ) {
+                                  setError(`plans.${index}.planEndTime`, {
+                                    message: '',
+                                  });
+                                } else {
+                                  setError(`plans.${index}.planEndTime`, {
+                                    message: END_DATE_WRONG_SELECTED,
+                                  });
+                                }
+                              }
+                            }}
+                            type="text"
+                            className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                          />
+                        </div>
+                      </div>
+                      <ErrorMessage
+                        error={
+                          errors?.plans?.[index]?.planEndTime?.message ||
+                          errors?.plans?.[index]?.planEndDate?.message
+                        }
+                        className="mt-[6px] text-xs"
+                      />
+                    </div>
+                    <div>
+                      {!isCheckActionPermission && (
+                        <Button
+                          sz="sm"
+                          variant="outline"
+                          className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                          type="button"
+                          name="Remove plan"
+                          onClick={() => {
+                            setIsFormTouched(true);
+                            removePlanField(index);
+                          }}>
+                          削除
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {!isCheckActionPermission && (
+                <div className="text-right flex justify-center w-full mt-2 ">
+                  <Button
+                    sz="sm"
+                    variant="outline"
+                    className="w-6 h-6 mr-[54px] text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                    type="button"
+                    onClick={async () => {
+                      setIsFormTouched(true);
+                      await appendPlanField({
+                        planStartDate: null,
+                        planStartTime: '',
+                        planEndDate: null,
+                        planEndTime: '',
+                      });
+                    }}>
+                    <ImageRound
+                      src="/icons/plus.svg"
+                      name="Add organization"
+                      className="h-3 w-3"
+                    />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Deadline & Plan date &  Description  */}
           <div>
@@ -1443,660 +2014,9 @@ const ActionsTaskModal = ({
                   />
                   <p className="text-[#0068B6]">タスクについての詳細</p>
                 </div>
-                {/* Deadline */}
-                <div
-                  style={{ zIndex: planFields.length + 1 }}
-                  className="flex  relative gap-[10px] items-center">
-                  <div className="w-full max-w-[100px] text-[14px] font-medium">
-                    締切日時
-                  </div>
-                  <div className="w-full max-w-[515px] items-start flex gap-1 justify-between">
-                    <div className="max-w-[250px]">
-                      <div className="flex gap-1 items-center">
-                        <div className="w-[140px]">
-                          <Controller
-                            control={control}
-                            name="deadlineDate"
-                            render={({ field: { value, onChange } }) => (
-                              <DatePickerCustom
-                                disabled={
-                                  isCheckActionPermission ||
-                                  watch('statusId')?.value ===
-                                    StatusValueTask.MY_ROUTINE
-                                }
-                                className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
-                                selected={value ? new Date(value) : null}
-                                onChange={(e) => {
-                                  setIsFormTouched(true);
-                                  onChange(e);
-                                  if (!getValues('deadlineTime')) {
-                                    setValue(
-                                      'deadlineTime',
-                                      convertToTimeString(`${currentDate}`),
-                                    );
-                                  }
-                                }}
-                              />
-                            )}
-                          />
-                        </div>
-                        <div className="w-[72px] relative z-20">
-                          <Input
-                            isShowClockIcon={true}
-                            type="text"
-                            disabled={
-                              isCheckActionPermission ||
-                              watch('statusId')?.value ===
-                                StatusValueTask.MY_ROUTINE
-                            }
-                            register={register('deadlineTime', {
-                              required:
-                                watch('deadlineDate') !== null ? true : false,
-                              onChange: (e) => {
-                                setIsFormTouched(true);
-                                handleChange(e, 'deadlineTime');
-                                if (getValues('deadlineDate') === null) {
-                                  setValue(
-                                    'deadlineDate',
-                                    (() => {
-                                      const today: Date = new Date();
-                                      today.setHours(0, 0, 0, 0);
-                                      return today;
-                                    })(),
-                                  );
-                                }
-                              },
-                              onBlur: () => {
-                                if (time) {
-                                  setValue(
-                                    'deadlineTime',
-                                    formatTimeInput(time),
-                                  );
-                                }
-                                setTime('');
-                              },
-                            })}
-                            options={optionTimeInput}
-                            onChangeDropdown={(e) => {
-                              setValue('deadlineTime', e.label);
-                              if (getValues('deadlineDate') === null) {
-                                setValue(
-                                  'deadlineDate',
-                                  (() => {
-                                    const today: Date = new Date();
-                                    today.setHours(0, 0, 0, 0);
-                                    return today;
-                                  })(),
-                                );
-                              }
-                            }}
-                            className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                          />
-                        </div>
-                        <div className="ml-2">
-                          <ImageRound
-                            onClick={() =>
-                              setIsShowFieldRemind(!isShowFieldRemind)
-                            }
-                            src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell-white.svg'}`}
-                            name="Bell icon"
-                            className="h-4 w-4"
-                          />
-                        </div>
-                      </div>
-                      <ErrorMessage
-                        error={errors.deadlineTime?.message}
-                        className="mt-[6px] text-xs"
-                      />
-                    </div>
-                    {isShowFieldRemind ? (
-                      <div className="max-w-[250px]">
-                        <div className="flex items-center gap-1">
-                          <div className="w-[56px]">
-                            <Controller
-                              control={control}
-                              name="deadlineRemindCountdown"
-                              render={({ field: { value, onChange } }) => (
-                                <Dropdown
-                                  className="h-[34px] !py-1 !px-0 text-xs !border-[#77858F] rounded-md"
-                                  classNameTextData="!text-xs !ml-0"
-                                  labelOptionClass="!ml-0 !px-0 !pl-2 text-start w-full "
-                                  classNameOption="!text-xs !border border-[#77858F] !rounded-md"
-                                  classNameError="!text-xs"
-                                  classActive="justify-between"
-                                  labelClass="w-[80%]"
-                                  disabled={
-                                    isCheckActionPermission ||
-                                    watch('statusId')?.value ===
-                                      StatusValueTask.MY_ROUTINE
-                                  }
-                                  options={optionsCountDown}
-                                  selectedOption={optionsCountDown.find(
-                                    (element) => element.value === value?.value,
-                                  )}
-                                  onChange={(e) => {
-                                    onChange(e);
-                                  }}
-                                  error={errors.statusId?.message}
-                                />
-                              )}
-                            />
-                          </div>
-                          <div className="w-[82px] ">
-                            <Controller
-                              control={control}
-                              name="deadlineRemindType"
-                              render={({ field: { value, onChange } }) => (
-                                <Dropdown
-                                  className="h-[34px] !py-1 !pr-2 text-xs !border-[#77858F] rounded-md"
-                                  classNameTextData="!text-xs"
-                                  classNameOption="!text-xs !ml-0 !border border-[#77858F] !rounded-md"
-                                  classNameError="!text-xs"
-                                  labelOptionClass="!ml-0 !px-0 !pl-2 text-start w-full  "
-                                  classActive=" justify-between"
-                                  labelClass="w-[80%]"
-                                  disabled={
-                                    isCheckActionPermission ||
-                                    watch('statusId')?.value ===
-                                      StatusValueTask.MY_ROUTINE
-                                  }
-                                  options={optionsCountType}
-                                  selectedOption={optionsCountType.find(
-                                    (element) => element.value === value?.value,
-                                  )}
-                                  onChange={(e) => {
-                                    onChange(e);
-                                  }}
-                                  error={errors.statusId?.message}
-                                />
-                              )}
-                            />
-                          </div>
-                          <div className="w-[60px]">に通知</div>
-                        </div>
-                        <ErrorMessage
-                          error={errors.deadlineTime?.message}
-                          className="mt-[6px] text-xs"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-fit"></div>
-                    )}
-
-                    <div>
-                      {!isCheckActionPermission && (
-                        <Button
-                          sz="sm"
-                          variant="outline"
-                          className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                          type="button"
-                          name="Remove deadline"
-                          onClick={() => {
-                            setIsFormTouched(true);
-                            setValue('deadlineTime', '');
-                            setValue('deadlineDate', null);
-                            setValue('deadlineRemindCountdown', null);
-                            setValue('deadlineRemindType', null);
-                          }}>
-                          削除
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {/* Plan date */}
-                <div className="flex  gap-[10px] items-start">
-                  <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
-                    実施予定日時
-                  </div>
-                  <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
-                    {planFields.map((field, index) => {
-                      return (
-                        <div
-                          key={field.id}
-                          style={{ zIndex: planFields.length - index }}
-                          className="w-full max-w-[515px] flex gap-2 items-start">
-                          <div className="max-w-[220px]">
-                            <div className="flex gap-1">
-                              <div className="w-[140px]">
-                                <Controller
-                                  control={control}
-                                  name={`plans.${index}.planStartDate`}
-                                  rules={{
-                                    required: watch(
-                                      `plans.${index}.planEndDate`,
-                                    )
-                                      ? START_DATE_REQUIRED_SELECTED
-                                      : false,
-                                  }}
-                                  render={({ field: { value, onChange } }) => {
-                                    return (
-                                      <DatePickerCustom
-                                        className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
-                                        selected={
-                                          value
-                                            ? new Date(value)
-                                            : watch(
-                                                `plans.${index}.planStartDate`,
-                                              )
-                                        }
-                                        disabled={isCheckActionPermission}
-                                        onChange={(e) => {
-                                          setIsFormTouched(true);
-                                          onChange(e);
-                                          if (e !== null) {
-                                            const newDate = new Date(
-                                              e.getTime(),
-                                            );
-                                            updateMinDatePlan(index, newDate);
-                                          } else {
-                                            updateMinDatePlan(index, null);
-                                          }
-                                          if (
-                                            !getValues(
-                                              `plans.${index}.planStartTime`,
-                                            )
-                                          ) {
-                                            setValue(
-                                              `plans.${index}.planStartTime`,
-                                              convertToTimeString(
-                                                `${currentDate}`,
-                                              ),
-                                            );
-                                          }
-                                          setValue(
-                                            `plans.${index}.planEndDate`,
-                                            null,
-                                          );
-                                          setValue(
-                                            `plans.${index}.planEndTime`,
-                                            '',
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  }}
-                                />
-                              </div>
-                              <div className="w-[72px] relative">
-                                <Input
-                                  isShowClockIcon={true}
-                                  autoFocus={false}
-                                  disabled={isCheckActionPermission}
-                                  register={register(
-                                    `plans.${index}.planStartTime`,
-                                    {
-                                      required:
-                                        watch(
-                                          `plans.${index}.planStartDate`,
-                                        ) !== null
-                                          ? true
-                                          : false,
-                                      onChange: (e) => {
-                                        setIsFormTouched(true);
-                                        handleChange(
-                                          e,
-                                          `plans.${index}.planStartTime`,
-                                        );
-                                        if (
-                                          getValues(
-                                            `plans.${index}.planStartDate`,
-                                          ) === null
-                                        ) {
-                                          setValue(
-                                            `plans.${index}.planStartDate`,
-                                            (() => {
-                                              const today: Date = new Date();
-                                              today.setHours(0, 0, 0, 0);
-                                              return today;
-                                            })(),
-                                          );
-                                          setValue(
-                                            `plans.${index}.planEndDate`,
-                                            null,
-                                          );
-                                          setValue(
-                                            `plans.${index}.planEndTime`,
-                                            '',
-                                          );
-                                          updateMinDatePlan(index, new Date());
-                                        }
-                                      },
-                                      onBlur: () => {
-                                        if (time) {
-                                          setValue(
-                                            `plans.${index}.planStartTime`,
-                                            formatTimeInput(time),
-                                          );
-                                        }
-                                        setTime('');
-                                      },
-                                    },
-                                  )}
-                                  type="text"
-                                  options={optionTimeInput}
-                                  onChangeDropdown={(e) => {
-                                    setValue(
-                                      `plans.${index}.planStartTime`,
-                                      e.label,
-                                    );
-                                    if (
-                                      getValues(
-                                        `plans.${index}.planStartDate`,
-                                      ) === null
-                                    ) {
-                                      setValue(
-                                        `plans.${index}.planStartDate`,
-                                        (() => {
-                                          const today: Date = new Date();
-                                          today.setHours(0, 0, 0, 0);
-                                          return today;
-                                        })(),
-                                      );
-
-                                      updateMinDatePlan(index, new Date());
-                                    }
-                                  }}
-                                  className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                                />
-                              </div>
-                            </div>
-                            <ErrorMessage
-                              error={errors.planStartDate?.message}
-                              className="mt-[6px] text-xs"
-                            />
-                          </div>
-                          <div className="h-[34px] flex items-center">〜</div>
-                          <div className="max-w-[220px]">
-                            <div className="flex gap-1">
-                              <div className="w-[140px]">
-                                <Controller
-                                  rules={{
-                                    required: watch(
-                                      `plans.${index}.planStartDate`,
-                                    )
-                                      ? END_DATE_WRONG_SELECTED
-                                      : false,
-                                  }}
-                                  control={control}
-                                  name={`plans.${index}.planEndDate`}
-                                  render={({ field: { value, onChange } }) => (
-                                    <DatePickerCustom
-                                      className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2 !pl-[30px] !text-xs !pt-2 text-center"
-                                      selected={
-                                        value
-                                          ? new Date(value)
-                                          : watch(`plans.${index}.planEndDate`)
-                                      }
-                                      disabled={isCheckActionPermission}
-                                      minDate={
-                                        watch(`plans.${index}.planStartDate`) ||
-                                        minDatePlans[index]
-                                      }
-                                      onChange={(e) => {
-                                        setIsFormTouched(true);
-                                        onChange(e);
-                                        if (
-                                          !getValues(
-                                            `plans.${index}.planEndTime`,
-                                          )
-                                        ) {
-                                          setValue(
-                                            `plans.${index}.planEndTime`,
-                                            convertToTimeString(
-                                              `${currentDate}`,
-                                            ),
-                                          );
-                                        }
-                                      }}
-                                    />
-                                  )}
-                                />
-                              </div>
-                              <div className="w-[72px] relative">
-                                <Input
-                                  isShowClockIcon={true}
-                                  disabled={isCheckActionPermission}
-                                  register={register(
-                                    `plans.${index}.planEndTime`,
-                                    {
-                                      required:
-                                        watch(`plans.${index}.planEndDate`) !==
-                                        null
-                                          ? true
-                                          : false,
-                                      validate: (value) => {
-                                        if (
-                                          watch(
-                                            `plans.${index}.planEndDate`,
-                                          )?.getTime() ===
-                                            watch(
-                                              `plans.${index}.planStartDate`,
-                                            )?.getTime() &&
-                                          watch(
-                                            `plans.${index}.planEndDate`,
-                                          ) !== null
-                                        ) {
-                                          return (
-                                            (value &&
-                                              watch(
-                                                `plans.${index}.planStartTime`,
-                                              ) &&
-                                              convertToMinutes(value) >
-                                                convertToMinutes(
-                                                  `${watch(`plans.${index}.planStartTime`)}`,
-                                                )) ||
-                                            END_DATE_WRONG_SELECTED
-                                          );
-                                        }
-                                        return true;
-                                      },
-                                      onChange: (e) => {
-                                        setIsFormTouched(true);
-                                        handleChange(
-                                          e,
-                                          `plans.${index}.planEndTime`,
-                                        );
-                                        if (
-                                          getValues(
-                                            `plans.${index}.planEndDate`,
-                                          ) === null
-                                        ) {
-                                          if (
-                                            getValues(
-                                              `plans.${index}.planStartDate`,
-                                            ) !== null
-                                          ) {
-                                            setValue(
-                                              `plans.${index}.planEndDate`,
-                                              getValues(
-                                                `plans.${index}.planStartDate`,
-                                              ),
-                                            );
-                                          } else {
-                                            setValue(
-                                              `plans.${index}.planEndDate`,
-                                              (() => {
-                                                const today: Date = new Date();
-                                                today.setHours(0, 0, 0, 0);
-                                                return today;
-                                              })(),
-                                            );
-                                          }
-                                        }
-                                      },
-                                      onBlur: (e) => {
-                                        if (time) {
-                                          setValue(
-                                            `plans.${index}.planEndTime`,
-                                            formatTimeInput(time),
-                                          );
-                                        }
-                                        if (
-                                          watch(
-                                            `plans.${index}.planEndDate`,
-                                          )?.getTime() ===
-                                            watch(
-                                              `plans.${index}.planStartDate`,
-                                            )?.getTime() &&
-                                          watch(
-                                            `plans.${index}.planEndDate`,
-                                          ) !== null
-                                        ) {
-                                          if (
-                                            e.target.value &&
-                                            watch(
-                                              `plans.${index}.planStartTime`,
-                                            ) &&
-                                            convertToMinutes(e.target.value) >
-                                              convertToMinutes(
-                                                `${watch(`plans.${index}.planStartTime`)}`,
-                                              )
-                                          ) {
-                                            setError(
-                                              `plans.${index}.planEndTime`,
-                                              {
-                                                message: '',
-                                              },
-                                            );
-                                          } else {
-                                            setError(
-                                              `plans.${index}.planEndTime`,
-                                              {
-                                                message:
-                                                  END_DATE_WRONG_SELECTED,
-                                              },
-                                            );
-                                          }
-                                        }
-
-                                        setTime('');
-                                      },
-                                    },
-                                  )}
-                                  options={optionTimeInput}
-                                  onChangeDropdown={(e) => {
-                                    setValue(
-                                      `plans.${index}.planEndTime`,
-                                      e.label,
-                                    );
-                                    if (
-                                      getValues(
-                                        `plans.${index}.planEndDate`,
-                                      ) === null
-                                    ) {
-                                      if (
-                                        getValues(
-                                          `plans.${index}.planStartDate`,
-                                        ) !== null
-                                      ) {
-                                        setValue(
-                                          `plans.${index}.planEndDate`,
-                                          getValues(
-                                            `plans.${index}.planStartDate`,
-                                          ),
-                                        );
-                                      } else {
-                                        setValue(
-                                          `plans.${index}.planEndDate`,
-                                          (() => {
-                                            const today: Date = new Date();
-                                            today.setHours(0, 0, 0, 0);
-                                            return today;
-                                          })(),
-                                        );
-                                      }
-                                    }
-                                    if (
-                                      watch(
-                                        `plans.${index}.planEndDate`,
-                                      )?.getTime() ===
-                                        watch(
-                                          `plans.${index}.planStartDate`,
-                                        )?.getTime() &&
-                                      watch(`plans.${index}.planEndDate`) !==
-                                        null
-                                    ) {
-                                      if (
-                                        e.label &&
-                                        watch(`plans.${index}.planStartTime`) &&
-                                        convertToMinutes(e.label) >
-                                          convertToMinutes(
-                                            `${watch(`plans.${index}.planStartTime`)}`,
-                                          )
-                                      ) {
-                                        setError(`plans.${index}.planEndTime`, {
-                                          message: '',
-                                        });
-                                      } else {
-                                        setError(`plans.${index}.planEndTime`, {
-                                          message: END_DATE_WRONG_SELECTED,
-                                        });
-                                      }
-                                    }
-                                  }}
-                                  type="text"
-                                  className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                                />
-                              </div>
-                            </div>
-                            <ErrorMessage
-                              error={
-                                errors?.plans?.[index]?.planEndTime?.message ||
-                                errors?.plans?.[index]?.planEndDate?.message
-                              }
-                              className="mt-[6px] text-xs"
-                            />
-                          </div>
-                          <div>
-                            {!isCheckActionPermission && (
-                              <Button
-                                sz="sm"
-                                variant="outline"
-                                className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                                type="button"
-                                name="Remove plan"
-                                onClick={() => {
-                                  setIsFormTouched(true);
-                                  removePlanField(index);
-                                }}>
-                                削除
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {!isCheckActionPermission && (
-                      <div className="text-right flex justify-center w-full mt-2 ">
-                        <Button
-                          sz="sm"
-                          variant="outline"
-                          className="w-6 h-6 mr-[54px] text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
-                          type="button"
-                          onClick={async () => {
-                            setIsFormTouched(true);
-                            await appendPlanField({
-                              planStartDate: null,
-                              planStartTime: '',
-                              planEndDate: null,
-                              planEndTime: '',
-                            });
-                          }}>
-                          <ImageRound
-                            src="/icons/plus.svg"
-                            name="Add organization"
-                            className="h-3 w-3"
-                          />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
 
                 {/* Description */}
                 <TextArea
-                  label="タスクについての詳細"
                   disabled={isCheckActionPermission}
                   register={Object.assign(register('description'), {
                     onChange: () => {
