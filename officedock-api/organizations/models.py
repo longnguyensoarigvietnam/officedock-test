@@ -1,5 +1,6 @@
 from django.db import models
 from base.models import BaseModel
+from organizations.constants import CategoryColors
 
 
 class Organization(BaseModel):
@@ -96,12 +97,17 @@ class OrganizationsStatisticCategories(BaseModel):
         related_name="organizations_small_statistic_categories",
     )
     index = models.IntegerField(null=True, default=1)
+    color = models.CharField(max_length=20, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         """
         Set default company
         """
         self.company = self.organization.company
+        # FIXME: Remove this line later
+        if self.color is None:
+            self.color = CategoryColors.random()
+
         super().save(*args, **kwargs)
 
 

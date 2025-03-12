@@ -1,4 +1,9 @@
 version: '3.8'
+
+networks:
+  office_dock_network:
+    external: true
+
 services:
   app:
     build:
@@ -9,3 +14,5 @@ services:
       - '${PORT}:3000'
     env_file:
       - .env
+    networks:
+      - office_dock_network

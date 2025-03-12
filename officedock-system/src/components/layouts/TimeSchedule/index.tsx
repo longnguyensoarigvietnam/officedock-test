@@ -28,6 +28,9 @@ import {
   eachDayOfInterval,
   startOfDay,
   endOfDay,
+  getHours,
+  getMinutes,
+  subSeconds,
 } from 'date-fns';
 import interactionPlugin, {
   EventDragStopArg,
@@ -58,6 +61,10 @@ import ImageRound from '@components/common/ImageRound';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
 import DatePicker from '@components/common/DatePicker';
+import ScheduleDaySkeleton from '@components/skeleton/ScheduleDaySkeleton';
+import RangeSlider from '@components/common/RangeSlider';
+import DetailPlanItemModal from '@components/modals/DetailPlanItemModal';
+import DetailEventPlanModal from '@components/modals/DetailEventPlanModal';
 
 import TaskCard from './TaskCard';
 
@@ -95,6 +102,7 @@ import {
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 
 import api from '@base/api';
@@ -137,11 +145,6 @@ import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
 } from '@utils';
-import ScheduleDaySkeleton from '@components/skeleton/ScheduleDaySkeleton';
-import RangeSlider from '@components/common/RangeSlider';
-import { useErrorToast } from '@hooks/useErrorToast';
-import DetailPlanItemModal from '@components/modals/DetailPlanlItemModal';
-import DetailEventPlanModal from '@components/modals/DetailEventPlanModal';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -398,7 +401,11 @@ const TimeSchedule = memo(
           if (data) {
             const splitMultiDayEvent = (event: TaskTimeSchedule) => {
               const startDate = parseISO(String(event.startDate));
-              const endDate = parseISO(String(event.endDate));
+              let endDate = parseISO(String(event.endDate));
+
+              if (getHours(endDate) === 0 && getMinutes(endDate) === 0) {
+                endDate = subSeconds(endDate, 1);
+              }
 
               if (isSameDay(startDate, endDate)) {
                 return [{ ...event }];
@@ -1192,11 +1199,8 @@ const TimeSchedule = memo(
           e._def &&
           e._def.resourceIds?.length &&
           e._def.resourceIds[0] === ItemScheduleType.PLANS;
-        const isSameType =
-          e.extendedProps.type === EventCalendarType.SCHEDULE &&
-          extendedProps.type === EventCalendarType.SCHEDULE;
 
-        if (!eResourceId || isSameType) return false;
+        if (!eResourceId) return false;
         return (
           e.start.getTime() < event.end!.getTime() &&
           e.end.getTime() > event.start!.getTime()
@@ -2030,6 +2034,7 @@ const TimeSchedule = memo(
       taskId: string | number;
       uuid: string;
       isImportant?: boolean | null;
+      isRunning?: boolean;
       deadline?: string;
       largeColor?: string;
       resource: string;
@@ -2051,6 +2056,7 @@ const TimeSchedule = memo(
         uuid: data.uuid,
         deadline: data.deadline,
         start: data.start,
+        isRunning: data.isRunning,
         left: adjustPositionForViewportSchedule({
           top: Number(data.clientY),
           left: Number(data.clientX),
@@ -2109,6 +2115,7 @@ const TimeSchedule = memo(
           id: clickInfo.event.id,
           taskId: clickInfo.event.extendedProps.taskId,
           isImportant: clickInfo.event.extendedProps.isImportant,
+          isRunning: clickInfo.event.extendedProps.isCalculation,
           deadline: clickInfo.event.extendedProps.deadline,
           uuid: clickInfo.event.extendedProps.uuid,
           resource: resourcePlan
@@ -2128,10 +2135,10 @@ const TimeSchedule = memo(
         handleShowEventInModal({
           title: clickInfo.event.title,
           id: clickInfo.event.extendedProps.scheduleId,
-          start: clickInfo.event.start,
+          start: clickInfo.event.extendedProps.planStartDate,
           end: clickInfo.event.extendedProps.isAllDay
             ? clickInfo.event.extendedProps.endDate
-            : clickInfo.event.end,
+            : clickInfo.event.extendedProps.planEndDate,
           clientX: clickInfo.jsEvent.clientX,
           clientY: clickInfo.jsEvent.clientY,
           isAllDay: clickInfo.event.extendedProps.isAllDay,
@@ -2355,14 +2362,29 @@ const TimeSchedule = memo(
         onSuccess: async ({ data }) => {
           setTaskTimeScheduleList((prevEvents) => {
             const filteredEvents = prevEvents.filter(
-              (event) => event.scheduleId !== data.id,
+              (event) =>
+                event.scheduleId !== data.id &&
+                event.resourceId === ItemScheduleType.PLANS,
+            );
+            const actualDataList = prevEvents.filter(
+              (event) => event.resourceId === ItemScheduleType.ACTUAL,
             );
 
             const splitMultiDayEvent = (event: TaskTimeSchedule) => {
               const startDate = parseISO(String(event.startDate));
               const endDate = parseISO(String(event.endDate));
               if (event.isAllDay)
-                return [{ ...event, id: `${event.id}event`, uuid: uuidv4() }];
+                return [
+                  {
+                    ...event,
+                    start: new Date(String(event.startDate)),
+                    end: new Date(
+                      new Date(String(event.endDate)).setHours(24, 0, 0, 0),
+                    ),
+                    id: `${event.id}event`,
+                    uuid: uuidv4(),
+                  },
+                ];
 
               if (isSameDay(startDate, endDate)) {
                 return [
@@ -2410,7 +2432,7 @@ const TimeSchedule = memo(
               planEndDate: `${data.endDate}`,
             });
 
-            return [...filteredEvents, ...newEvents];
+            return [...filteredEvents, ...actualDataList, ...newEvents];
           });
 
           handleRemoveEventParam();
@@ -2773,14 +2795,14 @@ const TimeSchedule = memo(
                 : '1040px'
               : '440px',
           }}
-          className={`schedule-page relative overflow-x-auto overflow-y-hidden `}
+          className={`${searchParams.get('view') == ViewOptions.DAY && 'w-[440px]'} schedule-page relative overflow-x-auto overflow-y-hidden `}
           ref={resizableElementRef}>
           <div
             className={`resizer absolute cursor-ew-resize right-[2px] z-[2] top-1/2 translate-x-1/2 -translate-y-1/2 h-full w-1 bg-transparent ${isExtendCalendar ? 'block' : 'hidden'}`}
             onMouseDown={handleMouseDown}
           />
           <div
-            className={`overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 px-4 `}>
+            className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 px-4 `}>
             <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
               <div className={`items-center gap-4 flex h-12 sticky z-20`}>
                 {!isExtendCalendar ? (
@@ -2887,7 +2909,8 @@ const TimeSchedule = memo(
                   </>
                 )}
               </div>
-              <div className="schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll">
+              <div
+                className={`schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll  `}>
                 <FullCalendar
                   ref={calendarRef}
                   plugins={[
@@ -3011,8 +3034,9 @@ const TimeSchedule = memo(
             placement="top"
             offset={[0, 5]}>
             <div
-              className="p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer "
+              className={`${isLoadingSchedule && 'opacity-50'} p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer `}
               onClick={() => {
+                if (isLoadingSchedule) return;
                 if (!isExtendCalendar) {
                   setIsScroll(true);
                   handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);

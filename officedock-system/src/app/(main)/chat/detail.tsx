@@ -47,6 +47,8 @@ import ErrorChatUploadFileValidationModal from '@components/modals/ErrorChatUplo
 import { MessageDetail } from '@components/chat/MessageDetail';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import ListTaskUserChat from '@components/chat/ListTaskUserChat';
+import { TaskQuote } from '@components/chat/CustomTaskQuote';
+import { CustomReaction } from '@components/chat/CustomIcon';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -75,6 +77,7 @@ import {
   ERROR_DELETE_MESSAGE,
   ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
+  ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -113,7 +116,6 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
 import { debounce } from 'lodash';
-import { TaskQuote } from '@components/chat/CustomTaskQuote';
 
 interface dataProps {
   clientId: string;
@@ -508,13 +510,14 @@ const ChatDetail = ({
   const handleSearchMessagesInChatRoom = async (data: {
     searchChatMsg: string;
     pageNumber: number;
+    roomType: string;
   }) => {
     if (chatRoomCode) {
       if (data.pageNumber == 1) setIsLoading(true);
       const encodedQuery = encodeURIComponent(data.searchChatMsg);
       const apiUrl = `${apiRouters.CHAT_MESSAGES(chatRoomCode)}?${
         data.searchChatMsg ? `message=${encodedQuery}` : ''
-      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}`;
+      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}${data.roomType ? `&chatroom_type=${data.roomType}` : ''}`;
 
       return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
     }
@@ -645,6 +648,7 @@ const ChatDetail = ({
       Placeholder.configure({
         placeholder: 'メッセージを入力',
       }),
+      CustomReaction
     ],
     content: message,
     onUpdate: ({ editor }: { editor: Editor }) => {
@@ -1007,11 +1011,12 @@ const ChatDetail = ({
         [variables.uuid]: { progress: 100 },
       }));
     },
-    onError: (_data, variables) => {
+    onError: (error: AxiosError<any>, variables) => {
       setUploadFileStatus((prev) => ({
         ...prev,
         [variables.uuid]: { progress: 0 },
       }));
+      showErrorToast(error, ERROR_SAVE_MESSAGE);
     },
     onSettled: () => {},
   });
@@ -1078,6 +1083,10 @@ const ChatDetail = ({
 
       ...dataMessageDetail,
     ]);
+    setUploadFileStatus((prev) => ({
+      ...prev,
+      [uuidMsg]: { progress: 0 },
+    }));
     setMessage('');
     if (!editor) return;
 
@@ -1206,6 +1215,10 @@ const ChatDetail = ({
         mentionIds = mentionMembers.map((member) => Number(member.id)) || [];
       }
       setMentionMembers([]);
+      setUploadFileStatus((prev) => ({
+        ...prev,
+        [uuid]: { progress: 0 },
+      }));
       handleUpdateMsgChat({
         message: trimUnnecessaryLineBreaks(`${message}`) as string,
         uuid: uuid,
@@ -1896,7 +1909,13 @@ const ChatDetail = ({
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) {
+
+    const totalSize =
+      uploadFiles.reduce(
+        (acc, uploadedFile) => acc + uploadedFile.file.size,
+        0,
+      ) + file.size;
+    if (totalSize > MAX_FILE_SIZE) {
       setOpenErrorUploadFileModal(true);
       return;
     }
@@ -1919,11 +1938,16 @@ const ChatDetail = ({
     setOpenDroppingFileModal(false);
     const droppedFiles = Array.from(e.dataTransfer.files);
     if (droppedFiles.length > 0) {
-      const invalidFiles = droppedFiles.filter(
-        (file) => file.size > MAX_FILE_SIZE,
+      const totalDroppedFilesSize = droppedFiles.reduce(
+        (acc, file) => acc + file.size,
+        0,
+      );
+      const totalPreviousFilesSize = uploadFiles.reduce(
+        (acc, uploadedFile) => acc + uploadedFile.file.size,
+        0,
       );
 
-      if (invalidFiles.length > 0) {
+      if (totalDroppedFilesSize + totalPreviousFilesSize > MAX_FILE_SIZE) {
         setOpenErrorUploadFileModal(true);
         return;
       }
@@ -2242,7 +2266,16 @@ const ChatDetail = ({
                 onChange={(e) => setSearchChatMsg(e.target.value)}
                 onKeyDown={(e: any) => {
                   if (e.keyCode == 13 && e.target.value !== '') {
-                    searchMessagesInChatRoom({ searchChatMsg, pageNumber: 1 });
+                    searchMessagesInChatRoom({
+                      searchChatMsg,
+                      pageNumber: 1,
+                      roomType:
+                        chatRoomDetail?.type == ChatRoomType.CALENDAR ||
+                        chatRoomDetail?.type == ChatRoomType.SKILL ||
+                        chatRoomDetail?.type == ChatRoomType.TASK
+                          ? chatRoomDetail?.type || ''
+                          : '',
+                    });
                     setOpenSearchMessagesModal(true);
                   }
                 }}
@@ -2636,13 +2669,19 @@ const ChatDetail = ({
           dashboardMembers={dashboardMembers}
           searchMessageResults={searchMessageResults}
           searchChatMsg={searchChatMsg}
+          chatRoomType={chatRoomDetail?.type || ''}
           setSearchChatMsg={setSearchChatMsg}
           searchResultsPage={searchResultsPage}
           setSearchMessageResults={setSearchMessageResults}
           setSearchResultsPage={setSearchResultsPage}
+          handleConfirmGetDataDetailEvent={handleConfirmGetDataDetailEvent}
           hasMoreSearchResultDetail={hasMoreSearchResultDetail}
-          onSubmit={(searchChatMsg: string, page: number) => {
-            searchMessagesInChatRoom({ searchChatMsg, pageNumber: page });
+          onSubmit={(searchChatMsg: string, page: number, roomType: string) => {
+            searchMessagesInChatRoom({
+              searchChatMsg,
+              pageNumber: page,
+              roomType,
+            });
           }}
           onClose={() => {
             setOpenSearchMessagesModal(false);

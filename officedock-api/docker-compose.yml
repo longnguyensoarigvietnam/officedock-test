@@ -1,11 +1,21 @@
 version: '3.10'
 
+networks:
+  office_dock_network_default:
+    name: office_dock_network
+    driver: bridge
+
 services:
   api:
     build: .
     image: officedock-api
     container_name: api
-    command: python manage.py runserver 0.0.0.0:8000
+    command: >
+        bash -c "PYTHONUNBUFFERED=1 UVICORN_LOG_LEVEL=debug
+        gunicorn core.asgi:application -k uvicorn.workers.UvicornWorker
+        --bind 0.0.0.0:8000 --workers 1 --threads 8 --timeout 0
+        --log-level debug --access-logfile - --error-logfile -
+        --reload"
     volumes:
       - .:/code
     ports:
@@ -16,8 +26,12 @@ services:
       - POSTGRES_PASSWORD=officedock
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
+    env_file:
+      - .env
     depends_on:
       - db
+    networks:
+      - office_dock_network_default
 
   db:
     image: postgres:12
@@ -30,6 +44,8 @@ services:
       - POSTGRES_PASSWORD=officedock
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - office_dock_network_default
 
 volumes:
   postgres_data:

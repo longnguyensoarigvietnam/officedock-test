@@ -1,6 +1,8 @@
 export interface Category {
   id: number;
   name: string;
+  uuid?: string;
+  color?: string;
 }
 export interface CreateCategoryFormRequest {
   name?: string;

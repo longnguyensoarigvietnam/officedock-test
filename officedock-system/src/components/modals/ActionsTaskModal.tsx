@@ -1201,62 +1201,66 @@ const ActionsTaskModal = ({
                 }}
               />
               {/* Category medium */}
-              <Controller
-                control={control}
-                name={'categories.MEDIUM'}
-                render={({ field: { value, onChange } }) => {
-                  return (
+              {watch('categories.LARGE.value') && (
+                <Controller
+                  control={control}
+                  name={'categories.MEDIUM'}
+                  render={({ field: { value, onChange } }) => {
+                    return (
+                      <Dropdown
+                        placeholder="中カテゴリ"
+                        className="h-[34px] !py-1 text-xs "
+                        classNameTextData="!text-xs"
+                        classNameOption="!text-xs"
+                        classNameError="!text-xs"
+                        disabled={isCheckActionPermission}
+                        options={dataOptionsCategoryMedium}
+                        selectedOption={dataOptionsCategoryMedium.find(
+                          (element) => element.value === value?.value,
+                        )}
+                        onChange={(e) => {
+                          if (e.value != watch('categories.MEDIUM.value')) {
+                            setValue('categories.SMALL', {
+                              label: '',
+                              value: '',
+                            });
+                          }
+                          setIsFormTouched(true);
+                          onChange(e);
+                        }}
+                        error={errors.categories?.MEDIUM?.message}
+                      />
+                    );
+                  }}
+                />
+              )}
+
+              {/* Category small */}
+              {watch('categories.MEDIUM.value') && (
+                <Controller
+                  control={control}
+                  name={'categories.SMALL'}
+                  render={({ field: { value, onChange } }) => (
                     <Dropdown
-                      placeholder="中カテゴリ"
                       className="h-[34px] !py-1 text-xs "
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
                       disabled={isCheckActionPermission}
-                      options={dataOptionsCategoryMedium}
-                      selectedOption={dataOptionsCategoryMedium.find(
+                      options={dataOptionsCategorySmall}
+                      selectedOption={dataOptionsCategorySmall.find(
                         (element) => element.value === value?.value,
                       )}
+                      placeholder="小カテゴリ"
                       onChange={(e) => {
-                        if (e.value != watch('categories.MEDIUM.value')) {
-                          setValue('categories.SMALL', {
-                            label: '',
-                            value: '',
-                          });
-                        }
                         setIsFormTouched(true);
                         onChange(e);
                       }}
-                      error={errors.categories?.MEDIUM?.message}
+                      error={errors.categories?.SMALL?.message}
                     />
-                  );
-                }}
-              />
-
-              {/* Category small */}
-              <Controller
-                control={control}
-                name={'categories.SMALL'}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    className="h-[34px] !py-1 text-xs "
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
-                    classNameError="!text-xs"
-                    disabled={isCheckActionPermission}
-                    options={dataOptionsCategorySmall}
-                    selectedOption={dataOptionsCategorySmall.find(
-                      (element) => element.value === value?.value,
-                    )}
-                    placeholder="小カテゴリ"
-                    onChange={(e) => {
-                      setIsFormTouched(true);
-                      onChange(e);
-                    }}
-                    error={errors.categories?.SMALL?.message}
-                  />
-                )}
-              />
+                  )}
+                />
+              )}
             </div>
           </div>
           {/* Tag */}
@@ -1427,7 +1431,7 @@ const ActionsTaskModal = ({
           {/* Deadline */}
           <div
             style={{ zIndex: planFields.length + 1 }}
-            className="flex  gap-[10px] items-center">
+            className="flex  relative gap-[10px] items-center">
             <div className="w-full max-w-[100px] text-[14px] font-medium">
               締切日時
             </div>
@@ -1995,7 +1999,8 @@ const ActionsTaskModal = ({
               )}
             </div>
           </div>
-          {/* Description */}
+
+          {/* Deadline & Plan date &  Description  */}
           <div>
             {showDescriptionSection ? (
               <>
@@ -2009,6 +2014,8 @@ const ActionsTaskModal = ({
                   />
                   <p className="text-[#0068B6]">タスクについての詳細</p>
                 </div>
+
+                {/* Description */}
                 <TextArea
                   disabled={isCheckActionPermission}
                   register={Object.assign(register('description'), {
@@ -2016,6 +2023,7 @@ const ActionsTaskModal = ({
                       setIsFormTouched(true);
                     },
                   })}
+                  labelClassName="font-medium"
                   className="resize-none !border-[1px] !border-[#77858F]"
                 />
               </>

@@ -17,17 +17,24 @@ from calendars.constants import (
 from calendars.models import Schedule
 from chat.constants import WebSocketEventType
 from skills.models import StatisticCategory
-from organizations.serializers import StatisticCategorySerializer
+from organizations.serializers import (
+    StatisticCategorySerializer,
+    OrganizationDetailSerializer,
+)
 from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
 from users.models import Role, RoleDetail, User
 from tasks.models import TaskStatus, Task, TaskDuration
-from tasks.constants import TASK_WORK_TYPES, TaskPriorities, TaskTypes
+from tasks.constants import (
+    TASK_WORK_TYPES,
+    TaskPriorities,
+    TaskTypes,
+    TaskCategoryTypes,
+)
 from skills.serializers import SkillSerializer
 from organizations.models import OrganizationsSkills
 from roles.constants import Actions, Screens, SelectionResultOptions
-from organizations.models import Organization
 from chat.models import ChatRoom
 from .serializers import (
     CreationDataOrganizationSerializer,
@@ -39,7 +46,11 @@ from .serializers import (
     CreationDataUserWithOrganizationSerializer,
     OrganizationWithUserNotHaveSkillMapSerializer,
 )
-from .utils import send_web_socket_event
+from .utils import (
+    send_web_socket_event,
+    transform_statistic_categories,
+    check_task_overtime,
+)
 
 
 @extend_schema(tags=["System > Creation Data"])
@@ -217,13 +228,27 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get creation data for Tag
         """
-
         tags = request.user.company.tags.order_by("created_at").all()
         status = TaskStatus.objects.order_by("created_at").all()
         organizations = request.user.organizations.order_by("created_at")
-        categories = StatisticCategory.objects.filter(
-            company=request.user.company
-        ).order_by("created_at")
+        list_cats = []
+        for organization in organizations:
+            organization_categories = OrganizationDetailSerializer(
+                organization
+            ).data["statistic_categories"]
+            categories = transform_statistic_categories(organization_categories)
+            list_cats.append(
+                {
+                    "organization": CreationDataOrganizationSerializer(
+                        organization
+                    ).data,
+                    "categories": [
+                        cat[TaskCategoryTypes.LARGE.value]
+                        for cat in categories
+                        if cat.get(TaskCategoryTypes.LARGE.value) is not None
+                    ],
+                }
+            )
 
         data = {
             "tags": CreationDataTagSerializer(
@@ -235,9 +260,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             "organizations": CreationDataOrganizationSerializer(
                 organizations, many=True
             ).data,
-            "categories": StatisticCategorySerializer(
-                categories, many=True
-            ).data,
+            "organization_categories": list_cats,
         }
 
         return self.response_ok(data)
@@ -272,11 +295,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             if chat_room and (
                 ids := chat_room.participants.values_list("id", flat=True)
             ):
-                org_ids = Organization.objects.filter(
-                    users__id__in=ids
-                ).values_list("id", flat=True)
                 tasks = tasks.filter(
-                    Q(organization_id__in=org_ids) | Q(created_by_id__in=ids)
+                    Q(people_in_charge__id__in=ids) | Q(created_by_id__in=ids)
                 )
 
         # Get list of tasks by user ids
@@ -288,18 +308,15 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 except ValueError:
                     continue
             if ids:
-                org_ids = Organization.objects.filter(
-                    users__id__in=ids
-                ).values_list("id", flat=True)
                 tasks = tasks.filter(
-                    Q(organization_id__in=org_ids) | Q(created_by_id__in=ids)
+                    Q(people_in_charge__id__in=ids) | Q(created_by_id__in=ids)
                 )
 
         # Get list of tasks by user logged in
         else:
-            organizations = request.user.organizations.order_by("created_at")
+            user_logged = request.user
             tasks = tasks.filter(
-                Q(organization__in=organizations) | Q(created_by=request.user)
+                Q(people_in_charge=user_logged) | Q(created_by=user_logged)
             )
 
         # Filter input keyword
@@ -307,7 +324,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             tasks = tasks.filter(title__icontains=search_query)
 
         return self.response_pagination(
-            request, tasks, CreationDataTaskListSerializer
+            request, tasks.distinct(), CreationDataTaskListSerializer
         )
 
     @action(methods=["GET"], detail=False, url_path="schedule")
@@ -315,12 +332,12 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get creation data for Schedule
         """
-
         tags = request.user.company.tags.order_by("created_at").all()
         users = request.user.company.users.order_by("created_at").all()
         organizations = request.user.company.organizations.order_by(
             "created_at"
         )
+
         data = {
             "members": CreationDataUserWithOrganizationSerializer(
                 users, many=True
@@ -477,64 +494,17 @@ class CronJobViewSet(BaseAPIViewSet):
                 else task_duration.schedule
             )
             if isinstance(related_obj, Task):
-                task_schedules = (
-                    related_obj.task_schedules.filter(
-                        plan_start_date__gte=start_of_today
-                    )
-                    .all()
-                    .order_by("plan_start_date")
-                )
                 users = related_obj.people_in_charge.all()
-                for idx, task_schedule in enumerate(task_schedules):
-                    if idx + 1 < len(
-                        task_schedules
-                    ):  # Ensure next task exists before accessing
-                        next_task_schedule = task_schedules[
-                            idx + 1
-                        ].plan_start_date
-                    else:
-                        next_task_schedule = None  # No next task
-
-                    prev_task_schedule = (
-                        task_schedules[idx - 1] if idx > 0 else None
-                    )
-                    if (
-                        prev_task_schedule
-                        and task_duration.is_cancel_alert
-                        and prev_task_schedule.plan_end_date
-                        < timezone.now()
-                        >= task_schedule.plan_start_date
-                    ):
-                        task_duration.is_cancel_alert = False
-                        is_send_sk = True
-                        task_duration.save()
-                    diff_time = timezone.now() - task_schedule.plan_end_date
-                    if (
-                        timedelta(minutes=30) <= diff_time
-                        and task_duration.is_cancel_alert is False
-                        and (
-                            next_task_schedule is None
-                            or timezone.now() <= next_task_schedule
-                        )
-                    ):
-                        is_send_sk = True
-                        is_over_estimate = True
-                        break
-                    elif (
-                        timedelta(minutes=2)
-                        >= timezone.now() - task_schedule.plan_start_date
-                        >= timedelta(minutes=0)
-                    ):
-                        is_send_sk = True
-                        is_over_estimate = False
-                        break
+                is_send_sk, is_over_estimate = check_task_overtime(
+                    related_obj, task_duration, timedelta(minutes=35)
+                )
             elif (
                 isinstance(related_obj, Schedule)
                 and task_duration.is_cancel_alert is False
             ):
                 users = related_obj.participants.all()
                 diff_time = timezone.now() - related_obj.end_date
-                if timedelta(minutes=30) <= diff_time:
+                if timedelta(minutes=30) <= diff_time <= timedelta(minutes=35):
                     is_send_sk = True
                     is_over_estimate = True
 

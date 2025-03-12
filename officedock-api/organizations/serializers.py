@@ -14,16 +14,34 @@ from .models import (
 )
 
 
+class OrganizationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Organization.
+    """
+
+    class Meta:
+        model = Organization
+        fields = ["id", "name"]
+
+
 class StatisticCategorySerializer(serializers.ModelSerializer):
     """
     Serializer for statistic category
     """
 
+    organizations = OrganizationSerializer(many=True, read_only=True)
+
     class Meta:
         model = StatisticCategory
-        # FIXME: Check spec implement color of category
-        fields = ["id", "name", "uuid", "color"]
-        read_only_fields = ["id"]
+        fields = [
+            "id",
+            "name",
+            "uuid",
+            "organizations",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate(self, attrs):
         """Handle validate"""
@@ -77,6 +95,7 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
             "small_statistic_category",
             "index",
             "skills",
+            "color",
         ]
 
     def get_skills(self, obj):

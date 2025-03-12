@@ -2,6 +2,13 @@
   border: none !important;
 }
 
+.custom-progress-bar .rc-slider{
+  padding: 0px !important;
+  height: 12px;
+  border: 1px solid #D2DBE1;
+  border-radius: 0px !important;
+}
+
 @keyframes pulse {
   0% {
     box-shadow: 0 0 2px rgba(0, 104, 182, 0.5);

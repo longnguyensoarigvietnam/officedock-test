@@ -1,21 +1,82 @@
 import io
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import random
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.core.files.storage import default_storage, FileSystemStorage
 from django.db.models import Sum, Func
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from djangorestframework_camel_case.parser import CamelCaseJSONParser
 from rest_framework.exceptions import ValidationError
+from google.auth.transport.requests import Request
+from google.cloud import storage
 
 from base.messages import ERROR_MESSAGES
 from calendars.constants import ScheduleCategoryTypes
 from chat.constants import USER_ACTION_GROUP, WebSocketEventType
 from common.constants import STRIP_TAGS
+from organizations.models import OrganizationsStatisticCategories
 from roles.constants import SelectionResultOptions
 from users.models import User, RoleDetail
+
+
+def get_signed_url(file, expiration_seconds=None):
+    """
+    Checks if the default storage is a local file system to generate a signed URL for a given file.
+    """
+
+    # Get file in local disk
+    if isinstance(default_storage, FileSystemStorage):
+        return default_storage.url(file.name)
+
+    # Get file in GCS
+    return generate_signed_url(file.name, expiration_seconds)
+
+
+def generate_signed_url(blob_name: str, expiration_seconds=None) -> str:
+    """
+    Generate a signed URL for the given blob in the specified Google Cloud Storage bucket.
+    """
+    # Retrieve the credentials from the Django settings
+    credentials = settings.GOOGLE_CLOUD_CREDENTIALS
+
+    # Refresh the credentials to ensure we have a valid access token
+    # This is necessary if the token is currently None or expired
+    if (
+        credentials.token is None
+        or not credentials.valid
+        or credentials.expired
+    ):
+        credentials.refresh(Request())
+
+    # Create a Google Cloud Storage client
+    client = storage.Client()
+
+    # Get the specified bucket using its name from settings
+    bucket = client.get_bucket(settings.GS_BUCKET_NAME)
+
+    # Create a blob (reference) for the file in the bucket using the blob name
+    blob = bucket.blob(blob_name)
+
+    # Generate a signed URL for the blob that is valid for a specified duration
+    signed_url = blob.generate_signed_url(
+        version="v4",  # Use version 4 of the signed URL
+        service_account_email=credentials.service_account_email,  # Email of the service account
+        access_token=credentials.token,  # Current access token for authorization
+        expiration=timedelta(
+            seconds=expiration_seconds
+            if expiration_seconds
+            else settings.GS_EXPIRATION
+        ),  # Expiration time for the signed URL
+        method="GET",  # HTTP method that the signed URL allows
+    )
+
+    # Return the signed URL, optionally disabling the toolbar in the viewer
+    return f"{signed_url}#toolbar=0"
 
 
 def generate_unique_code(model, field, length=10):
@@ -179,6 +240,7 @@ def transform_statistic_categories(statistic_categories):
             large_id = large_obj["id"]
             # Initialize large category entry if not present
             if large_id not in large_category_dict:
+                large_obj["color"] = item.get("color")
                 large_category_dict[large_id] = {
                     ScheduleCategoryTypes.LARGE.value: large_obj,
                     ScheduleCategoryTypes.MEDIUM.value: [],
@@ -294,20 +356,28 @@ def transform_statistic_categories(statistic_categories):
     return result
 
 
-def get_common_categories(category):
+def get_common_categories(category, obj=None):
     """Handle transform common category"""
     category_types = [
         ("large_statistic_category", ScheduleCategoryTypes.LARGE.value),
         ("medium_statistic_category", ScheduleCategoryTypes.MEDIUM.value),
         ("small_statistic_category", ScheduleCategoryTypes.SMALL.value),
     ]
-
+    color = None
+    if obj:
+        color = (
+            OrganizationsStatisticCategories.objects.filter(
+                organization_id=obj.organization_id,
+                large_statistic_category=category.large_statistic_category,
+            )
+            .values_list("color", flat=True)
+            .first()
+        )
     return [
         {
             "id": getattr(category, attr).id,
             "name": getattr(category, attr).name,
-            # FIXME: Check spec implement color of category
-            "color": getattr(category, attr).color
+            "color": color
             if type_value == ScheduleCategoryTypes.LARGE.value
             else None,
             "type": type_value,
@@ -359,3 +429,65 @@ def generate_file_name(format: str = "png") -> str:
     current_time = datetime.now().strftime("%Y%m%d%H%M%S%f")
     random_number = random.randint(10000, 99999)
     return f"{current_time}{random_number}.{format}"
+
+
+def check_task_overtime(task, task_duration, limit_time=None):
+    """
+    Handle return boolean if task run overtime or not.
+    """
+    datetime.combine(timezone.now().date(), time.min)
+    is_over_estimate = False
+    is_send_sk = False
+
+    task_schedules = task.task_schedules.all().order_by("plan_start_date")
+    for idx, task_schedule in enumerate(task_schedules):
+        if idx + 1 < len(
+            task_schedules
+        ):  # Ensure next task exists before accessing
+            next_task_schedule = task_schedules[idx + 1].plan_start_date
+        else:
+            next_task_schedule = None  # No next task
+
+        prev_task_schedule = task_schedules[idx - 1] if idx > 0 else None
+        if (
+            prev_task_schedule
+            and task_duration.is_cancel_alert
+            and prev_task_schedule.plan_end_date
+            < timezone.now()
+            >= task_schedule.plan_start_date
+        ):
+            task_duration.is_cancel_alert = False
+            is_send_sk = True
+            task_duration.save()
+        if limit_time:
+            diff_time = (
+                timedelta(minutes=30)
+                <= (timezone.now() - task_schedule.plan_end_date)
+                <= limit_time
+            )
+        else:
+            diff_time = timedelta(minutes=30) <= (
+                timezone.now() - task_schedule.plan_end_date
+            )
+
+        if (
+            diff_time
+            and task_duration.is_cancel_alert is False
+            and (
+                next_task_schedule is None
+                or timezone.now() <= next_task_schedule
+            )
+        ):
+            is_send_sk = True
+            is_over_estimate = True
+            break
+        elif (
+            timedelta(minutes=2)
+            >= timezone.now() - task_schedule.plan_start_date
+            >= timedelta(minutes=0)
+        ):
+            is_send_sk = True
+            is_over_estimate = False
+            break
+
+    return is_send_sk, is_over_estimate

@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from base.apis import BaseAPIViewSet
-from base.messages import ERROR_MESSAGES
+from base.messages import ERROR_MESSAGES, KEYWORDS
 from base.permissions import ActionPermission
 from organizations.models import (
     Organization,
@@ -52,13 +52,19 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     ]
     filterset_class = StatisticCategoryFilter
     screen_name = Screens.CATEGORY.value
+    lookup_field = "uuid"
 
     def get_queryset(self):
         """
         Filtering skill by company
         """
         company = self.request.user.company
-        return super().get_queryset().filter(company=company).order_by("id")
+        queryset = super().get_queryset().filter(company=company)
+
+        if self.action == "list":
+            return queryset.order_by("-id")
+
+        return queryset.order_by("id")
 
     def get_serializer_context(self):
         """
@@ -83,7 +89,13 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             or instance.organizations_small_statistic_categories.exists()
         )
         if check_exists:
-            raise ValidationError({"detail": ERROR_MESSAGES["cannot_delete"]})
+            raise ValidationError(
+                {
+                    "detail": ERROR_MESSAGES["cannot_delete_type"].format(
+                        type=KEYWORDS["category"]
+                    )
+                }
+            )
 
         instance.delete()
 
@@ -315,7 +327,7 @@ class SkillMapViewSet(
     @transaction.atomic
     def destroy_skill_maps(self, request, pk=None):
         """
-        Handle create hierarchical category statistics to each organization
+        Handle destroy skill maps
         """
         organization_id = request.query_params.get("organization_id", None)
         staff_id = request.query_params.get("staff_id", None)
@@ -337,7 +349,9 @@ class SkillMapViewSet(
         if check_is_having_submit:
             raise ValidationError(
                 {
-                    "detail": ERROR_MESSAGES["cannot_delete"],
+                    "detail": ERROR_MESSAGES["cannot_delete_type"].format(
+                        type=KEYWORDS["skill_map"]
+                    ),
                 }
             )
         else:
@@ -393,6 +407,12 @@ class SkillViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         )
 
         if check_exists:
-            raise ValidationError({"detail": ERROR_MESSAGES["cannot_delete"]})
+            raise ValidationError(
+                {
+                    "detail": ERROR_MESSAGES["cannot_delete_type"].format(
+                        type=KEYWORDS["skill"]
+                    )
+                }
+            )
 
         instance.delete()

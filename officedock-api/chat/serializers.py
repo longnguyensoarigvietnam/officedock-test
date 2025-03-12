@@ -5,7 +5,7 @@ from rest_framework.exceptions import NotFound
 
 from base.messages import ERROR_MESSAGES
 from chat.models import ChatMessage, ChatRoom, ChatRoomsParticipants
-from chat.constants import ChatRoomTypes
+from chat.constants import FILE_UPLOAD_MAX_SIZE, ChatRoomTypes
 from common.serializers import (
     CreationDataOrganizationSerializer,
     CreationDataUserWithMainOrganizationSerializer,
@@ -16,6 +16,7 @@ from users.models import User
 from tasks.models import Task
 from chat.models import ChatFile
 from skills.serializers import SkillSerializer
+from common.utils import get_signed_url
 
 
 class CreationDataUserForChatSerializer(serializers.ModelSerializer):
@@ -191,7 +192,9 @@ class ChatFileSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         if instance.compressed_file:
-            representation["compressed_file"] = instance.compressed_file.url
+            representation["compressed_file"] = get_signed_url(
+                instance.compressed_file
+            )
 
         return representation
 
@@ -475,6 +478,14 @@ class SendMessageSerializer(serializers.ModelSerializer):
                 attrs["reply"] = message
             else:
                 raise NotFound({"detail": ERROR_MESSAGES["message_not_exists"]})
+
+        files = attrs.pop("files", None)
+        if files:
+            for file in files:
+                if file.size > FILE_UPLOAD_MAX_SIZE:
+                    raise serializers.ValidationError(
+                        {"detail": ERROR_MESSAGES["max_file_size"]}
+                    )
 
         return attrs
 

@@ -76,6 +76,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
       window.removeEventListener('click', handleClickOutside);
     };
   }, [isDragging]);
+
   useEffect(() => {
     setValue(initialValue);
     if (onChange) onChange(initialValue);
@@ -85,6 +86,36 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
     setValue(initialValue);
     if (onChange) onChange(initialValue);
   }, [resetTrigger, initialValue, onChange]);
+
+  // Create 5 red apartments from the 2nd to the 6th section running from 100% down
+
+  // TODO : Confirm QA
+  // const handleMarkerClick = (markerValue: number) => {
+  //   setValue(markerValue);
+  //   if (onChange) onChange(markerValue);
+  // };
+  // const numMarkers = 6;
+  // const markerValues = [100, 84, 68, 50, 33];
+
+  // const markers = Array.from({ length: numMarkers }, (_, index) => {
+  //   if (index === 5) return null;
+
+  //   const percent = ((numMarkers - index) / numMarkers) * 100;
+  //   const markerValue = markerValues[index];
+
+  //   return (
+  //     <div
+  //       key={index}
+  //       className="absolute w-[2px] z-30 h-[14px] bg-red-500"
+  //       style={{
+  //         left: `${percent}%`,
+  //         transform: 'translateX(-50%)',
+  //         top: '-2px',
+  //       }}
+  //       onClick={() => handleMarkerClick(markerValue)}
+  //     />
+  //   );
+  // });
 
   return (
     <div className="flex w-full items-center gap-2 justify-between">

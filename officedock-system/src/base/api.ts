@@ -6,7 +6,7 @@ import { pageRouters } from '@constants/routers';
 
 const instance: AxiosInstance = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api/v1/system`,
-  timeout: 180000, // Request timeout in milliseconds
+  timeout: 3600000, // Request timeout in milliseconds
 });
 
 // TODO: Implement for refresh token

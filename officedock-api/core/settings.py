@@ -20,6 +20,7 @@ import google.auth
 from urllib.parse import urlparse
 from google.cloud import secretmanager
 from pathlib import Path
+from redis import SSLConnection
 
 
 env = environ.Env(DEBUG=(bool, False))
@@ -63,8 +64,9 @@ if GOOGLE_CLOUD_PROJECT_ID := os.environ.get("GOOGLE_CLOUD_PROJECT_ID", None):
     # https://django-storages.readthedocs.io/en/latest/backends/gcloud.html
 
     GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME", None)
+    GS_EXPIRATION = 60 * 60 * 24 * 7  # Expires in 7 days
     GS_CREDENTIALS = GOOGLE_CLOUD_CREDENTIALS
-    GS_QUERYSTRING_AUTH = False
+    GS_QUERYSTRING_AUTH = True
     GS_DEFAULT_ACL = None
     GS_FILE_OVERWRITE = False
     STORAGES = {
@@ -145,18 +147,21 @@ REDIS_URL = os.getenv("REDIS_URL", None)
 ASGI_APPLICATION = "core.asgi.application"
 
 if REDIS_URL:
-    parsed_redis_url = urlparse(REDIS_URL)
+    redis_config = {
+        "address": REDIS_URL
+    }
+
+    ca_data = os.getenv("REDIS_CA_CERTS", None)
+    if ca_data:
+        redis_config["connection_class"] = SSLConnection
+        redis_config["ssl_ca_data"] = ca_data.replace("\\n", "\n")
+
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
             "CONFIG": {
                 "hosts": [
-                    {
-                        "host": parsed_redis_url.hostname,
-                        "port": parsed_redis_url.port,
-                        "password": parsed_redis_url.password,
-                        "username": parsed_redis_url.username,
-                    }
+                    redis_config
                 ],
             },
         },
