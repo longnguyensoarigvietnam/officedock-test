@@ -479,7 +479,7 @@ class SendMessageSerializer(serializers.ModelSerializer):
             else:
                 raise NotFound({"detail": ERROR_MESSAGES["message_not_exists"]})
 
-        files = attrs.pop("files", None)
+        files = attrs.get("files", None)
         if files:
             for file in files:
                 if file.size > FILE_UPLOAD_MAX_SIZE:
