@@ -317,6 +317,7 @@ export const apiRouters = {
   USER_LIST: '/users/',
   USER_DETAIL: (id: string) => `/users/${id}/`,
   TAG_LIST: '/tags/',
+  HIDDEN_TAG_LIST: '/tags/list-hidden',
   TAG_DETAIL: (id: string) => `/tags/${id}/`,
   DASHBOARD_MEMBER_LIST: '/dashboard/members/',
   MEMO_DETAIL: '/users/memo/',
