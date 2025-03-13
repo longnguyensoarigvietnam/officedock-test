@@ -30,6 +30,7 @@ type Props = {
   classNameOption?: string;
   classNameError?: string;
   classNameTextData?: string;
+  classTextOption?: string;
   placeholder?: string;
   searchOption?: boolean;
   openByDefault?: boolean;
@@ -56,6 +57,7 @@ const Dropdown = ({
   isStatusDropdown,
   labelOptionClass,
   placeholder,
+  classTextOption,
   disabled = false,
   className,
   classNameOption,
@@ -249,7 +251,8 @@ const Dropdown = ({
                           onClick={() => handleOptionClick(option)}>
                           {() => (
                             <>
-                              <div className="flex  items-center w-full">
+                              <div
+                                className={`flex  items-center w-full justify-center ${classTextOption}`}>
                                 {option.imgUrl && (
                                   <ImageRound
                                     src={option.imgUrl}

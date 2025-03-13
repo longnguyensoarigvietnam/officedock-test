@@ -11,6 +11,7 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 import useStatisticTask from '@hooks/useStatisticTask';
 import { formatDateToYMD } from '@utils/date';
+import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 
 type Props = {
   selectedSmall: OptionDropdownType | null;
@@ -58,6 +59,7 @@ const TaskListStatistic = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [ordering, setOrdering] = useState<string>('');
+  const [pageSize, setPageSize] = useState<number>(PAGINATION_PAGE_SIZE_KANBAN);
 
   const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
   const getTotalDuration = () => {
@@ -83,6 +85,7 @@ const TaskListStatistic = ({
       page: currentPage,
       totalDuration: getTotalDuration(),
       ordering: ordering,
+      pageSize: pageSize,
     },
     onSuccess: (data) => {
       if (data) {
@@ -93,6 +96,21 @@ const TaskListStatistic = ({
       }
     },
   });
+
+  const optionList = [
+    {
+      label: '30',
+      value: 30,
+    },
+    {
+      label: '50',
+      value: 50,
+    },
+    {
+      label: '70',
+      value: 70,
+    },
+  ];
 
   return (
     <div
@@ -231,7 +249,7 @@ const TaskListStatistic = ({
               }}
             />
           </div>
-          <div className="flex justify-center">
+          <div className="flex justify-center top-[10px] relative">
             {taskList && taskList.length ? (
               <Pagination
                 onChange={(pageNumber) => setCurrentPage(pageNumber)}
@@ -239,6 +257,23 @@ const TaskListStatistic = ({
                 totalPages={totalPages}
               />
             ) : null}
+            <div className="absolute top-[5px] right-0 w-fit  flex gap-[6px] items-center">
+              <div className="min-w-[66px] flex items-center">
+                <Dropdown
+                  selectedOption={optionList.find(
+                    (item) => item.value === pageSize,
+                  )}
+                  options={optionList}
+                  onChange={(e) => {
+                    setPageSize(e.value as number);
+                  }}
+                  className="h-[34px]  
+                  !text-sm !py-0 !pl-[7px] !pr-0 !text-[#6B7280] mt-1 !bg-white !border-[#77858F]"
+                  classNameOption="[&>li]:!pl-0 [&>li]:!pr-0 [&>li]:!text-sm text-sm [&>li]:!text-black top-[-115px]"
+                />
+              </div>
+              <span className="font-normal text-sm text-black">件ずつ表示</span>
+            </div>
           </div>
         </>
       )}

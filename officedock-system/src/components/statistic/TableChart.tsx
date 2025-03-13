@@ -227,7 +227,7 @@ const TableChart = ({
       cell: (info) => {
         const value = info.getValue() as string;
         return (
-          <div className="font-medium text-[16px] text-left text-black">
+          <div className="font-medium text-[16px] break-all line-clamp-3 text-left text-black">
             {value}
           </div>
         );
@@ -638,11 +638,11 @@ const TableChart = ({
             name: task.title,
             type: task.type,
             organization: task.organization,
-            ratio: String(task.percent),
+            ratio: '',
             tags: task.tags.map((tag) => {
               return {
-                value: tag.id,
-                label: tag.name,
+                value: tag.id as number,
+                label: tag.name as string,
               };
             }),
           };
