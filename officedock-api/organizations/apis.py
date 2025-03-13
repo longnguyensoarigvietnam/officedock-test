@@ -144,7 +144,11 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Checking if there are any users associated with the organization
         if instance.users.count() > 0 or instance.tasks.count() > 0:
             raise ValidationError(
-                {"detail": ERROR_MESSAGES["organization_in_use"]}
+                {
+                    "detail": ERROR_MESSAGES["cannot_delete_type"].format(
+                        type=KEYWORDS["organization"]
+                    )
+                }
             )
 
         return super().perform_destroy(instance)

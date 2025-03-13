@@ -45,6 +45,7 @@ from .serializers import (
     CreationDataTaskStatusSerializer,
     CreationDataUserWithOrganizationSerializer,
     OrganizationWithUserNotHaveSkillMapSerializer,
+    CreationDataOrganizationWithTagSerializer,
 )
 from .utils import (
     send_web_socket_event,
@@ -228,7 +229,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get creation data for Tag
         """
-        tags = request.user.company.tags.order_by("created_at").all()
         status = TaskStatus.objects.order_by("created_at").all()
         organizations = request.user.organizations.order_by("created_at")
         list_cats = []
@@ -249,6 +249,15 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     ],
                 }
             )
+        tags = (
+            request.user.company.tags.filter(
+                is_hidden=False,
+                organizations__in=organizations,
+            )
+            .order_by("created_at")
+            .all()
+            .distinct()
+        )
 
         data = {
             "tags": CreationDataTagSerializer(
@@ -257,7 +266,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             "status": CreationDataTaskStatusSerializer(status, many=True).data,
             "types": [item.value for item in TaskTypes],
             "priorities": [item.value for item in TaskPriorities],
-            "organizations": CreationDataOrganizationSerializer(
+            "organizations": CreationDataOrganizationWithTagSerializer(
                 organizations, many=True
             ).data,
             "organization_categories": list_cats,
@@ -332,10 +341,19 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get creation data for Schedule
         """
-        tags = request.user.company.tags.order_by("created_at").all()
         users = request.user.company.users.order_by("created_at").all()
         organizations = request.user.company.organizations.order_by(
             "created_at"
+        )
+
+        tags = (
+            request.user.company.tags.filter(
+                is_hidden=False,
+                organizations__in=organizations,
+            )
+            .order_by("created_at")
+            .all()
+            .distinct()
         )
 
         data = {
@@ -344,7 +362,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             ).data,
             "tags": BaseTagSerializer(tags, many=True).data,
             "types": [item.value for item in ScheduleTypes],
-            "organizations": CreationDataOrganizationSerializer(
+            "organizations": CreationDataOrganizationWithTagSerializer(
                 organizations, many=True
             ).data,
         }
