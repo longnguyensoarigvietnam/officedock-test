@@ -977,7 +977,7 @@ const ActionsEventModal = ({
                         (element) =>
                           element.value == (value as OptionDropdownType)?.value,
                       )}
-                      placeholder={'大カテゴリ'}
+                      placeholder={'大カテゴリー'}
                       onChange={(e) => {
                         if (e.value != watch('largeCategory.value')) {
                           setValue('mediumCategory', { label: '', value: '' });

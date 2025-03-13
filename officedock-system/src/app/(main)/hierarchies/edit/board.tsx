@@ -10,26 +10,47 @@ import Dropdown from '@components/common/Dropdown';
 import Button from '@components/common/Button';
 
 import useCreationDataStatisticOrganization from '@hooks/useCreationDataStatisticOrganization';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import useCreationOrganization from '@hooks/useCreationOrganization';
+import useCreationDataSkill from '@hooks/useCreationDataSkill';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
   OrganizationCategoryHierarchyDetail,
   StatisticCategory,
 } from '@interfaces/hierarchy';
+import { CreationDataSkill, Skill } from '@interfaces/skills';
 
+import { ScreenName } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
+import { INVALID_CATEGORY_NAME } from '@constants/message';
+import { ALL_TEAMS_OPTION } from '@constants';
+
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
+
 import TableComponent from './form';
 import api from '@base/api';
-import useCreationDataSkill from '@hooks/useCreationDataSkill';
-import { ScreenName } from '@constants/enums';
 
 interface rowDataType {
   id: number | string;
-  large: OptionDropdownType;
-  medium: OptionDropdownType;
-  small: OptionDropdownType;
+  large: {
+    value: string | number;
+    label: string;
+    showBy: string;
+    isValid: boolean;
+  };
+  medium: {
+    value: string | number;
+    label: string;
+    showBy: string;
+    isValid: boolean;
+  };
+  small: {
+    value: string | number;
+    label: string;
+    showBy: string;
+    isValid: boolean;
+  };
   skills: OptionDropdownType[];
   color: string;
 }
@@ -71,16 +92,16 @@ const EditHierarchyForm = () => {
   >([]);
   const [dataOptionsSkill, setDataOptionsSkill] = useState<
     {
-      organizationId: number | string,
+      organizationId: number | string;
       skills: {
         value: number;
         label: string;
-      }[]
+      }[];
     }[]
   >([]);
   const [selectedOrganizationOption, setSelectedOrganizationOption] =
     useState<OptionDropdownType>({
-      label: 'すべてのチーム',
+      label: ALL_TEAMS_OPTION,
       value: '',
     });
   const { creationDataCategoryData } = useCreationDataStatisticOrganization({});
@@ -88,9 +109,10 @@ const EditHierarchyForm = () => {
     organizationId: String(selectedOrganizationOption.value),
     current_screen: ScreenName.CATEGORY_HIERARCHY,
   });
-  const { authenticatedUser } = useAuthenticatedUser();
+  const { creationOrganization } = useCreationOrganization({});
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (creationDataCategoryData && creationDataCategoryData?.length > 0) {
@@ -106,25 +128,39 @@ const EditHierarchyForm = () => {
 
   useEffect(() => {
     if (creationDataSkillData) {
-      setDataOptionsSkill(
-        creationDataSkillData.map((item) => {
-          return {
-            organizationId: item.organization.id,
-            skills: item.skills.map((skill) => {
+      if (selectedOrganizationOption.label == ALL_TEAMS_OPTION) {
+        setDataOptionsSkill(
+          (creationDataSkillData as CreationDataSkill[]).map((item) => {
+            return {
+              organizationId: item.organization.id,
+              skills: item.skills.map((skill: Skill) => {
+                return {
+                  value: skill.id,
+                  label: skill.name,
+                };
+              }),
+            };
+          }),
+        );
+      } else {
+        setDataOptionsSkill([
+          {
+            organizationId: selectedOrganizationOption.value,
+            skills: (creationDataSkillData as Skill[]).map((skill: Skill) => {
               return {
                 value: skill.id,
-                label: skill.name
-              }
-            })
-          };
-        }),
-      );
+                label: skill.name,
+              };
+            }),
+          },
+        ]);
+      }
     }
-  }, [creationDataSkillData]);
+  }, [creationDataSkillData, selectedOrganizationOption]);
 
   useEffect(() => {
-    if (authenticatedUser) {
-      const organizationList = authenticatedUser.organizations.map((org) => {
+    if (creationOrganization) {
+      const organizationList = creationOrganization.map((org) => {
         return {
           value: org.id,
           label: org.name,
@@ -132,13 +168,13 @@ const EditHierarchyForm = () => {
       });
       setOrganizationList([
         {
-          label: 'すべてのチーム',
+          label: ALL_TEAMS_OPTION,
           value: '',
         },
         ...organizationList,
       ]);
     }
-  }, [authenticatedUser]);
+  }, [creationOrganization]);
 
   const handleGetOrganizationCategoryHierarchyList = async () => {
     setIsLoading(true);
@@ -168,23 +204,47 @@ const EditHierarchyForm = () => {
     },
   );
 
-  const handleConfirmUpdateOrganizationCategoryHierarchy = () => {
-    const tempSelectedHierarchiesToUpdate = selectedHierarchiesToUpdate.map(
-      (hierarchy) => {
-        return {
-          ...hierarchy,
-          organizationStatisticCategoryId: isUUID(
-            hierarchy.organizationStatisticCategoryId as string,
-          )
-            ? null
-            : hierarchy.organizationStatisticCategoryId,
-        };
-      },
+  const hasInvalidCategory = (hierarchyList: HierarchyDetail[]): boolean => {
+    return hierarchyList.some((org) =>
+      org.statisticCategories.some(
+        (category) =>
+          (!category.large.isValid && !isUUID(category.large.label)) ||
+          (!category.medium.isValid && !isUUID(category.medium.label)) ||
+          (!category.small.isValid && !isUUID(category.small.label)),
+      ),
     );
-    updateOrganizationCategoryHierarchy({
-      ids: selectedHierarchiesToDelete || [],
-      items: tempSelectedHierarchiesToUpdate,
-    });
+  };
+
+  const handleConfirmUpdateOrganizationCategoryHierarchy = () => {
+    if (!hasInvalidCategory(hierarchyList)) {
+      const tempSelectedHierarchiesToUpdate = selectedHierarchiesToUpdate.map(
+        (hierarchy) => {
+          return {
+            ...hierarchy,
+            organizationStatisticCategoryId: isUUID(
+              hierarchy.organizationStatisticCategoryId as string,
+            )
+              ? null
+              : hierarchy.organizationStatisticCategoryId,
+          };
+        },
+      );
+      updateOrganizationCategoryHierarchy({
+        ids: selectedHierarchiesToDelete
+          ? selectedHierarchiesToDelete
+              .map((hierarchyId) =>
+                !isUUID(hierarchyId) ? hierarchyId : undefined,
+              )
+              .filter((id): id is string => id !== undefined)
+          : [],
+        items: tempSelectedHierarchiesToUpdate,
+      });
+    } else {
+      showToast({
+        variant: 'error',
+        description: INVALID_CATEGORY_NAME,
+      });
+    }
   };
 
   const handleUpdateOrganizationCategoryHierarchyList = async ({
@@ -227,6 +287,8 @@ const EditHierarchyForm = () => {
     handleUpdateOrganizationCategoryHierarchyList,
     {
       onSuccess: async () => {
+        setSelectedHierarchiesToDelete([]);
+        setSelectedHierarchiesToUpdate([]);
         router.push(pageRouters.HIERARCHY_MANAGEMENT.href);
       },
       onSettled: () => {
@@ -242,20 +304,26 @@ const EditHierarchyForm = () => {
       large: {
         label: org.largeStatisticCategory?.name || '',
         value: org.largeStatisticCategory?.uuid || '',
+        showBy: 'pulldown',
+        isValid: true,
       },
       medium: {
         label: org.mediumStatisticCategory?.name || '',
         value: org.mediumStatisticCategory?.uuid || '',
+        showBy: 'pulldown',
+        isValid: true,
       },
       small: {
         label: org.smallStatisticCategory?.name || '',
         value: org.smallStatisticCategory?.uuid || '',
+        showBy: 'pulldown',
+        isValid: true,
       },
       skills: org.skills.map((skill) => {
         return {
           label: skill.name,
-          value: skill.id
-        }
+          value: skill.id,
+        };
       }),
       color: org.color,
     }));
@@ -281,20 +349,26 @@ const EditHierarchyForm = () => {
           large: {
             label: org.largeStatisticCategory?.name || '',
             value: org.largeStatisticCategory?.uuid || '',
+            showBy: 'pulldown',
+            isValid: true,
           },
           medium: {
             label: org.mediumStatisticCategory?.name || '',
             value: org.mediumStatisticCategory?.uuid || '',
+            showBy: 'pulldown',
+            isValid: true,
           },
           small: {
             label: org.smallStatisticCategory?.name || '',
             value: org.smallStatisticCategory?.uuid || '',
+            showBy: 'pulldown',
+            isValid: true,
           },
           skills: org.skills.map((skill) => {
             return {
               label: skill.name,
-              value: skill.id
-            }
+              value: skill.id,
+            };
           }),
           color: org.color,
         }));
@@ -347,7 +421,13 @@ const EditHierarchyForm = () => {
 
         <div className="flex justify-center gap-3 my-7 items-center">
           <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
-            <Button variant="outline" className="w-[100px] !p-0 !h-[34px]">
+            <Button
+              variant="outline"
+              className="w-[100px] !p-0 !h-[34px]"
+              onClick={() => {
+                setSelectedHierarchiesToUpdate([]);
+                setSelectedHierarchiesToDelete([]);
+              }}>
               キャンセル
             </Button>
           </Link>
@@ -364,9 +444,13 @@ const EditHierarchyForm = () => {
           {hierarchyList.map((data) => (
             <TableComponent
               key={data.id}
-              hierarchyList={data} 
+              hierarchyList={data}
               categoryList={categoryList}
-              dataOptionsSkill={dataOptionsSkill.find((options) => options.organizationId == data.id)?.skills || []}
+              dataOptionsSkill={
+                dataOptionsSkill.find(
+                  (options) => options.organizationId == data.id,
+                )?.skills || []
+              }
               organizationName={data.name}
               setHierarchyList={setHierarchyList}
               setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
@@ -376,10 +460,14 @@ const EditHierarchyForm = () => {
         </div>
       ) : (
         <TableComponent
-          hierarchyList={hierarchyList[0]} 
+          hierarchyList={hierarchyList[0]}
           organizationName={hierarchyList[0].name}
           categoryList={categoryList}
-          dataOptionsSkill={dataOptionsSkill.find((options) => options.organizationId == hierarchyList[0].id)?.skills || []}
+          dataOptionsSkill={
+            dataOptionsSkill.find(
+              (options) => options.organizationId == hierarchyList[0].id,
+            )?.skills || []
+          }
           setHierarchyList={setHierarchyList}
           setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
           setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}

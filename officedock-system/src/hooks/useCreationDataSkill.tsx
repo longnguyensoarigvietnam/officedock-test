@@ -3,25 +3,17 @@ import { AxiosError } from 'axios';
 import { useQuery } from 'react-query';
 import { useSession } from 'next-auth/react';
 
-import api from '@base/api';
 import { apiRouters } from '@constants/routers';
+import { CreationDataSkill, Skill } from '@interfaces/skills';
+import api from '@base/api';
 
-interface CreationDataSkill {
-  organization: {
-    id: number;
-    name: string;
-  };
-  skills: {
-    id: number;
-    name: string;
-  }[];
-}
+
 
 interface useCreationDataSkillHooksProps {
   organizationId: string;
   condition?: boolean[];
   current_screen?: string;
-  onSuccess?: (success: CreationDataSkill[]) => void;
+  onSuccess?: (success: CreationDataSkill[] | Skill[]) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
@@ -41,7 +33,7 @@ const useCreationDataSkill = ({
   const getCreationDataSkill = async () => {
     const apiUrl = `${apiRouters.SKILL_CREATION}?organization_id=${organizationId}${current_screen ? `&current_screen=${current_screen}` : ''}`;
 
-    const { data } = await api.get<CreationDataSkill[]>(apiUrl);
+    const { data } = await api.get<CreationDataSkill[] | Skill[]>(apiUrl);
     return data;
   };
 
@@ -57,7 +49,7 @@ const useCreationDataSkill = ({
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: CreationDataSkill[]) => {
+    onSuccess: (response: CreationDataSkill[] | Skill[]) => {
       onSuccess && onSuccess(response);
     },
     onError: (error: AxiosError) => {

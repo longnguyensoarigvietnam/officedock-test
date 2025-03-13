@@ -1,264 +1,242 @@
 'use client';
-import { useMutation } from 'react-query';
 import React, {
   Fragment,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 import { useSession } from 'next-auth/react';
-import { AxiosError } from 'axios';
+import { useMutation } from 'react-query';
+import Link from 'next/link';
 
 import Button from '@components/common/Button';
-import ImageRound from '@components/common/ImageRound';
-import { Table, TableBody, TableHeader } from '@components/common/Table';
-import Pagination from '@components/common/Pagination';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
-import InputSearch from '@components/common/InputSearch';
-import Input from '@components/common/Input';
 import Dropdown from '@components/common/Dropdown';
 
 import { apiRouters, pageRouters } from '@constants/routers';
-import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
-import {
-  ERROR_CREATE_MESSAGE,
-  ERROR_DELETE_MESSAGE,
-  ERROR_UPDATE_MESSAGE,
-  SUCCESS_CREATE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
-  SUCCESS_UPDATE_MESSAGE,
-} from '@constants/message';
+import { ALL_TEAMS_OPTION } from '@constants';
 import { PermissionsSystem } from '@constants/enums';
 
-import { getCategoryFormattedDate } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 
-import useCategoryList from '@hooks/useCategoryList';
-import { useErrorToast } from '@hooks/useErrorToast';
-import useDebounceText from '@hooks/useDebounceText';
+import { OptionDropdownType } from '@interfaces/common';
+import { OrganizationCategoryHierarchyDetail, StatisticCategory } from '@interfaces/hierarchy';
 
+import useCreationOrganization from '@hooks/useCreationOrganization';
 import { LoadingContext } from '@providers/LoadingProvider';
-import { useToast } from '@providers/ToastProvider';
+import HierarchyTable from './table';
 
-import { Category } from '@interfaces/category';
 import api from '@base/api';
-import Link from 'next/link';
+
+interface rowDataType {
+  id: number | string;
+  large: {
+    value: string | number;
+    label: string;
+    showBy: string;
+    isValid: boolean;
+  };
+  medium: {
+    value: string | number;
+    label: string;
+    showBy: string;
+    isValid: boolean;
+  };
+  small: {
+    value: string | number;
+    label: string;
+    showBy: string;
+    isValid: boolean;
+  };
+  skills: OptionDropdownType[];
+  color: string;
+}
+
+interface HierarchyDetail {
+  id: number | string;
+  name: string;
+  statisticCategories: rowDataType[];
+}
 
 const ListHierarchy = () => {
-  const { setIsLoading } = useContext(LoadingContext);
-
   const { data: session } = useSession();
 
-  const showErrorToast = useErrorToast();
+  const [hierarchyList, setHierarchyList] = useState<HierarchyDetail[]>([]);
+  const { setIsLoading } = useContext(LoadingContext);
 
-  const { showToast } = useToast();
-
-  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
-  const [selectedCategoryToDelete, setSelectedCategoryToDelete] =
-    useState<Category | null>(null);
-  const [selectedCategoryToUpdate, setSelectedCategoryToUpdate] = useState<{
-    name: string;
-    uuid: string;
-    status: boolean;
-    action: string;
-  }>({
-    name: '',
-    uuid: '',
-    status: false,
-    action: '',
-  });
-  const categoryNameInputRef = useRef<HTMLInputElement | null>(null);
-
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [totalPages, setTotalPages] = useState<number>(1);
-
-  const [dataCategories, setDataCategories] = useState<Category[]>([]);
+  const [organizationList, setOrganizationList] = useState<
+    OptionDropdownType[]
+  >([]);
 
   // TODO: Update logic sort for multi column
-  const [searchCategoryName, setSearchCategoryName] = useState('');
-  const debouncedFilterByCategoryName = useDebounceText(
-    searchCategoryName,
-    1000,
-  );
-
-  const { categoryList, refetchCategoryList } = useCategoryList(
-    {
-      page: currentPage,
-      pageSize,
-    },
-    {
-      name: debouncedFilterByCategoryName,
-    },
-  );
-
-  useEffect(() => {
-    if (categoryList) {
-      setDataCategories(categoryList.results);
-      setTotalPages(categoryList.numPages);
-    }
-  }, [categoryList]);
-
-  useEffect(() => {
-    if (debouncedFilterByCategoryName) {
-      setCurrentPage(1);
-    }
-  }, [debouncedFilterByCategoryName]);
-
-  // Edit category name
-  const handleEditCategory = async (data: {
-    uuid: string | number;
-    name: string;
-  }) => {
-    return await api.patch(apiRouters.CATEGORY_DETAIL(String(data.uuid)), {
-      name: data.name,
+  const [selectedOrganizationOption, setSelectedOrganizationOption] =
+    useState<OptionDropdownType>({
+      label: ALL_TEAMS_OPTION,
+      value: '',
     });
-  };
-
-  const { mutate: editCategory } = useMutation(
-    'postEditCategory',
-    handleEditCategory,
-    {
-      onSuccess: () => {
-        showToast({
-          description: SUCCESS_UPDATE_MESSAGE,
-        });
-      },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_UPDATE_MESSAGE);
-      },
-      onSettled: () => {
-        setSelectedCategoryToUpdate({
-          uuid: '',
-          name: '',
-          status: false,
-          action: '',
-        });
-        refetchCategoryList();
-      },
-    },
-  );
-
-  // Create category
-  const handleCreateCategory = async (data: { uuid: string; name: string }) => {
-    return await api.post(apiRouters.CATEGORY_LIST, data);
-  };
-
-  const { mutate: createCategory } = useMutation(
-    'postCreateCategory',
-    handleCreateCategory,
-    {
-      onSuccess: () => {
-        showToast({
-          description: SUCCESS_CREATE_MESSAGE,
-        });
-      },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
-        setDataCategories((prev) => {
-          const updatedCategories = [...prev];
-          return updatedCategories.filter(
-            (category) => category.uuid != selectedCategoryToUpdate.uuid,
-          );
-        });
-      },
-      onSettled: () => {
-        setSelectedCategoryToUpdate({
-          uuid: '',
-          name: '',
-          status: false,
-          action: '',
-        });
-        refetchCategoryList();
-      },
-    },
-  );
-
-  // Delete category
-  const handleOpenDeleteCategoryModal = (category: Category) => {
-    setOpenConfirmDeleteModal(true);
-    setSelectedCategoryToDelete(category);
-  };
-
-  const handleConfirmDeleteCategory = () => {
-    if (selectedCategoryToDelete) {
-      setIsLoading(true);
-      deleteCategory(String(selectedCategoryToDelete.uuid));
-      return;
-    }
-  };
-
-  const postDeleteCategory = async (uuid: string) => {
-    const { data: response } = await api.delete(
-      apiRouters.CATEGORY_DETAIL(`${uuid}`),
-    );
-    return response;
-  };
-
-  const { mutate: deleteCategory } = useMutation(postDeleteCategory, {
-    onSuccess: async () => {
-      showToast({
-        description: SUCCESS_DELETE_MESSAGE,
-      });
-      if (dataCategories.length === 1 && currentPage > 1) {
-        // If change current page, useTagList auto recall, just don't need using refetchTagList
-        setCurrentPage(currentPage - 1);
-      } else {
-        refetchCategoryList();
-      }
-      setOpenConfirmDeleteModal(false);
-    },
-    onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
-      setOpenConfirmDeleteModal(false);
-      setIsLoading(false);
-    },
-    onSettled: () => {
-      setSelectedCategoryToDelete(null);
-    },
-  });
+  const { creationOrganization } = useCreationOrganization({});
 
   useEffect(() => {
-    const handleClickOutside = (event: any) => {
-      if (
-        categoryNameInputRef.current &&
-        !categoryNameInputRef.current.contains(event.target)
-      ) {
-        if (selectedCategoryToUpdate.action == 'EDIT') {
-          editCategory({
-            uuid: selectedCategoryToUpdate.uuid,
-            name: selectedCategoryToUpdate.name,
-          });
-        } else {
-          createCategory({
-            uuid: String(selectedCategoryToUpdate.uuid),
-            name: selectedCategoryToUpdate.name,
-          });
-        }
-      }
-    };
+    if (creationOrganization) {
+      const organizationList = creationOrganization.map((org) => {
+        return {
+          value: org.id,
+          label: org.name,
+        };
+      });
+      setOrganizationList([
+        {
+          label: ALL_TEAMS_OPTION,
+          value: '',
+        },
+        ...organizationList,
+      ]);
+    }
+  }, [creationOrganization]);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+  const handleGetOrganizationCategoryHierarchyList = async () => {
+      setIsLoading(true);
+      const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_LIST}`;
+  
+      const { data } =
+        await api.get<OrganizationCategoryHierarchyDetail[]>(apiUrl);
+      return data;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    selectedCategoryToUpdate.uuid,
-    selectedCategoryToUpdate.name,
-    selectedCategoryToUpdate.action,
-  ]);
+  
+    const { mutate: getOrganizationCategoryHierarchyList } = useMutation(
+      'getOrganizationCategoryHierarchyList',
+      handleGetOrganizationCategoryHierarchyList,
+      {
+        onSuccess: async (data) => {
+          const receivedHierarchyList = data.map((result) => ({
+            id: result.id,
+            name: result.name,
+            statisticCategories: mapStatisticCategories(
+              result.statisticCategories,
+            ),
+          }));
+  
+          setHierarchyList(receivedHierarchyList);
+        },
+        onSettled: () => setIsLoading(false),
+      },
+    );
+
+    const mapStatisticCategories = (categories: StatisticCategory[]) => {
+        return categories.map((org) => ({
+          id: org.id,
+          large: {
+            label: org.largeStatisticCategory?.name || '',
+            value: org.largeStatisticCategory?.uuid || '',
+            showBy: 'pulldown',
+            isValid: true,
+          },
+          medium: {
+            label: org.mediumStatisticCategory?.name || '',
+            value: org.mediumStatisticCategory?.uuid || '',
+            showBy: 'pulldown',
+            isValid: true,
+          },
+          small: {
+            label: org.smallStatisticCategory?.name || '',
+            value: org.smallStatisticCategory?.uuid || '',
+            showBy: 'pulldown',
+            isValid: true,
+          },
+          skills: org.skills.map((skill) => {
+            return {
+              label: skill.name,
+              value: skill.id,
+            };
+          }),
+          color: org.color,
+        }));
+      };
+
+      const handleGetOrganizationCategoryHierarchyDetail = async (
+        organizationId: number,
+      ) => {
+        setIsLoading(true);
+        const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_DETAIL(organizationId)}`;
+    
+        const { data } = await api.get<OrganizationCategoryHierarchyDetail>(apiUrl);
+        return data;
+      };
+    
+      const { mutate: getOrganizationCategoryHierarchyDetail } = useMutation(
+        'getOrganizationCategoryHierarchyDetail',
+        handleGetOrganizationCategoryHierarchyDetail,
+        {
+          onSuccess: async (data) => {
+            const statisticCategories = data.statisticCategories.map((org) => ({
+              id: org.id,
+              large: {
+                label: org.largeStatisticCategory?.name || '',
+                value: org.largeStatisticCategory?.uuid || '',
+                showBy: 'pulldown',
+                isValid: true,
+              },
+              medium: {
+                label: org.mediumStatisticCategory?.name || '',
+                value: org.mediumStatisticCategory?.uuid || '',
+                showBy: 'pulldown',
+                isValid: true,
+              },
+              small: {
+                label: org.smallStatisticCategory?.name || '',
+                value: org.smallStatisticCategory?.uuid || '',
+                showBy: 'pulldown',
+                isValid: true,
+              },
+              skills: org.skills.map((skill) => {
+                return {
+                  label: skill.name,
+                  value: skill.id,
+                };
+              }),
+              color: org.color,
+            }));
+            setHierarchyList([
+              {
+                id: data.id,
+                name: data.name,
+                statisticCategories,
+              },
+            ]);
+          },
+          onSettled: () => {
+            setIsLoading(false);
+          },
+        },
+      );
+    
+      useEffect(() => {
+        if (selectedOrganizationOption.value == '') {
+          getOrganizationCategoryHierarchyList();
+        } else {
+          getOrganizationCategoryHierarchyDetail(
+            Number(selectedOrganizationOption.value),
+          );
+        }
+      }, [
+        getOrganizationCategoryHierarchyDetail,
+        getOrganizationCategoryHierarchyList,
+        selectedOrganizationOption.value,
+      ]);
 
   return (
     <Fragment>
       <div className="flex justify-between">
-        <InputSearch
-          placeholder="業務カテゴリーを検索"
-          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
-          iconClassName="w-[14px] h-[14px]"
+        <Dropdown
+          options={organizationList}
+          className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
+          selectedOption={organizationList.find(
+            (element) => element.value == selectedOrganizationOption.value,
+          )}
           onChange={(e) => {
-            setSearchCategoryName(e.target.value);
+            setSelectedOrganizationOption({
+              label: e.label,
+              value: e.value,
+            });
           }}
         />
         <div className="flex gap-2">
@@ -284,171 +262,22 @@ const ListHierarchy = () => {
             )}
         </div>
       </div>
-      <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]">
-        <Table className="bg-white !rounded-lg relative">
-          <TableHeader className="!bg-[#F8FAFC]">
-            <th className="text-left w-[calc((100%_-_680px))] max-w-[calc(100%_-_680px)] border-r-[1px] border-r-[#D2DBE1]">
-              <span className="text-[#77858F] text-[12px] font-medium">
-                業務カテゴリー名
-              </span>
-            </th>
-            <th className="text-left w-[140px] max-w-[140px] border-r-[1px] border-r-[#D2DBE1]">
-              <span className="text-[#77858F] text-[12px] font-medium">
-                登録日
-              </span>
-            </th>
-            <th className="text-left w-[140px] max-w-[140px] border-r-[1px] border-r-[#D2DBE1]">
-              <span className="text-[#77858F] text-[12px] font-medium">
-                更新日
-              </span>
-            </th>
-            <th className="text-left w-[400px] max-w-[400px]">
-              <span className="text-[#77858F] text-[12px] font-medium">
-                業務カテゴリー階層で登録されているチーム
-              </span>
-            </th>
-          </TableHeader>
-          <TableBody>
-            {dataCategories && dataCategories.length ? (
-              dataCategories.map((element, index) => (
-                <tr key={index} className="text-black">
-                  <td className="border-r-[1px] border-r-[#D2DBE1] truncate">
-                    <div className="flex justify-between items-center">
-                      {selectedCategoryToUpdate.uuid == element.uuid &&
-                      selectedCategoryToUpdate.status ? (
-                        <div ref={categoryNameInputRef} className="!w-[93%]">
-                          <Input
-                            placeholder="入力してください"
-                            className="!border-[1px] !border-[#77858F] w-full !text-sm !h-[34px]"
-                            defaultValue={element.name}
-                            onChange={(e) => {
-                              setSelectedCategoryToUpdate((prev) => {
-                                return {
-                                  ...prev,
-                                  name: e.target.value,
-                                };
-                              });
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <p className="text-left truncate max-w-[500px] text-[16px] font-medium">
-                          {element.name}
-                        </p>
-                      )}
-                      <div className="flex gap-3 justify-end">
-                        {session?.user.permissions &&
-                        hasPermissionInArray(
-                          session?.user.permissions,
-                          PermissionsSystem.CATEGORY_UPDATE,
-                        ) ? (
-                          <div>
-                            <ImageRound
-                              name="Edit"
-                              src={'/icons/edit-gray.svg'}
-                              className={`w-3.5 h-3.5 hover:cursor-pointer ${!(selectedCategoryToUpdate.uuid == element.uuid) && 'opacity-45'}`}
-                              onClick={() => {
-                                setSelectedCategoryToUpdate({
-                                  uuid: element.uuid || '',
-                                  name: element.name,
-                                  status: true,
-                                  action: 'EDIT',
-                                });
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-3.5"></div>
-                        )}
-                        {session?.user.permissions &&
-                        hasPermissionInArray(
-                          session?.user.permissions,
-                          PermissionsSystem.CATEGORY_DELETE,
-                        ) ? (
-                          <ImageRound
-                            name="Delete"
-                            src={'/icons/delete-gray.svg'}
-                            className="w-[13px] h-[15px] hover:cursor-pointer"
-                            onClick={() =>
-                              handleOpenDeleteCategoryModal(element)
-                            }
-                          />
-                        ) : (
-                          <div className="w-[13px]"></div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="border-r-[1px] border-r-[#D2DBE1]">
-                    <p className="text-center text-sm font-medium">
-                      {getCategoryFormattedDate(
-                        new Date(element.createdAt || new Date()),
-                      )}
-                    </p>
-                  </td>
-                  <td className="border-r-[1px] border-r-[#D2DBE1]">
-                    <p className="text-center text-sm font-medium">
-                      {getCategoryFormattedDate(
-                        new Date(element.updatedAt || new Date()),
-                      )}
-                    </p>
-                  </td>
-                  <td>
-                    <p className="text-left text-sm font-medium">
-                      {element.organizations
-                        ?.map((org: { id: number; name: string }) => org.name)
-                        .join('/ ')}
-                    </p>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr className="py-5 text-center text-sm leading-6">
-                <td className="h-16" />
-                <td className="absolute whitespace-nowrap top-[54px] left-1/2 transform -translate-x-1/2  py-5 text-center">
-                  {NO_DATA_AVAILABLE}
-                </td>
-              </tr>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex justify-center items-center w-full">
-        <div className="flex justify-center flex-1">
-          {dataCategories && dataCategories.length ? (
-            <Pagination
-              onChange={(pageNumber) => setCurrentPage(pageNumber)}
-              currentPage={currentPage}
-              totalPages={totalPages}
-            />
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-[66px]">
-            <Dropdown
-              options={PAGE_SIZE_OPTIONS}
-              selectedOption={PAGE_SIZE_OPTIONS.find(
-                (element) => element.value == pageSize,
-              )}
-              className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
-              classNameTextData="!text-xs"
-              classActive="!text-sm"
-              classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
-              labelOptionClass="!text-sm font-medium !pl-0.5 !border-b-[1px] !border-[#EBF1F7]"
-              onChange={(e) => {
-                setPageSize(Number(e.value));
-              }}
-            />
+      {selectedOrganizationOption.value === '' ? (
+          <div className="flex flex-col gap-5">
+            {hierarchyList.map((data) => (
+              <HierarchyTable
+                key={data.id}
+                hierarchyList={data}
+                organizationName={data.name}
+              />
+            ))}
           </div>
-          <p className="text-sm">件ずつ表示</p>
-        </div>
-      </div>
-      <ConfirmDeleteModal
-        open={openConfirmDeleteModal}
-        type="集計カテゴリ"
-        onConfirm={handleConfirmDeleteCategory}
-        onClose={() => setOpenConfirmDeleteModal(false)}
-      />
+        ) : (
+          <HierarchyTable
+            hierarchyList={hierarchyList[0]}
+            organizationName={hierarchyList[0].name}
+          />
+        )}
     </Fragment>
   );
 };
