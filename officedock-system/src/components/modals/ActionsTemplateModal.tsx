@@ -264,8 +264,8 @@ const ActionsTemplateModal = ({
       if (dataTemplate.tags) {
         value.tagIds = dataTemplate.tags.map((tag) => {
           return {
-            value: tag.id,
-            label: tag.name,
+            value: String(tag.id),
+            label: String(tag.name),
           };
         });
       }
@@ -424,8 +424,8 @@ const ActionsTemplateModal = ({
       );
       setDataOptionsTagIds(
         creationDataTaskData.tags.map((org) => ({
-          label: org.name,
-          value: org.id,
+          label: String(org.name),
+          value: String(org.id),
         })),
       );
     }

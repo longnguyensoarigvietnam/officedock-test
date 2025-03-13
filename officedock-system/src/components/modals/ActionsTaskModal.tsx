@@ -428,8 +428,8 @@ const ActionsTaskModal = ({
       if (dataTask.tags) {
         value.tagIds = dataTask.tags.map((tag) => {
           return {
-            value: tag.id,
-            label: tag.name,
+            label: String(tag.name),
+            value: String(tag.id),
           };
         });
       }
@@ -658,8 +658,8 @@ const ActionsTaskModal = ({
       );
       setDataOptionsTagIds(
         creationDataTaskData.tags.map((org) => ({
-          label: org.name,
-          value: org.id,
+          label: String(org.name),
+          value: String(org.id),
         })),
       );
     }

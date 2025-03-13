@@ -229,8 +229,8 @@ const DailyReportBoard = () => {
     if (creationDataTaskData) {
       setDataTagsList(
         creationDataTaskData.tags.map((org) => ({
-          label: org.name,
-          value: org.id,
+          label: String(org.name),
+          value: String(org.id),
         })),
       );
     }
