@@ -6,6 +6,7 @@ export interface Tags {
   name?: string;
   organizations?: Organizations[]
   isHidden?: boolean;
+  createdAt?: Date | string
 }
 
 export interface TagFilterFormData {

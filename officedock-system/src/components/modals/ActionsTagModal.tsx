@@ -66,12 +66,12 @@ const ActionsTagModal = ({
     };
     if (dataTag) {
       (value.name = `${dataTag.name}`),
-        (value.organizations = dataTag.organizations.map((org) => {
+        (value.organizations = dataTag.organizations ? dataTag.organizations.map((org) => {
           return {
             label: org.name,
             value: org.id,
           };
-        }));
+        }) : []);
     }
     return value;
     // eslint-disable-next-line react-hooks/exhaustive-deps

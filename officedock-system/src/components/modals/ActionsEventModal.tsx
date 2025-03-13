@@ -246,8 +246,8 @@ const ActionsEventModal = ({
         value.tagIds = dataEvent.tags
           ? dataEvent.tags.map((tag) => {
               return {
-                value: tag.id,
-                label: tag.name,
+                value: String(tag.id),
+                label: String(tag.name),
               };
             })
           : [];
@@ -457,8 +457,8 @@ const ActionsEventModal = ({
       );
       setDataOptionsTagIds(
         creationDataEventCalendar.tags.map((org) => ({
-          label: org.name,
-          value: org.id,
+          label: String(org.name),
+          value: String(org.id),
         })),
       );
       setDataOptionsParticipants(
