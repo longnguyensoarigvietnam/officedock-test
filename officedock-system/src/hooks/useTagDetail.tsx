@@ -5,11 +5,11 @@ import { AxiosError } from 'axios';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
-import { TagDetailData } from '@interfaces/tag';
+import { Tags } from '@interfaces/tag';
 
 interface UseTagDetailHooksProps {
   tagId: string;
-  onSuccess?: (success: TagDetailData) => void;
+  onSuccess?: (success: Tags) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
@@ -27,7 +27,7 @@ const useTagDetail = ({
   const getTagDetail = async () => {
     const apiUrl = apiRouters.TAG_DETAIL(tagId);
 
-    const { data } = await api.get<TagDetailData>(apiUrl);
+    const { data } = await api.get<Tags>(apiUrl);
     return data;
   };
 
@@ -43,7 +43,7 @@ const useTagDetail = ({
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: TagDetailData) => {
+    onSuccess: (response: Tags) => {
       onSuccess && onSuccess(response);
     },
     onError: (error: AxiosError) => {

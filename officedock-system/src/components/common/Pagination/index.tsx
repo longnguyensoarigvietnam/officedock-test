@@ -146,19 +146,20 @@ const Pagination = ({
         <nav
           className="isolate -space-x-px inline-flex rounded gap-2"
           aria-label="Pagination">
-          <a
-            href="#"
-            className={`${sizeClasses} ${styleTag} ${isSpace && 'mr-5'} items-center bg-[#F1F2F4] ${
-              currentNumber === 1 ? 'hover:cursor-default opacity-40' : ''
-            }`}
-            onClick={() => onPageChange(currentNumber - 1)}>
-            <Image
-              src="/icons/chevron-left-pagination.svg"
-              alt="Chevron left"
-              width={7.5}
-              height={13}
-            />
-          </a>
+          {currentNumber != 1 && (
+            <a
+              href="#"
+              className={`${sizeClasses} ${styleTag} ${isSpace && 'mr-5'} items-center`}
+              onClick={() => onPageChange(currentNumber - 1)}>
+              <Image
+                src="/icons/chevron-left-pagination.svg"
+                alt="Chevron left"
+                width={7.5}
+                height={13}
+              />
+            </a>
+          )}
+
           {currentNumber >= pagesToShow && totalPages !== pagesToShow && (
             <>
               {showFirstPages.map((page) => (
@@ -169,7 +170,7 @@ const Pagination = ({
                   className={`${sizeClasses} ${styleTag}   items-center ${
                     page === currentNumber
                       ? `bg-${variant} text-white font-normal`
-                      : 'bg-[#F1F2F4] text-[#6B7280]'
+                      : 'text-[#6B7280]'
                   }`}
                   onClick={() => onPageChange(page)}>
                   {page}
@@ -189,7 +190,7 @@ const Pagination = ({
               className={`${sizeClasses} ${styleTag} z-2 items-center" ${
                 page === currentNumber
                   ? `bg-${variant} text-white font-normal`
-                  : 'bg-[#F1F2F4] text-[#6B7280]'
+                  : 'text-[#6B7280]'
               }`}
               onClick={() => onPageChange(page)}>
               {page}
@@ -218,21 +219,19 @@ const Pagination = ({
                 ))}
               </>
             )}
-          <a
-            className={`${sizeClasses} ${styleTag} ${isSpace && '!ml-5'} items-center bg-[#F1F2F4] ${
-              currentNumber === totalPages
-                ? 'hover:cursor-default opacity-40'
-                : ''
-            } `}
-            onClick={() => onPageChange(currentNumber + 1)}>
-            <Image
-              src="/icons/chevron-left-pagination.svg"
-              alt="Chevron right"
-              width={7.5}
-              height={13}
-              className="rotate-180"
-            />
-          </a>
+          {currentNumber != totalPages && (
+            <a
+              className={`${sizeClasses} ${styleTag} ${isSpace && '!ml-5'} items-center`}
+              onClick={() => onPageChange(currentNumber + 1)}>
+              <Image
+                src="/icons/chevron-left-pagination.svg"
+                alt="Chevron right"
+                width={7.5}
+                height={13}
+                className="rotate-180"
+              />
+            </a>
+          )}
         </nav>
         {showTotal && (
           <p className="text-sm  text-[#6B7280]">ステータス : {totalPages}</p>

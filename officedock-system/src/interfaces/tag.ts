@@ -1,17 +1,11 @@
 import { OptionDropdownType } from './common';
-import { User } from './user';
+import { Organizations } from './organization';
 
 export interface Tags {
-  id: number;
-  name: string;
-  responsiblePerson?: Omit<User, 'role' | 'company' | 'organizations'>;
-  peopleInCharge: Omit<User, 'role' | 'company' | 'organizations'>[];
-}
-export interface TagDetailData {
-  id: number;
-  name: string;
-  responsiblePerson?: Omit<User, 'role' | 'company' | 'organizations'>;
-  peopleInCharge: Omit<User, 'role' | 'company' | 'organizations'>[];
+  id?: number;
+  name?: string;
+  organizations?: Organizations[]
+  isHidden?: boolean;
 }
 
 export interface TagFilterFormData {
@@ -25,14 +19,13 @@ export interface TagId {
   tagId: number | string;
   name?: string;
 }
-export interface CreateTagRequest {
+export interface TagRequest {
   name: string;
-  responsiblePersonId: number | string | null;
-  peopleInChargeIds: PeopleInCharge[];
+  organizationIds: number[];
 }
 
-export interface CreateTagFormData {
+export interface TagFormData {
   name: string;
-  responsiblePersonId: OptionDropdownType;
-  peopleInChargeIds: OptionDropdownType[];
+  organizations: OptionDropdownType[];
+  isHidden?: boolean;
 }

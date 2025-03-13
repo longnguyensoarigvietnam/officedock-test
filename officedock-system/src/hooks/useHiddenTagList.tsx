@@ -15,8 +15,7 @@ import { AxiosError } from 'axios';
 
 interface FilterProps {
   tagName?: string;
-  organizationIds?: string;
-  isHidden?: boolean;
+  personInChargeName?: string;
 }
 
 interface PaginationProps {
@@ -24,16 +23,18 @@ interface PaginationProps {
   pageSize?: number;
 }
 
-const useTagList = ({
+const useHiddenTagList = ({
   pagination,
   filter,
+  ordering,
   onSuccess,
   onError,
   onSettled,
 }: {
   pagination?: PaginationProps;
   filter?: FilterProps;
-  onSuccess?: (success: BasePagination<Tags[]>) => void;
+  ordering?: string;
+  onSuccess?: (success: Tags[]) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }) => {
@@ -43,12 +44,12 @@ const useTagList = ({
   const { setIsLoading } = useContext(LoadingContext);
 
   // Handle call API get tag list
-  const getTagList = async () => {
+  const getHiddenTagList = async () => {
     setIsLoading(true);
 
     const apiUrl = pagination?.page
-      ? `${apiRouters.TAG_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${filter?.tagName ? `&name=${filter.tagName}` : ''}${filter?.organizationIds ? `&organization_ids=${filter.organizationIds}` : ''}${`&is_hidden=${filter?.isHidden || false}`}`
-      : `${apiRouters.TAG_LIST}`;
+      ? `${apiRouters.HIDDEN_TAG_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${ordering ? `&ordering=${ordering}` : ''}${filter?.tagName ? `&name=${filter.tagName}` : ''}${filter?.personInChargeName ? `&responsible_person=${filter.personInChargeName}` : ''}`
+      : `${apiRouters.HIDDEN_TAG_LIST}`;
 
     const { data } = await api.get<BasePagination<Tags[]>>(apiUrl);
     return data;
@@ -56,17 +57,17 @@ const useTagList = ({
 
   // Handle API get tag list
   const {
-    data: tagList,
-    refetch: refetchTagList,
-    isFetched: isFetchedTags,
+    data: hiddenTagList,
+    refetch: refetchHiddenTagList,
+    isFetched: isFetchedHiddenTags,
   } = useQuery({
-    queryKey: ['getTagList', [pagination, filter]],
-    queryFn: getTagList,
+    queryKey: ['getHiddenTagList', [pagination, filter, ordering]],
+    queryFn: getHiddenTagList,
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: BasePagination<Tags[]>) => {
+    onSuccess: (response: Tags[]) => {
       onSuccess && onSuccess(response);
     },
     onError: (error: AxiosError) => {
@@ -74,11 +75,10 @@ const useTagList = ({
     },
     onSettled: () => {
       onSettled && onSettled();
-      setIsLoading(false);
     },
   });
 
-  return { tagList, refetchTagList, isFetchedTags };
+  return { hiddenTagList, refetchHiddenTagList, isFetchedHiddenTags };
 };
 
-export default useTagList;
+export default useHiddenTagList;

@@ -392,3 +392,9 @@ export enum ReactionIconValue {
   HAND = 4,
   SMILE = 5,
 }
+
+export enum ActionsModal {
+  EDIT = 'EDIT',
+  CREATE = 'CREATE',
+  DELETE = 'DELETE',
+}
