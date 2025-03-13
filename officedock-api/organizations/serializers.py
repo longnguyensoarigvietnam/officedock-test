@@ -591,9 +591,15 @@ class OrgCategoryHierarchySerializer(serializers.ModelSerializer):
         queryset=Organization.objects.all(),
         write_only=True,
     )
-    large_statistic_category = StatisticCategoryFieldSerializer()
-    medium_statistic_category = StatisticCategoryFieldSerializer()
-    small_statistic_category = StatisticCategoryFieldSerializer()
+    large_statistic_category = StatisticCategoryFieldSerializer(
+        allow_null=True, required=False
+    )
+    medium_statistic_category = StatisticCategoryFieldSerializer(
+        allow_null=True, required=False
+    )
+    small_statistic_category = StatisticCategoryFieldSerializer(
+        allow_null=True, required=False
+    )
     skill_ids = serializers.PrimaryKeyRelatedField(
         source="skills",
         queryset=Skill.objects.all(),

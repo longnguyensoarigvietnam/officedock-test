@@ -388,7 +388,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter("organization_id", type=int, required=True),
+            OpenApiParameter("organization_id", type=int, required=False),
         ],
     )
     @action(
@@ -401,12 +401,44 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get all organization skills
         """
-        organization_id = request.query_params.get("organization_id")
+        organization_id = request.query_params.get("organization_id", None)
+        company = request.user.company
 
         if not organization_id:
-            return self.response_ok([])
+            orgs = Organization.objects.filter(company=company)
+            results = []
+            for org in orgs:
+                skills = (
+                    OrganizationsSkills.objects.filter(
+                        company=company, organization_id=org.id
+                    )
+                    .select_related("skill")
+                    .order_by("id")
+                    .distinct()
+                )
 
-        company = request.user.company
+                unique_skills = {
+                    (id, name)
+                    for id, name in skills.values_list(
+                        "skill__id", "skill__name"
+                    )
+                }
+
+                results.append(
+                    {
+                        "organization": {
+                            "id": org.id,
+                            "name": org.name,
+                        },
+                        "skills": [
+                            {"id": id, "name": name}
+                            for id, name in unique_skills
+                        ],
+                    }
+                )
+
+            return self.response_ok(results)
+
         skills = (
             OrganizationsSkills.objects.filter(
                 company=company, organization_id=organization_id
@@ -416,11 +448,13 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             .distinct()
         )
 
+        unique_skills = {
+            (id, name)
+            for id, name in skills.values_list("skill__id", "skill__name")
+        }
+
         return self.response_ok(
-            [
-                {"id": id, "name": name}
-                for id, name in skills.values_list("skill__id", "skill__name")
-            ]
+            [{"id": id, "name": name} for id, name in unique_skills]
         )
 
     @action(methods=["GET"], detail=False, url_path="tags")
