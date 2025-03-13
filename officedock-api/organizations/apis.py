@@ -548,6 +548,7 @@ class OrganizationCategoryHierarchyViewSet(
     queryset = Organization.objects.all()
     serializer_class = OrganizationCategoryHierarchySerializer
     permission_classes = [ActionPermission]
+    pagination_class = None
     screen_name = Screens.CATEGORY_HIERARCHY.value
 
     def get_queryset(self):
@@ -558,10 +559,19 @@ class OrganizationCategoryHierarchyViewSet(
         user = self.request.user
         company = user.company
 
+        return super().get_queryset().filter(company=company)
+
+    def get_serializer_class(self):
+        """Custom serializer class"""
+        if self.action == "create":
+            return OrganizationCategoryHierarchyForCreateSerializer
+
+        return super().get_serializer_class()
+
+    def list(self, request, *args, **kwargs):
+        """Get list organiztion statistic category"""
         queryset = (
-            super()
-            .get_queryset()
-            .filter(company=company)
+            self.get_queryset()
             .filter(
                 Exists(
                     OrganizationsStatisticCategories.objects.filter(
@@ -576,15 +586,9 @@ class OrganizationCategoryHierarchyViewSet(
             )
             .order_by("-latest_stat_category")
         )
-
-        return queryset
-
-    def get_serializer_class(self):
-        """Custom serializer class"""
-        if self.action == "create":
-            return OrganizationCategoryHierarchyForCreateSerializer
-
-        return super().get_serializer_class()
+        return self.response_ok(
+            OrganizationCategoryHierarchySerializer(queryset, many=True).data
+        )
 
     def get_serializer_context(self):
         """
