@@ -11,10 +11,15 @@ steps:
         --substitutions=\
         TAG_NAME=$TAG_NAME,\
         COMMIT_SHA=$COMMIT_SHA,\
-        _NETWORK=$_API_NETWORK,\
-        _SUBNET=$_API_SUBNET,\
+        _NETWORK=$_NETWORK,\
+        _CR_EGRESS_SUBNET=$_API_CR_EGRESS_SUBNET,\
         _CR_INGRESS=$_API_CR_INGRESS,\
         _CR_VPC_EGRESS=$_API_CR_VPC_EGRESS,\
+        _CR_CPU=$_API_CR_CPU,\
+        _CR_MEMORY=$_API_CR_MEMORY,\
+        _CR_CONCURRENCY=$_API_CR_CONCURRENCY,\
+        _CR_MIN_INSTANCES=$_API_CR_MIN_INSTANCES,\
+        _CR_MAX_INSTANCES=$_API_CR_MAX_INSTANCES,\
         _CR_ALLOW_AUTHENTICATED=$_API_CR_ALLOW_AUTHENTICATED,\
         _GUNICORN_WORKERS_COUNT=$_API_GUNICORN_WORKERS_COUNT,\
         _GUNICORN_THREADS_COUNT=$_API_GUNICORN_THREADS_COUNT,\
@@ -35,10 +40,15 @@ steps:
         --substitutions=\
         TAG_NAME=$TAG_NAME,\
         COMMIT_SHA=$COMMIT_SHA,\
-        _NETWORK=$_SYSTEM_NETWORK,\
-        _SUBNET=$_SYSTEM_SUBNET,\
+        _NETWORK=$_NETWORK,\
+        _CR_EGRESS_SUBNET=$_SYSTEM_CR_EGRESS_SUBNET,\
         _CR_INGRESS=$_SYSTEM_CR_INGRESS,\
         _CR_VPC_EGRESS=$_SYSTEM_CR_VPC_EGRESS,\
+        _CR_CPU=$_SYSTEM_CR_CPU,\
+        _CR_MEMORY=$_SYSTEM_CR_MEMORY,\
+        _CR_CONCURRENCY=$_SYSTEM_CR_CONCURRENCY,\
+        _CR_MIN_INSTANCES=$_SYSTEM_CR_MIN_INSTANCES,\
+        _CR_MAX_INSTANCES=$_SYSTEM_CR_MAX_INSTANCES,\
         _CR_SERVICE_ACCOUNT=$_SYSTEM_CR_SERVICE_ACCOUNT",
       ]
     entrypoint: bash
@@ -56,10 +66,15 @@ steps:
         --substitutions=\
         TAG_NAME=$TAG_NAME,\
         COMMIT_SHA=$COMMIT_SHA,\
-        _NETWORK=$_ADMIN_NETWORK,\
-        _SUBNET=$_ADMIN_SUBNET,\
+        _NETWORK=$_NETWORK,\
+        _CR_EGRESS_SUBNET=$_ADMIN_CR_EGRESS_SUBNET,\
         _CR_INGRESS=$_ADMIN_CR_INGRESS,\
         _CR_VPC_EGRESS=$_ADMIN_CR_VPC_EGRESS,\
+        _CR_CPU=$_ADMIN_CR_CPU,\
+        _CR_MEMORY=$_ADMIN_CR_MEMORY,\
+        _CR_CONCURRENCY=$_ADMIN_CR_CONCURRENCY,\
+        _CR_MIN_INSTANCES=$_ADMIN_CR_MIN_INSTANCES,\
+        _CR_MAX_INSTANCES=$_ADMIN_CR_MAX_INSTANCES,\
         _CR_SERVICE_ACCOUNT=$_ADMIN_CR_SERVICE_ACCOUNT",
       ]
     entrypoint: bash
@@ -68,26 +83,50 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 substitutions:
+  ######################
+  # Required variables #
+  ######################
+  _NETWORK: # e.g. app-network
+  _API_CR_EGRESS_SUBNET: # e.g. api-subnet
+  _SYSTEM_CR_EGRESS_SUBNET: # e.g. system-subnet
+  _ADMIN_CR_EGRESS_SUBNET: # e.g. admin-subnet
+
+  # e.g. <SA_NAME>@<PROJECT_ID>.iam.gserviceaccount.com
+  _API_CR_SERVICE_ACCOUNT:
+  _SYSTEM_CR_SERVICE_ACCOUNT:
+  _ADMIN_CR_SERVICE_ACCOUNT:
+
+  ######################
+  # Optional variables #
+  ######################
+  # default values ​​will be used if not set
+
   # API substitutions
-  _API_NETWORK: NETWORK_NAME # e.g. my-network
-  _API_SUBNET: SUBENET_NAME # e.g. my-subnet
   _API_CR_INGRESS: internal # all / internal / internal-and-cloud-load-balancing
-  _API_CR_VPC_EGRESS: private-ranges-only # all / all-trafic / private-ranges-only
-  _API_CR_ALLOW_AUTHENTICATED: --no-allow-unauthenticated # or --allow-unauthenticated
-  _API_CR_SERVICE_ACCOUNT: SERVICE_ACCOUNT_NAME
+  _API_CR_VPC_EGRESS: all-traffic # all / all-traffic / private-ranges-only
+  _API_CR_ALLOW_AUTHENTICATED: --allow-unauthenticated # --[no]-allow-unauthenticated
+  _API_CR_CPU: "1"
+  _API_CR_MEMORY: "512Mi"
+  _API_CR_CONCURRENCY: "50"
+  _API_CR_MIN_INSTANCES: "0" # "0" means cold start
+  _API_CR_MAX_INSTANCES: "50"
   _API_GUNICORN_WORKERS_COUNT: "1"
   _API_GUNICORN_THREADS_COUNT: "8"
 
   # System substitutions
-  _SYSTEM_NETWORK: NETWORK_NAME # e.g. my-network
-  _SYSTEM_SUBNET: SUBENET_NAME # e.g. my-subnet
   _SYSTEM_CR_INGRESS: internal-and-cloud-load-balancing # all / internal / internal-and-cloud-load-balancing
-  _SYSTEM_CR_VPC_EGRESS: private-ranges-only # all / all-trafic / private-ranges-only
-  _SYSTEM_CR_SERVICE_ACCOUNT: SERVICE_ACCOUNT_NAME
+  _SYSTEM_CR_VPC_EGRESS: all-traffic # all / all-traffic / private-ranges-only
+  _SYSTEM_CR_CPU: "1"
+  _SYSTEM_CR_MEMORY: "512Mi"
+  _SYSTEM_CR_CONCURRENCY: "50"
+  _SYSTEM_CR_MIN_INSTANCES: "0" # "0" means cold start
+  _SYSTEM_CR_MAX_INSTANCES: "50"
 
   # Admin substitutions
-  _ADMIN_NETWORK: NETWORK_NAME # e.g. my-network
-  _ADMIN_SUBNET: SUBENET_NAME # e.g. my-subnet
   _ADMIN_CR_INGRESS: internal-and-cloud-load-balancing # all / internal / internal-and-cloud-load-balancing
-  _ADMIN_CR_VPC_EGRESS: private-ranges-only # all / all-trafic / private-ranges-only
-  _ADMIN_CR_SERVICE_ACCOUNT: SERVICE_ACCOUNT_NAME
+  _ADMIN_CR_VPC_EGRESS: all-traffic # all / all-traffic / private-ranges-only
+  _ADMIN_CR_CPU: "1"
+  _ADMIN_CR_MEMORY: "512Mi"
+  _ADMIN_CR_CONCURRENCY: "50"
+  _ADMIN_CR_MIN_INSTANCES: "0" # "0" means cold start
+  _ADMIN_CR_MAX_INSTANCES: "50"

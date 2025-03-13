@@ -48,7 +48,7 @@ steps:
         --set-env-vars SECRET_PREFIX=PROD \
         --max-retries 1 \
         --network $_NETWORK \
-        --subnet $_SUBNET \
+        --subnet $_CR_EGRESS_SUBNET \
         --vpc-egress private-ranges-only \
         --command 'bash' \
         --args '/code/migrate-production.sh' \
@@ -74,22 +74,27 @@ steps:
       - |
         set -eux
 
-        # Replace dot with hyphen. (e.g. 1.0.0 -> 1-0-0)
+        # Replace dot with hyphen. (e.g. v1.0.0 -> v1-0-0)
         NORMALIZED_TAG_NAME="$(echo "$TAG_NAME" | sed 's/\./-/g')"
 
         gcloud run deploy $$_API_SERVICE_NAME \
           --image $$_API_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
           --region $$_API_REGION \
-          --tag "v$$NORMALIZED_TAG_NAME" \
+          --tag "$$NORMALIZED_TAG_NAME" \
           --port 8080 \
           --service-account $_CR_SERVICE_ACCOUNT \
           --network $_NETWORK \
-          --subnet $_SUBNET \
+          --subnet $_CR_EGRESS_SUBNET \
           --ingress $_CR_INGRESS \
           --vpc-egress $_CR_VPC_EGRESS \
           --add-cloudsql-instances $$_API_CLOUD_SQL_INSTANCE \
           --set-env-vars SECRET_PREFIX=PROD,WORKERS_COUNT=$_GUNICORN_WORKERS_COUNT,THREADS_COUNT=$_GUNICORN_THREADS_COUNT \
-          $_CR_ALLOW_AUTHENTICATED
+          $_CR_ALLOW_AUTHENTICATED \
+          --cpu=$_CR_CPU \
+          --memory=$_CR_MEMORY \
+          --concurrency $_CR_CONCURRENCY \
+          --min-instances $_CR_MIN_INSTANCES \
+          --max-instances $_CR_MAX_INSTANCES
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -97,14 +102,22 @@ options:
 # Please configure these substitutions in Cloud Build trigger.
 substitutions:
   # They should match the name of VPC and subnet
-  _NETWORK: NETWORK_NAME # e.g. my-network
-  _SUBNET: SUBENET_NAME # e.g. my-subnet
+  _NETWORK:
+  _CR_EGRESS_SUBNET:
+  _CR_SERVICE_ACCOUNT:
+
+  # Cloud Run settings
   _CR_INGRESS: internal # all / internal / internal-and-cloud-load-balancing
-  _CR_VPC_EGRESS: private-ranges-only # all / all-trafic / private-ranges-only
-  _CR_ALLOW_AUTHENTICATED: --no-allow-unauthenticated # or --allow-unauthenticated
+  _CR_VPC_EGRESS: all-traffic # all / all-traffic / private-ranges-only
+  _CR_ALLOW_AUTHENTICATED: --allow-unauthenticated # --[no]-allow-unauthenticated
+  _CR_CPU: "1"
+  _CR_MEMORY: "512Mi"
+  _CR_CONCURRENCY: "50"
+  _CR_MIN_INSTANCES: "0" # "0" means cold start
+  _CR_MAX_INSTANCES: "50"
+  # Django settings
   _GUNICORN_WORKERS_COUNT: "1"
   _GUNICORN_THREADS_COUNT: "8"
-  _CR_SERVICE_ACCOUNT: SERVICE_ACCOUNT_NAME
 
 # Setting SecretManger
 availableSecrets:
