@@ -1,14 +1,15 @@
 from datetime import datetime, time, timedelta
 import re
+from itertools import chain
 
 from django.db.models import (
-    Case,
-    DurationField,
-    ExpressionWrapper,
-    F,
     Q,
-    Sum,
+    ExpressionWrapper,
+    Case,
     When,
+    DurationField,
+    F,
+    Sum,
 )
 from django.db.models.functions import Now, Coalesce
 from django.utils import timezone
@@ -19,17 +20,37 @@ from rest_framework.exceptions import ValidationError, NotFound
 
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
+from base.paginations import BasePagination
 from calendars.models import Schedule
 from common.constants import DATE_REGEX, BASE_DATE_FORMAT
 from common.utils import (
     format_duration,
-    time_to_timedelta,
+    time_str_to_timedelta,
     transform_statistic_categories,
     generate_random_color,
 )
 from organizations.models import Organization, OrganizationsStatisticCategories
 from organizations.serializers import OrganizationDetailSerializer
-from stat_data.serializers import DailyTaskSerializer, DailyEventSerializer
+from stat_data.constants import NONE_CATEGORY
+from stat_data.serializers import (
+    DailyEventSerializer,
+    DailyTaskSerializer,
+    StatisticTaskSerializer,
+    StatisticEventSerializer,
+)
+from stat_data.utils import (
+    annotate_duration,
+    aggregate_durations,
+    process_categories,
+    get_duration_of_category,
+    merge_task_and_event,
+    get_list_models,
+    aggregate_durations_by_tag,
+    process_tags,
+    process_category_per_user,
+    process_merge_card_per_tag,
+)
+from tasks.constants import TaskCategoryTypes
 from tasks.models import Task, TaskDuration
 from tasks.utils import split_date_range
 from users.models import User
@@ -268,7 +289,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         total_duration = timedelta()
 
         for task in data["tasks"]:
-            total_duration += time_to_timedelta(task["total_duration"])
+            total_duration += time_str_to_timedelta(task["total_duration"])
 
         def get_category_durations(queryset):
             """
@@ -362,7 +383,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             category_color = cat["category_color"]
             percent_per_total_duration = (
                 (
-                    time_to_timedelta(category_duration).total_seconds()
+                    time_str_to_timedelta(category_duration).total_seconds()
                     / total_duration.total_seconds()
                     * 100
                 )
@@ -510,7 +531,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     total_duration = timedelta()
 
                     for task in merged_duration:
-                        total_duration += time_to_timedelta(
+                        total_duration += time_str_to_timedelta(
                             task["total_duration"]
                         )
                     confirm_report = user.reported_confirmations.filter(
@@ -538,3 +559,693 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 )
 
         return self.response_ok(data["list"])
+
+
+@extend_schema(tags=["System > Statistics"])
+class StatisticViewSet(BaseAPIViewSet):
+    """API endpoint for statistics"""
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                BasePagination.page_query_param,
+                type=int,
+                description=BasePagination.page_query_description,
+            ),
+            OpenApiParameter(
+                BasePagination.page_size_query_param,
+                type=int,
+                description=BasePagination.page_size_query_description,
+            ),
+            OpenApiParameter(name="from_date", type=datetime),
+            OpenApiParameter(name="end_date", type=datetime),
+            OpenApiParameter(name="organization_ids", type=str),
+            OpenApiParameter(name="large_category_id", type=str),
+            OpenApiParameter(name="medium_category_id", type=str),
+            OpenApiParameter(name="small_category_id", type=str),
+            OpenApiParameter(name="tag_ids", type=str),
+            OpenApiParameter(name="total_duration", type=str),
+            OpenApiParameter(name="ordering", type=str),
+        ]
+    )
+    @action(
+        detail=False,
+        methods=["GET"],
+        url_path="tasks",
+        serializer_class=None,
+    )
+    def tasks(self, request):
+        """
+        Return list of task and event
+        """
+        user = request.user
+        organization_ids_param = request.query_params.get("organization_ids")
+        large_category_id = request.query_params.get("large_category_id")
+        medium_category_id = request.query_params.get("medium_category_id")
+        small_category_id = request.query_params.get("small_category_id")
+        tag_ids_param = request.query_params.get("tag_ids")
+        organization_ids = []
+        tag_ids = []
+        from_date = request.query_params.get("from_date")
+        end_date = request.query_params.get("end_date")
+        total_duration = request.query_params.get("total_duration")
+        ordering = request.query_params.get("ordering")
+        # Validate date format using regex
+        if (
+            not from_date
+            or not end_date
+            or not re.match(DATE_REGEX, from_date)
+            or not re.match(DATE_REGEX, end_date)
+        ):
+            raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+
+        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
+        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        start_of_day = datetime.combine(from_date, time.min)
+        end_of_day = datetime.combine(end_date, time.max)
+        if organization_ids_param is None:
+            organization_ids = user.organizations.all().values_list(
+                "id", flat=True
+            )
+        else:
+            for id in organization_ids_param.split(","):
+                try:
+                    organization_ids.append(int(id))
+                except ValueError:
+                    continue
+        if tag_ids_param:
+            for id in tag_ids_param.split(","):
+                try:
+                    tag_ids.append(int(id))
+                except ValueError:
+                    continue
+        tasks, events = get_list_models(
+            start_of_day,
+            end_of_day,
+            organizations=organization_ids,
+            users=[user],
+            tags=tag_ids,
+        )
+        filters = Q()
+        if large_category_id and large_category_id != NONE_CATEGORY:
+            filters &= Q(
+                categories__large_statistic_category__id=large_category_id
+            )
+        elif large_category_id == NONE_CATEGORY:
+            filters &= Q(categories__large_statistic_category__isnull=True)
+        if medium_category_id and medium_category_id != NONE_CATEGORY:
+            filters &= Q(
+                categories__medium_statistic_category__id=medium_category_id
+            )
+        elif medium_category_id == NONE_CATEGORY:
+            filters &= Q(categories__medium_statistic_category__isnull=True)
+        if small_category_id and small_category_id != NONE_CATEGORY:
+            filters &= Q(
+                categories__small_statistic_category__id=small_category_id
+            )
+        elif small_category_id == NONE_CATEGORY:
+            filters &= Q(
+                categories__small_statistic_category__isnull=small_category_id
+            )
+
+        tasks = tasks.filter(filters)
+        events = events.filter(filters)
+
+        list_task = StatisticTaskSerializer(
+            tasks,
+            many=True,
+            context={
+                "start_of_day": start_of_day,
+                "end_of_day": end_of_day,
+                "total_duration": total_duration,
+            },
+        ).data
+        list_event = StatisticEventSerializer(
+            events,
+            many=True,
+            context={
+                "start_of_day": start_of_day,
+                "end_of_day": end_of_day,
+                "total_duration": total_duration,
+            },
+        ).data
+        merged_duration = list(chain(list_task, list_event))
+        if ordering:
+            # Sort by created_at in descending order (newest first)
+            merged_duration = sorted(
+                merged_duration, key=lambda x: x[ordering], reverse=True
+            )
+
+        paginator = self.pagination_class()
+        paginated_data = paginator.paginate_queryset(merged_duration, request)
+
+        return paginator.get_paginated_response(paginated_data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="from_date", type=datetime),
+            OpenApiParameter(name="end_date", type=datetime),
+            OpenApiParameter(name="organization_ids", type=str),
+            OpenApiParameter(name="large_category_id", type=str),
+            OpenApiParameter(name="medium_category_id", type=str),
+            OpenApiParameter(name="tag_ids", type=str),
+        ]
+    )
+    @action(
+        detail=False,
+        methods=["GET"],
+        url_path="categories",
+        serializer_class=None,
+    )
+    def categories(self, request):
+        """
+        Returns a list of statistic all categories.
+        """
+        user = request.user
+        organization_ids_param = request.query_params.get("organization_ids")
+        large_category_id = request.query_params.get("large_category_id")
+        medium_category_id = request.query_params.get("medium_category_id")
+        tag_ids_param = request.query_params.get("tag_ids")
+        organization_ids = []
+        tag_ids = []
+        from_date = request.query_params.get("from_date")
+        end_date = request.query_params.get("end_date")
+        # Validate date format using regex
+        if (
+            not from_date
+            or not end_date
+            or not re.match(DATE_REGEX, from_date)
+            or not re.match(DATE_REGEX, end_date)
+        ):
+            raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+
+        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
+        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        start_of_day = datetime.combine(from_date, time.min)
+        end_of_day = datetime.combine(end_date, time.max)
+        if organization_ids_param is None:
+            organization_ids = user.organizations.all().values_list(
+                "id", flat=True
+            )
+        else:
+            for id in organization_ids_param.split(","):
+                try:
+                    organization_ids.append(int(id))
+                except ValueError:
+                    continue
+        if tag_ids_param:
+            for id in tag_ids_param.split(","):
+                try:
+                    tag_ids.append(int(id))
+                except ValueError:
+                    continue
+        data = {}
+        if organization_ids:
+            tasks, events = get_list_models(
+                start_of_day, end_of_day, organization_ids, [user], tag_ids
+            )
+
+            total_duration = timedelta()
+            merged_duration = merge_task_and_event(
+                tasks, events, start_of_day, end_of_day
+            )
+            for task in merged_duration:
+                total_duration += time_str_to_timedelta(task["total_duration"])
+
+            category_list = aggregate_durations(
+                annotate_duration(tasks, start_of_day, end_of_day),
+                annotate_duration(events, start_of_day, end_of_day),
+            )
+            data["total_duration"] = format_duration(total_duration)
+
+            # Process large categories
+            if category_list:
+                data["large_categories"] = process_categories(
+                    category_list,
+                    total_duration,
+                    tasks,
+                    events,
+                    start_of_day,
+                    end_of_day,
+                    TaskCategoryTypes.LARGE.value,
+                    is_with_tasks=True,
+                )
+                # Process medium categories if large_category_id is provided
+                if large_category_id:
+                    duration = get_duration_of_category(
+                        data["large_categories"], large_category_id
+                    )
+                    category_list = aggregate_durations(
+                        annotate_duration(tasks, start_of_day, end_of_day),
+                        annotate_duration(events, start_of_day, end_of_day),
+                        large_category_id,
+                    )
+                    data["medium_categories"] = process_categories(
+                        category_list,
+                        duration,
+                        tasks,
+                        events,
+                        start_of_day,
+                        end_of_day,
+                        TaskCategoryTypes.MEDIUM.value,
+                        is_with_tasks=True,
+                    )
+                # Process small categories if medium_category_id is provided
+                if medium_category_id:
+                    duration = get_duration_of_category(
+                        data["medium_categories"], medium_category_id
+                    )
+
+                    category_list = aggregate_durations(
+                        annotate_duration(tasks, start_of_day, end_of_day),
+                        annotate_duration(events, start_of_day, end_of_day),
+                        large_category_id=large_category_id,
+                        medium_category_id=medium_category_id,
+                    )
+                    data["small_categories"] = process_categories(
+                        category_list,
+                        duration,
+                        tasks,
+                        events,
+                        start_of_day,
+                        end_of_day,
+                        TaskCategoryTypes.SMALL.value,
+                        is_with_tasks=True,
+                    )
+
+        return self.response_ok(data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="from_date", type=datetime),
+            OpenApiParameter(name="end_date", type=datetime),
+            OpenApiParameter(name="organization_ids", type=str),
+            OpenApiParameter(name="large_category_id", type=str),
+            OpenApiParameter(name="medium_category_id", type=str),
+            OpenApiParameter(name="small_category_id", type=str),
+            OpenApiParameter(name="tag_ids", type=str),
+        ]
+    )
+    @action(
+        detail=False,
+        methods=["GET"],
+        url_path="tags",
+        serializer_class=None,
+    )
+    def tags(self, request):
+        """
+        Returns a list of statistic by tags.
+        """
+        user = request.user
+        organization_ids_param = request.query_params.get("organization_ids")
+        large_category_id = request.query_params.get("large_category_id")
+        medium_category_id = request.query_params.get("medium_category_id")
+        small_category_id = request.query_params.get("small_category_id")
+        tag_ids_param = request.query_params.get("tag_ids")
+        organization_ids = []
+        tag_ids = []
+        from_date = request.query_params.get("from_date")
+        end_date = request.query_params.get("end_date")
+
+        # Validate date format using regex
+        if (
+            not from_date
+            or not end_date
+            or not re.match(DATE_REGEX, from_date)
+            or not re.match(DATE_REGEX, end_date)
+        ):
+            raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+
+        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
+        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        start_of_day = datetime.combine(from_date, time.min)
+        end_of_day = datetime.combine(end_date, time.max)
+        if organization_ids_param is None:
+            organization_ids = user.organizations.all().values_list(
+                "id", flat=True
+            )
+        else:
+            for id in organization_ids_param.split(","):
+                try:
+                    organization_ids.append(int(id))
+                except ValueError:
+                    continue
+        if tag_ids_param:
+            for id in tag_ids_param.split(","):
+                try:
+                    tag_ids.append(int(id))
+                except ValueError:
+                    continue
+        data = {}
+        if tag_ids:
+            tasks, events = get_list_models(
+                start_of_day,
+                end_of_day,
+                organizations=organization_ids,
+                users=[user],
+            )
+            total_duration, tag_list = process_merge_card_per_tag(
+                tag_ids,
+                tasks,
+                events,
+                start_of_day,
+                end_of_day,
+                is_get_total_duration=True,
+            )
+            data["total_duration"] = format_duration(total_duration)
+            if tag_list:
+                data["large_categories"] = process_tags(
+                    tag_list,
+                    total_duration,
+                    tasks,
+                    events,
+                    start_of_day,
+                    end_of_day,
+                    is_with_tasks=True,
+                )
+
+                if large_category_id:
+                    tasks = tasks.filter(
+                        categories__large_statistic_category__id=large_category_id
+                    )
+                    events = events.filter(
+                        categories__large_statistic_category__id=large_category_id
+                    )
+                    total_duration, tag_list = process_merge_card_per_tag(
+                        tag_ids,
+                        tasks,
+                        events,
+                        start_of_day,
+                        end_of_day,
+                        is_get_total_duration=True,
+                    )
+                    data["medium_categories"] = process_tags(
+                        tag_list,
+                        total_duration,
+                        tasks,
+                        events,
+                        start_of_day,
+                        end_of_day,
+                        is_with_tasks=True,
+                    )
+                    if medium_category_id:
+                        tasks = tasks.filter(
+                            categories__medium_statistic_category__id=medium_category_id
+                        )
+                        events = events.filter(
+                            categories__medium_statistic_category__id=medium_category_id
+                        )
+                        total_duration, tag_list = process_merge_card_per_tag(
+                            tag_ids,
+                            tasks,
+                            events,
+                            start_of_day,
+                            end_of_day,
+                            is_get_total_duration=True,
+                        )
+                        data["small_categories"] = process_tags(
+                            tag_list,
+                            total_duration,
+                            tasks,
+                            events,
+                            start_of_day,
+                            end_of_day,
+                            is_with_tasks=True,
+                        )
+                        if small_category_id:
+                            tasks = tasks.filter(
+                                categories__small_statistic_category__id=small_category_id
+                            )
+                            events = events.filter(
+                                categories__small_statistic_category__id=small_category_id
+                            )
+                            (
+                                total_duration,
+                                tag_list,
+                            ) = process_merge_card_per_tag(
+                                tag_ids,
+                                tasks,
+                                events,
+                                start_of_day,
+                                end_of_day,
+                                is_get_total_duration=True,
+                            )
+                            data["category"] = process_tags(
+                                tag_list,
+                                total_duration,
+                                tasks,
+                                events,
+                                start_of_day,
+                                end_of_day,
+                                is_with_tasks=True,
+                            )
+
+        return self.response_ok(data)
+
+
+@extend_schema(tags=["System > Organization Statistics"])
+class OrganizationStatisticViewSet(BaseAPIViewSet):
+    """API endpoint for organization statistics"""
+
+    queryset = Organization.objects.all()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="from_date", type=datetime),
+            OpenApiParameter(name="end_date", type=datetime),
+            OpenApiParameter(name="large_category_id", type=str),
+            OpenApiParameter(name="medium_category_id", type=str),
+            OpenApiParameter(name="tag_ids", type=str),
+        ]
+    )
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="categories",
+        serializer_class=None,
+    )
+    def categories(self, request, pk):
+        """
+        Returns a list of statistic all categories.
+        """
+        from_date = request.query_params.get("from_date")
+        end_date = request.query_params.get("end_date")
+
+        # Validate date format using regex
+        if (
+            not from_date
+            or not end_date
+            or not re.match(DATE_REGEX, from_date)
+            or not re.match(DATE_REGEX, end_date)
+        ):
+            raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+
+        tag_ids_param = request.query_params.get("tag_ids")
+        large_category_id = request.query_params.get("large_category_id")
+        medium_category_id = request.query_params.get("medium_category_id")
+        instance = self.get_object()
+        organization_categories = OrganizationDetailSerializer(instance).data[
+            "statistic_categories"
+        ]
+        categories = transform_statistic_categories(organization_categories)
+        large_categories = (
+            cat[TaskCategoryTypes.LARGE.value]
+            for cat in categories
+            if cat.get(TaskCategoryTypes.LARGE.value) is not None
+        )
+        large_category_ids = [item["id"] for item in large_categories]
+        users = instance.users.all()
+        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
+        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        start_of_day = datetime.combine(from_date, time.min)
+        end_of_day = datetime.combine(end_date, time.max)
+        data = {}
+        tag_ids = []
+        if tag_ids_param:
+            for id in tag_ids_param.split(","):
+                try:
+                    tag_ids.append(int(id))
+                except ValueError:
+                    continue
+        if large_category_ids:
+            tasks, events = get_list_models(
+                start_of_day,
+                end_of_day,
+                organizations=[instance],
+                tags=tag_ids,
+                large_categories=large_category_ids,
+            )
+
+            total_duration, category_list = process_category_per_user(
+                users,
+                tasks,
+                events,
+                start_of_day,
+                end_of_day,
+                is_get_total_duration=True,
+            )
+
+            data["total_duration"] = format_duration(total_duration)
+
+            # Process large categories
+            if category_list:
+                data["large_categories"] = process_categories(
+                    category_list,
+                    total_duration,
+                    tasks,
+                    events,
+                    start_of_day,
+                    end_of_day,
+                    TaskCategoryTypes.LARGE.value,
+                    users=users,
+                )
+                # Process medium categories if large_category_id is provided
+                if large_category_id:
+                    duration = get_duration_of_category(
+                        data["large_categories"], large_category_id
+                    )
+                    total_duration, category_list = process_category_per_user(
+                        users,
+                        tasks,
+                        events,
+                        start_of_day,
+                        end_of_day,
+                        large_category_id,
+                    )
+                    tasks = tasks.filter(
+                        categories__large_statistic_category__id=large_category_id
+                    )
+                    events = events.filter(
+                        categories__large_statistic_category__id=large_category_id
+                    )
+                    data["medium_categories"] = process_categories(
+                        category_list,
+                        duration,
+                        tasks,
+                        events,
+                        start_of_day,
+                        end_of_day,
+                        TaskCategoryTypes.MEDIUM.value,
+                        users=users,
+                    )
+                # Process small categories if medium_category_id is provided
+                if medium_category_id:
+                    duration = get_duration_of_category(
+                        data["medium_categories"], medium_category_id
+                    )
+                    total_duration, category_list = process_category_per_user(
+                        users,
+                        tasks,
+                        events,
+                        start_of_day,
+                        end_of_day,
+                        large_category_id,
+                        medium_category_id,
+                    )
+                    tasks = tasks.filter(
+                        categories__large_statistic_category__id=large_category_id,
+                        categories__medium_statistic_category__id=medium_category_id,
+                    )
+                    events = events.filter(
+                        categories__large_statistic_category__id=large_category_id,
+                        categories__medium_statistic_category__id=medium_category_id,
+                    )
+
+                    data["small_categories"] = process_categories(
+                        category_list,
+                        duration,
+                        tasks,
+                        events,
+                        start_of_day,
+                        end_of_day,
+                        TaskCategoryTypes.SMALL.value,
+                        users=users,
+                    )
+
+        return self.response_ok(data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="from_date", type=datetime),
+            OpenApiParameter(name="end_date", type=datetime),
+            OpenApiParameter(name="large_category_id", type=str),
+            OpenApiParameter(name="medium_category_id", type=str),
+            OpenApiParameter(name="small_category_id", type=str),
+            OpenApiParameter(name="tag_ids", type=str),
+        ]
+    )
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="tags",
+        serializer_class=None,
+    )
+    def tags(self, request, pk):
+        """
+        Returns a list of statistic by tags.
+        """
+        user = request.user
+        request.query_params.get("organization_ids")
+        request.query_params.get("large_category_id")
+        request.query_params.get("medium_category_id")
+        request.query_params.get("small_category_id")
+        tag_ids_param = request.query_params.get("tag_ids")
+        tag_ids = []
+        from_date = request.query_params.get("from_date")
+        end_date = request.query_params.get("end_date")
+
+        # Validate date format using regex
+        if (
+            not from_date
+            or not end_date
+            or not re.match(DATE_REGEX, from_date)
+            or not re.match(DATE_REGEX, end_date)
+        ):
+            raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+
+        instance = self.get_object()
+
+        from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
+        end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
+        start_of_day = datetime.combine(from_date, time.min)
+        end_of_day = datetime.combine(end_date, time.max)
+
+        if tag_ids_param:
+            for id in tag_ids_param.split(","):
+                try:
+                    tag_ids.append(int(id))
+                except ValueError:
+                    continue
+        data = {}
+        if tag_ids:
+            tasks, events = get_list_models(
+                start_of_day,
+                end_of_day,
+                organizations=[instance.id],
+                users=[user],
+                tags=tag_ids,
+            )
+            total_duration = timedelta()
+            merged_duration = merge_task_and_event(
+                tasks, events, start_of_day, end_of_day
+            )
+            for task in merged_duration:
+                total_duration += time_str_to_timedelta(task["total_duration"])
+            tag_list = aggregate_durations_by_tag(
+                annotate_duration(tasks, start_of_day, end_of_day),
+                annotate_duration(events, start_of_day, end_of_day),
+                tag_ids=tag_ids,
+            )
+            data["total_duration"] = format_duration(total_duration)
+            if tag_list:
+                data["large_categories"] = process_tags(
+                    tag_list,
+                    total_duration,
+                    tasks,
+                    events,
+                    start_of_day,
+                    end_of_day,
+                    is_with_users=True,
+                )
+
+        return self.response_ok(data)
