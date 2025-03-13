@@ -241,7 +241,7 @@ export const pageRouters = {
   },
   EDIT_HIERARCHY: {
     name: '集計カテゴリ階層編集',
-    href: (id: string) => `/hierarchies/${id}/edit`,
+    href: '/hierarchies/edit',
   },
   CREATE_HIERARCHY: {
     name: '集計カテゴリ階層作成',
@@ -427,4 +427,8 @@ export const apiRouters = {
   // STATISTICS
   STATISTICS_CATEGORIES: '/statistics/categories/',
   STATISTICS_TASKS: '/statistics/tasks/',
+  
+  // ORGANIZATION CATEGORY HIERARCHIES
+  ORGANIZATION_CATEGORY_HIERARCHY_DETAIL: (id: number) => `/organization-category-hierarchies/${id}/`,
+  ORGANIZATION_CATEGORY_HIERARCHY_LIST: '/organization-category-hierarchies/'
 };

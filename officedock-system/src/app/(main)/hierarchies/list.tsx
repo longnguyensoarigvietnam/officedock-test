@@ -1,140 +1,212 @@
 'use client';
 import { useMutation } from 'react-query';
-import Link from 'next/link';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
-import { Transition } from '@headlessui/react';
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import Input from '@components/common/Input';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Pagination from '@components/common/Pagination';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import InputSearch from '@components/common/InputSearch';
+import Input from '@components/common/Input';
 import Dropdown from '@components/common/Dropdown';
 
 import { apiRouters, pageRouters } from '@constants/routers';
-import { NO_DATA_AVAILABLE } from '@constants';
+import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import {
+  ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
+  SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
-import { CurrentScreen, PermissionsSystem } from '@constants/enums';
+import { PermissionsSystem } from '@constants/enums';
 
-import useOrganizationList from '@hooks/useOrganizationList';
+import { getCategoryFormattedDate } from '@utils/date';
+import { hasPermissionInArray } from '@utils';
+
+import useCategoryList from '@hooks/useCategoryList';
 import { useErrorToast } from '@hooks/useErrorToast';
+import useDebounceText from '@hooks/useDebounceText';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
+
+import { Category } from '@interfaces/category';
 import api from '@base/api';
-import { OptionDropdownType } from '@interfaces/common';
-import { Organizations } from '@interfaces/organization';
-import useOrganizationOptions from '@hooks/useFullOrganizationList';
-import { hasPermissionInArray } from '@utils';
-import { HierarchyStateContext } from '@providers/HierarchyProvider';
+import Link from 'next/link';
 
 const ListHierarchy = () => {
   const { setIsLoading } = useContext(LoadingContext);
 
-  const { setDataHierarchyDetail } = useContext(HierarchyStateContext);
-
-  const { showToast } = useToast();
-  const showErrorToast = useErrorToast();
-
   const { data: session } = useSession();
 
-  const [showFilter, setShowFilter] = useState(true);
+  const showErrorToast = useErrorToast();
+
+  const { showToast } = useToast();
+
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
-  const [idOrganizationChoose, setIdOrganizationChoose] = useState<number>();
+  const [selectedCategoryToDelete, setSelectedCategoryToDelete] =
+    useState<Category | null>(null);
+  const [selectedCategoryToUpdate, setSelectedCategoryToUpdate] = useState<{
+    name: string;
+    uuid: string;
+    status: boolean;
+    action: string;
+  }>({
+    name: '',
+    uuid: '',
+    status: false,
+    action: '',
+  });
+  const categoryNameInputRef = useRef<HTMLInputElement | null>(null);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const [idChoose, setIdChoose] = useState<OptionDropdownType>();
-
-  const [dataOrganizations, setDataOrganizations] = useState<Organizations[]>(
-    [],
-  );
-
-  const [dataOptionsOrganization, setDataOptionsOrganization] = useState<
-    OptionDropdownType[]
-  >([]);
+  const [dataCategories, setDataCategories] = useState<Category[]>([]);
 
   // TODO: Update logic sort for multi column
-  const [orderingRequest, _setOrderingRequest] = useState('');
+  const [searchCategoryName, setSearchCategoryName] = useState('');
+  const debouncedFilterByCategoryName = useDebounceText(
+    searchCategoryName,
+    1000,
+  );
 
-  const { register, handleSubmit } = useForm<{ name: string }>({
-    mode: 'onSubmit',
-  });
-  const [filterRequest, setFilterRequest] = useState({
-    name: '',
-  });
-
-  const { organizationOptions, refetchOrganizationOptions } =
-    useOrganizationOptions({
-      is_hierarchy: true,
-      current_screen: CurrentScreen.CATEGORY_HIERARCHY,
-    });
-
-  const { organizationList, refetchOrganizationList } = useOrganizationList(
-    { page: currentPage },
-    { name: filterRequest.name },
-    orderingRequest,
-    true,
+  const { categoryList, refetchCategoryList } = useCategoryList(
+    {
+      page: currentPage,
+      pageSize,
+    },
+    {
+      name: debouncedFilterByCategoryName,
+    },
   );
 
   useEffect(() => {
-    if (organizationOptions) {
-      setDataOptionsOrganization(
-        organizationOptions.map((org) => ({
-          label: org.name,
-          value: org.id,
-        })),
-      );
+    if (categoryList) {
+      setDataCategories(categoryList.results);
+      setTotalPages(categoryList.numPages);
     }
-  }, [organizationOptions]);
+  }, [categoryList]);
 
   useEffect(() => {
-    if (organizationList) {
-      setDataOrganizations(organizationList.results);
-      setTotalPages(organizationList.numPages);
+    if (debouncedFilterByCategoryName) {
+      setCurrentPage(1);
     }
-  }, [organizationList]);
+  }, [debouncedFilterByCategoryName]);
 
-  // Delete organization
-  const handleOpenDeleteOrganizationModal = (id: number) => {
-    setOpenConfirmDeleteModal(true);
-    setIdOrganizationChoose(id);
+  // Edit category name
+  const handleEditCategory = async (data: {
+    uuid: string | number;
+    name: string;
+  }) => {
+    return await api.patch(apiRouters.CATEGORY_DETAIL(String(data.uuid)), {
+      name: data.name,
+    });
   };
 
-  const handleConfirmDeleteOrganization = () => {
-    if (idOrganizationChoose) {
+  const { mutate: editCategory } = useMutation(
+    'postEditCategory',
+    handleEditCategory,
+    {
+      onSuccess: () => {
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {
+        setSelectedCategoryToUpdate({
+          uuid: '',
+          name: '',
+          status: false,
+          action: '',
+        });
+        refetchCategoryList();
+      },
+    },
+  );
+
+  // Create category
+  const handleCreateCategory = async (data: { uuid: string; name: string }) => {
+    return await api.post(apiRouters.CATEGORY_LIST, data);
+  };
+
+  const { mutate: createCategory } = useMutation(
+    'postCreateCategory',
+    handleCreateCategory,
+    {
+      onSuccess: () => {
+        showToast({
+          description: SUCCESS_CREATE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+        setDataCategories((prev) => {
+          const updatedCategories = [...prev];
+          return updatedCategories.filter(
+            (category) => category.uuid != selectedCategoryToUpdate.uuid,
+          );
+        });
+      },
+      onSettled: () => {
+        setSelectedCategoryToUpdate({
+          uuid: '',
+          name: '',
+          status: false,
+          action: '',
+        });
+        refetchCategoryList();
+      },
+    },
+  );
+
+  // Delete category
+  const handleOpenDeleteCategoryModal = (category: Category) => {
+    setOpenConfirmDeleteModal(true);
+    setSelectedCategoryToDelete(category);
+  };
+
+  const handleConfirmDeleteCategory = () => {
+    if (selectedCategoryToDelete) {
       setIsLoading(true);
-      deleteOrganization(idOrganizationChoose);
+      deleteCategory(String(selectedCategoryToDelete.uuid));
       return;
     }
   };
-  const postDeleteOrganization = async (id: number) => {
+
+  const postDeleteCategory = async (uuid: string) => {
     const { data: response } = await api.delete(
-      apiRouters.ACTION_STATISTIC_ORGANIZATION(`${id}`),
+      apiRouters.CATEGORY_DETAIL(`${uuid}`),
     );
     return response;
   };
 
-  const { mutate: deleteOrganization } = useMutation(postDeleteOrganization, {
+  const { mutate: deleteCategory } = useMutation(postDeleteCategory, {
     onSuccess: async () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      if (organizationList?.results.length === 1 && currentPage > 1) {
-        // If change current page, useOrganizationList auto recall, just don't need using refetchOrganizationList
+      if (dataCategories.length === 1 && currentPage > 1) {
+        // If change current page, useTagList auto recall, just don't need using refetchTagList
         setCurrentPage(currentPage - 1);
       } else {
-        refetchOrganizationList();
+        refetchCategoryList();
       }
-      refetchOrganizationOptions();
       setOpenConfirmDeleteModal(false);
     },
     onError: (error: AxiosError<any>) => {
@@ -142,155 +214,191 @@ const ListHierarchy = () => {
       setOpenConfirmDeleteModal(false);
       setIsLoading(false);
     },
+    onSettled: () => {
+      setSelectedCategoryToDelete(null);
+    },
   });
 
-  const onSubmit: SubmitHandler<{ name: string }> = (data) => {
-    setCurrentPage(1);
-    setFilterRequest({
-      name: encodeURIComponent(`${data.name}`) || '',
-    });
-  };
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (
+        categoryNameInputRef.current &&
+        !categoryNameInputRef.current.contains(event.target)
+      ) {
+        if (selectedCategoryToUpdate.action == 'EDIT') {
+          editCategory({
+            uuid: selectedCategoryToUpdate.uuid,
+            name: selectedCategoryToUpdate.name,
+          });
+        } else {
+          createCategory({
+            uuid: String(selectedCategoryToUpdate.uuid),
+            name: selectedCategoryToUpdate.name,
+          });
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedCategoryToUpdate.uuid,
+    selectedCategoryToUpdate.name,
+    selectedCategoryToUpdate.action,
+  ]);
+
   return (
     <Fragment>
-      <div className="flex flex-col border rounded-lg">
-        <div
-          className={`flex justify-between px-3 py-4 rounded-t-lg ${showFilter && 'border-b'} bg-gray-100`}>
-          <span className="text-gray-700 text-base font-medium">検索</span>
-          <ImageRound
-            name="Filter extend icon"
-            src={'/icons/arrow-down.svg'}
-            className={`w-4 h-4 hover:cursor-pointer ${!showFilter && 'rotate-180'}`}
-            onClick={() => setShowFilter(!showFilter)}
-          />
-        </div>
-        <Transition
-          show={showFilter}
-          enter="transition-transform duration-300 ease-out"
-          enterFrom="transform -translate-y-[10%]"
-          enterTo="transform translate-y-0"
-          leave="transition-transform duration-150 ease-in"
-          leaveFrom="transform translate-y-0"
-          leaveTo="transform -translate-y-[10%]">
-          <form
-            className={`flex flex-col gap-4 p-4 bg-white`}
-            onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex gap-4">
-              <div className="w-1/2 flex gap-2">
-                <div className="w-full flex items-end gap-4">
-                  <div className="w-full">
-                    <Input
-                      label="組織"
-                      placeholder="入力してください"
-                      register={register('name')}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end">
+      <div className="flex justify-between">
+        <InputSearch
+          placeholder="業務カテゴリーを検索"
+          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
+          iconClassName="w-[14px] h-[14px]"
+          onChange={(e) => {
+            setSearchCategoryName(e.target.value);
+          }}
+        />
+        <div className="flex gap-2">
+          {session?.user.permissions &&
+            hasPermissionInArray(
+              session?.user.permissions,
+              PermissionsSystem.CATEGORY_HIERARCHY_ADD,
+            ) && (
               <Button
-                variant="secondary"
-                type="submit"
-                className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
-                絞り込み
+                variant="outline"
+                className="w-[100px] h-[34px] !p-0 bg-white text-[#0068B6]">
+                インポート
               </Button>
-            </div>
-          </form>
-        </Transition>
+            )}
+          {session?.user.permissions &&
+            hasPermissionInArray(
+              session?.user.permissions,
+              PermissionsSystem.CATEGORY_HIERARCHY_UPDATE,
+            ) && (
+              <Link href={pageRouters.EDIT_HIERARCHY.href}>
+                <Button className="w-[100px] h-[34px]">編集</Button>
+              </Link>
+            )}
+        </div>
       </div>
-      {session?.user.permissions &&
-        hasPermissionInArray(
-          session?.user.permissions,
-          PermissionsSystem.CATEGORY_HIERARCHY_ADD,
-        ) && (
-          <div className="flex justify-end gap-10">
-            <div className="w-60">
-              <Dropdown
-                placeholder="選択してください"
-                classNameTextData=" !px-2 [&>div]:justify-center "
-                classNameOption=""
-                className=""
-                options={dataOptionsOrganization}
-                onChange={(e) => setIdChoose(e)}
-              />
-            </div>
-            <Link
-              href={
-                idChoose && idChoose.value
-                  ? pageRouters.CREATE_HIERARCHY.href(`${idChoose?.value}`)
-                  : ''
-              }
-              className={'flex'}>
-              <Button disabled={!idChoose} className="w-44">
-                新規登録
-              </Button>
-            </Link>
-          </div>
-        )}
-      <div className="w-full">
+      <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]">
         <Table className="bg-white !rounded-lg relative">
-          <TableHeader>
-            <th className="w-3">
-              <span>ID</span>
+          <TableHeader className="!bg-[#F8FAFC]">
+            <th className="text-left w-[calc((100%_-_680px))] max-w-[calc(100%_-_680px)] border-r-[1px] border-r-[#D2DBE1]">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                業務カテゴリー名
+              </span>
             </th>
-            <th className="text-left w-[228px] max-w-[228px]">
-              <span>組織</span>
+            <th className="text-left w-[140px] max-w-[140px] border-r-[1px] border-r-[#D2DBE1]">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                登録日
+              </span>
             </th>
-            <th className="w-20">操作</th>
+            <th className="text-left w-[140px] max-w-[140px] border-r-[1px] border-r-[#D2DBE1]">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                更新日
+              </span>
+            </th>
+            <th className="text-left w-[400px] max-w-[400px]">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                業務カテゴリー階層で登録されているチーム
+              </span>
+            </th>
           </TableHeader>
           <TableBody>
-            {dataOrganizations && dataOrganizations.length ? (
-              dataOrganizations.map((element, index) => (
-                <tr key={index}>
-                  <td className="w-3">{element.id}</td>
-                  <td className="text-left w-[350px] max-w-[350px] truncate">
-                    {element.name}
-                  </td>
-                  <td className="w-20">
-                    <div className="flex w-full gap-2 justify-center">
-                      <Link
-                        onClick={() => {
-                          setDataHierarchyDetail(element);
-                        }}
-                        href={pageRouters.DETAIL_HIERARCHY.href(
-                          `${element.id}`,
-                        )}>
-                        <ImageRound
-                          name="Detail"
-                          src={'/icons/detail.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
-                        />
-                      </Link>
-                      {element.actions?.update ? (
-                        <Link
-                          onClick={() => {
-                            setDataHierarchyDetail(element);
-                          }}
-                          href={pageRouters.EDIT_HIERARCHY.href(
-                            `${element.id}`,
-                          )}>
-                          <ImageRound
-                            name="Edit"
-                            src={'/icons/edit.svg'}
-                            className={`w-6 h-6 hover:cursor-pointer`}
+            {dataCategories && dataCategories.length ? (
+              dataCategories.map((element, index) => (
+                <tr key={index} className="text-black">
+                  <td className="border-r-[1px] border-r-[#D2DBE1] truncate">
+                    <div className="flex justify-between items-center">
+                      {selectedCategoryToUpdate.uuid == element.uuid &&
+                      selectedCategoryToUpdate.status ? (
+                        <div ref={categoryNameInputRef} className="!w-[93%]">
+                          <Input
+                            placeholder="入力してください"
+                            className="!border-[1px] !border-[#77858F] w-full !text-sm !h-[34px]"
+                            defaultValue={element.name}
+                            onChange={(e) => {
+                              setSelectedCategoryToUpdate((prev) => {
+                                return {
+                                  ...prev,
+                                  name: e.target.value,
+                                };
+                              });
+                            }}
                           />
-                        </Link>
+                        </div>
                       ) : (
-                        <div className="w-6"></div>
+                        <p className="text-left truncate max-w-[500px] text-[16px] font-medium">
+                          {element.name}
+                        </p>
                       )}
-                      {element.actions?.delete ? (
-                        <ImageRound
-                          name="Delete"
-                          src={'/icons/delete.svg'}
-                          className={`w-6 h-6 hover:cursor-pointer`}
-                          onClick={() =>
-                            handleOpenDeleteOrganizationModal(element.id)
-                          }
-                        />
-                      ) : (
-                        <div className="w-6"></div>
-                      )}
+                      <div className="flex gap-3 justify-end">
+                        {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.CATEGORY_UPDATE,
+                        ) ? (
+                          <div>
+                            <ImageRound
+                              name="Edit"
+                              src={'/icons/edit-gray.svg'}
+                              className={`w-3.5 h-3.5 hover:cursor-pointer ${!(selectedCategoryToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                              onClick={() => {
+                                setSelectedCategoryToUpdate({
+                                  uuid: element.uuid || '',
+                                  name: element.name,
+                                  status: true,
+                                  action: 'EDIT',
+                                });
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-3.5"></div>
+                        )}
+                        {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.CATEGORY_DELETE,
+                        ) ? (
+                          <ImageRound
+                            name="Delete"
+                            src={'/icons/delete-gray.svg'}
+                            className="w-[13px] h-[15px] hover:cursor-pointer"
+                            onClick={() =>
+                              handleOpenDeleteCategoryModal(element)
+                            }
+                          />
+                        ) : (
+                          <div className="w-[13px]"></div>
+                        )}
+                      </div>
                     </div>
+                  </td>
+                  <td className="border-r-[1px] border-r-[#D2DBE1]">
+                    <p className="text-center text-sm font-medium">
+                      {getCategoryFormattedDate(
+                        new Date(element.createdAt || new Date()),
+                      )}
+                    </p>
+                  </td>
+                  <td className="border-r-[1px] border-r-[#D2DBE1]">
+                    <p className="text-center text-sm font-medium">
+                      {getCategoryFormattedDate(
+                        new Date(element.updatedAt || new Date()),
+                      )}
+                    </p>
+                  </td>
+                  <td>
+                    <p className="text-left text-sm font-medium">
+                      {element.organizations
+                        ?.map((org: { id: number; name: string }) => org.name)
+                        .join('/ ')}
+                    </p>
                   </td>
                 </tr>
               ))
@@ -305,19 +413,40 @@ const ListHierarchy = () => {
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-center">
-        {dataOrganizations && dataOrganizations.length ? (
-          <Pagination
-            onChange={(pageNumber) => setCurrentPage(pageNumber)}
-            currentPage={currentPage}
-            totalPages={totalPages}
-          />
-        ) : null}
+      <div className="flex justify-center items-center w-full">
+        <div className="flex justify-center flex-1">
+          {dataCategories && dataCategories.length ? (
+            <Pagination
+              onChange={(pageNumber) => setCurrentPage(pageNumber)}
+              currentPage={currentPage}
+              totalPages={totalPages}
+            />
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-[66px]">
+            <Dropdown
+              options={PAGE_SIZE_OPTIONS}
+              selectedOption={PAGE_SIZE_OPTIONS.find(
+                (element) => element.value == pageSize,
+              )}
+              className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
+              classNameTextData="!text-xs"
+              classActive="!text-sm"
+              classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
+              labelOptionClass="!text-sm font-medium !pl-0.5 !border-b-[1px] !border-[#EBF1F7]"
+              onChange={(e) => {
+                setPageSize(Number(e.value));
+              }}
+            />
+          </div>
+          <p className="text-sm">件ずつ表示</p>
+        </div>
       </div>
       <ConfirmDeleteModal
         open={openConfirmDeleteModal}
-        type="集計カテゴリ階層"
-        onConfirm={handleConfirmDeleteOrganization}
+        type="集計カテゴリ"
+        onConfirm={handleConfirmDeleteCategory}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />
     </Fragment>

@@ -7,8 +7,14 @@ import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 
 interface CreationDataSkill {
-  id: number;
-  name: string;
+  organization: {
+    id: number;
+    name: string;
+  };
+  skills: {
+    id: number;
+    name: string;
+  }[];
 }
 
 interface useCreationDataSkillHooksProps {
@@ -45,7 +51,7 @@ const useCreationDataSkill = ({
     refetch: refetchCreationDataSkill,
     isFetched: isFetchedCreationDataSkill,
   } = useQuery({
-    queryKey: ['getCreationDataSkill'],
+    queryKey: ['getCreationDataSkill', [organizationId]],
     queryFn: getCreationDataSkill,
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
