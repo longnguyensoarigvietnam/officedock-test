@@ -18,7 +18,11 @@ from users.apis import (
     SystemUserMemoViewSet,
     SystemUserViewSet,
 )
-from organizations.apis import OrganizationViewSet, OrganizationSkillViewSet
+from organizations.apis import (
+    OrganizationViewSet,
+    OrganizationSkillViewSet,
+    OrganizationCategoryHierarchyViewSet,
+)
 from common.apis import SystemCreationDataViewSet, CronJobViewSet
 from tags.apis import TagViewSet
 from dashboard.apis import (
@@ -67,6 +71,11 @@ api_router.register(
     "statistic-categories",
     StatisticCategoryViewSet,
     basename="statistic_categories",
+)
+api_router.register(
+    "organization-category-hierarchies",
+    OrganizationCategoryHierarchyViewSet,
+    basename="org_category_hierarchies",
 )
 api_router.register("schedules", ScheduleViewSet, basename="schedules")
 api_router.register("calendars", CalendarViewSet, basename="calendars")

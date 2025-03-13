@@ -14,7 +14,7 @@ from .models import (
 )
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
+class BaseOrganizationSerializer(serializers.ModelSerializer):
     """
     Serializer for the Organization.
     """
@@ -24,12 +24,26 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
-class StatisticCategorySerializer(serializers.ModelSerializer):
+class BaseStatisticCategorySerializer(serializers.ModelSerializer):
     """
     Serializer for statistic category
     """
 
-    organizations = OrganizationSerializer(many=True, read_only=True)
+    class Meta:
+        model = StatisticCategory
+        fields = [
+            "id",
+            "name",
+            "uuid",
+        ]
+
+
+class StatisticCategorySerializer(BaseStatisticCategorySerializer):
+    """
+    Serializer for statistic category
+    """
+
+    organizations = serializers.SerializerMethodField()
 
     class Meta:
         model = StatisticCategory
@@ -65,6 +79,13 @@ class StatisticCategorySerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def get_organizations(self, obj):
+        """Get organizations by category"""
+        orgs = obj.organizations.order_by(
+            "organizations_statistic_categories__id"
+        ).distinct()
+        return BaseOrganizationSerializer(orgs, many=True).data
+
 
 class SuperiorSerializer(serializers.ModelSerializer):
     """
@@ -81,9 +102,9 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
     Serializer for the Statistic Category Struction.
     """
 
-    large_statistic_category = StatisticCategorySerializer()
-    medium_statistic_category = StatisticCategorySerializer()
-    small_statistic_category = StatisticCategorySerializer()
+    large_statistic_category = BaseStatisticCategorySerializer()
+    medium_statistic_category = BaseStatisticCategorySerializer()
+    small_statistic_category = BaseStatisticCategorySerializer()
     skills = serializers.SerializerMethodField()
 
     class Meta:
@@ -508,3 +529,106 @@ class OrganizationSkillForGetListSerializer(serializers.ModelSerializer):
         item_org_ids = [obj.organization.id]
 
         return has_permission(actions, user, item_org_ids)
+
+
+"""
+Begin handle organization category hierarchy
+"""
+
+
+class OrganizationCategoryHierarchySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Organization category hierarchy.
+    """
+
+    statistic_categories = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = [
+            "id",
+            "name",
+            "statistic_categories",
+        ]
+
+    def get_statistic_categories(self, obj):
+        """
+        Get and organize statistic categories for the given organization
+        """
+        statistic_categories = obj.organizations_statistic_categories.order_by(
+            "large_statistic_category_id",
+            "medium_statistic_category_id",
+            "small_statistic_category_id",
+        ).distinct()
+        return StatisticCategoryStructionSerializer(
+            statistic_categories, many=True
+        ).data
+
+
+class StatisticCategoryFieldSerializer(serializers.Serializer):
+    """
+    Serializer for statistic category
+    """
+
+    name = serializers.CharField(required=False, allow_null=True)
+    uuid = serializers.UUIDField(required=False, allow_null=True)
+
+
+class OrgCategoryHierarchySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Organization category hierarchy create.
+    """
+
+    organization_statistic_category_id = serializers.PrimaryKeyRelatedField(
+        source="organization_statistic_category",
+        queryset=OrganizationsStatisticCategories.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    organization_id = serializers.PrimaryKeyRelatedField(
+        source="organization",
+        queryset=Organization.objects.all(),
+        write_only=True,
+    )
+    large_statistic_category = StatisticCategoryFieldSerializer()
+    medium_statistic_category = StatisticCategoryFieldSerializer()
+    small_statistic_category = StatisticCategoryFieldSerializer()
+    skill_ids = serializers.PrimaryKeyRelatedField(
+        source="skills",
+        queryset=Skill.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = OrganizationsStatisticCategories
+        fields = [
+            "id",
+            "organization_statistic_category_id",
+            "organization_id",
+            "large_statistic_category",
+            "medium_statistic_category",
+            "small_statistic_category",
+            "index",
+            "color",
+            "skill_ids",
+        ]
+
+
+class OrganizationCategoryHierarchyForCreateSerializer(serializers.Serializer):
+    """
+    Serializer for the Organization category hierarchy create multi.
+    """
+
+    items = OrgCategoryHierarchySerializer(many=True, required=False)
+    ids = serializers.ListField(
+        child=serializers.IntegerField(), allow_null=True, required=False
+    )
+
+
+"""
+End handle organization category hierarchy
+"""
