@@ -19,3 +19,12 @@ export interface OptionTabType {
   name: string;
   badge?: string | number;
 }
+export interface DataChartType {
+  colors: string[];
+  labels: string[];
+  data: number[];
+  actualValue: string[];
+  optionData: string[][];
+  listId: number[];
+  listDuration: string[][];
+}

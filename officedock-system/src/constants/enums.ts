@@ -398,3 +398,8 @@ export enum ActionsModal {
   CREATE = 'CREATE',
   DELETE = 'DELETE',
 }
+
+export enum OrderingDataType {
+  TOTAL_DURATION = 'total_duration',
+  PERCENT = 'percent',
+}

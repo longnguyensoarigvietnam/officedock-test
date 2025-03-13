@@ -380,7 +380,13 @@
   z-index: 2; /* Ensure event sits above the divider */
   padding: 0 18px 0 !important;
 }
+.schedule-custom .hour-line::after {
+  background-color: red !important; /* Màu đỏ cho mốc giờ */
+}
 
+.schedule-custom .half-hour-line::after {
+  background-color: green !important; /* Màu xanh cho mốc 30 phút */
+}
 /* Day */
 
 .schedule-custom

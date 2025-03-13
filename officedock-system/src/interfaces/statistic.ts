@@ -186,3 +186,56 @@ export interface dataRequestConfirmType {
   isConfirmed: boolean;
   categoryId: number;
 }
+
+export interface StatisticsCategories {
+  totalDuration: string;
+  largeCategories: StatisticCategoryInfo[];
+  mediumCategories?: StatisticCategoryInfo[];
+  smallCategories?: StatisticCategoryInfo[];
+}
+
+export interface StatisticCategoryInfo {
+  categoryId: number;
+  categoryName: string;
+  duration: string;
+  percent: number;
+  categoryColor: string;
+  tasks: DataTaskModalStatisticType[];
+}
+export interface CreationStatisticType {
+  id: number;
+  name: string;
+  isMain: boolean;
+  statisticCategories: LargeCategory[];
+}
+export interface DataResponseStatisticCreationType {
+  organizations: CreationStatisticType[];
+}
+export interface DataTaskModalStatisticType {
+  id: number;
+  percent: number;
+  title: string;
+  totalDuration: string;
+}
+export interface DataTaskListStatisticListType {
+  id: number;
+  title: string;
+  percent: number;
+  totalDuration: string;
+  type: string;
+  tags: Omit<Tags, 'peopleInCharge' | 'responsiblePerson'>[];
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+    color: string;
+  }[];
+  taskDurations: {
+    uuid: string;
+    id: number;
+    duration: string;
+    startedAt: string;
+    pausedAt: string;
+  }[];
+  organization: number;
+}

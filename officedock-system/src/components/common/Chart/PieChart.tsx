@@ -1,3 +1,4 @@
+'use client';
 import { Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -8,17 +9,24 @@ import {
   ChartOptions,
 } from 'chart.js';
 import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
+import { useEffect, useRef } from 'react';
+import { OptionDropdownType } from '@interfaces/common';
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 interface PieChartProps {
   data: number[];
+  isClickTooltip?: boolean;
   labels: string[];
   colors?: string[];
   actualValues: string[];
   className?: string;
   showLegend?: boolean;
   showTooltip?: boolean;
+  optionsData?: string[][];
+  listIdData?: number[];
+  handleClickTooltip?: (id: number | null) => void;
+  handleClickChart?: (data: OptionDropdownType) => void;
 }
 
 const PieChart = ({
@@ -27,7 +35,12 @@ const PieChart = ({
   colors,
   className,
   actualValues,
+  isClickTooltip = false,
   showLegend = false,
+  optionsData,
+  listIdData,
+  handleClickChart,
+  handleClickTooltip,
 }: PieChartProps) => {
   const defaultColors = [
     'rgba(255, 99, 132, 0.8)',
@@ -35,6 +48,7 @@ const PieChart = ({
     'rgba(255, 206, 86, 0.8)',
     'rgba(75, 192, 192, 0.8)',
   ];
+
   const chartData: ChartData<'pie', number[], string> = {
     labels,
     datasets: [
@@ -58,26 +72,46 @@ const PieChart = ({
         enabled: false,
         external: (context) => {
           let tooltipEl = document.getElementById('chartjs-tooltip');
+
           if (!tooltipEl) {
             tooltipEl = document.createElement('div');
             tooltipEl.id = 'chartjs-tooltip';
             tooltipEl.style.position = 'absolute';
-            tooltipEl.style.zIndex = '99';
+            tooltipEl.style.zIndex = '5';
             tooltipEl.style.background = 'white';
-            tooltipEl.style.width = '167px';
+            tooltipEl.style.width = isClickTooltip ? '250px' : '167px';
             tooltipEl.style.color = 'black';
-            tooltipEl.style.fontSize = '14px';
+            tooltipEl.style.fontSize = isClickTooltip ? '16px' : '14px';
             tooltipEl.style.fontWeight = '500';
             tooltipEl.style.padding = '20px';
             tooltipEl.style.borderRadius = '6px';
-            tooltipEl.style.pointerEvents = 'none';
+            tooltipEl.style.pointerEvents = isClickTooltip ? 'auto' : 'none';
             tooltipEl.style.transform = 'translate(-50%, 0)';
             tooltipEl.style.boxShadow = '0px 2px 8px 0px #0000001A';
+            tooltipEl.style.transition = 'opacity 0.1s ease';
+            tooltipEl.style.opacity = '0';
+            tooltipEl.addEventListener('mouseenter', () => {
+              if (tooltipEl) {
+                tooltipEl.style.opacity = '1';
+                tooltipEl.dataset.hovering = 'true';
+              }
+            });
+            tooltipEl.addEventListener('mouseleave', () => {
+              if (tooltipEl) {
+                tooltipEl.style.opacity = '0';
+                tooltipEl.dataset.hovering = 'false';
+              }
+            });
+
             document.body.appendChild(tooltipEl);
           }
+
           const { tooltip } = context;
+
           if (!tooltip || tooltip.opacity === 0) {
-            tooltipEl.style.opacity = '0';
+            if (tooltipEl.dataset.hovering !== 'true') {
+              tooltipEl.style.opacity = '0';
+            }
             return;
           }
 
@@ -85,35 +119,83 @@ const PieChart = ({
             const title = tooltip.title || [];
             const body = tooltip.body.map((b) => b.lines).flat();
             const color = tooltip.labelColors[0]?.backgroundColor || '#000';
-            const dataIndex = tooltip.dataPoints[0]?.dataIndex; // Index of current point
-            const actualValue = actualValues[dataIndex]; // Access actualValues
+            const dataIndex = tooltip.dataPoints[0]?.dataIndex;
+            const actualValue = actualValues[dataIndex];
+
+            const optionsList =
+              optionsData && optionsData.length > 0
+                ? optionsData[dataIndex]
+                : [];
+            const optionsId =
+              listIdData && listIdData.length > 0 ? listIdData[dataIndex] : '';
+            const optionsHtml = optionsList
+              .map((opt) => `<li>${opt}</li>`)
+              .join('');
 
             let innerHtml = `
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px; z-index: 9999;">
-              <div style="width: 12px; height: 12px; background: ${color}; border-radius: 2px;"></div>
-              <span style="font-weight: bold;font-weight: bold; max-width: 105px; line-break: anywhere;">${title.join('<br>')}</span>
-            </div>
-          `;
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+          <div style="width: 12px; height: 12px; background: ${color}; border-radius: 2px;"></div>
+          <span style="font-weight: bold; max-width: 105px; line-break: anywhere;">${title.join('<br>')}</span>
+        </div>
+      `;
             body.forEach((line) => {
               innerHtml += `<div style="display: flex; gap: 8px; font-size: 16px; font-weight: 400">
-              <span>${line}% </span>
-              <span>  ${actualValue} </span>
-               </div>`;
+          <span>${line}% </span>
+          <span>${actualValue}</span>
+        </div>
+        ${
+          isClickTooltip &&
+          `   <ul style="font-weight:400 ;margin-top: 16px; color: #77858F; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word;">
+                   ${optionsHtml}
+           </ul>
+           <div>
+           <div style="margin-top: 16px;display: flex; align-items: center; justify-content: end;">
+    <button
+    id="tooltip-button"
+    data-label="${optionsId}"
+      style="font-weight:400 ; display: flex; align-items: center; justify-content: center; gap: 8px; background: white; font-size: 12px; color: #77858F;  height: 34px; border-radius: 6px; text-decoration: none;"
+    >
+      <span>タスクを見る</span>
+      <div style="display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #EBF1F7; border-radius: 50%; color: #77858F;">
+        <img 
+          src="/icons/right-statistic.svg" 
+          alt="right" 
+          style="height: 8px; width: auto; cursor: pointer; position: relative; left: 0.5px;"
+        />
+      </div>
+    </button>
+  </div>
+           </div>`
+        }
+   
+        `;
             });
 
             tooltipEl.innerHTML = innerHtml;
+            setTimeout(() => {
+              const button = document.getElementById('tooltip-button');
+
+              if (button) {
+                button.addEventListener('click', () => {
+                  const label = button.getAttribute('data-label') || 'null';
+
+                  window.dispatchEvent(
+                    new CustomEvent('tooltipClick', { detail: label }),
+                  );
+                });
+              }
+            }, 0);
           }
 
           const canvas = context.chart.canvas;
           const position = canvas.getBoundingClientRect();
 
           tooltipEl.style.opacity = '1';
-          tooltipEl.style.left =
-            position.left + 120 + window.pageXOffset + tooltip.caretX + 'px';
-          tooltipEl.style.top =
-            position.top - 50 + window.pageYOffset + tooltip.caretY + 'px';
+          tooltipEl.style.left = `${position.left + tooltip.caretX + window.pageXOffset}px`;
+          tooltipEl.style.top = `${position.top + tooltip.caretY + window.pageYOffset}px`;
         },
       },
+
       datalabels: {
         formatter: (value, context: Context) => {
           const maxLength = 20;
@@ -142,9 +224,59 @@ const PieChart = ({
     },
   };
 
+  useEffect(() => {
+    const handleTooltipClick = (event: Event) => {
+      const customEvent = event as CustomEvent<number | null>;
+      handleClickTooltip && handleClickTooltip(customEvent.detail);
+    };
+
+    window.addEventListener(
+      'tooltipClick',
+      handleTooltipClick as EventListener,
+    );
+    return () =>
+      window.removeEventListener(
+        'tooltipClick',
+        handleTooltipClick as EventListener,
+      );
+  }, [listIdData]);
+
+  const chartRef = useRef<any>(null);
+  const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!chartRef.current) return;
+    if (!isClickTooltip) return;
+
+    const chart = chartRef.current;
+    const points = chart.getElementsAtEventForMode(
+      event.nativeEvent,
+      'nearest',
+      { intersect: true },
+      true,
+    );
+
+    if (points.length) {
+      const firstPoint = points[0];
+      const dataIndex = firstPoint.index;
+
+      const label = chartData.labels?.[dataIndex] || 'Unknown';
+      const optionsId =
+        listIdData && listIdData.length > 0 ? listIdData[dataIndex] : '';
+
+      handleClickChart &&
+        handleClickChart({
+          label: label,
+          value: optionsId || '',
+        });
+    }
+  };
+
   return (
-    <div className={`w-96 h-96 my-0 mx-auto ${className}`}>
-      <Pie data={chartData} options={options} />
+    <div
+      onClick={(e: any) => {
+        handleClick(e);
+      }}
+      className={`w-96 h-96 my-0 mx-auto ${className}`}>
+      <Pie ref={chartRef} data={chartData} options={options} />
     </div>
   );
 };

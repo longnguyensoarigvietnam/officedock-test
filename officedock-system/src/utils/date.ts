@@ -6,6 +6,7 @@ import {
   DATE_TIME_LOCAL,
 } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
+import { StatisticCategoryInfo } from '@interfaces/statistic';
 
 export const getFormattedDateTime = (dateInput?: string | Date): string => {
   const date: Date = dateInput ? new Date(dateInput) : new Date();
@@ -879,3 +880,60 @@ export const calculateTotalTime = (data: OptionDropdownType[]): string => {
 
   return secondsToTime(totalSeconds);
 };
+
+export const formatDateToYMD = (dateString: Date | string) => {
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) {
+    return;
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+export function formatTimeToJapanese(time: string): string {
+  const [hours, minutes, seconds] = time.split(':').map(Number);
+
+  if (
+    isNaN(hours) ||
+    isNaN(minutes) ||
+    isNaN(seconds) ||
+    hours < 0 ||
+    minutes < 0 ||
+    seconds < 0 ||
+    minutes >= 60 ||
+    seconds >= 60
+  ) {
+    // Handle Error
+  }
+
+  const totalMinutes = hours * 60 + minutes + Math.floor(seconds / 60);
+
+  const resultHours = Math.floor(totalMinutes / 60);
+  const resultMinutes = totalMinutes % 60;
+
+  return `${resultHours}時間${String(resultMinutes).padStart(2, '0')}分`;
+}
+
+export function sumDurations(data: StatisticCategoryInfo[]): string {
+  if (data.length === 0) return '00:00:00';
+  let totalSeconds = 0;
+
+  data.forEach((item) => {
+    const [hours, minutes, seconds] = item.duration.split(':').map(Number);
+    totalSeconds += hours * 3600 + minutes * 60 + seconds;
+  });
+
+  const totalHours = Math.floor(totalSeconds / 3600);
+  const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+  const totalSecondsLeft = totalSeconds % 60;
+
+  const formattedHours = String(totalHours).padStart(2, '0');
+  const formattedMinutes = String(totalMinutes).padStart(2, '0');
+  const formattedSeconds = String(totalSecondsLeft).padStart(2, '0');
+
+  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+}
