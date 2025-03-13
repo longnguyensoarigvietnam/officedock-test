@@ -403,3 +403,10 @@ export enum OrderingDataType {
   TOTAL_DURATION = 'total_duration',
   PERCENT = 'percent',
 }
+export enum TimeOptionsType {
+  WEEK = '1週間',
+  MONTH = '1ヶ月',
+  HALF_YEAR = '6ヶ月',
+  YEAR = '1年',
+  MORE = 'カスタム',
+}

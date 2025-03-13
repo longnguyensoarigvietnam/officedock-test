@@ -4,6 +4,9 @@
   box-shadow: none !important;
   background-color: #ebf1f7;
 }
+.react-datepicker__day {
+  color: black !important;
+}
 
 .react-datepicker__header__dropdown {
   display: flex;
@@ -325,6 +328,8 @@
   background: theme('colors.gray.500');
 }
 .highlighted-date {
-  background-color: yellowgreen !important;
+  background-color: rgba(0, 104, 182, 0.3) !important;
   z-index: 1;
+  border-radius: 0 !important;
+  color: black !important;
 }

@@ -10,10 +10,11 @@ import { isHoliday } from 'japanese-holidays';
 import ImageRound from '../ImageRound';
 import ErrorMessage from '../ErrorMessage';
 import { DATE_FORMAT } from '@constants';
-import { ComponentSize } from '@constants/enums';
+import { ComponentSize, TimeOptionsType } from '@constants/enums';
 import './styles/multiPickerCustom.css';
 
 export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
+  isTypeTime: TimeOptionsType;
   initialStartDate?: Date;
   initialEndDate?: Date | null;
   className?: string;
@@ -38,6 +39,7 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
 };
 
 const MultiDatePickerCustom = ({
+  isTypeTime,
   label,
   className,
   labelClassName,
@@ -62,10 +64,13 @@ const MultiDatePickerCustom = ({
   const errorClasses = error ? 'border-danger' : 'border-gray-200';
 
   const dayClassName = (date: Date) => {
-    const startDate = new Date(2025, 2, 4);
-    const endDate = new Date(2025, 2, 10);
-
-    if (date >= startDate && date <= endDate) return 'highlighted-date';
+    if (initialStartDate && initialEndDate) {
+      const endDate = new Date(initialEndDate);
+      endDate.setDate(endDate.getDate() - 1);
+      const startDate = new Date(initialStartDate);
+      startDate.setDate(startDate.getDate());
+      if (date > startDate && date < endDate) return 'highlighted-date';
+    }
     if (isHoliday(date)) return 'holiday';
     else if (isSunday(date)) return 'sunday';
     else if (isSaturday(date)) return 'saturday';
@@ -103,19 +108,37 @@ const MultiDatePickerCustom = ({
       setEndDate(initialEndDate);
     }
   }, [initialEndDate]);
+  const getDaysFromTimeOption = (option: TimeOptionsType): number => {
+    switch (option) {
+      case TimeOptionsType.WEEK:
+        return 7;
+      case TimeOptionsType.MONTH:
+        return 30;
+      case TimeOptionsType.HALF_YEAR:
+        return 182;
+      case TimeOptionsType.YEAR:
+        return 365;
+      case TimeOptionsType.MORE:
+        return 0;
+      default:
+        return 0;
+    }
+  };
 
   const handleChange = (dates: [Date, Date | null]) => {
     const [start, end] = dates;
+    const days = getDaysFromTimeOption(isTypeTime);
+
     if (start && isEndButtonClicked) {
       const endDate = new Date(start);
-      endDate.setDate(start.getDate() - 6);
+      endDate.setDate(start.getDate() - (days - 1));
       setStartDate(endDate);
       setEndDate(start);
       onChange && onChange(endDate, start);
       resetEndClick && resetEndClick();
     } else if (start && isStartButtonClicked) {
       const endDate = new Date(start);
-      endDate.setDate(start.getDate() + 6);
+      endDate.setDate(start.getDate() + (days - 1));
       setStartDate(start);
       setEndDate(endDate);
       onChange && onChange(start, endDate);

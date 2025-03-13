@@ -12,7 +12,6 @@ import api from '@base/api';
 import { AxiosError } from 'axios';
 import { BasePagination } from '@interfaces/common';
 import { DataTaskListStatisticListType } from '@interfaces/statistic';
-import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 
 interface FilterProps {
   page: number;
@@ -24,6 +23,7 @@ interface FilterProps {
   tagIds?: string;
   totalDuration?: string;
   ordering: string;
+  pageSize: number;
 }
 
 const useStatisticTask = ({
@@ -61,8 +61,7 @@ const useStatisticTask = ({
     if (filter?.totalDuration)
       params.append('total_duration', String(filter.totalDuration));
     if (filter?.ordering) params.append('ordering', String(filter.ordering));
-
-    params.append('page_size', String(PAGINATION_PAGE_SIZE_KANBAN));
+    if (filter?.pageSize) params.append('page_size', String(filter.pageSize));
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 

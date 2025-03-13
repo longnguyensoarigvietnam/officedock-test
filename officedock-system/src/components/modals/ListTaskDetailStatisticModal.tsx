@@ -6,6 +6,7 @@ import Modal from '@components/common/Modal';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
+import Dropdown from '@components/common/Dropdown';
 
 import { EventWorkCategory, OrderingDataType } from '@constants/enums';
 import { formatDateToYMD, formatTimeToJapanese } from '@utils/date';
@@ -39,6 +40,7 @@ const ListTaskDetailStatisticModal = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [count, setCount] = useState<number>(0);
+  const [pageSize, setPageSize] = useState<number>(5);
 
   const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
   const [ordering, setOrdering] = useState<string>('');
@@ -59,6 +61,7 @@ const ListTaskDetailStatisticModal = ({
       page: currentPage,
       totalDuration: detailCategory?.totalDuration,
       ordering: ordering,
+      pageSize: pageSize,
     },
     onSuccess: (data) => {
       if (data) {
@@ -70,6 +73,21 @@ const ListTaskDetailStatisticModal = ({
       }
     },
   });
+
+  const optionList = [
+    {
+      label: '5',
+      value: 5,
+    },
+    {
+      label: '10',
+      value: 10,
+    },
+    {
+      label: '20',
+      value: 20,
+    },
+  ];
   return (
     <Modal
       open={open}
@@ -166,27 +184,55 @@ const ListTaskDetailStatisticModal = ({
           </TableBody>
         </Table>
       </div>
-      <div className="text-[#77858F] text-xs px-5 font-medium flex items-center justify-between">
-        <div className="w-fit">タスク数 {count}</div>
-        <div className="flex justify-center">
+      <div className="relative justify-center">
+        <div className="flex justify-center relative left-5">
           {taskList && taskList.length ? (
             <Pagination
+              sz="xs"
+              className="!px-2 !py-0"
               onChange={(pageNumber) => setCurrentPage(pageNumber)}
               currentPage={currentPage}
               totalPages={totalPages}
             />
           ) : null}
+          <div className=" absolute top-[-12px] right-[39px] w-fit  flex gap-[6px] items-center mt-2">
+            <div className="min-w-[56px] flex items-center">
+              <Dropdown
+                selectedOption={optionList.find(
+                  (item) => item.value === pageSize,
+                )}
+                options={optionList}
+                onChange={(e) => {
+                  setPageSize(e.value as number);
+                }}
+                classTextOption="justify-center"
+                labelOptionClass="!px-0 flex justify-center !ml-0"
+                className="h-[20px]  
+                  !text-xs !py-0 !pl-[7px] !pr-0 !text-[#6B7280] mt-1 !bg-white !border-[#77858F]"
+                classNameOption="[&>li]:!pl-0 [&>li]:!pr-0 [&>li]:!text-sm text-sm [&>li]:!text-black top-[-115px] "
+              />
+            </div>
+            <span className="font-normal text-[10px] text-[#6B7280]">
+              件ずつ表示
+            </span>
+          </div>
         </div>
-        <div
-          onClick={handleScroll}
-          className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium  h-[34px] rounded-md">
-          <span className="text-sm">タスク一覧へ</span>
-          <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-            <ImageRound
-              className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-              src="/icons/right-statistic.svg"
-              name="right"
-            />
+      </div>
+      <div className="text-[#77858F] text-xs px-5 font-medium flex mt-3 items-end justify-between">
+        <div className="w-fit  text-[#77858F] left-0 text-xs font-normal">
+          タスク数 {count}
+        </div>
+        <div>
+          <div className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F]  font-medium  h-[20px] rounded-md">
+            <span className="text-xs">タスク一覧へ</span>
+            <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+              <ImageRound
+                onClick={handleScroll}
+                className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                src="/icons/right-statistic.svg"
+                name="right"
+              />
+            </div>
           </div>
         </div>
       </div>

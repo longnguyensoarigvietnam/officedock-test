@@ -14,7 +14,7 @@ export type PaginationActiveButtonVariant =
   | 'danger'
   | 'neutral';
 
-export type PaginationSize = 'sm' | 'md' | 'lg';
+export type PaginationSize = 'xs' | 'sm' | 'md' | 'lg';
 
 export type PaginationProps = {
   currentPage: number;
@@ -111,6 +111,9 @@ const Pagination = ({
 
   let sizeClasses = '';
   switch (sz) {
+    case 'xs':
+      sizeClasses = 'w-5 h-5 text-xs';
+      break;
     case 'sm':
       sizeClasses = 'w-7 h-7 text-sm';
       break;
@@ -118,7 +121,7 @@ const Pagination = ({
       sizeClasses = 'w-9 h-9 text-sm';
       break;
     default:
-      sizeClasses = 'w-8 h-8 text-sm';
+      sizeClasses = 'w-[34px] h-[34px] text-sm';
       break;
   }
 

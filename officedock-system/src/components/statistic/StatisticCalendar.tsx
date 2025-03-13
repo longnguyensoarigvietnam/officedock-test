@@ -23,7 +23,9 @@ function StatisticCalendar({
 }: StatisticCalendarProps) {
   const modalRef = useRef<HTMLDivElement | null>(null);
 
-  const [isTypeTime, setIsTypeTime] = useState<string>(TimeOptionsType.MONTH);
+  const [isTypeTime, setIsTypeTime] = useState<TimeOptionsType>(
+    TimeOptionsType.MONTH,
+  );
   const [isDisableCalendar, setIsDisableCalendar] = useState(true);
 
   const [isOpenModal, setIsOpenModal] = useState(false);
@@ -89,7 +91,7 @@ function StatisticCalendar({
         return;
     }
 
-    setStartDate(newStartDate);
+    setDataStartDate(newStartDate);
   };
 
   // Change data time calendar
@@ -213,6 +215,7 @@ function StatisticCalendar({
             </div>
             <div className="flex-1">
               <MultiDatePickerCustom
+                isTypeTime={isTypeTime}
                 initialStartDate={dataStartDate}
                 initialEndDate={dataEndDate}
                 isDisable={isDisableCalendar}
