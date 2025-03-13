@@ -26,7 +26,6 @@ interface PaginationProps {
 const useCategoryList = (
   pagination?: PaginationProps,
   filter?: FilterProps,
-  ordering?: string,
 ) => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -40,7 +39,7 @@ const useCategoryList = (
 
     // TODO: Confirm with BE about how many and how to use param
     const apiUrl = pagination?.page
-      ? `${apiRouters.CATEGORY_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${ordering ? `&ordering=${ordering}` : ''}${filter?.name ? `&name=${filter.name}` : ''}`
+      ? `${apiRouters.CATEGORY_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${filter?.name ? `&name=${filter.name}` : ''}`
       : `${apiRouters.CATEGORY_LIST}`;
 
     const { data } = await api.get<BasePagination<Category[]>>(apiUrl);
@@ -53,7 +52,7 @@ const useCategoryList = (
     refetch: refetchCategoryList,
     isFetched: isFetchedCategory,
   } = useQuery({
-    queryKey: ['getCategoryList', [pagination, filter, ordering]],
+    queryKey: ['getCategoryList', [pagination, filter]],
     queryFn: getCategoryList,
     retry: 0,
     enabled: !!token,

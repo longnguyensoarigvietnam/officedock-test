@@ -301,12 +301,12 @@ const ActionFilterTask = ({
                                   isChecked={
                                     !!selectedCategories[
                                       team.organization.id
-                                    ]?.[category.id]?.selected
+                                    ]?.[category.id as number]?.selected
                                   }
                                   onChange={() =>
                                     toggleCategory(
                                       team.organization.id,
-                                      category,
+                                      category as { id: number; name: string; },
                                     )
                                   }
                                   label={category.name}

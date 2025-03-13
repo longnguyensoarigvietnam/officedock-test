@@ -937,3 +937,8 @@ export function sumDurations(data: StatisticCategoryInfo[]): string {
 
   return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 }
+
+//Get category formatted date
+export const getCategoryFormattedDate = (date: Date) => {
+  return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`;
+};

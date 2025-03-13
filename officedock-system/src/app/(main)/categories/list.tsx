@@ -1,97 +1,198 @@
 'use client';
 import { useMutation } from 'react-query';
-import Link from 'next/link';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
-import { Transition } from '@headlessui/react';
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useSession } from 'next-auth/react';
+import { AxiosError } from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import Input from '@components/common/Input';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Pagination from '@components/common/Pagination';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import InputSearch from '@components/common/InputSearch';
+import Input from '@components/common/Input';
+import Dropdown from '@components/common/Dropdown';
 
-import { apiRouters, pageRouters } from '@constants/routers';
-import { NO_DATA_AVAILABLE } from '@constants';
+import { apiRouters } from '@constants/routers';
+import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import {
+  ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
+  SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 import { PermissionsSystem } from '@constants/enums';
 
+import { getCategoryFormattedDate } from '@utils/date';
+import { hasPermissionInArray } from '@utils';
+
 import useCategoryList from '@hooks/useCategoryList';
+import { useErrorToast } from '@hooks/useErrorToast';
+import useDebounceText from '@hooks/useDebounceText';
+
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import api from '@base/api';
-import { CategoryStateContext } from '@providers/CategoryProvider';
+
 import { Category } from '@interfaces/category';
-import { hasPermissionInArray } from '@utils';
-import { AxiosError } from 'axios';
-import { useErrorToast } from '@hooks/useErrorToast';
+import api from '@base/api';
 
 const ListCategory = () => {
   const { setIsLoading } = useContext(LoadingContext);
 
   const { data: session } = useSession();
 
-  const { setDataCategoryDetail } = useContext(CategoryStateContext);
   const showErrorToast = useErrorToast();
 
   const { showToast } = useToast();
 
-  const [showFilter, setShowFilter] = useState(true);
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
-  const [idCategoryChoose, setIdCategoryChoose] = useState<number>();
+  const [selectedCategoryToDelete, setSelectedCategoryToDelete] =
+    useState<Category | null>(null);
+  const [selectedCategoryToUpdate, setSelectedCategoryToUpdate] = useState<{
+    name: string;
+    uuid: string;
+    status: boolean;
+    action: string
+  }>({
+    name: '',
+    uuid: '',
+    status: false,
+    action: ''
+  });
+  const categoryNameInputRef = useRef<HTMLInputElement | null>(null);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const [dataCategory, setDataCategory] = useState<Category[]>([]);
+  const [dataCategories, setDataCategories] = useState<Category[]>([]);
 
   // TODO: Update logic sort for multi column
-  const [orderingRequest, _setOrderingRequest] = useState('');
-
-  const { register, handleSubmit } = useForm<{ name: string }>({
-    mode: 'onSubmit',
-  });
-  const [filterRequest, setFilterRequest] = useState({
-    name: '',
-  });
+  const [searchCategoryName, setSearchCategoryName] = useState('');
+  const debouncedFilterByCategoryName = useDebounceText(
+    searchCategoryName,
+    1000,
+  );
 
   const { categoryList, refetchCategoryList } = useCategoryList(
     {
       page: currentPage,
+      pageSize,
     },
     {
-      name: filterRequest.name,
+      name: debouncedFilterByCategoryName,
     },
-    orderingRequest,
   );
 
   useEffect(() => {
     if (categoryList) {
-      setDataCategory(categoryList.results);
+      setDataCategories(categoryList.results);
       setTotalPages(categoryList.numPages);
     }
   }, [categoryList]);
 
-  // Delete Category
-  const handleOpenDeleteCategoryModal = (id: number) => {
-    setOpenConfirmDeleteModal(true);
-    setIdCategoryChoose(id);
+  useEffect(() => {
+    if (debouncedFilterByCategoryName) {
+      setCurrentPage(1);
+    }
+  }, [debouncedFilterByCategoryName]);
+
+  // Edit category name
+  const handleEditCategory = async (data: {
+    uuid: string | number;
+    name: string;
+  }) => {
+    return await api.patch(apiRouters.CATEGORY_DETAIL(String(data.uuid)), {
+      name: data.name,
+    });
   };
+
+  const { mutate: editCategory } = useMutation(
+    'postEditCategory',
+    handleEditCategory,
+    {
+      onSuccess: () => {
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {
+        setSelectedCategoryToUpdate({
+          uuid: '',
+          name: '',
+          status: false,
+          action: ''
+        });
+        refetchCategoryList();
+      },
+    },
+  );
+
+  // Create category
+  const handleCreateCategory = async (data: {
+    uuid: string, 
+    name: string
+  }) => {
+    return await api.post(apiRouters.CATEGORY_LIST, data);
+  };
+
+  const { mutate: createCategory } = useMutation(
+    'postCreateCategory',
+    handleCreateCategory,
+    {
+      onSuccess: () => {
+        showToast({
+          description: SUCCESS_CREATE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+        setDataCategories((prev) => {
+          const updatedCategories = [...prev];
+          return updatedCategories.filter((category) => category.uuid != selectedCategoryToUpdate.uuid)
+        })
+      },
+      onSettled: () => {
+        setSelectedCategoryToUpdate({
+          uuid: '',
+          name: '',
+          status: false,
+          action: ''
+        });
+        refetchCategoryList();
+      },
+    },
+  );
+
+  // Delete category
+  const handleOpenDeleteCategoryModal = (category: Category) => {
+    setOpenConfirmDeleteModal(true);
+    setSelectedCategoryToDelete(category);
+  };
+
   const handleConfirmDeleteCategory = () => {
-    if (idCategoryChoose) {
+    if (selectedCategoryToDelete) {
       setIsLoading(true);
-      deleteCategory(idCategoryChoose);
+      deleteCategory(String(selectedCategoryToDelete.uuid));
       return;
     }
   };
-  const postDeleteCategory = async (id: number) => {
+
+  const postDeleteCategory = async (uuid: string) => {
     const { data: response } = await api.delete(
-      apiRouters.CATEGORY_DETAIL(`${id}`),
+      apiRouters.CATEGORY_DETAIL(`${uuid}`),
     );
     return response;
   };
@@ -101,8 +202,8 @@ const ListCategory = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      if (categoryList?.results.length === 1 && currentPage > 1) {
-        // If change current page, useCategoryList auto recall, just don't need using refetchCategoryList
+      if (dataCategories.length === 1 && currentPage > 1) {
+        // If change current page, useTagList auto recall, just don't need using refetchTagList
         setCurrentPage(currentPage - 1);
       } else {
         refetchCategoryList();
@@ -114,147 +215,199 @@ const ListCategory = () => {
       setOpenConfirmDeleteModal(false);
       setIsLoading(false);
     },
+    onSettled: () => {
+      setSelectedCategoryToDelete(null);
+    },
   });
 
-  const onSubmit: SubmitHandler<{ name: string }> = (data) => {
-    setCurrentPage(1);
-    setFilterRequest({
-      name: encodeURIComponent(`${data.name}`) || '',
-    });
-  };
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (
+        categoryNameInputRef.current &&
+        !categoryNameInputRef.current.contains(event.target)
+      ) {
+        if(selectedCategoryToUpdate.action == 'EDIT'){
+          editCategory({
+            uuid: selectedCategoryToUpdate.uuid,
+            name: selectedCategoryToUpdate.name,
+          });
+        } else{
+          createCategory({
+            uuid: String(selectedCategoryToUpdate.uuid),
+            name: selectedCategoryToUpdate.name,
+          })
+        }
+        
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategoryToUpdate.uuid, selectedCategoryToUpdate.name, selectedCategoryToUpdate.action]);
+
   return (
     <Fragment>
-      <div className="flex flex-col border rounded-lg">
-        <div
-          className={`flex justify-between px-3 py-4 rounded-t-lg ${showFilter && 'border-b'} bg-gray-100`}>
-          <span className="text-gray-700 text-base font-medium">検索</span>
-          <ImageRound
-            name="Filter extend icon"
-            src={'/icons/arrow-down.svg'}
-            className={`w-4 h-4 hover:cursor-pointer ${!showFilter && 'rotate-180'}`}
-            onClick={() => setShowFilter(!showFilter)}
-          />
-        </div>
-        <Transition
-          show={showFilter}
-          enter="transition-transform duration-300 ease-out"
-          enterFrom="transform -translate-y-[10%]"
-          enterTo="transform translate-y-0"
-          leave="transition-transform duration-150 ease-in"
-          leaveFrom="transform translate-y-0"
-          leaveTo="transform -translate-y-[10%]">
-          <form
-            className={`flex flex-col gap-4 p-4 bg-white`}
-            onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex gap-4">
-              <div className="w-1/2 flex flex-col gap-2">
-                <div className="w-full flex items-end gap-4">
-                  <div className="w-1/2">
-                    <Input
-                      label="集計カテゴリ"
-                      placeholder="入力してください"
-                      register={register('name')}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                variant="secondary"
-                type="submit"
-                className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
-                絞り込み
-              </Button>
-            </div>
-          </form>
-        </Transition>
-      </div>
-      <div className="flex justify-end">
+      <div className="flex justify-between">
+        <InputSearch
+          placeholder="業務カテゴリーを検索"
+          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
+          iconClassName="w-[14px] h-[14px]"
+          onChange={(e) => {
+            setSearchCategoryName(e.target.value);
+          }}
+        />
         {session?.user.permissions &&
           hasPermissionInArray(
             session?.user.permissions,
             PermissionsSystem.CATEGORY_ADD,
           ) && (
-            <Link href={pageRouters.CREATE_CATEGORY.href} className={'flex'}>
-              <Button className="w-44">新規登録</Button>
-            </Link>
+            <Button
+              className="w-40"
+              onClick={() => {
+                const newUuid = uuidv4();
+                setDataCategories((prev) => [
+                  {
+                    uuid: newUuid,
+                    name: '',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                  },
+                  ...prev,
+                ]);
+                setSelectedCategoryToUpdate({
+                  uuid: newUuid,
+                  name: '',
+                  status: true,
+                  action: 'CREATE'
+                });
+              }}>
+              <ImageRound
+                src="/icons/add-with-background.svg"
+                name="Add icon"
+                className="!w-4 !h-4 mr-2 text-gray-400 cursor-pointer"
+              />
+              タグの新規追加
+            </Button>
           )}
       </div>
-      <div className="w-full">
+      <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]">
         <Table className="bg-white !rounded-lg relative">
-          <TableHeader>
-            <th className="w-3">
-              <span>ID</span>
+          <TableHeader className="!bg-[#F8FAFC]">
+            <th className="text-left w-[calc((100%_-_680px))] max-w-[calc(100%_-_680px)] border-r-[1px] border-r-[#D2DBE1]">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                業務カテゴリー名
+              </span>
             </th>
-            <th className="text-left w-[228px] max-w-[228px]">
-              <span>集計カテゴリ</span>
+            <th className="text-left w-[140px] max-w-[140px] border-r-[1px] border-r-[#D2DBE1]">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                登録日
+              </span>
             </th>
-            <th className="w-20">操作</th>
+            <th className="text-left w-[140px] max-w-[140px] border-r-[1px] border-r-[#D2DBE1]">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                更新日
+              </span>
+            </th>
+            <th className="text-left w-[400px] max-w-[400px]">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                業務カテゴリー階層で登録されているチーム
+              </span>
+            </th>
           </TableHeader>
           <TableBody>
-            {dataCategory && dataCategory.length ? (
-              dataCategory.map((element, index) => (
-                <tr key={index}>
-                  <td className="w-3">{element.id}</td>
-
-                  <td className="text-left w-[350px] max-w-[350px] truncate">
-                    {element.name}
-                  </td>
-
-                  <td className="w-20">
-                    <div className="flex w-full gap-2 justify-center">
-                      <Link
-                        onClick={() => {
-                          setDataCategoryDetail(element);
-                        }}
-                        href={pageRouters.DETAIL_CATEGORY.href(
-                          `${element.id}`,
-                        )}>
-                        <ImageRound
-                          name="Detail"
-                          src={'/icons/detail.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
-                        />
-                      </Link>
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.CATEGORY_UPDATE,
-                      ) ? (
-                        <Link
-                          onClick={() => {
-                            setDataCategoryDetail(element);
-                          }}
-                          href={pageRouters.EDIT_CATEGORY.href(
-                            `${element.id}`,
-                          )}>
-                          <ImageRound
-                            name="Edit"
-                            src={'/icons/edit.svg'}
-                            className={`w-6 h-6 hover:cursor-pointer`}
+            {dataCategories && dataCategories.length ? (
+              dataCategories.map((element, index) => (
+                <tr key={index} className="text-black">
+                  <td className="border-r-[1px] border-r-[#D2DBE1] truncate">
+                    <div className="flex justify-between items-center">
+                      {selectedCategoryToUpdate.uuid == element.uuid &&
+                      selectedCategoryToUpdate.status ? (
+                        <div ref={categoryNameInputRef} className="!w-[93%]">
+                          <Input
+                            placeholder="入力してください"
+                            className="!border-[1px] !border-[#77858F] w-full !text-sm !h-[34px]"
+                            defaultValue={element.name}
+                            onChange={(e) => {
+                              setSelectedCategoryToUpdate((prev) => {
+                                return {
+                                  ...prev,
+                                  name: e.target.value,
+                                };
+                              });
+                            }}
                           />
-                        </Link>
+                        </div>
                       ) : (
-                        <div className="w-6"></div>
+                        <p className="text-left truncate max-w-[500px] text-[16px] font-medium">
+                          {element.name}
+                        </p>
                       )}
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.CATEGORY_DELETE,
-                      ) ? (
-                        <ImageRound
-                          name="Delete"
-                          src={'/icons/delete.svg'}
-                          className={`w-6 h-6 hover:cursor-pointer`}
-                          onClick={() =>
-                            handleOpenDeleteCategoryModal(element.id)
-                          }
-                        />
-                      ) : (
-                        <div className="w-6"></div>
-                      )}
+                      <div className="flex gap-3 justify-end">
+                        {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.CATEGORY_UPDATE,
+                        ) ? (
+                          <div>
+                            <ImageRound
+                              name="Edit"
+                              src={'/icons/edit-gray.svg'}
+                              className={`w-3.5 h-3.5 hover:cursor-pointer ${!(selectedCategoryToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                              onClick={() => {
+                                setSelectedCategoryToUpdate({
+                                  uuid: element.uuid || '',
+                                  name: element.name,
+                                  status: true,
+                                  action: 'EDIT'
+                                });
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-3.5"></div>
+                        )}
+                        {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.CATEGORY_DELETE,
+                        ) ? (
+                          <ImageRound
+                            name="Delete"
+                            src={'/icons/delete-gray.svg'}
+                            className="w-[13px] h-[15px] hover:cursor-pointer"
+                            onClick={() =>
+                              handleOpenDeleteCategoryModal(element)
+                            }
+                          />
+                        ) : (
+                          <div className="w-[13px]"></div>
+                        )}
+                      </div>
                     </div>
+                  </td>
+                  <td className="border-r-[1px] border-r-[#D2DBE1]">
+                    <p className="text-center text-sm font-medium">
+                      {getCategoryFormattedDate(
+                        new Date(element.createdAt || new Date()),
+                      )}
+                    </p>
+                  </td>
+                  <td className="border-r-[1px] border-r-[#D2DBE1]">
+                    <p className="text-center text-sm font-medium">
+                      {getCategoryFormattedDate(
+                        new Date(element.updatedAt || new Date()),
+                      )}
+                    </p>
+                  </td>
+                  <td>
+                    <p className="text-left text-sm font-medium">
+                      {element.organizations
+                        ?.map((org: { id: number; name: string }) => org.name)
+                        .join('/ ')}
+                    </p>
                   </td>
                 </tr>
               ))
@@ -269,14 +422,35 @@ const ListCategory = () => {
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-center">
-        {dataCategory && dataCategory.length ? (
-          <Pagination
-            onChange={(pageNumber) => setCurrentPage(pageNumber)}
-            currentPage={currentPage}
-            totalPages={totalPages}
-          />
-        ) : null}
+      <div className="flex justify-center items-center w-full">
+        <div className="flex justify-center flex-1">
+          {dataCategories && dataCategories.length ? (
+            <Pagination
+              onChange={(pageNumber) => setCurrentPage(pageNumber)}
+              currentPage={currentPage}
+              totalPages={totalPages}
+            />
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-[66px]">
+            <Dropdown
+              options={PAGE_SIZE_OPTIONS}
+              selectedOption={PAGE_SIZE_OPTIONS.find(
+                (element) => element.value == pageSize,
+              )}
+              className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
+              classNameTextData="!text-xs"
+              classActive="!text-sm"
+              classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
+              labelOptionClass="!text-sm font-medium !pl-0.5 !border-b-[1px] !border-[#EBF1F7]"
+              onChange={(e) => {
+                setPageSize(Number(e.value));
+              }}
+            />
+          </div>
+          <p className="text-sm">件ずつ表示</p>
+        </div>
       </div>
       <ConfirmDeleteModal
         open={openConfirmDeleteModal}

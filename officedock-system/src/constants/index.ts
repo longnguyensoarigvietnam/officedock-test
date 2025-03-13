@@ -244,3 +244,30 @@ export const REACTION_LIST_SMALL = [
     value: ReactionIconValue.SMILE,
   },
 ];
+export const PAGE_SIZE_OPTIONS = [
+  {
+    label: '10',
+    value: 10,
+  },
+  {
+    label: '20',
+    value: 20,
+  },
+  {
+    label: '30',
+    value: 30,
+  },
+];
+
+export const HIERARCHY_COLOR_LIST = [
+  '#D7576A',
+  '#F0865F',
+  '#2E9267',
+  '#2E9267',
+  '#826AC4',
+  '#FC8EA2',
+  '#EDC45D',
+  '#70CB7E',
+  '#45AFD9',
+  '#899FEB',
+]
