@@ -1,23 +1,23 @@
 'use client';
-import { forwardRef, ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import DatePickerUI from 'react-datepicker';
 import type { ReactDatePickerProps } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ja } from 'date-fns/locale';
-import { format, isSaturday, isSunday } from 'date-fns';
+import { addMonths, format, isSaturday, isSunday } from 'date-fns';
 import { isHoliday } from 'japanese-holidays';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '../ImageRound';
 import ErrorMessage from '../ErrorMessage';
 import { DATE_FORMAT } from '@constants';
-import './styles/datepicker.css';
 import { ComponentSize } from '@constants/enums';
+import './styles/multiPickerCustom.css';
 
 export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
-  selected?: Date | null;
+  initialStartDate?: Date;
+  initialEndDate?: Date | null;
   className?: string;
+  isDisable?: boolean;
   labelClassName?: string;
   label?: string;
   error?: ReactNode;
@@ -30,14 +30,14 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   tooltipMsg?: string;
   iconClassName?: string;
   dateFormat?: string;
-  onChange?: (date: Date | null) => void;
+  isEndButtonClicked?: boolean;
+  isStartButtonClicked?: boolean;
+  onChange?: (startDate: Date, endDate: Date | null) => void;
+  resetEndClick?: () => void;
+  resetStartClick?: () => void;
 };
 
-const CustomInput = forwardRef<HTMLInputElement, any>((props, ref) => (
-  <input {...props} ref={ref} readOnly />
-));
-
-const DatePicker = ({
+const MultiDatePickerCustom = ({
   label,
   className,
   labelClassName,
@@ -45,23 +45,27 @@ const DatePicker = ({
   requireText,
   error,
   placeholder,
-  selected,
   size,
-  isShowInput = true,
+  initialStartDate,
+  initialEndDate,
   autoFocus = false,
+  isDisable = false,
+  isEndButtonClicked = false,
+  isStartButtonClicked = false,
   onChange,
-  tooltipMsg,
+  resetEndClick,
+  resetStartClick,
   dateFormat = DATE_FORMAT,
-  iconClassName,
   ...props
 }: DatePickerProps) => {
   const datePickerRef = useRef<DatePickerUI>(null);
   const errorClasses = error ? 'border-danger' : 'border-gray-200';
 
-  const [selectedDate, setSelectedDate] = useState(selected);
-  const [isOpen, setIsOpen] = useState(false);
-
   const dayClassName = (date: Date) => {
+    const startDate = new Date(2025, 2, 4);
+    const endDate = new Date(2025, 2, 10);
+
+    if (date >= startDate && date <= endDate) return 'highlighted-date';
     if (isHoliday(date)) return 'holiday';
     else if (isSunday(date)) return 'sunday';
     else if (isSaturday(date)) return 'saturday';
@@ -82,20 +86,50 @@ const DatePicker = ({
     }
   }, [autoFocus, size]);
 
-  useEffect(() => {
-    if (selected) {
-      setSelectedDate(selected);
-    } else {
-      setSelectedDate(null);
-    }
-  }, [selected]);
+  const [isOpen, setIsOpen] = useState(true);
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
-  const handleChange = (date: Date | null) => {
-    setSelectedDate(date);
-    onChange && onChange(date);
-    datePickerRef.current?.setOpen(false);
-    setIsOpen(false);
+  // Start date
+  useEffect(() => {
+    if (initialStartDate) {
+      setStartDate(initialStartDate);
+    }
+  }, [initialStartDate]);
+
+  // End date
+  useEffect(() => {
+    if (initialEndDate) {
+      setEndDate(initialEndDate);
+    }
+  }, [initialEndDate]);
+
+  const handleChange = (dates: [Date, Date | null]) => {
+    const [start, end] = dates;
+    if (start && isEndButtonClicked) {
+      const endDate = new Date(start);
+      endDate.setDate(start.getDate() - 6);
+      setStartDate(endDate);
+      setEndDate(start);
+      onChange && onChange(endDate, start);
+      resetEndClick && resetEndClick();
+    } else if (start && isStartButtonClicked) {
+      const endDate = new Date(start);
+      endDate.setDate(start.getDate() + 6);
+      setStartDate(start);
+      setEndDate(endDate);
+      onChange && onChange(start, endDate);
+      resetStartClick && resetStartClick();
+    } else {
+      setStartDate(start);
+      setEndDate(end);
+      onChange && onChange(start, end);
+    }
   };
+
+  useEffect(() => {
+    datePickerRef.current?.setOpen(true);
+  }, []);
 
   return (
     <div className={`w-full ${size}`}>
@@ -111,16 +145,28 @@ const DatePicker = ({
         </label>
       )}
       <div
-        className={`relative single-date  flex items-center ${label ? 'mt-1' : ''}`}
-        onClick={() => {
-          setIsOpen(true);
-        }}>
+        className={`relative multi-date flex items-center ${label ? 'mt-1' : ''}`}>
         <DatePickerUI
           scrollableYearDropdown
+          disabledKeyboardNavigation={isDisable}
           yearDropdownItemNumber={100}
-          ref={datePickerRef}
-          selected={selectedDate}
-          onChange={(date) => handleChange(date)}
+          ref={(el) => {
+            if (el) {
+              el.setOpen(true);
+            }
+          }}
+          open={isOpen}
+          disabled={isDisable}
+          selected={startDate}
+          onChange={(date: [Date, Date | null]) => {
+            if (!isDisable) {
+              handleChange(date);
+            }
+          }}
+          maxDate={addMonths(new Date(), 5)}
+          startDate={startDate}
+          endDate={endDate}
+          selectsRange
           locale={customLocale}
           dateFormat={dateFormat}
           className={`w-full px-3.5 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}
@@ -128,29 +174,25 @@ const DatePicker = ({
           todayButton="今日"
           wrapperClassName="w-full"
           customInput={
-            isShowInput ? (
-              <CustomInput />
-            ) : (
-              <div className="!w-4 h-4 absolute right-0 top-[-16px] !border-none cursor-pointer"></div>
-            )
+            <div className="!w-4 h-4 absolute right-0 top-[-16px] !border-none cursor-pointer"></div>
           }
           dayClassName={dayClassName}
           renderCustomHeader={({ date, decreaseMonth, increaseMonth }) => {
             const year = format(date, 'yyyy');
             const month = format(date, 'M');
             return (
-              <div className="flex items-center justify-between px-2 w-[60%] mb-2">
+              <div className="flex items-center justify-between px-2 w-[70%] mb-3">
                 <ImageRound
-                  className=" w-4 h-4 opacity-70 hover:cursor-pointer"
+                  className=" w-4 h-4 opacity-70 hover:cursor-pointer relative top-[1px]"
                   src="/icons/chevron-left.svg"
                   name="left"
                   onClick={decreaseMonth}
                 />
-                <p className="text-[#5B6770] text-[17px] font-medium">
+                <p className="text-[#5B6770] text-[15px] font-medium">
                   {year}年 {month}月
                 </p>
                 <ImageRound
-                  className=" w-4 h-4 opacity-70 hover:cursor-pointer"
+                  className=" w-4 h-4 opacity-70 hover:cursor-pointer relative top-[1px]"
                   src="/icons/chevron-right.svg"
                   name="right"
                   onClick={increaseMonth}
@@ -158,38 +200,13 @@ const DatePicker = ({
               </div>
             );
           }}
+          onClickOutside={() => setIsOpen(true)}
           {...props}
         />
-
-        <Tippy
-          content={tooltipMsg}
-          arrow={false}
-          delay={1000}
-          placement="top"
-          disabled={!tooltipMsg}
-          offset={[0, 15]}>
-          <div>
-            <ImageRound
-              className={`w-4 h-4 absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} ${className?.includes('hidden') && 'hidden'} ${iconClassName}`}
-              name="Calendar icon"
-              src={`${isShowInput ? '/icons/calendar-time.svg' : '/icons/calendar-time.svg'}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isOpen) {
-                  datePickerRef.current?.setOpen(false);
-                  setIsOpen(false);
-                } else {
-                  datePickerRef.current?.setOpen(true);
-                  setIsOpen(true);
-                }
-              }}
-            />
-          </div>
-        </Tippy>
       </div>
       {error && <ErrorMessage error={error} className="mt-[6px]" />}
     </div>
   );
 };
 
-export default DatePicker;
+export default MultiDatePickerCustom;

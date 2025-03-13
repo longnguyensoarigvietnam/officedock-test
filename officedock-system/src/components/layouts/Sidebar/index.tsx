@@ -182,11 +182,7 @@ const Sidebar = ({ className }: Props) => {
                               className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                               onClick={() => {
                                 if (isHasTerm) return;
-                                if (
-                                  item.href ===
-                                  pageRouters.STATISTIC_MANAGEMENT.href
-                                )
-                                  return;
+
                                 if (
                                   item.href ===
                                   pageRouters.TASKS_MANAGEMENT.href

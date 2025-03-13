@@ -254,7 +254,7 @@ const DailyReportBoard = () => {
         .map((item) => item.categoryColor);
 
       // Get list label
-      const listLableChart = dataStatistic.categories.map(
+      const listLabelChart = dataStatistic.categories.map(
         (item) => item.categoryName || '未設定',
       );
 
@@ -285,7 +285,7 @@ const DailyReportBoard = () => {
 
       setChartData({
         colors: listColor,
-        labels: listLableChart,
+        labels: listLabelChart,
         data: listValueChart,
         actualValue: listValueActualChart,
       });

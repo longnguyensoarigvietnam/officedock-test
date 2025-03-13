@@ -35,6 +35,7 @@ type Props = {
   openByDefault?: boolean;
   isShowIconDrop?: boolean;
   labelClass?: string;
+  labelTextClass?: string;
   classActive?: string;
   labelOptionClass?: string;
   addInput?: boolean;
@@ -51,6 +52,7 @@ const Dropdown = ({
   isLoading,
   options,
   labelClass,
+  labelTextClass,
   isStatusDropdown,
   labelOptionClass,
   placeholder,
@@ -143,7 +145,7 @@ const Dropdown = ({
   return (
     <div className="flex flex-col w-full h-full">
       {label && (
-        <label className={`text-sm`}>
+        <label className={`text-sm ${labelTextClass}`}>
           {label}
           {required && <span className="text-error align-super">*</span>}
         </label>

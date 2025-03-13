@@ -641,3 +641,22 @@ export const getChatFileURL = (url: string) => {
   }
   return '';
 };
+//Calculate duration percentage
+export const calculateDurationPercentage = (firstDuration: string, secondDuration: string) => {
+  // Convert "HH:MM:SS" to total seconds
+  const timeToSeconds = (time: string) => {
+      const [hours, minutes, seconds] = time.split(':').map(Number);
+      return (hours * 3600) + (minutes * 60) + seconds;
+  };
+
+  const firstSeconds = timeToSeconds(firstDuration);
+  const secondSeconds = timeToSeconds(secondDuration);
+
+  if (secondSeconds === 0) {
+      return ''
+  }
+
+  const percentage = (firstSeconds / secondSeconds) * 100;
+
+  return `${Math.ceil(percentage)}%`;
+}

@@ -312,6 +312,7 @@ export const apiRouters = {
   TAG_CREATION: '/creation-data/tags/',
   CATEGORY_FILTER_CREATION: '/creation-data/category-filters/',
   TASK_LIST_CHAT: '/creation-data/tasks/',
+  STATISTIC_CREATION: '/creation-data/statistics/',
 
   // USER
   USER_LIST: '/users/',
@@ -381,7 +382,7 @@ export const apiRouters = {
   READ_TERM: (id: string) => `/terms/${id}/read/`,
   TERM_LIST: '/terms/',
 
-  // STATISTIC
+  // DAILY REPORT
   DATA_DAILY_STATISTIC: '/stat-data/daily-report/',
   DATA_REMARK_DAILY: '/users/daily-report/',
 
@@ -422,4 +423,8 @@ export const apiRouters = {
   // STAT DATA
   STAT_DATA: '/stat-data/',
   CONFIRM_USER_DAILY: (id: number) => `/users/${id}/report/`,
+
+  // STATISTICS
+  STATISTICS_CATEGORIES: '/statistics/categories/',
+  STATISTICS_TASKS: '/statistics/tasks/',
 };
