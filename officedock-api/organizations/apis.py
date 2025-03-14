@@ -1,7 +1,7 @@
 from django.db import transaction
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Count, Q, Max, Exists, OuterRef
+from django.db.models import Count, Q
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, NotFound
@@ -559,7 +559,7 @@ class OrganizationCategoryHierarchyViewSet(
         user = self.request.user
         company = user.company
 
-        return super().get_queryset().filter(company=company)
+        return super().get_queryset().filter(company=company).order_by("-id")
 
     def get_serializer_class(self):
         """Custom serializer class"""
@@ -567,28 +567,6 @@ class OrganizationCategoryHierarchyViewSet(
             return OrganizationCategoryHierarchyForCreateSerializer
 
         return super().get_serializer_class()
-
-    def list(self, request, *args, **kwargs):
-        """Get list organiztion statistic category"""
-        queryset = (
-            self.get_queryset()
-            .filter(
-                Exists(
-                    OrganizationsStatisticCategories.objects.filter(
-                        organization=OuterRef("pk")
-                    )
-                )
-            )
-            .annotate(
-                latest_stat_category=Max(
-                    "organizations_statistic_categories__created_at"
-                )
-            )
-            .order_by("-latest_stat_category")
-        )
-        return self.response_ok(
-            OrganizationCategoryHierarchySerializer(queryset, many=True).data
-        )
 
     def get_serializer_context(self):
         """
