@@ -247,6 +247,7 @@ class StatisticTaskSerializer(DailyTaskSerializer):
             "categories",
             "type",
             "organization",
+            "created_at",
         ]
 
     def get_percent(self, obj):
@@ -300,6 +301,7 @@ class StatisticEventSerializer(DailyEventSerializer):
             "categories",
             "organization",
             "type",
+            "created_at",
         ]
 
     def get_percent(self, obj):
@@ -342,7 +344,7 @@ class BaseStatisticTaskSerializer(StatisticTaskSerializer):
 
     class Meta:
         model = Task
-        fields = ["id", "title", "total_duration", "type", "percent"]
+        fields = ["id", "title", "type"]
 
 
 class BaseStatisticEventSerializer(StatisticEventSerializer):

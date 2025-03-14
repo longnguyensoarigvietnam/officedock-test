@@ -42,33 +42,53 @@ def get_list_models(
     """
     Return list models by organizations, users and tags
     """
+
+    # Filters
+    filter_tasks = Q()
+    filter_events = Q()
+
+    if organizations:
+        filter_tasks &= Q(organization__in=organizations)
+        filter_events &= Q(organization__in=organizations)
+    if users:
+        filter_tasks &= Q(people_in_charge_tasks__user__in=users)
+        filter_events &= Q(participants__in=users)
+    if large_categories:
+        filter_tasks &= Q(
+            categories__large_statistic_category__id__in=large_categories
+        ) | Q(categories__large_statistic_category__isnull=True)
+        filter_events &= Q(
+            categories__large_statistic_category__id__in=large_categories
+        ) | Q(categories__large_statistic_category__isnull=True)
+    if tags:
+        filter_tasks &= Q(tags__in=tags)
+        filter_events &= Q(tags__in=tags)
+
+    # Optimized Query with Select Related and Prefetch Related
+    tasks = (
+        Task.objects.filter(filter_tasks)
+        .select_related("organization")  # Eager load ForeignKey
+        .prefetch_related(
+            "tags", "people_in_charge_tasks"
+        )  # Optimize ManyToMany
+    )
+
+    events = (
+        Schedule.objects.filter(filter_events)
+        .select_related("organization")
+        .prefetch_related("tags", "participants")
+    )
+
     tasks = Task.objects.filter(
-        Q(task_durations__started_at__gte=start_of_day)
+        Q(id__in=tasks.values_list("id", flat=True))
+        & Q(task_durations__started_at__gte=start_of_day)
         & Q(task_durations__paused_at__lte=end_of_day)
     ).distinct()
     events = Schedule.objects.filter(
-        Q(task_durations__started_at__gte=start_of_day)
+        Q(id__in=events.values_list("id", flat=True))
+        & Q(task_durations__started_at__gte=start_of_day)
         & Q(task_durations__paused_at__lte=end_of_day)
     ).distinct()
-    if organizations:
-        tasks = tasks.filter(organization__in=organizations)
-        events = events.filter(organization__in=organizations)
-    if users:
-        tasks = tasks.filter(people_in_charge_tasks__user__in=users)
-        events = events.filter(participants__in=users)
-    if large_categories:
-        tasks = tasks.filter(
-            Q(categories__large_statistic_category__id__in=large_categories)
-            | Q(categories__large_statistic_category__isnull=True)
-        )
-        events = events.filter(
-            Q(categories__large_statistic_category__id__in=large_categories)
-            | Q(categories__large_statistic_category__isnull=True)
-        )
-
-    if tags:
-        tasks = tasks.filter(tags__in=tags)
-        events = events.filter(tags__in=tags)
 
     return tasks, events
 
@@ -204,7 +224,6 @@ def aggregate_durations(
             "categories__small_statistic_category__id",
         ),
     ]
-
     for card in combine_cards:
         category_name, category_id = None, None
         organization_id = card["organization__id"]
@@ -222,7 +241,6 @@ def aggregate_durations(
             .first()
         )
         duration = card["duration"]
-
         if category_name in category_dict:
             category_dict[category_name]["duration"] += duration
         else:
@@ -269,10 +287,10 @@ def aggregate_durations_by_tag(tasks, events, tag_ids=None):
         tag_name = card["tags__name"]
         duration = card["duration"]
         if tag_id and tag_id in tag_ids:
-            if tag_name in tag_dict:
-                tag_dict[tag_name]["duration"] += duration
+            if tag_id in tag_dict:
+                tag_dict[tag_id]["duration"] += duration
             else:
-                tag_dict[tag_name] = {
+                tag_dict[tag_id] = {
                     "tag_id": tag_id,
                     "tag_name": tag_name,
                     "duration": duration,
@@ -342,14 +360,8 @@ def process_categories(
         if tasks or events:
             filter_key = category_id_map[category_type]
             if category_id:
-                task_filter = tasks.filter(
-                    Q(**{filter_key: category_id})
-                    | Q(**{category_id_null_map[category_type]: True})
-                )
-                event_filter = events.filter(
-                    Q(**{filter_key: category_id})
-                    | Q(**{category_id_null_map[category_type]: True})
-                )
+                task_filter = tasks.filter(Q(**{filter_key: category_id}))
+                event_filter = events.filter(Q(**{filter_key: category_id}))
             else:
                 task_filter = tasks.filter(
                     **{category_id_null_map[category_type]: True}
@@ -358,26 +370,9 @@ def process_categories(
                     **{category_id_null_map[category_type]: True}
                 )
             if is_with_tasks:
-                task_filter = tasks.filter(Q(**{filter_key: category_id}))
-                event_filter = events.filter(Q(**{filter_key: category_id}))
-                limit_task = 5
-                limit_event = 5
-                task_count = task_filter.count()
-                event_count = event_filter.count()
-                total_count = task_count + event_count
-                if total_count <= 10:
-                    limit_task = task_count
-                    limit_event = event_count
-                elif task_count > 5 > event_count:
-                    limit_task = 10 - event_count
-                    limit_event = event_count
-                elif task_count < 5 < event_count:
-                    limit_event = 10 - task_count
-                    limit_task = task_count
-
                 data["tasks"] = (
                     BaseStatisticTaskSerializer(
-                        task_filter.all()[:limit_task],
+                        task_filter.all()[:3],
                         many=True,
                         context={
                             "start_of_day": start_of_day,
@@ -386,7 +381,7 @@ def process_categories(
                         },
                     ).data
                     + BaseStatisticEventSerializer(
-                        event_filter.all()[:limit_event],
+                        event_filter.all()[:3],
                         many=True,
                         context={
                             "start_of_day": start_of_day,
@@ -493,7 +488,6 @@ def process_users(
                     },
                     "duration": format_duration(duration),
                     "percent": min(round(percent_per_total_duration), 100),
-                    # "tasks": combine_tasks,
                 }
             )
 
@@ -508,7 +502,7 @@ def process_tags(
     start_of_day=None,
     end_of_day=None,
     is_with_tasks=False,
-    is_with_users=False,
+    users=None,
 ):
     """Processes category durations, calculates percentages, and returns structured data."""
     percent = 100
@@ -529,16 +523,32 @@ def process_tags(
                 event_filter = events.filter(tags__id=tag["tag_id"]).all()
 
                 if is_with_tasks:
-                    data["tasks"] = merge_task_and_event(
-                        task_filter, event_filter, start_of_day, end_of_day
+                    data["tasks"] = (
+                        BaseStatisticTaskSerializer(
+                            task_filter.all()[:3],
+                            many=True,
+                            context={
+                                "start_of_day": start_of_day,
+                                "end_of_day": end_of_day,
+                            },
+                        ).data
+                        + BaseStatisticEventSerializer(
+                            event_filter.all()[:3],
+                            many=True,
+                            context={
+                                "start_of_day": start_of_day,
+                                "end_of_day": end_of_day,
+                            },
+                        ).data
                     )
-                elif is_with_users:
+                elif users:
                     data["users"] = process_users(
                         time_str_to_timedelta(tag_duration),
                         task_filter,
                         event_filter,
                         start_of_day,
                         end_of_day,
+                        users,
                     )
 
         # Calculate the percentage of the total duration
@@ -565,7 +575,7 @@ def process_tags(
     return tags_data
 
 
-def process_category_per_user(
+def process_per_user(
     users,
     tasks,
     events,
@@ -574,53 +584,72 @@ def process_category_per_user(
     large_category_id=None,
     medium_category_id=None,
     is_get_total_duration=False,
+    is_tag=False,
+    tag_ids=None,
 ):
     """
     Handle process category per user.
     """
     total_duration = timedelta()
-    category_totals = []
+    aggregate_total = []
     for user in users:
         filter_tasks = tasks.filter(people_in_charge_tasks__user=user)
         filter_events = events.filter(participants=user)
-        if filter_tasks or filter_events:
-            if is_get_total_duration:
-                merged_duration = merge_task_and_event(
-                    filter_tasks, filter_events, start_of_day, end_of_day
-                )
-                # Calculate total duration
-                for task in merged_duration:
-                    total_duration += time_str_to_timedelta(
-                        task["total_duration"]
-                    )
-            # Get list large category per user
-            category_totals.append(
-                aggregate_durations(
-                    annotate_duration(filter_tasks, start_of_day, end_of_day),
-                    annotate_duration(filter_events, start_of_day, end_of_day),
-                    large_category_id,
-                    medium_category_id,
-                )
-            )
-    # Handle sum duration and merge category has same id
-    category_list = defaultdict(
-        lambda: {
-            "category_name": None,
-            "category_color": None,
-            "duration": timedelta(),
-        }
-    )
-    for sublist in category_totals:
-        for item in sublist:
-            category_id = item["category_id"]
-            category_list[category_id]["category_name"] = item["category_name"]
-            category_list[category_id]["category_color"] = item[
-                "category_color"
-            ]
-            category_list[category_id]["duration"] += item["duration"]
-    category_list = [{"category_id": k, **v} for k, v in category_list.items()]
 
-    return total_duration, category_list
+        if filter_tasks or filter_events:
+            if is_tag:
+                aggregate_total.append(
+                    aggregate_durations_by_tag(
+                        annotate_duration(
+                            filter_tasks, start_of_day, end_of_day
+                        ),
+                        annotate_duration(
+                            filter_events, start_of_day, end_of_day
+                        ),
+                        tag_ids=tag_ids,
+                    )
+                )
+            else:
+                # Get list large category per user
+                aggregate_total.append(
+                    aggregate_durations(
+                        annotate_duration(
+                            filter_tasks, start_of_day, end_of_day
+                        ),
+                        annotate_duration(
+                            filter_events, start_of_day, end_of_day
+                        ),
+                        large_category_id,
+                        medium_category_id,
+                    )
+                )
+    if is_tag:
+        key_id = "tag_id"
+        name_key = "tag_name"
+        extra_keys = {}  # Dont need color while is_tag
+    else:
+        key_id = "category_id"
+        name_key = "category_name"
+        extra_keys = {"category_color": None}
+
+    # Handle sum duration and merge same id
+    result_dict = defaultdict(
+        lambda: {name_key: None, "duration": timedelta(), **extra_keys}
+    )
+
+    for sublist in aggregate_total:
+        for item in sublist:
+            item_id = item[key_id]
+            result_dict[item_id][name_key] = item[name_key]
+            result_dict[item_id]["duration"] += item["duration"]
+            if is_get_total_duration:
+                total_duration += item["duration"]
+            if not is_tag and "category_color" in item:
+                result_dict[item_id]["category_color"] = item["category_color"]
+
+    result_list = [{key_id: k, **v} for k, v in result_dict.items()]
+
+    return total_duration, result_list
 
 
 def process_merge_card_per_tag(
