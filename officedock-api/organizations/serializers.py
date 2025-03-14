@@ -1,3 +1,4 @@
+from django.db.models import Max
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -43,6 +44,7 @@ class StatisticCategorySerializer(BaseStatisticCategorySerializer):
     Serializer for statistic category
     """
 
+    uuid = serializers.UUIDField(required=False, allow_null=True)
     organizations = serializers.SerializerMethodField()
 
     class Meta:
@@ -81,9 +83,15 @@ class StatisticCategorySerializer(BaseStatisticCategorySerializer):
 
     def get_organizations(self, obj):
         """Get organizations by category"""
-        orgs = obj.organizations.order_by(
-            "organizations_statistic_categories__id"
-        ).distinct()
+        orgs = (
+            obj.organizations.annotate(
+                latest_stat_category_id=Max(
+                    "organizations_statistic_categories__id"
+                )
+            )
+            .order_by("-latest_stat_category_id")
+            .distinct()
+        )
         return BaseOrganizationSerializer(orgs, many=True).data
 
 

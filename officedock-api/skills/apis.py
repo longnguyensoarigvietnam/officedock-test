@@ -75,10 +75,46 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         return context
 
     @transaction.atomic
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
         """Handle create statistic category"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        uuid = serializer_data.get("uuid", None)
         company = self.request.user.company
-        serializer.save(company=company)
+
+        # Check if a category with the same uuid already exists for the company
+        if uuid and (
+            existing_category := StatisticCategory.objects.filter(
+                uuid=uuid, company=company
+            ).first()
+        ):
+            # Update the existing category (you can also update other fields if needed)
+            existing_category.name = serializer_data.get(
+                "name", existing_category.name
+            )
+            existing_category.save()
+        else:
+            # Create a new category if none exists
+            existing_category = serializer.save(company=company)
+
+        return self.response_created(
+            self.get_serializer(existing_category).data
+        )
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="validation-data",
+        serializer_class=StatisticCategorySerializer,
+    )
+    def validation_data(self, request):
+        """
+        Get list of member in organization
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return self.response_ok()
 
     @transaction.atomic
     def perform_destroy(self, instance):
