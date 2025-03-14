@@ -15,10 +15,10 @@ from django.utils import timezone
 
 from calendars.models import Schedule
 from common.utils import (
-    generate_random_color,
     format_duration,
     time_str_to_timedelta,
 )
+from organizations.constants import CategoryColors
 from organizations.models import OrganizationsStatisticCategories
 from stat_data.constants import NONE_CATEGORY
 from stat_data.serializers import (
@@ -225,21 +225,22 @@ def aggregate_durations(
         ),
     ]
     for card in combine_cards:
-        category_name, category_id = None, None
+        category_name, category_id, category_color = None, None, None
         organization_id = card["organization__id"]
         for name_key, id_key in category_fields:
             if card.get(name_key):
                 category_name = card[name_key]
                 category_id = card[id_key]
                 break
-        category_color = (
-            OrganizationsStatisticCategories.objects.filter(
-                organization_id=organization_id,
-                large_statistic_category__name=category_name,
+        if not large_category_id and not medium_category_id:
+            category_color = (
+                OrganizationsStatisticCategories.objects.filter(
+                    organization_id=organization_id,
+                    large_statistic_category__id=category_id,
+                )
+                .values_list("color", flat=True)
+                .first()
             )
-            .values_list("color", flat=True)
-            .first()
-        )
         duration = card["duration"]
         if category_name in category_dict:
             category_dict[category_name]["duration"] += duration
@@ -255,8 +256,8 @@ def aggregate_durations(
         if category_dict.get("empty_category") is None:
             category_dict["empty_category"] = {
                 "category_id": None,
-                "category_name": None,
-                "category_color": generate_random_color(),
+                "category_name": NONE_CATEGORY,
+                "category_color": CategoryColors.GRAY.value,
                 "duration": timedelta(0),
             }
         for task in task_without_large_durations:
@@ -265,8 +266,8 @@ def aggregate_durations(
         if category_dict.get("empty_category") is None:
             category_dict["empty_category"] = {
                 "category_id": None,
-                "category_name": None,
-                "category_color": generate_random_color(),
+                "category_name": NONE_CATEGORY,
+                "category_color": CategoryColors.GRAY.value,
                 "duration": timedelta(0),
             }
         for event in event_without_large_durations:
