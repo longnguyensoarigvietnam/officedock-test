@@ -29,6 +29,8 @@ export const NO_OPTIONS_CUSTOM = 'データがありません';
 
 export const PAGINATION_PAGE_SIZE_DEFAULT = 5;
 
+export const PAGINATION_PAGE_SIZE_SMALL = 10;
+
 export const PAGINATION_PAGE_SIZE_MEDIUM = 20;
 
 export const PAGINATION_PAGE_SIZE_HIGHT = 50;

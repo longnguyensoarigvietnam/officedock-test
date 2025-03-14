@@ -238,4 +238,5 @@ export interface DataTaskListStatisticListType {
     pausedAt: string;
   }[];
   organization: number;
+  createdAt: string;
 }

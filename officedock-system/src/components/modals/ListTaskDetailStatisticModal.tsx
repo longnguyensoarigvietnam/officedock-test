@@ -1,14 +1,18 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
 import Modal from '@components/common/Modal';
-import { Table, TableBody, TableHeader } from '@components/common/Table';
 import ImageRound from '@components/common/ImageRound';
-import Pagination from '@components/common/Pagination';
-import Dropdown from '@components/common/Dropdown';
+import {
+  SkeletonContainer,
+  SkeletonElement,
+} from '@components/common/SkeletonLoading';
+import { Table, TableBody } from '@components/common/Table';
 
+import { PAGINATION_PAGE_SIZE_SMALL } from '@constants';
 import { EventWorkCategory, OrderingDataType } from '@constants/enums';
+
 import { formatDateToYMD, formatTimeToJapanese } from '@utils/date';
 import { DataTaskListStatisticListType } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
@@ -37,15 +41,17 @@ const ListTaskDetailStatisticModal = ({
   onClose,
   handleScroll,
 }: Props) => {
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+
   const [count, setCount] = useState<number>(0);
-  const [pageSize, setPageSize] = useState<number>(5);
+  const [lastCreateAt, setLastCreateAt] = useState<string>('');
+  const [hastMore, setHasMore] = useState(false);
 
   const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
   const [ordering, setOrdering] = useState<string>('');
+  const [isSkeletonLoading, setIsSkeletonLoading] = useState(true);
 
-  useStatisticTask({
+  const { refetchStatisticCategoryList } = useStatisticTask({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -58,36 +64,62 @@ const ListTaskDetailStatisticModal = ({
         detailCategory && detailCategory.type === EventWorkCategory.MEDIUM
           ? (detailCategory.id as number)
           : undefined,
-      page: currentPage,
+      page: 1,
       totalDuration: detailCategory?.totalDuration,
       ordering: ordering,
-      pageSize: pageSize,
+      pageSize: PAGINATION_PAGE_SIZE_SMALL,
     },
+    created_at: lastCreateAt,
     onSuccess: (data) => {
+      setIsSkeletonLoading(false);
       if (data) {
-        setTotalPages(data.numPages);
-        setCount(data.count);
+        setCount(count + data.count);
+        setHasMore(data.hasNext as boolean);
         if (data.results) {
-          setTaskList(data.results);
+          setTaskList((prev) => {
+            const newMessages = data.results.filter(
+              (newMsg) =>
+                !(prev || []).some(
+                  (existingMsg) => existingMsg.id === newMsg.id,
+                ),
+            );
+            return [...(prev || []), ...newMessages];
+          });
+          if (data.results.length > 0) {
+            const lastItem = data.results[data.results.length - 1];
+            setLastCreateAt(lastItem.createdAt);
+          }
         }
       }
     },
   });
+  useEffect(() => {
+    const handleScroll = () => {
+      const chatContainer = listContainerRef.current;
+      if (
+        chatContainer &&
+        hastMore &&
+        chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) ===
+          chatContainer.scrollHeight
+      ) {
+        refetchStatisticCategoryList();
+      }
+    };
 
-  const optionList = [
-    {
-      label: '5',
-      value: 5,
-    },
-    {
-      label: '10',
-      value: 10,
-    },
-    {
-      label: '20',
-      value: 20,
-    },
-  ];
+    const chatContainer = listContainerRef.current;
+
+    if (chatContainer) {
+      chatContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (chatContainer) {
+        chatContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hastMore]);
+
   return (
     <Modal
       open={open}
@@ -106,119 +138,116 @@ const ListTaskDetailStatisticModal = ({
         </div>
       </div>
       <div className="p-5">
-        <Table
-          classCustom="bg-white rounded-md !p-0 "
-          className="bg-white !rounded-md relative !p-0 border border-[#D2DBE1]">
-          <TableHeader className="h-10 border-b border-[#D2DBE1]">
-            <th className="w-[332px] ">
-              <span className="!text-[#77858F]">タスク名</span>
-            </th>
-            <th className="w-[110px] border-l !px-0 border-[#D2DBE1]">
-              <div className="flex gap-[25px] items-center justify-center">
-                <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
-                <div
-                  onClick={() => {
-                    if (ordering === OrderingDataType.TOTAL_DURATION) {
-                      setOrdering('');
-                    } else {
-                      setOrdering(OrderingDataType.TOTAL_DURATION);
-                    }
-                  }}
-                  className=" relative flex flex-col">
-                  <Image
-                    src="/icons/sort-down.svg"
-                    alt="Sort down"
-                    width={9}
-                    height={10}
-                    className={`cursor-pointer justify-self-end  ${ordering === OrderingDataType.TOTAL_DURATION && 'rotate-180'} `}
-                  />
-                </div>
+        {isSkeletonLoading ? (
+          <div>
+            <SkeletonContainer className="!p-0 !rounded-sm !gap-0 w-full border-[1px] border-gray-200">
+              <div className="">
+                <Table className="!ring-0 !rounded-none !border-separate">
+                  <TableBody className="!divide-y-0 [&>tr:nth-child(even)]:bg-gray-100 [&>tr:nth-child(even)]:rounded-lg [&>tr>td:first-child]:rounded-l-lg [&>tr>td:last-child]:rounded-r-lg [&>tr>td]:!py-5">
+                    {[...Array(4)].map((_, index) => (
+                      <tr key={index}>
+                        <td>
+                          <SkeletonElement className="!w-[250px]" />
+                        </td>
+                        <td>
+                          <SkeletonElement className="!w-[90px]" />
+                        </td>
+                        <td>
+                          <SkeletonElement className="!w-[72px]" />
+                        </td>
+                      </tr>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            </th>
-            <th className="w-[72px] border-l !px-0 border-[#D2DBE1]">
-              <div className="flex gap-2 items-center justify-center">
-                <p className="!text-xs font-medium !text-[#77858F]">割合</p>
-                <div
-                  onClick={() => {
-                    if (ordering === OrderingDataType.PERCENT) {
-                      setOrdering('');
-                    } else {
-                      setOrdering(OrderingDataType.PERCENT);
-                    }
-                  }}
-                  className=" relative flex flex-col">
-                  <Image
-                    src="/icons/sort-down.svg"
-                    alt="Sort down"
-                    width={9}
-                    height={10}
-                    className={`cursor-pointer justify-self-end  ${ordering === OrderingDataType.PERCENT && 'rotate-180'} `}
-                  />
-                </div>
-              </div>
-            </th>
-          </TableHeader>
-          <TableBody>
-            {taskList.length > 0 ? (
-              taskList.map((item, index) => {
-                return (
-                  <tr key={index} className="font-medium text-base text-black">
-                    <td className="w-[332px] text-left !px-4  ">
-                      <p className="break-all line-clamp-2"> {item.title}</p>
-                    </td>
-
-                    <td className="border-l text-sm !px-0 border-[#D2DBE1] w-[110px] max-w-[110px] truncate">
-                      {item.totalDuration &&
-                        formatTimeToJapanese(item.totalDuration)}
-                    </td>
-
-                    <td className="border-l text-sm !px-0 border-[#D2DBE1] max-w-[72px] truncate">
-                      {item.percent}%
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <></>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="relative justify-center">
-        <div className="flex justify-center relative left-5">
-          {taskList && taskList.length ? (
-            <Pagination
-              sz="xs"
-              className="!px-2 !py-0"
-              onChange={(pageNumber) => setCurrentPage(pageNumber)}
-              currentPage={currentPage}
-              totalPages={totalPages}
-            />
-          ) : null}
-          <div className=" absolute top-[-12px] right-[39px] w-fit  flex gap-[6px] items-center mt-2">
-            <div className="min-w-[56px] flex items-center">
-              <Dropdown
-                selectedOption={optionList.find(
-                  (item) => item.value === pageSize,
-                )}
-                options={optionList}
-                onChange={(e) => {
-                  setPageSize(e.value as number);
-                }}
-                classTextOption="justify-center"
-                labelOptionClass="!px-0 flex justify-center !ml-0"
-                className="h-[20px]  
-                  !text-xs !py-0 !pl-[7px] !pr-0 !text-[#6B7280] mt-1 !bg-white !border-[#77858F]"
-                classNameOption="[&>li]:!pl-0 [&>li]:!pr-0 [&>li]:!text-sm text-sm [&>li]:!text-black top-[-115px] "
-              />
-            </div>
-            <span className="font-normal text-[10px] text-[#6B7280]">
-              件ずつ表示
-            </span>
+            </SkeletonContainer>
           </div>
-        </div>
+        ) : (
+          <div
+            ref={listContainerRef}
+            className="bg-white !rounded-md relative max-h-[300px] overflow-y-auto !p-0 border border-[#D2DBE1]">
+            <div className="h-10 border-b sticky top-0 border-[#D2DBE1]  flex items-center">
+              <div className="w-[332px] h-full flex bg-[#F8FAFC] items-center px-[18px] ">
+                <span className="!text-[#77858F]">タスク名</span>
+              </div>
+              <div className="w-[110px] h-full flex bg-[#F8FAFC] items-center border-l pl-[14px]  border-[#D2DBE1]">
+                <div className="flex gap-[25px] items-center justify-center">
+                  <p className="!text-xs font-medium !text-[#77858F]">
+                    計測時間
+                  </p>
+                  <div
+                    onClick={() => {
+                      if (ordering === OrderingDataType.TOTAL_DURATION) {
+                        setOrdering('');
+                      } else {
+                        setOrdering(OrderingDataType.TOTAL_DURATION);
+                      }
+                    }}
+                    className=" relative flex flex-col">
+                    <Image
+                      src="/icons/sort-down.svg"
+                      alt="Sort down"
+                      width={9}
+                      height={10}
+                      className={`cursor-pointer justify-self-end  ${ordering === OrderingDataType.TOTAL_DURATION && 'rotate-180'} `}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="w-[72px] h-full flex bg-[#F8FAFC] items-center border-l pl-[14px] border-[#D2DBE1]">
+                <div className="flex gap-2 items-center justify-center">
+                  <p className="!text-xs font-medium !text-[#77858F]">割合</p>
+                  <div
+                    onClick={() => {
+                      if (ordering === OrderingDataType.PERCENT) {
+                        setOrdering('');
+                      } else {
+                        setOrdering(OrderingDataType.PERCENT);
+                      }
+                    }}
+                    className=" relative flex flex-col">
+                    <Image
+                      src="/icons/sort-down.svg"
+                      alt="Sort down"
+                      width={9}
+                      height={10}
+                      className={`cursor-pointer justify-self-end  ${ordering === OrderingDataType.PERCENT && 'rotate-180'} `}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              {taskList.length > 0 ? (
+                taskList.map((item, index) => {
+                  return (
+                    <div
+                      key={index}
+                      className="font-medium border-b  text-base text-black flex items-center min-h-[50px]">
+                      <div className="w-[332px] min-h-[50px] flex items-center text-left !px-4  ">
+                        <p className="break-all min-h-[50px] flex items-center line-clamp-2">
+                          {item.title}
+                        </p>
+                      </div>
+                      <div className="border-l  min-h-[50px] flex items-center justify-center text-sm !px-0 border-[#D2DBE1] w-[110px] max-w-[110px] truncate">
+                        {item.totalDuration &&
+                          formatTimeToJapanese(item.totalDuration)}
+                      </div>
+                      <div className="border-l  min-h-[50px] flex items-center justify-center text-sm !px-0 border-[#D2DBE1] w-[72px] max-w-[72px] truncate">
+                        {item.percent}%
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <></>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-      <div className="text-[#77858F] text-xs px-5 font-medium flex mt-3 items-end justify-between">
+
+      <div className="text-[#77858F] text-xs px-5 font-medium flex items-end justify-between">
         <div className="w-fit  text-[#77858F] left-0 text-xs font-normal">
           タスク数 {count}
         </div>

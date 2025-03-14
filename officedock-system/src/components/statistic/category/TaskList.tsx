@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
+import Checkbox from '@components/common/Checkbox';
 import TableChart from '../TableChart';
 import {
   CreationStatisticType,
@@ -10,58 +11,72 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 import useStatisticTask from '@hooks/useStatisticTask';
-import { formatDateToYMD } from '@utils/date';
+import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
+import { StatisticStateContext } from '@providers/StatisticProvider';
 
 type Props = {
-  selectedSmall: OptionDropdownType | null;
+  isCheckCompare: boolean;
   startDate: Date;
   endDate: Date | null;
-  totalDurationLarge: string;
-  totalDurationMedium: string;
-  totalDurationSmall: string;
+  startDateCompare: Date;
+  endDateCompare: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
-  listOptionsOrganization: OptionDropdownType[];
-  largeOptions: OptionDropdownType[];
-  selectedOrganization: OptionDropdownType | null;
-  selectedLarge: OptionDropdownType | null;
-  mediumOptions: OptionDropdownType[];
-  selectedMedium: OptionDropdownType | null;
-  smallOptions: OptionDropdownType[];
+  creationDataStatisticData: CreationStatisticType[];
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
-  creationDataStatisticData: CreationStatisticType[];
 };
 
 const TaskListStatistic = ({
   startDate,
   endDate,
-  smallOptions,
-  listOptionsOrganization,
-  selectedSmall,
-  selectedOrganization,
-  selectedLarge,
-  selectedMedium,
-  largeOptions,
-  mediumOptions,
-  totalDurationLarge,
-  totalDurationMedium,
-  totalDurationSmall,
+  startDateCompare,
+  endDateCompare,
+  isCheckCompare,
   creationDataStatisticData,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectSmall,
   handleSelectOrganization,
 }: Props) => {
+  const {
+    smallOptions,
+    largeOptions,
+    mediumOptions,
+    listOptionsOrganization,
+    selectedLarge,
+    selectedMedium,
+    selectedOrganization,
+    selectedSmall,
+    totalDurationLarge,
+    totalDurationMedium,
+    totalDurationSmall,
+    totalDurationLargeCompare,
+    totalDurationMediumCompare,
+    totalDurationSmallCompare,
+  } = useContext(StatisticStateContext);
+
   const [isExtendData, setIsExtendData] = useState(true);
+
+  // Value
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
+
+  // Value Compare
+  const [currentPageCompare, setCurrentPageCompare] = useState<number>(1);
+  const [totalPagesCompare, setTotalPagesCompare] = useState<number>(1);
+  const [taskListCompare, setTaskListCompare] = useState<
+    DataTaskListStatisticListType[]
+  >([]);
+
   const [ordering, setOrdering] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(PAGINATION_PAGE_SIZE_KANBAN);
+  const [isShowCompare, setIsShowCompare] = useState(false);
 
-  const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
   const getTotalDuration = () => {
     if (selectedOrganization?.value) {
       if (selectedLarge?.value) {
@@ -71,6 +86,19 @@ const TaskListStatistic = ({
         return totalDurationMedium;
       }
       return totalDurationLarge;
+    }
+    return '00:00:00';
+  };
+  // Get total compare
+  const getTotalDurationCompare = () => {
+    if (selectedOrganization?.value) {
+      if (selectedLarge?.value) {
+        if (selectedMedium?.value) {
+          return totalDurationSmallCompare;
+        }
+        return totalDurationMediumCompare;
+      }
+      return totalDurationLargeCompare;
     }
     return '00:00:00';
   };
@@ -92,6 +120,28 @@ const TaskListStatistic = ({
         setTotalPages(data.numPages);
         if (data.results) {
           setTaskList(data.results);
+        }
+      }
+    },
+  });
+  useStatisticTaskCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: Number(selectedLarge?.value),
+      mediumCategoryId: Number(selectedMedium?.value),
+      page: currentPage,
+      totalDuration: getTotalDurationCompare(),
+      ordering: ordering,
+      pageSize: pageSize,
+      isCompare: isCheckCompare && isShowCompare,
+    },
+    onSuccess: (data) => {
+      if (data) {
+        setTotalPagesCompare(data.numPages);
+        if (data.results) {
+          setTaskListCompare(data.results);
         }
       }
     },
@@ -237,11 +287,61 @@ const TaskListStatistic = ({
               </div>
             </div>
           </div>
+          {isCheckCompare && (
+            <div className="px-[30px] mt-[30px] mb-[10px] flex flex-col gap-[10px]">
+              <div className="flex items-center gap-2">
+                <div className="w-4">
+                  <Checkbox
+                    isChecked={!isShowCompare}
+                    onChange={() => setIsShowCompare(false)}
+                    className="!rounded-full"
+                    classSize="!rounded-full"
+                  />
+                </div>
+                <p className="h-[18px] w-[58px] rounded-sm bg-[#EBF1F7] font-medium text-xs text-[#0068B6] flex items-center justify-center">
+                  基準期間
+                </p>
+                <div className="flex ml-[2px] text-sm font-normal text-black gap-[6px]">
+                  <span>{startDate && formatShowDateJapanese(startDate)}</span>~
+                  <span>{endDate && formatShowDateJapanese(endDate)}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4">
+                  <Checkbox
+                    isChecked={isShowCompare}
+                    onChange={() => setIsShowCompare(true)}
+                    className="!rounded-full"
+                    classSize="!rounded-full"
+                  />
+                </div>
+                <p className="h-[18px] w-[58px] rounded-sm bg-[#F9EAEA] font-medium text-xs text-[#C32E2E] flex items-center justify-center">
+                  比較期間
+                </p>
+                <div className="flex ml-[2px] text-sm font-normal text-black gap-[6px]">
+                  <span>
+                    {startDateCompare &&
+                      formatShowDateJapanese(startDateCompare)}
+                  </span>
+                  ~
+                  <span>
+                    {endDateCompare && formatShowDateJapanese(endDateCompare)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="mt-5 px-[30px]">
             <TableChart
               ordering={ordering}
-              taskList={taskList}
-              totalDuration={getTotalDuration()}
+              taskList={
+                isCheckCompare && isShowCompare ? taskListCompare : taskList
+              }
+              totalDuration={
+                isCheckCompare && isShowCompare
+                  ? getTotalDurationCompare()
+                  : getTotalDuration()
+              }
               listOptionsOrganization={listOptionsOrganization}
               creationDataStatisticData={creationDataStatisticData}
               setOrdering={(ord: string) => {
@@ -249,14 +349,23 @@ const TaskListStatistic = ({
               }}
             />
           </div>
-          <div className="flex justify-center top-[10px] relative">
-            {taskList && taskList.length ? (
+          <div className="flex justify-center top-[10px] relative min-h-16">
+            {isShowCompare ? (
+              taskListCompare && taskListCompare.length ? (
+                <Pagination
+                  onChange={(pageNumber) => setCurrentPageCompare(pageNumber)}
+                  currentPage={currentPageCompare}
+                  totalPages={totalPagesCompare}
+                />
+              ) : null
+            ) : taskList && taskList.length ? (
               <Pagination
                 onChange={(pageNumber) => setCurrentPage(pageNumber)}
                 currentPage={currentPage}
                 totalPages={totalPages}
               />
             ) : null}
+
             <div className="absolute top-[5px] right-0 w-fit  flex gap-[6px] items-center">
               <div className="min-w-[66px] flex items-center">
                 <Dropdown

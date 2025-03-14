@@ -10,10 +10,15 @@ export type TableHeaderProps = TableProps;
 
 export type TableBodyProps = TableProps;
 
-export const TableHeader = ({ children, className }: TableHeaderProps) => {
+export const TableHeader = ({
+  children,
+  className,
+  classCustom,
+}: TableHeaderProps) => {
   return (
-    <thead className={`bg-gray-100 ${className}`}>
-      <tr className="[&>th]:text-gray-700 [&>th]:font-medium [&>th]:text-base [&>th]:py-3 [&>th]:pr-2 [&>th]:pl-4">
+    <thead className={`bg-gray-100 static top-0 ${className}`}>
+      <tr
+        className={`[&>th]:text-gray-700 [&>th]:font-medium [&>th]:text-base [&>th]:py-3 [&>th]:pr-2 [&>th]:pl-4 ${classCustom}`}>
         {children}
       </tr>
     </thead>

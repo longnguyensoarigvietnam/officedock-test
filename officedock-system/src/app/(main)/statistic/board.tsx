@@ -1,12 +1,11 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import StatisticCalendar from '@components/statistic/StatisticCalendar';
 import PercentageCategory from '@components/statistic/category/PercentageCategory';
-import AllocationCategory from '@components/statistic/category/AllocationCategory';
 import TaskListStatistic from '@components/statistic/category/TaskList';
 
 import useStatisticCategories from '@hooks/useStatisticCategories';
@@ -14,42 +13,39 @@ import useStatisticCategories from '@hooks/useStatisticCategories';
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+import PercentageCategoryCompare from '@components/statistic/compare/PercentageCategoryCompare';
+import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
+import { StatisticStateContext } from '@providers/StatisticProvider';
 
 const StatisticBoard = () => {
+  const {
+    startDate,
+    endDate,
+    isCheckCompare,
+    startDateCompare,
+    endDateCompare,
+    largeOptions,
+    mediumOptions,
+    listOptionsOrganization,
+    selectedLarge,
+    selectedMedium,
+    selectedOrganization,
+    setSelectedLarge,
+    setSelectedMedium,
+    setSelectedOrganization,
+    setSelectedSmall,
+    setLargeOptions,
+    setMediumOptions,
+    setSmallOptions,
+    setListOptionsOrganization,
+    setTotalDurationSmall,
+    setTotalDurationLarge,
+    setTotalDurationMedium,
+    setTotalDurationLargeCompare,
+    setTotalDurationMediumCompare,
+    setTotalDurationSmallCompare,
+  } = useContext(StatisticStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
-  // Select organization
-  const [listOptionsOrganization, setListOptionsOrganization] = useState<
-    OptionDropdownType[]
-  >([]);
-  const [selectedOrganization, setSelectedOrganization] =
-    useState<OptionDropdownType | null>({
-      label: '',
-      value: '',
-    });
-  const [selectedLarge, setSelectedLarge] = useState<OptionDropdownType | null>(
-    null,
-  );
-  const [selectedMedium, setSelectedMedium] =
-    useState<OptionDropdownType | null>(null);
-  const [selectedSmall, setSelectedSmall] = useState<OptionDropdownType | null>(
-    null,
-  );
-  const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
-
-  const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
-  const [mediumOptions, setMediumOptions] = useState<OptionDropdownType[]>([]);
-
-  // Data Date calendar
-
-  const [endDate, setEndDate] = useState<Date | null>(new Date());
-  const [startDate, setStartDate] = useState<Date>(
-    new Date(new Date().setMonth(new Date().getMonth() - 1)),
-  );
-
-  // Total duration
-  const [totalDurationLarge, setTotalDurationLarge] = useState<string>('');
-  const [totalDurationMedium, setTotalDurationMedium] = useState<string>('');
-  const [totalDurationSmall, setTotalDurationSmall] = useState<string>('');
 
   const { statisticCategoryList } = useStatisticCategories({
     filter: {
@@ -63,6 +59,22 @@ const StatisticBoard = () => {
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
+    },
+  });
+
+  const { statisticCategoryCompareList } = useStatisticCategoriesCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: Number(selectedLarge?.value),
+      mediumCategoryId: Number(selectedMedium?.value),
+      isCompare: isCheckCompare,
+    },
+    onSuccess: (data) => {
+      setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
+      setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
+      setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
     },
   });
 
@@ -129,6 +141,7 @@ const StatisticBoard = () => {
         value: medium.MEDIUM?.id || '',
         label: medium.MEDIUM?.name || '',
       }));
+
       setMediumOptions(mediumCategories);
     } else {
       setMediumOptions([]);
@@ -160,6 +173,7 @@ const StatisticBoard = () => {
       setSmallOptions([]);
     }
   };
+  // Handle choose small
 
   const handleSelectSmall = (data: OptionDropdownType) => {
     setSelectedSmall(data);
@@ -242,12 +256,7 @@ const StatisticBoard = () => {
             </div>
           </div>
           <div>
-            <StatisticCalendar
-              startDate={startDate}
-              endDate={endDate}
-              setStartDate={setStartDate}
-              setEndDate={setEndDate}
-            />
+            <StatisticCalendar />
           </div>
         </div>
         <div className="flex items-center mt-8  gap-1 mb-[30px]">
@@ -262,7 +271,30 @@ const StatisticBoard = () => {
         </div>
       </div>
       {/* Percentage of categories */}
-      <PercentageCategory
+      {isCheckCompare ? (
+        <PercentageCategoryCompare
+          startDate={startDate}
+          endDate={endDate}
+          startDateCompare={startDateCompare}
+          endDateCompare={endDateCompare}
+          statisticCategoryList={statisticCategoryList}
+          statisticCategoryCompareList={statisticCategoryCompareList}
+          handleSelectOrganization={handleSelectOrganization}
+          handleSelectLarge={handleSelectLarge}
+          handleSelectMedium={handleSelectMedium}
+        />
+      ) : (
+        <PercentageCategory
+          startDate={startDate}
+          endDate={endDate}
+          statisticCategoryList={statisticCategoryList}
+          handleSelectOrganization={handleSelectOrganization}
+          handleSelectLarge={handleSelectLarge}
+          handleSelectMedium={handleSelectMedium}
+        />
+      )}
+      {/* TODO: Time allocation for each category */}
+      {/* <AllocationCategory
         startDate={startDate}
         endDate={endDate}
         totalDurationLarge={totalDurationLarge}
@@ -278,41 +310,15 @@ const StatisticBoard = () => {
         handleSelectOrganization={handleSelectOrganization}
         handleSelectLarge={handleSelectLarge}
         handleSelectMedium={handleSelectMedium}
-      />
-      {/* Time allocation for each category */}
-      <AllocationCategory
-        startDate={startDate}
-        endDate={endDate}
-        totalDurationLarge={totalDurationLarge}
-        totalDurationMedium={totalDurationMedium}
-        totalDurationSmall={totalDurationSmall}
-        statisticCategoryList={statisticCategoryList}
-        listOptionsOrganization={listOptionsOrganization}
-        selectedOrganization={selectedOrganization}
-        largeOptions={largeOptions}
-        selectedLarge={selectedLarge}
-        mediumOptions={mediumOptions}
-        selectedMedium={selectedMedium}
-        handleSelectOrganization={handleSelectOrganization}
-        handleSelectLarge={handleSelectLarge}
-        handleSelectMedium={handleSelectMedium}
-      />
+      /> */}
       {/* Task list */}
       <TaskListStatistic
         startDate={startDate}
         endDate={endDate}
-        totalDurationLarge={totalDurationLarge}
-        totalDurationMedium={totalDurationMedium}
-        totalDurationSmall={totalDurationSmall}
+        startDateCompare={startDateCompare}
+        endDateCompare={endDateCompare}
+        isCheckCompare={isCheckCompare}
         statisticCategoryList={statisticCategoryList}
-        listOptionsOrganization={listOptionsOrganization}
-        selectedOrganization={selectedOrganization}
-        largeOptions={largeOptions}
-        selectedLarge={selectedLarge}
-        mediumOptions={mediumOptions}
-        selectedMedium={selectedMedium}
-        selectedSmall={selectedSmall}
-        smallOptions={smallOptions}
         handleSelectOrganization={handleSelectOrganization}
         handleSelectLarge={handleSelectLarge}
         handleSelectMedium={handleSelectMedium}
