@@ -26,3 +26,4 @@ class CategoryColors(EnumChoices):
     LIGHT_GREEN = "#70CB7E"
     LIGHT_BLUE = "#45AFD9"
     LIGHT_PURPLE = "#899FEB"
+    GRAY = "#83919E"
