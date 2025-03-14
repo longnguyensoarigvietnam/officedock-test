@@ -227,7 +227,7 @@ const TableChart = ({
       cell: (info) => {
         const value = info.getValue() as string;
         return (
-          <div className="font-medium text-[16px] break-all line-clamp-3 text-left text-black">
+          <div className="font-medium px-[18px] text-[16px] break-all line-clamp-3 text-left text-black">
             {value}
           </div>
         );
@@ -677,7 +677,7 @@ const TableChart = ({
         </div>
       </div>
 
-      <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 overflow-y-auto py-0 mt-5 rounded-md">
+      <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0  py-0 mt-5 rounded-md">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr

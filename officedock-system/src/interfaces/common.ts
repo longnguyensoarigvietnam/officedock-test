@@ -28,3 +28,12 @@ export interface DataChartType {
   listId: number[];
   listDuration: string[][];
 }
+
+export interface DataPercentCompareType {
+  id: number;
+  label: string;
+  percentage: number;
+  color: string;
+  totalDuration: string;
+  optionData: string[];
+}

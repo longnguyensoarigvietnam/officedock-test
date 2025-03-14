@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 
 import PieChart from '@components/common/Chart/PieChart';
 import Dropdown from '@components/common/Dropdown';
@@ -12,20 +12,13 @@ import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor } from '@utils';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { EventWorkCategory } from '@constants/enums';
+import { StatisticStateContext } from '@providers/StatisticProvider';
+import { LoadingContext } from '@providers/LoadingProvider';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  totalDurationLarge: string;
-  totalDurationMedium: string;
-  totalDurationSmall: string;
   statisticCategoryList: StatisticsCategories | undefined;
-  listOptionsOrganization: OptionDropdownType[];
-  largeOptions: OptionDropdownType[];
-  selectedOrganization: OptionDropdownType | null;
-  selectedLarge: OptionDropdownType | null;
-  mediumOptions: OptionDropdownType[];
-  selectedMedium: OptionDropdownType | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -34,20 +27,24 @@ type Props = {
 const PercentageCategory = ({
   startDate,
   endDate,
-  totalDurationLarge,
-  totalDurationMedium,
-  totalDurationSmall,
-  listOptionsOrganization,
-  selectedOrganization,
-  largeOptions,
-  mediumOptions,
-  selectedLarge,
-  selectedMedium,
   statisticCategoryList,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
 }: Props) => {
+  const {
+    largeOptions,
+    mediumOptions,
+    listOptionsOrganization,
+    selectedLarge,
+    selectedMedium,
+    selectedOrganization,
+    totalDurationLarge,
+    totalDurationMedium,
+    totalDurationSmall,
+  } = useContext(StatisticStateContext);
+  const { setIsLoading } = useContext(LoadingContext);
+
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
   const [detailCategory, setDetailCategory] = useState<{
@@ -140,6 +137,7 @@ const PercentageCategory = ({
         );
         setDataChartSmall(smallChartData);
       }
+      setIsLoading(false);
     }
   }, [statisticCategoryList]);
 
@@ -264,7 +262,11 @@ const PercentageCategory = ({
                             handleClickTooltip(id, EventWorkCategory.LARGE);
                           }}
                           handleClickChart={(data: OptionDropdownType) => {
-                            handleSelectLarge(data);
+                            if (data.value) {
+                              selectedOrganization &&
+                                handleSelectOrganization(selectedOrganization);
+                              handleSelectLarge(data);
+                            }
                           }}
                         />
                       ) : (
@@ -311,7 +313,9 @@ const PercentageCategory = ({
                           className="w-[280px] h-[280px] ml-5"
                           listIdData={dataChartMedium.listId}
                           handleClickChart={(data: OptionDropdownType) => {
-                            handleSelectMedium(data);
+                            if (data.value) {
+                              handleSelectMedium(data);
+                            }
                           }}
                         />
                       ) : (

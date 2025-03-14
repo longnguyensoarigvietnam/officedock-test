@@ -57,7 +57,7 @@ const ProgressBarStatistic = ({
               <span className="truncate font-bold text-base">{label}</span>
             </div>
             <div className="flex items-center gap-[10px] font-normal text-base mt-4">
-              <span>${percentage}%</span>
+              <span>{percentage}%</span>
               <span>{duration && formatTimeToJapanese(duration)}</span>
             </div>
             <ul>

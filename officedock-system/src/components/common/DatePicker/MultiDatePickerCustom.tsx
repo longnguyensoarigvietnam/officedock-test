@@ -14,6 +14,7 @@ import { ComponentSize, TimeOptionsType } from '@constants/enums';
 import './styles/multiPickerCustom.css';
 
 export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
+  isCalendarCompare?: boolean;
   isTypeTime: TimeOptionsType;
   initialStartDate?: Date;
   initialEndDate?: Date | null;
@@ -54,6 +55,7 @@ const MultiDatePickerCustom = ({
   isDisable = false,
   isEndButtonClicked = false,
   isStartButtonClicked = false,
+  isCalendarCompare = false,
   onChange,
   resetEndClick,
   resetStartClick,
@@ -69,7 +71,8 @@ const MultiDatePickerCustom = ({
       endDate.setDate(endDate.getDate() - 1);
       const startDate = new Date(initialStartDate);
       startDate.setDate(startDate.getDate());
-      if (date > startDate && date < endDate) return 'highlighted-date';
+      if (date > startDate && date < endDate)
+        return isCalendarCompare ? 'highlighted-compare' : 'highlighted-date';
     }
     if (isHoliday(date)) return 'holiday';
     else if (isSunday(date)) return 'sunday';
@@ -128,7 +131,11 @@ const MultiDatePickerCustom = ({
   const handleChange = (dates: [Date, Date | null]) => {
     const [start, end] = dates;
     const days = getDaysFromTimeOption(isTypeTime);
-
+    if (isTypeTime === TimeOptionsType.MORE) {
+      setStartDate(start);
+      setEndDate(end);
+      onChange && onChange(start, end);
+    }
     if (start && isEndButtonClicked) {
       const endDate = new Date(start);
       endDate.setDate(start.getDate() - (days - 1));
@@ -171,7 +178,9 @@ const MultiDatePickerCustom = ({
         className={`relative multi-date flex items-center ${label ? 'mt-1' : ''}`}>
         <DatePickerUI
           scrollableYearDropdown
-          disabledKeyboardNavigation={isDisable}
+          disabledKeyboardNavigation={
+            isTypeTime === TimeOptionsType.MORE ? false : isDisable
+          }
           yearDropdownItemNumber={100}
           ref={(el) => {
             if (el) {
@@ -179,11 +188,15 @@ const MultiDatePickerCustom = ({
             }
           }}
           open={isOpen}
-          disabled={isDisable}
+          disabled={isTypeTime === TimeOptionsType.MORE ? false : isDisable}
           selected={startDate}
           onChange={(date: [Date, Date | null]) => {
-            if (!isDisable) {
+            if (isTypeTime === TimeOptionsType.MORE) {
               handleChange(date);
+            } else {
+              if (isDisable) {
+                handleChange(date);
+              }
             }
           }}
           maxDate={addMonths(new Date(), 5)}

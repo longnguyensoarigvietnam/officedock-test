@@ -1,18 +1,18 @@
 'use client';
 
-import { useContext } from 'react';
 import { useQuery } from 'react-query';
 import { useSession } from 'next-auth/react';
 
-import { LoadingContext } from '@providers/LoadingProvider';
-
 import { apiRouters } from '@constants/routers';
 
+import { AxiosError } from 'axios';
+import { useContext } from 'react';
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
-import { AxiosError } from 'axios';
+import { LoadingContext } from '@providers/LoadingProvider';
 
 interface FilterProps {
+  isCompare: boolean;
   endDate: string | Date;
   fromDate: string | Date;
   largeCategoryId?: number;
@@ -21,7 +21,7 @@ interface FilterProps {
   tagIds?: string;
 }
 
-const useStatisticCategories = ({
+const useStatisticCategoriesCompare = ({
   filter,
   onSuccess,
   onError,
@@ -32,11 +32,11 @@ const useStatisticCategories = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-
   const { setIsLoading } = useContext(LoadingContext);
 
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
+    if (!filter?.isCompare) return [];
     if (!filter?.organizationIds) return [];
     setIsLoading(true);
 
@@ -62,11 +62,11 @@ const useStatisticCategories = ({
 
   // Handle API get statistic category list
   const {
-    data: statisticCategoryList,
+    data: statisticCategoryCompareList,
     refetch: refetchStatisticCategoryList,
     isFetched: isFetchedStatisticCategoryList,
   } = useQuery({
-    queryKey: ['getStatisticCategoryList', [filter]],
+    queryKey: ['getStatisticCategoryCompareList', [filter]],
     queryFn: getStatisticCategoryList,
     retry: 0,
     enabled: !!token,
@@ -78,14 +78,16 @@ const useStatisticCategories = ({
     onError: (error: AxiosError) => {
       onError && onError(error);
     },
-    onSettled: () => {},
+    onSettled: () => {
+      setIsLoading(false);
+    },
   });
 
   return {
-    statisticCategoryList,
+    statisticCategoryCompareList,
     refetchStatisticCategoryList,
     isFetchedStatisticCategoryList,
   };
 };
 
-export default useStatisticCategories;
+export default useStatisticCategoriesCompare;

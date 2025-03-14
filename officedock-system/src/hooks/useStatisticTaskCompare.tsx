@@ -21,18 +21,15 @@ interface FilterProps {
   totalDuration?: string;
   ordering: string;
   pageSize: number;
+  isCompare: boolean;
 }
 
-const useStatisticTask = ({
-  created_at,
+const useStatisticTaskCompare = ({
   filter,
   onSuccess,
   onError,
 }: {
-  isScroll?: boolean;
-  created_at?: string;
   filter?: FilterProps;
-
   onSuccess?: (data: BasePagination<DataTaskListStatisticListType[]>) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -41,6 +38,7 @@ const useStatisticTask = ({
 
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
+    if (!filter?.isCompare) return null;
     if (!filter?.organizationIds) return null;
 
     const params = new URLSearchParams();
@@ -59,7 +57,6 @@ const useStatisticTask = ({
       params.append('total_duration', String(filter.totalDuration));
     if (filter?.ordering) params.append('ordering', String(filter.ordering));
     if (filter?.pageSize) params.append('page_size', String(filter.pageSize));
-    if (created_at) params.append('created_at', String(created_at));
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 
@@ -96,4 +93,4 @@ const useStatisticTask = ({
   };
 };
 
-export default useStatisticTask;
+export default useStatisticTaskCompare;
