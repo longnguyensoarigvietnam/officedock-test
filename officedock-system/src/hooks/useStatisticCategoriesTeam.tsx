@@ -1,10 +1,7 @@
 'use client';
 
-import { useContext } from 'react';
 import { useQuery } from 'react-query';
 import { useSession } from 'next-auth/react';
-
-import { LoadingContext } from '@providers/LoadingProvider';
 
 import { apiRouters } from '@constants/routers';
 
@@ -33,13 +30,9 @@ const useStatisticCategoriesTeam = ({
   const { data: session } = useSession();
   const token = session?.accessToken;
 
-  const { setIsLoading } = useContext(LoadingContext);
-
   // Handle call API get statistic category list team
   const getStatisticCategoryListTeam = async () => {
     if (!filter?.organizationIds) return [];
-    // setIsLoading(true);
-
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(parseInt(filter?.organizationIds))}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
