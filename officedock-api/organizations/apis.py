@@ -605,6 +605,7 @@ class OrganizationCategoryHierarchyViewSet(
                         item.pop("small_statistic_category", None), company
                     )
                 )
+                organization = item.get("organization", None)
                 skills = item.pop("skills", [])
 
                 if organization_statistic_category:
@@ -633,6 +634,15 @@ class OrganizationCategoryHierarchyViewSet(
                             small_statistic_category=small_statistic_category,
                         )
                     )
+
+                # Remove duplicate record
+                records = OrganizationsStatisticCategories.objects.filter(
+                    organization=organization,
+                    large_statistic_category=large_statistic_category,
+                    medium_statistic_category=medium_statistic_category,
+                    small_statistic_category=small_statistic_category,
+                ).order_by("-id")
+                records.exclude(id=records.first().id).delete()
 
                 # Create new organization category skills
                 if organization_statistic_category and skills:
