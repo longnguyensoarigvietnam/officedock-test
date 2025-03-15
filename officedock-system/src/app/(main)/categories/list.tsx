@@ -30,7 +30,7 @@ import {
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
-import { PermissionsSystem } from '@constants/enums';
+import { ActionsModal, PermissionsSystem } from '@constants/enums';
 
 import { getCategoryFormattedDate } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
@@ -61,12 +61,14 @@ const ListCategory = () => {
     name: string;
     uuid: string;
     status: boolean;
-    action: string
+    action: string;
+    showError: boolean;
   }>({
     name: '',
     uuid: '',
     status: false,
-    action: ''
+    action: '',
+    showError: false
   });
   const categoryNameInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -124,27 +126,29 @@ const ListCategory = () => {
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
-      },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_UPDATE_MESSAGE);
-      },
-      onSettled: () => {
         setSelectedCategoryToUpdate({
           uuid: '',
           name: '',
           status: false,
-          action: ''
+          action: '',
+          showError: false
         });
         refetchCategoryList();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+        setSelectedCategoryToUpdate((prev) => {
+          return {
+            ...prev,
+            showError: true
+          };
+        });
       },
     },
   );
 
   // Create category
-  const handleCreateCategory = async (data: {
-    uuid: string, 
-    name: string
-  }) => {
+  const handleCreateCategory = async (data: { uuid: string; name: string }) => {
     return await api.post(apiRouters.CATEGORY_LIST, data);
   };
 
@@ -156,22 +160,23 @@ const ListCategory = () => {
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
         });
-      },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
-        setDataCategories((prev) => {
-          const updatedCategories = [...prev];
-          return updatedCategories.filter((category) => category.uuid != selectedCategoryToUpdate.uuid)
-        })
-      },
-      onSettled: () => {
         setSelectedCategoryToUpdate({
           uuid: '',
           name: '',
           status: false,
-          action: ''
+          action: '',
+          showError: false
         });
         refetchCategoryList();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+        setSelectedCategoryToUpdate((prev) => {
+          return {
+            ...prev,
+            showError: true
+          };
+        });
       },
     },
   );
@@ -226,18 +231,19 @@ const ListCategory = () => {
         categoryNameInputRef.current &&
         !categoryNameInputRef.current.contains(event.target)
       ) {
-        if(selectedCategoryToUpdate.action == 'EDIT'){
-          editCategory({
-            uuid: selectedCategoryToUpdate.uuid,
-            name: selectedCategoryToUpdate.name,
-          });
-        } else{
-          createCategory({
-            uuid: String(selectedCategoryToUpdate.uuid),
-            name: selectedCategoryToUpdate.name,
-          })
+        if (selectedCategoryToUpdate.name.trim() != '') {
+          if (selectedCategoryToUpdate.action == ActionsModal.EDIT) {
+            editCategory({
+              uuid: selectedCategoryToUpdate.uuid,
+              name: selectedCategoryToUpdate.name.trim(),
+            });
+          } else {
+            createCategory({
+              uuid: String(selectedCategoryToUpdate.uuid),
+              name: selectedCategoryToUpdate.name.trim(),
+            });
+          }
         }
-        
       }
     };
 
@@ -245,8 +251,12 @@ const ListCategory = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategoryToUpdate.uuid, selectedCategoryToUpdate.name, selectedCategoryToUpdate.action]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedCategoryToUpdate.uuid,
+    selectedCategoryToUpdate.name,
+    selectedCategoryToUpdate.action,
+  ]);
 
   return (
     <Fragment>
@@ -265,31 +275,36 @@ const ListCategory = () => {
             PermissionsSystem.CATEGORY_ADD,
           ) && (
             <Button
-              className="w-40"
+              className="w-[100px] !p-0"
               onClick={() => {
-                const newUuid = uuidv4();
-                setDataCategories((prev) => [
-                  {
+                const hasEmptyCategory = dataCategories.some((category) => category.name.trim() === '');
+
+                if(!hasEmptyCategory){
+                  const newUuid = uuidv4();
+                  setDataCategories((prev) => [
+                    {
+                      uuid: newUuid,
+                      name: '',
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    },
+                    ...prev,
+                  ]);
+                  setSelectedCategoryToUpdate({
                     uuid: newUuid,
                     name: '',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                  },
-                  ...prev,
-                ]);
-                setSelectedCategoryToUpdate({
-                  uuid: newUuid,
-                  name: '',
-                  status: true,
-                  action: 'CREATE'
-                });
+                    status: true,
+                    action: ActionsModal.CREATE,
+                    showError: false
+                  });
+                }
               }}>
               <ImageRound
                 src="/icons/add-with-background.svg"
                 name="Add icon"
                 className="!w-4 !h-4 mr-2 text-gray-400 cursor-pointer"
               />
-              タグの新規追加
+              新規追加
             </Button>
           )}
       </div>
@@ -322,13 +337,13 @@ const ListCategory = () => {
               dataCategories.map((element, index) => (
                 <tr key={index} className="text-black">
                   <td className="border-r-[1px] border-r-[#D2DBE1] truncate">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center gap-3">
                       {selectedCategoryToUpdate.uuid == element.uuid &&
                       selectedCategoryToUpdate.status ? (
                         <div ref={categoryNameInputRef} className="!w-[93%]">
                           <Input
                             placeholder="入力してください"
-                            className="!border-[1px] !border-[#77858F] w-full !text-sm !h-[34px]"
+                            className={`!border-[1px] !border-[#77858F] ${selectedCategoryToUpdate.showError && '!border-error'} w-full !text-sm !h-[34px]`}
                             defaultValue={element.name}
                             onChange={(e) => {
                               setSelectedCategoryToUpdate((prev) => {
@@ -361,7 +376,8 @@ const ListCategory = () => {
                                   uuid: element.uuid || '',
                                   name: element.name,
                                   status: true,
-                                  action: 'EDIT'
+                                  action: ActionsModal.EDIT,
+                                  showError: false
                                 });
                               }}
                             />
@@ -454,7 +470,8 @@ const ListCategory = () => {
       </div>
       <ConfirmDeleteModal
         open={openConfirmDeleteModal}
-        type="集計カテゴリ"
+        name={selectedCategoryToDelete?.name || ''}
+        type="業務カテゴリ"
         onConfirm={handleConfirmDeleteCategory}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />

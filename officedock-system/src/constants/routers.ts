@@ -147,7 +147,7 @@ export const pageRouters = {
   },
   // CATEGORY
   CATEGORY_MANAGEMENT: {
-    name: '集計カテゴリ',
+    name: '業務カテゴリ',
     href: '/categories',
   },
   EDIT_CATEGORY: {
