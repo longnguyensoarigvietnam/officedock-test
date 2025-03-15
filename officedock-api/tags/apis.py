@@ -75,12 +75,11 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Update the tag instance
         tag = serializer.save()
 
-        if organizations:
-            tag.organizations.clear()
-            for organization in organizations:
-                tag.organizations.add(
-                    organization, through_defaults={"company": tag.company}
-                )
+        tag.organizations.clear()
+        for organization in organizations:
+            tag.organizations.add(
+                organization, through_defaults={"company": tag.company}
+            )
 
     @extend_schema(
         parameters=[

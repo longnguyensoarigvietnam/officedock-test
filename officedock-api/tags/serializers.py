@@ -49,6 +49,7 @@ class TagSerializer(serializers.ModelSerializer):
         """
         user = self.context["request"].user
         organizations = data.get("organizations")
+        name = data.get("name")
         if organizations:
             for organization in organizations:
                 if not user.company.organizations.filter(
@@ -57,6 +58,10 @@ class TagSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(
                         {"detail": ERROR_MESSAGES["organization_not_exists"]}
                     )
+        if name and Tag.objects.filter(name=name).exists():
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["tag_exists"]}
+            )
 
         return data
 
