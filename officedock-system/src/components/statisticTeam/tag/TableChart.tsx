@@ -44,7 +44,7 @@ import {
 import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useErrorToast } from '@hooks/useErrorToast';
-import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 interface ListTaskStatistic {
   id: number;
@@ -150,7 +150,7 @@ const TableChart = ({
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
   const queryClient = useQueryClient();
-  const { isCheckCompare } = useContext(StatisticTeamStateContext);
+  const { isCheckCompare } = useContext(StatisticTeamTagsStateContext);
 
   const [statisticTaskList, setStatisticTaskList] = useState<
     ListTaskStatistic[]
@@ -179,8 +179,7 @@ const TableChart = ({
     {
       onSuccess: async () => {
         queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticCategoryListTeam',
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
@@ -188,7 +187,7 @@ const TableChart = ({
         if (isCheckCompare) {
           queryClient.invalidateQueries({
             predicate: (query) =>
-              query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
+              query.queryKey[0] === 'getStatisticTaskListCompare',
           });
           queryClient.invalidateQueries({
             predicate: (query) =>

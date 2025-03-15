@@ -22,14 +22,17 @@ interface FilterProps {
   pageSize: number;
   isCompare: boolean;
   tagIds?: OptionDropdownType[];
+  user_id?: number;
 }
 
 const useStatisticTaskCompare = ({
   filter,
+  isTeam = false,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
+  isTeam?: boolean;
   onSuccess?: (data: BasePagination<DataTaskListStatisticListType[]>) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -38,8 +41,9 @@ const useStatisticTaskCompare = ({
 
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
-    if (!filter?.isCompare) return null;
+    if (!filter?.isCompare) return [];
     if (!filter?.organizationIds) return null;
+    if (isTeam && !filter.user_id) return [];
 
     const params = new URLSearchParams();
 
@@ -61,6 +65,7 @@ const useStatisticTaskCompare = ({
       params.append('total_duration', String(filter.totalDuration));
     if (filter?.ordering) params.append('ordering', String(filter.ordering));
     if (filter?.pageSize) params.append('page_size', String(filter.pageSize));
+    if (filter?.user_id) params.append('user_id', String(filter.user_id));
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 
