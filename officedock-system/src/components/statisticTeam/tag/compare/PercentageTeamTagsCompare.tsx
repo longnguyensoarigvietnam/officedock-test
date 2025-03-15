@@ -10,29 +10,32 @@ import {
 } from '@interfaces/statistic';
 import { EventWorkCategory } from '@constants/enums';
 import { getRandomColor } from '@utils';
-import { StatisticStateContext } from '@providers/StatisticProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  statisticCategoryList: StatisticsCategories | undefined;
-  statisticCategoryCompareList: StatisticsCategories | undefined;
+  statisticTagsList: StatisticsCategories | undefined;
+  statisticTagsCompareList: StatisticsCategories | undefined;
 
   startDateCompare: Date;
   endDateCompare: Date | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
+  removeTag: (selected: OptionDropdownType) => void;
 };
 
-const PercentageCategoryCompare = ({
+const PercentageTeamTagsCompare = ({
   startDate,
   endDate,
   startDateCompare,
   endDateCompare,
-  statisticCategoryCompareList,
-  statisticCategoryList,
+  statisticTagsCompareList,
+  statisticTagsList,
+  removeTag,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
@@ -50,7 +53,10 @@ const PercentageCategoryCompare = ({
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
-  } = useContext(StatisticStateContext);
+    selectedTags,
+    tagsOptions,
+    setSelectedTags,
+  } = useContext(StatisticTeamTagsStateContext);
   const { setIsLoading } = useContext(LoadingContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
@@ -92,7 +98,7 @@ const PercentageCategoryCompare = ({
 
   const mapCategoryData = (categories: StatisticCategoryInfo[]) =>
     categories?.map((item) => ({
-      id: item.categoryId,
+      id: item.tagId as number,
       label: item.categoryName,
       percentage: item.percent,
       color: item.categoryColor || getRandomColor(),
@@ -104,33 +110,33 @@ const PercentageCategoryCompare = ({
 
   // Set data from category list
   useEffect(() => {
-    if (statisticCategoryList) {
-      setDataChartLarge(mapCategoryData(statisticCategoryList.largeCategories));
+    if (statisticTagsList) {
+      setDataChartLarge(mapCategoryData(statisticTagsList.largeCategories));
       setDataChartMedium(
-        mapCategoryData(statisticCategoryList.mediumCategories || []),
+        mapCategoryData(statisticTagsList.mediumCategories || []),
       );
       setDataChartSmall(
-        mapCategoryData(statisticCategoryList.smallCategories || []),
+        mapCategoryData(statisticTagsList.smallCategories || []),
       );
       setIsLoading(false);
     }
-  }, [statisticCategoryList]);
+  }, [statisticTagsList]);
 
   // Set data from category compare list
   useEffect(() => {
-    if (statisticCategoryCompareList) {
+    if (statisticTagsCompareList) {
       setDataChartLargeCompare(
-        mapCategoryData(statisticCategoryCompareList.largeCategories),
+        mapCategoryData(statisticTagsCompareList.largeCategories),
       );
       setDataChartMediumCompare(
-        mapCategoryData(statisticCategoryCompareList.mediumCategories || []),
+        mapCategoryData(statisticTagsCompareList.mediumCategories || []),
       );
       setDataChartSmallCompare(
-        mapCategoryData(statisticCategoryCompareList.smallCategories || []),
+        mapCategoryData(statisticTagsCompareList.smallCategories || []),
       );
       setIsLoading(false);
     }
-  }, [statisticCategoryCompareList]);
+  }, [statisticTagsCompareList]);
 
   const handleClickTooltip = (
     id: number | null,
@@ -141,20 +147,20 @@ const PercentageCategoryCompare = ({
     if (isCompare) {
       if (type === EventWorkCategory.LARGE) {
         duration =
-          statisticCategoryCompareList?.largeCategories.find(
-            (item) => item.categoryId == id,
+          statisticTagsCompareList?.largeCategories.find(
+            (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
-          statisticCategoryCompareList?.mediumCategories?.find(
-            (item) => item.categoryId == id,
+          statisticTagsCompareList?.mediumCategories?.find(
+            (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.SMALL) {
         duration =
-          statisticCategoryCompareList?.smallCategories?.find(
-            (item) => item.categoryId == id,
+          statisticTagsCompareList?.smallCategories?.find(
+            (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
       setDetailCategoryCompare({
@@ -167,19 +173,19 @@ const PercentageCategoryCompare = ({
     } else {
       if (type === EventWorkCategory.LARGE) {
         duration =
-          statisticCategoryList?.largeCategories.find(
+          statisticTagsList?.largeCategories.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
-          statisticCategoryList?.mediumCategories?.find(
+          statisticTagsList?.mediumCategories?.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.SMALL) {
         duration =
-          statisticCategoryList?.smallCategories?.find(
+          statisticTagsList?.smallCategories?.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
       }
@@ -249,6 +255,69 @@ const PercentageCategoryCompare = ({
             {/* Line */}
             <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
             <div>
+              {/* List tags  */}
+              <div>
+                <div className="flex justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <div className="w-[240px]">
+                      <MultiSelectDropdown
+                        options={tagsOptions}
+                        placeholder="集計対象のタグを選択"
+                        className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                        selectedOptions={selectedTags || []}
+                        onChange={(selected) => {
+                          let updatedTagIds = [];
+                          const currentTagIds = selectedTags || [];
+                          const foundItemIndex = currentTagIds.findIndex(
+                            (tag) => tag.value == selected.value,
+                          );
+                          if (foundItemIndex == -1) {
+                            updatedTagIds = [...currentTagIds, selected];
+                          } else {
+                            updatedTagIds = currentTagIds.filter(
+                              (tag) => tag.value != selected.value,
+                            );
+                          }
+                          setSelectedTags(updatedTagIds);
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <div className="flex gap-2 ">
+                        {selectedTags.map((item) => {
+                          return (
+                            <div
+                              key={item.value}
+                              className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                              <span className="w-[32px] truncate">
+                                {item.label}
+                              </span>
+                              <ImageRound
+                                onClick={() => {
+                                  removeTag(item);
+                                }}
+                                src={`/icons/close-white.svg`}
+                                name="close"
+                                className="w-fit h-fit cursor-pointer"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center mt-8  gap-1 mb-[30px]">
+                  <ImageRound
+                    className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
+                    name="Sort icon"
+                    src={`/icons/sort.svg`}
+                  />
+                  <span className="text-xs text-[#77858F] relative top-[2px]">
+                    タグの絞り込み
+                  </span>
+                </div>
+              </div>
               <div className="flex gap-[41px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
                 <div className="w-[280px]">
@@ -421,4 +490,4 @@ const PercentageCategoryCompare = ({
   );
 };
 
-export default PercentageCategoryCompare;
+export default PercentageTeamTagsCompare;

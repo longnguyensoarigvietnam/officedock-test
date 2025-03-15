@@ -225,7 +225,7 @@ const PercentageTagsCompare = ({
                 src={`/icons/statistic-active.svg`}
               />
               <span className="text-black font-semibold text-[18px] relative top-[2px]">
-                カテゴリーの割合カテゴリーの割合
+                カテゴリーの割合
               </span>
             </div>
             <div className="flex items-center gap-1 ">
@@ -262,6 +262,7 @@ const PercentageTagsCompare = ({
                     <div className="w-[240px]">
                       <MultiSelectDropdown
                         options={tagsOptions}
+                        placeholder="集計対象のタグを選択"
                         className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
                         selectedOptions={selectedTags || []}
                         onChange={(selected) => {

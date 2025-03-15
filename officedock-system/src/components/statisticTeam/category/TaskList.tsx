@@ -22,7 +22,7 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  creationDataStatisticData: CreationStatisticType[];
+  creationDataStatisticData: CreationStatisticType;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -128,6 +128,7 @@ const TaskListTeamStatistic = ({
     },
   });
   useStatisticTaskCompare({
+    isTeam: true,
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
@@ -139,6 +140,7 @@ const TaskListTeamStatistic = ({
       ordering: ordering,
       pageSize: pageSize,
       isCompare: isCheckCompare && isShowCompare,
+      user_id: selectedMember as number,
     },
     onSuccess: (data) => {
       if (data) {

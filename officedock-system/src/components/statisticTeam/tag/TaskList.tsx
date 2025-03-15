@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
@@ -14,7 +14,8 @@ import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
 import TableChart from './TableChart';
-import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 type Props = {
   isCheckCompare: boolean;
@@ -22,7 +23,7 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  creationDataStatisticData: CreationStatisticType[];
+  creationDataStatisticData: CreationStatisticType;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -30,7 +31,7 @@ type Props = {
   removeTag: (selected: OptionDropdownType) => void;
 };
 
-const TaskListStatisticTags = ({
+const TaskListStatisticTeamTags = ({
   startDate,
   endDate,
   startDateCompare,
@@ -60,8 +61,9 @@ const TaskListStatisticTags = ({
     totalDurationSmallCompare,
     selectedTags,
     tagsOptions,
+    listMemberTeam,
     setSelectedTags,
-  } = useContext(StatisticTagStateContext);
+  } = useContext(StatisticTeamTagsStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
 
@@ -69,6 +71,8 @@ const TaskListStatisticTags = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
+
+  const [selectedMember, setSelectedMember] = useState<number | null>(null);
 
   // Value Compare
   const [currentPageCompare, setCurrentPageCompare] = useState<number>(1);
@@ -107,7 +111,14 @@ const TaskListStatisticTags = ({
     return '00:00:00';
   };
 
+  useEffect(() => {
+    if (listMemberTeam && listMemberTeam.length > 0) {
+      setSelectedMember(listMemberTeam[0].id);
+    }
+  }, [listMemberTeam]);
+
   useStatisticTask({
+    isTeam: true,
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -119,6 +130,7 @@ const TaskListStatisticTags = ({
       ordering: ordering,
       pageSize: pageSize,
       tagIds: selectedTags,
+      user_id: selectedMember as number,
     },
     onSuccess: (data) => {
       if (data) {
@@ -130,6 +142,7 @@ const TaskListStatisticTags = ({
     },
   });
   useStatisticTaskCompare({
+    isTeam: true,
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
@@ -142,6 +155,7 @@ const TaskListStatisticTags = ({
       pageSize: pageSize,
       tagIds: selectedTags,
       isCompare: isCheckCompare && isShowCompare,
+      user_id: selectedMember as number,
     },
     onSuccess: (data) => {
       if (data) {
@@ -215,9 +229,33 @@ const TaskListStatisticTags = ({
           {/* Line */}
           <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
           <div>
+            <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[30px]">
+              {listMemberTeam.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center gap-2 cursor-pointer">
+                  <div className="w-4">
+                    <Checkbox
+                      isChecked={selectedMember === member.id}
+                      onChange={() => setSelectedMember(member.id)}
+                      classSize="!rounded-full"
+                    />
+                  </div>
+                  <div className="relative top-[2px]">
+                    <AvatarIconWithDynamicColor
+                      size={30}
+                      color={member.color}
+                    />
+                  </div>
+                  <span className="max-w-[90px] w-full truncate">
+                    {member.fullName}
+                  </span>
+                </div>
+              ))}
+            </div>
             {/* List tags  */}
-            <div className="">
-              <div className="flex justify-between w-full">
+            <div>
+              <div className="flex justify-between w-full ">
                 <div className="flex items-center gap-2">
                   <div className="w-[240px]">
                     <MultiSelectDropdown
@@ -459,4 +497,4 @@ const TaskListStatisticTags = ({
   );
 };
 
-export default TaskListStatisticTags;
+export default TaskListStatisticTeamTags;

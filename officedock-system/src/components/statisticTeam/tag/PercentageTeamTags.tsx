@@ -13,7 +13,7 @@ import { getRandomColor } from '@utils';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { EventWorkCategory } from '@constants/enums';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
-import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 type Props = {
   startDate: Date;
@@ -25,7 +25,7 @@ type Props = {
   removeTag: (selected: OptionDropdownType) => void;
 };
 
-const PercentageTags = ({
+const PercentageTeamTags = ({
   startDate,
   endDate,
   statisticTagsList,
@@ -47,7 +47,7 @@ const PercentageTags = ({
     tagsOptions,
     selectedTags,
     setSelectedTags,
-  } = useContext(StatisticTagStateContext);
+  } = useContext(StatisticTeamTagsStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -462,4 +462,4 @@ const PercentageTags = ({
   );
 };
 
-export default PercentageTags;
+export default PercentageTeamTags;

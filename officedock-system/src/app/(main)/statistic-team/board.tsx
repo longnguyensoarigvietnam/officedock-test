@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
@@ -50,7 +50,6 @@ const StatisticTeamBoard = () => {
     setTotalDurationSmallCompare,
     setListMemberTeam,
   } = useContext(StatisticTeamStateContext);
-  const [isMyTask, setIsMyTask] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -245,22 +244,19 @@ const StatisticTeamBoard = () => {
           </span>
           <div className="flex justify-center items-center gap-2 ">
             <Button
-              onClick={() => {
-                if (!isMyTask) {
-                  setIsMyTask(true);
-                }
-              }}
-              variant={isMyTask ? 'primary' : 'outline'}
+              variant={'primary'}
               className={`!py-0 !px-0 font-bold w-[80px] h-7 
-              !rounded-[20px] text-xs  ${isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'}`}>
+              !rounded-[20px] text-xs  `}>
               カテゴリー
             </Button>
             <Button
               onClick={() => {
-                router.push(pageRouters.STATISTIC_TAG_MANAGEMENT.href);
+                router.push(
+                  `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${selectedOrganization?.value}`,
+                );
               }}
-              variant={!isMyTask ? 'primary' : 'outline'}
-              className={`${!isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'} !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
+              variant={'outline'}
+              className={`!text-[#A7B7C2] !border-[#A7B7C2] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
               タグ
             </Button>
           </div>{' '}
@@ -354,18 +350,20 @@ const StatisticTeamBoard = () => {
         />
       )}
       {/* Task list */}
-      <TaskListTeamStatistic
-        startDate={startDate}
-        endDate={endDate}
-        startDateCompare={startDateCompare}
-        endDateCompare={endDateCompare}
-        isCheckCompare={isCheckCompare}
-        handleSelectOrganization={handleSelectOrganization}
-        handleSelectLarge={handleSelectLarge}
-        handleSelectMedium={handleSelectMedium}
-        handleSelectSmall={handleSelectSmall}
-        creationDataStatisticData={[]}
-      />
+      {creationDataStatisticData && (
+        <TaskListTeamStatistic
+          startDate={startDate}
+          endDate={endDate}
+          startDateCompare={startDateCompare}
+          endDateCompare={endDateCompare}
+          isCheckCompare={isCheckCompare}
+          handleSelectOrganization={handleSelectOrganization}
+          handleSelectLarge={handleSelectLarge}
+          handleSelectMedium={handleSelectMedium}
+          handleSelectSmall={handleSelectSmall}
+          creationDataStatisticData={creationDataStatisticData?.organization}
+        />
+      )}
     </div>
   );
 };

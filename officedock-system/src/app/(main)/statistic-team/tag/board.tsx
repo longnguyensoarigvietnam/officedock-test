@@ -1,55 +1,61 @@
 'use client';
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
-
-import StatisticTagCalendar from '@components/statistic/tag/StatisticCalendar';
-import useStatisticsTags from '@hooks/useStatisticTags';
-import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
-import PercentageTags from '@components/statistic/tag/PercentageTags';
-import PercentageTagsCompare from '@components/statistic/tag/compare/PercentageTagsCompare';
-import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
-import TaskListStatisticTags from '@components/statistic/tag/TaskList';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { pageRouters } from '@constants/routers';
-import { useRouter } from 'next/navigation';
+import StatisticTeamCalendar from '@components/statisticTeam/category/StatisticTeamCalendar';
 
-const StatisticTagBoard = () => {
+import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import { getRandomColor } from '@utils';
+import useStatisticsTags from '@hooks/useStatisticTags';
+import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
+import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
+import PercentageTeamTagsCompare from '@components/statisticTeam/tag/compare/PercentageTeamTagsCompare';
+import TaskListStatisticTeamTags from '@components/statisticTeam/tag/TaskList';
+
+const StatisticTeamTagBoard = () => {
   const {
     startDate,
     endDate,
+    listMemberTeam,
     isCheckCompare,
     startDateCompare,
     endDateCompare,
     selectedLarge,
     selectedMedium,
     selectedOrganization,
-    tagsOptions,
     selectedTags,
-    setSelectedTags,
+    tagsOptions,
     setTagsOptions,
-    setTotalDurationSmall,
-    setTotalDurationLarge,
-    setTotalDurationMedium,
-    setSelectedOrganization,
-    setTotalDurationLargeCompare,
-    setTotalDurationMediumCompare,
-    setTotalDurationSmallCompare,
-    setListOptionsOrganization,
+    setSelectedTags,
     setSelectedLarge,
     setSelectedMedium,
+    setSelectedOrganization,
     setSelectedSmall,
     setLargeOptions,
     setMediumOptions,
     setSmallOptions,
-  } = useContext(StatisticTagStateContext);
-  const [isMyTask, setIsMyTask] = useState(true);
+    setListOptionsOrganization,
+    setTotalDurationSmall,
+    setTotalDurationLarge,
+    setTotalDurationMedium,
+    setTotalDurationLargeCompare,
+    setTotalDurationMediumCompare,
+    setTotalDurationSmallCompare,
+    setListMemberTeam,
+  } = useContext(StatisticTeamTagsStateContext);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const organizationId = searchParams.get('organization');
 
   const { statisticTagsList } = useStatisticsTags({
     filter: {
@@ -83,35 +89,37 @@ const StatisticTagBoard = () => {
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
     },
   });
-  const { creationDataStatisticData } = useCreationDataStatistic({
+
+  const { creationDataStatisticData } = useCreationDataStatisticTeam({
+    organization_id: organizationId || '',
+    isTeam: true,
     onSuccess: (data) => {
-      const result = (() => {
-        if (data.organizations.length === 0) {
-          return { label: '', value: '' };
-        }
+      if (!data) return;
+      if (data.organization) {
+        setListOptionsOrganization([
+          {
+            label: data.organization.name,
+            value: data.organization.id,
+          },
+        ]);
 
-        const mainItem =
-          data.organizations.find((item) => item.isMain) ||
-          data.organizations[0];
-        return {
-          label: mainItem.name,
-          value: mainItem.id,
-        };
-      })();
-
+        handleSelectOrganization({
+          label: data.organization.name,
+          value: data.organization.id,
+        });
+      }
+      setListMemberTeam(
+        data.members.map((member) => ({
+          id: member.id,
+          fullName: member.fullName,
+          color: getRandomColor(),
+        })),
+      );
       const optionsTagList = data.tags.map((item) => ({
         label: item.name,
         value: item.id,
       }));
-
-      setSelectedOrganization(result);
       setTagsOptions(optionsTagList);
-      setListOptionsOrganization([
-        ...data.organizations.map((org) => ({
-          value: org.id || '',
-          label: org.name,
-        })),
-      ]);
     },
   });
 
@@ -130,9 +138,7 @@ const StatisticTagBoard = () => {
     setSelectedLarge(null);
     setSelectedMedium(null);
 
-    const organization = creationDataStatisticData?.organizations?.find(
-      (org) => org.id === data.value,
-    );
+    const organization = creationDataStatisticData?.organization;
     if (organization) {
       const largeCategories = organization.statisticCategories.map((stat) => ({
         value: stat.LARGE.id,
@@ -150,9 +156,7 @@ const StatisticTagBoard = () => {
     setSelectedLarge(data);
     setSelectedMedium(null);
 
-    const organization = creationDataStatisticData?.organizations.find(
-      (org) => org.id === selectedOrganization?.value,
-    );
+    const organization = creationDataStatisticData?.organization;
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
     );
@@ -174,9 +178,8 @@ const StatisticTagBoard = () => {
     setSelectedMedium(data);
     setSelectedSmall(null);
 
-    const organization = creationDataStatisticData?.organizations.find(
-      (org) => org.id === selectedOrganization?.value,
-    );
+    const organization = creationDataStatisticData?.organization;
+
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === selectedLarge?.value,
     );
@@ -199,42 +202,89 @@ const StatisticTagBoard = () => {
   const handleSelectSmall = (data: OptionDropdownType) => {
     setSelectedSmall(data);
   };
+  const getParticipantAvatars = (
+    participants: {
+      id: number;
+      fullName: string;
+      color: string;
+    }[],
+  ) => {
+    const slicedParticipants = participants.slice(0, 6);
+    const remainingCount =
+      participants.length > 3 ? participants.length - 6 : 0;
+
+    return (
+      <>
+        {slicedParticipants.map((item) => {
+          return (
+            <div
+              className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
+              key={item.id}>
+              {AvatarIconWithDynamicColor({
+                color: item.color,
+                size: 33,
+                customClassName: '!mt-0',
+              })}
+            </div>
+          );
+        })}
+        {remainingCount > 0 && (
+          <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
+            +{remainingCount}
+          </div>
+        )}
+      </>
+    );
+  };
 
   return (
     <div className="pt-[30px] pr-10  font-medium ">
-      <div className="flex items-center gap-5 mb-[33px]">
-        <span className="text-[26px] font-medium relative top-[-2px]">
-          集計
-        </span>
-        <div className="flex justify-center items-center gap-2 ">
-          <Button
-            onClick={() => {
-              router.push(pageRouters.STATISTIC_MANAGEMENT.href);
-            }}
-            variant={'outline'}
-            className={`!py-0 !px-0 font-bold w-[80px] h-7 
-              !rounded-[20px] text-xs   !text-[#A7B7C2] !border-[#A7B7C2]`}>
-            カテゴリー
-          </Button>
-          <Button
-            onClick={() => {
-              if (isMyTask) {
-                setIsMyTask(false);
-              }
-            }}
-            variant={'primary'}
-            className={` !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
-            タグ
-          </Button>
-        </div>{' '}
+      <div className="mb-[33px] flex items-center justify-between">
+        <div className="flex items-center gap-5 ">
+          <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
+            <ImageRound
+              className="w-[34px] h-[34px] rounded-full"
+              src="/icons/statistic-team.svg"
+              border="full"
+              name="Multi users"
+            />
+          </div>
+          <span className="text-[26px] font-medium relative top-[-2px] max-w-[350px] truncate">
+            {selectedOrganization?.label}
+          </span>
+          <span className="text-[26px] font-medium relative top-[-2px]">
+            チーム集計
+          </span>
+          <div className="flex justify-center items-center gap-2 ">
+            <Button
+              variant={'outline'}
+              onClick={() => {
+                router.push(
+                  `${pageRouters.STATISTIC_TEAM_MANAGEMENT.href}?organization=${selectedOrganization?.value}`,
+                );
+              }}
+              className={`!py-0 !px-0 font-bold w-[80px] h-7 
+              !rounded-[20px] text-xs !text-[#A7B7C2] !border-[#A7B7C2]`}>
+              カテゴリー
+            </Button>
+            <Button
+              variant={'primary'}
+              className={`!py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
+              タグ
+            </Button>
+          </div>{' '}
+        </div>
+        <div className="flex items-center">
+          {listMemberTeam.length > 0 && getParticipantAvatars(listMemberTeam)}
+        </div>
       </div>
       <div>
         <div className="flex justify-between w-full">
           <div className="flex items-center gap-2">
             <div className="w-[240px]">
               <MultiSelectDropdown
-                options={tagsOptions}
                 placeholder="集計対象のタグを選択"
+                options={tagsOptions}
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {
@@ -277,7 +327,7 @@ const StatisticTagBoard = () => {
             </div>
           </div>
           <div>
-            <StatisticTagCalendar />
+            <StatisticTeamCalendar />
           </div>
         </div>
         <div className="flex items-center mt-8  gap-1 mb-[30px]">
@@ -293,7 +343,7 @@ const StatisticTagBoard = () => {
       </div>
       {/* Percentage of categories */}
       {isCheckCompare ? (
-        <PercentageTagsCompare
+        <PercentageTeamTagsCompare
           startDate={startDate}
           endDate={endDate}
           startDateCompare={startDateCompare}
@@ -306,7 +356,7 @@ const StatisticTagBoard = () => {
           handleSelectMedium={handleSelectMedium}
         />
       ) : (
-        <PercentageTags
+        <PercentageTeamTags
           startDate={startDate}
           endDate={endDate}
           statisticTagsList={statisticTagsList}
@@ -318,23 +368,23 @@ const StatisticTagBoard = () => {
       )}
 
       {/* Task list */}
-      <TaskListStatisticTags
-        startDate={startDate}
-        endDate={endDate}
-        removeTag={removeTag}
-        startDateCompare={startDateCompare}
-        endDateCompare={endDateCompare}
-        isCheckCompare={isCheckCompare}
-        handleSelectOrganization={handleSelectOrganization}
-        handleSelectLarge={handleSelectLarge}
-        handleSelectMedium={handleSelectMedium}
-        handleSelectSmall={handleSelectSmall}
-        creationDataStatisticData={
-          creationDataStatisticData?.organizations || []
-        }
-      />
+      {creationDataStatisticData && (
+        <TaskListStatisticTeamTags
+          startDate={startDate}
+          endDate={endDate}
+          removeTag={removeTag}
+          startDateCompare={startDateCompare}
+          endDateCompare={endDateCompare}
+          isCheckCompare={isCheckCompare}
+          handleSelectOrganization={handleSelectOrganization}
+          handleSelectLarge={handleSelectLarge}
+          handleSelectMedium={handleSelectMedium}
+          handleSelectSmall={handleSelectSmall}
+          creationDataStatisticData={creationDataStatisticData?.organization}
+        />
+      )}
     </div>
   );
 };
 
-export default StatisticTagBoard;
+export default StatisticTeamTagBoard;
