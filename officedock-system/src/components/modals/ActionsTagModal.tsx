@@ -1,5 +1,5 @@
 'use client';
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
@@ -10,6 +10,7 @@ import ImageRound from '@components/common/ImageRound';
 import Drawer from '@components/common/Drawers';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { Tags, TagFormData } from '@interfaces/tag';
 
 import { ActionsEvent, PermissionsSystem } from '@constants/enums';
 import { UNREGISTERED } from '@constants';
@@ -19,14 +20,12 @@ import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
-import { Tags, TagFormData } from '@interfaces/tag';
 
 export type ActionsTagModalProps = {
   open: boolean;
   dataTag?: Tags | null;
   action?: string | null;
   dataOrganizationList: OptionDropdownType[]
-  setDataOrganizationList: Dispatch<SetStateAction<OptionDropdownType[]>>
   onDelete?: (values: TagFormData) => void;
   onClose: () => void;
   onCreate?: (values: TagFormData) => void;
@@ -38,7 +37,6 @@ const ActionsTagModal = ({
   dataTag,
   action = 'CREATE',
   dataOrganizationList,
-  setDataOrganizationList,
   onClose,
   onEdit,
   onDelete,
@@ -81,11 +79,7 @@ const ActionsTagModal = ({
     reset(defaultValues);
   }, [defaultValues, reset]);
 
-  const [isCall, setIsCall] = useState<boolean>(false);
-
   const onSubmitData: SubmitHandler<TagFormData> = async (data) => {
-    if (isCall) return;
-    setIsCall(true);
     if (action === ActionsEvent.CREATE) {
       onCreate && onCreate(data as TagFormData);
     }
@@ -100,8 +94,6 @@ const ActionsTagModal = ({
   };
 
   const handleCloseModal = () => {
-    setDataOrganizationList([]);
-    setIsCall(false);
     onClose();
   };
 
@@ -110,12 +102,12 @@ const ActionsTagModal = ({
     ((action === ActionsEvent.EDIT &&
       !hasPermissionInArray(
         session?.user.permissions,
-        PermissionsSystem.CALENDAR_UPDATE,
+        PermissionsSystem.TAG_UPDATE,
       )) ||
       (action === ActionsEvent.CREATE &&
         !hasPermissionInArray(
           session?.user.permissions,
-          PermissionsSystem.CALENDAR_ADD,
+          PermissionsSystem.TAG_ADD,
         )));
 
   return (

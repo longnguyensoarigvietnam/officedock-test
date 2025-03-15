@@ -6,6 +6,12 @@ import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Button from '@components/common/Button';
@@ -50,6 +56,48 @@ import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
 
+const FilterOrganizationComponent = ({
+  dataOrganizationList,
+  selectedOptions,
+  onChange,
+  onSubmit,
+  onClose,
+}: {
+  dataOrganizationList: OptionDropdownType[];
+  selectedOptions: OptionDropdownType[];
+  onChange: (selected: OptionDropdownType) => void;
+  onSubmit: () => void;
+  onClose: () => void;
+}) => {
+  return (
+    <div className="bg-white rounded-lg shadow-common flex flex-col items-center w-[330px] py-5">
+      <div className="w-[300px]">
+        <MultiSelectDropdown
+          className="!h-[34px] !rounded-md"
+          labelClass="!min-h-0 !text-sm font-medium"
+          valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
+          optionClassName="!border-[1px] !border-[#77858F]"
+          labelOptionClass="break-words max-w-[300px] line-clamp-2 !text-sm"
+          options={dataOrganizationList}
+          selectedOptions={selectedOptions}
+          customLabel="チーム"
+          onChange={(selected) => {
+            onChange(selected);
+          }}
+        />
+      </div>
+      <div className="flex justify-center gap-[10px] mt-4 ">
+        <Button variant="outline" onClick={onClose} className="h-9">
+          キャンセル
+        </Button>
+        <Button onClick={onSubmit} className="h-9">
+          絞り込む
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const ListTags = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const { data: session } = useSession();
@@ -62,6 +110,7 @@ const ListTags = () => {
   >([]);
 
   const [showFilter, setShowFilter] = useState(true);
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [dataTags, setDataTags] = useState<Tags[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -135,31 +184,30 @@ const ListTags = () => {
   }, [organizationOptions]);
 
   const debouncedFilterByTagName = useDebounceText(watch('name'), 1000);
-  const debouncedFilterByOrganizations = useDebounceText(
-    watch('organizationIds'),
-    1000,
-  );
 
   useEffect(() => {
-    if (debouncedFilterByTagName) {
+    if (debouncedFilterByTagName || debouncedFilterByTagName === '') {
       setFilterRequest((prev) => ({
         ...prev,
-        name: encodeURIComponent(debouncedFilterByTagName),
+        name: encodeURIComponent(debouncedFilterByTagName || ''),
       }));
       setCurrentPage(1);
     }
-    if (debouncedFilterByOrganizations) {
-      setFilterRequest((prev) => ({
-        ...prev,
-        organizationIds: encodeURIComponent(
-          debouncedFilterByOrganizations
-            .map((org: OptionDropdownType) => org.value)
-            .join(','),
-        ),
-      }));
-      setCurrentPage(1);
-    }
-  }, [debouncedFilterByTagName, debouncedFilterByOrganizations]);
+  }, [debouncedFilterByTagName]);
+
+  const handleFilterTagByOrganizations = () => {
+    setFilterRequest((prev) => ({
+      ...prev,
+      organizationIds: encodeURIComponent(
+        watch('organizationIds')
+          ? watch('organizationIds')
+              .map((org: OptionDropdownType) => org.value)
+              .join(',')
+          : '',
+      ),
+    }));
+    setCurrentPage(1);
+  };
 
   const handleSetParam = ({
     id,
@@ -230,6 +278,8 @@ const ListTags = () => {
         description: SUCCESS_CREATE_MESSAGE,
       });
       setOpenActionsTagModal(false);
+      refetchTagList();
+      handleRemoveParam();
     },
     onError: (error: AxiosError<any>) => {
       showErrorToast(error, ERROR_CREATE_MESSAGE);
@@ -262,11 +312,11 @@ const ListTags = () => {
       });
       setOpenActionsTagModal(false);
       handleRemoveParam();
+      setDataTagEdit(null);
       refetchTagList();
     },
     onError: (error: AxiosError<any>) => {
       showErrorToast(error, ERROR_UPDATE_MESSAGE);
-      handleRemoveParam();
     },
     onSettled: () => {
       setIsLoading(false);
@@ -390,7 +440,9 @@ const ListTags = () => {
             />
           )}
 
-          <p className="text-[#77858F] font-medium text-[12px]">非表示一覧</p>
+          <p className="text-[#77858F] font-medium text-[12px]">
+            {!filterRequest.isHidden ? '非表示一覧' : '表示一覧'}
+          </p>
           <div className="flex justify-between p-[3px] rounded-full bg-white border-b">
             <ImageRound
               name="Filter extend icon"
@@ -409,38 +461,59 @@ const ListTags = () => {
             iconClassName="w-[14px] h-[14px]"
             register={register('name')}
           />
-          <ImageRound
-            src="/icons/filter.svg"
-            name="Filter icon"
-            className="!w-4 !h-4 text-gray-400 cursor-pointer"
-          />
-          <div className="w-[300px]">
-            <MultiSelectDropdown
-              className="!h-[34px] !rounded-md"
-              labelClass="!min-h-0 !text-sm font-medium"
-              valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
-              optionClassName="!border-[1px] !border-[#77858F]"
-              labelOptionClass="break-words max-w-[300px] line-clamp-2 !text-sm"
-              options={dataOrganizationList}
-              selectedOptions={watch('organizationIds') ?? []}
-              customLabel="チーム"
-              onChange={(selected) => {
-                let updatedTagIds = [];
-                const currentTagIds = getValues('organizationIds') || [];
-                const foundItemIndex = currentTagIds.findIndex(
-                  (tag) => tag.value == selected.value,
-                );
-                if (foundItemIndex == -1) {
-                  updatedTagIds = [...currentTagIds, selected];
-                } else {
-                  updatedTagIds = currentTagIds.filter(
-                    (tag) => tag.value != selected.value,
-                  );
-                }
-                setValue('organizationIds', updatedTagIds);
-              }}
-            />
-          </div>
+          <Popover className="relative">
+            {() => (
+              <>
+                <div className="flex items-center gap-2">
+                  <PopoverButton
+                    onClick={() => setIsOpenModalFilter(!isOpenModalFilter)}
+                    className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                    <ImageRound
+                      src="/icons/filter.svg"
+                      name="Filter icon"
+                      className="w-[14px] h-[14px] ml-2"
+                    />
+                  </PopoverButton>
+                </div>
+                <Transition
+                  as={Fragment}
+                  show={isOpenModalFilter}
+                  enter="transition ease-out duration-200"
+                  enterFrom="opacity-0 translate-y-1"
+                  enterTo="opacity-100 translate-y-0"
+                  leave="transition ease-in duration-150"
+                  leaveFrom="opacity-100 translate-y-0"
+                  leaveTo="opacity-0 translate-y-1">
+                  <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
+                    <FilterOrganizationComponent
+                      dataOrganizationList={dataOrganizationList}
+                      selectedOptions={watch('organizationIds') ?? []}
+                      onChange={(selected) => {
+                        let updatedTagIds = [];
+                        const currentTagIds =
+                          getValues('organizationIds') || [];
+                        const foundItemIndex = currentTagIds.findIndex(
+                          (tag) => tag.value == selected.value,
+                        );
+                        if (foundItemIndex == -1) {
+                          updatedTagIds = [...currentTagIds, selected];
+                        } else {
+                          updatedTagIds = currentTagIds.filter(
+                            (tag) => tag.value != selected.value,
+                          );
+                        }
+                        setValue('organizationIds', updatedTagIds);
+                      }}
+                      onSubmit={handleFilterTagByOrganizations}
+                      onClose={() => {
+                        setIsOpenModalFilter(false);
+                      }}
+                    />
+                  </PopoverPanel>
+                </Transition>
+              </>
+            )}
+          </Popover>
         </div>
         <div className="flex justify-end">
           {session?.user.permissions &&
@@ -484,68 +557,70 @@ const ListTags = () => {
             {dataTags && dataTags.length ? (
               dataTags.map((element, index) => (
                 <tr key={index}>
-                  <td className="w-[500px] max-w-[500px] flex justify-between items-center border-r-[1px] border-r-[#D2DBE1]">
-                    <p className="text-left max-w-[350px] truncate text-[16px] font-medium">
-                      {element.name}
-                    </p>
-                    <div className="flex gap-3 justify-end">
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.TAG_UPDATE,
-                      ) ? (
-                        <div
-                          onClick={() => {
-                            handleConfirmGetDataDetailTag(String(element.id));
-                            handleSetParam({
-                              id: String(element.id),
-                              action: ActionsModal.EDIT,
-                            });
-                          }}>
+                  <td className="w-[500px] max-w-[500px]  border-r-[1px] border-r-[#D2DBE1]">
+                    <div className="flex justify-between items-center">
+                      <p className="text-left max-w-[350px] truncate text-[16px] font-medium">
+                        {element.name}
+                      </p>
+                      <div className="flex gap-3 justify-end">
+                        {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.TAG_UPDATE,
+                        ) ? (
+                          <div
+                            onClick={() => {
+                              handleConfirmGetDataDetailTag(String(element.id));
+                              handleSetParam({
+                                id: String(element.id),
+                                action: ActionsModal.EDIT,
+                              });
+                            }}>
+                            <ImageRound
+                              name="Edit"
+                              src={'/icons/edit-gray.svg'}
+                              className="w-3.5 h-3.5 hover:cursor-pointer"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-3.5"></div>
+                        )}
+                        {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.TAG_UPDATE,
+                        ) ? (
+                          <div
+                            onClick={() => {
+                              handleConfirmToggleHideTag({
+                                id: element.id,
+                                isHidden: !element.isHidden,
+                              });
+                            }}>
+                            <ImageRound
+                              name="Hide"
+                              src={'/icons/close-eye-gray.svg'}
+                              className="w-[17px] h-[14px] hover:cursor-pointer"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-[17px]"></div>
+                        )}
+                        {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.TAG_DELETE,
+                        ) ? (
                           <ImageRound
-                            name="Edit"
-                            src={'/icons/edit-gray.svg'}
-                            className="w-3.5 h-3.5 hover:cursor-pointer"
+                            name="Delete"
+                            src={'/icons/delete-gray.svg'}
+                            className="w-[13px] h-[15px] hover:cursor-pointer"
+                            onClick={() => handleOpenDeleteTagModal(element)}
                           />
-                        </div>
-                      ) : (
-                        <div className="w-3.5"></div>
-                      )}
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.TAG_UPDATE,
-                      ) ? (
-                        <div
-                          onClick={() => {
-                            handleConfirmToggleHideTag({
-                              id: element.id,
-                              isHidden: !element.isHidden,
-                            });
-                          }}>
-                          <ImageRound
-                            name="Hide"
-                            src={'/icons/close-eye-gray.svg'}
-                            className="w-[17px] h-[14px] hover:cursor-pointer"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-[17px]"></div>
-                      )}
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.TAG_DELETE,
-                      ) ? (
-                        <ImageRound
-                          name="Delete"
-                          src={'/icons/delete-gray.svg'}
-                          className="w-[13px] h-[15px] hover:cursor-pointer"
-                          onClick={() => handleOpenDeleteTagModal(element)}
-                        />
-                      ) : (
-                        <div className="w-[13px]"></div>
-                      )}
+                        ) : (
+                          <div className="w-[13px]"></div>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="!w-[calc(100%_-_500px)] !break-words text-left text-[14px] font-medium">
@@ -610,7 +685,6 @@ const ListTags = () => {
           action={actionType}
           dataTag={dataTagEdit}
           dataOrganizationList={dataOrganizationList}
-          setDataOrganizationList={setDataOrganizationList}
           onClose={() => {
             setOpenActionsTagModal(false);
             handleRemoveParam();

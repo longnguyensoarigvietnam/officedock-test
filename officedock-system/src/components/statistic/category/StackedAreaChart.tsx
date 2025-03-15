@@ -123,7 +123,7 @@ const StackedAreaChart = () => {
       enabled: true,
       intersect: false,
       shared: true,
-      custom: function ({ series, dataPointIndex, w }) {
+      custom: function ({ series, dataPointIndex, w }: {series: any, dataPointIndex: any, w: any}) {
         const productNames = ['Product A', 'Product B', 'Product C'];
         return `
           <div style="background: white; border: 1px solid #ccc; padding: 8px; border-radius: 4px;">
@@ -143,6 +143,6 @@ const StackedAreaChart = () => {
       },
     },
   };
-  return <Chart options={options} series={series} type="area" height={350} />;
+  return <Chart options={options as any} series={series} type="area" height={350} />;
 };
 export default StackedAreaChart;
