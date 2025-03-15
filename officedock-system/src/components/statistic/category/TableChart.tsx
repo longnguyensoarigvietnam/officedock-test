@@ -20,7 +20,7 @@ import {
 } from '@tanstack/react-table';
 import { useMutation, useQueryClient } from 'react-query';
 import { AxiosError } from 'axios';
-import './styles/task-list-statistic.css';
+import '../styles/task-list-statistic.css';
 
 import { Table, TableBody } from '@components/common/Table';
 import ImageRound from '@components/common/ImageRound';
@@ -44,6 +44,7 @@ import {
 import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useErrorToast } from '@hooks/useErrorToast';
+import { StatisticStateContext } from '@providers/StatisticProvider';
 
 interface ListTaskStatistic {
   id: number;
@@ -146,6 +147,7 @@ const TableChart = ({
   listOptionsOrganization,
   setOrdering,
 }: TableChartProps) => {
+  const { isCheckCompare } = useContext(StatisticStateContext);
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
   const queryClient = useQueryClient();
@@ -176,8 +178,23 @@ const TableChart = ({
     handleEditCategoryInline,
     {
       onSuccess: async () => {
-        queryClient.refetchQueries(['getStatisticTaskList']);
-        queryClient.refetchQueries(['getStatisticCategoryList']);
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticCategoryList',
+        });
+        if (isCheckCompare) {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticCategoryCompareList',
+          });
+        }
       },
       onError: (error: AxiosError<any>) => {
         setIsLoading(false);
@@ -208,8 +225,23 @@ const TableChart = ({
     handleEditEventCategoryInline,
     {
       onSuccess: async () => {
-        queryClient.refetchQueries(['getStatisticTaskList']);
-        queryClient.refetchQueries(['getStatisticCategoryList']);
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
+        });
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticCategoryList',
+        });
+        if (isCheckCompare) {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskListCompare',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticCategoryCompareList',
+          });
+        }
       },
       onError: (error: AxiosError<any>) => {
         setIsLoading(false);

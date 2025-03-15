@@ -4,9 +4,9 @@ import { Organizations } from './organization';
 export interface Tags {
   id?: number;
   name?: string;
-  organizations?: Organizations[]
+  organizations?: Organizations[];
   isHidden?: boolean;
-  createdAt?: Date | string
+  createdAt?: Date | string;
 }
 
 export interface TagFilterFormData {
@@ -29,4 +29,8 @@ export interface TagFormData {
   name: string;
   organizations: OptionDropdownType[];
   isHidden?: boolean;
+}
+export interface TagCreationStatisticType {
+  id: number;
+  name: string;
 }

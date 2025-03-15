@@ -252,7 +252,7 @@ const Dropdown = ({
                           {() => (
                             <>
                               <div
-                                className={`flex  items-center w-full justify-center ${classTextOption}`}>
+                                className={`flex  items-center w-full ${classTextOption}`}>
                                 {option.imgUrl && (
                                   <ImageRound
                                     src={option.imgUrl}

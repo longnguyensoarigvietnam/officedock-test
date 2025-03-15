@@ -337,7 +337,187 @@ const Sidebar = ({ className }: Props) => {
             </div>
           )}
         </TabPanel>
-        <TabPanel key={1}></TabPanel>
+        <TabPanel key={1}>
+          <nav className="flex flex-col  w-full mb-5  h-full max-h-[70%]">
+            <ul role="list" className="flex flex-col gap-y-6 list-none">
+              <li className="flex-1">
+                <ul role="list" className="list-none pl-2">
+                  {menuItems
+                    .filter(
+                      (item) =>
+                        item.companyMenu == false &&
+                        item.href !== pageRouters.MEMBER_MANAGEMENT.href,
+                    )
+                    .map((item) => (
+                      <Tippy
+                        content={`${item.name}`}
+                        disabled={expanded}
+                        arrow={false}
+                        delay={1000}
+                        key={item.name}
+                        placement="right"
+                        offset={[0, 0]}>
+                        <li key={item.name} className={`text-sm relative`}>
+                          {!item.children ? (
+                            <div
+                              className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
+                              onClick={() => {
+                                if (isHasTerm) return;
+
+                                if (
+                                  item.href ===
+                                  pageRouters.TASKS_MANAGEMENT.href
+                                ) {
+                                  setTagSelected('');
+                                  setMemberSelected('');
+                                  router.push(`${item.href}?view=day`);
+                                } else {
+                                  if (
+                                    pathname ===
+                                      pageRouters.CHAT_MANAGEMENT.href &&
+                                    item.href ===
+                                      pageRouters.CHAT_MANAGEMENT.href
+                                  ) {
+                                    return;
+                                  }
+                                  {
+                                    router.push(item.href);
+                                  }
+                                }
+                              }}>
+                              {item.iconUrl && (
+                                <ImageRound
+                                  className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
+                                  src={item.iconUrl(item.current)}
+                                  name={`Icon ${item.name} menu`}
+                                />
+                              )}
+                              {!expanded &&
+                                item.iconUrl &&
+                                item.iconUrl(true).includes('chat') &&
+                                totalNotifications > 0 && (
+                                  <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                                )}
+                              {expanded && (
+                                <>
+                                  <p
+                                    className={`opacity-100 text-left font-medium w-fit text-white ${item.current && !memberSelected && !tagSelected && '!text-black'}`}>
+                                    {item.name}
+                                  </p>
+                                </>
+                              )}
+                              {expanded &&
+                                item.hasNotification &&
+                                totalNotifications != undefined &&
+                                totalNotifications > 0 && (
+                                  <p className="rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4">
+                                    {totalNotifications}
+                                  </p>
+                                )}
+                            </div>
+                          ) : (
+                            <Disclosure as="div" defaultOpen={item.current}>
+                              {({ open }) => (
+                                <>
+                                  <DisclosureButton
+                                    className={`flex items-center w-full gap-4 py-4 px-3 hover:bg-gray-50`}>
+                                    {item.iconUrl && (
+                                      <ImageRound
+                                        className="w-4 h-4"
+                                        src={item.iconUrl(item.current)}
+                                        name={`Icon ${item.name} menu`}
+                                      />
+                                    )}
+                                    <p
+                                      className={`flex-1 text-left ${item.current ? 'font-medium text-primary' : ''}`}>
+                                      {item.name}
+                                    </p>
+                                    <ImageRound
+                                      className={`w-4 h-4 ${open ? 'rotate-180' : ''}`}
+                                      src={`/icons/arrow-down${item.current ? '-active' : ''}.svg`}
+                                      name="Arrow menu icon"
+                                    />
+                                  </DisclosureButton>
+                                  <DisclosurePanel
+                                    as="ul"
+                                    className="list-none mt-1 px-2 last:pb-2">
+                                    {item.children?.map((subItem) => (
+                                      <li key={subItem.name}>
+                                        <Link
+                                          href={subItem.href}
+                                          className={`block py-2 pr-2 pl-9 ${subItem.current ? 'font-medium text-primary' : 'hover:bg-gray-50'}`}>
+                                          {subItem.name}
+                                        </Link>
+                                      </li>
+                                    ))}
+                                  </DisclosurePanel>
+                                </>
+                              )}
+                            </Disclosure>
+                          )}
+                        </li>
+                      </Tippy>
+                    ))}
+                </ul>
+              </li>
+            </ul>
+          </nav>
+          {memberOption && (
+            <div
+              className={`absolute ${expanded ? 'bottom-[135px]' : 'bottom-[165px]'}  left-0 w-full`}>
+              <ul
+                role="list"
+                className="flex max-h-20 flex-col gap-y-6 list-none">
+                <li className="flex-1">
+                  <ul role="list" className="list-none pl-2">
+                    <Tippy
+                      content={`${memberOption.name}`}
+                      disabled={expanded}
+                      arrow={false}
+                      delay={1000}
+                      key={memberOption.name}
+                      placement="right"
+                      offset={[0, 0]}>
+                      <li
+                        key={memberOption.name}
+                        className={`text-sm relative`}>
+                        <div
+                          className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
+                          onClick={() => {
+                            if (isHasTerm) return;
+
+                            router.push(memberOption.href);
+                          }}>
+                          {memberOption.iconUrl && (
+                            <ImageRound
+                              className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
+                              src={memberOption.iconUrl(memberOption.current)}
+                              name={`Icon ${memberOption.name} menu`}
+                            />
+                          )}
+                          {!expanded &&
+                            memberOption.iconUrl &&
+                            memberOption.iconUrl(true).includes('chat') &&
+                            totalNotifications > 0 && (
+                              <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                            )}
+                          {expanded && (
+                            <>
+                              <p
+                                className={`opacity-100 text-left font-medium w-fit text-white ${memberOption.current && !memberSelected && !tagSelected && '!text-black'}`}>
+                                {memberOption.name}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </li>
+                    </Tippy>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          )}
+        </TabPanel>
         <Tippy
           content={expanded ? 'メニューバーを縮小' : 'メニューバーを拡大'}
           arrow={false}

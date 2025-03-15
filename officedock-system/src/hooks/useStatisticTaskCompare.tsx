@@ -7,7 +7,7 @@ import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { AxiosError } from 'axios';
-import { BasePagination } from '@interfaces/common';
+import { BasePagination, OptionDropdownType } from '@interfaces/common';
 import { DataTaskListStatisticListType } from '@interfaces/statistic';
 
 interface FilterProps {
@@ -17,11 +17,11 @@ interface FilterProps {
   largeCategoryId?: number | null;
   mediumCategoryId?: number | null;
   organizationIds?: string;
-  tagIds?: string;
   totalDuration?: string;
   ordering: string;
   pageSize: number;
   isCompare: boolean;
+  tagIds?: OptionDropdownType[];
 }
 
 const useStatisticTaskCompare = ({
@@ -51,7 +51,11 @@ const useStatisticTaskCompare = ({
       params.append('medium_category_id', String(filter.mediumCategoryId));
     if (filter?.organizationIds)
       params.append('organization_ids', filter.organizationIds);
-    if (filter?.tagIds) params.append('tag_ids', filter.tagIds);
+    if (filter?.tagIds)
+      params.append(
+        'tag_ids',
+        filter.tagIds.map((item) => item.value).join(','),
+      );
     if (filter?.page) params.append('page', String(filter.page));
     if (filter?.totalDuration)
       params.append('total_duration', String(filter.totalDuration));
@@ -71,7 +75,7 @@ const useStatisticTaskCompare = ({
     refetch: refetchStatisticCategoryList,
     isFetched: isFetchedStatisticCategoryList,
   } = useQuery({
-    queryKey: ['getStatisticTaskList', [filter]],
+    queryKey: ['getStatisticTaskListCompare', [filter]],
     queryFn: getStatisticCategoryList,
     retry: 0,
     enabled: !!token,
