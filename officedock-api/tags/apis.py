@@ -18,7 +18,7 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     API endpoint for Tag
     """
 
-    queryset = Tag.objects.order_by("created_at").all()
+    queryset = Tag.objects.order_by("-created_at").all()
     serializer_class = TagSerializer
     permission_classes = [ActionPermission]
     filter_backends = [
