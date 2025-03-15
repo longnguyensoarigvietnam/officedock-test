@@ -496,20 +496,32 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         organization_id = request.query_params.get("organization_id")
         user = request.user
-        list_org = []
-
+        organizations = []
         if not organization_id:
             organizations = user.organizations.all()
         elif organization := Organization.objects.filter(
             id=organization_id
         ).first():
             organizations = [organization]
-        for organization in organizations:
-            list_org.append(
-                CreationDataOrganizationWithStructCategorySerializer(
-                    organization, context={"user": user}
-                ).data
-            )
+        data = {}
+        if organization_id:
+            data[
+                "organization"
+            ] = CreationDataOrganizationWithStructCategorySerializer(
+                organizations[0], context={"user": user}
+            ).data
+            data["members"] = CreationDataUserSerializer(
+                organizations[0].users.all(), many=True
+            ).data
+        else:
+            list_org = []
+            for organization in organizations:
+                list_org.append(
+                    CreationDataOrganizationWithStructCategorySerializer(
+                        organization, context={"user": user}
+                    ).data
+                )
+            data["organizations"] = list_org
 
         tags = (
             request.user.company.tags.filter(
@@ -520,13 +532,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             .all()
             .distinct()
         )
+        data["tags"] = BaseTagSerializer(tags, many=True).data
 
-        return self.response_ok(
-            {
-                "organizations": list_org,
-                "tags": BaseTagSerializer(tags, many=True).data,
-            }
-        )
+        return self.response_ok(data)
 
 
 @extend_schema(tags=["System > Cron Job"])
