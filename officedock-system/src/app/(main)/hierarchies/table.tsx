@@ -107,7 +107,7 @@ const HierarchyTable = ({
 
   const processRowspan = (
     data: rowDataType[],
-    key: 'large' | 'medium' | 'small',
+    key: 'large' | 'medium',
   ): Record<number, number> => {
     const rowspanMap: Record<number, number> = {};
     const countMap: Record<string, number> = {}; // Stores counts per (large, medium/small) group
@@ -144,10 +144,6 @@ const HierarchyTable = ({
   const mediumRowspan = processRowspan(
     hierarchyList.statisticCategories,
     'medium',
-  );
-  const smallRowspan = processRowspan(
-    hierarchyList.statisticCategories,
-    'small',
   );
 
   const findLastUniqueMediumIndexes = (data: rowDataType[]): number[] => {
@@ -283,21 +279,17 @@ const HierarchyTable = ({
                     </p>
                   </td>
                 )}
-                {smallRowspan[rowIndex] > 0 && (
-                  <td
-                    className={`w-1/4 px-3 ${lastSmallIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
-                    style={{ height: 'inherit' }}
-                    rowSpan={smallRowspan[rowIndex]}>
-                    <p
-                      className={`text-sm h-full flex justify-left items-center font-medium py-4 ${!lastSmallIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} `}>
-                      {row.original.small.label || NO_OPTION_CATEGORY}
-                    </p>
-                  </td>
-                )}
+                <td
+                  className={`w-1/4 px-3 ${lastSmallIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
+                  style={{ height: 'inherit' }}>
+                  <p
+                    className={`text-sm h-full flex justify-left items-center font-medium py-4 ${!lastSmallIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} `}>
+                    {row.original.small.label || NO_OPTION_CATEGORY}
+                  </p>
+                </td>
                 <td
                   className={`h-full px-3 !w-1/4 max-w-[1/4] ${lastMediumIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px]'} border-l-[1px] border-[#D2DBE1]`}
-                  style={{ height: 'inherit' }}
-                  >
+                  style={{ height: 'inherit' }}>
                   <div
                     className={`flex gap-2 flex-wrap py-4 ${!lastMediumIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} !h-full`}>
                     {row.original.skills.length > 0 ? (
