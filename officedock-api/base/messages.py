@@ -126,7 +126,7 @@ _ERROR_MESSAGES = {
         "exists_index": _("この位置がすでに存在しています。"),
         "statistic_category_not_exists": _("この集計カテゴリが存在しません。"),
         "skill_not_exists": _("このスキルが存在しません。"),
-        "unique_category_name": _("カテゴリ名はすでに存在しています。"),
+        "unique_category_name": _("このカテゴリー名はすでに存在しています。"),
         "unique_skill_name": _("スキル名はすでに存在しています。"),
         "skill_not_exists_in_organization": _("「{names}」スキルは選択した組織に所属していません。"),
         "submit_level_exists": "このレベルアップ申請がすでに存在しています。",
