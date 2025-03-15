@@ -10,24 +10,20 @@ import {
 } from '@interfaces/statistic';
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor } from '@utils';
-import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
-import { EventWorkCategory } from '@constants/enums';
-import { StatisticStateContext } from '@providers/StatisticProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  statisticCategoryList: StatisticsCategories | undefined;
+  statisticTeamCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
 };
 
-const PercentageCategory = ({
-  startDate,
-  endDate,
-  statisticCategoryList,
+const PercentageCategoryTeam = ({
+  statisticTeamCategoryList,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
@@ -42,16 +38,10 @@ const PercentageCategory = ({
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
-  } = useContext(StatisticStateContext);
+  } = useContext(StatisticTeamStateContext);
   const { setIsLoading } = useContext(LoadingContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [isShowModal, setIsShowModal] = useState(false);
-  const [detailCategory, setDetailCategory] = useState<{
-    id: number | null;
-    type: string;
-    totalDuration: string;
-  } | null>(null);
 
   const [dataChartLarge, setDataChartLarge] = useState<DataChartType>({
     actualValue: [],
@@ -96,16 +86,18 @@ const PercentageCategory = ({
       convertToJapaneseTime(item.duration),
     );
     // Get list options
-    const listDataOptions = categories.map((item) =>
-      item.tasks.slice(0, 6).map((task) => ({
-        label: task.title,
-      })),
+    const listDataOptions = categories.map(
+      (item) =>
+        item.users?.slice(0, 6).map((user) => ({
+          label: user.user.fullName,
+          percent: user.percent,
+        })) || [],
     );
     // Get list id
     const listDataIds = categories.map((item) => item.categoryId);
     // Get list duration
-    const listDuration = categories.map((item) =>
-      item.tasks.map((task) => task.totalDuration),
+    const listDuration = categories.map(
+      (item) => item.users?.map((user) => user.duration) || [],
     );
 
     return {
@@ -120,67 +112,28 @@ const PercentageCategory = ({
   };
 
   useEffect(() => {
-    if (statisticCategoryList) {
-      if (statisticCategoryList.largeCategories) {
+    if (statisticTeamCategoryList) {
+      if (statisticTeamCategoryList.largeCategories) {
         const largeChartData = processChartData(
-          statisticCategoryList.largeCategories,
+          statisticTeamCategoryList.largeCategories,
         );
         setDataChartLarge(largeChartData);
       }
-      if (statisticCategoryList.mediumCategories) {
+      if (statisticTeamCategoryList.mediumCategories) {
         const mediumChartData = processChartData(
-          statisticCategoryList.mediumCategories,
+          statisticTeamCategoryList.mediumCategories,
         );
         setDataChartMedium(mediumChartData);
       }
-      if (statisticCategoryList.smallCategories) {
+      if (statisticTeamCategoryList.smallCategories) {
         const smallChartData = processChartData(
-          statisticCategoryList.smallCategories,
+          statisticTeamCategoryList.smallCategories,
         );
         setDataChartSmall(smallChartData);
       }
       setIsLoading(false);
     }
-  }, [statisticCategoryList]);
-
-  const handleClickTooltip = (id: number | null, type: string) => {
-    let duration: string = '00:00:00';
-
-    if (type === EventWorkCategory.LARGE) {
-      duration =
-        statisticCategoryList?.largeCategories.find(
-          (item) => item.categoryId == id,
-        )?.duration || '00:00:00';
-    }
-    if (type === EventWorkCategory.MEDIUM) {
-      duration =
-        statisticCategoryList?.mediumCategories?.find(
-          (item) => item.categoryId == id,
-        )?.duration || '00:00:00';
-    }
-    if (type === EventWorkCategory.SMALL) {
-      duration =
-        statisticCategoryList?.smallCategories?.find(
-          (item) => item.categoryId == id,
-        )?.duration || '00:00:00';
-    }
-    setDetailCategory({
-      id: id,
-      type: type,
-      totalDuration: duration,
-    });
-
-    setIsShowModal(true);
-  };
-
-  const handleScroll = () => {
-    const element = document.getElementById('task-list-statistic');
-    setIsShowModal(false);
-
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  }, [statisticTeamCategoryList]);
 
   return (
     <>
@@ -253,6 +206,7 @@ const PercentageCategory = ({
                       {dataChartLarge.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
+                          isTeam
                           colors={dataChartLarge.colors}
                           data={dataChartLarge?.data}
                           labels={dataChartLarge?.labels}
@@ -260,9 +214,7 @@ const PercentageCategory = ({
                           className="w-[280px] h-[280px] ml-5"
                           optionsData={dataChartLarge.optionData}
                           listIdData={dataChartLarge.listId}
-                          handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.LARGE);
-                          }}
+                          handleClickTooltip={() => {}}
                           handleClickChart={(data: OptionDropdownType) => {
                             if (data.value) {
                               selectedOrganization &&
@@ -308,15 +260,13 @@ const PercentageCategory = ({
                       {dataChartMedium.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
+                          isTeam
                           colors={dataChartMedium.colors}
                           data={dataChartMedium?.data}
                           labels={dataChartMedium?.labels}
                           actualValues={dataChartMedium?.actualValue}
                           className="w-[280px] h-[280px] ml-5"
                           listIdData={dataChartMedium.listId}
-                          handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.MEDIUM);
-                          }}
                           handleClickChart={(data: OptionDropdownType) => {
                             if (data.value) {
                               handleSelectMedium(data);
@@ -366,9 +316,6 @@ const PercentageCategory = ({
                           className="w-[280px] h-[280px] ml-5"
                           optionsData={dataChartSmall.optionData}
                           listIdData={dataChartSmall.listId}
-                          handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.SMALL);
-                          }}
                           isClickTooltip
                         />
                       ) : (
@@ -382,21 +329,8 @@ const PercentageCategory = ({
           </>
         )}
       </div>
-      {isShowModal && (
-        <ListTaskDetailStatisticModal
-          open={isShowModal}
-          startDate={startDate}
-          endDate={endDate}
-          detailCategory={detailCategory}
-          selectedOrganization={selectedOrganization}
-          onClose={() => {
-            setIsShowModal(false);
-          }}
-          handleScroll={handleScroll}
-        />
-      )}
     </>
   );
 };
 
-export default PercentageCategory;
+export default PercentageCategoryTeam;

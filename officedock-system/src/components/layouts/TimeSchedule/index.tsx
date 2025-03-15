@@ -245,11 +245,10 @@ const TimeSchedule = memo(
       null,
     );
 
+    const router = useRouter();
     const searchParams = useSearchParams();
 
     const params = new URLSearchParams(searchParams);
-
-    const router = useRouter();
 
     const idEvent = searchParams.get('event');
 

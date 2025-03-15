@@ -101,7 +101,9 @@ const PercentageTags = ({
     );
     // Get list options
     const listDataOptions = categories.map((item) =>
-      item.tasks.slice(0, 3).map((task) => task.title),
+      item.tasks.slice(0, 6).map((task) => ({
+        label: task.title,
+      })),
     );
     // Get list id
     const listDataIds = categories.map((item) => item.tagId as number);
@@ -374,6 +376,9 @@ const PercentageTags = ({
                           actualValues={dataChartMedium?.actualValue}
                           className="w-[280px] h-[280px] ml-5"
                           listIdData={dataChartMedium.listId}
+                          handleClickTooltip={(id: number | null) => {
+                            handleClickTooltip(id, EventWorkCategory.MEDIUM);
+                          }}
                           handleClickChart={(data: OptionDropdownType) => {
                             if (data.value) {
                               handleSelectMedium(data);
@@ -423,6 +428,9 @@ const PercentageTags = ({
                           className="w-[280px] h-[280px] ml-5"
                           optionsData={dataChartSmall.optionData}
                           listIdData={dataChartSmall.listId}
+                          handleClickTooltip={(id: number | null) => {
+                            handleClickTooltip(id, EventWorkCategory.SMALL);
+                          }}
                           isClickTooltip
                         />
                       ) : (

@@ -97,7 +97,9 @@ const PercentageCategoryCompare = ({
       percentage: item.percent,
       color: item.categoryColor || getRandomColor(),
       totalDuration: item.duration,
-      optionData: item.tasks.map((item) => item.title),
+      optionData: item.tasks.map((item) => ({
+        label: item.title,
+      })),
     })) || [];
 
   // Set data from category list
