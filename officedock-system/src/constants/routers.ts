@@ -131,6 +131,15 @@ export const pageRouters = {
     name: '集計',
     href: '/statistic/tag',
   },
+  // STATISTIC TEAM
+  STATISTIC_TEAM_MANAGEMENT: {
+    name: '集計',
+    href: '/statistic-team',
+  },
+  STATISTIC_TEAM_TAG_MANAGEMENT: {
+    name: '集計',
+    href: '/statistic-team/tag',
+  },
 
   // DAILY REPORT
   DAILY_REPORT_MANAGEMENT: {
@@ -433,6 +442,10 @@ export const apiRouters = {
   STATISTICS_CATEGORIES: '/statistics/categories/',
   STATISTICS_TASKS: '/statistics/tasks/',
   STATISTICS_TAGS: '/statistics/tags/',
+
+  // STATISTICS TEAM
+  STATISTICS_CATEGORIES_TEAM: (id: number) =>
+    `/organization-statistics/${id}/categories`,
 
   // ORGANIZATION CATEGORY HIERARCHIES
   ORGANIZATION_CATEGORY_HIERARCHY_DETAIL: (id: number) =>

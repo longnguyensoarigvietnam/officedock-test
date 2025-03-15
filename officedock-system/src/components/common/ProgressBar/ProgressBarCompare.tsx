@@ -93,7 +93,7 @@ const PercentageBarCompare = ({
                     <li
                       key={index}
                       className="break-all text-start line-clamp-3 text-[#77858F] text-sm font-normal]">
-                      {item}
+                      {item.label}
                     </li>
                   ))}
                 </ul>
@@ -167,7 +167,7 @@ const PercentageBarCompare = ({
                     <li
                       key={index}
                       className="break-all text-start line-clamp-3 text-[#77858F] text-sm font-normal]">
-                      {item}
+                      {item.label}
                     </li>
                   ))}
                 </ul>

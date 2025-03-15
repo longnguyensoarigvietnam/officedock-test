@@ -24,7 +24,10 @@ export interface DataChartType {
   labels: string[];
   data: number[];
   actualValue: string[];
-  optionData: string[][];
+  optionData: {
+    label: string;
+    percent?: number;
+  }[][];
   listId: number[];
   listDuration: string[][];
 }
@@ -35,5 +38,8 @@ export interface DataPercentCompareType {
   percentage: number;
   color: string;
   totalDuration: string;
-  optionData: string[];
+  optionData: {
+    label: string;
+    percent?: number;
+  }[];
 }

@@ -21,16 +21,19 @@ interface FilterProps {
   totalDuration?: string;
   ordering: string;
   pageSize: number;
+  user_id?: number;
 }
 
 const useStatisticTask = ({
   created_at,
   filter,
+  isTeam = false,
   onSuccess,
   onError,
 }: {
   isScroll?: boolean;
   created_at?: string;
+  isTeam?: boolean;
   filter?: FilterProps;
 
   onSuccess?: (data: BasePagination<DataTaskListStatisticListType[]>) => void;
@@ -42,6 +45,7 @@ const useStatisticTask = ({
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
     if (!filter?.organizationIds) return null;
+    if (isTeam && !filter.user_id) return [];
 
     const params = new URLSearchParams();
     if (filter?.fromDate) params.append('from_date', String(filter.fromDate));
@@ -63,6 +67,7 @@ const useStatisticTask = ({
     if (filter?.ordering) params.append('ordering', String(filter.ordering));
     if (filter?.pageSize) params.append('page_size', String(filter.pageSize));
     if (created_at) params.append('created_at', String(created_at));
+    if (filter?.user_id) params.append('user_id', String(filter.user_id));
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 

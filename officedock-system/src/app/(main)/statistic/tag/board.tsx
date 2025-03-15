@@ -58,6 +58,8 @@ const StatisticTagBoard = () => {
       tagIds: selectedTags,
     },
     onSuccess: (data) => {
+      selectedOrganization && handleSelectOrganization(selectedOrganization);
+
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));

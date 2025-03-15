@@ -17,7 +17,10 @@ import ImageRound from '@components/common/ImageRound';
 import Tabs from '@components/common/Tabs';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 
-import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
+import {
+  SYSTEM_PERMISSIONS_MENU,
+  SYSTEM_PERMISSIONS_MENU_TEAM,
+} from '@constants/menu';
 import { PermissionsSystem, SocketActions, TabType } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
@@ -82,6 +85,15 @@ const Sidebar = ({ className }: Props) => {
     { name: TabType.MY_DOC },
     { name: TabType.TEAM_DOCK },
   ];
+
+  const MENU_ITEMS_TEAM = SYSTEM_PERMISSIONS_MENU_TEAM.filter((menu) => {
+    if (menu.requiredPermission === PermissionsSystem.VIEW_ALL) {
+      return true;
+    }
+    return session?.user.permissions.includes(menu.requiredPermission);
+  });
+  const menuItemsCloneTeam: MenuItem[] = lodash.cloneDeep(MENU_ITEMS_TEAM);
+  const menuItemsTeam = updateCurrent(menuItemsCloneTeam, pathname);
 
   useEffect(() => {
     const handleSocketMessage = (data: WebSocketMessageData) => {
@@ -342,7 +354,7 @@ const Sidebar = ({ className }: Props) => {
             <ul role="list" className="flex flex-col gap-y-6 list-none">
               <li className="flex-1">
                 <ul role="list" className="list-none pl-2">
-                  {menuItems
+                  {menuItemsTeam
                     .filter(
                       (item) =>
                         item.companyMenu == false &&
@@ -464,7 +476,7 @@ const Sidebar = ({ className }: Props) => {
           </nav>
           {memberOption && (
             <div
-              className={`absolute ${expanded ? 'bottom-[135px]' : 'bottom-[165px]'}  left-0 w-full`}>
+              className={`absolute ${expanded ? 'bottom-[40px]' : 'bottom-[40px]'}  left-0 w-full`}>
               <ul
                 role="list"
                 className="flex max-h-20 flex-col gap-y-6 list-none">

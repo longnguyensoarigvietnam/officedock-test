@@ -11,6 +11,14 @@ export interface TaskTimeStatistic {
   startedAt: Date;
   pausedAt: Date;
 }
+export interface UserListStatisticType {
+  duration: string;
+  percent: number;
+  user: {
+    id: number;
+    fullName: string;
+  };
+}
 
 export interface SmallCategory {
   id: number;
@@ -208,6 +216,7 @@ export interface StatisticCategoryInfo {
   percent: number;
   categoryColor: string;
   tasks: DataTaskModalStatisticType[];
+  users?: UserListStatisticType[];
 }
 export interface CreationStatisticType {
   id: number;
@@ -218,6 +227,14 @@ export interface CreationStatisticType {
 export interface DataResponseStatisticCreationType {
   organizations: CreationStatisticType[];
   tags: TagCreationStatisticType[];
+}
+export interface DataResponseStatisticCreationTeamType {
+  organization: CreationStatisticType;
+  tags: TagCreationStatisticType[];
+  members: {
+    id: number;
+    fullName: string;
+  }[];
 }
 export interface DataTaskModalStatisticType {
   id: number;

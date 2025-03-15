@@ -11,10 +11,12 @@ import {
 import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
 import { useEffect, useRef } from 'react';
 import { OptionDropdownType } from '@interfaces/common';
+import { getRandomColor } from '@utils';
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 interface PieChartProps {
+  isTeam?: boolean;
   data: number[];
   isClickTooltip?: boolean;
   labels: string[];
@@ -23,7 +25,10 @@ interface PieChartProps {
   className?: string;
   showLegend?: boolean;
   showTooltip?: boolean;
-  optionsData?: string[][];
+  optionsData?: {
+    label: string;
+    percent?: number;
+  }[][];
   listIdData?: number[];
   handleClickTooltip?: (id: number | null) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
@@ -37,6 +42,7 @@ const PieChart = ({
   actualValues,
   isClickTooltip = false,
   showLegend = false,
+  isTeam = false,
   optionsData,
   listIdData,
   handleClickChart,
@@ -128,9 +134,59 @@ const PieChart = ({
                 : [];
             const optionsId =
               listIdData && listIdData.length > 0 ? listIdData[dataIndex] : '';
-            const optionsHtml = optionsList
-              .map((opt) => `<li>${opt}</li>`)
-              .join('');
+            const optionsHtml = isTeam
+              ? optionsList
+                  .map((opt) => {
+                    const colorRandom = getRandomColor();
+                    return `<li style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                    <div >
+                      <svg
+                        width="30"
+                        height="30"
+                        viewBox="0 0 36 36"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <rect width="30" height="30" rx=${30 / 2} fill=${colorRandom} />
+                        <mask
+                          id="mask0_528_5"30""
+                          style="mask-type: alpha"
+                          maskUnits="userSpaceOnUse"
+                          x="0"
+                          y="0"
+                          width="30"
+                          height="30">
+                          <rect width="30" height="30" rx=${30 / 2} fill=${colorRandom} />
+                        </mask>
+                        <g mask="url(#mask0_528_5"30")">
+                          <rect
+                            x=${30 * 0.19}
+                            y=${30 * 0.57}
+                            width=${30 * 0.62}
+                            height=${30 * 0.62}
+                            rx=${30 * 0.31}
+                            fill="#F3F3F3"
+                          />
+                        </g>
+                        <rect
+                          x=${30 * 0.33}
+                          y=${30 * 0.17}
+                          width=${30 * 0.33}
+                          height=${30 * 0.33}
+                          rx=${30 * 0.17}
+                          fill="#F3F3F3"
+                        />
+                      </svg>
+                    </div>
+                  <span style="display: inline-block; width: 80px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+  ${opt.label}
+</span>
+                    </div>
+                    <span>  ${opt.percent}%</span>
+          </li>`;
+                  })
+                  .join('')
+              : optionsList.map((opt) => `<li>${opt.label}</li>`).join('');
 
             let innerHtml = `
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
@@ -149,7 +205,10 @@ const PieChart = ({
                    ${optionsHtml}
            </ul>
            <div>
-           <div style="margin-top: 16px;display: flex; align-items: center; justify-content: end;">
+           ${
+             !isTeam &&
+             `
+                       <div style="margin-top: 16px;display: flex; align-items: center; justify-content: end;">
     <button
     id="tooltip-button"
     data-label="${optionsId}"
@@ -165,6 +224,8 @@ const PieChart = ({
       </div>
     </button>
   </div>
+        `
+           }
            </div>`
         }
    
