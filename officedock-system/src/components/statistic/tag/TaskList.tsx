@@ -2,19 +2,19 @@ import React, { useContext, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Checkbox from '@components/common/Checkbox';
-import TableChart from './TableChart';
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
-  StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 import useStatisticTask from '@hooks/useStatisticTask';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
-import { StatisticStateContext } from '@providers/StatisticProvider';
+import TableChart from './TableChart';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 type Props = {
   isCheckCompare: boolean;
@@ -22,21 +22,22 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
-  statisticCategoryList: StatisticsCategories | undefined;
   creationDataStatisticData: CreationStatisticType[];
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
+  removeTag: (selected: OptionDropdownType) => void;
 };
 
-const TaskListStatistic = ({
+const TaskListStatisticTags = ({
   startDate,
   endDate,
   startDateCompare,
   endDateCompare,
   isCheckCompare,
   creationDataStatisticData,
+  removeTag,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectSmall,
@@ -57,7 +58,10 @@ const TaskListStatistic = ({
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
-  } = useContext(StatisticStateContext);
+    selectedTags,
+    tagsOptions,
+    setSelectedTags,
+  } = useContext(StatisticTagStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
 
@@ -114,6 +118,7 @@ const TaskListStatistic = ({
       totalDuration: getTotalDuration(),
       ordering: ordering,
       pageSize: pageSize,
+      tagIds: selectedTags,
     },
     onSuccess: (data) => {
       if (data) {
@@ -135,6 +140,7 @@ const TaskListStatistic = ({
       totalDuration: getTotalDurationCompare(),
       ordering: ordering,
       pageSize: pageSize,
+      tagIds: selectedTags,
       isCompare: isCheckCompare && isShowCompare,
     },
     onSuccess: (data) => {
@@ -209,6 +215,68 @@ const TaskListStatistic = ({
           {/* Line */}
           <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
           <div>
+            {/* List tags  */}
+            <div>
+              <div className="flex justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <div className="w-[240px]">
+                    <MultiSelectDropdown
+                      options={tagsOptions}
+                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                      selectedOptions={selectedTags || []}
+                      onChange={(selected) => {
+                        let updatedTagIds = [];
+                        const currentTagIds = selectedTags || [];
+                        const foundItemIndex = currentTagIds.findIndex(
+                          (tag) => tag.value == selected.value,
+                        );
+                        if (foundItemIndex == -1) {
+                          updatedTagIds = [...currentTagIds, selected];
+                        } else {
+                          updatedTagIds = currentTagIds.filter(
+                            (tag) => tag.value != selected.value,
+                          );
+                        }
+                        setSelectedTags(updatedTagIds);
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex gap-2 ">
+                      {selectedTags.map((item) => {
+                        return (
+                          <div
+                            key={item.value}
+                            className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                            <span className="w-[32px] truncate">
+                              {item.label}
+                            </span>
+                            <ImageRound
+                              onClick={() => {
+                                removeTag(item);
+                              }}
+                              src={`/icons/close-white.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center mt-8  gap-1 mb-[30px]">
+                <ImageRound
+                  className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
+                  name="Sort icon"
+                  src={`/icons/sort.svg`}
+                />
+                <span className="text-xs text-[#77858F] relative top-[2px]">
+                  タグの絞り込み
+                </span>
+              </div>
+            </div>
             <div className="flex items-end gap-[20px] justify-center px-[30px] text-sm font-medium">
               <div className="w-1/4 ">
                 <div className="mt-4">
@@ -390,4 +458,4 @@ const TaskListStatistic = ({
   );
 };
 
-export default TaskListStatistic;
+export default TaskListStatisticTags;

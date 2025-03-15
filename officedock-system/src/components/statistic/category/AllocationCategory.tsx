@@ -3,7 +3,7 @@ import React, { memo, useEffect, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
-import ProgressBarStatistic from '../ProgressBarStatistic';
+import ProgressBarStatistic from './ProgressBarStatistic';
 
 import { StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';

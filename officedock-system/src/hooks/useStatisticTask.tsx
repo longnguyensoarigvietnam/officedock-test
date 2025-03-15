@@ -7,7 +7,7 @@ import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { AxiosError } from 'axios';
-import { BasePagination } from '@interfaces/common';
+import { BasePagination, OptionDropdownType } from '@interfaces/common';
 import { DataTaskListStatisticListType } from '@interfaces/statistic';
 
 interface FilterProps {
@@ -17,7 +17,7 @@ interface FilterProps {
   largeCategoryId?: number | null;
   mediumCategoryId?: number | null;
   organizationIds?: string;
-  tagIds?: string;
+  tagIds?: OptionDropdownType[];
   totalDuration?: string;
   ordering: string;
   pageSize: number;
@@ -44,16 +44,19 @@ const useStatisticTask = ({
     if (!filter?.organizationIds) return null;
 
     const params = new URLSearchParams();
-
     if (filter?.fromDate) params.append('from_date', String(filter.fromDate));
     if (filter?.endDate) params.append('end_date', String(filter.endDate));
-    if (filter?.largeCategoryId)
+    if (filter?.largeCategoryId && filter.largeCategoryId !== undefined)
       params.append('large_category_id', String(filter.largeCategoryId));
     if (filter?.mediumCategoryId)
       params.append('medium_category_id', String(filter.mediumCategoryId));
     if (filter?.organizationIds)
       params.append('organization_ids', filter.organizationIds);
-    if (filter?.tagIds) params.append('tag_ids', filter.tagIds);
+    if (filter?.tagIds)
+      params.append(
+        'tag_ids',
+        filter.tagIds.map((item) => item.value).join(','),
+      );
     if (filter?.page) params.append('page', String(filter.page));
     if (filter?.totalDuration)
       params.append('total_duration', String(filter.totalDuration));

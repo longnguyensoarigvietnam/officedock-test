@@ -1,4 +1,4 @@
-import { Tags } from './tag';
+import { TagCreationStatisticType, Tags } from './tag';
 import { TodoItem } from './task';
 import { User } from './user';
 
@@ -193,9 +193,16 @@ export interface StatisticsCategories {
   mediumCategories?: StatisticCategoryInfo[];
   smallCategories?: StatisticCategoryInfo[];
 }
+export interface StatisticsTagsType {
+  totalDuration: string;
+  largeCategories: StatisticCategoryInfo[];
+  mediumCategories?: StatisticCategoryInfo[];
+  smallCategories?: StatisticCategoryInfo[];
+}
 
 export interface StatisticCategoryInfo {
   categoryId: number;
+  tagId?: number;
   categoryName: string;
   duration: string;
   percent: number;
@@ -210,6 +217,7 @@ export interface CreationStatisticType {
 }
 export interface DataResponseStatisticCreationType {
   organizations: CreationStatisticType[];
+  tags: TagCreationStatisticType[];
 }
 export interface DataTaskModalStatisticType {
   id: number;

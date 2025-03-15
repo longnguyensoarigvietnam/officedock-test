@@ -2,61 +2,60 @@
 import React, { useContext, useState } from 'react';
 
 import Button from '@components/common/Button';
-import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import StatisticCalendar from '@components/statistic/category/StatisticCalendar';
-import PercentageCategory from '@components/statistic/category/PercentageCategory';
-import TaskListStatistic from '@components/statistic/category/TaskList';
-
-import useStatisticCategories from '@hooks/useStatisticCategories';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
-import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
-import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
-import { StatisticStateContext } from '@providers/StatisticProvider';
-import { useRouter } from 'next/navigation';
-import { pageRouters } from '@constants/routers';
 
-const StatisticBoard = () => {
+import StatisticTagCalendar from '@components/statistic/tag/StatisticCalendar';
+import useStatisticsTags from '@hooks/useStatisticTags';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import PercentageTags from '@components/statistic/tag/PercentageTags';
+import PercentageTagsCompare from '@components/statistic/tag/compare/PercentageTagsCompare';
+import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
+import TaskListStatisticTags from '@components/statistic/tag/TaskList';
+
+const StatisticTagBoard = () => {
   const {
     startDate,
     endDate,
     isCheckCompare,
     startDateCompare,
     endDateCompare,
-    largeOptions,
-    mediumOptions,
-    listOptionsOrganization,
     selectedLarge,
     selectedMedium,
     selectedOrganization,
+    tagsOptions,
+    selectedTags,
+    setSelectedTags,
+    setTagsOptions,
+    setTotalDurationSmall,
+    setTotalDurationLarge,
+    setTotalDurationMedium,
+    setSelectedOrganization,
+    setTotalDurationLargeCompare,
+    setTotalDurationMediumCompare,
+    setTotalDurationSmallCompare,
+    setListOptionsOrganization,
     setSelectedLarge,
     setSelectedMedium,
-    setSelectedOrganization,
     setSelectedSmall,
     setLargeOptions,
     setMediumOptions,
     setSmallOptions,
-    setListOptionsOrganization,
-    setTotalDurationSmall,
-    setTotalDurationLarge,
-    setTotalDurationMedium,
-    setTotalDurationLargeCompare,
-    setTotalDurationMediumCompare,
-    setTotalDurationSmallCompare,
-  } = useContext(StatisticStateContext);
+  } = useContext(StatisticTagStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
-  const router = useRouter();
 
-  const { statisticCategoryList } = useStatisticCategories({
+  const { statisticTagsList } = useStatisticsTags({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      tagIds: selectedTags,
     },
     onSuccess: (data) => {
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
@@ -64,8 +63,7 @@ const StatisticBoard = () => {
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
     },
   });
-
-  const { statisticCategoryCompareList } = useStatisticCategoriesCompare({
+  const { statisticTagsListCompare } = useStatisticTagsCompare({
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
@@ -80,7 +78,6 @@ const StatisticBoard = () => {
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
     },
   });
-
   const { creationDataStatisticData } = useCreationDataStatistic({
     onSuccess: (data) => {
       const result = (() => {
@@ -96,7 +93,14 @@ const StatisticBoard = () => {
           value: mainItem.id,
         };
       })();
+
+      const optionsTagList = data.tags.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+
       setSelectedOrganization(result);
+      setTagsOptions(optionsTagList);
       setListOptionsOrganization([
         ...data.organizations.map((org) => ({
           value: org.id || '',
@@ -105,6 +109,15 @@ const StatisticBoard = () => {
       ]);
     },
   });
+
+  // Remove tags
+  const removeTag = (selected: OptionDropdownType) => {
+    const currentTagIds = selectedTags || [];
+    const updatedTagIds = currentTagIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
+    setSelectedTags(updatedTagIds);
+  };
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
@@ -195,17 +208,19 @@ const StatisticBoard = () => {
                 setIsMyTask(true);
               }
             }}
-            variant={isMyTask ? 'primary' : 'outline'}
+            variant={'outline'}
             className={`!py-0 !px-0 font-bold w-[80px] h-7 
-              !rounded-[20px] text-xs  ${isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'}`}>
+              !rounded-[20px] text-xs   !text-[#A7B7C2] !border-[#A7B7C2]`}>
             カテゴリー
           </Button>
           <Button
             onClick={() => {
-              router.push(pageRouters.STATISTIC_TAG_MANAGEMENT.href);
+              if (isMyTask) {
+                setIsMyTask(false);
+              }
             }}
-            variant={!isMyTask ? 'primary' : 'outline'}
-            className={`${!isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'} !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
+            variant={'primary'}
+            className={` !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
             タグ
           </Button>
         </div>{' '}
@@ -213,51 +228,52 @@ const StatisticBoard = () => {
       <div>
         <div className="flex justify-between w-full">
           <div className="flex items-center gap-2">
-            <div className="w-[220px]">
-              <Dropdown
-                options={listOptionsOrganization}
+            <div className="w-[240px]">
+              <MultiSelectDropdown
+                options={tagsOptions}
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                selectedOption={selectedOrganization || undefined}
-                onChange={(data) => {
-                  handleSelectOrganization(data);
+                selectedOptions={selectedTags || []}
+                onChange={(selected) => {
+                  let updatedTagIds = [];
+                  const currentTagIds = selectedTags || [];
+                  const foundItemIndex = currentTagIds.findIndex(
+                    (tag) => tag.value == selected.value,
+                  );
+                  if (foundItemIndex == -1) {
+                    updatedTagIds = [...currentTagIds, selected];
+                  } else {
+                    updatedTagIds = currentTagIds.filter(
+                      (tag) => tag.value != selected.value,
+                    );
+                  }
+                  setSelectedTags(updatedTagIds);
                 }}
               />
             </div>
-            <div className="flex items-center  w-fit h-[30px]">
-              <ImageRound
-                className={`w-fit h-fit `}
-                src="/icons/play-statistic.svg"
-                name="icon chevron right"
-              />
-            </div>
-            <div className="w-[220px]">
-              <Dropdown
-                options={largeOptions}
-                className="!h-[34px] !py-0 !rounded-md"
-                selectedOption={selectedLarge || undefined}
-                onChange={(data) => handleSelectLarge(data)}
-                disabled={!selectedOrganization}
-              />
-            </div>
-            <div className="flex items-center  w-fit h-[30px]">
-              <ImageRound
-                className={`w-fit h-fit `}
-                src="/icons/play-statistic.svg"
-                name="icon chevron right"
-              />
-            </div>
-            <div className="w-[220px]">
-              <Dropdown
-                className="!h-[34px] !py-0 !rounded-md"
-                options={mediumOptions}
-                selectedOption={selectedMedium || undefined}
-                onChange={(data) => handleSelectMedium(data)}
-                disabled={!selectedLarge}
-              />
+            <div>
+              <div className="flex gap-2 ">
+                {selectedTags.map((item) => {
+                  return (
+                    <div
+                      key={item.value}
+                      className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className="w-[32px] truncate">{item.label}</span>
+                      <ImageRound
+                        onClick={() => {
+                          removeTag(item);
+                        }}
+                        src={`/icons/close-white.svg`}
+                        name="close"
+                        className="w-fit h-fit cursor-pointer"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
           <div>
-            <StatisticCalendar />
+            <StatisticTagCalendar />
           </div>
         </div>
         <div className="flex items-center mt-8  gap-1 mb-[30px]">
@@ -273,53 +289,38 @@ const StatisticBoard = () => {
       </div>
       {/* Percentage of categories */}
       {isCheckCompare ? (
-        <PercentageCategoryCompare
+        <PercentageTagsCompare
           startDate={startDate}
           endDate={endDate}
           startDateCompare={startDateCompare}
           endDateCompare={endDateCompare}
-          statisticCategoryList={statisticCategoryList}
-          statisticCategoryCompareList={statisticCategoryCompareList}
+          statisticTagsList={statisticTagsList}
+          statisticTagsCompareList={statisticTagsListCompare}
+          removeTag={removeTag}
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
         />
       ) : (
-        <PercentageCategory
+        <PercentageTags
           startDate={startDate}
           endDate={endDate}
-          statisticCategoryList={statisticCategoryList}
+          statisticTagsList={statisticTagsList}
+          removeTag={removeTag}
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
         />
       )}
-      {/* TODO: Time allocation for each category */}
-      {/* <AllocationCategory
-        startDate={startDate}
-        endDate={endDate}
-        totalDurationLarge={totalDurationLarge}
-        totalDurationMedium={totalDurationMedium}
-        totalDurationSmall={totalDurationSmall}
-        statisticCategoryList={statisticCategoryList}
-        listOptionsOrganization={listOptionsOrganization}
-        selectedOrganization={selectedOrganization}
-        largeOptions={largeOptions}
-        selectedLarge={selectedLarge}
-        mediumOptions={mediumOptions}
-        selectedMedium={selectedMedium}
-        handleSelectOrganization={handleSelectOrganization}
-        handleSelectLarge={handleSelectLarge}
-        handleSelectMedium={handleSelectMedium}
-      /> */}
+
       {/* Task list */}
-      <TaskListStatistic
+      <TaskListStatisticTags
         startDate={startDate}
         endDate={endDate}
+        removeTag={removeTag}
         startDateCompare={startDateCompare}
         endDateCompare={endDateCompare}
         isCheckCompare={isCheckCompare}
-        statisticCategoryList={statisticCategoryList}
         handleSelectOrganization={handleSelectOrganization}
         handleSelectLarge={handleSelectLarge}
         handleSelectMedium={handleSelectMedium}
@@ -332,4 +333,4 @@ const StatisticBoard = () => {
   );
 };
 
-export default StatisticBoard;
+export default StatisticTagBoard;
