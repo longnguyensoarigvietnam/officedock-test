@@ -59,16 +59,6 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     requiredPermission: PermissionsSystem.CATEGORY_VIEW,
   },
   {
-    ...pageRouters.HIERARCHY_MANAGEMENT,
-    name: pageRouters.HIERARCHY_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/hierarchy.svg' : '/icons/hierarchy.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.CATEGORY_HIERARCHY_VIEW,
-  },
-  {
     ...pageRouters.SKILLS_MANAGEMENT,
     name: pageRouters.SKILLS_MANAGEMENT.name,
     iconUrl: (active: boolean) => {

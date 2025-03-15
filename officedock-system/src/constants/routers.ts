@@ -327,6 +327,7 @@ export const apiRouters = {
   // CATEGORY
   CATEGORY_LIST: '/statistic-categories/',
   CATEGORY_DETAIL: (id: string) => `/statistic-categories/${id}/`,
+  CATEGORY_VALIDATION: '/statistic-categories/validation-data/',
 
   // TASK
   TASK_BOARD_LIST: '/tasks/board/',

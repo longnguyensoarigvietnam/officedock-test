@@ -273,3 +273,5 @@ export const HIERARCHY_COLOR_LIST = [
   '#45AFD9',
   '#899FEB',
 ]
+
+export const ALL_TEAMS_OPTION = 'すべてのチーム'

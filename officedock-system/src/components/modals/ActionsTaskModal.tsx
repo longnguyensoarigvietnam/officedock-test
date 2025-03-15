@@ -1190,7 +1190,7 @@ const ActionsTaskModal = ({
                 render={({ field: { value, onChange } }) => {
                   return (
                     <Dropdown
-                      placeholder="大カテゴリ"
+                      placeholder="大カテゴリー"
                       className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
