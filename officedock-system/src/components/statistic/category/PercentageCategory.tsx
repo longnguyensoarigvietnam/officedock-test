@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 
-import PieChart from '@components/common/Chart/PieChart';
+import PieChartCustom from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
@@ -10,7 +10,7 @@ import {
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
-import { getRandomColor } from '@utils';
+import { getRandomColor, lightenColor } from '@utils';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { EventWorkCategory } from '@constants/enums';
 import { StatisticStateContext } from '@providers/StatisticProvider';
@@ -62,6 +62,7 @@ const PercentageCategory = ({
     optionData: [],
     listId: [],
     listDuration: [],
+    mergedItems: [],
   });
 
   const [dataChartMedium, setDataChartMedium] = useState<DataChartType>({
@@ -72,6 +73,7 @@ const PercentageCategory = ({
     optionData: [],
     listId: [],
     listDuration: [],
+    mergedItems: [],
   });
   const [dataChartSmall, setDataChartSmall] = useState<DataChartType>({
     actualValue: [],
@@ -81,26 +83,32 @@ const PercentageCategory = ({
     optionData: [],
     listId: [],
     listDuration: [],
+    mergedItems: [],
   });
 
-  const processChartData = (categories: StatisticCategoryInfo[]) => {
+  const processChartData = (
+    categories: StatisticCategoryInfo[],
+    colorData?: string,
+  ) => {
+    const mergedItems: StatisticCategoryInfo[] = [];
     const mergedCategory: StatisticCategoryInfo = {
       categoryName: 'その他',
-      categoryColor: getRandomColor(),
+      categoryColor: colorData || getRandomColor(),
       percent: 0,
       duration: '',
       tasks: [] as DataTaskModalStatisticType[],
       categoryId: -1,
     };
 
-    const mergedItems: StatisticCategoryInfo[] = [];
-
     const filteredCategories = categories.filter((item) => {
       if (item.percent < 10) {
         mergedCategory.percent += item.percent;
         mergedCategory.duration += item.duration;
+        mergedCategory.categoryColor =
+          (colorData && lightenColor(colorData, item.percent)) ||
+          getRandomColor();
         mergedCategory.tasks = mergedCategory.tasks.concat(item.tasks);
-        mergedItems.push(item); // Thêm mục đã gộp vào mảng chi tiết
+        mergedItems.push(item);
         return false;
       }
       return true;
@@ -110,12 +118,16 @@ const PercentageCategory = ({
       filteredCategories.push(mergedCategory);
     }
 
-    // Get list color
-    const listColor = filteredCategories.map(
-      (color) => color.categoryColor || getRandomColor(),
-    );
     // Get list percent
     const listPercent = filteredCategories.map((percent) => percent.percent);
+
+    // Get list color
+    const listColor = filteredCategories.map(
+      (color, index) =>
+        color.categoryColor ||
+        lightenColor(colorData as string, listPercent[index]) ||
+        getRandomColor(),
+    );
     // Get list label
     const listLabel = filteredCategories.map((label) => label.categoryName);
     // Get list value
@@ -123,23 +135,11 @@ const PercentageCategory = ({
       convertToJapaneseTime(item.duration),
     );
     // Get list options
-    const listDataOptions = filteredCategories.map((item) => {
-      const taskOptions = item.tasks.slice(0, 6).map((task) => ({
+    const listDataOptions = filteredCategories.map((item) =>
+      item.tasks.slice(0, 6).map((task) => ({
         label: task.title,
-      }));
-
-      if (item.categoryName === 'その他') {
-        return [
-          {
-            label: 'その他',
-            mergedItems: mergedItems,
-          },
-          ...taskOptions,
-        ];
-      }
-
-      return taskOptions;
-    });
+      })),
+    );
     // Get list id
     const listDataIds = filteredCategories.map((item) => item.categoryId);
     // Get list duration
@@ -155,6 +155,7 @@ const PercentageCategory = ({
       optionData: listDataOptions,
       listId: listDataIds,
       listDuration: listDuration,
+      mergedItems: mergedItems,
     };
   };
 
@@ -174,11 +175,16 @@ const PercentageCategory = ({
           optionData: [],
           listId: [],
           listDuration: [],
+          mergedItems: [],
         });
       }
       if (statisticCategoryList.mediumCategories) {
+        const color = statisticCategoryList.largeCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
         const mediumChartData = processChartData(
           statisticCategoryList.mediumCategories,
+          color?.categoryColor,
         );
         setDataChartMedium(mediumChartData);
       } else {
@@ -190,11 +196,18 @@ const PercentageCategory = ({
           optionData: [],
           listId: [],
           listDuration: [],
+          mergedItems: [],
         });
       }
       if (statisticCategoryList.smallCategories) {
+        const color =
+          statisticCategoryList.mediumCategories &&
+          statisticCategoryList.mediumCategories.find(
+            (item) => item.categoryId === selectedMedium?.value,
+          );
         const smallChartData = processChartData(
           statisticCategoryList.smallCategories,
+          color?.categoryColor,
         );
         setDataChartSmall(smallChartData);
       } else {
@@ -206,6 +219,7 @@ const PercentageCategory = ({
           optionData: [],
           listId: [],
           listDuration: [],
+          mergedItems: [],
         });
       }
       setIsLoading(false);
@@ -243,6 +257,9 @@ const PercentageCategory = ({
   };
 
   const handleScroll = () => {
+    const item = largeOptions.find((item) => item.value === detailCategory?.id);
+    item && handleSelectLarge(item);
+
     const element = document.getElementById('task-list-statistic');
     setIsShowModal(false);
 
@@ -322,8 +339,9 @@ const PercentageCategory = ({
                     </p>
                     <div className="min-h-[280px]">
                       {dataChartLarge.data.length > 0 ? (
-                        <PieChart
+                        <PieChartCustom
                           isClickTooltip
+                          mergedItems={dataChartLarge.mergedItems}
                           colors={dataChartLarge.colors}
                           data={dataChartLarge?.data}
                           labels={dataChartLarge?.labels}
@@ -381,8 +399,9 @@ const PercentageCategory = ({
                     </p>
                     <div>
                       {dataChartMedium.data.length > 0 ? (
-                        <PieChart
+                        <PieChartCustom
                           isClickTooltip
+                          mergedItems={dataChartMedium.mergedItems}
                           colors={dataChartMedium.colors}
                           data={dataChartMedium?.data}
                           labels={dataChartMedium?.labels}
@@ -437,10 +456,11 @@ const PercentageCategory = ({
                     </p>
                     <div>
                       {dataChartSmall.data.length > 0 ? (
-                        <PieChart
+                        <PieChartCustom
                           colors={dataChartSmall.colors}
                           data={dataChartSmall?.data}
                           labels={dataChartSmall?.labels}
+                          mergedItems={dataChartSmall.mergedItems}
                           actualValues={dataChartSmall?.actualValue}
                           className="w-[280px] h-[280px] ml-5"
                           optionsData={dataChartSmall.optionData}

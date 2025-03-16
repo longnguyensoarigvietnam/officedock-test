@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import PercentageBarCompare from '@components/common/ProgressBar/ProgressBarCompare';
+import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -9,7 +9,7 @@ import {
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { EventWorkCategory } from '@constants/enums';
-import { getRandomColor } from '@utils';
+import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
@@ -17,8 +17,8 @@ import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderT
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  statisticTagsList: StatisticsCategories | undefined;
-  statisticTagsCompareList: StatisticsCategories | undefined;
+  statisticTagsListTeam: StatisticsCategories | undefined;
+  statisticTagsListTeamCompare: StatisticsCategories | undefined;
 
   startDateCompare: Date;
   endDateCompare: Date | null;
@@ -33,8 +33,8 @@ const PercentageTeamTagsCompare = ({
   endDate,
   startDateCompare,
   endDateCompare,
-  statisticTagsCompareList,
-  statisticTagsList,
+  statisticTagsListTeamCompare,
+  statisticTagsListTeam,
   removeTag,
   handleSelectLarge,
   handleSelectMedium,
@@ -96,47 +96,126 @@ const PercentageTeamTagsCompare = ({
     DataPercentCompareType[]
   >([]);
 
-  const mapCategoryData = (categories: StatisticCategoryInfo[]) =>
-    categories?.map((item) => ({
-      id: item.tagId as number,
+  const mapCategoryData = (
+    categories: StatisticCategoryInfo[],
+    colorData?: string,
+  ) => {
+    if (!categories) return [];
+
+    const otherItems = categories.filter((item) => item.percent < 10);
+    const mainItems = categories.filter((item) => item.percent >= 10);
+
+    const otherItem = {
+      id: -1,
+      label: 'その他',
+      percentage: otherItems.reduce((sum, item) => sum + item.percent, 0),
+      color: colorData || getRandomColor(),
+      totalDuration: '',
+      optionData: otherItems
+        .flatMap((item) =>
+          item.users?.map((user) => {
+            if (user?.user?.fullName) {
+              return {
+                label: user.user.fullName,
+                percent: item.percent,
+              };
+            }
+            return undefined;
+          }),
+        )
+        .filter((item): item is { label: string; percent: number } => !!item),
+      mergedItems: otherItems,
+    };
+
+    const mappedMainItems = mainItems.map((item) => ({
+      id: item.categoryId,
       label: item.categoryName,
       percentage: item.percent,
-      color: item.categoryColor || getRandomColor(),
+      color:
+        item.categoryColor ||
+        lightenColor(colorData as string, item.percent) ||
+        getRandomColor(),
       totalDuration: item.duration,
-      optionData: item.tasks.map((item) => ({
-        label: item.title,
-      })),
-    })) || [];
+      optionData:
+        item.users
+          ?.map((user) => {
+            if (user?.user?.fullName) {
+              return {
+                label: user.user.fullName,
+                percent: item.percent,
+              };
+            }
+            return undefined;
+          })
+          .filter(
+            (user): user is { label: string; percent: number } => !!user,
+          ) || [],
+      mergedItems: [],
+    }));
+
+    return [
+      ...mappedMainItems,
+      ...(otherItem.percentage > 0 ? [otherItem] : []),
+    ];
+  };
 
   // Set data from category list
   useEffect(() => {
-    if (statisticTagsList) {
-      setDataChartLarge(mapCategoryData(statisticTagsList.largeCategories));
+    if (statisticTagsListTeam) {
+      const color = statisticTagsListTeam.largeCategories.find(
+        (item) => item.categoryId === selectedLarge?.value,
+      );
+      const colorMedium =
+        statisticTagsListTeam.mediumCategories &&
+        statisticTagsListTeam.mediumCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
+      setDataChartLarge(mapCategoryData(statisticTagsListTeam.largeCategories));
       setDataChartMedium(
-        mapCategoryData(statisticTagsList.mediumCategories || []),
+        mapCategoryData(
+          statisticTagsListTeam.mediumCategories || [],
+          color?.categoryColor,
+        ),
       );
       setDataChartSmall(
-        mapCategoryData(statisticTagsList.smallCategories || []),
+        mapCategoryData(
+          statisticTagsListTeam.smallCategories || [],
+          colorMedium?.categoryColor,
+        ),
       );
       setIsLoading(false);
     }
-  }, [statisticTagsList]);
+  }, [statisticTagsListTeam]);
 
   // Set data from category compare list
   useEffect(() => {
-    if (statisticTagsCompareList) {
+    if (statisticTagsListTeamCompare) {
+      const color = statisticTagsListTeamCompare.largeCategories.find(
+        (item) => item.categoryId === selectedLarge?.value,
+      );
+      const colorMedium =
+        statisticTagsListTeamCompare.mediumCategories &&
+        statisticTagsListTeamCompare.mediumCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       setDataChartLargeCompare(
-        mapCategoryData(statisticTagsCompareList.largeCategories),
+        mapCategoryData(statisticTagsListTeamCompare.largeCategories),
       );
       setDataChartMediumCompare(
-        mapCategoryData(statisticTagsCompareList.mediumCategories || []),
+        mapCategoryData(
+          statisticTagsListTeamCompare.mediumCategories || [],
+          color?.categoryColor,
+        ),
       );
       setDataChartSmallCompare(
-        mapCategoryData(statisticTagsCompareList.smallCategories || []),
+        mapCategoryData(
+          statisticTagsListTeamCompare.smallCategories || [],
+          colorMedium?.categoryColor,
+        ),
       );
       setIsLoading(false);
     }
-  }, [statisticTagsCompareList]);
+  }, [statisticTagsListTeamCompare]);
 
   const handleClickTooltip = (
     id: number | null,
@@ -147,19 +226,19 @@ const PercentageTeamTagsCompare = ({
     if (isCompare) {
       if (type === EventWorkCategory.LARGE) {
         duration =
-          statisticTagsCompareList?.largeCategories.find(
+          statisticTagsListTeamCompare?.largeCategories.find(
             (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
-          statisticTagsCompareList?.mediumCategories?.find(
+          statisticTagsListTeamCompare?.mediumCategories?.find(
             (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.SMALL) {
         duration =
-          statisticTagsCompareList?.smallCategories?.find(
+          statisticTagsListTeamCompare?.smallCategories?.find(
             (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
@@ -173,19 +252,19 @@ const PercentageTeamTagsCompare = ({
     } else {
       if (type === EventWorkCategory.LARGE) {
         duration =
-          statisticTagsList?.largeCategories.find(
+          statisticTagsListTeam?.largeCategories.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
-          statisticTagsList?.mediumCategories?.find(
+          statisticTagsListTeam?.mediumCategories?.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.SMALL) {
         duration =
-          statisticTagsList?.smallCategories?.find(
+          statisticTagsListTeam?.smallCategories?.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
       }
@@ -337,7 +416,7 @@ const PercentageTeamTagsCompare = ({
                     />
                     <div className="min-h-[280px] mt-[30px]">
                       {
-                        <PercentageBarCompare
+                        <PercentageBarCompareTeam
                           data={dataChartLarge}
                           startDate={startDate}
                           endDate={endDate}
@@ -387,7 +466,7 @@ const PercentageTeamTagsCompare = ({
                     />
                     <div className="min-h-[280px] mt-[30px]">
                       {
-                        <PercentageBarCompare
+                        <PercentageBarCompareTeam
                           data={dataChartMedium}
                           startDate={startDate}
                           endDate={endDate}
@@ -437,7 +516,7 @@ const PercentageTeamTagsCompare = ({
                     />
                     <div className="min-h-[280px] mt-[30px]">
                       {
-                        <PercentageBarCompare
+                        <PercentageBarCompareTeam
                           data={dataChartSmall}
                           startDate={startDate}
                           endDate={endDate}

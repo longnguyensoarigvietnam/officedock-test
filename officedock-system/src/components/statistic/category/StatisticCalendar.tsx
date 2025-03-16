@@ -191,6 +191,9 @@ function StatisticCalendar() {
     setEndDateCompare(dataEndDateCompare);
     setIsCheckCompare(isDataCheckCompare);
   };
+  const handleReset = () => {
+    setIsOpenModal(false);
+  };
 
   return (
     <div className="relative">
@@ -323,7 +326,7 @@ function StatisticCalendar() {
                   <div className="flex gap-[10px] mt-[60px]">
                     <Button
                       variant="outline"
-                      onClick={() => {}}
+                      onClick={handleReset}
                       className="!py-0 !px-0 w-[100px] h-9 rounded-md text-[13px] font-medium">
                       キャンセル
                     </Button>
@@ -397,7 +400,7 @@ function StatisticCalendar() {
                   <div className="flex gap-[10px] mt-[60px]">
                     <Button
                       variant="outline"
-                      onClick={() => {}}
+                      onClick={handleReset}
                       className="!py-0 !px-0 w-[100px] h-9 rounded-md text-[13px] font-medium">
                       キャンセル
                     </Button>

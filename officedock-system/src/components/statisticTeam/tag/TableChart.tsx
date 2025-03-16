@@ -335,7 +335,7 @@ const TableChart = ({
         const value = info.getValue() as string;
         return (
           <div className="font-medium text-[14px] text-center text-black">
-            {value}
+            {value}%
           </div>
         );
       },
@@ -666,7 +666,7 @@ const TableChart = ({
             name: task.title,
             type: task.type,
             organization: task.organization,
-            ratio: '',
+            ratio: String(task.percent),
             tags: task.tags.map((tag) => {
               return {
                 value: tag.id as number,

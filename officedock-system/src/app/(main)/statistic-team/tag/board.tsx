@@ -13,13 +13,13 @@ import StatisticTeamCalendar from '@components/statisticTeam/category/StatisticT
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import { getRandomColor } from '@utils';
-import useStatisticsTags from '@hooks/useStatisticTags';
-import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
 import PercentageTeamTagsCompare from '@components/statisticTeam/tag/compare/PercentageTeamTagsCompare';
 import TaskListStatisticTeamTags from '@components/statisticTeam/tag/TaskList';
+import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
+import useStatisticTagsTeamCompare from '@hooks/useStatisticTagsTeamCompare';
 
 const StatisticTeamTagBoard = () => {
   const {
@@ -57,7 +57,7 @@ const StatisticTeamTagBoard = () => {
 
   const organizationId = searchParams.get('organization');
 
-  const { statisticTagsList } = useStatisticsTags({
+  const { statisticTagsListTeam } = useStatisticTagsTeam({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -85,7 +85,7 @@ const StatisticTeamTagBoard = () => {
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
     },
   });
-  const { statisticTagsListCompare } = useStatisticTagsCompare({
+  const { statisticTagsListTeamCompare } = useStatisticTagsTeamCompare({
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
@@ -349,8 +349,8 @@ const StatisticTeamTagBoard = () => {
           endDate={endDate}
           startDateCompare={startDateCompare}
           endDateCompare={endDateCompare}
-          statisticTagsList={statisticTagsList}
-          statisticTagsCompareList={statisticTagsListCompare}
+          statisticTagsListTeam={statisticTagsListTeam}
+          statisticTagsListTeamCompare={statisticTagsListTeamCompare}
           removeTag={removeTag}
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
@@ -360,7 +360,7 @@ const StatisticTeamTagBoard = () => {
         <PercentageTeamTags
           startDate={startDate}
           endDate={endDate}
-          statisticTagsList={statisticTagsList}
+          statisticTagsListTeam={statisticTagsListTeam}
           removeTag={removeTag}
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}

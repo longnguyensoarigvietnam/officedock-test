@@ -2,7 +2,8 @@ import React from 'react';
 
 import { formatShowDeadlineTask, formatTimeToJapanese } from '@utils/date';
 import { DataPercentCompareType } from '@interfaces/common';
-import ImageRound from '../ImageRound';
+import { getRandomColor } from '@utils';
+import AvatarIconWithDynamicColor from '../AvatarIcon';
 
 interface Props {
   data: DataPercentCompareType[];
@@ -16,7 +17,7 @@ interface Props {
   handleClickTooltip: (id: number | null, isCompare: boolean) => void;
 }
 
-const PercentageBarCompare = ({
+const PercentageBarCompareTeam = ({
   data,
   dataCompare,
   startDate,
@@ -52,6 +53,9 @@ const PercentageBarCompare = ({
           data.map((item, index) => (
             <div
               key={index}
+              onClick={() => {
+                handleClickTooltip(item.id, false);
+              }}
               className="flex group relative flex-col justify-center items-center text-white text-center py-2"
               style={{
                 width: `${item.percentage * 2.8}px`,
@@ -100,30 +104,30 @@ const PercentageBarCompare = ({
                             </span>
                           </div>
                           <ul>
-                            {mergeItem.tasks.map((item, index) => (
-                              <li
-                                key={index}
-                                className="break-all text-start line-clamp-3 text-[#77858F] text-sm font-normal]">
-                                {item.title}
-                              </li>
-                            ))}
+                            {mergeItem.users &&
+                              mergeItem.users.map((item, index) => {
+                                const colorRandom = getRandomColor();
+                                return (
+                                  <li
+                                    key={index}
+                                    className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                      <div>
+                                        <AvatarIconWithDynamicColor
+                                          color={colorRandom}
+                                          size={30}
+                                        />
+                                      </div>
+                                      <span className="inline-block w-20 overflow-hidden whitespace-nowrap text-ellipsis">
+                                        {item.user.fullName}
+                                      </span>
+                                    </div>
+                                    <span>{item.percent}%</span>
+                                  </li>
+                                );
+                              })}
                           </ul>
-                          <div className="flex w-full justify-end mt-3">
-                            <div
-                              onClick={() => {
-                                handleClickTooltip(mergeItem.categoryId, false);
-                              }}
-                              className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
-                              <span>タスクを見る</span>
-                              <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                                <ImageRound
-                                  className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                                  src="/icons/right-statistic.svg"
-                                  name="right"
-                                />
-                              </div>
-                            </div>
-                          </div>
+
                           <div
                             className={`${indexMerge === item.mergedItems.length - 1 && 'hidden'} w-full my-5  border-b border-[#D2DBE1]`}></div>
                         </div>
@@ -158,22 +162,6 @@ const PercentageBarCompare = ({
                         </li>
                       ))}
                     </ul>
-                    <div className="flex w-full justify-end mt-3">
-                      <div
-                        onClick={() => {
-                          handleClickTooltip(item.id, false);
-                        }}
-                        className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
-                        <span>タスクを見る</span>
-                        <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                          <ImageRound
-                            className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                            src="/icons/right-statistic.svg"
-                            name="right"
-                          />
-                        </div>
-                      </div>
-                    </div>
                   </>
                 )}
               </div>
@@ -188,6 +176,9 @@ const PercentageBarCompare = ({
           dataCompare.map((item, index) => (
             <div
               key={index}
+              onClick={() => {
+                handleClickTooltip(item.id, false);
+              }}
               className="flex relative group flex-col justify-center items-center text-white text-center py-2"
               style={{
                 width: `${item.percentage * 2.8}px`,
@@ -237,30 +228,30 @@ const PercentageBarCompare = ({
                             </span>
                           </div>
                           <ul>
-                            {mergeItem.tasks.map((item, index) => (
-                              <li
-                                key={index}
-                                className="break-all text-start line-clamp-3 text-[#77858F] text-sm font-normal]">
-                                {item.title}
-                              </li>
-                            ))}
+                            {mergeItem.users &&
+                              mergeItem.users.map((item, index) => {
+                                const colorRandom = getRandomColor();
+                                return (
+                                  <li
+                                    key={index}
+                                    className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                      <div>
+                                        <AvatarIconWithDynamicColor
+                                          color={colorRandom}
+                                          size={30}
+                                        />
+                                      </div>
+                                      <span className="inline-block w-20 overflow-hidden whitespace-nowrap text-ellipsis">
+                                        {item.user.fullName}
+                                      </span>
+                                    </div>
+                                    <span>{item.percent}%</span>
+                                  </li>
+                                );
+                              })}
                           </ul>
-                          <div className="flex w-full justify-end mt-3">
-                            <div
-                              onClick={() => {
-                                handleClickTooltip(mergeItem.categoryId, false);
-                              }}
-                              className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
-                              <span>タスクを見る</span>
-                              <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                                <ImageRound
-                                  className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                                  src="/icons/right-statistic.svg"
-                                  name="right"
-                                />
-                              </div>
-                            </div>
-                          </div>
+
                           <div
                             className={`${indexMerge === item.mergedItems.length - 1 && 'hidden'} w-full my-5  border-b border-[#D2DBE1]`}></div>
                         </div>
@@ -295,22 +286,6 @@ const PercentageBarCompare = ({
                         </li>
                       ))}
                     </ul>
-                    <div className="flex w-full justify-end mt-3">
-                      <div
-                        onClick={() => {
-                          handleClickTooltip(item.id, false);
-                        }}
-                        className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
-                        <span>タスクを見る</span>
-                        <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                          <ImageRound
-                            className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                            src="/icons/right-statistic.svg"
-                            name="right"
-                          />
-                        </div>
-                      </div>
-                    </div>
                   </>
                 )}
               </div>
@@ -340,4 +315,4 @@ const PercentageBarCompare = ({
   );
 };
 
-export default PercentageBarCompare;
+export default PercentageBarCompareTeam;
