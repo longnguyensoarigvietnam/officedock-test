@@ -211,6 +211,7 @@ const ListTags = () => {
     }));
     setCurrentPage(1);
     setOrganizationLabels(watch('organizationIds'));
+    setIsOpenModalFilter(false);
   };
 
   const handleSetParam = ({
@@ -422,7 +423,6 @@ const ListTags = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getDataDetailTag, tagId, actionType]);
-
   return (
     <Fragment>
       <div className="flex justify-between">
@@ -519,7 +519,7 @@ const ListTags = () => {
             )}
           </Popover>
           <div className="flex gap-2">
-            {organizationLabels.slice(0, 3).map((organizationLabel) => {
+            {organizationLabels && organizationLabels?.length > 0 && organizationLabels.slice(0, 3).map((organizationLabel) => {
               return (
                 <div
                   key={organizationLabel.value}
@@ -555,7 +555,7 @@ const ListTags = () => {
                 </div>
               );
             })}
-            {organizationLabels.length > 3 && (
+            {organizationLabels && organizationLabels.length > 3 && (
               <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#F8FAFC] text-black text-xs font-medium">
                 +{organizationLabels.length - 3}
               </p>

@@ -893,15 +893,16 @@ const TableComponent = ({
                                   const updatedHierarchiesToUpdate = [...prev];
                                   const statisticCategories =
                                     hierarchyList.statisticCategories;
-  
+
                                   const matchedRows = statisticCategories
                                     .filter(
                                       (item) =>
-                                        item.large.value === row.original.large.value,
+                                        item.large.value ===
+                                        row.original.large.value,
                                     )
                                     .map((item) => ({
                                       ...item,
-                                      color: newColor
+                                      color: newColor,
                                     }));
                                   const updatedHierarchies = matchedRows.map(
                                     (row) => {
@@ -922,8 +923,10 @@ const TableComponent = ({
                                           isUUID(row.medium.label as string)
                                             ? null
                                             : {
-                                                name: row.medium.label as string,
-                                                uuid: row.medium.value as string,
+                                                name: row.medium
+                                                  .label as string,
+                                                uuid: row.medium
+                                                  .value as string,
                                               },
                                         smallStatisticCategory:
                                           row.small.label == '' ||
@@ -940,7 +943,7 @@ const TableComponent = ({
                                       };
                                     },
                                   );
-  
+
                                   updatedHierarchies.forEach(
                                     (updatedHierarchy) => {
                                       const existingIndex =
@@ -960,7 +963,7 @@ const TableComponent = ({
                                       }
                                     },
                                   );
-  
+
                                   return updatedHierarchiesToUpdate;
                                 });
                                 setHierarchyList((prev) => {
@@ -984,7 +987,8 @@ const TableComponent = ({
                                       updatedHierarchyList[
                                         foundOrganizationHierarchyIndex
                                       ].statisticCategories.map((hierarchy) =>
-                                        hierarchy.large.value === row.original.large.value
+                                        hierarchy.large.value ===
+                                        row.original.large.value
                                           ? {
                                               ...hierarchy,
                                               color: newColor,
@@ -1160,8 +1164,6 @@ const TableComponent = ({
                                       foundOrganizationHierarchyIndex
                                     ].statisticCategories;
 
-                                  const oldLargeValue =
-                                    row.original.large.value;
                                   const newLarge = {
                                     label: e.label,
                                     value: e.value,
@@ -1173,7 +1175,8 @@ const TableComponent = ({
                                   const matchedRows = statisticCategories
                                     .filter(
                                       (item) =>
-                                        item.large.value === oldLargeValue,
+                                        item.large.value ===
+                                        row.original.large.value,
                                     )
                                     .map((item) => ({
                                       ...item,
@@ -1183,7 +1186,8 @@ const TableComponent = ({
                                   const remainingRows =
                                     statisticCategories.filter(
                                       (item) =>
-                                        item.large.value !== oldLargeValue,
+                                        item.large.value !==
+                                        row.original.large.value,
                                     );
 
                                   // Find the last index where newLarge.value already exists
@@ -1193,11 +1197,9 @@ const TableComponent = ({
                                       lastIndex = index;
                                   });
 
-                                  // Insert updated rows right after the last occurrence of newLarge
                                   const newStatisticCategories = [
                                     ...remainingRows,
                                   ];
-
                                   if (lastIndex !== -1) {
                                     newStatisticCategories.splice(
                                       lastIndex + 1,
@@ -1205,7 +1207,27 @@ const TableComponent = ({
                                       ...matchedRows,
                                     );
                                   } else {
-                                    newStatisticCategories.push(...matchedRows);
+                                    // Instead of pushing, find the **original** position of row.original.large.value
+                                    const originalIndex =
+                                      statisticCategories.findIndex(
+                                        (item) =>
+                                          item.large.value ===
+                                          row.original.large.value,
+                                      );
+
+                                    if (originalIndex !== -1) {
+                                      // Insert in the same position as original row
+                                      newStatisticCategories.splice(
+                                        originalIndex,
+                                        0,
+                                        ...matchedRows,
+                                      );
+                                    } else {
+                                      // If no match found, append to the end
+                                      newStatisticCategories.push(
+                                        ...matchedRows,
+                                      );
+                                    }
                                   }
 
                                   const uniqueMap = new Map();
@@ -1503,24 +1525,29 @@ const TableComponent = ({
                                       const remainingRows =
                                         statisticCategories.filter(
                                           (item) =>
-                                            item.medium.value !==
-                                            row.original.medium.value,
+                                            !(
+                                              item.medium.value ==
+                                                row.original.medium.value &&
+                                              item.large.value ==
+                                                row.original.large.value
+                                            ),
                                         );
 
                                       // Find the last index where newMedium.value already exists
                                       let lastIndex = -1;
                                       remainingRows.forEach((item, index) => {
                                         if (
+                                          item.large.value ==
+                                            row.original.large.value &&
                                           item.medium.value === newMedium.value
                                         )
                                           lastIndex = index;
                                       });
 
-                                      // Insert updated rows right after the last occurrence of newMedium
+                                      // Maintain position if lastIndex is -1
                                       const newStatisticCategories = [
                                         ...remainingRows,
                                       ];
-
                                       if (lastIndex !== -1) {
                                         newStatisticCategories.splice(
                                           lastIndex + 1,
@@ -1528,11 +1555,32 @@ const TableComponent = ({
                                           ...matchedRows,
                                         );
                                       } else {
-                                        newStatisticCategories.push(
-                                          ...matchedRows,
-                                        );
+                                        // Instead of pushing, find the **original** position of row.original.medium.value
+                                        const originalIndex =
+                                          statisticCategories.findIndex(
+                                            (item) =>
+                                              item.medium.value ==
+                                                row.original.medium.value &&
+                                              item.large.value ==
+                                                row.original.large.value,
+                                          );
+
+                                        if (originalIndex !== -1) {
+                                          // Insert in the same position as original row
+                                          newStatisticCategories.splice(
+                                            originalIndex,
+                                            0,
+                                            ...matchedRows,
+                                          );
+                                        } else {
+                                          // If no match found, append to the end
+                                          newStatisticCategories.push(
+                                            ...matchedRows,
+                                          );
+                                        }
                                       }
 
+                                      // Remove duplicates
                                       const uniqueMap = new Map();
                                       const filteredStatisticCategories =
                                         newStatisticCategories.filter(
@@ -1668,9 +1716,6 @@ const TableComponent = ({
                     </div>
                   </td>
                 )}
-                {/* {smallRowspan[rowIndex] > 0 && (
-                  
-                )} */}
                 <td
                   className="border-[1px] w-1/4 border-[#D2DBE1]"
                   style={{ height: 'inherit' }}>
@@ -1938,6 +1983,7 @@ const TableComponent = ({
                 </td>
                 <td className="border-[1px] h-full border-[#D2DBE1] !w-1/4 max-w-[1/4]">
                   <MultiSelect
+                    key={JSON.stringify(row.original.skills)}
                     className="w-full"
                     defaultValue={row.original.skills.map((skill) => {
                       return {
@@ -1997,6 +2043,51 @@ const TableComponent = ({
                         }
 
                         return updatedHierarchiesToUpdate;
+                      });
+                      setHierarchyList((prev) => {
+                        const updatedHierarchyList = prev.map((org) => ({
+                          ...org,
+                          statisticCategories: [...org.statisticCategories],
+                        }));
+
+                        const foundOrganizationHierarchyIndex =
+                          updatedHierarchyList.findIndex(
+                            (hierarchy) => hierarchy.id == hierarchyList.id,
+                          );
+
+                        if (foundOrganizationHierarchyIndex !== -1) {
+                          const updatedCategories = updatedHierarchyList[
+                            foundOrganizationHierarchyIndex
+                          ].statisticCategories.map((hierarchy) =>
+                            hierarchy.id === row.original.id
+                              ? {
+                                  ...hierarchy,
+                                  skills: selectedSkills.map((skill) => {
+                                    return {
+                                      label: skill.label,
+                                      value: skill.value,
+                                    };
+                                  }),
+                                }
+                              : hierarchy,
+                          );
+
+                          const uniqueMap = new Map();
+                          const filteredCategories = updatedCategories.filter(
+                            (item) => {
+                              const key = `${item.large.value}|${item.medium.value}|${item.small?.value || ''}`;
+                              if (uniqueMap.has(key)) return false;
+                              uniqueMap.set(key, true);
+                              return true;
+                            },
+                          );
+
+                          updatedHierarchyList[
+                            foundOrganizationHierarchyIndex
+                          ].statisticCategories = filteredCategories;
+                        }
+
+                        return updatedHierarchyList;
                       });
                     }}
                   />
