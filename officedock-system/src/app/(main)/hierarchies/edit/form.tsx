@@ -889,6 +889,80 @@ const TableComponent = ({
                           <div className="absolute left-5 -top-5 z-50">
                             <CircleColorPicker
                               onChange={(newColor) => {
+                                setSelectedHierarchiesToUpdate((prev) => {
+                                  const updatedHierarchiesToUpdate = [...prev];
+                                  const statisticCategories =
+                                    hierarchyList.statisticCategories;
+  
+                                  const matchedRows = statisticCategories
+                                    .filter(
+                                      (item) =>
+                                        item.large.value === row.original.large.value,
+                                    )
+                                    .map((item) => ({
+                                      ...item,
+                                      color: newColor
+                                    }));
+                                  const updatedHierarchies = matchedRows.map(
+                                    (row) => {
+                                      return {
+                                        organizationStatisticCategoryId: row.id,
+                                        organizationId:
+                                          hierarchyList.id as number,
+                                        largeStatisticCategory:
+                                          row.large.label == '' ||
+                                          isUUID(row.large.label as string)
+                                            ? null
+                                            : {
+                                                name: row.large.label as string,
+                                                uuid: row.large.value as string,
+                                              },
+                                        mediumStatisticCategory:
+                                          row.medium.label == '' ||
+                                          isUUID(row.medium.label as string)
+                                            ? null
+                                            : {
+                                                name: row.medium.label as string,
+                                                uuid: row.medium.value as string,
+                                              },
+                                        smallStatisticCategory:
+                                          row.small.label == '' ||
+                                          isUUID(row.small.label as string)
+                                            ? null
+                                            : {
+                                                name: row.small.label as string,
+                                                uuid: row.small.value as string,
+                                              },
+                                        color: row.color,
+                                        skillIds: row.skills.map((skill) =>
+                                          Number(skill.value),
+                                        ),
+                                      };
+                                    },
+                                  );
+  
+                                  updatedHierarchies.forEach(
+                                    (updatedHierarchy) => {
+                                      const existingIndex =
+                                        updatedHierarchiesToUpdate.findIndex(
+                                          (item) =>
+                                            item.organizationStatisticCategoryId ===
+                                            updatedHierarchy.organizationStatisticCategoryId,
+                                        );
+                                      if (existingIndex != -1) {
+                                        updatedHierarchiesToUpdate[
+                                          existingIndex
+                                        ] = updatedHierarchy;
+                                      } else {
+                                        updatedHierarchiesToUpdate.push(
+                                          updatedHierarchy,
+                                        );
+                                      }
+                                    },
+                                  );
+  
+                                  return updatedHierarchiesToUpdate;
+                                });
                                 setHierarchyList((prev) => {
                                   const updatedHierarchyList = prev.map(
                                     (org) => ({
@@ -910,7 +984,7 @@ const TableComponent = ({
                                       updatedHierarchyList[
                                         foundOrganizationHierarchyIndex
                                       ].statisticCategories.map((hierarchy) =>
-                                        hierarchy.id === row.original.id
+                                        hierarchy.large.value === row.original.large.value
                                           ? {
                                               ...hierarchy,
                                               color: newColor,

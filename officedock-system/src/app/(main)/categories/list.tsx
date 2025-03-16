@@ -231,18 +231,16 @@ const ListCategory = () => {
         categoryNameInputRef.current &&
         !categoryNameInputRef.current.contains(event.target)
       ) {
-        if (selectedCategoryToUpdate.name.trim() != '') {
-          if (selectedCategoryToUpdate.action == ActionsModal.EDIT) {
-            editCategory({
-              uuid: selectedCategoryToUpdate.uuid,
-              name: selectedCategoryToUpdate.name.trim(),
-            });
-          } else {
-            createCategory({
-              uuid: String(selectedCategoryToUpdate.uuid),
-              name: selectedCategoryToUpdate.name.trim(),
-            });
-          }
+        if (selectedCategoryToUpdate.action == ActionsModal.EDIT) {
+          editCategory({
+            uuid: selectedCategoryToUpdate.uuid,
+            name: selectedCategoryToUpdate.name,
+          });
+        } else {
+          createCategory({
+            uuid: String(selectedCategoryToUpdate.uuid),
+            name: selectedCategoryToUpdate.name,
+          });
         }
       }
     };
@@ -471,7 +469,7 @@ const ListCategory = () => {
       <ConfirmDeleteModal
         open={openConfirmDeleteModal}
         name={selectedCategoryToDelete?.name || ''}
-        type="業務カテゴリ"
+        type="業務カテゴリー"
         onConfirm={handleConfirmDeleteCategory}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />

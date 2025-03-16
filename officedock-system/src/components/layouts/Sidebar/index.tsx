@@ -1,6 +1,6 @@
 'use client';
 import { useContext, useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Disclosure,
@@ -16,6 +16,7 @@ import 'tippy.js/dist/tippy.css';
 import ImageRound from '@components/common/ImageRound';
 import Tabs from '@components/common/Tabs';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
+import Dropdown from '@components/common/Dropdown';
 
 import {
   SYSTEM_PERMISSIONS_MENU,
@@ -25,8 +26,9 @@ import { PermissionsSystem, SocketActions, TabType } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
 import { MenuItem } from '@interfaces/menu';
-import { OptionTabType } from '@interfaces/common';
+import { OptionDropdownType, OptionTabType } from '@interfaces/common';
 
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import useDashboardUnreadMessages from '@hooks/useDashboardUnreadMessages';
 
 import { TaskContext } from '@providers/TaskProvider';
@@ -42,7 +44,7 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
   return menuItems.map((item) => {
     const updatedItem = { ...item };
 
-    if (updatedItem.href && pathname == updatedItem.href) {
+    if (updatedItem.href && pathname.startsWith(updatedItem.href)) {
       updatedItem.current = true;
     } else if (updatedItem.children) {
       const childWithMatchingHref = updatedItem.children.find((child) =>
@@ -62,14 +64,26 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
 const Sidebar = ({ className }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
+  const { authenticatedUser } = useAuthenticatedUser();
+  const searchParams = useSearchParams();
+  const [organizationList, setOrganizationList] = useState<
+    OptionDropdownType[]
+  >([]);
+  const organizationId = searchParams.get('organization');
 
   const { data: session } = useSession();
   const today = new Date();
 
   const { memberSelected, tagSelected, setMemberSelected, setTagSelected } =
     useContext(TaskContext);
-  const { totalNotifications, expanded, setExpanded, setTotalNotifications } =
-    useContext(GlobalStateContext);
+  const {
+    totalNotifications,
+    expanded,
+    selectedOrganization,
+    setSelectedOrganization,
+    setExpanded,
+    setTotalNotifications,
+  } = useContext(GlobalStateContext);
   const { dashboardUnreadMessages } = useDashboardUnreadMessages();
 
   const MENU_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
@@ -121,6 +135,34 @@ const Sidebar = ({ className }: Props) => {
     if (dashboardUnreadMessages)
       setTotalNotifications(dashboardUnreadMessages?.total);
   }, [dashboardUnreadMessages, setTotalNotifications]);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      setOrganizationList(
+        authenticatedUser.organizations.map((org) => {
+          return {
+            value: org.id,
+            label: org.name,
+          };
+        }),
+      );
+    }
+  }, [authenticatedUser]);
+
+  useEffect(() => {
+    if (organizationId && authenticatedUser?.organizations) {
+      const foundOrganization = authenticatedUser?.organizations.find(
+        (org) => org.id == Number(organizationId),
+      );
+      if (foundOrganization) {
+        setSelectedOrganization({
+          value: organizationId,
+          label: foundOrganization?.name,
+          imgUrl: '/icons/statistic-team.svg',
+        });
+      }
+    }
+  }, [organizationId, authenticatedUser?.organizations]);
 
   const hour = new Intl.DateTimeFormat('ja-JP', {
     timeZone: 'Asia/Tokyo',
@@ -354,6 +396,42 @@ const Sidebar = ({ className }: Props) => {
             <ul role="list" className="flex flex-col gap-y-6 list-none">
               <li className="flex-1">
                 <ul role="list" className="list-none pl-2">
+                  {expanded && (
+                    <div className="flex justify-center pr-2 mb-2">
+                      <Dropdown
+                        options={organizationList}
+                        className="!bg-[#182A4B33] !border-none !rounded-[6px] !w-full mb-1 !text-white !font-medium !text-sm !pr-0"
+                        selectedOption={
+                          selectedOrganization || {
+                            label:
+                              authenticatedUser?.organizations.find(
+                                (organization) => organization.isMain,
+                              )?.name || '',
+                            value:
+                              authenticatedUser?.organizations.find(
+                                (organization) => organization.isMain,
+                              )?.id || '',
+                            imgUrl: '/icons/statistic-team.svg',
+                          }
+                        }
+                        imgClassname="!w-6 !h-6"
+                        onChange={(e: OptionDropdownType) => {
+                          setSelectedOrganization({
+                            label: e.label,
+                            value: e.value,
+                            imgUrl: '/icons/statistic-team.svg',
+                          });
+                          const params = new URLSearchParams(
+                            searchParams.toString(),
+                          );
+                          params.set('organization', e.value as string);
+
+                          router.push(`${pathname}?${params.toString()}`);
+                        }}
+                      />
+                    </div>
+                  )}
+
                   {menuItemsTeam
                     .filter(
                       (item) =>
@@ -375,7 +453,6 @@ const Sidebar = ({ className }: Props) => {
                               className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                               onClick={() => {
                                 if (isHasTerm) return;
-
                                 if (
                                   item.href ===
                                   pageRouters.TASKS_MANAGEMENT.href
@@ -393,7 +470,32 @@ const Sidebar = ({ className }: Props) => {
                                     return;
                                   }
                                   {
-                                    router.push(item.href);
+                                    const mainOrganization = {
+                                      label:
+                                        authenticatedUser?.organizations.find(
+                                          (organization) => organization.isMain,
+                                        )?.name || '',
+                                      value:
+                                        authenticatedUser?.organizations.find(
+                                          (organization) => organization.isMain,
+                                        )?.id || '',
+                                    };
+                                    setSelectedOrganization({
+                                      label: mainOrganization.label,
+                                      value: mainOrganization.value,
+                                      imgUrl: '/icons/statistic-team.svg',
+                                    });
+                                    const params = new URLSearchParams(
+                                      searchParams.toString(),
+                                    );
+                                    params.set(
+                                      'organization',
+                                      mainOrganization.value as string,
+                                    );
+
+                                    router.push(
+                                      `${item.href}?${params.toString()}`,
+                                    );
                                   }
                                 }
                               }}>

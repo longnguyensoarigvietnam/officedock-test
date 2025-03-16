@@ -349,7 +349,7 @@ const TableChart = ({
         const {
           tags: tagList,
           categories,
-          organization: organizationId,
+          organization: _organizationId,
         } = rowData;
 
         // Find items by type
