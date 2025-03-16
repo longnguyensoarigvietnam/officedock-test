@@ -35,6 +35,7 @@ import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { WebSocketMessageData } from '@interfaces/chat';
 import { showBackgroundColorByTime } from '@utils';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 type Props = {
   className?: string;
@@ -109,6 +110,14 @@ const Sidebar = ({ className }: Props) => {
   const menuItemsCloneTeam: MenuItem[] = lodash.cloneDeep(MENU_ITEMS_TEAM);
   const menuItemsTeam = updateCurrent(menuItemsCloneTeam, pathname);
 
+  const getRandomColor = () => {
+    const hue = Math.floor(Math.random() * 360);
+    const saturation = Math.floor(Math.random() * (80 - 40) + 40);
+    const lightness = Math.floor(Math.random() * (70 - 30) + 30);
+
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  };
+
   useEffect(() => {
     const handleSocketMessage = (data: WebSocketMessageData) => {
       switch (data.action) {
@@ -140,9 +149,11 @@ const Sidebar = ({ className }: Props) => {
     if (authenticatedUser) {
       setOrganizationList(
         authenticatedUser.organizations.map((org) => {
+          const randomColor = getRandomColor();
           return {
             value: org.id,
             label: org.name,
+            imgComponent: <GroupIconWithDynamicColor color={randomColor} />,
           };
         }),
       );
@@ -150,7 +161,11 @@ const Sidebar = ({ className }: Props) => {
   }, [authenticatedUser]);
 
   useEffect(() => {
-    if (organizationId && authenticatedUser?.organizations) {
+    if (
+      organizationId &&
+      authenticatedUser?.organizations &&
+      organizationList
+    ) {
       const foundOrganization = authenticatedUser?.organizations.find(
         (org) => org.id == Number(organizationId),
       );
@@ -158,11 +173,13 @@ const Sidebar = ({ className }: Props) => {
         setSelectedOrganization({
           value: organizationId,
           label: foundOrganization?.name,
-          imgUrl: '/icons/statistic-team.svg',
+          imgComponent: organizationList.find(
+            (org) => org.value == organizationId,
+          )?.imgComponent,
         });
       }
     }
-  }, [organizationId, authenticatedUser?.organizations]);
+  }, [organizationId, authenticatedUser?.organizations, organizationList]);
 
   const hour = new Intl.DateTimeFormat('ja-JP', {
     timeZone: 'Asia/Tokyo',
@@ -193,6 +210,10 @@ const Sidebar = ({ className }: Props) => {
 
   const memberOption = menuItems.find(
     (item) => item.href == pageRouters.MEMBER_MANAGEMENT.href,
+  );
+
+  const mainOrganization = authenticatedUser?.organizations.find(
+    (organization) => organization.isMain,
   );
 
   return (
@@ -403,23 +424,22 @@ const Sidebar = ({ className }: Props) => {
                         className="!bg-[#182A4B33] !border-none !rounded-[6px] !w-full mb-1 !text-white !font-medium !text-sm !pr-0"
                         selectedOption={
                           selectedOrganization || {
-                            label:
-                              authenticatedUser?.organizations.find(
-                                (organization) => organization.isMain,
-                              )?.name || '',
-                            value:
-                              authenticatedUser?.organizations.find(
-                                (organization) => organization.isMain,
-                              )?.id || '',
-                            imgUrl: '/icons/statistic-team.svg',
+                            label: mainOrganization?.name || '',
+                            value: mainOrganization?.id || '',
+                            imgComponent: organizationList.find(
+                              (org) => org.value == mainOrganization?.id,
+                            )?.imgComponent,
                           }
                         }
+                        labelOptionClass="!text-sm"
                         imgClassname="!w-6 !h-6"
                         onChange={(e: OptionDropdownType) => {
                           setSelectedOrganization({
                             label: e.label,
                             value: e.value,
-                            imgUrl: '/icons/statistic-team.svg',
+                            imgComponent: organizationList.find(
+                              (org) => org.value == e.value,
+                            )?.imgComponent,
                           });
                           const params = new URLSearchParams(
                             searchParams.toString(),
@@ -483,7 +503,6 @@ const Sidebar = ({ className }: Props) => {
                                     setSelectedOrganization({
                                       label: mainOrganization.label,
                                       value: mainOrganization.value,
-                                      imgUrl: '/icons/statistic-team.svg',
                                     });
                                     const params = new URLSearchParams(
                                       searchParams.toString(),

@@ -323,7 +323,7 @@ const HierarchyTable = ({
                         return (
                           <div
                             key={skill.value}
-                            className="bg-[#77858F] text-white text-xs font-medium rounded-[20px] px-[10px] py-[5px]">
+                            className="bg-[#77858F] text-white text-xs font-medium rounded-[20px] px-[10px] py-[5px] truncate max-w-[calc(100%_-_10px)]">
                             {skill.label}
                           </div>
                         );

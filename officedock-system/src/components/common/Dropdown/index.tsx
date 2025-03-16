@@ -174,8 +174,9 @@ const Dropdown = ({
                             className={`w-4 h-4 ${imgClassname}`}
                           />
                         )}
+                        {selected.imgComponent}
                         <span
-                          className={`${selected.imgUrl && 'ml-3'} block truncate ${labelClass} ${classActive} `}>
+                          className={`${selected.imgUrl && 'ml-3'} ${selected.imgComponent && 'ml-2'} block truncate ${labelClass} ${classActive} `}>
                           {selected.label}
                         </span>
                       </>
@@ -262,6 +263,9 @@ const Dropdown = ({
                                     className="!w-4 !h-4"
                                   />
                                 )}
+                                <div className="w-4 mr-2">
+                                  {option.imgComponent}
+                                </div>
                                 {isStatusDropdown && (
                                   <div
                                     className={`${statusStyles.find((item) => item.label == option.label)?.color} w-3 h-3 ml-2 rounded-full`}
