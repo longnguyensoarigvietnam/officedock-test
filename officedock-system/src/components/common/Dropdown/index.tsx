@@ -42,6 +42,7 @@ type Props = {
   addInput?: boolean;
   styleClass?: CSSProperties;
   styleClassOption?: CSSProperties;
+  imgClassname?: string;
   onChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
 };
@@ -71,6 +72,7 @@ const Dropdown = ({
   styleClass,
   styleClassOption,
   isShowIconDrop = true,
+  imgClassname,
   onAdd,
   onChange,
 }: Props) => {
@@ -169,7 +171,7 @@ const Dropdown = ({
                           <ImageRound
                             src={selected.imgUrl}
                             name="Image selected option"
-                            className="w-4 h-4"
+                            className={`w-4 h-4 ${imgClassname}`}
                           />
                         )}
                         <span
@@ -266,7 +268,7 @@ const Dropdown = ({
                                   />
                                 )}
                                 <p
-                                  className={` ${!openByDefault ? 'ml-3' : 'text-center w-full'}  block truncate  ${!isStatusDropdown && selected?.value === option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'}`}>
+                                  className={` ${!openByDefault ? 'ml-3' : 'text-center w-full'}  block truncate  ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'}`}>
                                   {option.label}
                                 </p>
                                 {isStatusDropdown && (

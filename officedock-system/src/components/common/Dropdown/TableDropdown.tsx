@@ -60,6 +60,7 @@ const TableDropdown = ({
     width: 0,
     isShow: false,
   });
+  const [isAbove, setIsAbove] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (selectedOption) {
@@ -77,7 +78,7 @@ const TableDropdown = ({
     if (dropdownRef.current) {
       const rect = dropdownRef.current.getBoundingClientRect();
       setPosition({
-        top: rect.bottom,
+        top: isAbove ? rect.top : rect.bottom,
         left: rect.left,
         width: rect.width,
         isShow: true,
@@ -96,6 +97,7 @@ const TableDropdown = ({
       });
     }
   }, [isOpen]);
+
   const filteredOptions = options.filter((option) =>
     option.label?.toLowerCase().includes(searchInput.toLowerCase()),
   );
@@ -104,6 +106,7 @@ const TableDropdown = ({
       className={`absolute mt-1 z-50 max-h-60 overflow-auto rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}
       style={{
         top: position.top,
+        transform: isAbove ? 'translateY(-103%)' : '',
         left: position.left,
         width: position.width,
         position: 'fixed',
@@ -190,6 +193,11 @@ const TableDropdown = ({
           if (disabled) {
             setIsOpen(false);
           } else {
+            if (dropdownRef.current) {
+              const rect = dropdownRef.current.getBoundingClientRect();
+              const viewportHeight = window.innerHeight;
+              setIsAbove(rect.bottom + 240 > viewportHeight);
+            }
             setIsOpen(true);
           }
         }}>

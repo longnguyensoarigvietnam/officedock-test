@@ -156,19 +156,19 @@ export const pageRouters = {
   },
   // CATEGORY
   CATEGORY_MANAGEMENT: {
-    name: '業務カテゴリ',
+    name: '業務カテゴリー',
     href: '/categories',
   },
   EDIT_CATEGORY: {
-    name: '集計カテゴリ編集',
+    name: '集計カテゴリー編集',
     href: (id: string) => `/categories/${id}/edit`,
   },
   DETAIL_CATEGORY: {
-    name: '集計カテゴリ詳細',
+    name: '集計カテゴリー詳細',
     href: (id: string) => `/categories/${id}`,
   },
   CREATE_CATEGORY: {
-    name: '集計カテゴリ作成',
+    name: '集計カテゴリー作成',
     href: '/categories/create',
   },
 
@@ -249,19 +249,19 @@ export const pageRouters = {
 
   // HIERARCHY
   HIERARCHY_MANAGEMENT: {
-    name: '集計カテゴリ階層',
+    name: '集計カテゴリー階層',
     href: '/hierarchies',
   },
   EDIT_HIERARCHY: {
-    name: '集計カテゴリ階層編集',
+    name: '集計カテゴリー階層編集',
     href: '/hierarchies/edit',
   },
   CREATE_HIERARCHY: {
-    name: '集計カテゴリ階層作成',
+    name: '集計カテゴリー階層作成',
     href: (id: string) => `/hierarchies/${id}/create`,
   },
   DETAIL_HIERARCHY: {
-    name: '集計カテゴリ階層詳細',
+    name: '集計カテゴリー階層詳細',
     href: (id: string) => `/hierarchies/${id}`,
   },
 

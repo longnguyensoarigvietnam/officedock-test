@@ -108,6 +108,9 @@ const ListTags = () => {
   const [dataOrganizationList, setDataOrganizationList] = useState<
     OptionDropdownType[]
   >([]);
+  const [organizationLabels, setOrganizationLabels] = useState<
+    OptionDropdownType[]
+  >([]);
 
   const [showFilter, setShowFilter] = useState(true);
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
@@ -207,6 +210,7 @@ const ListTags = () => {
       ),
     }));
     setCurrentPage(1);
+    setOrganizationLabels(watch('organizationIds'));
   };
 
   const handleSetParam = ({
@@ -514,6 +518,49 @@ const ListTags = () => {
               </>
             )}
           </Popover>
+          <div className="flex gap-2">
+            {organizationLabels.slice(0, 3).map((organizationLabel) => {
+              return (
+                <div
+                  key={organizationLabel.value}
+                  className="w-[130px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#F8FAFC]">
+                  <span className="w-[120px] truncate">
+                    {organizationLabel.label}
+                  </span>
+                  <ImageRound
+                    src={`/icons/close.svg`}
+                    name="close"
+                    className="w-fit h-fit cursor-pointer"
+                    onClick={() => {
+                      let updatedTagIds = [];
+                      const currentTagIds = getValues('organizationIds') || [];
+                      updatedTagIds = currentTagIds.filter(
+                        (tag) => tag.value != organizationLabel.value,
+                      );
+                      setValue('organizationIds', updatedTagIds);
+                      setFilterRequest((prev) => ({
+                        ...prev,
+                        organizationIds: encodeURIComponent(
+                          updatedTagIds
+                            ? updatedTagIds
+                                .map((org: OptionDropdownType) => org.value)
+                                .join(',')
+                            : '',
+                        ),
+                      }));
+                      setCurrentPage(1);
+                      setOrganizationLabels(updatedTagIds);
+                    }}
+                  />
+                </div>
+              );
+            })}
+            {organizationLabels.length > 3 && (
+              <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#F8FAFC] text-black text-xs font-medium">
+                +{organizationLabels.length - 3}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex justify-end">
           {session?.user.permissions &&
@@ -522,7 +569,7 @@ const ListTags = () => {
               PermissionsSystem.TAG_ADD,
             ) && (
               <Button
-                className="w-40"
+                className="w-[120px]"
                 onClick={() => {
                   setOpenActionsTagModal(true);
                   handleSetParam({
@@ -534,7 +581,7 @@ const ListTags = () => {
                   name="Add icon"
                   className="!w-4 !h-4 mr-2 text-gray-400 cursor-pointer"
                 />
-                タグの新規追加
+                新規追加
               </Button>
             )}
         </div>
