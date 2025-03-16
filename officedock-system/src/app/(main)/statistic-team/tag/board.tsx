@@ -67,8 +67,19 @@ const StatisticTeamTagBoard = () => {
       tagIds: selectedTags,
     },
     onSuccess: (data) => {
-      selectedOrganization && handleSelectOrganization(selectedOrganization);
+      const organization = creationDataStatisticData?.organization;
 
+      if (organization) {
+        const largeCategories = organization.statisticCategories.map(
+          (stat) => ({
+            value: stat.LARGE.id,
+            label: stat.LARGE.name,
+          }),
+        );
+        setLargeOptions(largeCategories);
+      } else {
+        setLargeOptions([]);
+      }
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
@@ -279,7 +290,7 @@ const StatisticTeamTagBoard = () => {
         </div>
       </div>
       <div>
-        <div className="flex justify-between w-full">
+        <div className="flex justify-between w-full mb-[30px]">
           <div className="flex items-center gap-2">
             <div className="w-[240px]">
               <MultiSelectDropdown
@@ -329,16 +340,6 @@ const StatisticTeamTagBoard = () => {
           <div>
             <StatisticTeamCalendar />
           </div>
-        </div>
-        <div className="flex items-center mt-8  gap-1 mb-[30px]">
-          <ImageRound
-            className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-            name="Sort icon"
-            src={`/icons/sort.svg`}
-          />
-          <span className="text-xs text-[#77858F] relative top-[2px]">
-            タグの絞り込み
-          </span>
         </div>
       </div>
       {/* Percentage of categories */}

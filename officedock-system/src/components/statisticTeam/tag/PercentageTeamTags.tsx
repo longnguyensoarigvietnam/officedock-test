@@ -130,18 +130,48 @@ const PercentageTeamTags = ({
           statisticTagsList.largeCategories,
         );
         setDataChartLarge(largeChartData);
+      } else {
+        setDataChartLarge({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+        });
       }
       if (statisticTagsList.mediumCategories) {
         const mediumChartData = processChartData(
           statisticTagsList.mediumCategories,
         );
         setDataChartMedium(mediumChartData);
+      } else {
+        setDataChartMedium({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+        });
       }
       if (statisticTagsList.smallCategories) {
         const smallChartData = processChartData(
           statisticTagsList.smallCategories,
         );
         setDataChartSmall(smallChartData);
+      } else {
+        setDataChartSmall({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+        });
       }
     }
   }, [statisticTagsList]);
@@ -202,16 +232,6 @@ const PercentageTeamTags = ({
                 カテゴリーの割合
               </span>
             </div>
-            <div className="flex items-center gap-1 ">
-              <ImageRound
-                className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-                name="Sort icon"
-                src={`/icons/sort.svg`}
-              />
-              <span className="text-xs text-[#77858F] relative top-[2px]">
-                タグの絞り込み
-              </span>
-            </div>
           </div>
           <ImageRound
             src="/icons/extend-calendar.svg"
@@ -231,7 +251,7 @@ const PercentageTeamTags = ({
             <div>
               {/* List tags  */}
               <div>
-                <div className="flex justify-between w-full">
+                <div className="flex justify-between w-full mb-[30px] px-[30px]">
                   <div className="flex items-center gap-2">
                     <div className="w-[240px]">
                       <MultiSelectDropdown
@@ -281,18 +301,8 @@ const PercentageTeamTags = ({
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center mt-8  gap-1 mb-[30px]">
-                  <ImageRound
-                    className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-                    name="Sort icon"
-                    src={`/icons/sort.svg`}
-                  />
-                  <span className="text-xs text-[#77858F] relative top-[2px]">
-                    タグの絞り込み
-                  </span>
-                </div>
               </div>
-              <div className="flex gap-[41px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
                 <div className="w-[280px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
@@ -301,6 +311,8 @@ const PercentageTeamTags = ({
                   <div className="mt-4">
                     <Dropdown
                       label="チーム選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={listOptionsOrganization}
@@ -355,6 +367,8 @@ const PercentageTeamTags = ({
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={largeOptions}
@@ -407,6 +421,8 @@ const PercentageTeamTags = ({
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={mediumOptions}

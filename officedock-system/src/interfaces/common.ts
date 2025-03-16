@@ -1,3 +1,5 @@
+import { StatisticCategoryInfo } from './statistic';
+
 export interface OptionDropdownType {
   value: string | number;
   label: string;
@@ -27,6 +29,7 @@ export interface DataChartType {
   optionData: {
     label: string;
     percent?: number;
+    mergedItems?: StatisticCategoryInfo[];
   }[][];
   listId: number[];
   listDuration: string[][];

@@ -202,16 +202,6 @@ const TaskListStatisticTeamTags = ({
               タスク一覧
             </span>
           </div>
-          <div className="flex items-center gap-1 ">
-            <ImageRound
-              className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-              name="Sort icon"
-              src={`/icons/sort.svg`}
-            />
-            <span className="text-xs text-[#77858F] relative top-[2px]">
-              タグの絞り込み
-            </span>
-          </div>
         </div>
         <ImageRound
           src="/icons/extend-calendar.svg"
@@ -255,7 +245,7 @@ const TaskListStatisticTeamTags = ({
             </div>
             {/* List tags  */}
             <div>
-              <div className="flex justify-between w-full ">
+              <div className="flex justify-between w-full mb-[30px] px-[30px]">
                 <div className="flex items-center gap-2">
                   <div className="w-[240px]">
                     <MultiSelectDropdown
@@ -305,22 +295,14 @@ const TaskListStatisticTeamTags = ({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center mt-8  gap-1 mb-[30px]">
-                <ImageRound
-                  className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-                  name="Sort icon"
-                  src={`/icons/sort.svg`}
-                />
-                <span className="text-xs text-[#77858F] relative top-[2px]">
-                  タグの絞り込み
-                </span>
-              </div>
             </div>
             <div className="flex items-end gap-[20px] justify-center px-[30px] text-sm font-medium">
               <div className="w-1/4 ">
                 <div className="mt-4">
                   <Dropdown
                     label="チーム選択"
+                    placeholder="-"
+                    placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     options={listOptionsOrganization}
@@ -341,6 +323,8 @@ const TaskListStatisticTeamTags = ({
                 <div className="mt-4">
                   <Dropdown
                     label="大カテゴリー選択"
+                    placeholder="-"
+                    placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     options={largeOptions}
@@ -362,6 +346,8 @@ const TaskListStatisticTeamTags = ({
                 <div className="mt-4">
                   <Dropdown
                     label="中カテゴリー選択"
+                    placeholder="-"
+                    placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     options={mediumOptions}
@@ -383,6 +369,8 @@ const TaskListStatisticTeamTags = ({
                 <div className="mt-4">
                   <Dropdown
                     label="小カテゴリー選択"
+                    placeholder="-"
+                    placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     options={smallOptions}

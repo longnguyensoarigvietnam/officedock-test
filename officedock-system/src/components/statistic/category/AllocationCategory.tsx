@@ -214,6 +214,8 @@ const AllocationCategory = memo(
                     <div className="mt-4">
                       <Dropdown
                         label="チーム選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
                         options={listOptionsOrganization}
@@ -254,6 +256,8 @@ const AllocationCategory = memo(
                     <div className="mt-4">
                       <Dropdown
                         label="大カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md  text-sm font-normal  !border !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
                         options={largeOptions}
@@ -295,6 +299,8 @@ const AllocationCategory = memo(
                     <div className="mt-4">
                       <Dropdown
                         label="中カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md  text-sm font-normal  !border !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
                         options={mediumOptions}

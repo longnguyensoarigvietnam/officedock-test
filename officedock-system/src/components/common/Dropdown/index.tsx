@@ -39,6 +39,7 @@ type Props = {
   labelTextClass?: string;
   classActive?: string;
   labelOptionClass?: string;
+  placeholderClass?: string;
   addInput?: boolean;
   styleClass?: CSSProperties;
   styleClassOption?: CSSProperties;
@@ -55,6 +56,7 @@ const Dropdown = ({
   options,
   labelClass,
   labelTextClass,
+  placeholderClass,
   isStatusDropdown,
   labelOptionClass,
   placeholder,
@@ -181,7 +183,7 @@ const Dropdown = ({
                       </>
                     ) : (
                       <span
-                        className={`block truncate text-gray-300 ${labelClass}`}>
+                        className={`block truncate text-gray-300 ${labelClass} ${placeholderClass}`}>
                         {placeholder || <div className="h-[22px]"></div>}
                       </span>
                     )}

@@ -705,7 +705,9 @@ const TableChart = ({
         </div>
       </div>
 
-      <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0  py-0 mt-5 rounded-md">
+      <Table
+        classCustom="!px-0"
+        className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 !px-0  py-0 mt-5 rounded-md">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr

@@ -59,8 +59,21 @@ const StatisticBoard = () => {
       mediumCategoryId: Number(selectedMedium?.value),
     },
     onSuccess: (data) => {
-      selectedOrganization && handleSelectOrganization(selectedOrganization);
-
+      const organization = creationDataStatisticData?.organizations?.find(
+        (org) => org.id === selectedOrganization?.value,
+      );
+      if (organization) {
+        const largeCategories = organization.statisticCategories.map(
+          (stat) => ({
+            value: stat.LARGE.id,
+            label: stat.LARGE.name,
+          }),
+        );
+        setLargeOptions(largeCategories);
+      } else {
+        setLargeOptions([]);
+      }
+      setMediumOptions([]);
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
@@ -218,6 +231,8 @@ const StatisticBoard = () => {
             <div className="w-[220px]">
               <Dropdown
                 options={listOptionsOrganization}
+                placeholder="-"
+                placeholderClass="!text-black text-sm font-normal"
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
                 selectedOption={selectedOrganization || undefined}
                 onChange={(data) => {
@@ -236,6 +251,8 @@ const StatisticBoard = () => {
               <Dropdown
                 options={largeOptions}
                 className="!h-[34px] !py-0 !rounded-md"
+                placeholder="-"
+                placeholderClass="!text-black text-sm font-normal"
                 selectedOption={selectedLarge || undefined}
                 onChange={(data) => handleSelectLarge(data)}
                 disabled={!selectedOrganization}
@@ -251,6 +268,8 @@ const StatisticBoard = () => {
             <div className="w-[220px]">
               <Dropdown
                 className="!h-[34px] !py-0 !rounded-md"
+                placeholder="-"
+                placeholderClass="!text-black text-sm font-normal"
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}
                 onChange={(data) => handleSelectMedium(data)}
