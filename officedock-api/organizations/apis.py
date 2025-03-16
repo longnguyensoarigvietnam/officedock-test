@@ -605,6 +605,7 @@ class OrganizationCategoryHierarchyViewSet(
                         item.pop("small_statistic_category", None), company
                     )
                 )
+                color = item.get("color", None)
                 organization = item.get("organization", None)
                 skills = item.pop("skills", [])
 
@@ -619,6 +620,8 @@ class OrganizationCategoryHierarchyViewSet(
                     organization_statistic_category.small_statistic_category = (
                         small_statistic_category
                     )
+                    if color:
+                        organization_statistic_category.color = color
                     organization_statistic_category.save()
 
                     # Remove skills
