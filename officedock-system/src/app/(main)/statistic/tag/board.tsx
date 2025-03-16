@@ -61,7 +61,20 @@ const StatisticTagBoard = () => {
       tagIds: selectedTags,
     },
     onSuccess: (data) => {
-      selectedOrganization && handleSelectOrganization(selectedOrganization);
+      const organization = creationDataStatisticData?.organizations?.find(
+        (org) => org.id === selectedOrganization?.value,
+      );
+      if (organization) {
+        const largeCategories = organization.statisticCategories.map(
+          (stat) => ({
+            value: stat.LARGE.id,
+            label: stat.LARGE.name,
+          }),
+        );
+        setLargeOptions(largeCategories);
+      } else {
+        setLargeOptions([]);
+      }
 
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
@@ -280,16 +293,7 @@ const StatisticTagBoard = () => {
             <StatisticTagCalendar />
           </div>
         </div>
-        <div className="flex items-center mt-8  gap-1 mb-[30px]">
-          <ImageRound
-            className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-            name="Sort icon"
-            src={`/icons/sort.svg`}
-          />
-          <span className="text-xs text-[#77858F] relative top-[2px]">
-            タグの絞り込み
-          </span>
-        </div>
+        <div className="my-8"></div>
       </div>
       {/* Percentage of categories */}
       {isCheckCompare ? (

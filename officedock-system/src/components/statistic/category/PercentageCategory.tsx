@@ -5,6 +5,7 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
+  DataTaskModalStatisticType,
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
@@ -83,28 +84,66 @@ const PercentageCategory = ({
   });
 
   const processChartData = (categories: StatisticCategoryInfo[]) => {
+    const mergedCategory: StatisticCategoryInfo = {
+      categoryName: 'その他',
+      categoryColor: getRandomColor(),
+      percent: 0,
+      duration: '',
+      tasks: [] as DataTaskModalStatisticType[],
+      categoryId: -1,
+    };
+
+    const mergedItems: StatisticCategoryInfo[] = [];
+
+    const filteredCategories = categories.filter((item) => {
+      if (item.percent < 10) {
+        mergedCategory.percent += item.percent;
+        mergedCategory.duration += item.duration;
+        mergedCategory.tasks = mergedCategory.tasks.concat(item.tasks);
+        mergedItems.push(item); // Thêm mục đã gộp vào mảng chi tiết
+        return false;
+      }
+      return true;
+    });
+
+    if (mergedCategory.percent > 0) {
+      filteredCategories.push(mergedCategory);
+    }
+
     // Get list color
-    const listColor = categories.map(
+    const listColor = filteredCategories.map(
       (color) => color.categoryColor || getRandomColor(),
     );
     // Get list percent
-    const listPercent = categories.map((percent) => percent.percent);
+    const listPercent = filteredCategories.map((percent) => percent.percent);
     // Get list label
-    const listLabel = categories.map((label) => label.categoryName);
+    const listLabel = filteredCategories.map((label) => label.categoryName);
     // Get list value
-    const listValueActualChart = categories.map((item) =>
+    const listValueActualChart = filteredCategories.map((item) =>
       convertToJapaneseTime(item.duration),
     );
     // Get list options
-    const listDataOptions = categories.map((item) =>
-      item.tasks.slice(0, 6).map((task) => ({
+    const listDataOptions = filteredCategories.map((item) => {
+      const taskOptions = item.tasks.slice(0, 6).map((task) => ({
         label: task.title,
-      })),
-    );
+      }));
+
+      if (item.categoryName === 'その他') {
+        return [
+          {
+            label: 'その他',
+            mergedItems: mergedItems,
+          },
+          ...taskOptions,
+        ];
+      }
+
+      return taskOptions;
+    });
     // Get list id
-    const listDataIds = categories.map((item) => item.categoryId);
+    const listDataIds = filteredCategories.map((item) => item.categoryId);
     // Get list duration
-    const listDuration = categories.map((item) =>
+    const listDuration = filteredCategories.map((item) =>
       item.tasks.map((task) => task.totalDuration),
     );
 
@@ -126,18 +165,48 @@ const PercentageCategory = ({
           statisticCategoryList.largeCategories,
         );
         setDataChartLarge(largeChartData);
+      } else {
+        setDataChartLarge({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+        });
       }
       if (statisticCategoryList.mediumCategories) {
         const mediumChartData = processChartData(
           statisticCategoryList.mediumCategories,
         );
         setDataChartMedium(mediumChartData);
+      } else {
+        setDataChartMedium({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+        });
       }
       if (statisticCategoryList.smallCategories) {
         const smallChartData = processChartData(
           statisticCategoryList.smallCategories,
         );
         setDataChartSmall(smallChartData);
+      } else {
+        setDataChartSmall({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+        });
       }
       setIsLoading(false);
     }
@@ -229,7 +298,7 @@ const PercentageCategory = ({
             {/* Line */}
             <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
             <div>
-              <div className="flex gap-[41px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
                 <div className="w-[280px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
@@ -238,6 +307,8 @@ const PercentageCategory = ({
                   <div className="mt-4">
                     <Dropdown
                       label="チーム選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={listOptionsOrganization}
@@ -278,11 +349,13 @@ const PercentageCategory = ({
                   </div>
                 </div>
                 <div>
-                  <ImageRound
-                    className={`w-fit h-fit `}
-                    src="/icons/drawer-blue.svg"
-                    name="icon chevron right"
-                  />
+                  <div className="relative w-[18px] top-[6px]">
+                    <ImageRound
+                      className={`w-[18px] h-6 `}
+                      src="/icons/drawer-blue.svg"
+                      name="icon chevron right"
+                    />
+                  </div>
                 </div>
                 {/* Pie Chart 2 */}
                 <div className="w-[280px]">
@@ -292,6 +365,8 @@ const PercentageCategory = ({
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={largeOptions}
@@ -330,11 +405,13 @@ const PercentageCategory = ({
                   </div>
                 </div>
                 <div>
-                  <ImageRound
-                    className={`w-fit h-fit `}
-                    src="/icons/drawer-blue.svg"
-                    name="icon chevron right"
-                  />
+                  <div className="relative w-[18px] top-[6px]">
+                    <ImageRound
+                      className={`w-[18px] h-6 `}
+                      src="/icons/drawer-blue.svg"
+                      name="icon chevron right"
+                    />
+                  </div>
                 </div>
                 {/* Pie Chart 3 */}
                 <div className="w-[280px]">
@@ -344,6 +421,8 @@ const PercentageCategory = ({
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={mediumOptions}

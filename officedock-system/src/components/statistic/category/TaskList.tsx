@@ -214,6 +214,8 @@ const TaskListStatistic = ({
                 <div className="mt-4">
                   <Dropdown
                     label="チーム選択"
+                    placeholder="-"
+                    placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     options={listOptionsOrganization}
@@ -234,6 +236,8 @@ const TaskListStatistic = ({
                 <div className="mt-4">
                   <Dropdown
                     label="大カテゴリー選択"
+                    placeholder="-"
+                    placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     options={largeOptions}
@@ -255,6 +259,8 @@ const TaskListStatistic = ({
                 <div className="mt-4">
                   <Dropdown
                     label="中カテゴリー選択"
+                    placeholder="-"
+                    placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     options={mediumOptions}
@@ -276,6 +282,8 @@ const TaskListStatistic = ({
                 <div className="mt-4">
                   <Dropdown
                     label="小カテゴリー選択"
+                    placeholder="-"
+                    placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     options={smallOptions}

@@ -111,11 +111,32 @@ const MultiDatePickerCustom = ({
       setEndDate(initialEndDate);
     }
   }, [initialEndDate]);
-  const getDaysFromTimeOption = (option: TimeOptionsType): number => {
+  const getDaysFromTimeOption = (
+    option: TimeOptionsType,
+    startDate?: Date,
+    isEndDate?: boolean,
+  ): number => {
     switch (option) {
       case TimeOptionsType.WEEK:
         return 7;
       case TimeOptionsType.MONTH:
+        if (startDate) {
+          const date = new Date(startDate);
+
+          if (isEndDate) {
+            date.setMonth(startDate.getMonth() - 1);
+            date.setDate(date.getDate());
+          } else {
+            date.setMonth(startDate.getMonth() + 1);
+            date.setDate(date.getDate());
+          }
+
+          return Math.abs(
+            Math.floor(
+              (date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+            ),
+          );
+        }
         return 30;
       case TimeOptionsType.HALF_YEAR:
         return 182;
@@ -130,13 +151,13 @@ const MultiDatePickerCustom = ({
 
   const handleChange = (dates: [Date, Date | null]) => {
     const [start, end] = dates;
-    const days = getDaysFromTimeOption(isTypeTime);
+
     if (isTypeTime === TimeOptionsType.MORE) {
       setStartDate(start);
       setEndDate(end);
       onChange && onChange(start, end);
-    }
-    if (start && isEndButtonClicked) {
+    } else if (start && isEndButtonClicked) {
+      const days = getDaysFromTimeOption(isTypeTime, start, true);
       const endDate = new Date(start);
       endDate.setDate(start.getDate() - (days - 1));
       setStartDate(endDate);
@@ -144,6 +165,7 @@ const MultiDatePickerCustom = ({
       onChange && onChange(endDate, start);
       resetEndClick && resetEndClick();
     } else if (start && isStartButtonClicked) {
+      const days = getDaysFromTimeOption(isTypeTime, start, false);
       const endDate = new Date(start);
       endDate.setDate(start.getDate() + (days - 1));
       setStartDate(start);
@@ -194,7 +216,7 @@ const MultiDatePickerCustom = ({
             if (isTypeTime === TimeOptionsType.MORE) {
               handleChange(date);
             } else {
-              if (isDisable) {
+              if (!isDisable) {
                 handleChange(date);
               }
             }

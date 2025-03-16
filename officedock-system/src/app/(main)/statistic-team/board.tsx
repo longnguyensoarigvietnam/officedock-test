@@ -64,7 +64,19 @@ const StatisticTeamBoard = () => {
       mediumCategoryId: Number(selectedMedium?.value),
     },
     onSuccess: (data) => {
-      selectedOrganization && handleSelectOrganization(selectedOrganization);
+      const organization = creationDataStatisticData?.organization;
+
+      if (organization) {
+        const largeCategories = organization.statisticCategories.map(
+          (stat) => ({
+            value: stat.LARGE.id,
+            label: stat.LARGE.name,
+          }),
+        );
+        setLargeOptions(largeCategories);
+      } else {
+        setLargeOptions([]);
+      }
 
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
@@ -271,6 +283,8 @@ const StatisticTeamBoard = () => {
             <div className="w-[220px]">
               <Dropdown
                 options={listOptionsOrganization}
+                placeholder="-"
+                placeholderClass="!text-black text-sm font-normal"
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
                 selectedOption={selectedOrganization || undefined}
                 onChange={(data) => {
@@ -288,6 +302,8 @@ const StatisticTeamBoard = () => {
             <div className="w-[220px]">
               <Dropdown
                 options={largeOptions}
+                placeholder="-"
+                placeholderClass="!text-black text-sm font-normal"
                 className="!h-[34px] !py-0 !rounded-md"
                 selectedOption={selectedLarge || undefined}
                 onChange={(data) => handleSelectLarge(data)}
@@ -303,6 +319,8 @@ const StatisticTeamBoard = () => {
             </div>
             <div className="w-[220px]">
               <Dropdown
+                placeholder="-"
+                placeholderClass="!text-black text-sm font-normal"
                 className="!h-[34px] !py-0 !rounded-md"
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}

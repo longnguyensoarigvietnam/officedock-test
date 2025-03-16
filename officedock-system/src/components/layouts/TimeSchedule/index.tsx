@@ -631,7 +631,7 @@ const TimeSchedule = memo(
                     title: task.title,
                     start: startDateActual,
                     end: task.planEndDate
-                      ? adjustEndDate(startDateActual, endDateActual)
+                      ? adjustEndDate(startDateActual, endDateActual, 5)
                       : adjustEndDate(startDateActual, endTimeCustom as Date),
                     id: task.id.toString(),
                     taskId: task.taskId,

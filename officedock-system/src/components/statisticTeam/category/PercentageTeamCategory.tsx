@@ -118,18 +118,48 @@ const PercentageCategoryTeam = ({
           statisticTeamCategoryList.largeCategories,
         );
         setDataChartLarge(largeChartData);
+      } else {
+        setDataChartLarge({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+        });
       }
       if (statisticTeamCategoryList.mediumCategories) {
         const mediumChartData = processChartData(
           statisticTeamCategoryList.mediumCategories,
         );
         setDataChartMedium(mediumChartData);
+      } else {
+        setDataChartMedium({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+        });
       }
       if (statisticTeamCategoryList.smallCategories) {
         const smallChartData = processChartData(
           statisticTeamCategoryList.smallCategories,
         );
         setDataChartSmall(smallChartData);
+      } else {
+        setDataChartSmall({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+        });
       }
       setIsLoading(false);
     }
@@ -182,7 +212,7 @@ const PercentageCategoryTeam = ({
             {/* Line */}
             <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
             <div>
-              <div className="flex gap-[41px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
                 <div className="w-[280px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
@@ -191,6 +221,8 @@ const PercentageCategoryTeam = ({
                   <div className="mt-4">
                     <Dropdown
                       label="チーム選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={listOptionsOrganization}
@@ -244,6 +276,8 @@ const PercentageCategoryTeam = ({
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={largeOptions}
@@ -294,6 +328,8 @@ const PercentageCategoryTeam = ({
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
                       className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={mediumOptions}
