@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useContext } from 'react';
 
-import PieChart from '@components/common/Chart/PieChart';
+import PieChartCustom from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
+  DataTaskModalStatisticType,
   StatisticCategoryInfo,
   StatisticsTagsType,
 } from '@interfaces/statistic';
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
-import { getRandomColor } from '@utils';
+import { getRandomColor, lightenColor } from '@utils';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { EventWorkCategory } from '@constants/enums';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
@@ -65,6 +66,7 @@ const PercentageTags = ({
     optionData: [],
     listId: [],
     listDuration: [],
+    mergedItems: [],
   });
 
   const [dataChartMedium, setDataChartMedium] = useState<DataChartType>({
@@ -75,6 +77,7 @@ const PercentageTags = ({
     optionData: [],
     listId: [],
     listDuration: [],
+    mergedItems: [],
   });
   const [dataChartSmall, setDataChartSmall] = useState<DataChartType>({
     actualValue: [],
@@ -84,15 +87,50 @@ const PercentageTags = ({
     optionData: [],
     listId: [],
     listDuration: [],
+    mergedItems: [],
   });
 
-  const processChartData = (categories: StatisticCategoryInfo[]) => {
-    // Get list color
-    const listColor = categories.map(
-      (color) => color.categoryColor || getRandomColor(),
-    );
+  const processChartData = (
+    categories: StatisticCategoryInfo[],
+    colorData?: string,
+  ) => {
+    const mergedItems: StatisticCategoryInfo[] = [];
+    const mergedCategory: StatisticCategoryInfo = {
+      categoryName: 'その他',
+      categoryColor: colorData || getRandomColor(),
+      percent: 0,
+      duration: '',
+      tasks: [] as DataTaskModalStatisticType[],
+      categoryId: -1,
+    };
+
+    const filteredCategories = categories.filter((item) => {
+      if (item.percent < 10) {
+        mergedCategory.percent += item.percent;
+        mergedCategory.duration += item.duration;
+        mergedCategory.categoryColor =
+          (colorData && lightenColor(colorData, item.percent)) ||
+          getRandomColor();
+        mergedCategory.tasks = mergedCategory.tasks.concat(item.tasks);
+        mergedItems.push(item);
+        return false;
+      }
+      return true;
+    });
+
+    if (mergedCategory.percent > 0) {
+      filteredCategories.push(mergedCategory);
+    }
+
     // Get list percent
     const listPercent = categories.map((percent) => percent.percent);
+    // Get list color
+    const listColor = filteredCategories.map(
+      (color, index) =>
+        color.categoryColor ||
+        lightenColor(colorData as string, listPercent[index]) ||
+        getRandomColor(),
+    );
     // Get list label
     const listLabel = categories.map((label) => label.categoryName);
     // Get list value
@@ -120,6 +158,7 @@ const PercentageTags = ({
       optionData: listDataOptions,
       listId: listDataIds,
       listDuration: listDuration,
+      mergedItems: mergedItems,
     };
   };
 
@@ -139,11 +178,16 @@ const PercentageTags = ({
           optionData: [],
           listId: [],
           listDuration: [],
+          mergedItems: [],
         });
       }
       if (statisticTagsList.mediumCategories) {
+        const color = statisticTagsList.largeCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
         const mediumChartData = processChartData(
           statisticTagsList.mediumCategories,
+          color?.categoryColor,
         );
         setDataChartMedium(mediumChartData);
       } else {
@@ -155,11 +199,18 @@ const PercentageTags = ({
           optionData: [],
           listId: [],
           listDuration: [],
+          mergedItems: [],
         });
       }
       if (statisticTagsList.smallCategories) {
+        const color =
+          statisticTagsList.mediumCategories &&
+          statisticTagsList.mediumCategories.find(
+            (item) => item.categoryId === selectedMedium?.value,
+          );
         const smallChartData = processChartData(
           statisticTagsList.smallCategories,
+          color?.categoryColor,
         );
         setDataChartSmall(smallChartData);
       } else {
@@ -171,6 +222,7 @@ const PercentageTags = ({
           optionData: [],
           listId: [],
           listDuration: [],
+          mergedItems: [],
         });
       }
     }
@@ -204,6 +256,8 @@ const PercentageTags = ({
   };
 
   const handleScroll = () => {
+    const item = largeOptions.find((item) => item.value === detailCategory?.id);
+    item && handleSelectLarge(item);
     const element = document.getElementById('task-list-statistic');
     setIsShowModal(false);
 
@@ -326,8 +380,9 @@ const PercentageTags = ({
                     </p>
                     <div className="min-h-[280px]">
                       {dataChartLarge.data.length > 0 ? (
-                        <PieChart
+                        <PieChartCustom
                           isClickTooltip
+                          mergedItems={dataChartLarge.mergedItems}
                           colors={dataChartLarge.colors}
                           data={dataChartLarge?.data}
                           labels={dataChartLarge?.labels}
@@ -383,8 +438,9 @@ const PercentageTags = ({
                     </p>
                     <div>
                       {dataChartMedium.data.length > 0 ? (
-                        <PieChart
+                        <PieChartCustom
                           isClickTooltip
+                          mergedItems={dataChartLarge.mergedItems}
                           colors={dataChartMedium.colors}
                           data={dataChartMedium?.data}
                           labels={dataChartMedium?.labels}
@@ -437,7 +493,8 @@ const PercentageTags = ({
                     </p>
                     <div>
                       {dataChartSmall.data.length > 0 ? (
-                        <PieChart
+                        <PieChartCustom
+                          mergedItems={dataChartLarge.mergedItems}
                           colors={dataChartSmall.colors}
                           data={dataChartSmall?.data}
                           labels={dataChartSmall?.labels}

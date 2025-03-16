@@ -29,10 +29,10 @@ export interface DataChartType {
   optionData: {
     label: string;
     percent?: number;
-    mergedItems?: StatisticCategoryInfo[];
   }[][];
   listId: number[];
   listDuration: string[][];
+  mergedItems: StatisticCategoryInfo[];
 }
 
 export interface DataPercentCompareType {
@@ -45,4 +45,5 @@ export interface DataPercentCompareType {
     label: string;
     percent?: number;
   }[];
+  mergedItems: StatisticCategoryInfo[];
 }

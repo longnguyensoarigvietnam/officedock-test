@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import PercentageBarCompare from '@components/common/ProgressBar/ProgressBarCompare';
+import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
-import { getRandomColor } from '@utils';
+import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
@@ -74,31 +74,94 @@ const PercentageTeamCategoryCompare = ({
     DataPercentCompareType[]
   >([]);
 
-  const mapCategoryData = (categories: StatisticCategoryInfo[]) =>
-    categories?.map((item) => ({
+  const mapCategoryData = (
+    categories: StatisticCategoryInfo[],
+    colorData?: string,
+  ) => {
+    if (!categories) return [];
+
+    const otherItems = categories.filter((item) => item.percent < 10);
+    const mainItems = categories.filter((item) => item.percent >= 10);
+
+    const otherItem = {
+      id: -1,
+      label: 'その他',
+      percentage: otherItems.reduce((sum, item) => sum + item.percent, 0),
+      color: colorData || getRandomColor(),
+      totalDuration: '',
+      optionData: otherItems
+        .flatMap((item) =>
+          item.users?.map((user) => {
+            if (user?.user?.fullName) {
+              return {
+                label: user.user.fullName,
+                percent: item.percent,
+              };
+            }
+            return undefined;
+          }),
+        )
+        .filter((item): item is { label: string; percent: number } => !!item),
+      mergedItems: otherItems,
+    };
+
+    const mappedMainItems = mainItems.map((item) => ({
       id: item.categoryId,
       label: item.categoryName,
       percentage: item.percent,
-      color: item.categoryColor || getRandomColor(),
+      color:
+        item.categoryColor ||
+        lightenColor(colorData as string, item.percent) ||
+        getRandomColor(),
       totalDuration: item.duration,
       optionData:
-        item.users?.map((item) => ({
-          label: item.user.fullName,
-          percent: item.percent,
-        })) || [],
-    })) || [];
+        item.users
+          ?.map((user) => {
+            if (user?.user?.fullName) {
+              return {
+                label: user.user.fullName,
+                percent: item.percent,
+              };
+            }
+            return undefined;
+          })
+          .filter(
+            (user): user is { label: string; percent: number } => !!user,
+          ) || [],
+      mergedItems: [],
+    }));
+
+    return [
+      ...mappedMainItems,
+      ...(otherItem.percentage > 0 ? [otherItem] : []),
+    ];
+  };
 
   // Set data from category list
   useEffect(() => {
     if (statisticTeamCategoryList) {
+      const color = statisticTeamCategoryList.largeCategories.find(
+        (item) => item.categoryId === selectedLarge?.value,
+      );
+      const colorMedium =
+        statisticTeamCategoryList.mediumCategories &&
+        statisticTeamCategoryList.mediumCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       setDataChartLarge(
         mapCategoryData(statisticTeamCategoryList.largeCategories),
       );
       setDataChartMedium(
-        mapCategoryData(statisticTeamCategoryList.mediumCategories || []),
+        mapCategoryData(
+          statisticTeamCategoryList.mediumCategories || [],
+          color?.categoryColor,
+        ),
       );
       setDataChartSmall(
-        mapCategoryData(statisticTeamCategoryList.smallCategories || []),
+        mapCategoryData(
+          statisticTeamCategoryList.smallCategories || [],
+          colorMedium?.categoryColor,
+        ),
       );
       setIsLoading(false);
     }
@@ -107,16 +170,28 @@ const PercentageTeamCategoryCompare = ({
   // Set data from category compare list
   useEffect(() => {
     if (statisticCategoryListTeamCompare) {
+      const color = statisticCategoryListTeamCompare.largeCategories.find(
+        (item) => item.categoryId === selectedLarge?.value,
+      );
+      const colorMedium =
+        statisticCategoryListTeamCompare.mediumCategories &&
+        statisticCategoryListTeamCompare.mediumCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       setDataChartLargeCompare(
         mapCategoryData(statisticCategoryListTeamCompare.largeCategories),
       );
       setDataChartMediumCompare(
         mapCategoryData(
           statisticCategoryListTeamCompare.mediumCategories || [],
+          color?.categoryColor,
         ),
       );
       setDataChartSmallCompare(
-        mapCategoryData(statisticCategoryListTeamCompare.smallCategories || []),
+        mapCategoryData(
+          statisticCategoryListTeamCompare.smallCategories || [],
+          colorMedium?.categoryColor,
+        ),
       );
       setIsLoading(false);
     }
@@ -188,7 +263,7 @@ const PercentageTeamCategoryCompare = ({
                     />
                     <div className="min-h-[280px] mt-[30px]">
                       {
-                        <PercentageBarCompare
+                        <PercentageBarCompareTeam
                           data={dataChartLarge}
                           startDate={startDate}
                           endDate={endDate}
@@ -229,7 +304,7 @@ const PercentageTeamCategoryCompare = ({
                     />
                     <div className="min-h-[280px] mt-[30px]">
                       {
-                        <PercentageBarCompare
+                        <PercentageBarCompareTeam
                           data={dataChartMedium}
                           startDate={startDate}
                           endDate={endDate}
@@ -270,7 +345,7 @@ const PercentageTeamCategoryCompare = ({
                     />
                     <div className="min-h-[280px] mt-[30px]">
                       {
-                        <PercentageBarCompare
+                        <PercentageBarCompareTeam
                           data={dataChartSmall}
                           startDate={startDate}
                           endDate={endDate}

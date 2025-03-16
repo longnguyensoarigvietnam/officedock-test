@@ -1767,8 +1767,12 @@ const DailyReportDetailBoard = () => {
       const end = new Date(event.end);
       const timeDifference = (end.getTime() - start.getTime()) / (1000 * 60);
 
-      if (timeDifference < 60 && start.getHours() < 23) {
-        event.end = new Date(end.setTime(start.getTime() + 60 * 60 * 1000));
+      if (
+        timeDifference < 5 &&
+        start.getHours() < 23 &&
+        start.getMinutes() <= 50
+      ) {
+        event.end = new Date(start.getTime() + 5 * 60 * 1000);
       }
       return event;
     });

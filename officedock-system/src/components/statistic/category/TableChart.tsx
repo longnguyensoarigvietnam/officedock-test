@@ -337,7 +337,7 @@ const TableChart = ({
         const value = info.getValue() as string;
         return (
           <div className="font-medium text-[14px] text-center text-black">
-            {value}
+            {value}%
           </div>
         );
       },
@@ -412,11 +412,11 @@ const TableChart = ({
         }
 
         return (
-          <div className="statistic-custom flex gap-2 items-center">
+          <div className=" flex gap-2 items-center">
             {/* Organization */}
-            <div className="flex justify-between h-full relative rounded-md gap-2">
+            <div className="statistic-custom flex justify-between h-full relative rounded-md gap-2">
               <SingleSelect
-                className="border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
+                className="statistic-custom border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   listOptionsOrganization &&
                   listOptionsOrganization.find(
@@ -670,7 +670,7 @@ const TableChart = ({
             name: task.title,
             type: task.type,
             organization: task.organization,
-            ratio: '',
+            ratio: String(task.percent),
             tags: task.tags.map((tag) => {
               return {
                 value: tag.id as number,

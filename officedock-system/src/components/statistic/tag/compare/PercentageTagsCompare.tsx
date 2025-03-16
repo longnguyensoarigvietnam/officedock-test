@@ -9,7 +9,7 @@ import {
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { EventWorkCategory } from '@constants/enums';
-import { getRandomColor } from '@utils';
+import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
@@ -96,27 +96,73 @@ const PercentageTagsCompare = ({
     DataPercentCompareType[]
   >([]);
 
-  const mapCategoryData = (categories: StatisticCategoryInfo[]) =>
-    categories?.map((item) => ({
+  const mapCategoryData = (
+    categories: StatisticCategoryInfo[],
+    colorData?: string,
+  ) => {
+    if (!categories) return [];
+
+    const otherItems = categories.filter((item) => item.percent < 10);
+    const mainItems = categories.filter((item) => item.percent >= 10);
+
+    const otherItem = {
+      id: -1,
+      label: 'その他',
+      percentage: otherItems.reduce((sum, item) => sum + item.percent, 0),
+      color: colorData || getRandomColor(),
+      totalDuration: '',
+      optionData: otherItems.flatMap((item) =>
+        item.tasks.map((task) => ({
+          label: task.title,
+        })),
+      ),
+      mergedItems: otherItems,
+    };
+
+    const mappedMainItems = mainItems.map((item) => ({
       id: item.tagId as number,
       label: item.categoryName,
       percentage: item.percent,
-      color: item.categoryColor || getRandomColor(),
+      color:
+        item.categoryColor ||
+        lightenColor(colorData as string, item.percent) ||
+        getRandomColor(),
       totalDuration: item.duration,
-      optionData: item.tasks.map((item) => ({
-        label: item.title,
+      optionData: item.tasks.map((task) => ({
+        label: task.title,
       })),
-    })) || [];
+      mergedItems: [],
+    }));
+
+    return [
+      ...mappedMainItems,
+      ...(otherItem.percentage > 0 ? [otherItem] : []),
+    ];
+  };
 
   // Set data from category list
   useEffect(() => {
     if (statisticTagsList) {
+      const color = statisticTagsList.largeCategories.find(
+        (item) => item.categoryId === selectedLarge?.value,
+      );
+      const colorMedium =
+        statisticTagsList.mediumCategories &&
+        statisticTagsList.mediumCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       setDataChartLarge(mapCategoryData(statisticTagsList.largeCategories));
       setDataChartMedium(
-        mapCategoryData(statisticTagsList.mediumCategories || []),
+        mapCategoryData(
+          statisticTagsList.mediumCategories || [],
+          color?.categoryColor,
+        ),
       );
       setDataChartSmall(
-        mapCategoryData(statisticTagsList.smallCategories || []),
+        mapCategoryData(
+          statisticTagsList.smallCategories || [],
+          colorMedium?.categoryColor,
+        ),
       );
       setIsLoading(false);
     }
@@ -125,14 +171,28 @@ const PercentageTagsCompare = ({
   // Set data from category compare list
   useEffect(() => {
     if (statisticTagsCompareList) {
+      const color = statisticTagsCompareList.largeCategories.find(
+        (item) => item.categoryId === selectedLarge?.value,
+      );
+      const colorMedium =
+        statisticTagsCompareList.mediumCategories &&
+        statisticTagsCompareList.mediumCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       setDataChartLargeCompare(
         mapCategoryData(statisticTagsCompareList.largeCategories),
       );
       setDataChartMediumCompare(
-        mapCategoryData(statisticTagsCompareList.mediumCategories || []),
+        mapCategoryData(
+          statisticTagsCompareList.mediumCategories || [],
+          color?.categoryColor,
+        ),
       );
       setDataChartSmallCompare(
-        mapCategoryData(statisticTagsCompareList.smallCategories || []),
+        mapCategoryData(
+          statisticTagsCompareList.smallCategories || [],
+          colorMedium?.categoryColor,
+        ),
       );
       setIsLoading(false);
     }
@@ -200,6 +260,20 @@ const PercentageTagsCompare = ({
   };
 
   const handleScroll = () => {
+    const item = largeOptions.find((item) => item.value === detailCategory?.id);
+    item && handleSelectLarge(item);
+    const element = document.getElementById('task-list-statistic');
+    setIsShowModal(false);
+
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  const handleScrollCompare = () => {
+    const item = largeOptions.find(
+      (item) => item.value === detailCategoryCompare?.id,
+    );
+    item && handleSelectLarge(item);
     const element = document.getElementById('task-list-statistic');
     setIsShowModal(false);
 
@@ -469,7 +543,7 @@ const PercentageTagsCompare = ({
           onClose={() => {
             setIsShowModalCompare(false);
           }}
-          handleScroll={handleScroll}
+          handleScroll={handleScrollCompare}
         />
       )}
     </>

@@ -1,15 +1,17 @@
 import React, { useEffect, useState, useContext } from 'react';
 
-import PieChart from '@components/common/Chart/PieChart';
+import PieChart from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
+  DataTaskModalStatisticType,
   StatisticCategoryInfo,
   StatisticsTagsType,
+  UserListStatisticType,
 } from '@interfaces/statistic';
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
-import { getRandomColor } from '@utils';
+import { getRandomColor, lightenColor } from '@utils';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { EventWorkCategory } from '@constants/enums';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
@@ -18,7 +20,7 @@ import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderT
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  statisticTagsList: StatisticsTagsType | undefined;
+  statisticTagsListTeam: StatisticsTagsType | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -28,7 +30,7 @@ type Props = {
 const PercentageTeamTags = ({
   startDate,
   endDate,
-  statisticTagsList,
+  statisticTagsListTeam,
   removeTag,
   handleSelectLarge,
   handleSelectMedium,
@@ -65,6 +67,7 @@ const PercentageTeamTags = ({
     optionData: [],
     listId: [],
     listDuration: [],
+    mergedItems: [],
   });
 
   const [dataChartMedium, setDataChartMedium] = useState<DataChartType>({
@@ -75,6 +78,7 @@ const PercentageTeamTags = ({
     optionData: [],
     listId: [],
     listDuration: [],
+    mergedItems: [],
   });
   const [dataChartSmall, setDataChartSmall] = useState<DataChartType>({
     actualValue: [],
@@ -84,15 +88,55 @@ const PercentageTeamTags = ({
     optionData: [],
     listId: [],
     listDuration: [],
+    mergedItems: [],
   });
 
-  const processChartData = (categories: StatisticCategoryInfo[]) => {
-    // Get list color
-    const listColor = categories.map(
-      (color) => color.categoryColor || getRandomColor(),
-    );
+  const processChartData = (
+    categories: StatisticCategoryInfo[],
+    colorData?: string,
+  ) => {
+    const mergedItems: StatisticCategoryInfo[] = [];
+    const mergedCategory: StatisticCategoryInfo = {
+      categoryName: 'その他',
+      categoryColor: colorData || getRandomColor(),
+      percent: 0,
+      duration: '',
+      tasks: [] as DataTaskModalStatisticType[],
+      users: [] as UserListStatisticType[],
+
+      categoryId: -1,
+    };
+
+    const filteredCategories = categories.filter((item) => {
+      if (item.percent < 10) {
+        mergedCategory.percent += item.percent;
+        mergedCategory.duration += item.duration;
+        mergedCategory.categoryColor =
+          (colorData && lightenColor(colorData, item.percent)) ||
+          getRandomColor();
+        mergedCategory.tasks = mergedCategory.tasks.concat(item.tasks);
+        mergedCategory.users = mergedCategory.users?.concat(item.users || []);
+
+        mergedItems.push(item);
+        return false;
+      }
+      return true;
+    });
+
+    if (mergedCategory.percent > 0) {
+      filteredCategories.push(mergedCategory);
+    }
+
     // Get list percent
     const listPercent = categories.map((percent) => percent.percent);
+
+    // Get list color
+    const listColor = filteredCategories.map(
+      (color, index) =>
+        color.categoryColor ||
+        lightenColor(colorData as string, listPercent[index]) ||
+        getRandomColor(),
+    );
     // Get list label
     const listLabel = categories.map((label) => label.categoryName);
     // Get list value
@@ -120,14 +164,15 @@ const PercentageTeamTags = ({
       optionData: listDataOptions,
       listId: listDataIds,
       listDuration: listDuration,
+      mergedItems: mergedItems,
     };
   };
 
   useEffect(() => {
-    if (statisticTagsList) {
-      if (statisticTagsList.largeCategories) {
+    if (statisticTagsListTeam) {
+      if (statisticTagsListTeam.largeCategories) {
         const largeChartData = processChartData(
-          statisticTagsList.largeCategories,
+          statisticTagsListTeam.largeCategories,
         );
         setDataChartLarge(largeChartData);
       } else {
@@ -139,11 +184,16 @@ const PercentageTeamTags = ({
           optionData: [],
           listId: [],
           listDuration: [],
+          mergedItems: [],
         });
       }
-      if (statisticTagsList.mediumCategories) {
+      if (statisticTagsListTeam.mediumCategories) {
+        const color = statisticTagsListTeam.largeCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
         const mediumChartData = processChartData(
-          statisticTagsList.mediumCategories,
+          statisticTagsListTeam.mediumCategories,
+          color?.categoryColor,
         );
         setDataChartMedium(mediumChartData);
       } else {
@@ -155,11 +205,18 @@ const PercentageTeamTags = ({
           optionData: [],
           listId: [],
           listDuration: [],
+          mergedItems: [],
         });
       }
-      if (statisticTagsList.smallCategories) {
+      if (statisticTagsListTeam.smallCategories) {
+        const color =
+          statisticTagsListTeam.mediumCategories &&
+          statisticTagsListTeam.mediumCategories.find(
+            (item) => item.categoryId === selectedMedium?.value,
+          );
         const smallChartData = processChartData(
-          statisticTagsList.smallCategories,
+          statisticTagsListTeam.smallCategories,
+          color?.categoryColor,
         );
         setDataChartSmall(smallChartData);
       } else {
@@ -171,27 +228,29 @@ const PercentageTeamTags = ({
           optionData: [],
           listId: [],
           listDuration: [],
+          mergedItems: [],
         });
       }
     }
-  }, [statisticTagsList]);
+  }, [statisticTagsListTeam]);
 
   const handleClickTooltip = (id: number | null, type: string) => {
     let duration: string = '00:00:00';
 
     if (type === EventWorkCategory.LARGE) {
       duration =
-        statisticTagsList?.largeCategories.find((item) => item.tagId == id)
+        statisticTagsListTeam?.largeCategories.find((item) => item.tagId == id)
           ?.duration || '00:00:00';
     }
     if (type === EventWorkCategory.MEDIUM) {
       duration =
-        statisticTagsList?.mediumCategories?.find((item) => item.tagId == id)
-          ?.duration || '00:00:00';
+        statisticTagsListTeam?.mediumCategories?.find(
+          (item) => item.tagId == id,
+        )?.duration || '00:00:00';
     }
     if (type === EventWorkCategory.SMALL) {
       duration =
-        statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
+        statisticTagsListTeam?.smallCategories?.find((item) => item.tagId == id)
           ?.duration || '00:00:00';
     }
     setDetailCategory({
@@ -328,6 +387,8 @@ const PercentageTeamTags = ({
                       {dataChartLarge.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
+                          isTeam
+                          mergedItems={dataChartLarge.mergedItems}
                           colors={dataChartLarge.colors}
                           data={dataChartLarge?.data}
                           labels={dataChartLarge?.labels}
@@ -385,6 +446,8 @@ const PercentageTeamTags = ({
                       {dataChartMedium.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
+                          isTeam
+                          mergedItems={dataChartLarge.mergedItems}
                           colors={dataChartMedium.colors}
                           data={dataChartMedium?.data}
                           labels={dataChartMedium?.labels}
@@ -438,6 +501,8 @@ const PercentageTeamTags = ({
                     <div>
                       {dataChartSmall.data.length > 0 ? (
                         <PieChart
+                          isTeam
+                          mergedItems={dataChartLarge.mergedItems}
                           colors={dataChartSmall.colors}
                           data={dataChartSmall?.data}
                           labels={dataChartSmall?.labels}

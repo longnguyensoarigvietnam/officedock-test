@@ -924,6 +924,7 @@ const TimeSchedule = memo(
               item.resourceId === ItemScheduleType.PLANS
             ),
         );
+
         const largeColor =
           dataItemUpdateSchedule.categories &&
           dataItemUpdateSchedule.categories.find(
@@ -1656,7 +1657,6 @@ const TimeSchedule = memo(
         }
       }
     };
-
     // Event drag & drop schedule
     const handleEventDrop = async (info: EventDropArg) => {
       const droppedEvent = info.event;
@@ -2123,8 +2123,8 @@ const TimeSchedule = memo(
           largeColor: clickInfo.event.extendedProps.largeColor
             ? clickInfo.event.extendedProps.largeColor
             : '',
-          start: clickInfo.event.start,
-          end: clickInfo.event.end,
+          start: clickInfo.event.extendedProps.planStartDate,
+          end: clickInfo.event.extendedProps.planEndDate,
           eventList: taskTimeScheduleList,
           clientX: clickInfo.jsEvent.clientX,
           clientY: clickInfo.jsEvent.clientY,
@@ -2360,14 +2360,26 @@ const TimeSchedule = memo(
       {
         onSuccess: async ({ data }) => {
           setTaskTimeScheduleList((prevEvents) => {
+            const largeColor = data.categories?.find(
+              (item: any) => item.type === EventWorkCategory.LARGE,
+            )?.color;
             const filteredEvents = prevEvents.filter(
               (event) =>
                 event.scheduleId !== data.id &&
                 event.resourceId === ItemScheduleType.PLANS,
             );
-            const actualDataList = prevEvents.filter(
-              (event) => event.resourceId === ItemScheduleType.ACTUAL,
-            );
+            const actualDataList = prevEvents
+              .filter((event) => event.resourceId === ItemScheduleType.ACTUAL)
+              .map((event) => {
+                if (event.scheduleId === data.id) {
+                  return {
+                    ...event,
+                    title: data.title,
+                    largeColor,
+                  };
+                }
+                return event;
+              });
 
             const splitMultiDayEvent = (event: TaskTimeSchedule) => {
               const startDate = parseISO(String(event.startDate));
@@ -2415,10 +2427,6 @@ const TimeSchedule = memo(
                 };
               });
             };
-
-            const largeColor = data.categories?.find(
-              (item: any) => item.type === EventWorkCategory.LARGE,
-            )?.color;
 
             const newEvents = splitMultiDayEvent({
               ...data,

@@ -177,6 +177,8 @@ const ListTaskDetailStatisticModal = ({
                   </p>
                   <div
                     onClick={() => {
+                      setTaskList([]);
+                      setLastCreateAt('');
                       if (ordering === OrderingDataType.TOTAL_DURATION) {
                         setOrdering('');
                       } else {
@@ -199,6 +201,9 @@ const ListTaskDetailStatisticModal = ({
                   <p className="!text-xs font-medium !text-[#77858F]">割合</p>
                   <div
                     onClick={() => {
+                      setTaskList([]);
+                      setLastCreateAt('');
+
                       if (ordering === OrderingDataType.PERCENT) {
                         setOrdering('');
                       } else {
