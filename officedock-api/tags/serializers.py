@@ -60,7 +60,9 @@ class TagSerializer(serializers.ModelSerializer):
                     )
         if (
             name
-            and Tag.objects.filter(name=name, company=user.company).exists()
+            and Tag.objects.filter(name=name, company=user.company)
+            .exclude(id=self.instance.id if self.instance else None)
+            .exists()
         ):
             raise serializers.ValidationError(
                 {"detail": ERROR_MESSAGES["tag_exists"]}
