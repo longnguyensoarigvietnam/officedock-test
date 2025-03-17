@@ -701,7 +701,7 @@ const Header = ({ className }: HeaderProps) => {
     <>
       <header
         className={`sticky 2xl:fixed top-0 z-[22] bg-white w-full h-[76px]  p-3 flex justify-between item-center ${className}`}
-        style={{boxShadow: '0px 4px 8px 0px #1D2D3F0A'}}>
+        style={{ boxShadow: '0px 4px 8px 0px #1D2D3F0A' }}>
         <div className="flex gap-8 justify-between w-full">
           <div className="flex flex-grow items-center gap-8">
             <ImageRound
@@ -713,7 +713,7 @@ const Header = ({ className }: HeaderProps) => {
           </div>
           <div className="flex items-center w-fit">
             <Popover className="relative">
-              {({ open }) => (
+              {({ open, close }) => (
                 <>
                   <div className="flex gap-2 items-center">
                     <PopoverButton
@@ -745,7 +745,8 @@ const Header = ({ className }: HeaderProps) => {
                               <Link
                                 key={item.name}
                                 href={item.href}
-                                className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}>
+                                className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}
+                                onClick={close}>
                                 <p>{item.name}</p>
                               </Link>
                             ) : (
@@ -767,7 +768,7 @@ const Header = ({ className }: HeaderProps) => {
               )}
             </Popover>
             <Popover className="relative">
-              {({ open }) => (
+              {({ open, close }) => (
                 <>
                   <div className="flex gap-2 items-center">
                     <PopoverButton
@@ -803,7 +804,8 @@ const Header = ({ className }: HeaderProps) => {
                                   <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}>
+                                    className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}
+                                    onClick={close}>
                                     <p>{item.name}</p>
                                   </Link>
                                 ) : (
