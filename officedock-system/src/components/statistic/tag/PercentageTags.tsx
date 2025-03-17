@@ -182,12 +182,9 @@ const PercentageTags = ({
         });
       }
       if (statisticTagsList.mediumCategories) {
-        const color = statisticTagsList.largeCategories.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        );
         const mediumChartData = processChartData(
           statisticTagsList.mediumCategories,
-          color?.categoryColor,
+          '#2E9267',
         );
         setDataChartMedium(mediumChartData);
       } else {
@@ -203,14 +200,9 @@ const PercentageTags = ({
         });
       }
       if (statisticTagsList.smallCategories) {
-        const color =
-          statisticTagsList.mediumCategories &&
-          statisticTagsList.mediumCategories.find(
-            (item) => item.categoryId === selectedMedium?.value,
-          );
         const smallChartData = processChartData(
           statisticTagsList.smallCategories,
-          color?.categoryColor,
+          '#2E9267',
         );
         setDataChartSmall(smallChartData);
       } else {

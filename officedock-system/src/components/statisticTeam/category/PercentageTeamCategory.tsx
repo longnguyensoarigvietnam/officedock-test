@@ -245,7 +245,7 @@ const PercentageCategoryTeam = ({
                 src={`/icons/statistic-active.svg`}
               />
               <span className="text-black font-semibold text-[18px] relative top-[2px]">
-                カテゴリーの割合カテゴリーの割合
+                カテゴリーの割合
               </span>
             </div>
             <div className="flex items-center gap-2">

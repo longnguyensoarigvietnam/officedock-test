@@ -143,30 +143,14 @@ const PercentageTagsCompare = ({
   // Set data from category list
   useEffect(() => {
     if (statisticTagsList) {
-      const color =
-        statisticTagsList.largeCategories &&
-        statisticTagsList.largeCategories.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        );
-      const colorMedium =
-        statisticTagsList.mediumCategories &&
-        statisticTagsList.mediumCategories.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        );
       setDataChartLarge(
         mapCategoryData(statisticTagsList.largeCategories || []),
       );
       setDataChartMedium(
-        mapCategoryData(
-          statisticTagsList.mediumCategories || [],
-          color?.categoryColor,
-        ),
+        mapCategoryData(statisticTagsList.mediumCategories || [], '#2E9267'),
       );
       setDataChartSmall(
-        mapCategoryData(
-          statisticTagsList.smallCategories || [],
-          colorMedium?.categoryColor,
-        ),
+        mapCategoryData(statisticTagsList.smallCategories || [], '#2E9267'),
       );
       setIsLoading(false);
     }
@@ -175,29 +159,19 @@ const PercentageTagsCompare = ({
   // Set data from category compare list
   useEffect(() => {
     if (statisticTagsCompareList) {
-      const color =
-        statisticTagsCompareList.largeCategories &&
-        statisticTagsCompareList.largeCategories.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        );
-      const colorMedium =
-        statisticTagsCompareList.mediumCategories &&
-        statisticTagsCompareList.mediumCategories.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        );
       setDataChartLargeCompare(
         mapCategoryData(statisticTagsCompareList.largeCategories || []),
       );
       setDataChartMediumCompare(
         mapCategoryData(
           statisticTagsCompareList.mediumCategories || [],
-          color?.categoryColor,
+          '#2E9267',
         ),
       );
       setDataChartSmallCompare(
         mapCategoryData(
           statisticTagsCompareList.smallCategories || [],
-          colorMedium?.categoryColor,
+          '#2E9267',
         ),
       );
       setIsLoading(false);

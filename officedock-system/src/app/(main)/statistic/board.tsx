@@ -79,7 +79,6 @@ const StatisticBoard = () => {
       } else {
         setLargeOptions([]);
       }
-      setMediumOptions([]);
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
@@ -173,7 +172,6 @@ const StatisticBoard = () => {
         value: medium.MEDIUM?.id || '',
         label: medium.MEDIUM?.name || '',
       }));
-
       setMediumOptions(mediumCategories);
     } else {
       setMediumOptions([]);
@@ -191,6 +189,7 @@ const StatisticBoard = () => {
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === selectedLarge?.value,
     );
+
     const mediumCategory = largeCategory?.MEDIUM.find(
       (medium) => medium.MEDIUM?.id === data.value,
     );

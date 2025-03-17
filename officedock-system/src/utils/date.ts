@@ -7,6 +7,7 @@ import {
 } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
+import { TimeOptionsType } from '@constants/enums';
 
 export const getFormattedDateTime = (dateInput?: string | Date): string => {
   const date: Date = dateInput ? new Date(dateInput) : new Date();
@@ -941,4 +942,141 @@ export function sumDurations(data: StatisticCategoryInfo[]): string {
 //Get category formatted date
 export const getCategoryFormattedDate = (date: Date) => {
   return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`;
+};
+
+// Get time date statistic
+export const getDaysFromTimeOption = (
+  option: TimeOptionsType,
+  startDate?: Date,
+  isEndDate?: boolean,
+): number => {
+  switch (option) {
+    case TimeOptionsType.WEEK:
+      return 7;
+    case TimeOptionsType.MONTH:
+      if (startDate) {
+        const date = new Date(startDate);
+
+        if (isEndDate) {
+          date.setMonth(startDate.getMonth() - 1);
+        } else {
+          date.setMonth(startDate.getMonth() + 1);
+        }
+
+        return Math.abs(
+          Math.floor(
+            (date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+          ),
+        );
+      }
+      return 30;
+
+    case TimeOptionsType.HALF_YEAR:
+      if (startDate) {
+        const date = new Date(startDate);
+
+        if (isEndDate) {
+          date.setMonth(startDate.getMonth() - 6);
+        } else {
+          date.setMonth(startDate.getMonth() + 6);
+        }
+
+        return Math.abs(
+          Math.floor(
+            (date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+          ),
+        );
+      }
+      return 182;
+
+    case TimeOptionsType.YEAR:
+      if (startDate) {
+        const date = new Date(startDate);
+
+        if (isEndDate) {
+          date.setFullYear(startDate.getFullYear() - 1);
+        } else {
+          date.setFullYear(startDate.getFullYear() + 1);
+        }
+
+        return Math.abs(
+          Math.floor(
+            (date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+          ),
+        );
+      }
+      return 365;
+
+    case TimeOptionsType.MORE:
+      return 0;
+
+    default:
+      return 0;
+  }
+};
+
+// Get time date statistic compare before
+export const handleSetStartDateBefore = (
+  option: TimeOptionsType,
+  startDate: Date,
+) => {
+  if (!startDate) return;
+
+  const newStartDateBefore = new Date(startDate);
+
+  switch (option) {
+    case TimeOptionsType.WEEK:
+      newStartDateBefore.setDate(newStartDateBefore.getDate() - 7);
+      break;
+
+    case TimeOptionsType.MONTH:
+      newStartDateBefore.setMonth(newStartDateBefore.getMonth() - 1);
+      break;
+
+    case TimeOptionsType.HALF_YEAR:
+      newStartDateBefore.setMonth(newStartDateBefore.getMonth() - 6);
+      break;
+
+    case TimeOptionsType.YEAR:
+      newStartDateBefore.setFullYear(newStartDateBefore.getFullYear() - 1);
+      break;
+
+    default:
+      break;
+  }
+
+  return newStartDateBefore;
+};
+
+// Get time date statistic compare start
+export const handleSetStartDateAfter = (
+  option: TimeOptionsType,
+  startDate: Date,
+) => {
+  if (!startDate) return;
+
+  const newStartDateAfter = new Date(startDate);
+
+  switch (option) {
+    case TimeOptionsType.WEEK:
+      newStartDateAfter.setDate(newStartDateAfter.getDate() + 7);
+      break;
+
+    case TimeOptionsType.MONTH:
+      newStartDateAfter.setMonth(newStartDateAfter.getMonth() + 1);
+      break;
+
+    case TimeOptionsType.HALF_YEAR:
+      newStartDateAfter.setMonth(newStartDateAfter.getMonth() + 6);
+      break;
+
+    case TimeOptionsType.YEAR:
+      newStartDateAfter.setFullYear(newStartDateAfter.getFullYear() + 1);
+      break;
+
+    default:
+      break;
+  }
+
+  return newStartDateAfter;
 };

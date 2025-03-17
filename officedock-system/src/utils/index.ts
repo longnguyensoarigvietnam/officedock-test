@@ -667,14 +667,17 @@ export const calculateDurationPercentage = (
 };
 
 // Opacity color follow percent
-export function lightenColor(color: string, percent: number): string {
+export function lightenColor(color: string | null, percent: number): string {
+  const defaultColor = '#2E9267';
+
   const hexToRgb = (hex: string): [number, number, number] => {
-    hex = hex.replace(/^#/, '');
-    if (hex.length === 3)
+    hex = (hex || defaultColor).replace(/^#/, '');
+    if (hex.length === 3) {
       hex = hex
         .split('')
         .map((x) => x + x)
         .join(''); // #abc -> #aabbcc
+    }
     const num = parseInt(hex, 16);
     return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
   };
@@ -690,5 +693,5 @@ export function lightenColor(color: string, percent: number): string {
       Math.round(c * (percent / 100) + 255 * (1 - percent / 100)),
     ) as [number, number, number];
 
-  return rgbToHex(mixWithWhite(hexToRgb(color), percent));
+  return rgbToHex(mixWithWhite(hexToRgb(color || defaultColor), percent));
 }
