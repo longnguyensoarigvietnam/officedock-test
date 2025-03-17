@@ -182,6 +182,7 @@ class CreationDataOrganizationWithStructCategorySerializer(
     """
 
     statistic_categories = serializers.SerializerMethodField(read_only=True)
+    tags = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Organization
@@ -190,6 +191,7 @@ class CreationDataOrganizationWithStructCategorySerializer(
             "name",
             "is_main",
             "statistic_categories",
+            "tags",
         ]
 
     def get_statistic_categories(self, obj):
@@ -204,3 +206,11 @@ class CreationDataOrganizationWithStructCategorySerializer(
         ).data
 
         return transform_statistic_categories(statistic_categories)
+
+    def get_tags(self, obj):
+        """
+        Return list of tags
+        """
+        from tags.serializers import BaseTagSerializer
+
+        return BaseTagSerializer(obj.tags.all(), many=True).data
