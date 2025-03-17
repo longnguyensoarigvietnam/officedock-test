@@ -330,8 +330,9 @@ const PercentageCategoryTeam = ({
                       label="チーム選択"
                       placeholder="-"
                       placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                      classNameOption="!text-sm"
                       options={listOptionsOrganization}
                       selectedOption={selectedOrganization || undefined}
                       onChange={(data) => handleSelectOrganization(data)}
@@ -386,8 +387,9 @@ const PercentageCategoryTeam = ({
                       label="大カテゴリー選択"
                       placeholder="-"
                       placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                      classNameOption="!text-sm"
                       options={largeOptions}
                       selectedOption={selectedLarge || undefined}
                       onChange={(data) => handleSelectLarge(data)}
@@ -439,8 +441,9 @@ const PercentageCategoryTeam = ({
                       label="中カテゴリー選択"
                       placeholder="-"
                       placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
+                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                      classNameOption="!text-sm"
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}

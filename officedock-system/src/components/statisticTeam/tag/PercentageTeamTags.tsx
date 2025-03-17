@@ -309,7 +309,6 @@ const PercentageTeamTags = ({
                         options={tagsOptions}
                         placeholder="集計対象のタグを選択"
                         className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                        labelClass="mt-[-3px]"
                         selectedOptions={selectedTags || []}
                         onChange={(selected) => {
                           let updatedTagIds = [];
@@ -365,8 +364,9 @@ const PercentageTeamTags = ({
                       label="チーム選択"
                       placeholder="-"
                       placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                      classNameOption="!text-sm"
                       options={listOptionsOrganization}
                       selectedOption={selectedOrganization || undefined}
                       onChange={(data) => handleSelectOrganization(data)}
@@ -423,8 +423,9 @@ const PercentageTeamTags = ({
                       label="大カテゴリー選択"
                       placeholder="-"
                       placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                      classNameOption="!text-sm"
                       options={largeOptions}
                       selectedOption={selectedLarge || undefined}
                       onChange={(data) => handleSelectLarge(data)}
@@ -479,8 +480,9 @@ const PercentageTeamTags = ({
                       label="中カテゴリー選択"
                       placeholder="-"
                       placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
+                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                      classNameOption="!text-sm"
                       options={mediumOptions}
                       selectedOption={selectedMedium || undefined}
                       onChange={(data) => handleSelectMedium(data)}

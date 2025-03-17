@@ -214,7 +214,6 @@ const TaskListStatisticTags = ({
                       options={tagsOptions}
                       placeholder="集計対象のタグを選択"
                       className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                      labelClass="mt-[-3px]"
                       selectedOptions={selectedTags || []}
                       onChange={(selected) => {
                         let updatedTagIds = [];
@@ -268,6 +267,7 @@ const TaskListStatisticTags = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => handleSelectOrganization(data)}
@@ -298,6 +298,7 @@ const TaskListStatisticTags = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
@@ -327,6 +328,7 @@ const TaskListStatisticTags = ({
                     label="中カテゴリー選択"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
@@ -358,6 +360,7 @@ const TaskListStatisticTags = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}

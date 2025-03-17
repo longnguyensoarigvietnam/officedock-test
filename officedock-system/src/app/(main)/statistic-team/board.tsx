@@ -286,7 +286,7 @@ const StatisticTeamBoard = () => {
             <Button
               onClick={() => {
                 router.push(
-                  `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${selectedOrganization?.value}`,
+                  `${pageRouters.STATISTIC_TEAM_TAG_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
                 );
               }}
               variant={'outline'}

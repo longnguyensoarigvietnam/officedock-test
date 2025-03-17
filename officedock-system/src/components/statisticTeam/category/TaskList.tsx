@@ -308,6 +308,7 @@ const TaskListTeamStatistic = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => handleSelectOrganization(data)}
@@ -338,6 +339,7 @@ const TaskListTeamStatistic = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
@@ -400,6 +402,7 @@ const TaskListTeamStatistic = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}

@@ -255,7 +255,6 @@ const TaskListStatisticTeamTags = ({
                       options={tagsOptions}
                       placeholder="集計対象のタグを選択"
                       className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                      labelClass="mt-[-3px]"
                       selectedOptions={selectedTags || []}
                       onChange={(selected) => {
                         let updatedTagIds = [];
@@ -307,8 +306,9 @@ const TaskListStatisticTeamTags = ({
                     label="チーム選択"
                     placeholder="-"
                     placeholderClass="!text-black text-sm font-normal"
-                    className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
+                    className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => handleSelectOrganization(data)}
@@ -337,8 +337,9 @@ const TaskListStatisticTeamTags = ({
                     label="大カテゴリー選択"
                     placeholder="-"
                     placeholderClass="!text-black text-sm font-normal"
-                    className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
+                    className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
@@ -368,8 +369,9 @@ const TaskListStatisticTeamTags = ({
                     label="中カテゴリー選択"
                     placeholder="-"
                     placeholderClass="!text-black text-sm font-normal"
-                    className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
+                    className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
@@ -399,8 +401,9 @@ const TaskListStatisticTeamTags = ({
                     label="小カテゴリー選択"
                     placeholder="-"
                     placeholderClass="!text-black text-sm font-normal"
-                    className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
+                    className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption='!text-sm'
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}

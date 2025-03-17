@@ -257,7 +257,10 @@ const Sidebar = ({ className }: Props) => {
                               className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                               onClick={() => {
                                 if (isHasTerm) return;
-
+                                const params = new URLSearchParams(
+                                  searchParams.toString(),
+                                );
+                                params.set('tabId', '0');
                                 if (
                                   item.href ===
                                   pageRouters.TASKS_MANAGEMENT.href
@@ -275,7 +278,7 @@ const Sidebar = ({ className }: Props) => {
                                     return;
                                   }
                                   {
-                                    router.push(item.href);
+                                    router.push(`${item.href}?${params.toString()}`);
                                   }
                                 }
                               }}>
@@ -490,31 +493,39 @@ const Sidebar = ({ className }: Props) => {
                                     return;
                                   }
                                   {
-                                    const mainOrganization = {
-                                      label:
-                                        authenticatedUser?.organizations.find(
-                                          (organization) => organization.isMain,
-                                        )?.name || '',
-                                      value:
-                                        authenticatedUser?.organizations.find(
-                                          (organization) => organization.isMain,
-                                        )?.id || '',
-                                    };
-                                    setSelectedOrganization({
-                                      label: mainOrganization.label,
-                                      value: mainOrganization.value,
-                                    });
-                                    const params = new URLSearchParams(
-                                      searchParams.toString(),
-                                    );
-                                    params.set(
-                                      'organization',
-                                      mainOrganization.value as string,
-                                    );
+                                    const organizationId =
+                                      searchParams.get('organization');
+                                    if (!organizationId) {
+                                      const mainOrganization = {
+                                        label:
+                                          authenticatedUser?.organizations.find(
+                                            (organization) =>
+                                              organization.isMain,
+                                          )?.name || '',
+                                        value:
+                                          authenticatedUser?.organizations.find(
+                                            (organization) =>
+                                              organization.isMain,
+                                          )?.id || '',
+                                      };
+                                      setSelectedOrganization({
+                                        label: mainOrganization.label,
+                                        value: mainOrganization.value,
+                                      });
 
-                                    router.push(
-                                      `${item.href}?${params.toString()}`,
-                                    );
+                                      const params = new URLSearchParams(
+                                        searchParams.toString(),
+                                      );
+                                      params.set(
+                                        'organization',
+                                        mainOrganization.value as string,
+                                      );
+                                      params.set('tabId', '1');
+
+                                      router.push(
+                                        `${item.href}?${params.toString()}`,
+                                      );
+                                    }
                                   }
                                 }
                               }}>
