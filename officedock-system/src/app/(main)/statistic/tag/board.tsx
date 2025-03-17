@@ -226,7 +226,7 @@ const StatisticTagBoard = () => {
             }}
             variant={'outline'}
             className={`!py-0 !px-0 font-bold w-[80px] h-7 
-              !rounded-[20px] text-xs   !text-[#A7B7C2] !border-[#A7B7C2]`}>
+              !rounded-[20px] text-xs !text-[#77858F] !bg-transparent !border-[#77858F]`}>
             カテゴリー
           </Button>
           <Button
@@ -249,6 +249,7 @@ const StatisticTagBoard = () => {
                 options={tagsOptions}
                 placeholder="集計対象のタグを選択"
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                labelClass="mt-[-3px]"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {
                   let updatedTagIds = [];

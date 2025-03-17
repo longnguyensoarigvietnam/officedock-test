@@ -23,7 +23,7 @@ const CategoryPage = () => {
             <Button
               variant='primary'
               className={`w-[152px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
-              共通業務カテゴリー登録
+              社内共通カテゴリー
             </Button>
           </Link>
 
@@ -31,7 +31,7 @@ const CategoryPage = () => {
             <Button
               variant='outline'
               className={`w-[152px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
-              業務カテゴリー階層
+              チームカテゴリー
             </Button>
           </Link>
         </div>
