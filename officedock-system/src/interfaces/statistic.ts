@@ -211,6 +211,7 @@ export interface StatisticsTagsType {
 export interface StatisticCategoryInfo {
   categoryId: number;
   tagId?: number;
+  tagName?: string;
   categoryName: string;
   duration: string;
   percent: number;

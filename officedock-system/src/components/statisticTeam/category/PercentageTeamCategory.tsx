@@ -202,11 +202,9 @@ const PercentageCategoryTeam = ({
         });
       }
       if (statisticTeamCategoryList.smallCategories) {
-        const color =
-          statisticTeamCategoryList.mediumCategories &&
-          statisticTeamCategoryList.mediumCategories.find(
-            (item) => item.categoryId === selectedMedium?.value,
-          );
+        const color = statisticTeamCategoryList.largeCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
         const smallChartData = processChartData(
           statisticTeamCategoryList.smallCategories,
           color?.categoryColor,

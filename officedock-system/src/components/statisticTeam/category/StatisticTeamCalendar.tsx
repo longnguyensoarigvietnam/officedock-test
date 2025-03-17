@@ -68,6 +68,7 @@ function StatisticTeamCalendar() {
       setDataEndDate(endDate);
     }
   }, [endDate, startDate]);
+
   useEffect(() => {
     if (isCheckCompare) {
       setIsDataCheckCompare(isCheckCompare);

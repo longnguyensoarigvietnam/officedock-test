@@ -16,6 +16,7 @@ interface FilterProps {
   fromDate: string | Date;
   largeCategoryId?: number | null;
   mediumCategoryId?: number | null;
+  smallCategoryId?: number | null;
   organizationIds?: string;
   totalDuration?: string;
   ordering: string;
@@ -53,6 +54,8 @@ const useStatisticTaskCompare = ({
       params.append('large_category_id', String(filter.largeCategoryId));
     if (filter?.mediumCategoryId)
       params.append('medium_category_id', String(filter.mediumCategoryId));
+    if (filter?.smallCategoryId)
+      params.append('small_category_id', String(filter.smallCategoryId));
     if (filter?.organizationIds)
       params.append('organization_ids', filter.organizationIds);
     if (filter?.tagIds)

@@ -199,10 +199,12 @@ const StatisticTagBoard = () => {
     );
 
     if (mediumCategory) {
-      const smallCategories = mediumCategory.SMALL.map((small) => ({
-        value: small.id,
-        label: small.name,
-      }));
+      const smallCategories =
+        mediumCategory.SMALL &&
+        mediumCategory.SMALL.map((small) => ({
+          value: small.id,
+          label: small.name,
+        }));
       setSmallOptions(smallCategories);
     } else {
       setSmallOptions([]);
@@ -309,6 +311,7 @@ const StatisticTagBoard = () => {
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
+          handleSelectSmall={handleSelectSmall}
         />
       ) : (
         <PercentageTags

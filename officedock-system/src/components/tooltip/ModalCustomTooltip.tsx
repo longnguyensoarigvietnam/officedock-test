@@ -70,32 +70,32 @@ const ModalCustomTooltip = ({
                     <span>{convertToJapaneseTime(item.duration)}</span>
                   </div>
                   <ul className="font-normal mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
-                    {isTeam
-                      ? option &&
-                        option.map((opt) => {
-                          const colorRandom = getRandomColor();
-                          return (
-                            <li
-                              key={opt.label}
-                              className="flex items-center justify-between">
-                              <div className="flex items-center">
-                                <div>
-                                  <AvatarIconWithDynamicColor
-                                    color={colorRandom}
-                                    size={30}
-                                  />
-                                </div>
-                                <span className="inline-block w-20 overflow-hidden whitespace-nowrap text-ellipsis">
-                                  {opt.label}
-                                </span>
+                    {isTeam ? (
+                      option &&
+                      option.map((opt) => {
+                        const colorRandom = getRandomColor();
+                        return (
+                          <li
+                            key={opt.label}
+                            className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div>
+                                <AvatarIconWithDynamicColor
+                                  color={colorRandom}
+                                  size={30}
+                                />
                               </div>
-                              <span>{opt.percent}%</span>
-                            </li>
-                          );
-                        })
-                      : option.map((opt) => (
-                          <li key={opt.label}>{opt.label}</li>
-                        ))}
+                              <span className="inline-block w-20 overflow-hidden whitespace-nowrap text-ellipsis">
+                                {opt.label}
+                              </span>
+                            </div>
+                            <span>{opt.percent}%</span>
+                          </li>
+                        );
+                      })
+                    ) : (
+                      <div></div>
+                    )}
                   </ul>
                   {!isTeam && (
                     <div className="mt-4 flex items-center justify-end">

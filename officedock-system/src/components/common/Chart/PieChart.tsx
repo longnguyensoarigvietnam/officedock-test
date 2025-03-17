@@ -47,6 +47,7 @@ const PieChart = ({
           colors?.map((color) => color.replace('1', '1')) ||
           defaultColors.map((color) => color.replace('1', '1')),
         borderWidth: 1,
+        hoverOffset: 0,
       },
     ],
   };
@@ -77,6 +78,12 @@ const PieChart = ({
           size: 10,
         },
       },
+    },
+    hover: {
+      mode: undefined,
+    },
+    interaction: {
+      mode: undefined,
     },
   };
 

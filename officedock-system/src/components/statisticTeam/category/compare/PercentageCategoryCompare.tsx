@@ -24,6 +24,7 @@ type Props = {
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
+  handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
 const PercentageTeamCategoryCompare = ({
@@ -35,6 +36,7 @@ const PercentageTeamCategoryCompare = ({
   statisticTeamCategoryList,
   handleSelectLarge,
   handleSelectMedium,
+  handleSelectSmall,
   handleSelectOrganization,
   removeTag,
 }: Props) => {
@@ -53,6 +55,7 @@ const PercentageTeamCategoryCompare = ({
     totalDurationSmallCompare,
     selectedTags,
     tagsOptions,
+    smallOptions,
     setSelectedTags,
   } = useContext(StatisticTeamStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -151,11 +154,6 @@ const PercentageTeamCategoryCompare = ({
         statisticTeamCategoryList.largeCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
-      const colorMedium =
-        statisticTeamCategoryList.mediumCategories &&
-        statisticTeamCategoryList.mediumCategories.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        );
       setDataChartLarge(
         mapCategoryData(statisticTeamCategoryList.largeCategories || []),
       );
@@ -168,7 +166,7 @@ const PercentageTeamCategoryCompare = ({
       setDataChartSmall(
         mapCategoryData(
           statisticTeamCategoryList.smallCategories || [],
-          colorMedium?.categoryColor,
+          color?.categoryColor,
         ),
       );
       setIsLoading(false);
@@ -183,11 +181,6 @@ const PercentageTeamCategoryCompare = ({
         statisticCategoryListTeamCompare.largeCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
-      const colorMedium =
-        statisticCategoryListTeamCompare.mediumCategories &&
-        statisticCategoryListTeamCompare.mediumCategories.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        );
       setDataChartLargeCompare(
         mapCategoryData(statisticCategoryListTeamCompare.largeCategories || []),
       );
@@ -200,7 +193,7 @@ const PercentageTeamCategoryCompare = ({
       setDataChartSmallCompare(
         mapCategoryData(
           statisticCategoryListTeamCompare.smallCategories || [],
-          colorMedium?.categoryColor,
+          color?.categoryColor,
         ),
       );
       setIsLoading(false);
@@ -327,6 +320,18 @@ const PercentageTeamCategoryCompare = ({
                           endDateCompare={endDateCompare}
                           dataCompare={dataChartLargeCompare}
                           handleClickTooltip={() => {}}
+                          handleClickChart={(data: number) => {
+                            if (data) {
+                              const select = largeOptions.find(
+                                (item) => item.value === data,
+                              );
+                              selectedOrganization &&
+                                handleSelectOrganization(selectedOrganization);
+                              if (select) {
+                                handleSelectLarge(select);
+                              }
+                            }
+                          }}
                         />
                       }
                     </div>
@@ -368,6 +373,18 @@ const PercentageTeamCategoryCompare = ({
                           totalDuration={totalDurationMedium}
                           totalDurationCompare={totalDurationMediumCompare}
                           handleClickTooltip={() => {}}
+                          handleClickChart={(data: number) => {
+                            if (data) {
+                              const select = mediumOptions.find(
+                                (item) => item.value === data,
+                              );
+                              selectedOrganization &&
+                                handleSelectOrganization(selectedOrganization);
+                              if (select) {
+                                handleSelectMedium(select);
+                              }
+                            }
+                          }}
                         />
                       }
                     </div>
@@ -409,6 +426,18 @@ const PercentageTeamCategoryCompare = ({
                           totalDuration={totalDurationSmall}
                           totalDurationCompare={totalDurationSmallCompare}
                           handleClickTooltip={() => {}}
+                          handleClickChart={(data: number) => {
+                            if (data) {
+                              const select = smallOptions.find(
+                                (item) => item.value === data,
+                              );
+                              selectedOrganization &&
+                                handleSelectOrganization(selectedOrganization);
+                              if (select) {
+                                handleSelectSmall(select);
+                              }
+                            }
+                          }}
                         />
                       }
                     </div>

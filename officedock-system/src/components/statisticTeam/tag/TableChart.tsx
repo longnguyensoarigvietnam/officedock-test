@@ -15,7 +15,6 @@ import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import { useMutation, useQueryClient } from 'react-query';
@@ -625,13 +624,6 @@ const TableChart = ({
                   }
                 }}
               />
-              <div className="flex items-center  w-3 h-[30px]">
-                <ImageRound
-                  className={`w-fit h-fit `}
-                  src="/icons/play-statistic.svg"
-                  name="icon chevron right"
-                />
-              </div>
             </div>
             <div className="ml-auto">
               <TagListInfo tagList={tagList} />
@@ -683,7 +675,6 @@ const TableChart = ({
     data: statisticTaskList,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 

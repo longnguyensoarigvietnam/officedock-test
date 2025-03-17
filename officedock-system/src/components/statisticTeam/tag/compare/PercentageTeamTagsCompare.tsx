@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
-import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
@@ -13,6 +12,7 @@ import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
+import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
 type Props = {
   startDate: Date;
@@ -26,6 +26,7 @@ type Props = {
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
+  handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
 const PercentageTeamTagsCompare = ({
@@ -39,6 +40,7 @@ const PercentageTeamTagsCompare = ({
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
+  handleSelectSmall,
 }: Props) => {
   const {
     largeOptions,
@@ -55,6 +57,7 @@ const PercentageTeamTagsCompare = ({
     totalDurationSmallCompare,
     selectedTags,
     tagsOptions,
+    smallOptions,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -128,8 +131,8 @@ const PercentageTeamTagsCompare = ({
     };
 
     const mappedMainItems = mainItems.map((item) => ({
-      id: item.categoryId,
-      label: item.categoryName,
+      id: item.tagId as number,
+      label: item.tagName || '',
       percentage: item.percent,
       color:
         item.categoryColor ||
@@ -421,6 +424,7 @@ const PercentageTeamTagsCompare = ({
                           startDateCompare={startDateCompare}
                           endDateCompare={endDateCompare}
                           dataCompare={dataChartLargeCompare}
+                          handleClickChart={(_data: number) => {}}
                           handleClickTooltip={(
                             id: number | null,
                             isCompare: boolean,
@@ -471,6 +475,18 @@ const PercentageTeamTagsCompare = ({
                           dataCompare={dataChartMediumCompare}
                           totalDuration={totalDurationMedium}
                           totalDurationCompare={totalDurationMediumCompare}
+                          handleClickChart={(data: number) => {
+                            if (data) {
+                              const select = mediumOptions.find(
+                                (item) => item.value === data,
+                              );
+                              selectedOrganization &&
+                                handleSelectOrganization(selectedOrganization);
+                              if (select) {
+                                handleSelectMedium(select);
+                              }
+                            }
+                          }}
                           handleClickTooltip={(
                             id: number | null,
                             isCompare: boolean,
@@ -521,6 +537,18 @@ const PercentageTeamTagsCompare = ({
                           dataCompare={dataChartSmallCompare}
                           totalDuration={totalDurationSmall}
                           totalDurationCompare={totalDurationSmallCompare}
+                          handleClickChart={(data: number) => {
+                            if (data) {
+                              const select = smallOptions.find(
+                                (item) => item.value === data,
+                              );
+                              selectedOrganization &&
+                                handleSelectOrganization(selectedOrganization);
+                              if (select) {
+                                handleSelectSmall(select);
+                              }
+                            }
+                          }}
                           handleClickTooltip={(
                             id: number | null,
                             isCompare: boolean,
@@ -542,9 +570,10 @@ const PercentageTeamTagsCompare = ({
         )}
       </div>
       {isShowModal && (
-        <ListTaskDetailStatisticModal
+        <ListTaskDetailStatisticTagModal
           open={isShowModal}
-          selectedTags={selectedTags}
+          selectedLarge={selectedLarge}
+          selectedMedium={selectedMedium}
           startDate={startDate}
           endDate={endDate}
           detailCategory={detailCategory}
@@ -556,9 +585,10 @@ const PercentageTeamTagsCompare = ({
         />
       )}
       {isShowModalCompare && (
-        <ListTaskDetailStatisticModal
+        <ListTaskDetailStatisticTagModal
           open={isShowModalCompare}
-          selectedTags={selectedTags}
+          selectedLarge={selectedLarge}
+          selectedMedium={selectedMedium}
           startDate={startDateCompare}
           endDate={endDateCompare}
           detailCategory={detailCategoryCompare}
