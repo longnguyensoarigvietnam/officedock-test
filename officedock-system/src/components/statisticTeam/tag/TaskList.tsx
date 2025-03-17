@@ -219,6 +219,9 @@ const TaskListStatisticTeamTags = ({
           {/* Line */}
           <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
           <div>
+            <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
+              表示させるメンバー
+            </p>
             <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[30px]">
               {listMemberTeam.map((member) => (
                 <div
@@ -311,12 +314,20 @@ const TaskListStatisticTeamTags = ({
                   />
                 </div>
               </div>
-              <div className="pb-1.5">
-                <ImageRound
-                  className={`w-fit h-fit `}
-                  src="/icons/drawer-blue.svg"
-                  name="icon chevron right"
-                />
+              <div className="">
+                {isCheckCompare ? (
+                  <ImageRound
+                    className={`w-[14px] h-fit pb-[6px] `}
+                    src="/icons/statistic-compare.svg"
+                    name="icon chevron right"
+                  />
+                ) : (
+                  <ImageRound
+                    className={`w-fit h-fit pb-[2px]`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                )}
               </div>
               {/* Large category */}
               <div className="w-1/4 ">
@@ -334,12 +345,20 @@ const TaskListStatisticTeamTags = ({
                   />
                 </div>
               </div>
-              <div className="pb-1.5">
-                <ImageRound
-                  className={`w-fit h-fit `}
-                  src="/icons/drawer-blue.svg"
-                  name="icon chevron right"
-                />
+              <div className="">
+                {isCheckCompare ? (
+                  <ImageRound
+                    className={`w-[14px] h-fit pb-[6px] `}
+                    src="/icons/statistic-compare.svg"
+                    name="icon chevron right"
+                  />
+                ) : (
+                  <ImageRound
+                    className={`w-fit h-fit pb-[2px]`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                )}
               </div>
               {/* Medium category */}
               <div className="w-1/4">
@@ -357,12 +376,20 @@ const TaskListStatisticTeamTags = ({
                   />
                 </div>
               </div>
-              <div className="pb-1.5">
-                <ImageRound
-                  className={`w-fit h-fit `}
-                  src="/icons/drawer-blue.svg"
-                  name="icon chevron right"
-                />
+              <div className="">
+                {isCheckCompare ? (
+                  <ImageRound
+                    className={`w-[14px] h-fit pb-[6px] `}
+                    src="/icons/statistic-compare.svg"
+                    name="icon chevron right"
+                  />
+                ) : (
+                  <ImageRound
+                    className={`w-fit h-fit pb-[2px]`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                )}
               </div>
               {/* Small category */}
               <div className="w-1/4">

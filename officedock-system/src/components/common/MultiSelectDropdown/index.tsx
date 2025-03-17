@@ -9,8 +9,10 @@ import Spinner from '../Spinner';
 import { OptionDropdownType } from '@interfaces/common';
 import { NO_DATA_AVAILABLE } from '@constants';
 import Checkbox from '../Checkbox';
+import ImageRound from '../ImageRound';
 
 type Props = {
+  isShowIconFilter?: boolean;
   label?: ReactNode;
   options: OptionDropdownType[];
   selectedOption?: OptionDropdownType;
@@ -37,6 +39,7 @@ const MultiSelectDropdown = ({
   options,
   placeholder,
   disabled = false,
+  isShowIconFilter = false,
   customLabel,
   className,
   labelClass,
@@ -149,38 +152,54 @@ const MultiSelectDropdown = ({
           {required && <span className="text-red-500"> *</span>}
         </label>
       )}
-      <div
-        className="h-full"
-        onClick={() => {
-          if (disabled) {
-            setIsOpen(false);
-          } else {
-            setIsOpen(true);
-          }
-        }}>
-        <div className="h-full">
-          <div
-            className={` h-full flex relative w-full cursor-default rounded border bg-white py-2.5  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-              disabled ? 'opacity-50 cursor-not-allowed' : ''
-            } ${valueClassName} `}>
-            <p
-              className={`block truncate ${!selected && 'text-gray-300'} text-left min-h-[24px] text-xs ${labelClass}`}>
-              {customLabel
-                ? customLabel
-                : placeholder || <div className="h-[22px]"></div>}
-            </p>
-            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-              <Image
-                src="/icons/arrow-down.svg"
-                alt="Arrow down"
-                width={16}
-                height={16}
-                className={`${isOpen ? 'rotate-180' : 'rotate-0'}`}
-              />
+      {isShowIconFilter ? (
+        <ImageRound
+          onClick={() => {
+            if (disabled) {
+              setIsOpen(false);
+            } else {
+              setIsOpen(true);
+            }
+          }}
+          className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
+          name="Sort icon"
+          src={`/icons/sort.svg`}
+        />
+      ) : (
+        <div
+          className="h-full"
+          onClick={() => {
+            if (disabled) {
+              setIsOpen(false);
+            } else {
+              setIsOpen(true);
+            }
+          }}>
+          <div className="h-full">
+            <div
+              className={` h-full flex relative w-full cursor-default rounded border bg-white py-2  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                disabled ? 'opacity-50 cursor-not-allowed' : ''
+              } ${valueClassName} `}>
+              <p
+                className={`block truncate ${!selected && 'text-gray-300'} text-left min-h-[24px] text-xs ${labelClass}`}>
+                {customLabel
+                  ? customLabel
+                  : placeholder || <div className="h-[22px]"></div>}
+              </p>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                <Image
+                  src="/icons/arrow-down.svg"
+                  alt="Arrow down"
+                  width={16}
+                  height={16}
+                  className={`${isOpen ? 'rotate-180' : 'rotate-0'}`}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
       {isOpen &&
         ReactDOM.createPortal(
           <div

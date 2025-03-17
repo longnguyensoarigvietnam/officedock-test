@@ -143,15 +143,19 @@ const PercentageTagsCompare = ({
   // Set data from category list
   useEffect(() => {
     if (statisticTagsList) {
-      const color = statisticTagsList.largeCategories.find(
-        (item) => item.categoryId === selectedLarge?.value,
-      );
+      const color =
+        statisticTagsList.largeCategories &&
+        statisticTagsList.largeCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       const colorMedium =
         statisticTagsList.mediumCategories &&
         statisticTagsList.mediumCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
-      setDataChartLarge(mapCategoryData(statisticTagsList.largeCategories));
+      setDataChartLarge(
+        mapCategoryData(statisticTagsList.largeCategories || []),
+      );
       setDataChartMedium(
         mapCategoryData(
           statisticTagsList.mediumCategories || [],
@@ -171,16 +175,18 @@ const PercentageTagsCompare = ({
   // Set data from category compare list
   useEffect(() => {
     if (statisticTagsCompareList) {
-      const color = statisticTagsCompareList.largeCategories.find(
-        (item) => item.categoryId === selectedLarge?.value,
-      );
+      const color =
+        statisticTagsCompareList.largeCategories &&
+        statisticTagsCompareList.largeCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       const colorMedium =
         statisticTagsCompareList.mediumCategories &&
         statisticTagsCompareList.mediumCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
       setDataChartLargeCompare(
-        mapCategoryData(statisticTagsCompareList.largeCategories),
+        mapCategoryData(statisticTagsCompareList.largeCategories || []),
       );
       setDataChartMediumCompare(
         mapCategoryData(
@@ -523,6 +529,7 @@ const PercentageTagsCompare = ({
       {isShowModal && (
         <ListTaskDetailStatisticModal
           open={isShowModal}
+          selectedTags={selectedTags}
           startDate={startDate}
           endDate={endDate}
           detailCategory={detailCategory}
@@ -536,6 +543,7 @@ const PercentageTagsCompare = ({
       {isShowModalCompare && (
         <ListTaskDetailStatisticModal
           open={isShowModalCompare}
+          selectedTags={selectedTags}
           startDate={startDateCompare}
           endDate={endDateCompare}
           detailCategory={detailCategoryCompare}

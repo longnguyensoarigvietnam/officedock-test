@@ -343,6 +343,7 @@ const AllocationCategory = memo(
               setIsShowModal(false);
             }}
             handleScroll={handleScroll}
+            selectedTags={[]}
           />
         )}
       </>

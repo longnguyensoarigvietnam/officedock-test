@@ -523,6 +523,7 @@ const PercentageTags = ({
           open={isShowModal}
           startDate={startDate}
           endDate={endDate}
+          selectedTags={selectedTags}
           detailCategory={detailCategory}
           selectedOrganization={selectedOrganization}
           onClose={() => {

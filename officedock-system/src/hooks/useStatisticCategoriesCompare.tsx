@@ -10,6 +10,7 @@ import { useContext } from 'react';
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { OptionDropdownType } from '@interfaces/common';
 
 interface FilterProps {
   isCompare: boolean;
@@ -18,7 +19,7 @@ interface FilterProps {
   largeCategoryId?: number;
   mediumCategoryId?: number;
   organizationIds?: string;
-  tagIds?: string;
+  tagIds?: OptionDropdownType[];
 }
 
 const useStatisticCategoriesCompare = ({
@@ -54,7 +55,7 @@ const useStatisticCategoriesCompare = ({
       filter?.organizationIds
         ? `&organization_ids=${filter.organizationIds}`
         : ''
-    }${filter?.tagIds ? `&tag_ids=${filter.tagIds}` : ''}`;
+    }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;

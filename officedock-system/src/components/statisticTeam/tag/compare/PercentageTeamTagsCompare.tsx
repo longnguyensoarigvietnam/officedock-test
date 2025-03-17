@@ -162,15 +162,19 @@ const PercentageTeamTagsCompare = ({
   // Set data from category list
   useEffect(() => {
     if (statisticTagsListTeam) {
-      const color = statisticTagsListTeam.largeCategories.find(
-        (item) => item.categoryId === selectedLarge?.value,
-      );
+      const color =
+        statisticTagsListTeam.largeCategories &&
+        statisticTagsListTeam.largeCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       const colorMedium =
         statisticTagsListTeam.mediumCategories &&
         statisticTagsListTeam.mediumCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
-      setDataChartLarge(mapCategoryData(statisticTagsListTeam.largeCategories));
+      setDataChartLarge(
+        mapCategoryData(statisticTagsListTeam.largeCategories || []),
+      );
       setDataChartMedium(
         mapCategoryData(
           statisticTagsListTeam.mediumCategories || [],
@@ -190,16 +194,18 @@ const PercentageTeamTagsCompare = ({
   // Set data from category compare list
   useEffect(() => {
     if (statisticTagsListTeamCompare) {
-      const color = statisticTagsListTeamCompare.largeCategories.find(
-        (item) => item.categoryId === selectedLarge?.value,
-      );
+      const color =
+        statisticTagsListTeamCompare.largeCategories &&
+        statisticTagsListTeamCompare.largeCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       const colorMedium =
         statisticTagsListTeamCompare.mediumCategories &&
         statisticTagsListTeamCompare.mediumCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
       setDataChartLargeCompare(
-        mapCategoryData(statisticTagsListTeamCompare.largeCategories),
+        mapCategoryData(statisticTagsListTeamCompare.largeCategories || []),
       );
       setDataChartMediumCompare(
         mapCategoryData(
@@ -548,6 +554,7 @@ const PercentageTeamTagsCompare = ({
       {isShowModal && (
         <ListTaskDetailStatisticModal
           open={isShowModal}
+          selectedTags={selectedTags}
           startDate={startDate}
           endDate={endDate}
           detailCategory={detailCategory}
@@ -561,6 +568,7 @@ const PercentageTeamTagsCompare = ({
       {isShowModalCompare && (
         <ListTaskDetailStatisticModal
           open={isShowModalCompare}
+          selectedTags={selectedTags}
           startDate={startDateCompare}
           endDate={endDateCompare}
           detailCategory={detailCategoryCompare}

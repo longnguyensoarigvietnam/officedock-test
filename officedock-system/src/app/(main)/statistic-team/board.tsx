@@ -19,6 +19,7 @@ import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeam
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import { getRandomColor } from '@utils';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 const StatisticTeamBoard = () => {
   const {
@@ -34,6 +35,10 @@ const StatisticTeamBoard = () => {
     selectedLarge,
     selectedMedium,
     selectedOrganization,
+    selectedTags,
+    tagsOptions,
+    setSelectedTags,
+    setTagsOptions,
     setSelectedLarge,
     setSelectedMedium,
     setSelectedOrganization,
@@ -62,6 +67,7 @@ const StatisticTeamBoard = () => {
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      tagIds: selectedTags,
     },
     onSuccess: (data) => {
       const organization = creationDataStatisticData?.organization;
@@ -93,6 +99,7 @@ const StatisticTeamBoard = () => {
         largeCategoryId: Number(selectedLarge?.value),
         mediumCategoryId: Number(selectedMedium?.value),
         isCompare: isCheckCompare,
+        tagIds: selectedTags,
       },
       onSuccess: (data) => {
         setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
@@ -121,6 +128,12 @@ const StatisticTeamBoard = () => {
           value: data.organization.id,
         });
       }
+      const optionsTagList = data.tags.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }));
+      setTagsOptions(optionsTagList);
+
       setListMemberTeam(
         data.members.map((member) => ({
           id: member.id,
@@ -200,6 +213,15 @@ const StatisticTeamBoard = () => {
 
   const handleSelectSmall = (data: OptionDropdownType) => {
     setSelectedSmall(data);
+  };
+
+  // Remove tags
+  const removeTag = (selected: OptionDropdownType) => {
+    const currentTagIds = selectedTags || [];
+    const updatedTagIds = currentTagIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
+    setSelectedTags(updatedTagIds);
   };
   const getParticipantAvatars = (
     participants: {
@@ -333,15 +355,59 @@ const StatisticTeamBoard = () => {
             <StatisticTeamCalendar />
           </div>
         </div>
-        <div className="flex items-center mt-8  gap-1 mb-[30px]">
-          <ImageRound
-            className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-            name="Sort icon"
-            src={`/icons/sort.svg`}
-          />
-          <span className="text-xs text-[#77858F] relative top-[2px]">
-            タグの絞り込み
-          </span>
+        <div className="flex items-center gap-2 mb-[14px] mt-6">
+          <div className="w-[240px]  relative">
+            <MultiSelectDropdown
+              isShowIconFilter
+              options={tagsOptions}
+              placeholder="集計対象のタグを選択"
+              className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+              selectedOptions={selectedTags || []}
+              onChange={(selected) => {
+                let updatedTagIds = [];
+                const currentTagIds = selectedTags || [];
+                const foundItemIndex = currentTagIds.findIndex(
+                  (tag) => tag.value == selected.value,
+                );
+                if (foundItemIndex == -1) {
+                  updatedTagIds = [...currentTagIds, selected];
+                } else {
+                  updatedTagIds = currentTagIds.filter(
+                    (tag) => tag.value != selected.value,
+                  );
+                }
+                setSelectedTags(updatedTagIds);
+              }}
+            />
+            {selectedTags.length === 0 && (
+              <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
+                タグの絞り込み
+              </span>
+            )}
+          </div>
+          <div className="relative right-[224px] top-[-8px]">
+            <div className="flex gap-2 ">
+              {selectedTags.map((item) => {
+                return (
+                  <div
+                    key={item.value}
+                    className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                    <span className="min-w-[32px] max-w-[80px] truncate">
+                      {item.label}
+                    </span>
+                    <ImageRound
+                      onClick={() => {
+                        removeTag(item);
+                      }}
+                      src={`/icons/close-white.svg`}
+                      name="close"
+                      className="w-fit h-fit cursor-pointer"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
       {/* Percentage of categories */}
@@ -356,6 +422,7 @@ const StatisticTeamBoard = () => {
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
+          removeTag={removeTag}
         />
       ) : (
         <PercentageTeamCategory
@@ -365,6 +432,7 @@ const StatisticTeamBoard = () => {
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
+          removeTag={removeTag}
         />
       )}
       {/* Task list */}
@@ -379,6 +447,7 @@ const StatisticTeamBoard = () => {
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           handleSelectSmall={handleSelectSmall}
+          removeTag={removeTag}
           creationDataStatisticData={creationDataStatisticData?.organization}
         />
       )}

@@ -52,6 +52,11 @@ const PercentageBarCompare = ({
           data.map((item, index) => (
             <div
               key={index}
+              onClick={() => {
+                if (item.id !== -1) {
+                  handleClickTooltip(item.id, false);
+                }
+              }}
               className="flex group relative flex-col justify-center items-center text-white text-center py-2"
               style={{
                 width: `${item.percentage * 2.8}px`,
@@ -188,6 +193,11 @@ const PercentageBarCompare = ({
           dataCompare.map((item, index) => (
             <div
               key={index}
+              onClick={() => {
+                if (item.id !== -1) {
+                  handleClickTooltip(item.id, true);
+                }
+              }}
               className="flex relative group flex-col justify-center items-center text-white text-center py-2"
               style={{
                 width: `${item.percentage * 2.8}px`,

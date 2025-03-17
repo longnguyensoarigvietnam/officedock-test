@@ -28,6 +28,7 @@ type Props = {
   open: boolean;
   startDate: Date;
   endDate: Date | null;
+  selectedTags: OptionDropdownType[];
   onClose: () => void;
   handleScroll: () => void;
 };
@@ -38,6 +39,7 @@ const ListTaskDetailStatisticModal = ({
   endDate,
   detailCategory,
   selectedOrganization,
+  selectedTags,
   onClose,
   handleScroll,
 }: Props) => {
@@ -68,6 +70,7 @@ const ListTaskDetailStatisticModal = ({
       totalDuration: detailCategory?.totalDuration,
       ordering: ordering,
       pageSize: PAGINATION_PAGE_SIZE_SMALL,
+      tagIds: selectedTags,
     },
     created_at: lastCreateAt,
     onSuccess: (data) => {

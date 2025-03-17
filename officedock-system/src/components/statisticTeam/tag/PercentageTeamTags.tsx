@@ -536,6 +536,7 @@ const PercentageTeamTags = ({
           onClose={() => {
             setIsShowModal(false);
           }}
+          selectedTags={selectedTags}
           handleScroll={handleScroll}
         />
       )}

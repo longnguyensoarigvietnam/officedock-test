@@ -34,6 +34,11 @@ interface ContextValue {
     fullName: string;
     color: string;
   }[];
+  // Tag
+  tagsOptions: OptionDropdownType[];
+  selectedTags: OptionDropdownType[];
+  setSelectedTags: Dispatch<SetStateAction<OptionDropdownType[]>>;
+  setTagsOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setSmallOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setMediumOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setLargeOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
@@ -105,6 +110,10 @@ const defaultValue: ContextValue = {
   setStartDateCompare: () => {},
   listMemberTeam: [],
   setListMemberTeam: () => {},
+  tagsOptions: [],
+  selectedTags: [],
+  setSelectedTags: () => {},
+  setTagsOptions: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -160,6 +169,9 @@ export const StatisticTeamStateProvider = ({
       new Date().setMonth(new Date().getMonth() - 1) + 24 * 60 * 60 * 1000,
     ),
   );
+  // Tag
+  const [tagsOptions, setTagsOptions] = useState<OptionDropdownType[]>([]);
+  const [selectedTags, setSelectedTags] = useState<OptionDropdownType[]>([]);
 
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
@@ -219,6 +231,10 @@ export const StatisticTeamStateProvider = ({
     setStartDateCompare,
     listMemberTeam,
     setListMemberTeam,
+    tagsOptions,
+    selectedTags,
+    setSelectedTags,
+    setTagsOptions,
   };
 
   return (
