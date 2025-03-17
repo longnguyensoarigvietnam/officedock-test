@@ -704,7 +704,7 @@ const ListTags = () => {
               classNameTextData="!text-xs"
               classActive="!text-sm"
               classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
-              labelOptionClass="!text-sm font-medium !pl-0.5 !border-b-[1px] !border-[#EBF1F7]"
+              labelOptionClass="!text-sm font-medium !pl-1.5"
               onChange={(e) => {
                 setPageSize(Number(e.value));
               }}
