@@ -414,7 +414,13 @@ const TaskListStatisticTags = ({
             <TableChart
               ordering={ordering}
               taskList={
-                isCheckCompare && isShowCompare ? taskListCompare : taskList
+                isCheckCompare && isShowCompare
+                  ? selectedTags.length > 0
+                    ? taskListCompare
+                    : taskListCompare
+                  : selectedTags.length > 0
+                    ? taskList
+                    : []
               }
               totalDuration={
                 isCheckCompare && isShowCompare

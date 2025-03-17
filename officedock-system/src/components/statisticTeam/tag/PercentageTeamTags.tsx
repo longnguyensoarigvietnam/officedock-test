@@ -188,12 +188,9 @@ const PercentageTeamTags = ({
         });
       }
       if (statisticTagsListTeam.mediumCategories) {
-        const color = statisticTagsListTeam.largeCategories.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        );
         const mediumChartData = processChartData(
           statisticTagsListTeam.mediumCategories,
-          color?.categoryColor,
+          '#2E9267',
         );
         setDataChartMedium(mediumChartData);
       } else {
@@ -209,14 +206,9 @@ const PercentageTeamTags = ({
         });
       }
       if (statisticTagsListTeam.smallCategories) {
-        const color =
-          statisticTagsListTeam.mediumCategories &&
-          statisticTagsListTeam.mediumCategories.find(
-            (item) => item.categoryId === selectedMedium?.value,
-          );
         const smallChartData = processChartData(
           statisticTagsListTeam.smallCategories,
-          color?.categoryColor,
+          '#2E9267',
         );
         setDataChartSmall(smallChartData);
       } else {

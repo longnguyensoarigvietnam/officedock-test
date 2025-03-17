@@ -119,6 +119,7 @@ const StatisticTagBoard = () => {
 
       setSelectedOrganization(result);
       setTagsOptions(optionsTagList);
+      setSelectedTags(optionsTagList);
       setListOptionsOrganization([
         ...data.organizations.map((org) => ({
           value: org.id || '',

@@ -194,29 +194,19 @@ const PercentageTeamTagsCompare = ({
   // Set data from category compare list
   useEffect(() => {
     if (statisticTagsListTeamCompare) {
-      const color =
-        statisticTagsListTeamCompare.largeCategories &&
-        statisticTagsListTeamCompare.largeCategories.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        );
-      const colorMedium =
-        statisticTagsListTeamCompare.mediumCategories &&
-        statisticTagsListTeamCompare.mediumCategories.find(
-          (item) => item.categoryId === selectedLarge?.value,
-        );
       setDataChartLargeCompare(
         mapCategoryData(statisticTagsListTeamCompare.largeCategories || []),
       );
       setDataChartMediumCompare(
         mapCategoryData(
           statisticTagsListTeamCompare.mediumCategories || [],
-          color?.categoryColor,
+          '#2E9267',
         ),
       );
       setDataChartSmallCompare(
         mapCategoryData(
           statisticTagsListTeamCompare.smallCategories || [],
-          colorMedium?.categoryColor,
+          '#2E9267',
         ),
       );
       setIsLoading(false);

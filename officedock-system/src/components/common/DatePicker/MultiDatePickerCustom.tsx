@@ -12,6 +12,7 @@ import ErrorMessage from '../ErrorMessage';
 import { DATE_FORMAT } from '@constants';
 import { ComponentSize, TimeOptionsType } from '@constants/enums';
 import './styles/multiPickerCustom.css';
+import { getDaysFromTimeOption } from '@utils/date';
 
 export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   isCalendarCompare?: boolean;
@@ -111,43 +112,6 @@ const MultiDatePickerCustom = ({
       setEndDate(initialEndDate);
     }
   }, [initialEndDate]);
-  const getDaysFromTimeOption = (
-    option: TimeOptionsType,
-    startDate?: Date,
-    isEndDate?: boolean,
-  ): number => {
-    switch (option) {
-      case TimeOptionsType.WEEK:
-        return 7;
-      case TimeOptionsType.MONTH:
-        if (startDate) {
-          const date = new Date(startDate);
-
-          if (isEndDate) {
-            date.setMonth(startDate.getMonth() - 1);
-            date.setDate(date.getDate());
-          } else {
-            date.setMonth(startDate.getMonth() + 1);
-            date.setDate(date.getDate());
-          }
-
-          return Math.abs(
-            Math.floor(
-              (date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-            ),
-          );
-        }
-        return 30;
-      case TimeOptionsType.HALF_YEAR:
-        return 182;
-      case TimeOptionsType.YEAR:
-        return 365;
-      case TimeOptionsType.MORE:
-        return 0;
-      default:
-        return 0;
-    }
-  };
 
   const handleChange = (dates: [Date, Date | null]) => {
     const [start, end] = dates;
@@ -199,6 +163,7 @@ const MultiDatePickerCustom = ({
       <div
         className={`relative multi-date flex items-center ${label ? 'mt-1' : ''}`}>
         <DatePickerUI
+          openToDate={startDate}
           scrollableYearDropdown
           disabledKeyboardNavigation={
             isTypeTime === TimeOptionsType.MORE ? false : isDisable
@@ -225,6 +190,7 @@ const MultiDatePickerCustom = ({
           startDate={startDate}
           endDate={endDate}
           selectsRange
+          minDate={isStartButtonClicked ? null : startDate}
           locale={customLocale}
           dateFormat={dateFormat}
           className={`w-full px-3.5 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}

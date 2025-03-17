@@ -6,7 +6,12 @@ import MultiDatePickerCustom from '@components/common/DatePicker/MultiDatePicker
 import ImageRound from '@components/common/ImageRound';
 
 import { TimeOptionsType } from '@constants/enums';
-import { formatShowDateJapanese } from '@utils/date';
+import {
+  formatShowDateJapanese,
+  getDaysFromTimeOption,
+  handleSetStartDateAfter,
+  handleSetStartDateBefore,
+} from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
@@ -24,6 +29,9 @@ function StatisticCalendar() {
     setEndDateCompare,
   } = useContext(StatisticStateContext);
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const buttonPrev = useRef<HTMLDivElement | null>(null);
+  const buttonNext = useRef<HTMLDivElement | null>(null);
+
   const { setIsLoading } = useContext(LoadingContext);
 
   const [isTypeTime, setIsTypeTime] = useState<TimeOptionsType>(
@@ -93,7 +101,12 @@ function StatisticCalendar() {
 
   useEffect(() => {
     const handleClickOutside = (event: any) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !buttonPrev.current?.contains(event.target) &&
+        !buttonNext.current?.contains(event.target)
+      ) {
         setIsOpenModal(false);
       }
     };
@@ -113,38 +126,46 @@ function StatisticCalendar() {
     const newStartDate: Date = new Date(endDate);
 
     switch (option) {
-      case TimeOptionsType.WEEK:
-        newStartDate.setDate(newStartDate.getDate() - 7);
+      case TimeOptionsType.WEEK: {
+        const days = getDaysFromTimeOption(option, endDate, true);
+        newStartDate.setDate(newStartDate.getDate() - days + 1);
         setIsDisableCalendar(true);
         if (isCheckCompare) {
           setIsDisableCalendarCompare(true);
         }
-
         break;
-      case TimeOptionsType.MONTH:
-        newStartDate.setMonth(newStartDate.getMonth() - 1);
+      }
+
+      case TimeOptionsType.MONTH: {
+        const days = getDaysFromTimeOption(option, endDate, true);
+        newStartDate.setDate(newStartDate.getDate() - days + 1);
         setIsDisableCalendar(true);
         if (isCheckCompare) {
           setIsDisableCalendarCompare(true);
         }
-
         break;
-      case TimeOptionsType.HALF_YEAR:
-        newStartDate.setMonth(newStartDate.getMonth() - 6);
+      }
+
+      case TimeOptionsType.HALF_YEAR: {
+        const days = getDaysFromTimeOption(option, endDate, true);
+        newStartDate.setDate(newStartDate.getDate() - days + 1);
         setIsDisableCalendar(true);
         if (isCheckCompare) {
           setIsDisableCalendarCompare(true);
         }
-
         break;
-      case TimeOptionsType.YEAR:
-        newStartDate.setFullYear(newStartDate.getFullYear() - 1);
+      }
+
+      case TimeOptionsType.YEAR: {
+        const days = getDaysFromTimeOption(option, endDate, true);
+        newStartDate.setDate(newStartDate.getDate() - days + 1);
         setIsDisableCalendar(true);
         if (isCheckCompare) {
           setIsDisableCalendarCompare(true);
         }
-
         break;
+      }
+
       case TimeOptionsType.MORE:
         setIsDisableCalendar(false);
         setIsEndButtonClicked(false);
@@ -155,9 +176,17 @@ function StatisticCalendar() {
           setIsStartButtonClickedCompare(false);
         }
         return;
+
+      default:
+        return;
     }
 
     setDataStartDate(newStartDate);
+    if (isDataCheckCompare) {
+      setDataStartDateCompare(
+        handleSetStartDateBefore(option, newStartDate) as Date,
+      );
+    }
   };
 
   // Change data time calendar
@@ -195,20 +224,84 @@ function StatisticCalendar() {
     setIsOpenModal(false);
   };
 
+  const handlePrevCalendar = () => {
+    const dataPrevDateStart = handleSetStartDateBefore(
+      isTypeTime,
+      dataStartDate,
+    );
+    setDataStartDate(dataPrevDateStart as Date);
+
+    if (dataEndDate) {
+      const dataPrevDateEnd = handleSetStartDateBefore(isTypeTime, dataEndDate);
+      setDataEndDate(dataPrevDateEnd as Date);
+    }
+    if (isDataCheckCompare) {
+      const dataPrevDateStartCompare = handleSetStartDateBefore(
+        isTypeTime,
+        dataStartDateCompare,
+      );
+      setDataStartDateCompare(dataPrevDateStartCompare as Date);
+
+      if (dataEndDateCompare) {
+        const dataPrevDateEndCompare = handleSetStartDateBefore(
+          isTypeTime,
+          dataEndDateCompare,
+        );
+        setDataEndDate(dataPrevDateEndCompare as Date);
+      }
+    }
+  };
+  const handleNextCalendar = () => {
+    const dataPrevDateStart = handleSetStartDateAfter(
+      isTypeTime,
+      dataStartDate,
+    );
+    setDataStartDate(dataPrevDateStart as Date);
+
+    if (dataEndDate) {
+      const dataPrevDateEnd = handleSetStartDateAfter(isTypeTime, dataEndDate);
+      setDataEndDate(dataPrevDateEnd as Date);
+    }
+    if (isDataCheckCompare) {
+      const dataPrevDateStartCompare = handleSetStartDateAfter(
+        isTypeTime,
+        dataStartDateCompare,
+      );
+      setDataStartDateCompare(dataPrevDateStartCompare as Date);
+
+      if (dataEndDateCompare) {
+        const dataPrevDateEndCompare = handleSetStartDateAfter(
+          isTypeTime,
+          dataEndDateCompare,
+        );
+        setDataEndDate(dataPrevDateEndCompare as Date);
+      }
+    }
+  };
+
   return (
     <div className="relative">
       {/* Input data */}
-      <div
-        onClick={() => {
-          setIsOpenModal(!isOpenModal);
-        }}
-        className="flex items-center gap-3">
-        <ImageRound
-          className="h-fit w-fit cursor-pointer"
-          src="/icons/left-statistic.svg"
-          name="left"
-        />
-        <div className="w-fit h-fit min-h-[34px] flex flex-col gap-[6px]  px-3 py-2 border border-[#77858F] bg-white rounded-md  ">
+      <div className="flex items-center gap-3">
+        <div
+          onClick={(e) => {
+            e.preventDefault();
+            setIsOpenModal(true);
+
+            handlePrevCalendar();
+          }}
+          ref={buttonPrev}>
+          <ImageRound
+            className="h-fit w-fit cursor-pointer"
+            src="/icons/left-statistic.svg"
+            name="left"
+          />
+        </div>
+        <div
+          onClick={() => {
+            setIsOpenModal(!isOpenModal);
+          }}
+          className="w-fit h-fit min-h-[34px] flex flex-col gap-[6px]  px-3 py-2 border border-[#77858F] bg-white rounded-md  ">
           <div className="flex items-center gap-[10px] h-5">
             <div className="text-xs font-medium text-[#0068B6] px-[14px] h-[18px] flex items-center  bg-[#EBF1F7] rounded-sm">
               {isTypeTime}
@@ -254,14 +347,21 @@ function StatisticCalendar() {
             </div>
           )}
         </div>
+        <div
+          ref={buttonNext}
+          onClick={(e) => {
+            e.preventDefault();
+            setIsOpenModal(true);
 
-        <ImageRound
-          className=" h-fit w-fit cursor-pointer"
-          src="/icons/right-statistic.svg"
-          name="right"
-        />
+            handleNextCalendar();
+          }}>
+          <ImageRound
+            className=" h-fit w-fit cursor-pointer"
+            src="/icons/right-statistic.svg"
+            name="right"
+          />
+        </div>
       </div>
-
       {/* Modal */}
 
       {isOpenModal && (
@@ -293,6 +393,8 @@ function StatisticCalendar() {
                 <div
                   onClick={() => {
                     setIsDisableCalendar(false);
+                    setIsEndButtonClickedCompare(false);
+
                     setIsStartButtonClicked(true);
                   }}
                   className="gap-3 flex items-center mt-[6px]">
@@ -307,6 +409,8 @@ function StatisticCalendar() {
                 <div
                   onClick={() => {
                     setIsDisableCalendar(false);
+                    setIsStartButtonClicked(false);
+
                     setIsEndButtonClicked(true);
                   }}
                   className="gap-3 flex items-center mt-[6px]">
@@ -318,7 +422,24 @@ function StatisticCalendar() {
                 <div className="mt-[30px]">
                   <Checkbox
                     isChecked={isDataCheckCompare}
-                    onChange={(e) => setIsDataCheckCompare(e)}
+                    onChange={(e) => {
+                      if (e) {
+                        const dateStart = handleSetStartDateBefore(
+                          isTypeTime,
+                          dataStartDate,
+                        );
+                        setDataStartDateCompare(dateStart as Date);
+                        if (dataEndDate) {
+                          const dateEnd = handleSetStartDateBefore(
+                            isTypeTime,
+                            dataEndDate,
+                          );
+                          setDataEndDateCompare(dateEnd as Date);
+                        }
+                      }
+
+                      setIsDataCheckCompare(e);
+                    }}
                     label="過去の期間と比較する"
                   />
                 </div>
