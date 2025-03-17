@@ -45,7 +45,7 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
   return menuItems.map((item) => {
     const updatedItem = { ...item };
 
-    if (updatedItem.href && pathname.startsWith(updatedItem.href)) {
+    if (updatedItem.href && pathname == (updatedItem.href)) {
       updatedItem.current = true;
     } else if (updatedItem.children) {
       const childWithMatchingHref = updatedItem.children.find((child) =>
@@ -261,6 +261,7 @@ const Sidebar = ({ className }: Props) => {
                                   searchParams.toString(),
                                 );
                                 params.set('tabId', '0');
+                                params.delete('organization');
                                 if (
                                   item.href ===
                                   pageRouters.TASKS_MANAGEMENT.href
@@ -269,6 +270,7 @@ const Sidebar = ({ className }: Props) => {
                                   setMemberSelected('');
                                   router.push(`${item.href}?view=day`);
                                 } else {
+                                  params.delete('view');
                                   if (
                                     pathname ===
                                       pageRouters.CHAT_MANAGEMENT.href &&
@@ -278,7 +280,9 @@ const Sidebar = ({ className }: Props) => {
                                     return;
                                   }
                                   {
-                                    router.push(`${item.href}?${params.toString()}`);
+                                    router.push(
+                                      `${item.href}?${params.toString()}`,
+                                    );
                                   }
                                 }
                               }}>
@@ -495,6 +499,9 @@ const Sidebar = ({ className }: Props) => {
                                   {
                                     const organizationId =
                                       searchParams.get('organization');
+                                    const params = new URLSearchParams(
+                                      searchParams.toString(),
+                                    );
                                     if (!organizationId) {
                                       const mainOrganization = {
                                         label:
@@ -513,19 +520,16 @@ const Sidebar = ({ className }: Props) => {
                                         value: mainOrganization.value,
                                       });
 
-                                      const params = new URLSearchParams(
-                                        searchParams.toString(),
-                                      );
                                       params.set(
                                         'organization',
                                         mainOrganization.value as string,
                                       );
-                                      params.set('tabId', '1');
-
-                                      router.push(
-                                        `${item.href}?${params.toString()}`,
-                                      );
                                     }
+                                    params.set('tabId', '1');
+
+                                    router.push(
+                                      `${item.href}?${params.toString()}`,
+                                    );
                                   }
                                 }
                               }}>
