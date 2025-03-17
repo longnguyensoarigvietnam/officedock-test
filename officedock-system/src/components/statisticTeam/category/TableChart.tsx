@@ -413,7 +413,7 @@ const TableChart = ({
             {/* Organization */}
             <div className="flex justify-between h-full relative rounded-md gap-2">
               <SingleSelect
-                className="border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
+                className="statistic-custom border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   listOptionsOrganization &&
                   listOptionsOrganization.find(

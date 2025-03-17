@@ -452,7 +452,7 @@ const TableChart = ({
             <div className="flex justify-between h-full relative rounded-md gap-2">
               <SingleSelect
                 showArrow
-                className="border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
+                className="statistic-custom border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   largeCategories &&
                   largeCategories.find(
@@ -518,7 +518,7 @@ const TableChart = ({
             {/* MEDIUM */}
             <div className="flex justify-between h-full relative rounded-md gap-2">
               <SingleSelect
-                className="border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
+                className="statistic-custom border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   mediumCategories &&
                   mediumCategories.find(
@@ -579,7 +579,7 @@ const TableChart = ({
             {/* SMALL */}
             <div className="flex justify-between h-full relative rounded-md gap-2">
               <SingleSelect
-                className="border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
+                className="statistic-custom border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   smallCategories &&
                   smallCategories.find(

@@ -271,7 +271,7 @@ const StatisticTeamTagBoard = () => {
               variant={'outline'}
               onClick={() => {
                 router.push(
-                  `${pageRouters.STATISTIC_TEAM_MANAGEMENT.href}?organization=${selectedOrganization?.value}`,
+                  `${pageRouters.STATISTIC_TEAM_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
                 );
               }}
               className={`!py-0 !px-0 font-bold w-[80px] h-7 
@@ -297,7 +297,6 @@ const StatisticTeamTagBoard = () => {
                 placeholder="集計対象のタグを選択"
                 options={tagsOptions}
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                labelClass="mt-[-3px]"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {
                   let updatedTagIds = [];

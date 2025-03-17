@@ -266,11 +266,10 @@ const Dropdown = ({
                                   />
                                 )}
                                 {option.imgComponent && (
-                                  <div className="w-4 mr-2">
+                                  <div className="w-4 mr-3">
                                     {option.imgComponent}
                                   </div>
                                 )}
-
                                 {isStatusDropdown && (
                                   <div
                                     className={`${statusStyles.find((item) => item.label == option.label)?.color} w-3 h-3 ml-2 rounded-full`}
