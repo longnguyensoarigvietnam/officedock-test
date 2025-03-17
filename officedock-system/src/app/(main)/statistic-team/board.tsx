@@ -290,7 +290,7 @@ const StatisticTeamBoard = () => {
                 );
               }}
               variant={'outline'}
-              className={`!text-[#A7B7C2] !border-[#A7B7C2] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
+              className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
               タグ
             </Button>
           </div>{' '}

@@ -275,7 +275,7 @@ const StatisticTeamTagBoard = () => {
                 );
               }}
               className={`!py-0 !px-0 font-bold w-[80px] h-7 
-              !rounded-[20px] text-xs !text-[#A7B7C2] !border-[#A7B7C2]`}>
+              !rounded-[20px] text-xs !text-[#77858F] !bg-transparent !border-[#77858F]`}>
               カテゴリー
             </Button>
             <Button
