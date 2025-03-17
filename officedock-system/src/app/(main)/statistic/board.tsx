@@ -235,7 +235,7 @@ const StatisticBoard = () => {
             }}
             variant={isMyTask ? 'primary' : 'outline'}
             className={`!py-0 !px-0 font-bold w-[80px] h-7 
-              !rounded-[20px] text-xs  ${isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'}`}>
+              !rounded-[20px] text-xs  ${isMyTask ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F]'}`}>
             カテゴリー
           </Button>
           <Button
@@ -243,7 +243,7 @@ const StatisticBoard = () => {
               router.push(pageRouters.STATISTIC_TAG_MANAGEMENT.href);
             }}
             variant={!isMyTask ? 'primary' : 'outline'}
-            className={`${!isMyTask ? '' : '!text-[#A7B7C2] !border-[#A7B7C2]'} !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
+            className={`${!isMyTask ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F]'} !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
             タグ
           </Button>
         </div>{' '}
@@ -257,6 +257,7 @@ const StatisticBoard = () => {
                 placeholder="-"
                 placeholderClass="!text-black text-sm font-normal"
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                classNameOption='text-sm'
                 selectedOption={selectedOrganization || undefined}
                 onChange={(data) => {
                   handleSelectOrganization(data);
@@ -276,6 +277,7 @@ const StatisticBoard = () => {
                 className="!h-[34px] !py-0 !rounded-md"
                 placeholder="-"
                 placeholderClass="!text-black text-sm font-normal"
+                classNameOption='text-sm'
                 selectedOption={selectedLarge || undefined}
                 onChange={(data) => handleSelectLarge(data)}
                 disabled={!selectedOrganization}
@@ -293,6 +295,7 @@ const StatisticBoard = () => {
                 className="!h-[34px] !py-0 !rounded-md"
                 placeholder="-"
                 placeholderClass="!text-black text-sm font-normal"
+                classNameOption='text-sm'
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}
                 onChange={(data) => handleSelectMedium(data)}

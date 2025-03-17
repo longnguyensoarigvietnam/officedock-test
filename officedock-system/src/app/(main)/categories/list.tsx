@@ -68,7 +68,7 @@ const ListCategory = () => {
     uuid: '',
     status: false,
     action: '',
-    showError: false
+    showError: false,
   });
   const categoryNameInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -131,7 +131,7 @@ const ListCategory = () => {
           name: '',
           status: false,
           action: '',
-          showError: false
+          showError: false,
         });
         refetchCategoryList();
       },
@@ -140,7 +140,7 @@ const ListCategory = () => {
         setSelectedCategoryToUpdate((prev) => {
           return {
             ...prev,
-            showError: true
+            showError: true,
           };
         });
       },
@@ -165,7 +165,7 @@ const ListCategory = () => {
           name: '',
           status: false,
           action: '',
-          showError: false
+          showError: false,
         });
         refetchCategoryList();
       },
@@ -174,7 +174,7 @@ const ListCategory = () => {
         setSelectedCategoryToUpdate((prev) => {
           return {
             ...prev,
-            showError: true
+            showError: true,
           };
         });
       },
@@ -232,15 +232,38 @@ const ListCategory = () => {
         !categoryNameInputRef.current.contains(event.target)
       ) {
         if (selectedCategoryToUpdate.action == ActionsModal.EDIT) {
-          editCategory({
-            uuid: selectedCategoryToUpdate.uuid,
-            name: selectedCategoryToUpdate.name,
-          });
+          const oldCategoryName =
+            dataCategories.find(
+              (category) => category.uuid == selectedCategoryToUpdate.uuid,
+            )?.name || '';
+          if (oldCategoryName.trim() != selectedCategoryToUpdate.name.trim()) {
+            editCategory({
+              uuid: selectedCategoryToUpdate.uuid,
+              name: selectedCategoryToUpdate.name,
+            });
+          } else {
+            setSelectedCategoryToUpdate({
+              uuid: '',
+              name: '',
+              status: false,
+              action: '',
+              showError: false,
+            });
+          }
         } else {
-          createCategory({
-            uuid: String(selectedCategoryToUpdate.uuid),
-            name: selectedCategoryToUpdate.name,
-          });
+          if (selectedCategoryToUpdate.name.trim()) {
+            createCategory({
+              uuid: String(selectedCategoryToUpdate.uuid),
+              name: selectedCategoryToUpdate.name,
+            });
+          } else {
+            setSelectedCategoryToUpdate((prev) => {
+              return {
+                ...prev,
+                showError: true,
+              };
+            });
+          }
         }
       }
     };
@@ -249,7 +272,7 @@ const ListCategory = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     selectedCategoryToUpdate.uuid,
     selectedCategoryToUpdate.name,
@@ -260,7 +283,7 @@ const ListCategory = () => {
     <Fragment>
       <div className="flex justify-between">
         <InputSearch
-          placeholder="業務カテゴリーを検索"
+          placeholder="カテゴリー名を検索"
           inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
           iconClassName="w-[14px] h-[14px]"
           onChange={(e) => {
@@ -275,9 +298,11 @@ const ListCategory = () => {
             <Button
               className="w-[100px] !p-0"
               onClick={() => {
-                const hasEmptyCategory = dataCategories.some((category) => category.name.trim() === '');
+                const hasEmptyCategory = dataCategories.some(
+                  (category) => category.name.trim() === '',
+                );
 
-                if(!hasEmptyCategory){
+                if (!hasEmptyCategory) {
                   const newUuid = uuidv4();
                   setDataCategories((prev) => [
                     {
@@ -293,7 +318,7 @@ const ListCategory = () => {
                     name: '',
                     status: true,
                     action: ActionsModal.CREATE,
-                    showError: false
+                    showError: false,
                   });
                 }
               }}>
@@ -311,7 +336,7 @@ const ListCategory = () => {
           <TableHeader className="!bg-[#F8FAFC]">
             <th className="text-left w-[calc((100%_-_680px))] max-w-[calc(100%_-_680px)] border-r-[1px] border-r-[#D2DBE1]">
               <span className="text-[#77858F] text-[12px] font-medium">
-                業務カテゴリー名
+                カテゴリー名
               </span>
             </th>
             <th className="text-left w-[140px] max-w-[140px] border-r-[1px] border-r-[#D2DBE1]">
@@ -326,7 +351,7 @@ const ListCategory = () => {
             </th>
             <th className="text-left w-[400px] max-w-[400px]">
               <span className="text-[#77858F] text-[12px] font-medium">
-                業務カテゴリー階層で登録されているチーム
+                登録されているチーム
               </span>
             </th>
           </TableHeader>
@@ -340,7 +365,7 @@ const ListCategory = () => {
                       selectedCategoryToUpdate.status ? (
                         <div ref={categoryNameInputRef} className="!w-[93%]">
                           <Input
-                            placeholder="入力してください"
+                            placeholder="カテゴリー名を入力"
                             className={`!border-[1px] !border-[#77858F] ${selectedCategoryToUpdate.showError && '!border-error'} w-full !text-sm !h-[34px]`}
                             defaultValue={element.name}
                             onChange={(e) => {
@@ -375,7 +400,7 @@ const ListCategory = () => {
                                   name: element.name,
                                   status: true,
                                   action: ActionsModal.EDIT,
-                                  showError: false
+                                  showError: false,
                                 });
                               }}
                             />
@@ -392,9 +417,31 @@ const ListCategory = () => {
                             name="Delete"
                             src={'/icons/delete-gray.svg'}
                             className="w-[13px] h-[15px] hover:cursor-pointer"
-                            onClick={() =>
-                              handleOpenDeleteCategoryModal(element)
-                            }
+                            onClick={() => {
+                              if (
+                                selectedCategoryToUpdate.uuid == element.uuid &&
+                                selectedCategoryToUpdate.status &&
+                                selectedCategoryToUpdate.action ==
+                                  ActionsModal.CREATE
+                              ) {
+                                setDataCategories((prev) => {
+                                  let updatedCategories = [...prev];
+                                  updatedCategories = updatedCategories.filter(
+                                    (category) => category.uuid != element.uuid,
+                                  );
+                                  return updatedCategories;
+                                });
+                                setSelectedCategoryToUpdate({
+                                  uuid: '',
+                                  name: '',
+                                  status: false,
+                                  action: '',
+                                  showError: false,
+                                });
+                              } else {
+                                handleOpenDeleteCategoryModal(element);
+                              }
+                            }}
                           />
                         ) : (
                           <div className="w-[13px]"></div>
@@ -470,6 +517,7 @@ const ListCategory = () => {
         open={openConfirmDeleteModal}
         name={selectedCategoryToDelete?.name || ''}
         type="業務カテゴリー"
+        message="紐づいている階層からも削除されます。"
         onConfirm={handleConfirmDeleteCategory}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />

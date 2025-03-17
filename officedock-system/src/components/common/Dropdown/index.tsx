@@ -265,16 +265,19 @@ const Dropdown = ({
                                     className="!w-4 !h-4"
                                   />
                                 )}
-                                <div className="w-4 mr-2">
-                                  {option.imgComponent}
-                                </div>
+                                {option.imgComponent && (
+                                  <div className="w-4 mr-2">
+                                    {option.imgComponent}
+                                  </div>
+                                )}
+
                                 {isStatusDropdown && (
                                   <div
                                     className={`${statusStyles.find((item) => item.label == option.label)?.color} w-3 h-3 ml-2 rounded-full`}
                                   />
                                 )}
                                 <p
-                                  className={` ${!openByDefault ? 'ml-3' : 'text-center w-full'}  block truncate  ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'}`}>
+                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'}  block truncate  ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'}`}>
                                   {option.label}
                                 </p>
                                 {isStatusDropdown && (

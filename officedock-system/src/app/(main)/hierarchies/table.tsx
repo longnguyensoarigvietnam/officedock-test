@@ -54,11 +54,9 @@ const HierarchyTable = ({
       (item) => `${item.large.value}-${item.medium.value}`,
     ),
   ).size;
-  const uniqueSmallCount = new Set(
-    hierarchyList.statisticCategories.map(
-      (item) => `${item.large.value}-${item.medium.value}-${item.small.value}`,
-    ),
-  ).size;
+  const uniqueSmallCount = hierarchyList.statisticCategories.filter(
+    (hierarchy) => hierarchy.small.showBy,
+  ).length;
 
   const columns = [
     {
@@ -176,77 +174,35 @@ const HierarchyTable = ({
     return lastIndexes;
   };
 
-  const findLastUniqueSmallIndexes = (data: rowDataType[]): number[] => {
-    const lastIndexes: number[] = [];
-    let currentLargeValue: number | string | null = null;
-    let currentMediumValue: number | string | null = null;
-    let smallIndexes: Record<number | string, number> = {}; // Track first occurrence of each small value
-    let lastSmallIndex: number | null = null;
-
-    for (let i = 0; i < data.length; i++) {
-      const { large, medium, small } = data[i];
-
-      // If the large category changes, reset tracking
-      if (large.value !== currentLargeValue) {
-        if (lastSmallIndex !== null) lastIndexes.push(lastSmallIndex); // Store last small index of previous large group
-        currentLargeValue = large.value;
-        currentMediumValue = null; // Reset medium tracking
-        smallIndexes = {}; // Reset for new large group
-        lastSmallIndex = null;
-      }
-
-      // If the medium category changes, reset tracking
-      if (medium.value !== currentMediumValue) {
-        if (lastSmallIndex !== null) lastIndexes.push(lastSmallIndex); // Store last small index of previous medium group
-        currentMediumValue = medium.value;
-        smallIndexes = {}; // Reset for new medium group
-        lastSmallIndex = null;
-      }
-
-      // Store only the first occurrence of each small
-      if (smallIndexes[small.value] === undefined) {
-        smallIndexes[small.value] = i;
-        lastSmallIndex = i; // Track last added small index
-      }
-    }
-
-    // Push the last tracked index of the final large/medium group
-    if (lastSmallIndex !== null) lastIndexes.push(lastSmallIndex);
-
-    return lastIndexes;
-  };
-
   const findLastUniqueLargeIndexes = (data: rowDataType[]): number[] => {
     const lastIndexes: number[] = [];
     let lastLargeIndex: number | null = null;
     let currentLargeValue: number | string | null = null;
-  
+
     for (let i = 0; i < data.length; i++) {
       const { large } = data[i];
-  
+
       // If the large category changes, store the last large index
       if (large.value !== currentLargeValue) {
         if (lastLargeIndex !== null) lastIndexes.push(lastLargeIndex);
         currentLargeValue = large.value;
       }
-  
+
       lastLargeIndex = i; // Always update with the last index of the large group
     }
-  
+
     // Push the last tracked index of the final large group
     if (lastLargeIndex !== null) lastIndexes.push(lastLargeIndex);
-  
+
     return lastIndexes;
   };
-  
-  // Call the function
-  const lastLargeIndexes = findLastUniqueLargeIndexes(hierarchyList.statisticCategories);
 
-  const lastMediumIndexes = findLastUniqueMediumIndexes(
+  // Call the function
+  const lastLargeIndexes = findLastUniqueLargeIndexes(
     hierarchyList.statisticCategories,
   );
 
-  const lastSmallIndexes = findLastUniqueSmallIndexes(
+  const lastMediumIndexes = findLastUniqueMediumIndexes(
     hierarchyList.statisticCategories,
   );
 
@@ -306,10 +262,10 @@ const HierarchyTable = ({
                   </td>
                 )}
                 <td
-                  className={`w-1/4 px-3 ${lastSmallIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
+                  className={`w-1/4 px-3 ${lastLargeIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
                   style={{ height: 'inherit' }}>
                   <p
-                    className={`text-sm h-full flex justify-left items-center font-medium py-4 ${!lastSmallIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} `}>
+                    className={`text-sm h-full flex justify-left items-center font-medium py-4 ${!lastLargeIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} `}>
                     {row.original.small.label || NO_OPTION_CATEGORY}
                   </p>
                 </td>

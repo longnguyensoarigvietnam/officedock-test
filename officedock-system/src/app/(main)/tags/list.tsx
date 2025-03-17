@@ -239,7 +239,6 @@ const ListTags = () => {
 
   // Get tag's detail
   const handleGetDataDetailTag = async (id: string) => {
-    setIsLoading(true);
     const { data: response } = await api.get(apiRouters.TAG_DETAIL(id));
     return response;
   };
@@ -429,13 +428,7 @@ const ListTags = () => {
         <p className="text-black font-medium text-[26px]">タグ管理</p>
         <div
           className="flex gap-2 items-center hover:cursor-pointer"
-          onClick={() => {
-            setCurrentPage(1);
-            setFilterRequest((prev) => ({
-              ...prev,
-              isHidden: !prev.isHidden,
-            }));
-          }}>
+          >
           {!filterRequest.isHidden && (
             <ImageRound
               name="Hide"
@@ -638,6 +631,7 @@ const ListTags = () => {
                           PermissionsSystem.TAG_UPDATE,
                         ) ? (
                           <div
+                            className='hidden'
                             onClick={() => {
                               handleConfirmToggleHideTag({
                                 id: element.id,

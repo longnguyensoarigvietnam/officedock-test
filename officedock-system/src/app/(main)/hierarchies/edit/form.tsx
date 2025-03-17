@@ -66,20 +66,37 @@ const OptionsBoxToAddCategory = ({
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState<{ top: number; left: number }>({
-    top: 0,
-    left: 0,
+    top: -9999,
+    left: -9999,
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   const handleToggle = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-      });
-    }
+    if (!buttonRef.current) return;
+
+    const buttonRect = buttonRef.current.getBoundingClientRect();
     setIsOpen((prev) => !prev);
+    setIsReady(false);
+
+    requestAnimationFrame(() => {
+      if (dropdownRef.current) {
+        const dropdownHeight = dropdownRef.current.offsetHeight;
+        const viewportHeight = window.innerHeight;
+
+        const shouldShowAbove =
+          buttonRect.bottom + dropdownHeight + 10 > viewportHeight;
+
+        setPosition({
+          top: shouldShowAbove
+            ? buttonRect.top - dropdownHeight - 10 + window.scrollY
+            : buttonRect.bottom + 10 + window.scrollY,
+          left: buttonRect.left + window.scrollX,
+        });
+
+        setIsReady(true);
+      }
+    });
   };
 
   useEffect(() => {
@@ -123,10 +140,12 @@ const OptionsBoxToAddCategory = ({
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed bg-[#5B6770] text-white rounded-[6px] w-[252px] py-[5px] text-sm font-medium shadow-lg z-50"
+            className="fixed bg-[#5B6770] text-white rounded-[6px] w-[252px] py-[5px] text-sm font-medium shadow-lg z-50 transition-opacity duration-200"
             style={{
-              top: `${position.top + 10}px`,
+              top: `${position.top}px`,
               left: `${position.left}px`,
+              opacity: isReady ? 1 : 0,
+              visibility: isReady ? 'visible' : 'hidden',
             }}>
             <button
               className="py-[10px] px-[14px] text-left w-full hover:bg-[#7D8A94] transition-all duration-200 rounded-[6px]"
@@ -315,18 +334,18 @@ const TableComponent = ({
   );
 
   const uniqueLargeCount = new Set(
-    hierarchyList.statisticCategories.map((item) => item.large.value),
+    hierarchyList.statisticCategories
+      .filter((hierarchy) => hierarchy.large.showBy)
+      .map((item) => item.large.value),
   ).size;
   const uniqueMediumCount = new Set(
-    hierarchyList.statisticCategories.map(
-      (item) => `${item.large.value}-${item.medium.value}`,
-    ),
+    hierarchyList.statisticCategories
+      .filter((hierarchy) => hierarchy.medium.showBy)
+      .map((item) => `${item.large.value}-${item.medium.value}`),
   ).size;
-  const uniqueSmallCount = new Set(
-    hierarchyList.statisticCategories.map(
-      (item) => `${item.large.value}-${item.medium.value}-${item.small.value}`,
-    ),
-  ).size;
+  const uniqueSmallCount = hierarchyList.statisticCategories.filter(
+    (hierarchy) => hierarchy.small.showBy,
+  ).length;
 
   const columns = [
     {
@@ -842,6 +861,18 @@ const TableComponent = ({
     };
   }, [newCategory.name, newCategory.uuid]);
 
+  const getExcludedSmalls = (currentRow: rowDataType) => {
+    return hierarchyList.statisticCategories
+      .filter(
+        (row) =>
+          row.id !== currentRow.id &&
+          row.large.value === currentRow.large.value &&
+          row.medium.value === currentRow.medium.value,
+      )
+      .map((row) => row.small.value)
+      .filter((value) => value !== '');
+  };
+
   return (
     <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]">
       <p className="text-[#77858F] text-[16px] font-medium my-2">
@@ -866,6 +897,7 @@ const TableComponent = ({
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row, rowIndex) => {
+            const excludedSmalls = getExcludedSmalls(row.original);
             return (
               <tr key={row.id} className="h-[1px]">
                 {largeRowspan[rowIndex] > 0 && (
@@ -1053,7 +1085,14 @@ const TableComponent = ({
                       ) : (
                         row.original.large.showBy == 'pulldown' && (
                           <TableDropdown
-                            options={categoryList}
+                            options={[
+                              ...categoryList.filter(
+                                (option) =>
+                                  option.value !== row.original.medium.value && // Prevent selecting the same as medium
+                                  option.value !== row.original.small.value && // Prevent selecting the same as small
+                                  option.value !== '',
+                              ),
+                            ]}
                             className="h-full !rounded-[5px] w-full flex-grow !border-[1px] !border-[#77858F]"
                             selectedOption={categoryList.find(
                               (element) =>
@@ -1121,17 +1160,29 @@ const TableComponent = ({
 
                                 updatedHierarchies.forEach(
                                   (updatedHierarchy) => {
-                                    const existingIndex =
-                                      updatedHierarchiesToUpdate.findIndex(
+                                    const key = `${updatedHierarchy.organizationId}|${
+                                      updatedHierarchy.largeStatisticCategory
+                                        ?.uuid || ''
+                                    }|${updatedHierarchy.mediumStatisticCategory?.uuid || ''}|${
+                                      updatedHierarchy.smallStatisticCategory
+                                        ?.uuid || ''
+                                    }`;
+
+                                    const alreadyExists =
+                                      updatedHierarchiesToUpdate.some(
                                         (item) =>
                                           item.organizationStatisticCategoryId ===
-                                          updatedHierarchy.organizationStatisticCategoryId,
+                                            updatedHierarchy.organizationStatisticCategoryId ||
+                                          `${item.organizationId}|${
+                                            item.largeStatisticCategory?.uuid ||
+                                            ''
+                                          }|${item.mediumStatisticCategory?.uuid || ''}|${
+                                            item.smallStatisticCategory?.uuid ||
+                                            ''
+                                          }` === key,
                                       );
-                                    if (existingIndex != -1) {
-                                      updatedHierarchiesToUpdate[
-                                        existingIndex
-                                      ] = updatedHierarchy;
-                                    } else {
+
+                                    if (!alreadyExists) {
                                       updatedHierarchiesToUpdate.push(
                                         updatedHierarchy,
                                       );
@@ -1233,7 +1284,7 @@ const TableComponent = ({
                                   const uniqueMap = new Map();
                                   const filteredStatisticCategories =
                                     newStatisticCategories.filter((item) => {
-                                      const key = `${item.large.value}|${item.medium.value}|${item.small?.value || ''}`;
+                                      const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
                                       if (uniqueMap.has(key)) return false;
                                       uniqueMap.set(key, true);
                                       return true;
@@ -1376,7 +1427,16 @@ const TableComponent = ({
                           row.original.medium.showBy == 'pulldown' && (
                             <div className={`w-full h-full`}>
                               <TableDropdown
-                                options={categoryList}
+                                options={[
+                                  ...categoryList.filter(
+                                    (option) =>
+                                      option.value !==
+                                        row.original.large.value &&
+                                      option.value !==
+                                        row.original.small.value &&
+                                      option.value !== '',
+                                  ),
+                                ]}
                                 className="h-full !rounded-[5px] w-full flex-grow !border-[1px] !border-[#77858F]"
                                 selectedOption={categoryList.find(
                                   (element) =>
@@ -1585,7 +1645,7 @@ const TableComponent = ({
                                       const filteredStatisticCategories =
                                         newStatisticCategories.filter(
                                           (item) => {
-                                            const key = `${item.large.value}|${item.medium.value}|${item.small?.value || ''}`;
+                                            const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
                                             if (uniqueMap.has(key))
                                               return false;
                                             uniqueMap.set(key, true);
@@ -1757,7 +1817,16 @@ const TableComponent = ({
                         row.original.small.showBy == 'pulldown' && (
                           <div className="w-full h-full">
                             <TableDropdown
-                              options={categoryList}
+                              options={[
+                                ...categoryList.filter(
+                                  (option) =>
+                                    !excludedSmalls.includes(option.value) && // Prevent selecting the same as other rows in the group
+                                    option.value !== row.original.large.value && // Prevent selecting the same as large
+                                    option.value !==
+                                      row.original.medium.value && // Prevent selecting the same as medium
+                                    option.value !== '',
+                                ),
+                              ]}
                               className="w-full !rounded-[5px] !border-[1px] !border-[#77858F]"
                               selectedOption={categoryList.find(
                                 (element) =>
@@ -1858,7 +1927,7 @@ const TableComponent = ({
                                     const uniqueMap = new Map();
                                     const filteredCategories =
                                       updatedCategories.filter((item) => {
-                                        const key = `${item.large.value}|${item.medium.value}|${item.small?.value || ''}`;
+                                        const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
                                         if (uniqueMap.has(key)) return false;
                                         uniqueMap.set(key, true);
                                         return true;

@@ -402,78 +402,105 @@ const EditHierarchyForm = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex justify-between items-center">
-        <div>
-          <Dropdown
-            options={organizationList}
-            className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
-            classNameOption='!w-[220px]'
-            selectedOption={organizationList.find(
-              (element) => element.value == selectedOrganizationOption.value,
-            )}
-            onChange={(e) => {
-              setSelectedOrganizationOption({
-                label: e.label,
-                value: e.value,
-              });
-            }}
-          />
+      <div className="sticky z-[21] top-[0px] pl-8 pt-8 pb-3 bg-[#EBF1F7]">
+        <div className="flex gap-4 items-center">
+          <p className="text-black font-medium text-[26px]">
+            業務カテゴリー設定
+          </p>
+          <div className="flex gap-2">
+            <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
+              <Button
+                variant="outline"
+                className={`w-[152px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                社内共通カテゴリー
+              </Button>
+            </Link>
+
+            <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
+              <Button
+                variant="primary"
+                className={`w-[152px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+                チームカテゴリー
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        <div className="flex justify-center gap-3 my-7 items-center">
-          <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
+        <div className="flex justify-between items-center">
+          <div>
+            <Dropdown
+              options={organizationList}
+              className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
+              classNameOption="!w-[220px]"
+              selectedOption={organizationList.find(
+                (element) => element.value == selectedOrganizationOption.value,
+              )}
+              onChange={(e) => {
+                setSelectedOrganizationOption({
+                  label: e.label,
+                  value: e.value,
+                });
+              }}
+            />
+          </div>
+
+          <div className="flex justify-center gap-3 my-7 items-center">
+            <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
+              <Button
+                variant="outline"
+                className="w-[100px] !p-0 !h-[34px]"
+                onClick={() => {
+                  setSelectedHierarchiesToUpdate([]);
+                  setSelectedHierarchiesToDelete([]);
+                }}>
+                キャンセル
+              </Button>
+            </Link>
             <Button
-              variant="outline"
+              variant="primary"
               className="w-[100px] !p-0 !h-[34px]"
-              onClick={() => {
-                setSelectedHierarchiesToUpdate([]);
-                setSelectedHierarchiesToDelete([]);
-              }}>
-              キャンセル
+              onClick={handleConfirmUpdateOrganizationCategoryHierarchy}>
+              保存
             </Button>
-          </Link>
-          <Button
-            variant="primary"
-            className="w-[100px] !p-0 !h-[34px]"
-            onClick={handleConfirmUpdateOrganizationCategoryHierarchy}>
-            保存
-          </Button>
+          </div>
         </div>
       </div>
-      {selectedOrganizationOption.value === '' ? (
-        <div className="flex flex-col gap-5">
-          {hierarchyList.map((data) => (
-            <TableComponent
-              key={data.id}
-              hierarchyList={data}
-              categoryList={categoryList}
-              dataOptionsSkill={
-                dataOptionsSkill.find(
-                  (options) => options.organizationId == data.id,
-                )?.skills || []
-              }
-              organizationName={data.name}
-              setHierarchyList={setHierarchyList}
-              setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
-              setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
-            />
-          ))}
-        </div>
-      ) : (
-        <TableComponent
-          hierarchyList={hierarchyList[0]}
-          organizationName={hierarchyList[0].name}
-          categoryList={categoryList}
-          dataOptionsSkill={
-            dataOptionsSkill.find(
-              (options) => options.organizationId == hierarchyList[0].id,
-            )?.skills || []
-          }
-          setHierarchyList={setHierarchyList}
-          setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
-          setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
-        />
-      )}
+      <div className="pl-8">
+        {selectedOrganizationOption.value === '' ? (
+          <div className="flex flex-col gap-5">
+            {hierarchyList.map((data) => (
+              <TableComponent
+                key={data.id}
+                hierarchyList={data}
+                categoryList={categoryList}
+                dataOptionsSkill={
+                  dataOptionsSkill.find(
+                    (options) => options.organizationId == data.id,
+                  )?.skills || []
+                }
+                organizationName={data.name}
+                setHierarchyList={setHierarchyList}
+                setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
+                setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
+              />
+            ))}
+          </div>
+        ) : (
+          <TableComponent
+            hierarchyList={hierarchyList[0]}
+            organizationName={hierarchyList[0].name}
+            categoryList={categoryList}
+            dataOptionsSkill={
+              dataOptionsSkill.find(
+                (options) => options.organizationId == hierarchyList[0].id,
+              )?.skills || []
+            }
+            setHierarchyList={setHierarchyList}
+            setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
+            setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
+          />
+        )}
+      </div>
     </div>
   );
 };

@@ -297,6 +297,7 @@ const StatisticTeamTagBoard = () => {
                 placeholder="集計対象のタグを選択"
                 options={tagsOptions}
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                labelClass="mt-[-3px]"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {
                   let updatedTagIds = [];
