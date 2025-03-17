@@ -640,6 +640,24 @@ class StatisticViewSet(BaseAPIViewSet):
                     organization_ids.append(int(id))
                 except ValueError:
                     continue
+        large_category_ids = []
+        medium_category_ids = []
+        if organization := Organization.objects.filter(
+            id=organization_ids[0]
+        ).first():
+            organization_categories = OrganizationDetailSerializer(
+                organization
+            ).data["statistic_categories"]
+            large_category_ids = [
+                item["large_statistic_category"]["id"]
+                for item in organization_categories
+                if "large_statistic_category" in item
+            ]
+            medium_category_ids = {
+                item["medium_statistic_category"]["id"]
+                for item in organization_categories
+                if item["medium_statistic_category"]
+            }
         if tag_ids_param:
             for id in tag_ids_param.split(","):
                 try:
@@ -659,13 +677,19 @@ class StatisticViewSet(BaseAPIViewSet):
                 categories__large_statistic_category__id=large_category_id
             )
         elif large_category_id == NONE_CATEGORY:
-            filters &= Q(categories__large_statistic_category__isnull=True)
+            filters &= Q(
+                categories__large_statistic_category__isnull=True
+            ) | ~Q(categories__large_statistic_category__in=large_category_ids)
         if medium_category_id and medium_category_id != NONE_CATEGORY:
             filters &= Q(
                 categories__medium_statistic_category__id=medium_category_id
             )
         elif medium_category_id == NONE_CATEGORY:
-            filters &= Q(categories__medium_statistic_category__isnull=True)
+            filters &= Q(
+                categories__medium_statistic_category__isnull=True
+            ) | ~Q(
+                categories__medium_statistic_category__in=medium_category_ids
+            )
         if small_category_id and small_category_id != NONE_CATEGORY:
             filters &= Q(
                 categories__small_statistic_category__id=small_category_id
@@ -709,8 +733,27 @@ class StatisticViewSet(BaseAPIViewSet):
                 merged_duration, key=lambda x: x[ordering], reverse=True
             )
 
+        def adjust_percentages(cards):
+            """
+            Adjust percentages
+            """
+            total_percent = sum(task["percent"] for task in cards)
+
+            if total_percent > 100:
+                excess = total_percent - 100
+                while excess > 0:
+                    # Find card have large percent
+                    max_task = max(cards, key=lambda x: x["percent"])
+                    if max_task["percent"] > 0:
+                        max_task["percent"] -= 1
+                        excess -= 1
+
+            return cards
+
         paginator = self.pagination_class()
-        paginated_data = paginator.paginate_queryset(merged_duration, request)
+        paginated_data = paginator.paginate_queryset(
+            adjust_percentages(merged_duration), request
+        )
 
         return paginator.get_paginated_response(paginated_data)
 
@@ -1064,16 +1107,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         large_category_id = request.query_params.get("large_category_id")
         medium_category_id = request.query_params.get("medium_category_id")
         instance = self.get_object()
-        organization_categories = OrganizationDetailSerializer(instance).data[
-            "statistic_categories"
-        ]
-        categories = transform_statistic_categories(organization_categories)
-        large_categories = (
-            cat[TaskCategoryTypes.LARGE.value]
-            for cat in categories
-            if cat.get(TaskCategoryTypes.LARGE.value) is not None
-        )
-        large_category_ids = [item["id"] for item in large_categories]
         users = instance.users.all()
         from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
         end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
@@ -1087,13 +1120,12 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     tag_ids.append(int(id))
                 except ValueError:
                     continue
-        if large_category_ids:
+        if instance:
             tasks, events = get_list_models(
                 start_of_day,
                 end_of_day,
                 organizations=[instance],
                 tags=tag_ids,
-                large_categories=large_category_ids,
             )
 
             total_duration, category_list = process_per_user(
