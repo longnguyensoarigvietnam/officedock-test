@@ -15,6 +15,7 @@ interface Props {
   totalDuration: string;
   totalDurationCompare: string;
   handleClickTooltip: (id: number | null, isCompare: boolean) => void;
+  handleClickChart: (data: number) => void;
 }
 
 const PercentageBarCompareTeam = ({
@@ -26,7 +27,7 @@ const PercentageBarCompareTeam = ({
   endDateCompare,
   totalDuration,
   totalDurationCompare,
-  handleClickTooltip,
+  handleClickChart,
 }: Props) => {
   return (
     <div>
@@ -55,7 +56,7 @@ const PercentageBarCompareTeam = ({
               key={index}
               onClick={() => {
                 if (item.id !== -1) {
-                  handleClickTooltip(item.id, false);
+                  handleClickChart(item.id);
                 }
               }}
               className="flex group relative flex-col justify-center items-center text-white text-center py-2"
@@ -180,7 +181,7 @@ const PercentageBarCompareTeam = ({
               key={index}
               onClick={() => {
                 if (item.id !== -1) {
-                  handleClickTooltip(item.id, false);
+                  handleClickChart(item.id);
                 }
               }}
               className="flex relative group flex-col justify-center items-center text-white text-center py-2"

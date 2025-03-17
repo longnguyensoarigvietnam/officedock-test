@@ -676,7 +676,7 @@ export function lightenColor(color: string | null, percent: number): string {
       hex = hex
         .split('')
         .map((x) => x + x)
-        .join(''); // #abc -> #aabbcc
+        .join('');
     }
     const num = parseInt(hex, 16);
     return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
@@ -685,12 +685,19 @@ export function lightenColor(color: string | null, percent: number): string {
   const rgbToHex = ([r, g, b]: [number, number, number]): string =>
     `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 
+  const adjustBrightness = (percent: number): number => {
+    return 100 - (100 - percent) / 2;
+  };
+
   const mixWithWhite = (
     rgb: [number, number, number],
     percent: number,
   ): [number, number, number] =>
     rgb.map((c) =>
-      Math.round(c * (percent / 100) + 255 * (1 - percent / 100)),
+      Math.round(
+        c * (adjustBrightness(percent) / 100) +
+          255 * (1 - adjustBrightness(percent) / 100),
+      ),
     ) as [number, number, number];
 
   return rgbToHex(mixWithWhite(hexToRgb(color || defaultColor), percent));

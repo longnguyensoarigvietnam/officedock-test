@@ -200,10 +200,12 @@ const StatisticTeamBoard = () => {
     );
 
     if (mediumCategory) {
-      const smallCategories = mediumCategory.SMALL.map((small) => ({
-        value: small.id,
-        label: small.name,
-      }));
+      const smallCategories =
+        mediumCategory.SMALL &&
+        mediumCategory.SMALL.map((small) => ({
+          value: small.id,
+          label: small.name,
+        }));
       setSmallOptions(smallCategories);
     } else {
       setSmallOptions([]);
@@ -423,6 +425,7 @@ const StatisticTeamBoard = () => {
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           removeTag={removeTag}
+          handleSelectSmall={handleSelectSmall}
         />
       ) : (
         <PercentageTeamCategory

@@ -8,7 +8,6 @@ import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { pageRouters } from '@constants/routers';
-import StatisticTeamCalendar from '@components/statisticTeam/category/StatisticTeamCalendar';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
@@ -20,6 +19,7 @@ import PercentageTeamTagsCompare from '@components/statisticTeam/tag/compare/Per
 import TaskListStatisticTeamTags from '@components/statisticTeam/tag/TaskList';
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
 import useStatisticTagsTeamCompare from '@hooks/useStatisticTagsTeamCompare';
+import StatisticTeamCalendar from '@components/statisticTeam/tag/StatisticTeamCalendar';
 
 const StatisticTeamTagBoard = () => {
   const {
@@ -131,6 +131,7 @@ const StatisticTeamTagBoard = () => {
         value: item.id,
       }));
       setTagsOptions(optionsTagList);
+      setSelectedTags(optionsTagList);
     },
   });
 
@@ -199,10 +200,12 @@ const StatisticTeamTagBoard = () => {
     );
 
     if (mediumCategory) {
-      const smallCategories = mediumCategory.SMALL.map((small) => ({
-        value: small.id,
-        label: small.name,
-      }));
+      const smallCategories =
+        mediumCategory.SMALL &&
+        mediumCategory.SMALL.map((small) => ({
+          value: small.id,
+          label: small.name,
+        }));
       setSmallOptions(smallCategories);
     } else {
       setSmallOptions([]);
@@ -356,6 +359,7 @@ const StatisticTeamTagBoard = () => {
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
+          handleSelectSmall={handleSelectSmall}
         />
       ) : (
         <PercentageTeamTags

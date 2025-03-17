@@ -12,10 +12,10 @@ import {
 } from '@interfaces/statistic';
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
-import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import { EventWorkCategory } from '@constants/enums';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
+import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
 type Props = {
   startDate: Date;
@@ -138,22 +138,24 @@ const PercentageTeamTags = ({
         getRandomColor(),
     );
     // Get list label
-    const listLabel = categories.map((label) => label.categoryName);
+    const listLabel = categories.map((label) => label.tagName || '');
     // Get list value
     const listValueActualChart = categories.map((item) =>
       convertToJapaneseTime(item.duration),
     );
     // Get list options
-    const listDataOptions = categories.map((item) =>
-      item.tasks.slice(0, 6).map((task) => ({
-        label: task.title,
-      })),
+    const listDataOptions = categories.map(
+      (item) =>
+        item.tasks &&
+        item.tasks.slice(0, 6).map((task) => ({
+          label: task.title,
+        })),
     );
     // Get list id
     const listDataIds = categories.map((item) => item.tagId as number);
     // Get list duration
-    const listDuration = categories.map((item) =>
-      item.tasks.map((task) => task.totalDuration),
+    const listDuration = categories.map(
+      (item) => item.tasks && item.tasks.map((task) => task.totalDuration),
     );
 
     return {
@@ -392,13 +394,7 @@ const PercentageTeamTags = ({
                           handleClickTooltip={(id: number | null) => {
                             handleClickTooltip(id, EventWorkCategory.LARGE);
                           }}
-                          handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value) {
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
-                              handleSelectLarge(data);
-                            }
-                          }}
+                          handleClickChart={(_data: OptionDropdownType) => {}}
                         />
                       ) : (
                         <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
@@ -520,16 +516,17 @@ const PercentageTeamTags = ({
         )}
       </div>
       {isShowModal && (
-        <ListTaskDetailStatisticModal
+        <ListTaskDetailStatisticTagModal
           open={isShowModal}
           startDate={startDate}
           endDate={endDate}
-          detailCategory={detailCategory}
           selectedOrganization={selectedOrganization}
           onClose={() => {
             setIsShowModal(false);
           }}
-          selectedTags={selectedTags}
+          selectedLarge={selectedLarge}
+          selectedMedium={selectedMedium}
+          detailCategory={detailCategory}
           handleScroll={handleScroll}
         />
       )}

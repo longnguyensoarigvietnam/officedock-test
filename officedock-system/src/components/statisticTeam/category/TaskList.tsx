@@ -118,6 +118,8 @@ const TaskListTeamStatistic = ({
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
+
       page: currentPage,
       totalDuration: getTotalDuration(),
       ordering: ordering,
@@ -142,6 +144,8 @@ const TaskListTeamStatistic = ({
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
+
       page: currentPage,
       totalDuration: getTotalDurationCompare(),
       ordering: ordering,

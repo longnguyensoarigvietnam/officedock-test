@@ -195,10 +195,12 @@ const StatisticBoard = () => {
     );
 
     if (mediumCategory) {
-      const smallCategories = mediumCategory.SMALL.map((small) => ({
-        value: small.id,
-        label: small.name,
-      }));
+      const smallCategories =
+        mediumCategory.SMALL &&
+        mediumCategory.SMALL.map((small) => ({
+          value: small.id,
+          label: small.name,
+        }));
       setSmallOptions(smallCategories);
     } else {
       setSmallOptions([]);
@@ -256,7 +258,7 @@ const StatisticBoard = () => {
                 placeholder="-"
                 placeholderClass="!text-black text-sm font-normal"
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                classNameOption='text-sm'
+                classNameOption="text-sm"
                 selectedOption={selectedOrganization || undefined}
                 onChange={(data) => {
                   handleSelectOrganization(data);
@@ -276,7 +278,7 @@ const StatisticBoard = () => {
                 className="!h-[34px] !py-0 !rounded-md"
                 placeholder="-"
                 placeholderClass="!text-black text-sm font-normal"
-                classNameOption='text-sm'
+                classNameOption="text-sm"
                 selectedOption={selectedLarge || undefined}
                 onChange={(data) => handleSelectLarge(data)}
                 disabled={!selectedOrganization}
@@ -294,7 +296,7 @@ const StatisticBoard = () => {
                 className="!h-[34px] !py-0 !rounded-md"
                 placeholder="-"
                 placeholderClass="!text-black text-sm font-normal"
-                classNameOption='text-sm'
+                classNameOption="text-sm"
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}
                 onChange={(data) => handleSelectMedium(data)}
@@ -376,6 +378,7 @@ const StatisticBoard = () => {
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
+          handleSelectSmall={handleSelectSmall}
         />
       ) : (
         <PercentageCategory

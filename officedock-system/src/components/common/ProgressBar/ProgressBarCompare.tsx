@@ -14,6 +14,7 @@ interface Props {
   totalDuration: string;
   totalDurationCompare: string;
   handleClickTooltip: (id: number | null, isCompare: boolean) => void;
+  handleClickChart: (data: number) => void;
 }
 
 const PercentageBarCompare = ({
@@ -26,6 +27,7 @@ const PercentageBarCompare = ({
   totalDuration,
   totalDurationCompare,
   handleClickTooltip,
+  handleClickChart,
 }: Props) => {
   return (
     <div>
@@ -54,7 +56,7 @@ const PercentageBarCompare = ({
               key={index}
               onClick={() => {
                 if (item.id !== -1) {
-                  handleClickTooltip(item.id, false);
+                  handleClickChart(item.id);
                 }
               }}
               className="flex group relative flex-col justify-center items-center text-white text-center py-2"
@@ -104,15 +106,6 @@ const PercentageBarCompare = ({
                                 formatTimeToJapanese(mergeItem.duration)}
                             </span>
                           </div>
-                          <ul>
-                            {mergeItem.tasks.map((item, index) => (
-                              <li
-                                key={index}
-                                className="break-all text-start line-clamp-3 text-[#77858F] text-sm font-normal]">
-                                {item.title}
-                              </li>
-                            ))}
-                          </ul>
                           <div className="flex w-full justify-end mt-3">
                             <div
                               onClick={() => {
@@ -195,7 +188,7 @@ const PercentageBarCompare = ({
               key={index}
               onClick={() => {
                 if (item.id !== -1) {
-                  handleClickTooltip(item.id, true);
+                  handleClickChart(item.id);
                 }
               }}
               className="flex relative group flex-col justify-center items-center text-white text-center py-2"
