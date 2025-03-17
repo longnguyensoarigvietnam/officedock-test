@@ -232,25 +232,71 @@ def aggregate_durations(
                 category_name = card[name_key]
                 category_id = card[id_key]
                 break
+        organization_statistic_cats = (
+            OrganizationsStatisticCategories.objects.filter(
+                organization_id=organization_id,
+            )
+        )
         if not large_category_id and not medium_category_id:
             category_color = (
-                OrganizationsStatisticCategories.objects.filter(
-                    organization_id=organization_id,
+                organization_statistic_cats.filter(
                     large_statistic_category__id=category_id,
                 )
                 .values_list("color", flat=True)
                 .first()
             )
         duration = card["duration"]
-        if category_name in category_dict:
-            category_dict[category_name]["duration"] += duration
+        if not large_category_id and not medium_category_id:
+            key = category_name if category_color else "empty_category"
         else:
-            category_dict[category_name] = {
-                "category_id": category_id,
-                "category_name": category_name,
-                "category_color": category_color,
-                "duration": duration,
-            }
+            key = category_name
+
+        if key in category_dict:
+            category_dict[key]["duration"] += duration
+        else:
+            if not large_category_id and not medium_category_id:
+                category_dict[key] = {
+                    "category_id": category_id if category_color else None,
+                    "category_name": category_name
+                    if category_color
+                    else NONE_CATEGORY,
+                    "category_color": category_color
+                    if category_color
+                    else CategoryColors.GRAY.value,
+                    "duration": duration,
+                }
+            else:
+                check_medium_category_exists = (
+                    large_category_id
+                    and not medium_category_id
+                    and not organization_statistic_cats.filter(
+                        large_statistic_category__id=large_category_id,
+                        medium_statistic_category__id=category_id,
+                    ).exists()
+                )
+                check_small_category_exists = (
+                    large_category_id
+                    and medium_category_id
+                    and not organization_statistic_cats.filter(
+                        large_statistic_category__id=large_category_id,
+                        medium_statistic_category__id=medium_category_id,
+                        small_statistic_category__id=category_id,
+                    ).exists()
+                )
+                if check_medium_category_exists or check_small_category_exists:
+                    category_dict["empty_category"] = {
+                        "category_id": None,
+                        "category_name": NONE_CATEGORY,
+                        "category_color": CategoryColors.GRAY.value,
+                        "duration": duration,
+                    }
+                else:
+                    category_dict[key] = {
+                        "category_id": category_id,
+                        "category_name": category_name,
+                        "category_color": category_color,
+                        "duration": duration,
+                    }
 
     if task_without_large_durations:
         if category_dict.get("empty_category") is None:
