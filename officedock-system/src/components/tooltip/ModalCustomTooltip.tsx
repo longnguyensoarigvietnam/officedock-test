@@ -71,7 +71,8 @@ const ModalCustomTooltip = ({
                   </div>
                   <ul className="font-normal mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
                     {isTeam
-                      ? option.map((opt) => {
+                      ? option &&
+                        option.map((opt) => {
                           const colorRandom = getRandomColor();
                           return (
                             <li
@@ -141,7 +142,8 @@ const ModalCustomTooltip = ({
             </div>
             <ul className="font-normal mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
               {isTeam
-                ? option.map((opt) => {
+                ? option &&
+                  option.map((opt) => {
                     const colorRandom = getRandomColor();
                     return (
                       <li

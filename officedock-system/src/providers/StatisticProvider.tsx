@@ -29,6 +29,11 @@ interface ContextValue {
   startDate: Date;
   endDateCompare: Date | null;
   startDateCompare: Date;
+  // Tag
+  tagsOptions: OptionDropdownType[];
+  selectedTags: OptionDropdownType[];
+  setSelectedTags: Dispatch<SetStateAction<OptionDropdownType[]>>;
+  setTagsOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setSmallOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setMediumOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setLargeOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
@@ -89,6 +94,10 @@ const defaultValue: ContextValue = {
   setStartDate: () => {},
   setEndDateCompare: () => {},
   setStartDateCompare: () => {},
+  tagsOptions: [],
+  selectedTags: [],
+  setSelectedTags: () => {},
+  setTagsOptions: () => {},
 };
 
 export const StatisticStateContext = createContext<ContextValue>(defaultValue);
@@ -144,6 +153,10 @@ export const StatisticStateProvider = ({
     ),
   );
 
+  // Tag
+  const [tagsOptions, setTagsOptions] = useState<OptionDropdownType[]>([]);
+  const [selectedTags, setSelectedTags] = useState<OptionDropdownType[]>([]);
+
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
   const [startDateCompare, setStartDateCompare] = useState<Date>(
@@ -191,6 +204,10 @@ export const StatisticStateProvider = ({
     setStartDate,
     setEndDateCompare,
     setStartDateCompare,
+    tagsOptions,
+    selectedTags,
+    setSelectedTags,
+    setTagsOptions,
   };
 
   return (

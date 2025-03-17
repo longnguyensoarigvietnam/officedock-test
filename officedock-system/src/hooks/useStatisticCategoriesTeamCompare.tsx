@@ -1,13 +1,14 @@
 'use client';
 
 import { useQuery } from 'react-query';
+import { AxiosError } from 'axios';
 import { useSession } from 'next-auth/react';
 
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
-import { AxiosError } from 'axios';
+import { OptionDropdownType } from '@interfaces/common';
 
 interface FilterProps {
   isCompare: boolean;
@@ -16,7 +17,7 @@ interface FilterProps {
   largeCategoryId?: number;
   mediumCategoryId?: number;
   organizationIds?: string;
-  tagIds?: string;
+  tagIds?: OptionDropdownType[];
 }
 
 const useStatisticCategoriesTeamCompare = ({
@@ -46,7 +47,7 @@ const useStatisticCategoriesTeamCompare = ({
       filter?.mediumCategoryId
         ? `&medium_category_id=${filter.mediumCategoryId}`
         : ''
-    }${filter?.tagIds ? `&tag_ids=${filter.tagIds}` : ''}`;
+    }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;

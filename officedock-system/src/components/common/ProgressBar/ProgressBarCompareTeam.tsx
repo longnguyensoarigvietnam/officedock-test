@@ -54,7 +54,9 @@ const PercentageBarCompareTeam = ({
             <div
               key={index}
               onClick={() => {
-                handleClickTooltip(item.id, false);
+                if (item.id !== -1) {
+                  handleClickTooltip(item.id, false);
+                }
               }}
               className="flex group relative flex-col justify-center items-center text-white text-center py-2"
               style={{
@@ -177,7 +179,9 @@ const PercentageBarCompareTeam = ({
             <div
               key={index}
               onClick={() => {
-                handleClickTooltip(item.id, false);
+                if (item.id !== -1) {
+                  handleClickTooltip(item.id, false);
+                }
               }}
               className="flex relative group flex-col justify-center items-center text-white text-center py-2"
               style={{

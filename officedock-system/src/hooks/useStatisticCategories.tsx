@@ -11,6 +11,7 @@ import { apiRouters } from '@constants/routers';
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
 import { AxiosError } from 'axios';
+import { OptionDropdownType } from '@interfaces/common';
 
 interface FilterProps {
   endDate: string | Date;
@@ -18,7 +19,7 @@ interface FilterProps {
   largeCategoryId?: number;
   mediumCategoryId?: number;
   organizationIds?: string;
-  tagIds?: string;
+  tagIds?: OptionDropdownType[];
 }
 
 const useStatisticCategories = ({
@@ -54,7 +55,7 @@ const useStatisticCategories = ({
       filter?.organizationIds
         ? `&organization_ids=${filter.organizationIds}`
         : ''
-    }${filter?.tagIds ? `&tag_ids=${filter.tagIds}` : ''}`;
+    }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
     const { data } = await api.get<StatisticsCategories[]>(apiUrl);
     return data;

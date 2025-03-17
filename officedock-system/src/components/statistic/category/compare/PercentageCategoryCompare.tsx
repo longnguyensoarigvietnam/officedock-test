@@ -12,6 +12,7 @@ import { EventWorkCategory } from '@constants/enums';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 type Props = {
   startDate: Date;
@@ -24,6 +25,7 @@ type Props = {
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
+  removeTag: (selected: OptionDropdownType) => void;
 };
 
 const PercentageCategoryCompare = ({
@@ -33,6 +35,7 @@ const PercentageCategoryCompare = ({
   endDateCompare,
   statisticCategoryCompareList,
   statisticCategoryList,
+  removeTag,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
@@ -50,6 +53,9 @@ const PercentageCategoryCompare = ({
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
+    selectedTags,
+    tagsOptions,
+    setSelectedTags,
   } = useContext(StatisticStateContext);
   const { setIsLoading } = useContext(LoadingContext);
 
@@ -137,15 +143,19 @@ const PercentageCategoryCompare = ({
   // Set data from category list
   useEffect(() => {
     if (statisticCategoryList) {
-      const color = statisticCategoryList.largeCategories.find(
-        (item) => item.categoryId === selectedLarge?.value,
-      );
+      const color =
+        statisticCategoryList.largeCategories &&
+        statisticCategoryList.largeCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       const colorMedium =
         statisticCategoryList.mediumCategories &&
         statisticCategoryList.mediumCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
-      setDataChartLarge(mapCategoryData(statisticCategoryList.largeCategories));
+      setDataChartLarge(
+        mapCategoryData(statisticCategoryList.largeCategories || []),
+      );
       setDataChartMedium(
         mapCategoryData(
           statisticCategoryList.mediumCategories || [],
@@ -165,16 +175,18 @@ const PercentageCategoryCompare = ({
   // Set data from category compare list
   useEffect(() => {
     if (statisticCategoryCompareList) {
-      const color = statisticCategoryCompareList.largeCategories.find(
-        (item) => item.categoryId === selectedLarge?.value,
-      );
+      const color =
+        statisticCategoryCompareList.largeCategories &&
+        statisticCategoryCompareList.largeCategories.find(
+          (item) => item.categoryId === selectedLarge?.value,
+        );
       const colorMedium =
         statisticCategoryCompareList.mediumCategories &&
         statisticCategoryCompareList.mediumCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
       setDataChartLargeCompare(
-        mapCategoryData(statisticCategoryCompareList.largeCategories),
+        mapCategoryData(statisticCategoryCompareList.largeCategories || []),
       );
       setDataChartMediumCompare(
         mapCategoryData(
@@ -296,15 +308,59 @@ const PercentageCategoryCompare = ({
                 カテゴリーの割合
               </span>
             </div>
-            <div className="flex items-center gap-1 ">
-              <ImageRound
-                className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-                name="Sort icon"
-                src={`/icons/sort.svg`}
-              />
-              <span className="text-xs text-[#77858F] relative top-[2px]">
-                タグの絞り込み
-              </span>
+            <div className="flex items-center gap-2">
+              <div className="w-[240px]  relative">
+                <MultiSelectDropdown
+                  isShowIconFilter
+                  options={tagsOptions}
+                  placeholder="集計対象のタグを選択"
+                  className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
+                  selectedOptions={selectedTags || []}
+                  onChange={(selected) => {
+                    let updatedTagIds = [];
+                    const currentTagIds = selectedTags || [];
+                    const foundItemIndex = currentTagIds.findIndex(
+                      (tag) => tag.value == selected.value,
+                    );
+                    if (foundItemIndex == -1) {
+                      updatedTagIds = [...currentTagIds, selected];
+                    } else {
+                      updatedTagIds = currentTagIds.filter(
+                        (tag) => tag.value != selected.value,
+                      );
+                    }
+                    setSelectedTags(updatedTagIds);
+                  }}
+                />
+                {selectedTags.length === 0 && (
+                  <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
+                    タグの絞り込み
+                  </span>
+                )}
+              </div>
+              <div className="relative right-[224px] top-0">
+                <div className="flex gap-2 ">
+                  {selectedTags.map((item) => {
+                    return (
+                      <div
+                        key={item.value}
+                        className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                        <span className="min-w-[32px] max-w-[80px] truncate">
+                          {item.label}
+                        </span>
+                        <ImageRound
+                          onClick={() => {
+                            removeTag(item);
+                          }}
+                          src={`/icons/close-white.svg`}
+                          name="close"
+                          className="w-fit h-fit cursor-pointer"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
           <ImageRound
@@ -485,12 +541,14 @@ const PercentageCategoryCompare = ({
           onClose={() => {
             setIsShowModal(false);
           }}
+          selectedTags={selectedTags}
           handleScroll={handleScroll}
         />
       )}
       {isShowModalCompare && (
         <ListTaskDetailStatisticModal
           open={isShowModalCompare}
+          selectedTags={selectedTags}
           startDate={startDateCompare}
           endDate={endDateCompare}
           detailCategory={detailCategoryCompare}

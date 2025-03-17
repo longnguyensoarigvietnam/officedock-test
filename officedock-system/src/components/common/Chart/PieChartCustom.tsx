@@ -162,11 +162,13 @@ const PieChartCustom = ({
       const optionsId =
         listIdData && listIdData.length > 0 ? listIdData[dataIndex] : '';
 
-      handleClickChart &&
-        handleClickChart({
-          label: label,
-          value: optionsId || '',
-        });
+      if (optionsId !== -1) {
+        handleClickChart &&
+          handleClickChart({
+            label: label,
+            value: optionsId || '',
+          });
+      }
     }
   };
 

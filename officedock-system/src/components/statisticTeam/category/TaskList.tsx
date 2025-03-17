@@ -15,6 +15,7 @@ import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
 import TableChart from './TableChart';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 type Props = {
   isCheckCompare: boolean;
@@ -27,6 +28,7 @@ type Props = {
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
+  removeTag: (selected: OptionDropdownType) => void;
 };
 
 const TaskListTeamStatistic = ({
@@ -40,6 +42,7 @@ const TaskListTeamStatistic = ({
   handleSelectMedium,
   handleSelectSmall,
   handleSelectOrganization,
+  removeTag,
 }: Props) => {
   const {
     smallOptions,
@@ -57,6 +60,9 @@ const TaskListTeamStatistic = ({
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
+    tagsOptions,
+    selectedTags,
+    setSelectedTags,
   } = useContext(StatisticTeamStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
@@ -117,6 +123,7 @@ const TaskListTeamStatistic = ({
       ordering: ordering,
       pageSize: pageSize,
       user_id: selectedMember as number,
+      tagIds: selectedTags,
     },
     onSuccess: (data) => {
       if (data) {
@@ -139,6 +146,7 @@ const TaskListTeamStatistic = ({
       totalDuration: getTotalDurationCompare(),
       ordering: ordering,
       pageSize: pageSize,
+      tagIds: selectedTags,
       isCompare: isCheckCompare && isShowCompare,
       user_id: selectedMember as number,
     },
@@ -193,15 +201,59 @@ const TaskListTeamStatistic = ({
               タスク一覧
             </span>
           </div>
-          <div className="flex items-center gap-1 ">
-            <ImageRound
-              className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-              name="Sort icon"
-              src={`/icons/sort.svg`}
-            />
-            <span className="text-xs text-[#77858F] relative top-[2px]">
-              タグの絞り込み
-            </span>
+          <div className="flex items-center gap-2">
+            <div className="w-[240px]  relative">
+              <MultiSelectDropdown
+                isShowIconFilter
+                options={tagsOptions}
+                placeholder="集計対象のタグを選択"
+                className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
+                selectedOptions={selectedTags || []}
+                onChange={(selected) => {
+                  let updatedTagIds = [];
+                  const currentTagIds = selectedTags || [];
+                  const foundItemIndex = currentTagIds.findIndex(
+                    (tag) => tag.value == selected.value,
+                  );
+                  if (foundItemIndex == -1) {
+                    updatedTagIds = [...currentTagIds, selected];
+                  } else {
+                    updatedTagIds = currentTagIds.filter(
+                      (tag) => tag.value != selected.value,
+                    );
+                  }
+                  setSelectedTags(updatedTagIds);
+                }}
+              />
+              {selectedTags.length === 0 && (
+                <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
+                  タグの絞り込み
+                </span>
+              )}
+            </div>
+            <div className="relative right-[224px] top-0">
+              <div className="flex gap-2 ">
+                {selectedTags.map((item) => {
+                  return (
+                    <div
+                      key={item.value}
+                      className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className="min-w-[32px] max-w-[80px] truncate">
+                        {item.label}
+                      </span>
+                      <ImageRound
+                        onClick={() => {
+                          removeTag(item);
+                        }}
+                        src={`/icons/close-white.svg`}
+                        name="close"
+                        className="w-fit h-fit cursor-pointer"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
         <ImageRound
@@ -220,6 +272,9 @@ const TaskListTeamStatistic = ({
           {/* Line */}
           <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
           <div className="">
+            <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
+              表示させるメンバー
+            </p>
             <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[10px]">
               {listMemberTeam.map((member) => (
                 <div
@@ -259,12 +314,20 @@ const TaskListTeamStatistic = ({
                   />
                 </div>
               </div>
-              <div className="pb-1.5">
-                <ImageRound
-                  className={`w-fit h-fit `}
-                  src="/icons/drawer-blue.svg"
-                  name="icon chevron right"
-                />
+              <div className="">
+                {isCheckCompare ? (
+                  <ImageRound
+                    className={`w-[14px] h-fit pb-[6px] `}
+                    src="/icons/statistic-compare.svg"
+                    name="icon chevron right"
+                  />
+                ) : (
+                  <ImageRound
+                    className={`w-fit h-fit pb-[2px]`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                )}
               </div>
               {/* Large category */}
               <div className="w-1/4 ">
@@ -282,12 +345,20 @@ const TaskListTeamStatistic = ({
                   />
                 </div>
               </div>
-              <div className="pb-1.5">
-                <ImageRound
-                  className={`w-fit h-fit `}
-                  src="/icons/drawer-blue.svg"
-                  name="icon chevron right"
-                />
+              <div className="">
+                {isCheckCompare ? (
+                  <ImageRound
+                    className={`w-[14px] h-fit pb-[6px] `}
+                    src="/icons/statistic-compare.svg"
+                    name="icon chevron right"
+                  />
+                ) : (
+                  <ImageRound
+                    className={`w-fit h-fit pb-[2px]`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                )}
               </div>
               {/* Medium category */}
               <div className="w-1/4">
@@ -305,12 +376,20 @@ const TaskListTeamStatistic = ({
                   />
                 </div>
               </div>
-              <div className="pb-1.5">
-                <ImageRound
-                  className={`w-fit h-fit `}
-                  src="/icons/drawer-blue.svg"
-                  name="icon chevron right"
-                />
+              <div className="">
+                {isCheckCompare ? (
+                  <ImageRound
+                    className={`w-[14px] h-fit pb-[6px] `}
+                    src="/icons/statistic-compare.svg"
+                    name="icon chevron right"
+                  />
+                ) : (
+                  <ImageRound
+                    className={`w-fit h-fit pb-[2px]`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                )}
               </div>
               {/* Small category */}
               <div className="w-1/4">

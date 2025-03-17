@@ -273,12 +273,20 @@ const TaskListStatisticTags = ({
                   />
                 </div>
               </div>
-              <div className="pb-1.5">
-                <ImageRound
-                  className={`w-fit h-fit `}
-                  src="/icons/drawer-blue.svg"
-                  name="icon chevron right"
-                />
+              <div className="">
+                {isCheckCompare ? (
+                  <ImageRound
+                    className={`w-[14px] h-fit pb-[6px] `}
+                    src="/icons/statistic-compare.svg"
+                    name="icon chevron right"
+                  />
+                ) : (
+                  <ImageRound
+                    className={`w-fit h-fit pb-[2px]`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                )}
               </div>
               {/* Large category */}
               <div className="w-1/4 ">
@@ -296,12 +304,20 @@ const TaskListStatisticTags = ({
                   />
                 </div>
               </div>
-              <div className="pb-1.5">
-                <ImageRound
-                  className={`w-fit h-fit `}
-                  src="/icons/drawer-blue.svg"
-                  name="icon chevron right"
-                />
+              <div className="">
+                {isCheckCompare ? (
+                  <ImageRound
+                    className={`w-[14px] h-fit pb-[6px] `}
+                    src="/icons/statistic-compare.svg"
+                    name="icon chevron right"
+                  />
+                ) : (
+                  <ImageRound
+                    className={`w-fit h-fit pb-[2px]`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                )}
               </div>
               {/* Medium category */}
               <div className="w-1/4">
@@ -317,12 +333,20 @@ const TaskListStatisticTags = ({
                   />
                 </div>
               </div>
-              <div className="pb-1.5">
-                <ImageRound
-                  className={`w-fit h-fit `}
-                  src="/icons/drawer-blue.svg"
-                  name="icon chevron right"
-                />
+              <div className="">
+                {isCheckCompare ? (
+                  <ImageRound
+                    className={`w-[14px] h-fit pb-[6px] `}
+                    src="/icons/statistic-compare.svg"
+                    name="icon chevron right"
+                  />
+                ) : (
+                  <ImageRound
+                    className={`w-fit h-fit pb-[2px]`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                )}
               </div>
               {/* Small category */}
               <div className="w-1/4">
