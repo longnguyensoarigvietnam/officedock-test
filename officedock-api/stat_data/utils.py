@@ -153,8 +153,11 @@ def get_category_durations(
             & Q(categories__medium_statistic_category__isnull=True)
         )
         if medium_category_id:
-            without_large = without_large.filter(
-                Q(categories__medium_statistic_category__id=medium_category_id)
+            without_large = queryset.filter(
+                Q(categories__large_statistic_category__id=large_category_id)
+                & Q(
+                    categories__medium_statistic_category__id=medium_category_id
+                )
                 & Q(categories__small_statistic_category__isnull=True)
             )
     without_large = without_large.annotate(duration=Sum("duration")).values(

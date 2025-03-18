@@ -841,7 +841,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 annotate_duration(tasks, start_of_day, end_of_day),
                 annotate_duration(events, start_of_day, end_of_day),
             )
-            data["total_duration"] = format_duration(total_duration)
+            data["large_total_duration"] = format_duration(total_duration)
 
             # Process large categories
             if category_list:
@@ -871,6 +871,7 @@ class StatisticViewSet(BaseAPIViewSet):
                         annotate_duration(events, start_of_day, end_of_day),
                         large_category_id,
                     )
+                    data["medium_total_duration"] = format_duration(duration)
                     data["medium_categories"] = process_categories(
                         category_list,
                         duration,
@@ -898,6 +899,7 @@ class StatisticViewSet(BaseAPIViewSet):
                             large_category_id=large_category_id,
                             medium_category_id=medium_category_id,
                         )
+                        data["small_total_duration"] = format_duration(duration)
                         data["small_categories"] = process_categories(
                             category_list,
                             duration,
@@ -987,7 +989,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 end_of_day,
                 is_get_total_duration=True,
             )
-            data["total_duration"] = format_duration(total_duration)
+            data["large_total_duration"] = format_duration(total_duration)
             if tag_list:
                 data["large_categories"] = process_tags(
                     tag_list,
@@ -1014,6 +1016,9 @@ class StatisticViewSet(BaseAPIViewSet):
                         end_of_day,
                         is_get_total_duration=True,
                     )
+                    data["medium_total_duration"] = format_duration(
+                        total_duration
+                    )
                     data["medium_categories"] = process_tags(
                         tag_list,
                         total_duration,
@@ -1037,6 +1042,9 @@ class StatisticViewSet(BaseAPIViewSet):
                             start_of_day,
                             end_of_day,
                             is_get_total_duration=True,
+                        )
+                        data["small_total_duration"] = format_duration(
+                            total_duration
                         )
                         data["small_categories"] = process_tags(
                             tag_list,
@@ -1064,6 +1072,9 @@ class StatisticViewSet(BaseAPIViewSet):
                                 start_of_day,
                                 end_of_day,
                                 is_get_total_duration=True,
+                            )
+                            data["category_total_duration"] = format_duration(
+                                total_duration
                             )
                             data["category"] = process_tags(
                                 tag_list,
@@ -1149,7 +1160,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 is_get_total_duration=True,
             )
 
-            data["total_duration"] = format_duration(total_duration)
+            data["large_total_duration"] = format_duration(total_duration)
 
             # Process large categories
             if category_list:
@@ -1175,6 +1186,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         start_of_day,
                         end_of_day,
                         large_category_id,
+                        is_get_total_duration=False,
                     )
                     tasks = tasks.filter(
                         categories__large_statistic_category__id=large_category_id
@@ -1182,6 +1194,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     events = events.filter(
                         categories__large_statistic_category__id=large_category_id
                     )
+                    data["medium_total_duration"] = format_duration(duration)
                     data["medium_categories"] = process_categories(
                         category_list,
                         duration,
@@ -1205,6 +1218,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         end_of_day,
                         large_category_id,
                         medium_category_id,
+                        is_get_total_duration=False,
                     )
                     tasks = tasks.filter(
                         categories__large_statistic_category__id=large_category_id,
@@ -1214,7 +1228,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         categories__large_statistic_category__id=large_category_id,
                         categories__medium_statistic_category__id=medium_category_id,
                     )
-
+                    data["small_total_duration"] = format_duration(duration)
                     data["small_categories"] = process_categories(
                         category_list,
                         duration,
@@ -1297,7 +1311,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 is_tag=True,
                 tag_ids=tag_ids,
             )
-            data["total_duration"] = format_duration(total_duration)
+            data["large_total_duration"] = format_duration(total_duration)
             if tag_list:
                 data["large_categories"] = process_tags(
                     tag_list,
@@ -1326,6 +1340,9 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         is_tag=True,
                         tag_ids=tag_ids,
                     )
+                    data["medium_total_duration"] = format_duration(
+                        total_duration
+                    )
                     data["medium_categories"] = process_tags(
                         tag_list,
                         total_duration,
@@ -1352,6 +1369,9 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                             is_tag=True,
                             tag_ids=tag_ids,
                         )
+                        data["small_total_duration"] = format_duration(
+                            total_duration
+                        )
                         data["small_categories"] = process_tags(
                             tag_list,
                             total_duration,
@@ -1377,6 +1397,9 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                                 is_get_total_duration=False,
                                 is_tag=True,
                                 tag_ids=tag_ids,
+                            )
+                            data["category_total_duration"] = format_duration(
+                                total_duration
                             )
                             data["category"] = process_tags(
                                 tag_list,
