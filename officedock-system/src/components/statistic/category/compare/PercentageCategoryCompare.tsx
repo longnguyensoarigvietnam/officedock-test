@@ -561,7 +561,7 @@ const PercentageCategoryCompare = ({
                   </div>
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[280px]">
+                <div className="w-[280px] ">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
