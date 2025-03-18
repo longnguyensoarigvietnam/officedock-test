@@ -229,6 +229,7 @@ function StatisticTeamCalendar() {
     setStartDateCompare(dataStartDateCompare);
     setEndDateCompare(dataEndDateCompare);
     setIsCheckCompare(isDataCheckCompare);
+    setIsOpenModal(false);
   };
   const handleReset = () => {
     setIsOpenModal(false);

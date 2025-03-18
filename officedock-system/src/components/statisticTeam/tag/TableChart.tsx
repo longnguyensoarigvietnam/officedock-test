@@ -405,9 +405,9 @@ const TableChart = ({
         return (
           <div className="statistic-custom flex gap-2 items-center">
             {/* Organization */}
-            <div className="flex justify-between h-full relative rounded-md gap-2">
+            <div className="flex w-[24%] justify-between h-full relative rounded-md gap-2">
               <SingleSelect
-                className="border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
+                className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   listOptionsOrganization &&
                   listOptionsOrganization.find(
@@ -440,10 +440,10 @@ const TableChart = ({
               </div>
             </div>
             {/* LARGE */}
-            <div className="flex justify-between h-full relative rounded-md gap-2">
+            <div className="flex w-[24%] justify-between h-full relative rounded-md gap-2">
               <SingleSelect
                 showArrow
-                className="border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
+                className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   largeCategories &&
                   largeCategories.find(
@@ -507,9 +507,9 @@ const TableChart = ({
               </div>
             </div>
             {/* MEDIUM */}
-            <div className="flex justify-between h-full relative rounded-md gap-2">
+            <div className="flex w-[24%] justify-between h-full relative rounded-md gap-2">
               <SingleSelect
-                className="border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
+                className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   mediumCategories &&
                   mediumCategories.find(
@@ -568,9 +568,9 @@ const TableChart = ({
               </div>
             </div>
             {/* SMALL */}
-            <div className="flex justify-between h-full relative rounded-md gap-2">
+            <div className="flex w-[calc(24%_-_20px)] justify-between h-full relative rounded-md gap-2">
               <SingleSelect
-                className="border-none shadow-none w-[98px] h-[30px] !bg-[#EBF1F7] rounded-md"
+                className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   smallCategories &&
                   smallCategories.find(
