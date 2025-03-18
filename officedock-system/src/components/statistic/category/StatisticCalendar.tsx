@@ -138,6 +138,7 @@ function StatisticCalendar() {
 
       case TimeOptionsType.MONTH: {
         const days = getDaysFromTimeOption(option, endDate, true);
+
         newStartDate.setDate(newStartDate.getDate() - days + 1);
         setIsDisableCalendar(true);
         if (isCheckCompare) {
@@ -182,10 +183,16 @@ function StatisticCalendar() {
     }
 
     setDataStartDate(newStartDate);
+    if (!dataEndDate) {
+      setDataEndDate(new Date());
+    }
     if (isDataCheckCompare) {
       setDataStartDateCompare(
         handleSetStartDateBefore(option, newStartDate) as Date,
       );
+      if (!dataEndDateCompare) {
+        setDataEndDateCompare(new Date());
+      }
     }
   };
 

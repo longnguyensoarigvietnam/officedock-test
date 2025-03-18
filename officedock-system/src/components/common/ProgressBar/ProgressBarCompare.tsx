@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { formatShowDeadlineTask, formatTimeToJapanese } from '@utils/date';
+import { formatShowStatisticTask, formatTimeToJapanese } from '@utils/date';
 import { DataPercentCompareType } from '@interfaces/common';
 import ImageRound from '../ImageRound';
 
@@ -31,25 +31,25 @@ const PercentageBarCompare = ({
 }: Props) => {
   return (
     <div>
-      <div className="mb-[14px]">
+      <div className="mb-[14px] flex justify-between items-center">
         <div className="flex items-center ">
           <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
             比較
           </p>
           <div className="text-black text-xs font-normal flex items-center gap-[2px]">
-            <p>{startDate && formatShowDeadlineTask(startDate)}</p>~
-            <p>{endDate && formatShowDeadlineTask(endDate)}</p>
+            <p>{startDate && formatShowStatisticTask(startDate)}</p>~
+            <p>{endDate && formatShowStatisticTask(endDate)}</p>
           </div>
         </div>
         {data.length > 0 ? (
           <div className="font-medium text-sm text-black ">
-            合計 {totalDuration && formatTimeToJapanese(totalDuration)}
+            基準 {totalDuration && formatTimeToJapanese(totalDuration)}
           </div>
         ) : (
           <div>-</div>
         )}
       </div>
-      <div className="w-[280px]  h-[100px] flex">
+      <div className="w-[220px]  h-[100px] flex">
         {data.length > 0 ? (
           data.map((item, index) => (
             <div
@@ -99,7 +99,7 @@ const PercentageBarCompare = ({
                           </div>
                           <div className="flex items-center gap-[10px] font-normal text-base mt-4">
                             <span className="text-black">
-                              {item.percentage}%
+                              {mergeItem.percent}%
                             </span>
                             <span className="text-black">
                               {mergeItem.duration &&
@@ -181,7 +181,7 @@ const PercentageBarCompare = ({
           <div className="w-full h-full bg-[#EBF1F7]"></div>
         )}
       </div>
-      <div className="w-[280px] flex  h-[100px] mt-[30px]">
+      <div className="w-[220px] flex  h-[100px] mt-[30px]">
         {dataCompare.length > 0 ? (
           dataCompare.map((item, index) => (
             <div
@@ -232,7 +232,7 @@ const PercentageBarCompare = ({
                           </div>
                           <div className="flex items-center gap-[10px] font-normal text-base mt-4">
                             <span className="text-black">
-                              {item.percentage}%
+                              {mergeItem.percent}%
                             </span>
                             <span className="text-black">
                               {mergeItem.duration &&
@@ -323,22 +323,26 @@ const PercentageBarCompare = ({
           <div className="w-full h-full bg-[#EBF1F7]"></div>
         )}
       </div>
-      <div className="flex items-center mt-[14px]">
-        <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
-          比較
-        </p>
-        <div className="text-black text-xs font-normal flex items-center gap-[2px]">
-          <p>{startDateCompare && formatShowDeadlineTask(startDateCompare)}</p>~
-          <p>{endDateCompare && formatShowDeadlineTask(endDateCompare)}</p>
+      <div className="mt-[14px] flex items-center justify-between">
+        <div className="flex items-center">
+          <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+            比較
+          </p>
+          <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+            <p>
+              {startDateCompare && formatShowStatisticTask(startDateCompare)}
+            </p>
+            ~<p>{endDateCompare && formatShowStatisticTask(endDateCompare)}</p>
+          </div>
         </div>
+        {dataCompare.length ? (
+          <div className="font-medium text-sm text-black">
+            合計 {totalDuration && formatTimeToJapanese(totalDurationCompare)}
+          </div>
+        ) : (
+          <div>-</div>
+        )}
       </div>
-      {dataCompare.length ? (
-        <div className="font-medium text-sm text-black">
-          合計 {totalDuration && formatTimeToJapanese(totalDurationCompare)}
-        </div>
-      ) : (
-        <div>-</div>
-      )}
     </div>
   );
 };

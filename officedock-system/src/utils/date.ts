@@ -462,6 +462,20 @@ export function formatShowDeadlineTask(date: string | Date): string {
   const day = String(inputDate.getDate()).padStart(2, '0');
   return `${month}月${day}日`;
 }
+export function formatShowStatisticTask(date: string | Date): string {
+  const inputDate = new Date(date);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  inputDate.setHours(0, 0, 0, 0);
+
+  const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  return `${month}月${day}日`;
+}
 
 export function formatShowDeadlineAllDayEvent(date: string | Date): string {
   const inputDate = new Date(date);

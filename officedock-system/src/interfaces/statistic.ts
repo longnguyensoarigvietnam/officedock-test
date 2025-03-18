@@ -200,12 +200,14 @@ export interface StatisticsCategories {
   largeCategories: StatisticCategoryInfo[];
   mediumCategories?: StatisticCategoryInfo[];
   smallCategories?: StatisticCategoryInfo[];
+  category?: StatisticCategoryInfo[];
 }
 export interface StatisticsTagsType {
   totalDuration: string;
   largeCategories: StatisticCategoryInfo[];
   mediumCategories?: StatisticCategoryInfo[];
   smallCategories?: StatisticCategoryInfo[];
+  category?: StatisticCategoryInfo[];
 }
 
 export interface StatisticCategoryInfo {

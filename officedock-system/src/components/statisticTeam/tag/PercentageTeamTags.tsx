@@ -39,6 +39,7 @@ const PercentageTeamTags = ({
   const {
     largeOptions,
     mediumOptions,
+    smallOptions,
     listOptionsOrganization,
     selectedLarge,
     selectedMedium,
@@ -46,8 +47,10 @@ const PercentageTeamTags = ({
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
+    totalDurationCategory,
     tagsOptions,
     selectedTags,
+    selectedSmall,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
 
@@ -90,6 +93,16 @@ const PercentageTeamTags = ({
     listDuration: [],
     mergedItems: [],
   });
+  const [dataChartCategory, setDataChartCategory] = useState<DataChartType>({
+    actualValue: [],
+    colors: [],
+    data: [],
+    labels: [],
+    optionData: [],
+    listId: [],
+    listDuration: [],
+    mergedItems: [],
+  });
 
   const processChartData = (
     categories: StatisticCategoryInfo[],
@@ -109,6 +122,7 @@ const PercentageTeamTags = ({
 
     const filteredCategories = categories.filter((item) => {
       if (item.percent < 10) {
+        mergedItems.push({ ...item });
         mergedCategory.percent += item.percent;
         mergedCategory.duration += item.duration;
         mergedCategory.categoryColor =
@@ -117,7 +131,6 @@ const PercentageTeamTags = ({
         mergedCategory.tasks = mergedCategory.tasks.concat(item.tasks);
         mergedCategory.users = mergedCategory.users?.concat(item.users || []);
 
-        mergedItems.push(item);
         return false;
       }
       return true;
@@ -225,6 +238,24 @@ const PercentageTeamTags = ({
           mergedItems: [],
         });
       }
+      if (statisticTagsListTeam.category) {
+        const categoryChartData = processChartData(
+          statisticTagsListTeam.category,
+          '#2E9267',
+        );
+        setDataChartCategory(categoryChartData);
+      } else {
+        setDataChartCategory({
+          actualValue: [],
+          colors: [],
+          data: [],
+          labels: [],
+          optionData: [],
+          listId: [],
+          listDuration: [],
+          mergedItems: [],
+        });
+      }
     }
   }, [statisticTagsListTeam]);
 
@@ -282,7 +313,7 @@ const PercentageTeamTags = ({
                 src={`/icons/statistic-active.svg`}
               />
               <span className="text-black font-semibold text-[18px] relative top-[2px]">
-                カテゴリーの割合
+                カテゴリーごとのタグの割合
               </span>
             </div>
           </div>
@@ -355,12 +386,9 @@ const PercentageTeamTags = ({
                   </div>
                 </div>
               </div>
-              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex gap-[17px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[280px]">
-                  <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
-                    大カテゴリー
-                  </div>
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="チーム選択"
@@ -378,7 +406,7 @@ const PercentageTeamTags = ({
                       {totalDurationLarge &&
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
-                    <div className="min-h-[280px]">
+                    <div className="min-h-[220px]">
                       {dataChartLarge.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
@@ -388,32 +416,29 @@ const PercentageTeamTags = ({
                           data={dataChartLarge?.data}
                           labels={dataChartLarge?.labels}
                           actualValues={dataChartLarge?.actualValue}
-                          className="w-[280px] h-[280px] ml-5"
+                          className="w-[220px] h-[220px] "
                           optionsData={dataChartLarge.optionData}
                           listIdData={dataChartLarge.listId}
                           handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.LARGE);
+                            handleClickTooltip(id, '');
                           }}
                           handleClickChart={(_data: OptionDropdownType) => {}}
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
                       )}
                     </div>
                   </div>
                 </div>
                 <div>
                   <ImageRound
-                    className={`w-fit h-fit `}
+                    className={`w-fit h-fit relative top-9 `}
                     src="/icons/drawer-blue.svg"
                     name="icon chevron right"
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[280px]">
-                  <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
-                    中カテゴリー
-                  </div>
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
@@ -442,10 +467,11 @@ const PercentageTeamTags = ({
                           data={dataChartMedium?.data}
                           labels={dataChartMedium?.labels}
                           actualValues={dataChartMedium?.actualValue}
-                          className="w-[280px] h-[280px] ml-5"
+                          optionsData={dataChartMedium.optionData}
+                          className="w-[220px] h-[220px] "
                           listIdData={dataChartMedium.listId}
                           handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.MEDIUM);
+                            handleClickTooltip(id, EventWorkCategory.LARGE);
                           }}
                           handleClickChart={(data: OptionDropdownType) => {
                             if (data.value) {
@@ -454,23 +480,20 @@ const PercentageTeamTags = ({
                           }}
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
                       )}
                     </div>
                   </div>
                 </div>
                 <div>
                   <ImageRound
-                    className={`w-fit h-fit `}
+                    className={`w-fit h-fit relative top-9 `}
                     src="/icons/drawer-blue.svg"
                     name="icon chevron right"
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[280px]">
-                  <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
-                    小カテゴリー
-                  </div>
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
@@ -498,16 +521,67 @@ const PercentageTeamTags = ({
                           data={dataChartSmall?.data}
                           labels={dataChartSmall?.labels}
                           actualValues={dataChartSmall?.actualValue}
-                          className="w-[280px] h-[280px] ml-5"
+                          className="w-[220px] h-[220px] "
                           optionsData={dataChartSmall.optionData}
                           listIdData={dataChartSmall.listId}
+                          handleClickTooltip={(id: number | null) => {
+                            handleClickTooltip(id, EventWorkCategory.MEDIUM);
+                          }}
+                          isClickTooltip
+                        />
+                      ) : (
+                        <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <ImageRound
+                    className={`w-fit h-fit relative top-9 `}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+                {/* Pie Chart 4 */}
+                <div className="w-[220px]">
+                  <div className="mt-4">
+                    <Dropdown
+                      label="小カテゴリー選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
+                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
+                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                      classNameOption="!text-sm"
+                      options={smallOptions}
+                      selectedOption={selectedSmall || undefined}
+                      onChange={(data) => handleSelectMedium(data)}
+                      disabled={!selectedLarge}
+                    />
+                    <p className="text-sm text-black my-[26px]">
+                      合計{' '}
+                      {totalDurationCategory &&
+                        formatTimeToJapanese(totalDurationCategory)}
+                    </p>
+                    <div>
+                      {dataChartCategory.data.length > 0 ? (
+                        <PieChart
+                          isTeam
+                          isLast
+                          mergedItems={dataChartLarge.mergedItems}
+                          colors={dataChartCategory.colors}
+                          data={dataChartCategory?.data}
+                          labels={dataChartCategory?.labels}
+                          actualValues={dataChartCategory?.actualValue}
+                          className="w-[220px] h-[220px] "
+                          optionsData={dataChartCategory.optionData}
+                          listIdData={dataChartCategory.listId}
                           handleClickTooltip={(id: number | null) => {
                             handleClickTooltip(id, EventWorkCategory.SMALL);
                           }}
                           isClickTooltip
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
                       )}
                     </div>
                   </div>
@@ -527,6 +601,7 @@ const PercentageTeamTags = ({
             setIsShowModal(false);
           }}
           selectedLarge={selectedLarge}
+          selectedSmall={selectedSmall}
           selectedMedium={selectedMedium}
           detailCategory={detailCategory}
           handleScroll={handleScroll}

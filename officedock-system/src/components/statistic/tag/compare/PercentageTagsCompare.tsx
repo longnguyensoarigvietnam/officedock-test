@@ -52,12 +52,15 @@ const PercentageTagsCompare = ({
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
+    totalDurationCategory,
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
+    totalDurationCategoryCompare,
     selectedTags,
     tagsOptions,
     smallOptions,
+    selectedSmall,
     setSelectedTags,
   } = useContext(StatisticTagStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -88,6 +91,9 @@ const PercentageTagsCompare = ({
   const [dataChartSmall, setDataChartSmall] = useState<
     DataPercentCompareType[]
   >([]);
+  const [dataChartCategory, setDataChartCategory] = useState<
+    DataPercentCompareType[]
+  >([]);
   // Data value compare
   const [dataChartLargeCompare, setDataChartLargeCompare] = useState<
     DataPercentCompareType[]
@@ -96,6 +102,9 @@ const PercentageTagsCompare = ({
     DataPercentCompareType[]
   >([]);
   const [dataChartSmallCompare, setDataChartSmallCompare] = useState<
+    DataPercentCompareType[]
+  >([]);
+  const [dataChartCategoryCompare, setDataChartCategoryCompare] = useState<
     DataPercentCompareType[]
   >([]);
 
@@ -119,7 +128,7 @@ const PercentageTagsCompare = ({
           label: task.title,
         })),
       ),
-      mergedItems: otherItems,
+      mergedItems: otherItems.map((item) => ({ ...item })),
     };
 
     const mappedMainItems = mainItems.map((item) => ({
@@ -155,6 +164,9 @@ const PercentageTagsCompare = ({
       setDataChartSmall(
         mapCategoryData(statisticTagsList.smallCategories || [], '#2E9267'),
       );
+      setDataChartCategory(
+        mapCategoryData(statisticTagsList.category || [], '#2E9267'),
+      );
       setIsLoading(false);
     }
   }, [statisticTagsList]);
@@ -176,6 +188,9 @@ const PercentageTagsCompare = ({
           statisticTagsCompareList.smallCategories || [],
           '#2E9267',
         ),
+      );
+      setDataChartCategoryCompare(
+        mapCategoryData(statisticTagsCompareList.category || [], '#2E9267'),
       );
       setIsLoading(false);
     }
@@ -282,7 +297,7 @@ const PercentageTagsCompare = ({
                 src={`/icons/statistic-active.svg`}
               />
               <span className="text-black font-semibold text-[18px] relative top-[2px]">
-                カテゴリーの割合
+                カテゴリーごとのタグの割合
               </span>
             </div>
           </div>
@@ -355,12 +370,9 @@ const PercentageTagsCompare = ({
                   </div>
                 </div>
               </div>
-              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex gap-[10px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[280px]">
-                  <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
-                    大カテゴリー
-                  </div>
+                <div className="w-[220px]">
                   <div className="mt-4 ">
                     <Dropdown
                       label="チーム選択"
@@ -388,11 +400,7 @@ const PercentageTagsCompare = ({
                             id: number | null,
                             isCompare: boolean,
                           ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.LARGE,
-                              isCompare,
-                            );
+                            handleClickTooltip(id, '', isCompare);
                           }}
                         />
                       }
@@ -401,16 +409,13 @@ const PercentageTagsCompare = ({
                 </div>
                 <div>
                   <ImageRound
-                    className={`w-fit h-fit `}
+                    className={`w-fit h-fit relative top-9 `}
                     src="/icons/drawer-blue.svg"
                     name="icon chevron right"
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[280px]">
-                  <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
-                    中カテゴリー
-                  </div>
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
@@ -452,7 +457,7 @@ const PercentageTagsCompare = ({
                           ) => {
                             handleClickTooltip(
                               id,
-                              EventWorkCategory.MEDIUM,
+                              EventWorkCategory.LARGE,
                               isCompare,
                             );
                           }}
@@ -463,16 +468,13 @@ const PercentageTagsCompare = ({
                 </div>
                 <div>
                   <ImageRound
-                    className={`w-fit h-fit `}
+                    className={`w-fit h-fit relative top-9 `}
                     src="/icons/drawer-blue.svg"
                     name="icon chevron right"
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[280px]">
-                  <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
-                    小カテゴリー
-                  </div>
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
@@ -514,6 +516,54 @@ const PercentageTagsCompare = ({
                           ) => {
                             handleClickTooltip(
                               id,
+                              EventWorkCategory.MEDIUM,
+                              isCompare,
+                            );
+                          }}
+                        />
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <ImageRound
+                    className={`w-fit h-fit relative top-9 `}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+                {/* Pie Chart 4 */}
+                <div className="w-[220px]">
+                  <div className="mt-4">
+                    <Dropdown
+                      label="小カテゴリー選択"
+                      placeholder="-"
+                      placeholderClass="!text-black text-sm font-normal"
+                      className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
+                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                      options={smallOptions}
+                      selectedOption={selectedSmall || undefined}
+                      onChange={(data) => handleSelectMedium(data)}
+                      disabled={!selectedLarge}
+                    />
+                    <div className="min-h-[280px] mt-[30px]">
+                      {
+                        <PercentageBarCompare
+                          data={dataChartCategory}
+                          startDate={startDate}
+                          endDate={endDate}
+                          startDateCompare={startDateCompare}
+                          endDateCompare={endDateCompare}
+                          dataCompare={dataChartCategoryCompare}
+                          totalDuration={totalDurationCategory}
+                          totalDurationCompare={totalDurationCategoryCompare}
+                          handleClickChart={(_data: number) => {}}
+                          handleClickTooltip={(
+                            id: number | null,
+                            isCompare: boolean,
+                          ) => {
+                            handleClickTooltip(
+                              id,
                               EventWorkCategory.SMALL,
                               isCompare,
                             );
@@ -534,6 +584,7 @@ const PercentageTagsCompare = ({
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}
           detailCategory={detailCategory}
+          selectedSmall={selectedSmall}
           startDate={startDate}
           endDate={endDate}
           selectedOrganization={selectedOrganization}
@@ -548,6 +599,7 @@ const PercentageTagsCompare = ({
           open={isShowModalCompare}
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}
+          selectedSmall={selectedSmall}
           startDate={startDateCompare}
           endDate={endDateCompare}
           detailCategory={detailCategoryCompare}

@@ -20,9 +20,11 @@ interface ContextValue {
   totalDurationLarge: string;
   totalDurationMedium: string;
   totalDurationSmall: string;
+  totalDurationCategory: string;
   totalDurationLargeCompare: string;
   totalDurationMediumCompare: string;
   totalDurationSmallCompare: string;
+  totalDurationCategoryCompare: string;
   listOptionsOrganization: OptionDropdownType[];
   isCheckCompare: boolean;
   endDate: Date | null;
@@ -45,9 +47,11 @@ interface ContextValue {
   setTotalDurationLarge: Dispatch<SetStateAction<string>>;
   setTotalDurationMedium: Dispatch<SetStateAction<string>>;
   setTotalDurationSmall: Dispatch<SetStateAction<string>>;
+  setTotalDurationCategory: Dispatch<SetStateAction<string>>;
   setTotalDurationLargeCompare: Dispatch<SetStateAction<string>>;
   setTotalDurationMediumCompare: Dispatch<SetStateAction<string>>;
   setTotalDurationSmallCompare: Dispatch<SetStateAction<string>>;
+  setTotalDurationCategoryCompare: Dispatch<SetStateAction<string>>;
   setIsCheckCompare: Dispatch<SetStateAction<boolean>>;
   setEndDate: Dispatch<SetStateAction<Date | null>>;
   setStartDate: Dispatch<SetStateAction<Date>>;
@@ -75,15 +79,23 @@ const defaultValue: ContextValue = {
   totalDurationLarge: '',
   totalDurationMedium: '',
   totalDurationSmall: '',
+  totalDurationCategory: '',
+
   totalDurationLargeCompare: '',
   totalDurationMediumCompare: '',
   totalDurationSmallCompare: '',
+  totalDurationCategoryCompare: '',
+
   setTotalDurationLarge: () => {},
   setTotalDurationMedium: () => {},
   setTotalDurationSmall: () => {},
+  setTotalDurationCategory: () => {},
+
   setTotalDurationLargeCompare: () => {},
   setTotalDurationMediumCompare: () => {},
   setTotalDurationSmallCompare: () => {},
+  setTotalDurationCategoryCompare: () => {},
+
   isCheckCompare: false,
   endDate: null,
   startDate: new Date(),
@@ -139,6 +151,8 @@ export const StatisticTagStateProvider = ({
   const [totalDurationLarge, setTotalDurationLarge] = useState<string>('');
   const [totalDurationMedium, setTotalDurationMedium] = useState<string>('');
   const [totalDurationSmall, setTotalDurationSmall] = useState<string>('');
+  const [totalDurationCategory, setTotalDurationCategory] =
+    useState<string>('');
 
   // Total duration compare
   const [totalDurationLargeCompare, setTotalDurationLargeCompare] =
@@ -146,6 +160,8 @@ export const StatisticTagStateProvider = ({
   const [totalDurationMediumCompare, setTotalDurationMediumCompare] =
     useState<string>('');
   const [totalDurationSmallCompare, setTotalDurationSmallCompare] =
+    useState<string>('');
+  const [totalDurationCategoryCompare, setTotalDurationCategoryCompare] =
     useState<string>('');
 
   // Data Date calendar
@@ -185,15 +201,19 @@ export const StatisticTagStateProvider = ({
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
+    totalDurationCategory,
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
+    totalDurationCategoryCompare,
     setTotalDurationLarge,
     setTotalDurationMedium,
     setTotalDurationSmall,
+    setTotalDurationCategory,
     setTotalDurationLargeCompare,
     setTotalDurationMediumCompare,
     setTotalDurationSmallCompare,
+    setTotalDurationCategoryCompare,
     isCheckCompare,
     endDate,
     startDate,

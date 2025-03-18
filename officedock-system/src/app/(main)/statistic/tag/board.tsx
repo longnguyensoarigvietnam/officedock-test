@@ -31,6 +31,7 @@ const StatisticTagBoard = () => {
     selectedOrganization,
     tagsOptions,
     selectedTags,
+    selectedSmall,
     setSelectedTags,
     setTagsOptions,
     setTotalDurationSmall,
@@ -40,6 +41,8 @@ const StatisticTagBoard = () => {
     setTotalDurationLargeCompare,
     setTotalDurationMediumCompare,
     setTotalDurationSmallCompare,
+    setTotalDurationCategory,
+    setTotalDurationCategoryCompare,
     setListOptionsOrganization,
     setSelectedLarge,
     setSelectedMedium,
@@ -58,6 +61,7 @@ const StatisticTagBoard = () => {
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: selectedSmall?.value as number,
       tagIds: selectedTags,
     },
     onSuccess: (data) => {
@@ -79,6 +83,7 @@ const StatisticTagBoard = () => {
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
+      setTotalDurationCategory(sumDurations(data.category ?? []));
     },
   });
   const { statisticTagsListCompare } = useStatisticTagsCompare({
@@ -94,6 +99,7 @@ const StatisticTagBoard = () => {
       setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
       setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
+      setTotalDurationCategoryCompare(sumDurations(data.smallCategories ?? []));
     },
   });
   const { creationDataStatisticData } = useCreationDataStatistic({
@@ -321,6 +327,7 @@ const StatisticTagBoard = () => {
           removeTag={removeTag}
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
+          handleSelectSmall={handleSelectSmall}
           handleSelectMedium={handleSelectMedium}
         />
       )}

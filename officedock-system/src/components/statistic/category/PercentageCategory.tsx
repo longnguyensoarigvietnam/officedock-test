@@ -108,13 +108,13 @@ const PercentageCategory = ({
 
     const filteredCategories = categories.filter((item) => {
       if (item.percent < 10) {
+        mergedItems.push({ ...item });
         mergedCategory.percent += item.percent;
         mergedCategory.duration += item.duration;
         mergedCategory.categoryColor =
           (colorData && lightenColor(colorData, item.percent)) ||
           getRandomColor();
         mergedCategory.tasks = mergedCategory.tasks.concat(item.tasks);
-        mergedItems.push(item);
         return false;
       }
       return true;
@@ -146,6 +146,7 @@ const PercentageCategory = ({
         label: task.title,
       })),
     );
+
     // Get list id
     const listDataIds = filteredCategories.map((item) => item.categoryId);
     // Get list duration
@@ -458,6 +459,7 @@ const PercentageCategory = ({
                           data={dataChartMedium?.data}
                           labels={dataChartMedium?.labels}
                           actualValues={dataChartMedium?.actualValue}
+                          optionsData={dataChartMedium.optionData}
                           className="w-[280px] h-[280px] ml-5"
                           listIdData={dataChartMedium.listId}
                           handleClickTooltip={(id: number | null) => {
@@ -512,6 +514,7 @@ const PercentageCategory = ({
                         <PieChartCustom
                           colors={dataChartSmall.colors}
                           data={dataChartSmall?.data}
+                          isLast
                           labels={dataChartSmall?.labels}
                           mergedItems={dataChartSmall.mergedItems}
                           actualValues={dataChartSmall?.actualValue}

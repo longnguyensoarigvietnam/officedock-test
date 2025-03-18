@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { formatShowDeadlineTask, formatTimeToJapanese } from '@utils/date';
+import { formatShowStatisticTask, formatTimeToJapanese } from '@utils/date';
 import { DataPercentCompareType } from '@interfaces/common';
 import { getRandomColor } from '@utils';
 import AvatarIconWithDynamicColor from '../AvatarIcon';
@@ -31,19 +31,19 @@ const PercentageBarCompareTeam = ({
 }: Props) => {
   return (
     <div>
-      <div className="mb-[14px]">
+      <div className="mb-[14px] flex items-center justify-between">
         <div className="flex items-center ">
           <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
             比較
           </p>
           <div className="text-black text-xs font-normal flex items-center gap-[2px]">
-            <p>{startDate && formatShowDeadlineTask(startDate)}</p>~
-            <p>{endDate && formatShowDeadlineTask(endDate)}</p>
+            <p>{startDate && formatShowStatisticTask(startDate)}</p>~
+            <p>{endDate && formatShowStatisticTask(endDate)}</p>
           </div>
         </div>
         {data.length > 0 ? (
           <div className="font-medium text-sm text-black ">
-            合計 {totalDuration && formatTimeToJapanese(totalDuration)}
+            基準 {totalDuration && formatTimeToJapanese(totalDuration)}
           </div>
         ) : (
           <div>-</div>
@@ -99,7 +99,7 @@ const PercentageBarCompareTeam = ({
                           </div>
                           <div className="flex items-center gap-[10px] font-normal text-base mt-4">
                             <span className="text-black">
-                              {item.percentage}%
+                              {mergeItem.percent}%
                             </span>
                             <span className="text-black">
                               {mergeItem.duration &&
@@ -225,7 +225,7 @@ const PercentageBarCompareTeam = ({
                           </div>
                           <div className="flex items-center gap-[10px] font-normal text-base mt-4">
                             <span className="text-black">
-                              {item.percentage}%
+                              {mergeItem.percent}%
                             </span>
                             <span className="text-black">
                               {mergeItem.duration &&
@@ -300,22 +300,26 @@ const PercentageBarCompareTeam = ({
           <div className="w-full h-full bg-[#EBF1F7]"></div>
         )}
       </div>
-      <div className="flex items-center mt-[14px]">
-        <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
-          比較
-        </p>
-        <div className="text-black text-xs font-normal flex items-center gap-[2px]">
-          <p>{startDateCompare && formatShowDeadlineTask(startDateCompare)}</p>~
-          <p>{endDateCompare && formatShowDeadlineTask(endDateCompare)}</p>
+      <div className="mt-[14px] items-center justify-between">
+        <div className="flex items-center ">
+          <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+            比較
+          </p>
+          <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+            <p>
+              {startDateCompare && formatShowStatisticTask(startDateCompare)}
+            </p>
+            ~<p>{endDateCompare && formatShowStatisticTask(endDateCompare)}</p>
+          </div>
         </div>
+        {dataCompare.length ? (
+          <div className="font-medium text-sm text-black">
+            合計 {totalDuration && formatTimeToJapanese(totalDurationCompare)}
+          </div>
+        ) : (
+          <div>-</div>
+        )}
       </div>
-      {dataCompare.length ? (
-        <div className="font-medium text-sm text-black">
-          合計 {totalDuration && formatTimeToJapanese(totalDurationCompare)}
-        </div>
-      ) : (
-        <div>-</div>
-      )}
     </div>
   );
 };
