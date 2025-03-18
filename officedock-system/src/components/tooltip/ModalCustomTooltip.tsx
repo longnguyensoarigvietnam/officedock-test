@@ -71,12 +71,13 @@ const ModalCustomTooltip = ({
                   </div>
                   <ul className="font-normal mt-4 text-[#77858F] overflow-hidden break-words line-clamp-4">
                     {isTeam ? (
-                      option &&
-                      option.map((opt) => {
+                      item &&
+                      item.users &&
+                      item.users.map((user) => {
                         const colorRandom = getRandomColor();
                         return (
                           <li
-                            key={opt.label}
+                            key={user.user.id}
                             className="flex items-center justify-between">
                             <div className="flex items-center">
                               <div>
@@ -86,10 +87,10 @@ const ModalCustomTooltip = ({
                                 />
                               </div>
                               <span className="inline-block w-20 overflow-hidden whitespace-nowrap text-ellipsis">
-                                {opt.label}
+                                {user.user.fullName}
                               </span>
                             </div>
-                            <span>{opt.percent}%</span>
+                            <span>{user.percent}%</span>
                           </li>
                         );
                       })

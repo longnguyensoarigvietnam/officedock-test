@@ -72,7 +72,7 @@ const StatisticBoard = () => {
       const organization = creationDataStatisticData?.organizations?.find(
         (org) => org.id === selectedOrganization?.value,
       );
-      if (organization) {
+      if (organization && organization.statisticCategories) {
         const largeCategories = organization.statisticCategories.map(
           (stat) => ({
             value: stat.LARGE.id,
@@ -291,8 +291,9 @@ const StatisticBoard = () => {
                 options={listOptionsOrganization}
                 placeholder="-"
                 placeholderClass="!text-black text-sm font-normal"
-                className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-                classNameOption="text-sm"
+                className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                classNameOption="!text-sm"
                 selectedOption={selectedOrganization || undefined}
                 onChange={(data) => {
                   handleSelectOrganization(data);
@@ -309,10 +310,11 @@ const StatisticBoard = () => {
             <div className="w-[220px]">
               <Dropdown
                 options={largeOptions}
-                className="!h-[34px] !py-0 !rounded-md"
                 placeholder="-"
                 placeholderClass="!text-black text-sm font-normal"
-                classNameOption="text-sm"
+                className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                classNameOption="!text-sm"
                 selectedOption={selectedLarge || undefined}
                 onChange={(data) => handleSelectLarge(data)}
                 disabled={!selectedOrganization}
@@ -327,10 +329,11 @@ const StatisticBoard = () => {
             </div>
             <div className="w-[220px]">
               <Dropdown
-                className="!h-[34px] !py-0 !rounded-md"
                 placeholder="-"
                 placeholderClass="!text-black text-sm font-normal"
-                classNameOption="text-sm"
+                className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                classNameOption="!text-sm"
                 options={mediumOptions}
                 selectedOption={selectedMedium || undefined}
                 onChange={(data) => handleSelectMedium(data)}

@@ -112,7 +112,7 @@ const PercentageBarCompareTeam = ({
                                 formatTimeToJapanese(mergeItem.duration)}
                             </span>
                           </div>
-                          <ul>
+                          <ul className="mt-2">
                             {mergeItem.users &&
                               mergeItem.users.map((item, index) => {
                                 const colorRandom = getRandomColor();
@@ -127,7 +127,7 @@ const PercentageBarCompareTeam = ({
                                           size={30}
                                         />
                                       </div>
-                                      <span className="inline-block w-20 overflow-hidden whitespace-nowrap text-ellipsis">
+                                      <span className="inline-block w-20 text-black overflow-hidden whitespace-nowrap text-ellipsis">
                                         {item.user.fullName}
                                       </span>
                                     </div>
@@ -255,7 +255,7 @@ const PercentageBarCompareTeam = ({
                                 formatTimeToJapanese(mergeItem.duration)}
                             </span>
                           </div>
-                          <ul>
+                          <ul className="mt-2">
                             {mergeItem.users &&
                               mergeItem.users.map((item, index) => {
                                 const colorRandom = getRandomColor();
@@ -270,7 +270,7 @@ const PercentageBarCompareTeam = ({
                                           size={30}
                                         />
                                       </div>
-                                      <span className="inline-block w-20 overflow-hidden whitespace-nowrap text-ellipsis">
+                                      <span className="inline-block text-black w-20 overflow-hidden whitespace-nowrap text-ellipsis">
                                         {item.user.fullName}
                                       </span>
                                     </div>

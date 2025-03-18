@@ -363,6 +363,7 @@ const PercentageCategoryCompare = ({
         });
       }
     }
+
     if (detailCategoryCompare?.type === EventWorkCategory.MEDIUM) {
       const item = smallOptions.find(
         (item) => item.value === detailCategoryCompare?.id,
@@ -396,6 +397,11 @@ const PercentageCategoryCompare = ({
 
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+
+      const url = new URL(window.location.href);
+
+      url.searchParams.set('isCompare', 'true');
+      window.history.pushState({}, '', url);
     }
   };
 
@@ -650,8 +656,7 @@ const PercentageCategoryCompare = ({
                               const select = smallOptions.find(
                                 (item) => item.value === data,
                               );
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
+
                               if (select) {
                                 handleSelectSmall(select);
                               }
