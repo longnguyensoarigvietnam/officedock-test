@@ -11,7 +11,7 @@ import {
 import { Table, TableBody } from '@components/common/Table';
 
 import { PAGINATION_PAGE_SIZE_SMALL } from '@constants';
-import { OrderingDataType } from '@constants/enums';
+import { EventWorkCategory, OrderingDataType } from '@constants/enums';
 
 import { formatDateToYMD, formatTimeToJapanese } from '@utils/date';
 import { DataTaskListStatisticListType } from '@interfaces/statistic';
@@ -27,6 +27,7 @@ type Props = {
   selectedOrganization: OptionDropdownType | null;
   selectedLarge: OptionDropdownType | null;
   selectedMedium: OptionDropdownType | null;
+  selectedSmall: OptionDropdownType | null;
   open: boolean;
   startDate: Date;
   endDate: Date | null;
@@ -40,6 +41,7 @@ const ListTaskDetailStatisticTagModal = ({
   endDate,
   selectedMedium,
   selectedLarge,
+  selectedSmall,
   detailCategory,
   selectedOrganization,
   onClose,
@@ -60,8 +62,18 @@ const ListTaskDetailStatisticTagModal = ({
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge?.value as number,
-      mediumCategoryId: selectedMedium?.value as number,
+      largeCategoryId:
+        detailCategory && detailCategory.type === EventWorkCategory.LARGE
+          ? (selectedLarge?.value as number)
+          : undefined,
+      mediumCategoryId:
+        detailCategory && detailCategory.type === EventWorkCategory.MEDIUM
+          ? (selectedMedium?.value as number)
+          : undefined,
+      smallCategoryId:
+        detailCategory && detailCategory.type === EventWorkCategory.SMALL
+          ? (selectedSmall?.value as number)
+          : undefined,
       page: 1,
       totalDuration: detailCategory?.totalDuration,
       ordering: ordering,
@@ -169,7 +181,7 @@ const ListTaskDetailStatisticTagModal = ({
         ) : (
           <div
             ref={listContainerRef}
-            className="bg-white !rounded-md relative max-h-[300px] overflow-y-auto !p-0 border border-[#D2DBE1]">
+            className="bg-white !rounded-md min-h-[300px] relative max-h-[300px] overflow-y-auto !p-0 border border-[#D2DBE1]">
             <div className="h-10 border-b sticky top-0 border-[#D2DBE1]  flex items-center">
               <div className="w-[332px] h-full flex bg-[#F8FAFC] items-center px-[18px] ">
                 <span className="!text-[#77858F]">タスク名</span>
@@ -184,8 +196,11 @@ const ListTaskDetailStatisticTagModal = ({
                       setTaskList([]);
                       setLastCreateAt('');
                       if (ordering === OrderingDataType.TOTAL_DURATION) {
+                        setIsSkeletonLoading(true);
                         setOrdering('');
                       } else {
+                        setIsSkeletonLoading(true);
+
                         setOrdering(OrderingDataType.TOTAL_DURATION);
                       }
                     }}
@@ -209,8 +224,12 @@ const ListTaskDetailStatisticTagModal = ({
                       setLastCreateAt('');
 
                       if (ordering === OrderingDataType.PERCENT) {
+                        setIsSkeletonLoading(true);
+
                         setOrdering('');
                       } else {
+                        setIsSkeletonLoading(true);
+
                         setOrdering(OrderingDataType.PERCENT);
                       }
                     }}

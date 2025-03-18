@@ -96,6 +96,7 @@ const PercentageTeamCategoryCompare = ({
       id: -1,
       label: 'その他',
       percentage: otherItems.reduce((sum, item) => sum + item.percent, 0),
+      mergedItems: otherItems.map((item) => ({ ...item })),
       color: colorData || getRandomColor(),
       totalDuration: '',
       optionData: otherItems
@@ -111,7 +112,6 @@ const PercentageTeamCategoryCompare = ({
           }),
         )
         .filter((item): item is { label: string; percent: number } => !!item),
-      mergedItems: otherItems,
     };
 
     const mappedMainItems = mainItems.map((item) => ({

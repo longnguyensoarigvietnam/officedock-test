@@ -168,7 +168,7 @@ const ListTaskDetailStatisticModal = ({
         ) : (
           <div
             ref={listContainerRef}
-            className="bg-white !rounded-md relative max-h-[300px] overflow-y-auto !p-0 border border-[#D2DBE1]">
+            className="bg-white min-h-[300px] !rounded-md relative max-h-[300px] overflow-y-auto !p-0 border border-[#D2DBE1]">
             <div className="h-10 border-b sticky top-0 border-[#D2DBE1]  flex items-center">
               <div className="w-[332px] h-full flex bg-[#F8FAFC] items-center px-[18px] ">
                 <span className="!text-[#77858F]">タスク名</span>
@@ -183,8 +183,12 @@ const ListTaskDetailStatisticModal = ({
                       setTaskList([]);
                       setLastCreateAt('');
                       if (ordering === OrderingDataType.TOTAL_DURATION) {
+                        setIsSkeletonLoading(true);
+
                         setOrdering('');
                       } else {
+                        setIsSkeletonLoading(true);
+
                         setOrdering(OrderingDataType.TOTAL_DURATION);
                       }
                     }}
@@ -206,6 +210,7 @@ const ListTaskDetailStatisticModal = ({
                     onClick={() => {
                       setTaskList([]);
                       setLastCreateAt('');
+                      setIsSkeletonLoading(true);
 
                       if (ordering === OrderingDataType.PERCENT) {
                         setOrdering('');

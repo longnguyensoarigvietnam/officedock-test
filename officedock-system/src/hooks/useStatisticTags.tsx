@@ -19,6 +19,7 @@ interface FilterProps {
   mediumCategoryId?: number;
   organizationIds?: string;
   tagIds?: OptionDropdownType[];
+  smallCategoryId?: number;
 }
 
 const useStatisticsTags = ({
@@ -51,6 +52,10 @@ const useStatisticsTags = ({
     }${
       filter?.organizationIds
         ? `&organization_ids=${filter.organizationIds}`
+        : ''
+    }${
+      filter?.smallCategoryId
+        ? `&small_category_id=${filter.smallCategoryId}`
         : ''
     }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 

@@ -26,6 +26,7 @@ interface PieChartProps {
   className?: string;
   showLegend?: boolean;
   showTooltip?: boolean;
+  isLast?: boolean;
   optionsData?: {
     label: string;
     percent?: number;
@@ -53,6 +54,7 @@ const PieChartCustom = ({
   isClickTooltip = false,
   showLegend = false,
   isTeam = false,
+  isLast = false,
   optionsData,
   listIdData,
   handleClickChart,
@@ -98,7 +100,9 @@ const PieChartCustom = ({
 
           const dataIndex = tooltip.dataPoints[0]?.dataIndex;
 
-          const tooltipX = tooltip.caretX + 10;
+          const tooltipX =
+            tooltip.caretX + isLast ? tooltip.caretX - 70 : tooltip.caretX + 10;
+
           const tooltipY = tooltip.caretY - 20;
           if (
             !tooltipData ||

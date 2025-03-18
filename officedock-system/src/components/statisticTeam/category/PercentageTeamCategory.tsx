@@ -100,6 +100,8 @@ const PercentageCategoryTeam = ({
 
     const filteredCategories = categories.filter((item) => {
       if (item.percent < 10) {
+        mergedItems.push({ ...item });
+
         mergedCategory.percent += item.percent;
         mergedCategory.duration += item.duration;
         mergedCategory.categoryColor =
@@ -108,7 +110,6 @@ const PercentageCategoryTeam = ({
         mergedCategory.tasks = mergedCategory.tasks.concat(item.tasks);
         mergedCategory.users = mergedCategory.users?.concat(item.users || []);
 
-        mergedItems.push(item);
         return false;
       }
       return true;
@@ -408,6 +409,7 @@ const PercentageCategoryTeam = ({
                           data={dataChartMedium?.data}
                           labels={dataChartMedium?.labels}
                           actualValues={dataChartMedium?.actualValue}
+                          optionsData={dataChartMedium.optionData}
                           className="w-[280px] h-[280px] ml-5"
                           listIdData={dataChartMedium.listId}
                           handleClickChart={(data: OptionDropdownType) => {
@@ -456,6 +458,7 @@ const PercentageCategoryTeam = ({
                       {dataChartSmall.data.length > 0 ? (
                         <PieChart
                           isTeam
+                          isLast
                           mergedItems={dataChartLarge.mergedItems}
                           colors={dataChartSmall.colors}
                           data={dataChartSmall?.data}

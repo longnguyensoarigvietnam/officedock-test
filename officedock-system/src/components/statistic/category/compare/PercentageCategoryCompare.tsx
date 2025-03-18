@@ -112,6 +112,7 @@ const PercentageCategoryCompare = ({
       id: -1,
       label: 'その他',
       percentage: otherItems.reduce((sum, item) => sum + item.percent, 0),
+      mergedItems: otherItems.map((item) => ({ ...item })),
       color: colorData || getRandomColor(),
       totalDuration: '',
       optionData: otherItems.flatMap((item) =>
@@ -119,7 +120,6 @@ const PercentageCategoryCompare = ({
           label: task.title,
         })),
       ),
-      mergedItems: otherItems,
     };
 
     const mappedMainItems = mainItems.map((item) => ({

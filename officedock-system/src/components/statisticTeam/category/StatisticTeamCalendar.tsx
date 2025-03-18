@@ -182,10 +182,16 @@ function StatisticTeamCalendar() {
     }
 
     setDataStartDate(newStartDate);
+    if (!dataEndDate) {
+      setDataEndDate(new Date());
+    }
     if (isDataCheckCompare) {
       setDataStartDateCompare(
         handleSetStartDateBefore(option, newStartDate) as Date,
       );
+      if (!dataEndDateCompare) {
+        setDataEndDateCompare(new Date());
+      }
     }
   };
 

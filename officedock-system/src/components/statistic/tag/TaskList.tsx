@@ -112,9 +112,9 @@ const TaskListStatisticTags = ({
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: Number(selectedLarge?.value),
-      mediumCategoryId: Number(selectedMedium?.value),
-      smallCategoryId: Number(selectedSmall?.value),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      smallCategoryId: selectedSmall?.value as number,
 
       page: currentPage,
       totalDuration: getTotalDuration(),
@@ -136,9 +136,9 @@ const TaskListStatisticTags = ({
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: Number(selectedLarge?.value),
-      mediumCategoryId: Number(selectedMedium?.value),
-      smallCategoryId: Number(selectedSmall?.value),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      smallCategoryId: selectedSmall?.value as number,
 
       page: currentPage,
       totalDuration: getTotalDurationCompare(),
@@ -189,7 +189,7 @@ const TaskListStatisticTags = ({
               src={`/icons/task-active.svg`}
             />
             <span className="text-[18px] text-black font-semibold relative top-[2px]">
-              タスク一覧
+              タグの中のタスク一覧
             </span>
           </div>
         </div>

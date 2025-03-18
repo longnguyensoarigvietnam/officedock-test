@@ -51,6 +51,8 @@ const StatisticTeamTagBoard = () => {
     setTotalDurationMediumCompare,
     setTotalDurationSmallCompare,
     setListMemberTeam,
+    setTotalDurationCategory,
+    setTotalDurationCategoryCompare,
   } = useContext(StatisticTeamTagsStateContext);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -83,6 +85,7 @@ const StatisticTeamTagBoard = () => {
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
+      setTotalDurationCategory(sumDurations(data.category ?? []));
     },
   });
   const { statisticTagsListTeamCompare } = useStatisticTagsTeamCompare({
@@ -98,6 +101,7 @@ const StatisticTeamTagBoard = () => {
       setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
       setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
+      setTotalDurationCategoryCompare(sumDurations(data.smallCategories ?? []));
     },
   });
 
