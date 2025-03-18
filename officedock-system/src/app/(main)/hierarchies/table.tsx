@@ -273,7 +273,7 @@ const HierarchyTable = ({
                   className={`h-full px-3 !w-1/4 max-w-[1/4] ${lastLargeIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px]'} border-l-[1px] border-[#D2DBE1]`}
                   style={{ height: 'inherit' }}>
                   <div
-                    className={`flex gap-2 flex-wrap py-4 ${!lastLargeIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} !h-full`}>
+                    className={`flex gap-2 flex-wrap py-4 ${!lastLargeIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'}`}>
                     {row.original.skills.length > 0 ? (
                       row.original.skills.map((skill) => {
                         return (
