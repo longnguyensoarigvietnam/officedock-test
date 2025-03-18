@@ -2,7 +2,6 @@ import React, { memo, useEffect, useState } from 'react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import ProgressBarStatistic from './ProgressBarStatistic';
 
 import { StatisticsCategories } from '@interfaces/statistic';
@@ -38,8 +37,6 @@ type ProgressDataType = {
 
 const AllocationCategory = memo(
   ({
-    startDate,
-    endDate,
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
@@ -55,8 +52,8 @@ const AllocationCategory = memo(
     handleSelectOrganization,
   }: Props) => {
     const [isExtendData, setIsExtendData] = useState(true);
-    const [isShowModal, setIsShowModal] = useState(false);
-    const [detailCategory, setDetailCategory] = useState<{
+    const [_isShowModal, setIsShowModal] = useState(false);
+    const [_detailCategory, setDetailCategory] = useState<{
       id: number | null;
       type: string;
       totalDuration: string;
@@ -119,7 +116,7 @@ const AllocationCategory = memo(
       }
     }, [statisticCategoryList]);
 
-    const handleScroll = () => {
+    const _handleScroll = () => {
       const element = document.getElementById('task-list-statistic');
       setIsShowModal(false);
 
@@ -332,20 +329,6 @@ const AllocationCategory = memo(
             </>
           )}
         </div>
-        {isShowModal && (
-          <ListTaskDetailStatisticModal
-            open={isShowModal}
-            startDate={startDate}
-            endDate={endDate}
-            detailCategory={detailCategory}
-            selectedOrganization={selectedOrganization}
-            onClose={() => {
-              setIsShowModal(false);
-            }}
-            handleScroll={handleScroll}
-            selectedTags={[]}
-          />
-        )}
       </>
     );
   },

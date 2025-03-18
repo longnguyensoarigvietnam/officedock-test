@@ -58,7 +58,7 @@ const ModalCustomTooltip = ({
                   <div className="flex items-center gap-2 mb-[14px]">
                     <div
                       style={{
-                        backgroundColor: color,
+                        backgroundColor: item.categoryColor,
                       }}
                       className="w-3 h-3 rounded-sm"></div>
                     <span className="font-bold max-w-[105px] line-clamp-3">

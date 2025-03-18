@@ -332,7 +332,7 @@ function StatisticTagCalendar() {
               </div>
             </div>
           </div>
-          {isDataCheckCompare && (
+          {isCheckCompare && (
             <div className="flex items-center gap-[10px] h-5">
               <div className="text-xs font-medium text-[#C32E2E] px-[14px] flex items-center  bg-[#F9EAEA] rounded-sm">
                 {isTypeTime}

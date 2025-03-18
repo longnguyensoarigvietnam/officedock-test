@@ -93,6 +93,9 @@ const StatisticTagBoard = () => {
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: selectedSmall?.value as number,
+      tagIds: selectedTags,
+
       isCompare: isCheckCompare,
     },
     onSuccess: (data) => {
@@ -149,6 +152,7 @@ const StatisticTagBoard = () => {
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
+    setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
@@ -169,6 +173,7 @@ const StatisticTagBoard = () => {
   const handleSelectLarge = (data: OptionDropdownType) => {
     setSelectedLarge(data);
     setSelectedMedium(null);
+    setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations.find(
       (org) => org.id === selectedOrganization?.value,

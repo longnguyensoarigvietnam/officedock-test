@@ -29,11 +29,14 @@ interface FilterProps {
 const useStatisticTaskCompare = ({
   filter,
   isTeam = false,
+  is_tag_page = false,
   onSuccess,
   onError,
 }: {
   filter?: FilterProps;
   isTeam?: boolean;
+  is_tag_page?: boolean;
+
   onSuccess?: (data: BasePagination<DataTaskListStatisticListType[]>) => void;
   onError?: (error: AxiosError) => void;
 }) => {
@@ -69,6 +72,7 @@ const useStatisticTaskCompare = ({
     if (filter?.ordering) params.append('ordering', String(filter.ordering));
     if (filter?.pageSize) params.append('page_size', String(filter.pageSize));
     if (filter?.user_id) params.append('user_id', String(filter.user_id));
+    if (is_tag_page) params.append('is_tag_page', String(is_tag_page));
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 

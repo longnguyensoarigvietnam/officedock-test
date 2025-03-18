@@ -196,7 +196,9 @@ export interface dataRequestConfirmType {
 }
 
 export interface StatisticsCategories {
-  totalDuration: string;
+  largeTotalDuration: string;
+  mediumTotalDuration?: string;
+  smallTotalDuration?: string;
   largeCategories: StatisticCategoryInfo[];
   mediumCategories?: StatisticCategoryInfo[];
   smallCategories?: StatisticCategoryInfo[];

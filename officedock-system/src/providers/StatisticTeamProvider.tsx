@@ -34,6 +34,8 @@ interface ContextValue {
     fullName: string;
     color: string;
   }[];
+  totalDurationCategory: string;
+  totalDurationCategoryCompare: string;
   // Tag
   tagsOptions: OptionDropdownType[];
   selectedTags: OptionDropdownType[];
@@ -58,6 +60,8 @@ interface ContextValue {
   setStartDate: Dispatch<SetStateAction<Date>>;
   setEndDateCompare: Dispatch<SetStateAction<Date | null>>;
   setStartDateCompare: Dispatch<SetStateAction<Date>>;
+  setTotalDurationCategory: Dispatch<SetStateAction<string>>;
+  setTotalDurationCategoryCompare: Dispatch<SetStateAction<string>>;
   setListMemberTeam: Dispatch<
     SetStateAction<
       {
@@ -92,12 +96,16 @@ const defaultValue: ContextValue = {
   totalDurationLargeCompare: '',
   totalDurationMediumCompare: '',
   totalDurationSmallCompare: '',
+  totalDurationCategory: '',
+  totalDurationCategoryCompare: '',
   setTotalDurationLarge: () => {},
   setTotalDurationMedium: () => {},
   setTotalDurationSmall: () => {},
   setTotalDurationLargeCompare: () => {},
   setTotalDurationMediumCompare: () => {},
   setTotalDurationSmallCompare: () => {},
+  setTotalDurationCategory: () => {},
+  setTotalDurationCategoryCompare: () => {},
   isCheckCompare: false,
   endDate: null,
   startDate: new Date(),
@@ -152,8 +160,12 @@ export const StatisticTeamStateProvider = ({
   const [totalDurationLarge, setTotalDurationLarge] = useState<string>('');
   const [totalDurationMedium, setTotalDurationMedium] = useState<string>('');
   const [totalDurationSmall, setTotalDurationSmall] = useState<string>('');
+  const [totalDurationCategory, setTotalDurationCategory] =
+    useState<string>('');
 
   // Total duration compare
+  const [totalDurationCategoryCompare, setTotalDurationCategoryCompare] =
+    useState<string>('');
   const [totalDurationLargeCompare, setTotalDurationLargeCompare] =
     useState<string>('');
   const [totalDurationMediumCompare, setTotalDurationMediumCompare] =
@@ -213,12 +225,16 @@ export const StatisticTeamStateProvider = ({
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
+    totalDurationCategory,
+    totalDurationCategoryCompare,
     setTotalDurationLarge,
     setTotalDurationMedium,
     setTotalDurationSmall,
     setTotalDurationLargeCompare,
     setTotalDurationMediumCompare,
     setTotalDurationSmallCompare,
+    setTotalDurationCategory,
+    setTotalDurationCategoryCompare,
     isCheckCompare,
     endDate,
     startDate,

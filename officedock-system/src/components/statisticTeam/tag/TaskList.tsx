@@ -119,6 +119,8 @@ const TaskListStatisticTeamTags = ({
 
   useStatisticTask({
     isTeam: true,
+    is_tag_page: true,
+
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -145,6 +147,8 @@ const TaskListStatisticTeamTags = ({
   });
   useStatisticTaskCompare({
     isTeam: true,
+    is_tag_page: true,
+
     filter: {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
