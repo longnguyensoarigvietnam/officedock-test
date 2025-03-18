@@ -12,7 +12,6 @@ import {
   handleSetStartDateAfter,
   handleSetStartDateBefore,
 } from '@utils/date';
-import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 function StatisticTeamCalendar() {
@@ -31,7 +30,6 @@ function StatisticTeamCalendar() {
   const modalRef = useRef<HTMLDivElement | null>(null);
   const buttonPrev = useRef<HTMLDivElement | null>(null);
   const buttonNext = useRef<HTMLDivElement | null>(null);
-  const { setIsLoading } = useContext(LoadingContext);
 
   const [isTypeTime, setIsTypeTime] = useState<TimeOptionsType>(
     TimeOptionsType.MONTH,
@@ -225,7 +223,6 @@ function StatisticTeamCalendar() {
 
   // Save data time compare
   const handleSaveCalendarCompare = () => {
-    setIsLoading(true);
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setStartDateCompare(dataStartDateCompare);

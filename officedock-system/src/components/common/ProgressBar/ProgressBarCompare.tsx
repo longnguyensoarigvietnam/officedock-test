@@ -10,7 +10,7 @@ import ImageRound from '../ImageRound';
 
 interface Props {
   isTag?: boolean;
-  isLast? : boolean ;
+  isLast?: boolean;
   data: DataPercentCompareType[];
   dataCompare: DataPercentCompareType[];
   startDate: Date;
@@ -29,7 +29,7 @@ const PercentageBarCompare = ({
   startDate,
   endDate,
   isTag = false,
-  isLast = false ,
+  isLast = false,
   startDateCompare,
   endDateCompare,
   totalDuration,
@@ -67,11 +67,12 @@ const PercentageBarCompare = ({
                   handleClickChart(item.id);
                 }
               }}
-              className="flex group relative flex-col justify-center items-center text-white text-center py-2"
+              className="flex group border-l border-white relative flex-col justify-center items-center text-white text-center py-2"
               style={{
-                width: `${item.percentage * 2.8}px`,
+                width: isTag
+                  ? `${item.percentage * 2.19}px`
+                  : `${item.percentage * 2.79}px`,
                 backgroundColor: item.color,
-                margin: '2px',
                 borderRadius: '4px',
               }}>
               <span className="w-full text-sm truncate break-all">
@@ -216,11 +217,12 @@ const PercentageBarCompare = ({
                   handleClickChart(item.id);
                 }
               }}
-              className="flex relative group flex-col justify-center items-center text-white text-center py-2"
+              className="flex relative group border-l border-white flex-col justify-center items-center text-white text-center py-2"
               style={{
-                width: `${item.percentage * 2.8}px`,
+                width: isTag
+                  ? `${item.percentage * 2.188}px`
+                  : `${item.percentage * 2.788}px`,
                 backgroundColor: item.color,
-                margin: '2px',
                 borderRadius: '4px',
               }}>
               <span className="text-sm w-full truncate break-all">

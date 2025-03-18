@@ -14,7 +14,7 @@ interface Props {
   data: DataPercentCompareType[];
   dataCompare: DataPercentCompareType[];
   startDate: Date;
-  isLast?: boolean
+  isLast?: boolean;
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
@@ -29,7 +29,7 @@ const PercentageBarCompareTeam = ({
   dataCompare,
   startDate,
   endDate,
-  isLast = false ,
+  isLast = false,
   isTag = false,
   startDateCompare,
   endDateCompare,
@@ -67,11 +67,12 @@ const PercentageBarCompareTeam = ({
                   handleClickChart(item.id);
                 }
               }}
-              className="flex group relative flex-col justify-center items-center text-white text-center py-2"
+              className="flex group border-l border-white relative flex-col justify-center items-center text-white text-center py-2"
               style={{
-                width: `${item.percentage * 2.8}px`,
+                width: isTag
+                  ? `${item.percentage * 2.188}px`
+                  : `${item.percentage * 2.788}px`,
                 backgroundColor: item.color,
-                margin: '2px',
                 borderRadius: '4px',
               }}>
               <span className="w-full text-sm truncate break-all">
@@ -85,7 +86,7 @@ const PercentageBarCompareTeam = ({
                 style={{
                   boxShadow: '0px 2px 8px 0px #0000001A',
                 }}
-                className={`absolute top-0 ${isLast ? 'left-[10%]' : 'left-[70%]' }  w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
+                className={`absolute top-0 ${isLast ? 'left-[10%]' : 'left-[70%]'}  w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                 {item.mergedItems.length > 0 ? (
                   <>
                     <p className="text-xs text-start font-medium text-[#77858F] mb-5">
@@ -216,11 +217,12 @@ const PercentageBarCompareTeam = ({
                   handleClickChart(item.id);
                 }
               }}
-              className="flex relative group flex-col justify-center items-center text-white text-center py-2"
+              className="flex relative border-l border-white group flex-col justify-center items-center text-white text-center py-2"
               style={{
-                width: `${item.percentage * 2.8}px`,
+                width: isTag
+                  ? `${item.percentage * 2.188}px`
+                  : `${item.percentage * 2.799}px`,
                 backgroundColor: item.color,
-                margin: '2px',
                 borderRadius: '4px',
               }}>
               <span className="text-sm w-full truncate break-all">
@@ -235,7 +237,7 @@ const PercentageBarCompareTeam = ({
                 style={{
                   boxShadow: '0px 2px 8px 0px #0000001A',
                 }}
-                className={`absolute top-0 ${isLast  ? 'left-[10%]' : 'left-[70%]'}  w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
+                className={`absolute top-0 ${isLast ? 'left-[10%]' : 'left-[70%]'}  w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                 {item.mergedItems.length > 0 ? (
                   <>
                     <p className="text-xs text-start font-medium text-[#77858F] mb-5">
