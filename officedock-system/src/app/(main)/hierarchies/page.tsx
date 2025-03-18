@@ -12,9 +12,7 @@ const HierarchyPage = () => {
       permission={PermissionsSystem.CATEGORY_HIERARCHY_VIEW}
       className="px-0 !pt-0 !overflow-x-auto !bg-[#EBF1F7]"
       showFooter={false}>
-      <div className="flex flex-col gap-6">
-        <ListHierarchy />
-      </div>
+      <ListHierarchy />
     </MainLayout>
   );
 };

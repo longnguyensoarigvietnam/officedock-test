@@ -218,7 +218,7 @@ const HierarchyTable = ({
               {headerGroup.headers.map((header, index) => (
                 <th
                   key={header.id}
-                  className={`text-[#77858F] ${headerGroup.headers.length - 1 != index && 'border-r-[1px]'} font-medium text-xs py-3`}>
+                  className={`text-[#77858F] ${headerGroup.headers.length - 1 != index && 'border-r-[1px]'} w-1/4 font-medium text-xs py-3`}>
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -279,7 +279,7 @@ const HierarchyTable = ({
                         return (
                           <div
                             key={skill.value}
-                            className="bg-[#77858F] text-white text-xs font-medium rounded-[20px] px-[10px] py-[5px] truncate max-w-[calc(100%_-_10px)]">
+                            className="bg-[#77858F] text-white text-xs font-medium rounded-[20px] px-[10px] py-[5px] truncate max-w-[calc(300px)]">
                             {skill.label}
                           </div>
                         );

@@ -885,7 +885,7 @@ const TableComponent = ({
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="text-[#77858F] border-r-[1px] font-medium text-xs py-3">
+                  className="text-[#77858F] border-r-[1px] w-1/4 font-medium text-xs py-3">
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -902,7 +902,7 @@ const TableComponent = ({
               <tr key={row.id} className="h-[1px]">
                 {largeRowspan[rowIndex] > 0 && (
                   <td
-                    className="border-[1px] w-1/4 border-[#D2DBE1] h-full"
+                    className="border-[1px] !w-1/4 border-[#D2DBE1] h-full"
                     style={{ height: 'inherit' }}
                     rowSpan={largeRowspan[rowIndex]}>
                     <div className="p-3 h-full flex items-center gap-3">
@@ -1055,7 +1055,7 @@ const TableComponent = ({
                           <div className="mb-1 !h-full w-full" ref={inputRef}>
                             <input
                               type="text"
-                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-md ${!row.original.large.isValid && !isUUID(row.original.large.label) && 'border-red-500'}`}
+                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.large.isValid && !isUUID(row.original.large.label) && 'border-red-500'}`}
                               placeholder="新しいカテゴリーを入力"
                               value={
                                 newCategory.name !== '' &&
@@ -1396,7 +1396,7 @@ const TableComponent = ({
                             <div className="mb-1 !h-full w-full" ref={inputRef}>
                               <input
                                 type="text"
-                                className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-md ${!row.original.medium.isValid && !isUUID(row.original.medium.label) && 'border-red-500'}`}
+                                className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.medium.isValid && !isUUID(row.original.medium.label) && 'border-red-500'}`}
                                 placeholder="新しいカテゴリーを入力"
                                 value={
                                   newCategory.name !== '' &&
@@ -1788,7 +1788,7 @@ const TableComponent = ({
                           <div className="mb-1 !h-full w-full" ref={inputRef}>
                             <input
                               type="text"
-                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-md ${!row.original.small.isValid && !isUUID(row.original.small.label) && 'border-red-500'}`}
+                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.small.isValid && !isUUID(row.original.small.label) && 'border-red-500'}`}
                               placeholder="新しいカテゴリーを入力"
                               value={
                                 newCategory.name !== '' &&
@@ -2057,6 +2057,7 @@ const TableComponent = ({
                   <MultiSelect
                     key={JSON.stringify(row.original.skills)}
                     className="w-full"
+                    customControlMaxWidth="300px"
                     defaultValue={row.original.skills.map((skill) => {
                       return {
                         value: skill.value as number,
@@ -2076,7 +2077,7 @@ const TableComponent = ({
                           );
 
                         const newEntry = {
-                          organizationStatisticCategoryId: row.original.id, // Track creation if null
+                          organizationStatisticCategoryId: row.original.id,
                           organizationId: hierarchyList.id as number,
                           largeStatisticCategory:
                             row.original.large.label == '' ||
@@ -2168,7 +2169,7 @@ const TableComponent = ({
             );
           })}
           <tr>
-            <td className="p-3 border-[1px] border-[#D2DBE1]">
+            <td className="p-3 w-1/4 border-[1px] border-[#D2DBE1]">
               <OptionsBoxToAddCategory
                 text={'大カテゴリーを追加'}
                 addCategoryUsingInput={() => handleAddLargeCategory('input')}
@@ -2177,9 +2178,9 @@ const TableComponent = ({
                 }
               />
             </td>
-            <td className="border-[1px] border-[#D2DBE1]"></td>
-            <td className="border-[1px] border-[#D2DBE1]"></td>
-            <td className="border-[1px] border-[#D2DBE1]"></td>
+            <td className="w-1/4 border-[1px] border-[#D2DBE1]"></td>
+            <td className="w-1/4 border-[1px] border-[#D2DBE1]"></td>
+            <td className="w-1/4 border-[1px] border-[#D2DBE1]"></td>
           </tr>
         </tbody>
       </Table>

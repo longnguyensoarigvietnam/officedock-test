@@ -285,7 +285,7 @@ const ListHierarchy = () => {
           </div>
         </div>
       </div>
-      <div className="pl-8">
+      <div className="pl-8 mt-5">
         {selectedOrganizationOption.value === '' ? (
           <div className="flex flex-col gap-5">
             {hierarchyList.map((data) => (

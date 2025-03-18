@@ -223,33 +223,6 @@ const TaskListStatisticTeamTags = ({
           {/* Line */}
           <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
           <div>
-            <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
-              表示させるメンバー
-            </p>
-            <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[30px]">
-              {listMemberTeam.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-4">
-                    <Checkbox
-                      isChecked={selectedMember === member.id}
-                      onChange={() => setSelectedMember(member.id)}
-                      classSize="!rounded-full"
-                    />
-                  </div>
-                  <div className="relative top-[2px]">
-                    <AvatarIconWithDynamicColor
-                      size={30}
-                      color={member.color}
-                    />
-                  </div>
-                  <span className="max-w-[90px] w-full truncate">
-                    {member.fullName}
-                  </span>
-                </div>
-              ))}
-            </div>
             {/* List tags  */}
             <div>
               <div className="flex justify-between w-full mb-[30px] px-[30px]">
@@ -303,6 +276,34 @@ const TaskListStatisticTeamTags = ({
                 </div>
               </div>
             </div>
+            <p className="px-8 text-xs font-medium text-[#77858F] mb-[14px]">
+              表示させるメンバー
+            </p>
+            <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[30px]">
+              {listMemberTeam.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center gap-2 cursor-pointer">
+                  <div className="w-4">
+                    <Checkbox
+                      isChecked={selectedMember === member.id}
+                      onChange={() => setSelectedMember(member.id)}
+                      classSize="!rounded-full"
+                    />
+                  </div>
+                  <div className="relative top-[2px]">
+                    <AvatarIconWithDynamicColor
+                      size={30}
+                      color={member.color}
+                    />
+                  </div>
+                  <span className="max-w-[90px] w-full truncate">
+                    {member.fullName}
+                  </span>
+                </div>
+              ))}
+            </div>
+
             <div className="flex items-end gap-[20px] justify-center px-[30px] text-sm font-medium">
               <div className="w-1/4 ">
                 <div className="mt-4">
@@ -312,7 +313,7 @@ const TaskListStatisticTeamTags = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                    classNameOption='!text-sm'
+                    classNameOption="!text-sm"
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => handleSelectOrganization(data)}
@@ -343,7 +344,7 @@ const TaskListStatisticTeamTags = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                    classNameOption='!text-sm'
+                    classNameOption="!text-sm"
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
@@ -375,7 +376,7 @@ const TaskListStatisticTeamTags = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                    classNameOption='!text-sm'
+                    classNameOption="!text-sm"
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
@@ -407,7 +408,7 @@ const TaskListStatisticTeamTags = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 text-sm !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                    classNameOption='!text-sm'
+                    classNameOption="!text-sm"
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}
