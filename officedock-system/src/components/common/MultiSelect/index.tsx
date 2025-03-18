@@ -78,7 +78,7 @@ const MultiSelect = ({
   }, [menuIsOpen]);
 
   return (
-    <div className={`h-full w-full border shadow-sm ${className}`}>
+    <div className={`h-full w-full border custom-input shadow-sm ${className}`}>
       <Select
         closeMenuOnSelect={closeMenuOnSelect}
         noOptionsMessage={() => NO_OPTIONS}

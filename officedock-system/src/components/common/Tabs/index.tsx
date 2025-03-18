@@ -55,9 +55,11 @@ const Tabs = ({
     setTabIdx(idx);
     setIsTeamDockMenu(idx == 1);
     onSelectedTab && onSelectedTab(idx);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('tabId', String(idx));
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    if(idx){
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('tabId', String(idx));
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    }
   };
 
   const handleSwitchToggle = (enable: boolean) => {

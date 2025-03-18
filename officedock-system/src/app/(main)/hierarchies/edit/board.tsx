@@ -113,6 +113,39 @@ const EditHierarchyForm = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
   const { showToast } = useToast();
+  const [newCategory, setNewCategory] = useState<{
+    name: string;
+    uuid: string;
+    type: string;
+    rowInfo: rowDataType;
+  }>({
+    name: '',
+    uuid: '',
+    type: '',
+    rowInfo: {
+      id: '',
+      large: {
+        value: '',
+        label: '',
+        showBy: '',
+        isValid: false,
+      },
+      medium: {
+        value: '',
+        label: '',
+        showBy: '',
+        isValid: false,
+      },
+      small: {
+        value: '',
+        label: '',
+        showBy: '',
+        isValid: false,
+      },
+      skills: [],
+      color: '',
+    },
+  });
 
   useEffect(() => {
     if (creationDataCategoryData && creationDataCategoryData?.length > 0) {
@@ -214,8 +247,12 @@ const EditHierarchyForm = () => {
       ),
     );
   };
-
+  
+  
   const handleConfirmUpdateOrganizationCategoryHierarchy = () => {
+    if(newCategory.uuid || newCategory.name){
+      return 
+    }
     if (!hasInvalidCategory(hierarchyList)) {
       const tempSelectedHierarchiesToUpdate = selectedHierarchiesToUpdate.map(
         (hierarchy) => {
@@ -479,6 +516,8 @@ const EditHierarchyForm = () => {
                   )?.skills || []
                 }
                 organizationName={data.name}
+                newCategory={newCategory}
+                setNewCategory={setNewCategory}
                 setHierarchyList={setHierarchyList}
                 setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
                 setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
@@ -495,6 +534,8 @@ const EditHierarchyForm = () => {
                 (options) => options.organizationId == hierarchyList[0].id,
               )?.skills || []
             }
+            newCategory={newCategory}
+            setNewCategory={setNewCategory}
             setHierarchyList={setHierarchyList}
             setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
             setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
