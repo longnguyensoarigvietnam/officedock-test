@@ -643,6 +643,7 @@ const PercentageCategoryCompare = ({
                     <div className="min-h-[280px] mt-[30px]">
                       {
                         <PercentageBarCompare
+                          isLast
                           data={dataChartSmall}
                           startDate={startDate}
                           endDate={endDate}

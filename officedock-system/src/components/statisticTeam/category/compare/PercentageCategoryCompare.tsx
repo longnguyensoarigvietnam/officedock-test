@@ -423,6 +423,7 @@ const PercentageTeamCategoryCompare = ({
                     <div className="min-h-[280px] mt-[30px]">
                       {
                         <PercentageBarCompareTeam
+                        isLast
                           data={dataChartSmall}
                           startDate={startDate}
                           endDate={endDate}
