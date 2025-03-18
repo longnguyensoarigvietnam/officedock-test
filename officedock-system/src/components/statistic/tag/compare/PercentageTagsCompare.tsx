@@ -233,25 +233,22 @@ const PercentageTagsCompare = ({
     } else {
       if (type === EventWorkCategory.ALL) {
         duration =
-          statisticTagsList?.largeCategories.find(
-            (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          statisticTagsList?.largeCategories.find((item) => item.tagId == id)
+            ?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.LARGE) {
         duration =
-          statisticTagsList?.mediumCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          statisticTagsList?.mediumCategories?.find((item) => item.tagId == id)
+            ?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
-          statisticTagsList?.smallCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
+            ?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.SMALL) {
         duration =
-          statisticTagsList?.category?.find((item) => item.categoryId == id)
+          statisticTagsList?.category?.find((item) => item.tagId == id)
             ?.duration || '00:00:00';
       }
       setDetailCategory({
@@ -352,7 +349,7 @@ const PercentageTagsCompare = ({
                       />
                     </div>
                     <div>
-                      <div className="flex gap-2 ">
+                      <div className="flex gap-2  flex-wrap">
                         {selectedTags.map((item) => {
                           return (
                             <div

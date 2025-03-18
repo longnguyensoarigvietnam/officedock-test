@@ -240,7 +240,7 @@ const TaskListStatisticTags = ({
                     />
                   </div>
                   <div>
-                    <div className="flex gap-2 ">
+                    <div className="flex gap-2 flex-wrap">
                       {selectedTags.map((item) => {
                         return (
                           <div
@@ -272,7 +272,7 @@ const TaskListStatisticTags = ({
                     label="チーム選択"
                     placeholder="-"
                     placeholderClass="!text-black text-sm font-normal"
-                    className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
+                    className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     classNameOption="!text-sm"
                     options={listOptionsOrganization}
@@ -303,7 +303,7 @@ const TaskListStatisticTags = ({
                     label="大カテゴリー選択"
                     placeholder="-"
                     placeholderClass="!text-black text-sm font-normal"
-                    className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
+                    className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     classNameOption="!text-sm"
                     options={largeOptions}
@@ -333,7 +333,8 @@ const TaskListStatisticTags = ({
                 <div className="mt-4">
                   <Dropdown
                     label="中カテゴリー選択"
-                    className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
+                    placeholderClass="!text-black text-sm font-normal"
+                    className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     classNameOption="!text-sm"
                     options={mediumOptions}

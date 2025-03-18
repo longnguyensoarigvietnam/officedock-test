@@ -101,7 +101,7 @@ const PieChartCustom = ({
           const dataIndex = tooltip.dataPoints[0]?.dataIndex;
 
           const tooltipX =
-            tooltip.caretX + isLast ? tooltip.caretX - 70 : tooltip.caretX + 10;
+            tooltip.caretX + isLast ? tooltip.caretX - 90 : tooltip.caretX + 10;
 
           const tooltipY = tooltip.caretY - 20;
           if (
