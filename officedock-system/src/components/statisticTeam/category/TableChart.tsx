@@ -165,8 +165,6 @@ const TableChart = ({
     }[];
     organizationId?: number;
   }) => {
-    setIsLoading(true);
-
     const { data } = await api.patch(
       `${apiRouters.TASK_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
       dataTask,
@@ -212,8 +210,6 @@ const TableChart = ({
     }[];
     organizationId?: number;
   }) => {
-    setIsLoading(true);
-
     const { data } = await api.patch(
       `${apiRouters.SCHEDULE_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
       dataTask,

@@ -79,7 +79,9 @@ const useStatisticCategories = ({
     onError: (error: AxiosError) => {
       onError && onError(error);
     },
-    onSettled: () => {},
+    onSettled: () => {
+      setIsLoading(false);
+    },
   });
 
   return {

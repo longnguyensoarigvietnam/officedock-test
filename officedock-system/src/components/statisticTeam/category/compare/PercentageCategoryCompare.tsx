@@ -325,6 +325,7 @@ const PercentageTeamCategoryCompare = ({
                               const select = largeOptions.find(
                                 (item) => item.value === data,
                               );
+
                               selectedOrganization &&
                                 handleSelectOrganization(selectedOrganization);
                               if (select) {
@@ -378,8 +379,7 @@ const PercentageTeamCategoryCompare = ({
                               const select = mediumOptions.find(
                                 (item) => item.value === data,
                               );
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
+
                               if (select) {
                                 handleSelectMedium(select);
                               }

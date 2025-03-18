@@ -136,9 +136,7 @@ const PercentageTagsCompare = ({
       label: item.tagName || '',
       percentage: item.percent,
       color:
-        item.categoryColor ||
-        lightenColor(colorData as string, item.percent) ||
-        getRandomColor(),
+        lightenColor(colorData as string, item.percent) || getRandomColor(),
       totalDuration: item.duration,
       optionData: item.tasks.map((task) => ({
         label: task.title,
@@ -387,6 +385,7 @@ const PercentageTagsCompare = ({
                     <div className="min-h-[280px] mt-[30px]">
                       {
                         <PercentageBarCompare
+                          isTag
                           data={dataChartLarge}
                           startDate={startDate}
                           endDate={endDate}
@@ -431,6 +430,7 @@ const PercentageTagsCompare = ({
                     <div className="min-h-[280px] mt-[30px]">
                       {
                         <PercentageBarCompare
+                          isTag
                           data={dataChartMedium}
                           startDate={startDate}
                           endDate={endDate}
@@ -490,6 +490,7 @@ const PercentageTagsCompare = ({
                     <div className="min-h-[280px] mt-[30px]">
                       {
                         <PercentageBarCompare
+                          isTag
                           data={dataChartSmall}
                           startDate={startDate}
                           endDate={endDate}
@@ -549,6 +550,7 @@ const PercentageTagsCompare = ({
                     <div className="min-h-[280px] mt-[30px]">
                       {
                         <PercentageBarCompare
+                          isTag
                           data={dataChartCategory}
                           startDate={startDate}
                           endDate={endDate}

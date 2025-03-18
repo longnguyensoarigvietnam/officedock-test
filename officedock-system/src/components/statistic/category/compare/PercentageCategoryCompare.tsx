@@ -206,7 +206,7 @@ const PercentageCategoryCompare = ({
   ) => {
     let duration: string = '00:00:00';
     if (isCompare) {
-      if (type === EventWorkCategory.LARGE) {
+      if (type === EventWorkCategory.LARGE || type === 'ALL') {
         duration =
           statisticCategoryCompareList?.largeCategories.find(
             (item) => item.categoryId == id,
@@ -232,7 +232,7 @@ const PercentageCategoryCompare = ({
 
       setIsShowModalCompare(true);
     } else {
-      if (type === EventWorkCategory.LARGE) {
+      if (type === EventWorkCategory.LARGE || type === 'ALL') {
         duration =
           statisticCategoryList?.largeCategories.find(
             (item) => item.categoryId == id,
@@ -263,6 +263,12 @@ const PercentageCategoryCompare = ({
   const handleScroll = () => {
     const item = largeOptions.find((item) => item.value === detailCategory?.id);
     item && handleSelectLarge(item);
+    if (String(detailCategory?.id) == '未設定') {
+      handleSelectLarge({
+        label: '未設定',
+        value: '未設定',
+      });
+    }
     const element = document.getElementById('task-list-statistic');
     setIsShowModal(false);
 
@@ -418,11 +424,7 @@ const PercentageCategoryCompare = ({
                             id: number | null,
                             isCompare: boolean,
                           ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.LARGE,
-                              isCompare,
-                            );
+                            handleClickTooltip(id, 'ALL', isCompare);
                           }}
                         />
                       }
@@ -471,8 +473,7 @@ const PercentageCategoryCompare = ({
                               const select = mediumOptions.find(
                                 (item) => item.value === data,
                               );
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
+
                               if (select) {
                                 handleSelectMedium(select);
                               }
@@ -484,7 +485,7 @@ const PercentageCategoryCompare = ({
                           ) => {
                             handleClickTooltip(
                               id,
-                              EventWorkCategory.MEDIUM,
+                              EventWorkCategory.LARGE,
                               isCompare,
                             );
                           }}
@@ -548,7 +549,7 @@ const PercentageCategoryCompare = ({
                           ) => {
                             handleClickTooltip(
                               id,
-                              EventWorkCategory.SMALL,
+                              EventWorkCategory.MEDIUM,
                               isCompare,
                             );
                           }}
@@ -567,6 +568,8 @@ const PercentageCategoryCompare = ({
           open={isShowModal}
           startDate={startDate}
           endDate={endDate}
+          selectedLarge={selectedLarge}
+          selectedMedium={selectedMedium}
           detailCategory={detailCategory}
           selectedOrganization={selectedOrganization}
           onClose={() => {
@@ -582,6 +585,8 @@ const PercentageCategoryCompare = ({
           selectedTags={selectedTags}
           startDate={startDateCompare}
           endDate={endDateCompare}
+          selectedLarge={selectedLarge}
+          selectedMedium={selectedMedium}
           detailCategory={detailCategoryCompare}
           selectedOrganization={selectedOrganization}
           onClose={() => {

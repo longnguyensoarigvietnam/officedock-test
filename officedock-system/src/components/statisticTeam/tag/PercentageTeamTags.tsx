@@ -146,7 +146,6 @@ const PercentageTeamTags = ({
     // Get list color
     const listColor = filteredCategories.map(
       (color, index) =>
-        color.categoryColor ||
         lightenColor(colorData as string, listPercent[index]) ||
         getRandomColor(),
     );
@@ -159,16 +158,17 @@ const PercentageTeamTags = ({
     // Get list options
     const listDataOptions = categories.map(
       (item) =>
-        item.tasks &&
-        item.tasks.slice(0, 6).map((task) => ({
-          label: task.title,
-        })),
+        item.users?.slice(0, 6).map((user) => ({
+          label: user.user.fullName,
+          percent: user.percent,
+        })) || [],
     );
     // Get list id
     const listDataIds = categories.map((item) => item.tagId as number);
     // Get list duration
+    // Get list duration
     const listDuration = categories.map(
-      (item) => item.tasks && item.tasks.map((task) => task.totalDuration),
+      (item) => item.users?.map((user) => user.duration) || [],
     );
 
     return {
