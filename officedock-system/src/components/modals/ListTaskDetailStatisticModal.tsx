@@ -29,8 +29,8 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   selectedTags: OptionDropdownType[];
-  selectedLarge: OptionDropdownType | null;
-  selectedMedium: OptionDropdownType | null;
+  selectedLarge?: OptionDropdownType | null;
+  selectedMedium?: OptionDropdownType | null;
   onClose: () => void;
   handleScroll: () => void;
 };
