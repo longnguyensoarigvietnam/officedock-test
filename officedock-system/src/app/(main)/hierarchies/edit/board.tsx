@@ -403,7 +403,7 @@ const EditHierarchyForm = () => {
   return (
     <div className="flex flex-col h-full">
       <div className="sticky z-[21] top-[0px] pl-8 pt-8 pb-3 bg-[#EBF1F7]">
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-4 items-center mb-5">
           <p className="text-black font-medium text-[26px]">
             業務カテゴリー設定
           </p>
@@ -444,7 +444,7 @@ const EditHierarchyForm = () => {
             />
           </div>
 
-          <div className="flex justify-center gap-3 my-7 items-center">
+          <div className="flex justify-center gap-3 items-center">
             <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
               <Button
                 variant="outline"
@@ -465,7 +465,7 @@ const EditHierarchyForm = () => {
           </div>
         </div>
       </div>
-      <div className="pl-8">
+      <div className="pl-8 mt-5">
         {selectedOrganizationOption.value === '' ? (
           <div className="flex flex-col gap-5">
             {hierarchyList.map((data) => (

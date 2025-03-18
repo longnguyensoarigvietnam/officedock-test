@@ -45,7 +45,7 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
   return menuItems.map((item) => {
     const updatedItem = { ...item };
 
-    if (updatedItem.href && pathname == (updatedItem.href)) {
+    if (updatedItem.href && pathname == updatedItem.href) {
       updatedItem.current = true;
     } else if (updatedItem.children) {
       const childWithMatchingHref = updatedItem.children.find((child) =>
@@ -260,8 +260,8 @@ const Sidebar = ({ className }: Props) => {
                                 const params = new URLSearchParams(
                                   searchParams.toString(),
                                 );
-                                params.set('tabId', '0');
                                 params.delete('organization');
+                                params.delete('tabId');
                                 if (
                                   item.href ===
                                   pageRouters.TASKS_MANAGEMENT.href
@@ -503,12 +503,12 @@ const Sidebar = ({ className }: Props) => {
                                       searchParams.toString(),
                                     );
                                     if (!organizationId) {
-                                      if(selectedOrganization){
+                                      if (selectedOrganization) {
                                         params.set(
                                           'organization',
                                           selectedOrganization.value as string,
                                         );
-                                      } else{
+                                      } else {
                                         const mainOrganization = {
                                           label:
                                             authenticatedUser?.organizations.find(
@@ -525,7 +525,7 @@ const Sidebar = ({ className }: Props) => {
                                           label: mainOrganization.label,
                                           value: mainOrganization.value,
                                         });
-  
+
                                         params.set(
                                           'organization',
                                           mainOrganization.value as string,

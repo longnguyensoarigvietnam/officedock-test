@@ -48,7 +48,7 @@ const Tabs = ({
   const tabIdParam = searchParams.get('tabId');
 
   useEffect(() => {
-    setTabIdx(Number(tabIdParam));
+    setTabIdx(tabIdParam ? Number(tabIdParam) : 0);
   }, [tabIdParam]);
 
   const onChangeTab = (idx: number) => {
