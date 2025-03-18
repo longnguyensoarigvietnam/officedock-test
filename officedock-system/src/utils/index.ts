@@ -202,7 +202,9 @@ export function decodeHtml(str: string): string {
     .replace(/&#039;/g, "'");
 }
 // Split the input by new lines and wrap the parts in <p> tags
-export function formatWithParagraphTags(content: string | null | undefined): string {
+export function formatWithParagraphTags(
+  content: string | null | undefined,
+): string {
   if (!content) return '';
   const parts = content.split('\n').map((line, index) => {
     return index === 0 ? line : `<p>${line}</p>`;
@@ -288,7 +290,7 @@ export function transformDataTaskDailyToTable(
       },
       organization: task.organization,
       status: task.status,
-      tags: task.tags,
+      tags: task.tags as { id: number; name: string }[],
       type: task.type,
       todoList: task.todoList,
       totalDuration: duration.duration,
@@ -322,7 +324,7 @@ export function transformDataTaskDailyToTable(
       },
       isRunning: task.taskDurations[0].pausedAt === null ? true : false,
       status: task.status,
-      tags: task.tags,
+      tags: task.tags as { id: number; name: string }[],
       taskDuration: task.totalDuration,
       children,
       type: task.type,
@@ -641,3 +643,62 @@ export const getChatFileURL = (url: string) => {
   }
   return '';
 };
+//Calculate duration percentage
+export const calculateDurationPercentage = (
+  firstDuration: string,
+  secondDuration: string,
+) => {
+  // Convert "HH:MM:SS" to total seconds
+  const timeToSeconds = (time: string) => {
+    const [hours, minutes, seconds] = time.split(':').map(Number);
+    return hours * 3600 + minutes * 60 + seconds;
+  };
+
+  const firstSeconds = timeToSeconds(firstDuration);
+  const secondSeconds = timeToSeconds(secondDuration);
+
+  if (secondSeconds === 0) {
+    return '';
+  }
+
+  const percentage = (firstSeconds / secondSeconds) * 100;
+
+  return `${Math.ceil(percentage)}%`;
+};
+
+// Opacity color follow percent
+export function lightenColor(color: string | null, percent: number): string {
+  const defaultColor = '#2E9267';
+
+  const hexToRgb = (hex: string): [number, number, number] => {
+    hex = (hex || defaultColor).replace(/^#/, '');
+    if (hex.length === 3) {
+      hex = hex
+        .split('')
+        .map((x) => x + x)
+        .join('');
+    }
+    const num = parseInt(hex, 16);
+    return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+  };
+
+  const rgbToHex = ([r, g, b]: [number, number, number]): string =>
+    `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+
+  const adjustBrightness = (percent: number): number => {
+    return 100 - (100 - percent) / 2;
+  };
+
+  const mixWithWhite = (
+    rgb: [number, number, number],
+    percent: number,
+  ): [number, number, number] =>
+    rgb.map((c) =>
+      Math.round(
+        c * (adjustBrightness(percent) / 100) +
+          255 * (1 - adjustBrightness(percent) / 100),
+      ),
+    ) as [number, number, number];
+
+  return rgbToHex(mixWithWhite(hexToRgb(color || defaultColor), percent));
+}

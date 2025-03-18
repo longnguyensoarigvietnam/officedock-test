@@ -1063,7 +1063,7 @@ const EventCalendar = () => {
 
             if (event.end) {
               const end = new Date(event.end);
-              if (start.toDateString() !== end.toDateString() && event.allDay) {
+              if ((start.toDateString() !== end.toDateString() && event.allDay) || isMidnight(new Date(event.end))) {
                 end.setDate(end.getDate() + 1);
                 event.end = end.toISOString();
               }
@@ -1543,10 +1543,9 @@ const EventCalendar = () => {
             const dataEndDate =
               data.startDate &&
               data.endDate &&
-              new Date(data.startDate).toDateString() !==
+              ((new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              !isMidnight(new Date(data.endDate)) &&
-              data.isAllDay
+              data.isAllDay) || isMidnight(new Date(data.endDate)))
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
@@ -1720,10 +1719,9 @@ const EventCalendar = () => {
             const dataEndDate =
               data.startDate &&
               data.endDate &&
-              new Date(data.startDate).toDateString() !==
+              ((new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              !isMidnight(new Date(data.endDate)) &&
-              data.isAllDay
+              data.isAllDay) || isMidnight(new Date(data.endDate)))
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
@@ -2313,7 +2311,7 @@ const EventCalendar = () => {
           </div>
         )}
         <div
-          className={`transition-all duration-300 ${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
+          className={`${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
           <CalendarSidebar
             getEventCalendarByUsers={getEventCalendarByUsers}
             handleFilterScheduleByUserIds={handleFilterScheduleByUserIds}
@@ -2509,8 +2507,8 @@ const EventCalendar = () => {
             let newTagIds: OptionDropdownType[] = [];
             if (data.tags) {
               newTagIds = data.tags.map((item) => ({
-                label: item.name,
-                value: item.id,
+                label: String(item.name),
+                value: String(item.id),
               }));
             }
 

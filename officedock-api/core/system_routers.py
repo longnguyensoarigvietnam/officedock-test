@@ -2,7 +2,11 @@ from rest_framework import routers
 
 from calendars.apis import CalendarViewSet, ScheduleViewSet
 from skills.apis import StatisticCategoryViewSet, SkillMapViewSet, SkillViewSet
-from stat_data.apis import StatDataViewSet
+from stat_data.apis import (
+    StatDataViewSet,
+    StatisticViewSet,
+    OrganizationStatisticViewSet,
+)
 from submit_levels.apis import SubmitLevelViewSet
 from tasks.apis import (
     TaskBoardViewSet,
@@ -18,7 +22,11 @@ from users.apis import (
     SystemUserMemoViewSet,
     SystemUserViewSet,
 )
-from organizations.apis import OrganizationViewSet, OrganizationSkillViewSet
+from organizations.apis import (
+    OrganizationViewSet,
+    OrganizationSkillViewSet,
+    OrganizationCategoryHierarchyViewSet,
+)
 from common.apis import SystemCreationDataViewSet, CronJobViewSet
 from tags.apis import TagViewSet
 from dashboard.apis import (
@@ -68,6 +76,11 @@ api_router.register(
     StatisticCategoryViewSet,
     basename="statistic_categories",
 )
+api_router.register(
+    "organization-category-hierarchies",
+    OrganizationCategoryHierarchyViewSet,
+    basename="org_category_hierarchies",
+)
 api_router.register("schedules", ScheduleViewSet, basename="schedules")
 api_router.register("calendars", CalendarViewSet, basename="calendars")
 api_router.register("durations", DurationViewSet, basename="durations")
@@ -84,6 +97,12 @@ api_router.register(
 api_router.register("roles", RoleViewSet, basename="roles")
 api_router.register("cron-jobs", CronJobViewSet, basename="cron_jobs")
 api_router.register("chat-files", ChatFileViewSet, basename="chat_files")
+api_router.register("statistics", StatisticViewSet, basename="statistics")
+api_router.register(
+    "organization-statistics",
+    OrganizationStatisticViewSet,
+    basename="organization_statistics",
+)
 
 # Add api router urls
 urlpatterns = []

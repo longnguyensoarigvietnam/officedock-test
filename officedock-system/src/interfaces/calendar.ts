@@ -14,7 +14,7 @@ export interface EventCalendarDetail {
   isMyEvent?: boolean;
   participants?: EventParticipant[];
   resourceIds?: string[];
-  address?: string
+  address?: string;
 }
 
 export interface EventCalendarDayRange {
@@ -95,6 +95,7 @@ export interface CreationDataEventCalendar {
     id: number;
     name: string;
     superior: { id: number; name: string } | null;
+    tags: { id: number; name: string }[];
   }[];
 }
 

@@ -264,8 +264,8 @@ const ActionsTemplateModal = ({
       if (dataTemplate.tags) {
         value.tagIds = dataTemplate.tags.map((tag) => {
           return {
-            value: tag.id,
-            label: tag.name,
+            value: String(tag.id),
+            label: String(tag.name),
           };
         });
       }
@@ -424,8 +424,8 @@ const ActionsTemplateModal = ({
       );
       setDataOptionsTagIds(
         creationDataTaskData.tags.map((org) => ({
-          label: org.name,
-          value: org.id,
+          label: String(org.name),
+          value: String(org.id),
         })),
       );
     }
@@ -752,7 +752,7 @@ const ActionsTemplateModal = ({
                 render={({ field: { value, onChange } }) => {
                   return (
                     <Dropdown
-                      placeholder="大カテゴリ"
+                      placeholder="大カテゴリー"
                       className="h-[34px] !py-1 text-xs !border-[#77858F] rounded-md"
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"

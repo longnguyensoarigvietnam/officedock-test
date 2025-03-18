@@ -1,6 +1,6 @@
 'use client';
 import { useContext, useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Disclosure,
@@ -16,20 +16,26 @@ import 'tippy.js/dist/tippy.css';
 import ImageRound from '@components/common/ImageRound';
 import Tabs from '@components/common/Tabs';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
+import Dropdown from '@components/common/Dropdown';
 
-import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
+import {
+  SYSTEM_PERMISSIONS_MENU,
+  SYSTEM_PERMISSIONS_MENU_TEAM,
+} from '@constants/menu';
 import { PermissionsSystem, SocketActions, TabType } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
 import { MenuItem } from '@interfaces/menu';
-import { OptionTabType } from '@interfaces/common';
+import { OptionDropdownType, OptionTabType } from '@interfaces/common';
 
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import useDashboardUnreadMessages from '@hooks/useDashboardUnreadMessages';
 
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { WebSocketMessageData } from '@interfaces/chat';
 import { showBackgroundColorByTime } from '@utils';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 type Props = {
   className?: string;
@@ -39,17 +45,19 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
   return menuItems.map((item) => {
     const updatedItem = { ...item };
 
-    if (updatedItem.href && pathname == updatedItem.href) {
-      updatedItem.current = true;
-    } else if (updatedItem.children) {
-      const childWithMatchingHref = updatedItem.children.find((child) =>
-        child.href.startsWith(pathname),
-      );
-      if (childWithMatchingHref) {
-        updatedItem.current = true;
-        childWithMatchingHref.current = true;
-      }
+    if (updatedItem.href) {
+      const isActive =
+        pathname === updatedItem.href ||
+        (pathname.startsWith(updatedItem.href + "/") && updatedItem.href !== "/");
+
+      updatedItem.current = isActive;
+    }
+
+    if (updatedItem.children) {
       updatedItem.children = updateCurrent(updatedItem.children, pathname);
+      if (updatedItem.children.some((child) => child.current)) {
+        updatedItem.current = true;
+      }
     }
 
     return updatedItem;
@@ -59,14 +67,26 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
 const Sidebar = ({ className }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
+  const { authenticatedUser } = useAuthenticatedUser();
+  const searchParams = useSearchParams();
+  const [organizationList, setOrganizationList] = useState<
+    OptionDropdownType[]
+  >([]);
+  const organizationId = searchParams.get('organization');
 
   const { data: session } = useSession();
   const today = new Date();
 
   const { memberSelected, tagSelected, setMemberSelected, setTagSelected } =
     useContext(TaskContext);
-  const { totalNotifications, expanded, setExpanded, setTotalNotifications } =
-    useContext(GlobalStateContext);
+  const {
+    totalNotifications,
+    expanded,
+    selectedOrganization,
+    setSelectedOrganization,
+    setExpanded,
+    setTotalNotifications,
+  } = useContext(GlobalStateContext);
   const { dashboardUnreadMessages } = useDashboardUnreadMessages();
 
   const MENU_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
@@ -82,6 +102,23 @@ const Sidebar = ({ className }: Props) => {
     { name: TabType.MY_DOC },
     { name: TabType.TEAM_DOCK },
   ];
+
+  const MENU_ITEMS_TEAM = SYSTEM_PERMISSIONS_MENU_TEAM.filter((menu) => {
+    if (menu.requiredPermission === PermissionsSystem.VIEW_ALL) {
+      return true;
+    }
+    return session?.user.permissions.includes(menu.requiredPermission);
+  });
+  const menuItemsCloneTeam: MenuItem[] = lodash.cloneDeep(MENU_ITEMS_TEAM);
+  const menuItemsTeam = updateCurrent(menuItemsCloneTeam, pathname);
+
+  const getRandomColor = () => {
+    const hue = Math.floor(Math.random() * 360);
+    const saturation = Math.floor(Math.random() * (80 - 40) + 40);
+    const lightness = Math.floor(Math.random() * (70 - 30) + 30);
+
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  };
 
   useEffect(() => {
     const handleSocketMessage = (data: WebSocketMessageData) => {
@@ -109,6 +146,42 @@ const Sidebar = ({ className }: Props) => {
     if (dashboardUnreadMessages)
       setTotalNotifications(dashboardUnreadMessages?.total);
   }, [dashboardUnreadMessages, setTotalNotifications]);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      setOrganizationList(
+        authenticatedUser.organizations.map((org) => {
+          const randomColor = getRandomColor();
+          return {
+            value: org.id,
+            label: org.name,
+            imgComponent: <GroupIconWithDynamicColor color={randomColor} />,
+          };
+        }),
+      );
+    }
+  }, [authenticatedUser]);
+
+  useEffect(() => {
+    if (
+      organizationId &&
+      authenticatedUser?.organizations &&
+      organizationList
+    ) {
+      const foundOrganization = authenticatedUser?.organizations.find(
+        (org) => org.id == Number(organizationId),
+      );
+      if (foundOrganization) {
+        setSelectedOrganization({
+          value: organizationId,
+          label: foundOrganization?.name,
+          imgComponent: organizationList.find(
+            (org) => org.value == organizationId,
+          )?.imgComponent,
+        });
+      }
+    }
+  }, [organizationId, authenticatedUser?.organizations, organizationList]);
 
   const hour = new Intl.DateTimeFormat('ja-JP', {
     timeZone: 'Asia/Tokyo',
@@ -139,6 +212,10 @@ const Sidebar = ({ className }: Props) => {
 
   const memberOption = menuItems.find(
     (item) => item.href == pageRouters.MEMBER_MANAGEMENT.href,
+  );
+
+  const mainOrganization = authenticatedUser?.organizations.find(
+    (organization) => organization.isMain,
   );
 
   return (
@@ -182,11 +259,11 @@ const Sidebar = ({ className }: Props) => {
                               className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                               onClick={() => {
                                 if (isHasTerm) return;
-                                if (
-                                  item.href ===
-                                  pageRouters.STATISTIC_MANAGEMENT.href
-                                )
-                                  return;
+                                const params = new URLSearchParams(
+                                  searchParams.toString(),
+                                );
+                                params.delete('organization');
+                                params.delete('tabId');
                                 if (
                                   item.href ===
                                   pageRouters.TASKS_MANAGEMENT.href
@@ -195,6 +272,7 @@ const Sidebar = ({ className }: Props) => {
                                   setMemberSelected('');
                                   router.push(`${item.href}?view=day`);
                                 } else {
+                                  params.delete('view');
                                   if (
                                     pathname ===
                                       pageRouters.CHAT_MANAGEMENT.href &&
@@ -204,7 +282,9 @@ const Sidebar = ({ className }: Props) => {
                                     return;
                                   }
                                   {
-                                    router.push(item.href);
+                                    router.push(
+                                      `${item.href}?${params.toString()}`,
+                                    );
                                   }
                                 }
                               }}>
@@ -341,7 +421,260 @@ const Sidebar = ({ className }: Props) => {
             </div>
           )}
         </TabPanel>
-        <TabPanel key={1}></TabPanel>
+        <TabPanel key={1}>
+          <nav className="flex flex-col  w-full mb-5  h-full max-h-[70%]">
+            <ul role="list" className="flex flex-col gap-y-6 list-none">
+              <li className="flex-1">
+                <ul role="list" className="list-none pl-2">
+                  {expanded && (
+                    <div className="flex justify-center pr-2 mb-2">
+                      <Dropdown
+                        options={organizationList}
+                        className="!bg-[#182A4B33] !border-none !rounded-[6px] !w-full mb-1 !text-white !font-medium !text-sm !pr-0"
+                        selectedOption={
+                          selectedOrganization || {
+                            label: mainOrganization?.name || '',
+                            value: mainOrganization?.id || '',
+                            imgComponent: organizationList.find(
+                              (org) => org.value == mainOrganization?.id,
+                            )?.imgComponent,
+                          }
+                        }
+                        labelOptionClass="!text-sm"
+                        imgClassname="!w-6 !h-6"
+                        onChange={(e: OptionDropdownType) => {
+                          setSelectedOrganization({
+                            label: e.label,
+                            value: e.value,
+                            imgComponent: organizationList.find(
+                              (org) => org.value == e.value,
+                            )?.imgComponent,
+                          });
+                          const params = new URLSearchParams(
+                            searchParams.toString(),
+                          );
+                          params.set('organization', e.value as string);
+
+                          router.push(`${pathname}?${params.toString()}`);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {menuItemsTeam
+                    .filter(
+                      (item) =>
+                        item.companyMenu == false &&
+                        item.href !== pageRouters.MEMBER_MANAGEMENT.href,
+                    )
+                    .map((item) => (
+                      <Tippy
+                        content={`${item.name}`}
+                        disabled={expanded}
+                        arrow={false}
+                        delay={1000}
+                        key={item.name}
+                        placement="right"
+                        offset={[0, 0]}>
+                        <li key={item.name} className={`text-sm relative`}>
+                          {!item.children ? (
+                            <div
+                              className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
+                              onClick={() => {
+                                if (isHasTerm) return;
+                                if (
+                                  item.href ===
+                                  pageRouters.TASKS_MANAGEMENT.href
+                                ) {
+                                  setTagSelected('');
+                                  setMemberSelected('');
+                                  router.push(`${item.href}?view=day`);
+                                } else {
+                                  if (
+                                    pathname ===
+                                      pageRouters.CHAT_MANAGEMENT.href &&
+                                    item.href ===
+                                      pageRouters.CHAT_MANAGEMENT.href
+                                  ) {
+                                    return;
+                                  }
+                                  {
+                                    const organizationId =
+                                      searchParams.get('organization');
+                                    const params = new URLSearchParams(
+                                      searchParams.toString(),
+                                    );
+                                    if (!organizationId) {
+                                      if (selectedOrganization) {
+                                        params.set(
+                                          'organization',
+                                          selectedOrganization.value as string,
+                                        );
+                                      } else {
+                                        const mainOrganization = {
+                                          label:
+                                            authenticatedUser?.organizations.find(
+                                              (organization) =>
+                                                organization.isMain,
+                                            )?.name || '',
+                                          value:
+                                            authenticatedUser?.organizations.find(
+                                              (organization) =>
+                                                organization.isMain,
+                                            )?.id || '',
+                                        };
+                                        setSelectedOrganization({
+                                          label: mainOrganization.label,
+                                          value: mainOrganization.value,
+                                        });
+
+                                        params.set(
+                                          'organization',
+                                          mainOrganization.value as string,
+                                        );
+                                      }
+                                    }
+                                    params.set('tabId', '1');
+
+                                    router.push(
+                                      `${item.href}?${params.toString()}`,
+                                    );
+                                  }
+                                }
+                              }}>
+                              {item.iconUrl && (
+                                <ImageRound
+                                  className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
+                                  src={item.iconUrl(item.current)}
+                                  name={`Icon ${item.name} menu`}
+                                />
+                              )}
+                              {!expanded &&
+                                item.iconUrl &&
+                                item.iconUrl(true).includes('chat') &&
+                                totalNotifications > 0 && (
+                                  <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                                )}
+                              {expanded && (
+                                <>
+                                  <p
+                                    className={`opacity-100 text-left font-medium w-fit text-white ${item.current && !memberSelected && !tagSelected && '!text-black'}`}>
+                                    {item.name}
+                                  </p>
+                                </>
+                              )}
+                              {expanded &&
+                                item.hasNotification &&
+                                totalNotifications != undefined &&
+                                totalNotifications > 0 && (
+                                  <p className="rounded-full w-4 h-4 bg-error text-[10px] text-center text-white leading-4">
+                                    {totalNotifications}
+                                  </p>
+                                )}
+                            </div>
+                          ) : (
+                            <Disclosure as="div" defaultOpen={item.current}>
+                              {({ open }) => (
+                                <>
+                                  <DisclosureButton
+                                    className={`flex items-center w-full gap-4 py-4 px-3 hover:bg-gray-50`}>
+                                    {item.iconUrl && (
+                                      <ImageRound
+                                        className="w-4 h-4"
+                                        src={item.iconUrl(item.current)}
+                                        name={`Icon ${item.name} menu`}
+                                      />
+                                    )}
+                                    <p
+                                      className={`flex-1 text-left ${item.current ? 'font-medium text-primary' : ''}`}>
+                                      {item.name}
+                                    </p>
+                                    <ImageRound
+                                      className={`w-4 h-4 ${open ? 'rotate-180' : ''}`}
+                                      src={`/icons/arrow-down${item.current ? '-active' : ''}.svg`}
+                                      name="Arrow menu icon"
+                                    />
+                                  </DisclosureButton>
+                                  <DisclosurePanel
+                                    as="ul"
+                                    className="list-none mt-1 px-2 last:pb-2">
+                                    {item.children?.map((subItem) => (
+                                      <li key={subItem.name}>
+                                        <Link
+                                          href={subItem.href}
+                                          className={`block py-2 pr-2 pl-9 ${subItem.current ? 'font-medium text-primary' : 'hover:bg-gray-50'}`}>
+                                          {subItem.name}
+                                        </Link>
+                                      </li>
+                                    ))}
+                                  </DisclosurePanel>
+                                </>
+                              )}
+                            </Disclosure>
+                          )}
+                        </li>
+                      </Tippy>
+                    ))}
+                </ul>
+              </li>
+            </ul>
+          </nav>
+          {memberOption && (
+            <div
+              className={`absolute ${expanded ? 'bottom-[40px]' : 'bottom-[40px]'}  left-0 w-full`}>
+              <ul
+                role="list"
+                className="flex max-h-20 flex-col gap-y-6 list-none">
+                <li className="flex-1">
+                  <ul role="list" className="list-none pl-2">
+                    <Tippy
+                      content={`${memberOption.name}`}
+                      disabled={expanded}
+                      arrow={false}
+                      delay={1000}
+                      key={memberOption.name}
+                      placement="right"
+                      offset={[0, 0]}>
+                      <li
+                        key={memberOption.name}
+                        className={`text-sm relative`}>
+                        <div
+                          className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
+                          onClick={() => {
+                            if (isHasTerm) return;
+
+                            router.push(memberOption.href);
+                          }}>
+                          {memberOption.iconUrl && (
+                            <ImageRound
+                              className={`w-5 h-5 ${!expanded && 'ml-2 my-1'}`}
+                              src={memberOption.iconUrl(memberOption.current)}
+                              name={`Icon ${memberOption.name} menu`}
+                            />
+                          )}
+                          {!expanded &&
+                            memberOption.iconUrl &&
+                            memberOption.iconUrl(true).includes('chat') &&
+                            totalNotifications > 0 && (
+                              <div className="notification-dot absolute bg-error w-1 h-1 rounded-full right-4 top-4" />
+                            )}
+                          {expanded && (
+                            <>
+                              <p
+                                className={`opacity-100 text-left font-medium w-fit text-white ${memberOption.current && !memberSelected && !tagSelected && '!text-black'}`}>
+                                {memberOption.name}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </li>
+                    </Tippy>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          )}
+        </TabPanel>
         <Tippy
           content={expanded ? 'メニューバーを縮小' : 'メニューバーを拡大'}
           arrow={false}

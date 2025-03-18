@@ -1,3 +1,5 @@
+import { StatisticCategoryInfo } from './statistic';
+
 export interface OptionDropdownType {
   value: string | number;
   label: string;
@@ -6,6 +8,7 @@ export interface OptionDropdownType {
   totalData?: string;
   largeColor?: string;
   teamId?: number;
+  imgComponent?: any
 }
 
 export interface BasePagination<T> {
@@ -18,4 +21,30 @@ export interface BasePagination<T> {
 export interface OptionTabType {
   name: string;
   badge?: string | number;
+}
+export interface DataChartType {
+  colors: string[];
+  labels: string[];
+  data: number[];
+  actualValue: string[];
+  optionData: {
+    label: string;
+    percent?: number;
+  }[][];
+  listId: number[];
+  listDuration: string[][];
+  mergedItems: StatisticCategoryInfo[];
+}
+
+export interface DataPercentCompareType {
+  id: number;
+  label: string;
+  percentage: number;
+  color: string;
+  totalDuration: string;
+  optionData: {
+    label: string;
+    percent?: number;
+  }[];
+  mergedItems: StatisticCategoryInfo[];
 }

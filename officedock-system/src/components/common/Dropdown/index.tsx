@@ -30,16 +30,20 @@ type Props = {
   classNameOption?: string;
   classNameError?: string;
   classNameTextData?: string;
+  classTextOption?: string;
   placeholder?: string;
   searchOption?: boolean;
   openByDefault?: boolean;
   isShowIconDrop?: boolean;
   labelClass?: string;
+  labelTextClass?: string;
   classActive?: string;
   labelOptionClass?: string;
+  placeholderClass?: string;
   addInput?: boolean;
   styleClass?: CSSProperties;
   styleClassOption?: CSSProperties;
+  imgClassname?: string;
   onChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
 };
@@ -51,9 +55,12 @@ const Dropdown = ({
   isLoading,
   options,
   labelClass,
+  labelTextClass,
+  placeholderClass,
   isStatusDropdown,
   labelOptionClass,
   placeholder,
+  classTextOption,
   disabled = false,
   className,
   classNameOption,
@@ -67,6 +74,7 @@ const Dropdown = ({
   styleClass,
   styleClassOption,
   isShowIconDrop = true,
+  imgClassname,
   onAdd,
   onChange,
 }: Props) => {
@@ -143,7 +151,7 @@ const Dropdown = ({
   return (
     <div className="flex flex-col w-full h-full">
       {label && (
-        <label className={`text-sm`}>
+        <label className={`text-sm ${labelTextClass}`}>
           {label}
           {required && <span className="text-error align-super">*</span>}
         </label>
@@ -165,17 +173,18 @@ const Dropdown = ({
                           <ImageRound
                             src={selected.imgUrl}
                             name="Image selected option"
-                            className="w-4 h-4"
+                            className={`w-4 h-4 ${imgClassname}`}
                           />
                         )}
+                        {selected.imgComponent}
                         <span
-                          className={`${selected.imgUrl && 'ml-3'} block truncate ${labelClass} ${classActive} `}>
+                          className={`${selected.imgUrl && 'ml-3'} ${selected.imgComponent && 'ml-2'} block truncate ${labelClass} ${classActive} `}>
                           {selected.label}
                         </span>
                       </>
                     ) : (
                       <span
-                        className={`block truncate text-gray-300 ${labelClass}`}>
+                        className={`block truncate text-gray-300 ${labelClass} ${placeholderClass}`}>
                         {placeholder || <div className="h-[22px]"></div>}
                       </span>
                     )}
@@ -247,7 +256,8 @@ const Dropdown = ({
                           onClick={() => handleOptionClick(option)}>
                           {() => (
                             <>
-                              <div className="flex  items-center w-full">
+                              <div
+                                className={`flex  items-center w-full ${classTextOption}`}>
                                 {option.imgUrl && (
                                   <ImageRound
                                     src={option.imgUrl}
@@ -255,13 +265,18 @@ const Dropdown = ({
                                     className="!w-4 !h-4"
                                   />
                                 )}
+                                {option.imgComponent && (
+                                  <div className="w-4 mr-3">
+                                    {option.imgComponent}
+                                  </div>
+                                )}
                                 {isStatusDropdown && (
                                   <div
                                     className={`${statusStyles.find((item) => item.label == option.label)?.color} w-3 h-3 ml-2 rounded-full`}
                                   />
                                 )}
                                 <p
-                                  className={` ${!openByDefault ? 'ml-3' : 'text-center w-full'}  block truncate  ${!isStatusDropdown && selected?.value === option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'}`}>
+                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'}  block truncate  ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'}`}>
                                   {option.label}
                                 </p>
                                 {isStatusDropdown && (

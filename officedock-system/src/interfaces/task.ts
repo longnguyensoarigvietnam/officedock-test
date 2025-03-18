@@ -202,6 +202,7 @@ export interface CreationDataTask {
     id: number;
     name: string;
     superior: { id: number; name: string } | null;
+    tags: { id: number; name: string }[];
   }[];
   organizationCategories: Team[];
 }

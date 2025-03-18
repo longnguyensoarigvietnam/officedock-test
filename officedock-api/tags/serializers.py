@@ -1,8 +1,9 @@
 from rest_framework import serializers
 
-from users.models import User
-from users.serializers import BaseUserSerializer, UsersForCreationSerializer
-from .models import Tag, PeopleInChargeTags
+from base.messages import ERROR_MESSAGES
+from common.serializers import CreationDataOrganizationSerializer
+from organizations.models import Organization
+from .models import Tag
 
 
 class BaseTagSerializer(serializers.ModelSerializer):
@@ -20,17 +21,16 @@ class TagSerializer(serializers.ModelSerializer):
     Serializer for Tag
     """
 
-    responsible_person = BaseUserSerializer(read_only=True)
-    responsible_person_id = serializers.PrimaryKeyRelatedField(
-        source="responsible_person",
-        queryset=User.objects.all(),
+    organization_ids = serializers.PrimaryKeyRelatedField(
+        source="organizations",
+        queryset=Organization.objects.all(),
         write_only=True,
         required=False,
         allow_null=True,
+        many=True,
     )
-    people_in_charge = BaseUserSerializer(many=True, read_only=True)
-    people_in_charge_ids = UsersForCreationSerializer(
-        many=True, write_only=True
+    organizations = CreationDataOrganizationSerializer(
+        many=True, read_only=True
     )
 
     class Meta:
@@ -38,26 +38,43 @@ class TagSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "responsible_person",
-            "responsible_person_id",
-            "people_in_charge",
-            "people_in_charge_ids",
+            "organization_ids",
+            "organizations",
+            "is_hidden",
         ]
+
+    def validate(self, data):
+        """
+        Validate data
+        """
+        user = self.context["request"].user
+        organizations = data.get("organizations")
+        name = data.get("name")
+        if organizations:
+            for organization in organizations:
+                if not user.company.organizations.filter(
+                    id=organization.id
+                ).exists():
+                    raise serializers.ValidationError(
+                        {"detail": ERROR_MESSAGES["organization_not_exists"]}
+                    )
+        if (
+            name
+            and Tag.objects.filter(name=name, company=user.company)
+            .exclude(id=self.instance.id if self.instance else None)
+            .exists()
+        ):
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["tag_exists"]}
+            )
+
+        return data
 
     def to_representation(self, instance):
         """
         Custom sorting by index for list people in charge
         """
         representation = super().to_representation(instance)
-        sorted_users = [
-            item.user
-            for item in PeopleInChargeTags.objects.filter(
-                tag=instance
-            ).order_by("id")
-        ]
-        representation["people_in_charge"] = BaseUserSerializer(
-            sorted_users, many=True
-        ).data
 
         return representation
 

@@ -20,6 +20,8 @@ from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
 from .filters import OrganizationFilter, OrganizationSkillFilter
 from .serializers import (
+    OrganizationCategoryHierarchyForCreateSerializer,
+    OrganizationCategoryHierarchySerializer,
     OrganizationMemberSerializer,
     OrganizationSerializer,
     OrganizationDetailSerializer,
@@ -30,6 +32,7 @@ from .serializers import (
 from .models import (
     Organization,
     OrganizationsSkills,
+    OrganizationsStatisticCategories,
 )
 
 
@@ -141,7 +144,11 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Checking if there are any users associated with the organization
         if instance.users.count() > 0 or instance.tasks.count() > 0:
             raise ValidationError(
-                {"detail": ERROR_MESSAGES["organization_in_use"]}
+                {
+                    "detail": ERROR_MESSAGES["cannot_delete_type"].format(
+                        type=KEYWORDS["organization"]
+                    )
+                }
             )
 
         return super().perform_destroy(instance)
@@ -524,3 +531,148 @@ class OrganizationSkillViewSet(
         instance.delete()
 
         return self.response(status_code=HTTP_204_NO_CONTENT)
+
+
+@extend_schema(tags=["System > Organization > Statistic Category hierarchy"])
+class OrganizationCategoryHierarchyViewSet(
+    BaseAPIViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+):
+    """
+    API endpoint for Organization Category.
+    """
+
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationCategoryHierarchySerializer
+    permission_classes = [ActionPermission]
+    pagination_class = None
+    screen_name = Screens.CATEGORY_HIERARCHY.value
+
+    def get_queryset(self):
+        """
+        Filtering orgs by company.
+        """
+
+        user = self.request.user
+        company = user.company
+
+        return super().get_queryset().filter(company=company).order_by("-id")
+
+    def get_serializer_class(self):
+        """Custom serializer class"""
+        if self.action == "create":
+            return OrganizationCategoryHierarchyForCreateSerializer
+
+        return super().get_serializer_class()
+
+    def get_serializer_context(self):
+        """
+        Add request to context
+        """
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        company = request.user.company
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        data_to_create = serializer_data.pop("items", [])
+        ids_do_delete = serializer_data.pop("ids", [])
+
+        if data_to_create:
+            for item in data_to_create:
+                organization_statistic_category = item.pop(
+                    "organization_statistic_category", None
+                )
+                large_statistic_category = (
+                    self._get_statistic_category_instance(
+                        item.pop("large_statistic_category", None), company
+                    )
+                )
+                medium_statistic_category = (
+                    self._get_statistic_category_instance(
+                        item.pop("medium_statistic_category", None), company
+                    )
+                )
+                small_statistic_category = (
+                    self._get_statistic_category_instance(
+                        item.pop("small_statistic_category", None), company
+                    )
+                )
+                color = item.get("color", None)
+                organization = item.get("organization", None)
+                skills = item.pop("skills", [])
+
+                if organization_statistic_category:
+                    # Handle to create new organization_statistic_category
+                    organization_statistic_category.large_statistic_category = (
+                        large_statistic_category
+                    )
+                    organization_statistic_category.medium_statistic_category = (
+                        medium_statistic_category
+                    )
+                    organization_statistic_category.small_statistic_category = (
+                        small_statistic_category
+                    )
+                    if color:
+                        organization_statistic_category.color = color
+                    organization_statistic_category.save()
+
+                    # Remove skills
+                    organization_statistic_category.organizations_statistic_categories_skills.all().delete()
+
+                else:
+                    # Handle to update organization_statistic_category
+                    organization_statistic_category = (
+                        OrganizationsStatisticCategories.objects.create(
+                            **item,
+                            large_statistic_category=large_statistic_category,
+                            medium_statistic_category=medium_statistic_category,
+                            small_statistic_category=small_statistic_category,
+                        )
+                    )
+
+                # Remove duplicate record
+                records = OrganizationsStatisticCategories.objects.filter(
+                    organization=organization,
+                    large_statistic_category=large_statistic_category,
+                    medium_statistic_category=medium_statistic_category,
+                    small_statistic_category=small_statistic_category,
+                ).order_by("-id")
+                records.exclude(id=records.first().id).delete()
+
+                # Create new organization category skills
+                if organization_statistic_category and skills:
+                    for skill in skills:
+                        organization_statistic_category.organizations_statistic_categories_skills.get_or_create(
+                            organization=organization_statistic_category.organization,
+                            skill=skill,
+                        )
+
+        if ids_do_delete:
+            OrganizationsStatisticCategories.objects.filter(
+                id__in=ids_do_delete
+            ).delete()
+
+        return self.response_created()
+
+    def _get_statistic_category_instance(self, obj, company):
+        """Get instance"""
+        large_statistic_category = None
+
+        if obj:
+            (
+                large_statistic_category,
+                _,
+            ) = StatisticCategory.objects.get_or_create(
+                company=company,
+                name=obj.get("name"),
+                defaults={"uuid": obj.get("uuid")},
+            )
+        return large_statistic_category

@@ -246,8 +246,8 @@ const ActionsEventModal = ({
         value.tagIds = dataEvent.tags
           ? dataEvent.tags.map((tag) => {
               return {
-                value: tag.id,
-                label: tag.name,
+                value: String(tag.id),
+                label: String(tag.name),
               };
             })
           : [];
@@ -413,6 +413,24 @@ const ActionsEventModal = ({
     }
   }, [dataOrganizationCategories, largeCategoryValue, watch]);
 
+  const selectedOrganization = watch('organization') as OptionDropdownType;
+
+  useEffect(() => {
+    if (selectedOrganization && creationDataEventCalendar) {
+      const organizationTags =
+        creationDataEventCalendar.organizations.find(
+          (org) => org.id === selectedOrganization.value,
+        )?.tags || [];
+
+      setDataOptionsTagIds(
+        organizationTags.map((tag) => ({
+          label: tag.name,
+          value: tag.id,
+        })),
+      );
+    }
+  }, [selectedOrganization, creationDataEventCalendar, setValue]);
+
   useMemo(() => {
     if (!dataOrganizationCategories || !watch('mediumCategory.value')) {
       setDataOptionsCategorySmall([]);
@@ -457,8 +475,8 @@ const ActionsEventModal = ({
       );
       setDataOptionsTagIds(
         creationDataEventCalendar.tags.map((org) => ({
-          label: org.name,
-          value: org.id,
+          label: String(org.name),
+          value: String(org.id),
         })),
       );
       setDataOptionsParticipants(
@@ -931,6 +949,8 @@ const ActionsEventModal = ({
                         setDataOptionsCategorySmall([]);
                         setDataOptionsCategoryMedium([]);
                       }
+                      setValue('tagIds', []);
+
                       onChange(e);
                     }}
                   />
@@ -977,7 +997,7 @@ const ActionsEventModal = ({
                         (element) =>
                           element.value == (value as OptionDropdownType)?.value,
                       )}
-                      placeholder={'大カテゴリ'}
+                      placeholder={'大カテゴリー'}
                       onChange={(e) => {
                         if (e.value != watch('largeCategory.value')) {
                           setValue('mediumCategory', { label: '', value: '' });

@@ -159,8 +159,8 @@ const CreateActualDurationsForm = () => {
     if (creationDataTaskData) {
       setDataOptionsTagIds(
         creationDataTaskData.tags.map((org) => ({
-          label: org.name,
-          value: org.id,
+          label: String(org.name),
+          value: String(org.id),
         })),
       );
     }
@@ -230,7 +230,7 @@ const CreateActualDurationsForm = () => {
                 )?.id ?? NO_OPTION_CATEGORY
               : NO_OPTION_CATEGORY,
           },
-          tagIds: data.tags,
+          tagIds: data.tags as { id: number; name: string; }[],
         });
       },
       onError: (error: AxiosError) => {

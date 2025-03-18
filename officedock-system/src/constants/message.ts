@@ -45,7 +45,8 @@ export const START_DATE_REQUIRED_SELECTED = '実施予定日時を設定して�
 export const START_DATE_WRONG_SELECTED = '実施予定日時を入力してください。';
 export const DATE_REQUIRED_DURATION = '計測時間を入力してください。';
 export const UPLOAD_FILE_MAXIMUM_SZIE =
-  '5GB以下のファイルをアップロードしてください。';
+  '32MB以上のファイルをアップロードできません。';
+export const INVALID_CATEGORY_NAME = 'カテゴリー名がすでに存在しています。'
 
 // Success message
 export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました。';

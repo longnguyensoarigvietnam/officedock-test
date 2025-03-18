@@ -29,6 +29,8 @@ export const NO_OPTIONS_CUSTOM = 'データがありません';
 
 export const PAGINATION_PAGE_SIZE_DEFAULT = 5;
 
+export const PAGINATION_PAGE_SIZE_SMALL = 10;
+
 export const PAGINATION_PAGE_SIZE_MEDIUM = 20;
 
 export const PAGINATION_PAGE_SIZE_HIGHT = 50;
@@ -188,7 +190,7 @@ export const TASK_STARTING = 'タスク実行中';
 
 export const BOOKMARK_ROUTER_NAME = 'bookmark';
 
-export const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024;
+export const MAX_FILE_SIZE = 32 * 1024 * 1024;
 
 export const REACTION_LIST = [
   {
@@ -244,3 +246,32 @@ export const REACTION_LIST_SMALL = [
     value: ReactionIconValue.SMILE,
   },
 ];
+export const PAGE_SIZE_OPTIONS = [
+  {
+    label: '10',
+    value: 10,
+  },
+  {
+    label: '20',
+    value: 20,
+  },
+  {
+    label: '30',
+    value: 30,
+  },
+];
+
+export const HIERARCHY_COLOR_LIST = [
+  '#D7576A',
+  '#F0865F',
+  '#2E9267',
+  '#2E9267',
+  '#826AC4',
+  '#FC8EA2',
+  '#EDC45D',
+  '#70CB7E',
+  '#45AFD9',
+  '#899FEB',
+]
+
+export const ALL_TEAMS_OPTION = 'すべてのチーム'

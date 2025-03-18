@@ -229,8 +229,8 @@ const DailyReportBoard = () => {
     if (creationDataTaskData) {
       setDataTagsList(
         creationDataTaskData.tags.map((org) => ({
-          label: org.name,
-          value: org.id,
+          label: String(org.name),
+          value: String(org.id),
         })),
       );
     }
@@ -254,7 +254,7 @@ const DailyReportBoard = () => {
         .map((item) => item.categoryColor);
 
       // Get list label
-      const listLableChart = dataStatistic.categories.map(
+      const listLabelChart = dataStatistic.categories.map(
         (item) => item.categoryName || '未設定',
       );
 
@@ -285,7 +285,7 @@ const DailyReportBoard = () => {
 
       setChartData({
         colors: listColor,
-        labels: listLableChart,
+        labels: listLabelChart,
         data: listValueChart,
         actualValue: listValueActualChart,
       });
@@ -1702,8 +1702,12 @@ const DailyReportBoard = () => {
       const end = new Date(event.end);
       const timeDifference = (end.getTime() - start.getTime()) / (1000 * 60);
 
-      if (timeDifference < 60 && start.getHours() < 23) {
-        event.end = new Date(end.setTime(start.getTime() + 60 * 60 * 1000));
+      if (
+        timeDifference < 5 &&
+        start.getHours() < 23 &&
+        start.getMinutes() <= 50
+      ) {
+        event.end = new Date(start.getTime() + 5 * 60 * 1000);
       }
       return event;
     });

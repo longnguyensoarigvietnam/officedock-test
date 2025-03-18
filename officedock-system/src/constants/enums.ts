@@ -191,6 +191,7 @@ export enum EventWorkCategory {
   LARGE = 'LARGE',
   MEDIUM = 'MEDIUM',
   SMALL = 'SMALL',
+  ALL = 'ALL',
 }
 
 export enum TermType {
@@ -391,4 +392,22 @@ export enum ReactionIconValue {
   THANK = 3,
   HAND = 4,
   SMILE = 5,
+}
+
+export enum ActionsModal {
+  EDIT = 'EDIT',
+  CREATE = 'CREATE',
+  DELETE = 'DELETE',
+}
+
+export enum OrderingDataType {
+  TOTAL_DURATION = 'total_duration',
+  PERCENT = 'percent',
+}
+export enum TimeOptionsType {
+  WEEK = '1週間',
+  MONTH = '1ヶ月',
+  HALF_YEAR = '6ヶ月',
+  YEAR = '1年',
+  MORE = 'カスタム',
 }

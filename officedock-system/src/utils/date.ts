@@ -6,6 +6,8 @@ import {
   DATE_TIME_LOCAL,
 } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
+import { StatisticCategoryInfo } from '@interfaces/statistic';
+import { TimeOptionsType } from '@constants/enums';
 
 export const getFormattedDateTime = (dateInput?: string | Date): string => {
   const date: Date = dateInput ? new Date(dateInput) : new Date();
@@ -460,6 +462,20 @@ export function formatShowDeadlineTask(date: string | Date): string {
   const day = String(inputDate.getDate()).padStart(2, '0');
   return `${month}月${day}日`;
 }
+export function formatShowStatisticTask(date: string | Date): string {
+  const inputDate = new Date(date);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  inputDate.setHours(0, 0, 0, 0);
+
+  const month = String(inputDate.getMonth() + 1).padStart(2, '0');
+  const day = String(inputDate.getDate()).padStart(2, '0');
+  return `${month}月${day}日`;
+}
 
 export function formatShowDeadlineAllDayEvent(date: string | Date): string {
   const inputDate = new Date(date);
@@ -878,4 +894,203 @@ export const calculateTotalTime = (data: OptionDropdownType[]): string => {
   }, 0);
 
   return secondsToTime(totalSeconds);
+};
+
+export const formatDateToYMD = (dateString: Date | string) => {
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) {
+    return;
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+export function formatTimeToJapanese(time: string): string {
+  const [hours, minutes, seconds] = time.split(':').map(Number);
+
+  if (
+    isNaN(hours) ||
+    isNaN(minutes) ||
+    isNaN(seconds) ||
+    hours < 0 ||
+    minutes < 0 ||
+    seconds < 0 ||
+    minutes >= 60 ||
+    seconds >= 60
+  ) {
+    // Handle Error
+  }
+
+  const totalMinutes = hours * 60 + minutes + Math.floor(seconds / 60);
+
+  const resultHours = Math.floor(totalMinutes / 60);
+  const resultMinutes = totalMinutes % 60;
+
+  return `${resultHours}時間${String(resultMinutes).padStart(2, '0')}分`;
+}
+
+export function sumDurations(data: StatisticCategoryInfo[]): string {
+  if (data.length === 0) return '00:00:00';
+  let totalSeconds = 0;
+
+  data.forEach((item) => {
+    const [hours, minutes, seconds] = item.duration.split(':').map(Number);
+    totalSeconds += hours * 3600 + minutes * 60 + seconds;
+  });
+
+  const totalHours = Math.floor(totalSeconds / 3600);
+  const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+  const totalSecondsLeft = totalSeconds % 60;
+
+  const formattedHours = String(totalHours).padStart(2, '0');
+  const formattedMinutes = String(totalMinutes).padStart(2, '0');
+  const formattedSeconds = String(totalSecondsLeft).padStart(2, '0');
+
+  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+}
+
+//Get category formatted date
+export const getCategoryFormattedDate = (date: Date) => {
+  return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`;
+};
+
+// Get time date statistic
+export const getDaysFromTimeOption = (
+  option: TimeOptionsType,
+  startDate?: Date,
+  isEndDate?: boolean,
+): number => {
+  switch (option) {
+    case TimeOptionsType.WEEK:
+      return 7;
+    case TimeOptionsType.MONTH:
+      if (startDate) {
+        const date = new Date(startDate);
+
+        if (isEndDate) {
+          date.setMonth(startDate.getMonth() - 1);
+        } else {
+          date.setMonth(startDate.getMonth() + 1);
+        }
+
+        return Math.abs(
+          Math.floor(
+            (date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+          ),
+        );
+      }
+      return 30;
+
+    case TimeOptionsType.HALF_YEAR:
+      if (startDate) {
+        const date = new Date(startDate);
+
+        if (isEndDate) {
+          date.setMonth(startDate.getMonth() - 6);
+        } else {
+          date.setMonth(startDate.getMonth() + 6);
+        }
+
+        return Math.abs(
+          Math.floor(
+            (date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+          ),
+        );
+      }
+      return 182;
+
+    case TimeOptionsType.YEAR:
+      if (startDate) {
+        const date = new Date(startDate);
+
+        if (isEndDate) {
+          date.setFullYear(startDate.getFullYear() - 1);
+        } else {
+          date.setFullYear(startDate.getFullYear() + 1);
+        }
+
+        return Math.abs(
+          Math.floor(
+            (date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+          ),
+        );
+      }
+      return 365;
+
+    case TimeOptionsType.MORE:
+      return 0;
+
+    default:
+      return 0;
+  }
+};
+
+// Get time date statistic compare before
+export const handleSetStartDateBefore = (
+  option: TimeOptionsType,
+  startDate: Date,
+) => {
+  if (!startDate) return;
+
+  const newStartDateBefore = new Date(startDate);
+
+  switch (option) {
+    case TimeOptionsType.WEEK:
+      newStartDateBefore.setDate(newStartDateBefore.getDate() - 7);
+      break;
+
+    case TimeOptionsType.MONTH:
+      newStartDateBefore.setMonth(newStartDateBefore.getMonth() - 1);
+      break;
+
+    case TimeOptionsType.HALF_YEAR:
+      newStartDateBefore.setMonth(newStartDateBefore.getMonth() - 6);
+      break;
+
+    case TimeOptionsType.YEAR:
+      newStartDateBefore.setFullYear(newStartDateBefore.getFullYear() - 1);
+      break;
+
+    default:
+      break;
+  }
+
+  return newStartDateBefore;
+};
+
+// Get time date statistic compare start
+export const handleSetStartDateAfter = (
+  option: TimeOptionsType,
+  startDate: Date,
+) => {
+  if (!startDate) return;
+
+  const newStartDateAfter = new Date(startDate);
+
+  switch (option) {
+    case TimeOptionsType.WEEK:
+      newStartDateAfter.setDate(newStartDateAfter.getDate() + 7);
+      break;
+
+    case TimeOptionsType.MONTH:
+      newStartDateAfter.setMonth(newStartDateAfter.getMonth() + 1);
+      break;
+
+    case TimeOptionsType.HALF_YEAR:
+      newStartDateAfter.setMonth(newStartDateAfter.getMonth() + 6);
+      break;
+
+    case TimeOptionsType.YEAR:
+      newStartDateAfter.setFullYear(newStartDateAfter.getFullYear() + 1);
+      break;
+
+    default:
+      break;
+  }
+
+  return newStartDateAfter;
 };

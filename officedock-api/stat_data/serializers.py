@@ -6,7 +6,11 @@ from rest_framework import serializers
 
 from calendars.constants import CalendarTypes
 from calendars.models import Schedule
-from common.utils import format_duration, get_common_categories
+from common.utils import (
+    format_duration,
+    get_common_categories,
+    time_str_to_timedelta,
+)
 from tags.serializers import BaseTagSerializer
 from tasks.models import TaskDuration, Task
 from tasks.serializers import TaskCommonSerializer, TodoListSerializer
@@ -113,6 +117,7 @@ class DailyTaskSerializer(TaskCommonSerializer):
         """
         start_of_day = self.context.get("start_of_day")
         end_of_day = self.context.get("end_of_day")
+        tag_ids = self.context.get("tag_ids")
         durations = _get_list_durations(obj, start_of_day, end_of_day)
 
         total_duration = timedelta()
@@ -124,7 +129,9 @@ class DailyTaskSerializer(TaskCommonSerializer):
                 else timezone.now()
             )
             total_duration += paused_at - task_duration.started_at
-
+        if tag_ids:
+            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
+            total_duration = total_duration * related_tag_count
         # Format the output as desired (HH:MM:SS)
         return format_duration(total_duration)
 
@@ -210,6 +217,7 @@ class DailyEventSerializer(serializers.ModelSerializer):
         """
         start_of_day = self.context.get("start_of_day")
         end_of_day = self.context.get("end_of_day")
+        tag_ids = self.context.get("tag_ids")
         durations = _get_list_durations(obj, start_of_day, end_of_day)
 
         total_duration = timedelta()
@@ -221,6 +229,141 @@ class DailyEventSerializer(serializers.ModelSerializer):
                 else timezone.now()
             )
             total_duration += paused_at - task_duration.started_at
-
+        if tag_ids:
+            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
+            total_duration = total_duration * related_tag_count
         # Format the output as desired (HH:MM:SS)
         return format_duration(total_duration)
+
+
+class StatisticTaskSerializer(DailyTaskSerializer):
+    """Statistic task serializer"""
+
+    percent = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Task
+        fields = [
+            "id",
+            "title",
+            "tags",
+            "total_duration",
+            "percent",
+            "task_durations",
+            "categories",
+            "type",
+            "organization",
+            "created_at",
+        ]
+
+    def get_percent(self, obj):
+        """
+        Handle calculate percent of total duration
+        """
+        start_of_day = self.context.get("start_of_day")
+        end_of_day = self.context.get("end_of_day")
+        total_duration = self.context.get("total_duration")
+        tag_ids = self.context.get("tag_ids")
+        if not total_duration:
+            return None
+
+        durations = _get_list_durations(obj, start_of_day, end_of_day)
+
+        duration = timedelta()
+        # Calculate time between started and paused
+        for task_duration in durations:
+            paused_at = (
+                task_duration.paused_at
+                if task_duration.paused_at
+                else timezone.now()
+            )
+            duration += paused_at - task_duration.started_at
+        if tag_ids:
+            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
+            duration = duration * related_tag_count
+        if time_str_to_timedelta(total_duration).total_seconds() > 0:
+            percent_per_total_duration = (
+                duration.total_seconds()
+                / time_str_to_timedelta(total_duration).total_seconds()
+                * 100
+            )
+        else:
+            percent_per_total_duration = 0
+
+        return round(percent_per_total_duration)
+
+
+class StatisticEventSerializer(DailyEventSerializer):
+    """Statistic event serializer"""
+
+    percent = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Schedule
+        fields = [
+            "id",
+            "title",
+            "tags",
+            "total_duration",
+            "percent",
+            "task_durations",
+            "categories",
+            "organization",
+            "type",
+            "created_at",
+        ]
+
+    def get_percent(self, obj):
+        """
+        Handle calculate percent of total duration
+        """
+        start_of_day = self.context.get("start_of_day")
+        end_of_day = self.context.get("end_of_day")
+        total_duration = self.context.get("total_duration")
+        tag_ids = self.context.get("tag_ids")
+        if not total_duration:
+            return None
+        durations = _get_list_durations(obj, start_of_day, end_of_day)
+
+        duration = timedelta()
+        # Calculate time between started and paused
+        for task_duration in durations:
+            paused_at = (
+                task_duration.paused_at
+                if task_duration.paused_at
+                else timezone.now()
+            )
+            duration += paused_at - task_duration.started_at
+        if tag_ids:
+            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
+            duration = duration * related_tag_count
+        if time_str_to_timedelta(total_duration).total_seconds() > 0:
+            percent_per_total_duration = (
+                duration.total_seconds()
+                / time_str_to_timedelta(total_duration).total_seconds()
+                * 100
+            )
+        else:
+            percent_per_total_duration = 0
+
+        return round(percent_per_total_duration)
+
+
+class BaseStatisticTaskSerializer(StatisticTaskSerializer):
+    """
+    Base statistic task serializer
+    """
+
+    class Meta:
+        model = Task
+        fields = ["id", "title", "type"]
+
+
+class BaseStatisticEventSerializer(StatisticEventSerializer):
+    """
+    Base statistic task serializer
+    """
+
+    class Meta:
+        model = Schedule
+        fields = ["id", "title", "total_duration", "percent", "type"]

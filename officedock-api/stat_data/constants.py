@@ -1,0 +1,1 @@
+NONE_CATEGORY = "未設定"

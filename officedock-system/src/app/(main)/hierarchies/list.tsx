@@ -1,325 +1,308 @@
 'use client';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
-import { Transition } from '@headlessui/react';
-import { useSession } from 'next-auth/react';
-import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
-import ImageRound from '@components/common/ImageRound';
-import Input from '@components/common/Input';
-import { Table, TableBody, TableHeader } from '@components/common/Table';
-import Pagination from '@components/common/Pagination';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import Dropdown from '@components/common/Dropdown';
 
 import { apiRouters, pageRouters } from '@constants/routers';
-import { NO_DATA_AVAILABLE } from '@constants';
-import {
-  ERROR_DELETE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
-} from '@constants/message';
-import { CurrentScreen, PermissionsSystem } from '@constants/enums';
+import { ALL_TEAMS_OPTION } from '@constants';
+import { PermissionsSystem } from '@constants/enums';
 
-import useOrganizationList from '@hooks/useOrganizationList';
-import { useErrorToast } from '@hooks/useErrorToast';
-
-import { LoadingContext } from '@providers/LoadingProvider';
-import { useToast } from '@providers/ToastProvider';
-import api from '@base/api';
-import { OptionDropdownType } from '@interfaces/common';
-import { Organizations } from '@interfaces/organization';
-import useOrganizationOptions from '@hooks/useFullOrganizationList';
 import { hasPermissionInArray } from '@utils';
-import { HierarchyStateContext } from '@providers/HierarchyProvider';
+
+import { OptionDropdownType } from '@interfaces/common';
+import {
+  OrganizationCategoryHierarchyDetail,
+  StatisticCategory,
+} from '@interfaces/hierarchy';
+
+import useCreationOrganization from '@hooks/useCreationOrganization';
+import { LoadingContext } from '@providers/LoadingProvider';
+import HierarchyTable from './table';
+
+import api from '@base/api';
+
+interface rowDataType {
+  id: number | string;
+  large: {
+    value: string | number;
+    label: string;
+    showBy: string;
+    isValid: boolean;
+  };
+  medium: {
+    value: string | number;
+    label: string;
+    showBy: string;
+    isValid: boolean;
+  };
+  small: {
+    value: string | number;
+    label: string;
+    showBy: string;
+    isValid: boolean;
+  };
+  skills: OptionDropdownType[];
+  color: string;
+}
+
+interface HierarchyDetail {
+  id: number | string;
+  name: string;
+  statisticCategories: rowDataType[];
+}
 
 const ListHierarchy = () => {
-  const { setIsLoading } = useContext(LoadingContext);
-
-  const { setDataHierarchyDetail } = useContext(HierarchyStateContext);
-
-  const { showToast } = useToast();
-  const showErrorToast = useErrorToast();
-
   const { data: session } = useSession();
 
-  const [showFilter, setShowFilter] = useState(true);
-  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
-  const [idOrganizationChoose, setIdOrganizationChoose] = useState<number>();
+  const [hierarchyList, setHierarchyList] = useState<HierarchyDetail[]>([]);
+  const { setIsLoading } = useContext(LoadingContext);
 
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-
-  const [idChoose, setIdChoose] = useState<OptionDropdownType>();
-
-  const [dataOrganizations, setDataOrganizations] = useState<Organizations[]>(
-    [],
-  );
-
-  const [dataOptionsOrganization, setDataOptionsOrganization] = useState<
+  const [organizationList, setOrganizationList] = useState<
     OptionDropdownType[]
   >([]);
 
   // TODO: Update logic sort for multi column
-  const [orderingRequest, _setOrderingRequest] = useState('');
-
-  const { register, handleSubmit } = useForm<{ name: string }>({
-    mode: 'onSubmit',
-  });
-  const [filterRequest, setFilterRequest] = useState({
-    name: '',
-  });
-
-  const { organizationOptions, refetchOrganizationOptions } =
-    useOrganizationOptions({
-      is_hierarchy: true,
-      current_screen: CurrentScreen.CATEGORY_HIERARCHY,
+  const [selectedOrganizationOption, setSelectedOrganizationOption] =
+    useState<OptionDropdownType>({
+      label: ALL_TEAMS_OPTION,
+      value: '',
     });
+  const { creationOrganization } = useCreationOrganization({});
 
-  const { organizationList, refetchOrganizationList } = useOrganizationList(
-    { page: currentPage },
-    { name: filterRequest.name },
-    orderingRequest,
-    true,
+  useEffect(() => {
+    if (creationOrganization) {
+      const organizationList = creationOrganization.map((org) => {
+        return {
+          value: org.id,
+          label: org.name,
+        };
+      });
+      setOrganizationList([
+        {
+          label: ALL_TEAMS_OPTION,
+          value: '',
+        },
+        ...organizationList,
+      ]);
+    }
+  }, [creationOrganization]);
+
+  const handleGetOrganizationCategoryHierarchyList = async () => {
+    setIsLoading(true);
+    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_LIST}`;
+
+    const { data } =
+      await api.get<OrganizationCategoryHierarchyDetail[]>(apiUrl);
+    return data;
+  };
+
+  const { mutate: getOrganizationCategoryHierarchyList } = useMutation(
+    'getOrganizationCategoryHierarchyList',
+    handleGetOrganizationCategoryHierarchyList,
+    {
+      onSuccess: async (data) => {
+        const receivedHierarchyList = data.map((result) => ({
+          id: result.id,
+          name: result.name,
+          statisticCategories: mapStatisticCategories(
+            result.statisticCategories,
+          ),
+        }));
+
+        setHierarchyList(receivedHierarchyList);
+      },
+      onSettled: () => setIsLoading(false),
+    },
+  );
+
+  const mapStatisticCategories = (categories: StatisticCategory[]) => {
+    return categories.map((org) => ({
+      id: org.id,
+      large: {
+        label: org.largeStatisticCategory?.name || '',
+        value: org.largeStatisticCategory?.uuid || '',
+        showBy: 'pulldown',
+        isValid: true,
+      },
+      medium: {
+        label: org.mediumStatisticCategory?.name || '',
+        value: org.mediumStatisticCategory?.uuid || '',
+        showBy: 'pulldown',
+        isValid: true,
+      },
+      small: {
+        label: org.smallStatisticCategory?.name || '',
+        value: org.smallStatisticCategory?.uuid || '',
+        showBy: 'pulldown',
+        isValid: true,
+      },
+      skills: org.skills.map((skill) => {
+        return {
+          label: skill.name,
+          value: skill.id,
+        };
+      }),
+      color: org.color,
+    }));
+  };
+
+  const handleGetOrganizationCategoryHierarchyDetail = async (
+    organizationId: number,
+  ) => {
+    setIsLoading(true);
+    const apiUrl = `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_DETAIL(organizationId)}`;
+
+    const { data } = await api.get<OrganizationCategoryHierarchyDetail>(apiUrl);
+    return data;
+  };
+
+  const { mutate: getOrganizationCategoryHierarchyDetail } = useMutation(
+    'getOrganizationCategoryHierarchyDetail',
+    handleGetOrganizationCategoryHierarchyDetail,
+    {
+      onSuccess: async (data) => {
+        const statisticCategories = data.statisticCategories.map((org) => ({
+          id: org.id,
+          large: {
+            label: org.largeStatisticCategory?.name || '',
+            value: org.largeStatisticCategory?.uuid || '',
+            showBy: 'pulldown',
+            isValid: true,
+          },
+          medium: {
+            label: org.mediumStatisticCategory?.name || '',
+            value: org.mediumStatisticCategory?.uuid || '',
+            showBy: 'pulldown',
+            isValid: true,
+          },
+          small: {
+            label: org.smallStatisticCategory?.name || '',
+            value: org.smallStatisticCategory?.uuid || '',
+            showBy: 'pulldown',
+            isValid: true,
+          },
+          skills: org.skills.map((skill) => {
+            return {
+              label: skill.name,
+              value: skill.id,
+            };
+          }),
+          color: org.color,
+        }));
+        setHierarchyList([
+          {
+            id: data.id,
+            name: data.name,
+            statisticCategories,
+          },
+        ]);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
   );
 
   useEffect(() => {
-    if (organizationOptions) {
-      setDataOptionsOrganization(
-        organizationOptions.map((org) => ({
-          label: org.name,
-          value: org.id,
-        })),
+    if (selectedOrganizationOption.value == '') {
+      getOrganizationCategoryHierarchyList();
+    } else {
+      getOrganizationCategoryHierarchyDetail(
+        Number(selectedOrganizationOption.value),
       );
     }
-  }, [organizationOptions]);
+  }, [
+    getOrganizationCategoryHierarchyDetail,
+    getOrganizationCategoryHierarchyList,
+    selectedOrganizationOption.value,
+  ]);
 
-  useEffect(() => {
-    if (organizationList) {
-      setDataOrganizations(organizationList.results);
-      setTotalPages(organizationList.numPages);
-    }
-  }, [organizationList]);
-
-  // Delete organization
-  const handleOpenDeleteOrganizationModal = (id: number) => {
-    setOpenConfirmDeleteModal(true);
-    setIdOrganizationChoose(id);
-  };
-
-  const handleConfirmDeleteOrganization = () => {
-    if (idOrganizationChoose) {
-      setIsLoading(true);
-      deleteOrganization(idOrganizationChoose);
-      return;
-    }
-  };
-  const postDeleteOrganization = async (id: number) => {
-    const { data: response } = await api.delete(
-      apiRouters.ACTION_STATISTIC_ORGANIZATION(`${id}`),
-    );
-    return response;
-  };
-
-  const { mutate: deleteOrganization } = useMutation(postDeleteOrganization, {
-    onSuccess: async () => {
-      showToast({
-        description: SUCCESS_DELETE_MESSAGE,
-      });
-      if (organizationList?.results.length === 1 && currentPage > 1) {
-        // If change current page, useOrganizationList auto recall, just don't need using refetchOrganizationList
-        setCurrentPage(currentPage - 1);
-      } else {
-        refetchOrganizationList();
-      }
-      refetchOrganizationOptions();
-      setOpenConfirmDeleteModal(false);
-    },
-    onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
-      setOpenConfirmDeleteModal(false);
-      setIsLoading(false);
-    },
-  });
-
-  const onSubmit: SubmitHandler<{ name: string }> = (data) => {
-    setCurrentPage(1);
-    setFilterRequest({
-      name: encodeURIComponent(`${data.name}`) || '',
-    });
-  };
   return (
     <Fragment>
-      <div className="flex flex-col border rounded-lg">
-        <div
-          className={`flex justify-between px-3 py-4 rounded-t-lg ${showFilter && 'border-b'} bg-gray-100`}>
-          <span className="text-gray-700 text-base font-medium">検索</span>
-          <ImageRound
-            name="Filter extend icon"
-            src={'/icons/arrow-down.svg'}
-            className={`w-4 h-4 hover:cursor-pointer ${!showFilter && 'rotate-180'}`}
-            onClick={() => setShowFilter(!showFilter)}
-          />
-        </div>
-        <Transition
-          show={showFilter}
-          enter="transition-transform duration-300 ease-out"
-          enterFrom="transform -translate-y-[10%]"
-          enterTo="transform translate-y-0"
-          leave="transition-transform duration-150 ease-in"
-          leaveFrom="transform translate-y-0"
-          leaveTo="transform -translate-y-[10%]">
-          <form
-            className={`flex flex-col gap-4 p-4 bg-white`}
-            onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex gap-4">
-              <div className="w-1/2 flex gap-2">
-                <div className="w-full flex items-end gap-4">
-                  <div className="w-full">
-                    <Input
-                      label="組織"
-                      placeholder="入力してください"
-                      register={register('name')}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end">
+      <div className="sticky z-[21] top-[0px] pl-8 pt-8 pb-3 bg-[#EBF1F7]">
+        <div className="flex gap-4 items-center mb-5">
+          <p className="text-black font-medium text-[26px]">
+            業務カテゴリー設定
+          </p>
+          <div className="flex gap-2">
+            <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
               <Button
-                variant="secondary"
-                type="submit"
-                className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
-                絞り込み
+                variant="outline"
+                className={`w-[152px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                社内共通カテゴリー
               </Button>
-            </div>
-          </form>
-        </Transition>
-      </div>
-      {session?.user.permissions &&
-        hasPermissionInArray(
-          session?.user.permissions,
-          PermissionsSystem.CATEGORY_HIERARCHY_ADD,
-        ) && (
-          <div className="flex justify-end gap-10">
-            <div className="w-60">
-              <Dropdown
-                placeholder="選択してください"
-                classNameTextData=" !px-2 [&>div]:justify-center "
-                classNameOption=""
-                className=""
-                options={dataOptionsOrganization}
-                onChange={(e) => setIdChoose(e)}
-              />
-            </div>
-            <Link
-              href={
-                idChoose && idChoose.value
-                  ? pageRouters.CREATE_HIERARCHY.href(`${idChoose?.value}`)
-                  : ''
-              }
-              className={'flex'}>
-              <Button disabled={!idChoose} className="w-44">
-                新規登録
+            </Link>
+
+            <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
+              <Button
+                variant="primary"
+                className={`w-[152px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+                チームカテゴリー
               </Button>
             </Link>
           </div>
-        )}
-      <div className="w-full">
-        <Table className="bg-white !rounded-lg relative">
-          <TableHeader>
-            <th className="w-3">
-              <span>ID</span>
-            </th>
-            <th className="text-left w-[228px] max-w-[228px]">
-              <span>組織</span>
-            </th>
-            <th className="w-20">操作</th>
-          </TableHeader>
-          <TableBody>
-            {dataOrganizations && dataOrganizations.length ? (
-              dataOrganizations.map((element, index) => (
-                <tr key={index}>
-                  <td className="w-3">{element.id}</td>
-                  <td className="text-left w-[350px] max-w-[350px] truncate">
-                    {element.name}
-                  </td>
-                  <td className="w-20">
-                    <div className="flex w-full gap-2 justify-center">
-                      <Link
-                        onClick={() => {
-                          setDataHierarchyDetail(element);
-                        }}
-                        href={pageRouters.DETAIL_HIERARCHY.href(
-                          `${element.id}`,
-                        )}>
-                        <ImageRound
-                          name="Detail"
-                          src={'/icons/detail.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
-                        />
-                      </Link>
-                      {element.actions?.update ? (
-                        <Link
-                          onClick={() => {
-                            setDataHierarchyDetail(element);
-                          }}
-                          href={pageRouters.EDIT_HIERARCHY.href(
-                            `${element.id}`,
-                          )}>
-                          <ImageRound
-                            name="Edit"
-                            src={'/icons/edit.svg'}
-                            className={`w-6 h-6 hover:cursor-pointer`}
-                          />
-                        </Link>
-                      ) : (
-                        <div className="w-6"></div>
-                      )}
-                      {element.actions?.delete ? (
-                        <ImageRound
-                          name="Delete"
-                          src={'/icons/delete.svg'}
-                          className={`w-6 h-6 hover:cursor-pointer`}
-                          onClick={() =>
-                            handleOpenDeleteOrganizationModal(element.id)
-                          }
-                        />
-                      ) : (
-                        <div className="w-6"></div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr className="py-5 text-center text-sm leading-6">
-                <td className="h-16" />
-                <td className="absolute whitespace-nowrap top-[54px] left-1/2 transform -translate-x-1/2  py-5 text-center">
-                  {NO_DATA_AVAILABLE}
-                </td>
-              </tr>
+        </div>
+        <div className="flex justify-between">
+          <Dropdown
+            options={organizationList}
+            className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
+            classNameOption="!w-[220px]"
+            selectedOption={organizationList.find(
+              (element) => element.value == selectedOrganizationOption.value,
             )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex justify-center">
-        {dataOrganizations && dataOrganizations.length ? (
-          <Pagination
-            onChange={(pageNumber) => setCurrentPage(pageNumber)}
-            currentPage={currentPage}
-            totalPages={totalPages}
+            onChange={(e) => {
+              setSelectedOrganizationOption({
+                label: e.label,
+                value: e.value,
+              });
+            }}
           />
-        ) : null}
+          <div className="flex gap-2">
+            {session?.user.permissions &&
+              hasPermissionInArray(
+                session?.user.permissions,
+                PermissionsSystem.CATEGORY_HIERARCHY_ADD,
+              ) && (
+                <Button
+                  variant="outline"
+                  className="w-[100px] h-[34px] !p-0 bg-white text-[#0068B6]">
+                  インポート
+                </Button>
+              )}
+            {session?.user.permissions &&
+              hasPermissionInArray(
+                session?.user.permissions,
+                PermissionsSystem.CATEGORY_HIERARCHY_UPDATE,
+              ) && (
+                <Link href={pageRouters.EDIT_HIERARCHY.href}>
+                  <Button className="w-[100px] h-[34px]">編集</Button>
+                </Link>
+              )}
+          </div>
+        </div>
       </div>
-      <ConfirmDeleteModal
-        open={openConfirmDeleteModal}
-        type="集計カテゴリ階層"
-        onConfirm={handleConfirmDeleteOrganization}
-        onClose={() => setOpenConfirmDeleteModal(false)}
-      />
+      <div className="pl-8 mt-5">
+        {selectedOrganizationOption.value === '' ? (
+          <div className="flex flex-col gap-5">
+            {hierarchyList.map((data) => (
+              <HierarchyTable
+                key={data.id}
+                hierarchyList={data}
+                organizationName={data.name}
+              />
+            ))}
+          </div>
+        ) : (
+          <HierarchyTable
+            hierarchyList={hierarchyList[0]}
+            organizationName={hierarchyList[0].name}
+          />
+        )}
+      </div>
     </Fragment>
   );
 };

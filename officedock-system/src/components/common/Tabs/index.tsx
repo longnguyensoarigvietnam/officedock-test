@@ -1,5 +1,5 @@
 'use client';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Tab, TabGroup, TabList, TabPanels } from '@headlessui/react';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
@@ -8,6 +8,7 @@ import Switch from '../Switch';
 import { OptionTabType } from '@interfaces/common';
 import { showToggleButtonColorByTime } from '@utils';
 import { TabType } from '@constants/enums';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 type TabsProps = {
   defaultTab?: number;
@@ -41,11 +42,22 @@ const Tabs = ({
 }: TabsProps) => {
   const [tabIdx, setTabIdx] = useState<number>(defaultTab);
   const [isTeamDockMenu, setIsTeamDockMenu] = useState<boolean>(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const tabIdParam = searchParams.get('tabId');
+
+  useEffect(() => {
+    setTabIdx(tabIdParam ? Number(tabIdParam) : 0);
+  }, [tabIdParam]);
 
   const onChangeTab = (idx: number) => {
     setTabIdx(idx);
     setIsTeamDockMenu(idx == 1);
     onSelectedTab && onSelectedTab(idx);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tabId', String(idx));
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const handleSwitchToggle = (enable: boolean) => {

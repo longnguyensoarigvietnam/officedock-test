@@ -12,6 +12,7 @@ export interface CreateSkillFormRequest {
 export interface CreateSkillFormData {
   name?: string;
 }
+
 export interface SkillMapFormData {
   organizationId?: number | null;
   staffId?: number | null;
@@ -222,4 +223,14 @@ export interface CreateSubmitLevelsFormData {
   organizationId: number;
   skillId: number;
   levelBeforeSubmit: string;
+}
+export interface CreationDataSkill {
+  organization: {
+    id: number;
+    name: string;
+  };
+  skills: {
+    id: number;
+    name: string;
+  }[];
 }

@@ -1,4 +1,4 @@
-import { Tags } from './tag';
+import { TagCreationStatisticType, Tags } from './tag';
 import { TodoItem } from './task';
 import { User } from './user';
 
@@ -10,6 +10,14 @@ export interface TaskTimeStatistic {
   title: string;
   startedAt: Date;
   pausedAt: Date;
+}
+export interface UserListStatisticType {
+  duration: string;
+  percent: number;
+  user: {
+    id: number;
+    fullName: string;
+  };
 }
 
 export interface SmallCategory {
@@ -185,4 +193,80 @@ export interface dataRequestConfirmType {
   id: number;
   isConfirmed: boolean;
   categoryId: number;
+}
+
+export interface StatisticsCategories {
+  largeTotalDuration: string;
+  mediumTotalDuration?: string;
+  smallTotalDuration?: string;
+  largeCategories: StatisticCategoryInfo[];
+  mediumCategories?: StatisticCategoryInfo[];
+  smallCategories?: StatisticCategoryInfo[];
+  category?: StatisticCategoryInfo[];
+}
+export interface StatisticsTagsType {
+  totalDuration: string;
+  largeCategories: StatisticCategoryInfo[];
+  mediumCategories?: StatisticCategoryInfo[];
+  smallCategories?: StatisticCategoryInfo[];
+  category?: StatisticCategoryInfo[];
+}
+
+export interface StatisticCategoryInfo {
+  categoryId: number;
+  tagId?: number;
+  tagName?: string;
+  categoryName: string;
+  duration: string;
+  percent: number;
+  categoryColor: string;
+  tasks: DataTaskModalStatisticType[];
+  users?: UserListStatisticType[];
+}
+export interface CreationStatisticType {
+  id: number;
+  name: string;
+  isMain: boolean;
+  statisticCategories: LargeCategory[];
+}
+export interface DataResponseStatisticCreationType {
+  organizations: CreationStatisticType[];
+  tags: TagCreationStatisticType[];
+}
+export interface DataResponseStatisticCreationTeamType {
+  organization: CreationStatisticType;
+  tags: TagCreationStatisticType[];
+  members: {
+    id: number;
+    fullName: string;
+  }[];
+}
+export interface DataTaskModalStatisticType {
+  id: number;
+  percent: number;
+  title: string;
+  totalDuration: string;
+}
+export interface DataTaskListStatisticListType {
+  id: number;
+  title: string;
+  percent: number;
+  totalDuration: string;
+  type: string;
+  tags: Omit<Tags, 'peopleInCharge' | 'responsiblePerson'>[];
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+    color: string;
+  }[];
+  taskDurations: {
+    uuid: string;
+    id: number;
+    duration: string;
+    startedAt: string;
+    pausedAt: string;
+  }[];
+  organization: number;
+  createdAt: string;
 }

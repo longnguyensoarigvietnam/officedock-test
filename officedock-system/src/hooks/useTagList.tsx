@@ -1,23 +1,22 @@
 'use client';
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
-import { apiRouters, pageRouters } from '@constants/routers';
+import { apiRouters } from '@constants/routers';
 import { PAGINATION_PAGE_SIZE_DEFAULT } from '@constants';
-import { ServerStatusCode } from '@constants/enums';
 
 import { BasePagination } from '@interfaces/common';
 import { Tags } from '@interfaces/tag';
-import { ResponseError } from '@interfaces/response';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import api from '@base/api';
+import { AxiosError } from 'axios';
 
 interface FilterProps {
   tagName?: string;
-  personInChargeName?: string;
+  organizationIds?: string;
+  isHidden?: boolean;
 }
 
 interface PaginationProps {
@@ -25,13 +24,20 @@ interface PaginationProps {
   pageSize?: number;
 }
 
-const useTagList = (
-  pagination?: PaginationProps,
-  filter?: FilterProps,
-  ordering?: string,
-) => {
+const useTagList = ({
+  pagination,
+  filter,
+  onSuccess,
+  onError,
+  onSettled,
+}: {
+  pagination?: PaginationProps;
+  filter?: FilterProps;
+  onSuccess?: (success: BasePagination<Tags[]>) => void;
+  onError?: (error: AxiosError) => void;
+  onSettled?: () => void;
+}) => {
   const { data: session } = useSession();
-  const router = useRouter();
   const token = session?.accessToken;
 
   const { setIsLoading } = useContext(LoadingContext);
@@ -41,7 +47,7 @@ const useTagList = (
     setIsLoading(true);
 
     const apiUrl = pagination?.page
-      ? `${apiRouters.TAG_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${ordering ? `&ordering=${ordering}` : ''}${filter?.tagName ? `&name=${filter.tagName}` : ''}${filter?.personInChargeName ? `&responsible_person=${filter.personInChargeName}` : ''}`
+      ? `${apiRouters.TAG_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${filter?.tagName ? `&name=${filter.tagName}` : ''}${filter?.organizationIds ? `&organization_ids=${filter.organizationIds}` : ''}${`&is_hidden=${filter?.isHidden || false}`}`
       : `${apiRouters.TAG_LIST}`;
 
     const { data } = await api.get<BasePagination<Tags[]>>(apiUrl);
@@ -54,21 +60,20 @@ const useTagList = (
     refetch: refetchTagList,
     isFetched: isFetchedTags,
   } = useQuery({
-    queryKey: ['getTagList', [pagination, filter, ordering]],
+    queryKey: ['getTagList', [pagination, filter]],
     queryFn: getTagList,
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onError: ({ response }: ResponseError<any>) => {
-      if (response?.status === ServerStatusCode.UNAUTHORIZED) {
-        if (session) {
-          signOut();
-          router.push(pageRouters.LOGIN.href);
-        }
-      }
+    onSuccess: (response: BasePagination<Tags[]>) => {
+      onSuccess && onSuccess(response);
+    },
+    onError: (error: AxiosError) => {
+      onError && onError(error);
     },
     onSettled: () => {
+      onSettled && onSettled();
       setIsLoading(false);
     },
   });

@@ -1,10 +1,16 @@
 from django.db.models import Q
 from rest_framework import serializers
+
+from common.utils import transform_statistic_categories
 from users.models import User
 from organizations.models import Organization
-from organizations.serializers import SuperiorSerializer
+from organizations.serializers import (
+    SuperiorSerializer,
+    StatisticCategoryStructionSerializer,
+)
 from tags.models import Tag
 from tasks.models import Task, TaskStatus
+from users.serializers import OrganizationForUserSerializer
 
 
 class CreationDataUserSerializer(serializers.ModelSerializer):
@@ -81,6 +87,20 @@ class CreationDataTagSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
+class CreationDataOrganizationWithTagSerializer(
+    CreationDataOrganizationSerializer
+):
+    """
+    Serializer for Creation data Organization with User
+    """
+
+    tags = CreationDataTagSerializer(many=True)
+
+    class Meta:
+        model = Organization
+        fields = ["id", "name", "superior", "tags"]
+
+
 class CreationDataTaskListSerializer(serializers.ModelSerializer):
     """
     Serializer for Creation data Task
@@ -152,3 +172,45 @@ class CreationDataUserWithMainOrganizationSerializer(
             if organization
             else None
         )
+
+
+class CreationDataOrganizationWithStructCategorySerializer(
+    OrganizationForUserSerializer
+):
+    """
+    Serializer for creation data organization with struct category
+    """
+
+    statistic_categories = serializers.SerializerMethodField(read_only=True)
+    tags = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Organization
+        fields = [
+            "id",
+            "name",
+            "is_main",
+            "statistic_categories",
+            "tags",
+        ]
+
+    def get_statistic_categories(self, obj):
+        """
+        Transform statistic category list to serializer data
+        """
+        statistic_categories = (
+            obj.organizations_statistic_categories.all().order_by("index")
+        )
+        statistic_categories = StatisticCategoryStructionSerializer(
+            statistic_categories, many=True
+        ).data
+
+        return transform_statistic_categories(statistic_categories)
+
+    def get_tags(self, obj):
+        """
+        Return list of tags
+        """
+        from tags.serializers import BaseTagSerializer
+
+        return BaseTagSerializer(obj.tags.all(), many=True).data

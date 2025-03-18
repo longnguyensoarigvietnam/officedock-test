@@ -1,143 +1,386 @@
 'use client';
 
 import { Fragment, useContext, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Transition } from '@headlessui/react';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { useMutation } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import Input from '@components/common/Input';
 import Pagination from '@components/common/Pagination';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import InputSearch from '@components/common/InputSearch';
+import ActionsTagModal from '@components/modals/ActionsTagModal';
 import Dropdown from '@components/common/Dropdown';
+
+import { NO_DATA_AVAILABLE } from '@constants';
+import { apiRouters } from '@constants/routers';
+import {
+  ERROR_COMMON_MESSAGE,
+  ERROR_CREATE_MESSAGE,
+  ERROR_DELETE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_CREATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
+  SUCCESS_UPDATE_MESSAGE,
+} from '@constants/message';
+import {
+  ActionsModal,
+  PermissionsSystem,
+  ServerStatusCode,
+} from '@constants/enums';
+
+import useTagList from '@hooks/useTagList';
+import useOrganizationOptions from '@hooks/useFullOrganizationList';
+import { useErrorToast } from '@hooks/useErrorToast';
+import useDebounceText from '@hooks/useDebounceText';
+
+import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
+
+import { Tags, TagFormData, TagRequest } from '@interfaces/tag';
+import { OptionDropdownType } from '@interfaces/common';
+import { Organizations } from '@interfaces/organization';
+
+import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
 
-import { NO_DATA_AVAILABLE } from '@constants';
-import { apiRouters, pageRouters } from '@constants/routers';
-import {
-  ERROR_DELETE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
-} from '@constants/message';
-import { PermissionsSystem } from '@constants/enums';
-
-import useTagList from '@hooks/useTagList';
-import useCreationPersonInCharge from '@hooks/useCreationPersonInCharge';
-import { LoadingContext } from '@providers/LoadingProvider';
-import { useToast } from '@providers/ToastProvider';
-import { TagStateContext } from '@providers/TagProvider';
-
-import { TagFilterFormData, Tags } from '@interfaces/tag';
-import { OptionDropdownType } from '@interfaces/common';
-import { Profile } from '@interfaces/user';
-import { hasPermissionInArray } from '@utils';
-import { useErrorToast } from '@hooks/useErrorToast';
+const FilterOrganizationComponent = ({
+  dataOrganizationList,
+  selectedOptions,
+  onChange,
+  onSubmit,
+  onClose,
+}: {
+  dataOrganizationList: OptionDropdownType[];
+  selectedOptions: OptionDropdownType[];
+  onChange: (selected: OptionDropdownType) => void;
+  onSubmit: () => void;
+  onClose: () => void;
+}) => {
+  return (
+    <div className="bg-white rounded-lg shadow-common flex flex-col items-center w-[330px] py-5">
+      <div className="w-[300px]">
+        <MultiSelectDropdown
+          className="!h-[34px] !rounded-md"
+          labelClass="!min-h-0 !text-sm font-medium"
+          valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
+          optionClassName="!border-[1px] !border-[#77858F]"
+          labelOptionClass="break-words max-w-[300px] line-clamp-2 !text-sm"
+          options={dataOrganizationList}
+          selectedOptions={selectedOptions}
+          customLabel="チーム"
+          onChange={(selected) => {
+            onChange(selected);
+          }}
+        />
+      </div>
+      <div className="flex justify-center gap-[10px] mt-4 ">
+        <Button variant="outline" onClick={onClose} className="h-9">
+          キャンセル
+        </Button>
+        <Button onClick={onSubmit} className="h-9">
+          絞り込む
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const ListTags = () => {
   const { setIsLoading } = useContext(LoadingContext);
-  const { setDataTagDetail } = useContext(TagStateContext);
   const { data: session } = useSession();
 
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
-
-  const [showFilter, setShowFilter] = useState(true);
-  const [dataTags, setDataTags] = useState<Tags[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [filterRequest, setFilterRequest] = useState({
-    name: '',
-    personInCharge: '',
-  });
-  const [orderingRequest, _setOrderingRequest] = useState('');
-
-  // Set ID tag for delete
-  const [idTagChoose, setIdTagChoose] = useState<number>();
-  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
-
-  const [dataPersonInCharge, setDataPersonInCharge] = useState<
-    Omit<Profile, 'birthday' | 'gender'>[]
+  const { organizationOptions } = useOrganizationOptions({});
+  const [dataOrganizationList, setDataOrganizationList] = useState<
+    OptionDropdownType[]
   >([]);
-  const [personInChargeOptions, setPersonInChargeOptions] = useState<
+  const [organizationLabels, setOrganizationLabels] = useState<
     OptionDropdownType[]
   >([]);
 
-  // Loading dropdown
-  const [isLoadingPersonInCharge, setIsLoadingPersonInCharge] =
-    useState<boolean>(true);
+  const [showFilter, setShowFilter] = useState(true);
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+  const [dataTags, setDataTags] = useState<Tags[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [filterRequest, setFilterRequest] = useState<{
+    name: string;
+    organizationIds: string;
+    isHidden: boolean;
+  }>({
+    name: '',
+    organizationIds: '',
+    isHidden: false,
+  });
+  const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
+  const actionType = searchParams.get('action');
+  const tagId = searchParams.get('tagId');
+  const router = useRouter();
+  const PAGE_SIZE_OPTIONS = [
+    {
+      label: '10',
+      value: 10,
+    },
+    {
+      label: '20',
+      value: 20,
+    },
+    {
+      label: '30',
+      value: 30,
+    },
+  ];
 
-  const { creationPersonInChargeData } = useCreationPersonInCharge({
-    onSettled: () => {
-      setIsLoadingPersonInCharge(false);
+  // Set ID tag for delete
+  const [selectedTagToDelete, setSelectedTagToDelete] = useState<Tags | null>();
+
+  // Actions
+  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  const [openActionsTagModal, setOpenActionsTagModal] = useState(false);
+  const [dataTagEdit, setDataTagEdit] = useState<Tags | null>(null);
+
+  // Search
+  const { register, watch, getValues, setValue } = useForm<{
+    name: string;
+    organizationIds: OptionDropdownType[];
+  }>();
+
+  const { refetchTagList } = useTagList({
+    pagination: { page: currentPage, pageSize },
+    filter: {
+      tagName: filterRequest.name,
+      organizationIds: filterRequest.organizationIds,
+      isHidden: filterRequest.isHidden,
+    },
+    onSuccess: (data) => {
+      setDataTags(data.results);
+      setTotalPages(data.numPages);
     },
   });
 
   useEffect(() => {
-    if (creationPersonInChargeData) {
-      setDataPersonInCharge(creationPersonInChargeData);
+    if (organizationOptions) {
+      setDataOrganizationList(
+        organizationOptions.map((org) => ({
+          label: org.name,
+          value: org.id as number,
+        })),
+      );
     }
-  }, [creationPersonInChargeData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizationOptions]);
+
+  const debouncedFilterByTagName = useDebounceText(watch('name'), 1000);
 
   useEffect(() => {
-    if (dataPersonInCharge) {
-      setPersonInChargeOptions([
-        {
-          label: '選択',
-          value: '',
-        },
-        ...dataPersonInCharge.map((item) => ({
-          label: item.fullName,
-          value: item.fullName,
-        })),
-      ]);
+    if (debouncedFilterByTagName || debouncedFilterByTagName === '') {
+      setFilterRequest((prev) => ({
+        ...prev,
+        name: encodeURIComponent(debouncedFilterByTagName || ''),
+      }));
+      setCurrentPage(1);
     }
-  }, [dataPersonInCharge]);
+  }, [debouncedFilterByTagName]);
 
-  const { tagList, refetchTagList } = useTagList(
-    { page: currentPage },
+  const handleFilterTagByOrganizations = () => {
+    setFilterRequest((prev) => ({
+      ...prev,
+      organizationIds: encodeURIComponent(
+        watch('organizationIds')
+          ? watch('organizationIds')
+              .map((org: OptionDropdownType) => org.value)
+              .join(',')
+          : '',
+      ),
+    }));
+    setCurrentPage(1);
+    setOrganizationLabels(watch('organizationIds'));
+    setIsOpenModalFilter(false);
+  };
+
+  const handleSetParam = ({
+    id,
+    action,
+  }: {
+    id?: string | null;
+    action?: string | null;
+  }) => {
+    if (id) {
+      params.set('tagId', id);
+    }
+    if (action) {
+      params.set('action', action);
+    }
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleRemoveParam = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('tagId');
+    params.delete('action');
+    router.replace(`?${params.toString()}`);
+  };
+
+  // Get tag's detail
+  const handleGetDataDetailTag = async (id: string) => {
+    const { data: response } = await api.get(apiRouters.TAG_DETAIL(id));
+    return response;
+  };
+
+  const { mutate: getDataDetailTag } = useMutation(
+    'getDataDetailTag',
+    handleGetDataDetailTag,
     {
-      tagName: filterRequest.name,
-      personInChargeName: filterRequest.personInCharge,
+      onSuccess: async (data) => {
+        setDataTagEdit(data);
+        setOpenActionsTagModal(true);
+      },
+      onError: (error: AxiosError) => {
+        if (error.response?.status === ServerStatusCode.NOT_FOUND) {
+          showToast({
+            variant: 'error',
+            description: ERROR_COMMON_MESSAGE,
+          });
+          handleRemoveParam();
+        }
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
     },
-    orderingRequest,
   );
 
-  const { register, control, handleSubmit } = useForm<TagFilterFormData>({
-    mode: 'onSubmit',
+  const handleConfirmGetDataDetailTag = (id: string) => {
+    getDataDetailTag(id);
+  };
+
+  // Create tag
+  const handleCreateTag = async (data: TagRequest) => {
+    setIsLoading(true);
+    return await api.post(apiRouters.TAG_LIST, data);
+  };
+
+  const { mutate: createTag } = useMutation('postCreateTag', handleCreateTag, {
+    onSuccess: () => {
+      showToast({
+        description: SUCCESS_CREATE_MESSAGE,
+      });
+      setOpenActionsTagModal(false);
+      refetchTagList();
+      handleRemoveParam();
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_CREATE_MESSAGE);
+    },
+    onSettled: () => {
+      setIsLoading(false);
+    },
   });
 
-  useEffect(() => {
-    if (tagList) {
-      setDataTags(tagList.results);
-      setTotalPages(tagList.numPages);
-    }
-  }, [tagList]);
+  const handleConfirmCreateTag = (data: TagFormData) => {
+    const organizationIds = data.organizations.map((org: OptionDropdownType) =>
+      Number(org.value),
+    );
+    createTag({
+      name: data.name || '',
+      organizationIds,
+    });
+  };
 
-  const onSubmit: SubmitHandler<TagFilterFormData> = (data) => {
-    setCurrentPage(1);
-    setFilterRequest({
-      name: encodeURIComponent(`${data.name}`) || '',
-      personInCharge: data.personInCharge?.value
-        ? encodeURIComponent(`${data.personInCharge?.value}`)
-        : '',
+  // Edit tag
+  const handleEditTag = async (data: TagRequest) => {
+    setIsLoading(true);
+    return await api.patch(apiRouters.TAG_DETAIL(String(tagId)), data);
+  };
+
+  const { mutate: editTag } = useMutation('postEditTag', handleEditTag, {
+    onSuccess: () => {
+      showToast({
+        description: SUCCESS_UPDATE_MESSAGE,
+      });
+      setOpenActionsTagModal(false);
+      handleRemoveParam();
+      setDataTagEdit(null);
+      refetchTagList();
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_UPDATE_MESSAGE);
+    },
+    onSettled: () => {
+      setIsLoading(false);
+    },
+  });
+
+  const handleConfirmEditTag = (data: TagFormData) => {
+    const organizationIds = data.organizations.map((org: OptionDropdownType) =>
+      Number(org.value),
+    );
+    editTag({
+      name: data.name || '',
+      organizationIds,
+    });
+  };
+
+  // Hide tag
+  const handleToggleHideTag = async (data: Tags) => {
+    setIsLoading(true);
+    return await api.patch(apiRouters.TAG_DETAIL(String(data.id)), {
+      isHidden: data.isHidden,
+    });
+  };
+
+  const { mutate: toggleHideTag } = useMutation(
+    'handleToggleHideTag',
+    handleToggleHideTag,
+    {
+      onSuccess: () => {
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
+        refetchTagList();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  const handleConfirmToggleHideTag = (data: Tags) => {
+    toggleHideTag({
+      id: data.id,
+      isHidden: Boolean(data.isHidden),
     });
   };
 
   // Delete tag
-  const handleOpenDeleteTagModal = (id: number) => {
+  const handleOpenDeleteTagModal = (tag: Tags) => {
     setOpenConfirmDeleteModal(true);
-    setIdTagChoose(id);
+    setSelectedTagToDelete(tag);
   };
 
   const handleConfirmDeleteTag = () => {
-    if (idTagChoose) {
+    if (selectedTagToDelete) {
       setIsLoading(true);
-      deleteTag(idTagChoose);
+      deleteTag(Number(selectedTagToDelete.id));
       return;
     }
   };
@@ -152,7 +395,7 @@ const ListTags = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      if (tagList?.results.length === 1 && currentPage > 1) {
+      if (dataTags.length === 1 && currentPage > 1) {
         // If change current page, useTagList auto recall, just don't need using refetchTagList
         setCurrentPage(currentPage - 1);
       } else {
@@ -165,156 +408,267 @@ const ListTags = () => {
       setOpenConfirmDeleteModal(false);
       setIsLoading(false);
     },
+    onSettled: () => {
+      setSelectedTagToDelete(null);
+    },
   });
 
+  useEffect(() => {
+    if (tagId && dataTagEdit == null && actionType) {
+      handleConfirmGetDataDetailTag(tagId);
+    }
+    if (actionType === ActionsModal.CREATE) {
+      setOpenActionsTagModal(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getDataDetailTag, tagId, actionType]);
   return (
     <Fragment>
-      <div className="flex flex-col border rounded-lg">
-        <div className="flex justify-between px-3 py-4 rounded-t-lg border-b bg-gray-100">
-          <span className="text-gray-700 text-base font-medium">検索</span>
-          <ImageRound
-            name="Filter extend icon"
-            src={'/icons/arrow-down.svg'}
-            className={`w-4 h-4 hover:cursor-pointer ${!showFilter && 'rotate-180'}`}
-            onClick={() => setShowFilter(!showFilter)}
-          />
-        </div>
-        <Transition
-          show={showFilter}
-          enter="transition-transform duration-300 ease-out"
-          enterFrom="transform -translate-y-[10%]"
-          enterTo="transform translate-y-0"
-          leave="transition-transform duration-150 ease-in"
-          leaveFrom="transform translate-y-0"
-          leaveTo="transform -translate-y-[10%]">
-          <form
-            className={`flex flex-col gap-4 p-4 bg-white`}
-            onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex gap-4">
-              <div className="w-full flex flex-col gap-2">
-                <div className="w-full flex items-end gap-4">
-                  <div className="w-1/2">
-                    <Input
-                      label="集計タグ"
-                      placeholder="入力してください"
-                      register={register('name')}
-                    />
-                  </div>
-                  <div className="w-1/2">
-                    <Controller
-                      control={control}
-                      name={'personInCharge'}
-                      render={({ field: { onChange } }) => (
-                        <Dropdown
-                          label="責任者"
-                          isLoading={isLoadingPersonInCharge}
-                          options={personInChargeOptions}
-                          placeholder="選択してください"
-                          className="w-1/2"
-                          onChange={onChange}
-                        />
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                variant="secondary"
-                type="submit"
-                className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
-                絞り込み
-              </Button>
-            </div>
-          </form>
-        </Transition>
-      </div>
-      <div className="flex justify-end">
-        {session?.user.permissions &&
-          hasPermissionInArray(
-            session?.user.permissions,
-            PermissionsSystem.TAG_ADD,
-          ) && (
-            <Link href={pageRouters.CREATE_TAG.href}>
-              <Button className="w-44">新規登録</Button>
-            </Link>
+      <div className="flex justify-between">
+        <p className="text-black font-medium text-[26px]">タグ管理</p>
+        <div
+          className="flex gap-2 items-center hover:cursor-pointer"
+          >
+          {!filterRequest.isHidden && (
+            <ImageRound
+              name="Hide"
+              src={'/icons/close-eye.svg'}
+              className="w-[15px] h-[12px] hover:cursor-pointer"
+            />
           )}
+
+          <p className="text-[#77858F] font-medium text-[12px]">
+            {!filterRequest.isHidden ? '非表示一覧' : '表示一覧'}
+          </p>
+          <div className="flex justify-between p-[3px] rounded-full bg-white border-b">
+            <ImageRound
+              name="Filter extend icon"
+              src={'/icons/arrow-down.svg'}
+              className={`w-4 h-4 hover:cursor-pointer -rotate-90`}
+              onClick={() => setShowFilter(!showFilter)}
+            />
+          </div>
+        </div>
       </div>
-      <div className="w-full">
+      <div className="flex justify-between items-center mb-3">
+        <div className="flex gap-4 items-center">
+          <InputSearch
+            placeholder="タグを検索"
+            inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
+            iconClassName="w-[14px] h-[14px]"
+            register={register('name')}
+          />
+          <Popover className="relative">
+            {() => (
+              <>
+                <div className="flex items-center gap-2">
+                  <PopoverButton
+                    onClick={() => setIsOpenModalFilter(!isOpenModalFilter)}
+                    className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                    <ImageRound
+                      src="/icons/filter.svg"
+                      name="Filter icon"
+                      className="w-[14px] h-[14px] ml-2"
+                    />
+                  </PopoverButton>
+                </div>
+                <Transition
+                  as={Fragment}
+                  show={isOpenModalFilter}
+                  enter="transition ease-out duration-200"
+                  enterFrom="opacity-0 translate-y-1"
+                  enterTo="opacity-100 translate-y-0"
+                  leave="transition ease-in duration-150"
+                  leaveFrom="opacity-100 translate-y-0"
+                  leaveTo="opacity-0 translate-y-1">
+                  <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
+                    <FilterOrganizationComponent
+                      dataOrganizationList={dataOrganizationList}
+                      selectedOptions={watch('organizationIds') ?? []}
+                      onChange={(selected) => {
+                        let updatedTagIds = [];
+                        const currentTagIds =
+                          getValues('organizationIds') || [];
+                        const foundItemIndex = currentTagIds.findIndex(
+                          (tag) => tag.value == selected.value,
+                        );
+                        if (foundItemIndex == -1) {
+                          updatedTagIds = [...currentTagIds, selected];
+                        } else {
+                          updatedTagIds = currentTagIds.filter(
+                            (tag) => tag.value != selected.value,
+                          );
+                        }
+                        setValue('organizationIds', updatedTagIds);
+                      }}
+                      onSubmit={handleFilterTagByOrganizations}
+                      onClose={() => {
+                        setIsOpenModalFilter(false);
+                      }}
+                    />
+                  </PopoverPanel>
+                </Transition>
+              </>
+            )}
+          </Popover>
+          <div className="flex gap-2">
+            {organizationLabels && organizationLabels?.length > 0 && organizationLabels.slice(0, 3).map((organizationLabel) => {
+              return (
+                <div
+                  key={organizationLabel.value}
+                  className="w-[130px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#F8FAFC]">
+                  <span className="w-[120px] truncate">
+                    {organizationLabel.label}
+                  </span>
+                  <ImageRound
+                    src={`/icons/close.svg`}
+                    name="close"
+                    className="w-fit h-fit cursor-pointer"
+                    onClick={() => {
+                      let updatedTagIds = [];
+                      const currentTagIds = getValues('organizationIds') || [];
+                      updatedTagIds = currentTagIds.filter(
+                        (tag) => tag.value != organizationLabel.value,
+                      );
+                      setValue('organizationIds', updatedTagIds);
+                      setFilterRequest((prev) => ({
+                        ...prev,
+                        organizationIds: encodeURIComponent(
+                          updatedTagIds
+                            ? updatedTagIds
+                                .map((org: OptionDropdownType) => org.value)
+                                .join(',')
+                            : '',
+                        ),
+                      }));
+                      setCurrentPage(1);
+                      setOrganizationLabels(updatedTagIds);
+                    }}
+                  />
+                </div>
+              );
+            })}
+            {organizationLabels && organizationLabels.length > 3 && (
+              <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#F8FAFC] text-black text-xs font-medium">
+                +{organizationLabels.length - 3}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex justify-end">
+          {session?.user.permissions &&
+            hasPermissionInArray(
+              session?.user.permissions,
+              PermissionsSystem.TAG_ADD,
+            ) && (
+              <Button
+                className="w-[120px]"
+                onClick={() => {
+                  setOpenActionsTagModal(true);
+                  handleSetParam({
+                    action: ActionsModal.CREATE,
+                  });
+                }}>
+                <ImageRound
+                  src="/icons/add-with-background.svg"
+                  name="Add icon"
+                  className="!w-4 !h-4 mr-2 text-gray-400 cursor-pointer"
+                />
+                新規追加
+              </Button>
+            )}
+        </div>
+      </div>
+      <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]">
         <Table className="bg-white !rounded-lg relative">
-          <TableHeader>
-            <th className="w-20">
-              <div className="flex w-full items-center justify-center gap-1 hover:cursor-pointer">
-                <span>ID</span>
-              </div>
+          <TableHeader className="!bg-[#F8FAFC]">
+            <th className="w-[500px] max-w-[500px] text-left border-r-[1px] border-r-[#D2DBE1]">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                タグ名
+              </span>
             </th>
-            <th className="w-[425px] max-w-[425px] text-left">
-              <span>集計タグ</span>
+            <th className="w-[calc(100%_-_500px)] text-left">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                表示するチーム
+              </span>
             </th>
-            <th className="w-[425px] max-w-[425px] text-left">
-              <span>責任者</span>
-            </th>
-            <th className="w-36">操作</th>
           </TableHeader>
           <TableBody>
             {dataTags && dataTags.length ? (
               dataTags.map((element, index) => (
                 <tr key={index}>
-                  <td className="w-20">{element.id}</td>
-                  <td className="w-[425px] max-w-[425px] text-left truncate">
-                    {element.name}
-                  </td>
-                  <td className="w-[425px] max-w-[425px] text-left truncate">
-                    {element?.responsiblePerson?.profile.fullName}
-                  </td>
-                  <td className="w-36">
-                    <div className="flex w-full gap-2 justify-center">
-                      <Link
-                        onClick={() => {
-                          setDataTagDetail(element);
-                        }}
-                        href={pageRouters.DETAIL_TAG.href(`${element.id}`)}>
-                        <ImageRound
-                          name="Detail"
-                          src={'/icons/detail.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
-                        />
-                      </Link>
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.TAG_UPDATE,
-                      ) ? (
-                        <Link
-                          onClick={() => {
-                            setDataTagDetail(element);
-                          }}
-                          href={pageRouters.EDIT_TAG.href(`${element.id}`)}>
+                  <td className="w-[500px] max-w-[500px]  border-r-[1px] border-r-[#D2DBE1]">
+                    <div className="flex justify-between items-center">
+                      <p className="text-left max-w-[350px] truncate text-[16px] font-medium">
+                        {element.name}
+                      </p>
+                      <div className="flex gap-3 justify-end">
+                        {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.TAG_UPDATE,
+                        ) ? (
+                          <div
+                            onClick={() => {
+                              handleConfirmGetDataDetailTag(String(element.id));
+                              handleSetParam({
+                                id: String(element.id),
+                                action: ActionsModal.EDIT,
+                              });
+                            }}>
+                            <ImageRound
+                              name="Edit"
+                              src={'/icons/edit-gray.svg'}
+                              className="w-3.5 h-3.5 hover:cursor-pointer"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-3.5"></div>
+                        )}
+                        {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.TAG_UPDATE,
+                        ) ? (
+                          <div
+                            className='hidden'
+                            onClick={() => {
+                              handleConfirmToggleHideTag({
+                                id: element.id,
+                                isHidden: !element.isHidden,
+                              });
+                            }}>
+                            <ImageRound
+                              name="Hide"
+                              src={'/icons/close-eye-gray.svg'}
+                              className="w-[17px] h-[14px] hover:cursor-pointer"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-[17px]"></div>
+                        )}
+                        {session?.user.permissions &&
+                        hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.TAG_DELETE,
+                        ) ? (
                           <ImageRound
-                            name="Edit"
-                            src={'/icons/edit.svg'}
-                            className="w-6 h-6 hover:cursor-pointer"
+                            name="Delete"
+                            src={'/icons/delete-gray.svg'}
+                            className="w-[13px] h-[15px] hover:cursor-pointer"
+                            onClick={() => handleOpenDeleteTagModal(element)}
                           />
-                        </Link>
-                      ) : (
-                        <div className="w-6"></div>
-                      )}
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.TAG_DELETE,
-                      ) ? (
-                        <ImageRound
-                          name="Delete"
-                          src={'/icons/delete.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
-                          onClick={() => handleOpenDeleteTagModal(element.id)}
-                        />
-                      ) : (
-                        <div className="w-6"></div>
-                      )}
+                        ) : (
+                          <div className="w-[13px]"></div>
+                        )}
+                      </div>
                     </div>
+                  </td>
+                  <td className="!w-[calc(100%_-_500px)] !break-words text-left text-[14px] font-medium">
+                    {element?.organizations &&
+                      element?.organizations
+                        .map((org: Organizations) => org.name)
+                        .join('/ ')}
                   </td>
                 </tr>
               ))
@@ -329,21 +683,62 @@ const ListTags = () => {
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-center">
-        {dataTags && dataTags.length ? (
-          <Pagination
-            onChange={(pageNumber) => setCurrentPage(pageNumber)}
-            currentPage={currentPage}
-            totalPages={totalPages}
-          />
-        ) : null}
+      <div className="flex justify-center items-center w-full">
+        <div className="flex justify-center flex-1">
+          {dataTags && dataTags.length ? (
+            <Pagination
+              onChange={(pageNumber) => setCurrentPage(pageNumber)}
+              currentPage={currentPage}
+              totalPages={totalPages}
+            />
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-[66px]">
+            <Dropdown
+              options={PAGE_SIZE_OPTIONS}
+              selectedOption={PAGE_SIZE_OPTIONS.find(
+                (element) => element.value == pageSize,
+              )}
+              className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
+              classNameTextData="!text-xs"
+              classActive="!text-sm"
+              classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
+              labelOptionClass="!text-sm font-medium !pl-1.5"
+              onChange={(e) => {
+                setPageSize(Number(e.value));
+              }}
+            />
+          </div>
+          <p className="text-sm">件ずつ表示</p>
+        </div>
       </div>
       <ConfirmDeleteModal
         open={openConfirmDeleteModal}
-        type="集計タグ"
+        name={selectedTagToDelete?.name || ''}
+        type="タグ"
         onConfirm={handleConfirmDeleteTag}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />
+      {openActionsTagModal && (
+        <ActionsTagModal
+          open={true}
+          action={actionType}
+          dataTag={dataTagEdit}
+          dataOrganizationList={dataOrganizationList}
+          onClose={() => {
+            setOpenActionsTagModal(false);
+            handleRemoveParam();
+            setDataTagEdit(null);
+          }}
+          onCreate={(data) => {
+            handleConfirmCreateTag(data);
+          }}
+          onEdit={(data) => {
+            handleConfirmEditTag(data);
+          }}
+        />
+      )}
     </Fragment>
   );
 };

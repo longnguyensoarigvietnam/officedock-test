@@ -9,7 +9,12 @@ import ActionActualSchedule from '@components/modals/ActionActualSchedule';
 
 import { apiRouters } from '@constants/routers';
 import { NO_SETTING } from '@constants';
-import { ItemScheduleType, ItemStartType, ViewOptions } from '@constants/enums';
+import {
+  EventWorkCategory,
+  ItemScheduleType,
+  ItemStartType,
+  ViewOptions,
+} from '@constants/enums';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
@@ -293,6 +298,10 @@ const TaskCard = ({
         const endTimeCustom = task.planEndDate
           ? endDateActual
           : getNext30MinuteSlot(startDateActual);
+        const largeColor =
+          task.categories &&
+          task.categories.find((item) => item.type === EventWorkCategory.LARGE)
+            ?.color;
         if (task.type === ItemStartType.TASK) {
           return {
             title: task.title,
@@ -312,6 +321,7 @@ const TaskCard = ({
             type: ItemStartType.TASK,
             isMyTask: false,
             isStart: false,
+            largeColor: largeColor,
             isCalculation: task.planEndDate ? false : true,
           };
         } else {
@@ -334,6 +344,7 @@ const TaskCard = ({
             eventId: task.scheduleId,
             isMyTask: false,
             isStart: false,
+            largeColor: largeColor,
             isCalculation: task.planEndDate ? false : true,
           };
         }

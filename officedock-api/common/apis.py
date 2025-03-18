@@ -33,7 +33,7 @@ from tasks.constants import (
     TaskCategoryTypes,
 )
 from skills.serializers import SkillSerializer
-from organizations.models import OrganizationsSkills
+from organizations.models import OrganizationsSkills, Organization
 from roles.constants import Actions, Screens, SelectionResultOptions
 from chat.models import ChatRoom
 from .serializers import (
@@ -45,6 +45,8 @@ from .serializers import (
     CreationDataTaskStatusSerializer,
     CreationDataUserWithOrganizationSerializer,
     OrganizationWithUserNotHaveSkillMapSerializer,
+    CreationDataOrganizationWithTagSerializer,
+    CreationDataOrganizationWithStructCategorySerializer,
 )
 from .utils import (
     send_web_socket_event,
@@ -228,7 +230,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get creation data for Tag
         """
-        tags = request.user.company.tags.order_by("created_at").all()
         status = TaskStatus.objects.order_by("created_at").all()
         organizations = request.user.organizations.order_by("created_at")
         list_cats = []
@@ -249,6 +250,15 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     ],
                 }
             )
+        tags = (
+            request.user.company.tags.filter(
+                is_hidden=False,
+                organizations__in=organizations,
+            )
+            .order_by("created_at")
+            .all()
+            .distinct()
+        )
 
         data = {
             "tags": CreationDataTagSerializer(
@@ -257,7 +267,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             "status": CreationDataTaskStatusSerializer(status, many=True).data,
             "types": [item.value for item in TaskTypes],
             "priorities": [item.value for item in TaskPriorities],
-            "organizations": CreationDataOrganizationSerializer(
+            "organizations": CreationDataOrganizationWithTagSerializer(
                 organizations, many=True
             ).data,
             "organization_categories": list_cats,
@@ -332,10 +342,19 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get creation data for Schedule
         """
-        tags = request.user.company.tags.order_by("created_at").all()
         users = request.user.company.users.order_by("created_at").all()
         organizations = request.user.company.organizations.order_by(
             "created_at"
+        )
+
+        tags = (
+            request.user.company.tags.filter(
+                is_hidden=False,
+                organizations__in=organizations,
+            )
+            .order_by("created_at")
+            .all()
+            .distinct()
         )
 
         data = {
@@ -344,7 +363,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             ).data,
             "tags": BaseTagSerializer(tags, many=True).data,
             "types": [item.value for item in ScheduleTypes],
-            "organizations": CreationDataOrganizationSerializer(
+            "organizations": CreationDataOrganizationWithTagSerializer(
                 organizations, many=True
             ).data,
         }
@@ -369,7 +388,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter("organization_id", type=int, required=True),
+            OpenApiParameter("organization_id", type=int, required=False),
         ],
     )
     @action(
@@ -382,12 +401,44 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get all organization skills
         """
-        organization_id = request.query_params.get("organization_id")
+        organization_id = request.query_params.get("organization_id", None)
+        company = request.user.company
 
         if not organization_id:
-            return self.response_ok([])
+            orgs = Organization.objects.filter(company=company)
+            results = []
+            for org in orgs:
+                skills = (
+                    OrganizationsSkills.objects.filter(
+                        company=company, organization_id=org.id
+                    )
+                    .select_related("skill")
+                    .order_by("id")
+                    .distinct()
+                )
 
-        company = request.user.company
+                unique_skills = {
+                    (id, name)
+                    for id, name in skills.values_list(
+                        "skill__id", "skill__name"
+                    )
+                }
+
+                results.append(
+                    {
+                        "organization": {
+                            "id": org.id,
+                            "name": org.name,
+                        },
+                        "skills": [
+                            {"id": id, "name": name}
+                            for id, name in unique_skills
+                        ],
+                    }
+                )
+
+            return self.response_ok(results)
+
         skills = (
             OrganizationsSkills.objects.filter(
                 company=company, organization_id=organization_id
@@ -397,11 +448,13 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             .distinct()
         )
 
+        unique_skills = {
+            (id, name)
+            for id, name in skills.values_list("skill__id", "skill__name")
+        }
+
         return self.response_ok(
-            [
-                {"id": id, "name": name}
-                for id, name in skills.values_list("skill__id", "skill__name")
-            ]
+            [{"id": id, "name": name} for id, name in unique_skills]
         )
 
     @action(methods=["GET"], detail=False, url_path="tags")
@@ -430,6 +483,58 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 merged_categories.append({"type": type, "category": category})
 
         return self.response_ok(merged_categories)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=int, required=False),
+        ],
+    )
+    @action(methods=["GET"], detail=False, url_path="statistics")
+    def statistics(self, request):
+        """
+        Return creation data for statistics
+        """
+        organization_id = request.query_params.get("organization_id")
+        user = request.user
+        organizations = []
+        if not organization_id:
+            organizations = user.organizations.all()
+        elif organization := Organization.objects.filter(
+            id=organization_id
+        ).first():
+            organizations = [organization]
+        data = {}
+        if organization_id:
+            data[
+                "organization"
+            ] = CreationDataOrganizationWithStructCategorySerializer(
+                organizations[0], context={"user": user}
+            ).data
+            data["members"] = CreationDataUserSerializer(
+                organizations[0].users.all(), many=True
+            ).data
+        else:
+            list_org = []
+            for organization in organizations:
+                list_org.append(
+                    CreationDataOrganizationWithStructCategorySerializer(
+                        organization, context={"user": user}
+                    ).data
+                )
+            data["organizations"] = list_org
+
+        tags = (
+            request.user.company.tags.filter(
+                is_hidden=False,
+                organizations__in=organizations,
+            )
+            .order_by("created_at")
+            .all()
+            .distinct()
+        )
+        data["tags"] = BaseTagSerializer(tags, many=True).data
+
+        return self.response_ok(data)
 
 
 @extend_schema(tags=["System > Cron Job"])
