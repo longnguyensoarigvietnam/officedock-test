@@ -881,33 +881,33 @@ class StatisticViewSet(BaseAPIViewSet):
                         TaskCategoryTypes.MEDIUM.value,
                         is_with_tasks=True,
                     )
-                # Process small categories if medium_category_id is provided
-                if medium_category_id:
-                    duration = get_duration_of_category(
-                        data["medium_categories"], medium_category_id
-                    )
-                    tasks = tasks.filter(
-                        categories__medium_statistic_category__id=medium_category_id
-                    )
-                    events = events.filter(
-                        categories__medium_statistic_category__id=medium_category_id
-                    )
-                    category_list = aggregate_durations(
-                        annotate_duration(tasks, start_of_day, end_of_day),
-                        annotate_duration(events, start_of_day, end_of_day),
-                        large_category_id=large_category_id,
-                        medium_category_id=medium_category_id,
-                    )
-                    data["small_categories"] = process_categories(
-                        category_list,
-                        duration,
-                        tasks,
-                        events,
-                        start_of_day,
-                        end_of_day,
-                        TaskCategoryTypes.SMALL.value,
-                        is_with_tasks=True,
-                    )
+                    # Process small categories if medium_category_id is provided
+                    if medium_category_id:
+                        duration = get_duration_of_category(
+                            data["medium_categories"], medium_category_id
+                        )
+                        tasks = tasks.filter(
+                            categories__medium_statistic_category__id=medium_category_id
+                        )
+                        events = events.filter(
+                            categories__medium_statistic_category__id=medium_category_id
+                        )
+                        category_list = aggregate_durations(
+                            annotate_duration(tasks, start_of_day, end_of_day),
+                            annotate_duration(events, start_of_day, end_of_day),
+                            large_category_id=large_category_id,
+                            medium_category_id=medium_category_id,
+                        )
+                        data["small_categories"] = process_categories(
+                            category_list,
+                            duration,
+                            tasks,
+                            events,
+                            start_of_day,
+                            end_of_day,
+                            TaskCategoryTypes.SMALL.value,
+                            is_with_tasks=True,
+                        )
 
         return self.response_ok(data)
 
@@ -1322,7 +1322,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         events,
                         start_of_day,
                         end_of_day,
-                        is_get_total_duration=False,
+                        is_get_total_duration=True,
                         is_tag=True,
                         tag_ids=tag_ids,
                     )
@@ -1348,7 +1348,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                             events,
                             start_of_day,
                             end_of_day,
-                            is_get_total_duration=False,
+                            is_get_total_duration=True,
                             is_tag=True,
                             tag_ids=tag_ids,
                         )
