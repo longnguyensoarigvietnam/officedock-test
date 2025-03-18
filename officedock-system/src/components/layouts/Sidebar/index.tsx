@@ -503,27 +503,34 @@ const Sidebar = ({ className }: Props) => {
                                       searchParams.toString(),
                                     );
                                     if (!organizationId) {
-                                      const mainOrganization = {
-                                        label:
-                                          authenticatedUser?.organizations.find(
-                                            (organization) =>
-                                              organization.isMain,
-                                          )?.name || '',
-                                        value:
-                                          authenticatedUser?.organizations.find(
-                                            (organization) =>
-                                              organization.isMain,
-                                          )?.id || '',
-                                      };
-                                      setSelectedOrganization({
-                                        label: mainOrganization.label,
-                                        value: mainOrganization.value,
-                                      });
-
-                                      params.set(
-                                        'organization',
-                                        mainOrganization.value as string,
-                                      );
+                                      if(selectedOrganization){
+                                        params.set(
+                                          'organization',
+                                          selectedOrganization.value as string,
+                                        );
+                                      } else{
+                                        const mainOrganization = {
+                                          label:
+                                            authenticatedUser?.organizations.find(
+                                              (organization) =>
+                                                organization.isMain,
+                                            )?.name || '',
+                                          value:
+                                            authenticatedUser?.organizations.find(
+                                              (organization) =>
+                                                organization.isMain,
+                                            )?.id || '',
+                                        };
+                                        setSelectedOrganization({
+                                          label: mainOrganization.label,
+                                          value: mainOrganization.value,
+                                        });
+  
+                                        params.set(
+                                          'organization',
+                                          mainOrganization.value as string,
+                                        );
+                                      }
                                     }
                                     params.set('tabId', '1');
 
