@@ -40,7 +40,6 @@ const PercentageTeamTagsCompare = ({
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
-  handleSelectSmall,
 }: Props) => {
   const {
     largeOptions,
@@ -116,8 +115,8 @@ const PercentageTeamTagsCompare = ({
   ) => {
     if (!categories) return [];
 
-    const otherItems = categories.filter((item) => item.percent < 10);
-    const mainItems = categories.filter((item) => item.percent >= 10);
+    const otherItems = categories.filter((item) => item.percent < 0);
+    const mainItems = categories.filter((item) => item.percent >= 0);
 
     const otherItem = {
       id: -1,
@@ -238,21 +237,27 @@ const PercentageTeamTagsCompare = ({
   ) => {
     let duration: string = '00:00:00';
     if (isCompare) {
-      if (type === EventWorkCategory.LARGE) {
+      if (type === EventWorkCategory.ALL) {
         duration =
           statisticTagsListTeamCompare?.largeCategories.find(
             (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
-      if (type === EventWorkCategory.MEDIUM) {
+      if (type === EventWorkCategory.LARGE) {
         duration =
           statisticTagsListTeamCompare?.mediumCategories?.find(
             (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
-      if (type === EventWorkCategory.SMALL) {
+      if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticTagsListTeamCompare?.smallCategories?.find(
+            (item) => item.tagId == id,
+          )?.duration || '00:00:00';
+      }
+      if (type === EventWorkCategory.SMALL) {
+        duration =
+          statisticTagsListTeamCompare?.category?.find(
             (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
@@ -264,23 +269,28 @@ const PercentageTeamTagsCompare = ({
 
       setIsShowModalCompare(true);
     } else {
-      if (type === EventWorkCategory.LARGE) {
+      if (type === EventWorkCategory.ALL) {
         duration =
           statisticTagsListTeam?.largeCategories.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
       }
-      if (type === EventWorkCategory.MEDIUM) {
+      if (type === EventWorkCategory.LARGE) {
         duration =
           statisticTagsListTeam?.mediumCategories?.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
       }
-      if (type === EventWorkCategory.SMALL) {
+      if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticTagsListTeam?.smallCategories?.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
+      }
+      if (type === EventWorkCategory.SMALL) {
+        duration =
+          statisticTagsListTeam?.category?.find((item) => item.categoryId == id)
+            ?.duration || '00:00:00';
       }
       setDetailCategory({
         id: id,
@@ -442,7 +452,11 @@ const PercentageTeamTagsCompare = ({
                             id: number | null,
                             isCompare: boolean,
                           ) => {
-                            handleClickTooltip(id, '', isCompare);
+                            handleClickTooltip(
+                              id,
+                              EventWorkCategory.ALL,
+                              isCompare,
+                            );
                           }}
                         />
                       }
@@ -482,18 +496,7 @@ const PercentageTeamTagsCompare = ({
                           dataCompare={dataChartMediumCompare}
                           totalDuration={totalDurationMedium}
                           totalDurationCompare={totalDurationMediumCompare}
-                          handleClickChart={(data: number) => {
-                            if (data) {
-                              const select = mediumOptions.find(
-                                (item) => item.value === data,
-                              );
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
-                              if (select) {
-                                handleSelectMedium(select);
-                              }
-                            }
-                          }}
+                          handleClickChart={(_data: number) => {}}
                           handleClickTooltip={(
                             id: number | null,
                             isCompare: boolean,
@@ -542,18 +545,7 @@ const PercentageTeamTagsCompare = ({
                           dataCompare={dataChartSmallCompare}
                           totalDuration={totalDurationSmall}
                           totalDurationCompare={totalDurationSmallCompare}
-                          handleClickChart={(data: number) => {
-                            if (data) {
-                              const select = smallOptions.find(
-                                (item) => item.value === data,
-                              );
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
-                              if (select) {
-                                handleSelectSmall(select);
-                              }
-                            }
-                          }}
+                          handleClickChart={(_data: number) => {}}
                           handleClickTooltip={(
                             id: number | null,
                             isCompare: boolean,

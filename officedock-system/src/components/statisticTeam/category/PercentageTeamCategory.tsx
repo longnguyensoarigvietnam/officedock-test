@@ -100,11 +100,18 @@ const PercentageCategoryTeam = ({
 
     const filteredCategories = categories.filter((item) => {
       if (item.percent < 10) {
-        mergedItems.push({ ...item });
+        mergedItems.push({
+          ...item,
+          categoryColor:
+            item.categoryColor ||
+            (colorData && lightenColor(colorData, item.percent)) ||
+            getRandomColor(),
+        });
 
         mergedCategory.percent += item.percent;
         mergedCategory.duration += item.duration;
         mergedCategory.categoryColor =
+          item.categoryColor ||
           (colorData && lightenColor(colorData, item.percent)) ||
           getRandomColor();
         mergedCategory.tasks = mergedCategory.tasks.concat(item.tasks);
@@ -356,7 +363,7 @@ const PercentageCategoryTeam = ({
                           listIdData={dataChartLarge.listId}
                           handleClickTooltip={() => {}}
                           handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value) {
+                            if (data.value && data.value !== '未設定') {
                               selectedOrganization &&
                                 handleSelectOrganization(selectedOrganization);
                               handleSelectLarge(data);
@@ -413,7 +420,7 @@ const PercentageCategoryTeam = ({
                           className="w-[280px] h-[280px] ml-5"
                           listIdData={dataChartMedium.listId}
                           handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value) {
+                            if (data.value && data.value !== '未設定') {
                               handleSelectMedium(data);
                             }
                           }}

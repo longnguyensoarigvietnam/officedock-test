@@ -149,6 +149,7 @@ const StatisticTeamBoard = () => {
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
+    setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organization;
     if (organization) {
@@ -167,6 +168,7 @@ const StatisticTeamBoard = () => {
   const handleSelectLarge = (data: OptionDropdownType) => {
     setSelectedLarge(data);
     setSelectedMedium(null);
+    setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organization;
     const largeCategory = organization?.statisticCategories.find(

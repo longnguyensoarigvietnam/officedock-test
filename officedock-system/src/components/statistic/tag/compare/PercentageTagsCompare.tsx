@@ -40,7 +40,6 @@ const PercentageTagsCompare = ({
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
-  handleSelectSmall,
 }: Props) => {
   const {
     largeOptions,
@@ -114,8 +113,8 @@ const PercentageTagsCompare = ({
   ) => {
     if (!categories) return [];
 
-    const otherItems = categories.filter((item) => item.percent < 10);
-    const mainItems = categories.filter((item) => item.percent >= 10);
+    const otherItems = categories.filter((item) => item.percent < 0);
+    const mainItems = categories.filter((item) => item.percent >= 0);
 
     const otherItem = {
       id: -1,
@@ -201,23 +200,28 @@ const PercentageTagsCompare = ({
   ) => {
     let duration: string = '00:00:00';
     if (isCompare) {
-      if (type === EventWorkCategory.LARGE) {
+      if (type === EventWorkCategory.ALL) {
         duration =
           statisticTagsCompareList?.largeCategories.find(
             (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
-      if (type === EventWorkCategory.MEDIUM) {
+      if (type === EventWorkCategory.LARGE) {
         duration =
           statisticTagsCompareList?.mediumCategories?.find(
             (item) => item.tagId == id,
           )?.duration || '00:00:00';
       }
-      if (type === EventWorkCategory.SMALL) {
+      if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticTagsCompareList?.smallCategories?.find(
             (item) => item.tagId == id,
           )?.duration || '00:00:00';
+      }
+      if (type === EventWorkCategory.SMALL) {
+        duration =
+          statisticTagsCompareList?.category?.find((item) => item.tagId == id)
+            ?.duration || '00:00:00';
       }
       setDetailCategoryCompare({
         id: id,
@@ -227,23 +231,28 @@ const PercentageTagsCompare = ({
 
       setIsShowModalCompare(true);
     } else {
-      if (type === EventWorkCategory.LARGE) {
+      if (type === EventWorkCategory.ALL) {
         duration =
           statisticTagsList?.largeCategories.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
       }
-      if (type === EventWorkCategory.MEDIUM) {
+      if (type === EventWorkCategory.LARGE) {
         duration =
           statisticTagsList?.mediumCategories?.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
       }
-      if (type === EventWorkCategory.SMALL) {
+      if (type === EventWorkCategory.MEDIUM) {
         duration =
           statisticTagsList?.smallCategories?.find(
             (item) => item.categoryId == id,
           )?.duration || '00:00:00';
+      }
+      if (type === EventWorkCategory.SMALL) {
+        duration =
+          statisticTagsList?.category?.find((item) => item.categoryId == id)
+            ?.duration || '00:00:00';
       }
       setDetailCategory({
         id: id,
@@ -439,18 +448,7 @@ const PercentageTagsCompare = ({
                           dataCompare={dataChartMediumCompare}
                           totalDuration={totalDurationMedium}
                           totalDurationCompare={totalDurationMediumCompare}
-                          handleClickChart={(data: number) => {
-                            if (data) {
-                              const select = mediumOptions.find(
-                                (item) => item.value === data,
-                              );
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
-                              if (select) {
-                                handleSelectMedium(select);
-                              }
-                            }
-                          }}
+                          handleClickChart={(_data: number) => {}}
                           handleClickTooltip={(
                             id: number | null,
                             isCompare: boolean,
@@ -499,18 +497,7 @@ const PercentageTagsCompare = ({
                           dataCompare={dataChartSmallCompare}
                           totalDuration={totalDurationSmall}
                           totalDurationCompare={totalDurationSmallCompare}
-                          handleClickChart={(data: number) => {
-                            if (data) {
-                              const select = smallOptions.find(
-                                (item) => item.value === data,
-                              );
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
-                              if (select) {
-                                handleSelectSmall(select);
-                              }
-                            }
-                          }}
+                          handleClickChart={(_data: number) => {}}
                           handleClickTooltip={(
                             id: number | null,
                             isCompare: boolean,

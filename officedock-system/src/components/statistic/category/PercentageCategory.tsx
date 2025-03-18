@@ -25,6 +25,7 @@ type Props = {
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
+  handleSelectSmall: (data: OptionDropdownType) => void;
 };
 
 const PercentageCategory = ({
@@ -35,10 +36,13 @@ const PercentageCategory = ({
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
+  handleSelectSmall,
 }: Props) => {
   const {
     largeOptions,
     mediumOptions,
+    smallOptions,
+    selectedSmall,
     listOptionsOrganization,
     selectedLarge,
     selectedMedium,
@@ -48,6 +52,8 @@ const PercentageCategory = ({
     totalDurationSmall,
     tagsOptions,
     selectedTags,
+    setTotalDurationTask,
+    setTotalDurationCategory,
     setSelectedTags,
   } = useContext(StatisticStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -108,12 +114,20 @@ const PercentageCategory = ({
 
     const filteredCategories = categories.filter((item) => {
       if (item.percent < 10) {
-        mergedItems.push({ ...item });
+        mergedItems.push({
+          ...item,
+          categoryColor:
+            item.categoryColor ||
+            (colorData && lightenColor(colorData, item.percent)) ||
+            getRandomColor(),
+        });
         mergedCategory.percent += item.percent;
         mergedCategory.duration += item.duration;
         mergedCategory.categoryColor =
-          (colorData && lightenColor(colorData, item.percent)) ||
-          getRandomColor();
+          item.categoryColor !== null
+            ? item.categoryColor
+            : (colorData && lightenColor(colorData, item.percent)) ||
+              getRandomColor();
         mergedCategory.tasks = mergedCategory.tasks.concat(item.tasks);
         return false;
       }
@@ -128,11 +142,11 @@ const PercentageCategory = ({
     const listPercent = filteredCategories.map((percent) => percent.percent);
 
     // Get list color
-    const listColor = filteredCategories.map(
-      (color, index) =>
-        color.categoryColor ||
-        lightenColor(colorData as string, listPercent[index]) ||
-        getRandomColor(),
+    const listColor = filteredCategories.map((color, index) =>
+      color.categoryColor !== null
+        ? color.categoryColor
+        : lightenColor(colorData as string, listPercent[index]) ||
+          getRandomColor(),
     );
     // Get list label
     const listLabel = filteredCategories.map((label) => label.categoryName);
@@ -165,7 +179,6 @@ const PercentageCategory = ({
       mergedItems: mergedItems,
     };
   };
-
   useEffect(() => {
     if (statisticCategoryList) {
       if (statisticCategoryList.largeCategories) {
@@ -236,19 +249,19 @@ const PercentageCategory = ({
   const handleClickTooltip = (id: number | null, type: string) => {
     let duration: string = '00:00:00';
 
-    if (type === EventWorkCategory.LARGE || type === 'ALL') {
+    if (type === EventWorkCategory.ALL) {
       duration =
         statisticCategoryList?.largeCategories.find(
           (item) => item.categoryId == id,
         )?.duration || '00:00:00';
     }
-    if (type === EventWorkCategory.MEDIUM) {
+    if (type === EventWorkCategory.LARGE) {
       duration =
         statisticCategoryList?.mediumCategories?.find(
           (item) => item.categoryId == id,
         )?.duration || '00:00:00';
     }
-    if (type === EventWorkCategory.SMALL) {
+    if (type === EventWorkCategory.MEDIUM) {
       duration =
         statisticCategoryList?.smallCategories?.find(
           (item) => item.categoryId == id,
@@ -264,13 +277,58 @@ const PercentageCategory = ({
   };
 
   const handleScroll = () => {
-    const item = largeOptions.find((item) => item.value === detailCategory?.id);
-    item && handleSelectLarge(item);
-    if (String(detailCategory?.id) == '未設定') {
-      handleSelectLarge({
-        label: '未設定',
-        value: '未設定',
-      });
+    if (detailCategory?.type === EventWorkCategory.ALL) {
+      const item = largeOptions.find(
+        (item) => item.value === detailCategory?.id,
+      );
+      item && handleSelectLarge(item);
+
+      setTotalDurationTask(detailCategory.totalDuration);
+      if (String(detailCategory?.id) == '未設定') {
+        handleSelectLarge({
+          label: '未設定',
+          value: '未設定',
+        });
+      }
+    }
+    if (detailCategory?.type === EventWorkCategory.LARGE) {
+      const item = mediumOptions.find(
+        (item) => item.value === detailCategory?.id,
+      );
+      item && handleSelectMedium(item);
+      setTotalDurationTask(detailCategory.totalDuration);
+      if (String(detailCategory?.id) == '未設定') {
+        handleSelectMedium({
+          label: '未設定',
+          value: '未設定',
+        });
+      }
+    }
+    if (detailCategory?.type === EventWorkCategory.MEDIUM) {
+      const item = smallOptions.find(
+        (item) => item.value === detailCategory?.id,
+      );
+      item && handleSelectSmall(item);
+      setTotalDurationTask(detailCategory.totalDuration);
+      if (String(detailCategory?.id) == '未設定') {
+        handleSelectSmall({
+          label: '未設定',
+          value: '未設定',
+        });
+      }
+    }
+    if (detailCategory?.type === EventWorkCategory.SMALL) {
+      const item = smallOptions.find(
+        (item) => item.value === detailCategory?.id,
+      );
+      item && handleSelectSmall(item);
+      if (String(detailCategory?.id) == '未設定') {
+        handleSelectSmall({
+          label: '未設定',
+          value: '未設定',
+        });
+        setTotalDurationCategory(detailCategory.totalDuration);
+      }
     }
 
     const element = document.getElementById('task-list-statistic');
@@ -408,10 +466,10 @@ const PercentageCategory = ({
                           optionsData={dataChartLarge.optionData}
                           listIdData={dataChartLarge.listId}
                           handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, 'ALL');
+                            handleClickTooltip(id, EventWorkCategory.ALL);
                           }}
                           handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value) {
+                            if (data.value && data.value !== '未設定') {
                               selectedOrganization &&
                                 handleSelectOrganization(selectedOrganization);
                               handleSelectLarge(data);
@@ -472,7 +530,7 @@ const PercentageCategory = ({
                             handleClickTooltip(id, EventWorkCategory.LARGE);
                           }}
                           handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value) {
+                            if (data.value && data.value !== '未設定') {
                               handleSelectMedium(data);
                             }
                           }}
@@ -549,6 +607,7 @@ const PercentageCategory = ({
           selectedTags={selectedTags}
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}
+          selectedSmall={selectedSmall}
           startDate={startDate}
           endDate={endDate}
           detailCategory={detailCategory}

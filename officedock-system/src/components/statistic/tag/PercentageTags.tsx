@@ -7,7 +7,7 @@ import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
   StatisticCategoryInfo,
-  StatisticsTagsType,
+  StatisticsCategories,
 } from '@interfaces/statistic';
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
@@ -19,7 +19,7 @@ import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailSt
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  statisticTagsList: StatisticsTagsType | undefined;
+  statisticTagsList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -256,23 +256,25 @@ const PercentageTags = ({
 
   const handleClickTooltip = (id: number | null, type: string) => {
     let duration: string = '00:00:00';
-    if (type === 'ALL') {
-      duration = totalDurationLarge;
-    }
-
-    if (type === EventWorkCategory.LARGE) {
+    if (type === EventWorkCategory.ALL) {
       duration =
         statisticTagsList?.largeCategories.find((item) => item.tagId == id)
           ?.duration || '00:00:00';
     }
-    if (type === EventWorkCategory.MEDIUM) {
+
+    if (type === EventWorkCategory.LARGE) {
       duration =
         statisticTagsList?.mediumCategories?.find((item) => item.tagId == id)
           ?.duration || '00:00:00';
     }
-    if (type === EventWorkCategory.SMALL) {
+    if (type === EventWorkCategory.MEDIUM) {
       duration =
         statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
+          ?.duration || '00:00:00';
+    }
+    if (type === EventWorkCategory.SMALL) {
+      duration =
+        statisticTagsList?.category?.find((item) => item.tagId == id)
           ?.duration || '00:00:00';
     }
     setDetailCategory({
@@ -418,7 +420,7 @@ const PercentageTags = ({
                           optionsData={dataChartLarge.optionData}
                           listIdData={dataChartLarge.listId}
                           handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, 'ALL');
+                            handleClickTooltip(id, EventWorkCategory.ALL);
                           }}
                           handleClickChart={(_data: OptionDropdownType) => {}}
                         />
@@ -470,11 +472,7 @@ const PercentageTags = ({
                           handleClickTooltip={(id: number | null) => {
                             handleClickTooltip(id, EventWorkCategory.LARGE);
                           }}
-                          handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value) {
-                              handleSelectMedium(data);
-                            }
-                          }}
+                          handleClickChart={(_data: OptionDropdownType) => {}}
                         />
                       ) : (
                         <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>

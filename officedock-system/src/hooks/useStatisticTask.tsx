@@ -29,9 +29,12 @@ const useStatisticTask = ({
   created_at,
   filter,
   isTeam = false,
+  is_tag_page = false,
   onSuccess,
   onError,
 }: {
+  is_tag_page?: boolean;
+
   isScroll?: boolean;
   created_at?: string;
   isTeam?: boolean;
@@ -71,6 +74,7 @@ const useStatisticTask = ({
     if (filter?.pageSize) params.append('page_size', String(filter.pageSize));
     if (created_at) params.append('created_at', String(created_at));
     if (filter?.user_id) params.append('user_id', String(filter.user_id));
+    if (is_tag_page) params.append('is_tag_page', String(is_tag_page));
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 

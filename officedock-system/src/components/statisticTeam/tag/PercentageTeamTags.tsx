@@ -7,7 +7,7 @@ import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
   StatisticCategoryInfo,
-  StatisticsTagsType,
+  StatisticsCategories,
   UserListStatisticType,
 } from '@interfaces/statistic';
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
@@ -20,10 +20,11 @@ import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailSt
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  statisticTagsListTeam: StatisticsTagsType | undefined;
+  statisticTagsListTeam: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
+  handleSelectSmall: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
 };
 
@@ -34,6 +35,7 @@ const PercentageTeamTags = ({
   removeTag,
   handleSelectLarge,
   handleSelectMedium,
+  handleSelectSmall,
   handleSelectOrganization,
 }: Props) => {
   const {
@@ -121,7 +123,7 @@ const PercentageTeamTags = ({
     };
 
     const filteredCategories = categories.filter((item) => {
-      if (item.percent < 10) {
+      if (item.percent < 0) {
         mergedItems.push({ ...item });
         mergedCategory.percent += item.percent;
         mergedCategory.duration += item.duration;
@@ -261,21 +263,26 @@ const PercentageTeamTags = ({
 
   const handleClickTooltip = (id: number | null, type: string) => {
     let duration: string = '00:00:00';
-
-    if (type === EventWorkCategory.LARGE) {
+    if (type === EventWorkCategory.ALL) {
       duration =
         statisticTagsListTeam?.largeCategories.find((item) => item.tagId == id)
           ?.duration || '00:00:00';
     }
-    if (type === EventWorkCategory.MEDIUM) {
+
+    if (type === EventWorkCategory.LARGE) {
       duration =
         statisticTagsListTeam?.mediumCategories?.find(
           (item) => item.tagId == id,
         )?.duration || '00:00:00';
     }
-    if (type === EventWorkCategory.SMALL) {
+    if (type === EventWorkCategory.MEDIUM) {
       duration =
         statisticTagsListTeam?.smallCategories?.find((item) => item.tagId == id)
+          ?.duration || '00:00:00';
+    }
+    if (type === EventWorkCategory.SMALL) {
+      duration =
+        statisticTagsListTeam?.category?.find((item) => item.tagId == id)
           ?.duration || '00:00:00';
     }
     setDetailCategory({
@@ -420,7 +427,7 @@ const PercentageTeamTags = ({
                           optionsData={dataChartLarge.optionData}
                           listIdData={dataChartLarge.listId}
                           handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, '');
+                            handleClickTooltip(id, EventWorkCategory.ALL);
                           }}
                           handleClickChart={(_data: OptionDropdownType) => {}}
                         />
@@ -473,11 +480,7 @@ const PercentageTeamTags = ({
                           handleClickTooltip={(id: number | null) => {
                             handleClickTooltip(id, EventWorkCategory.LARGE);
                           }}
-                          handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value) {
-                              handleSelectMedium(data);
-                            }
-                          }}
+                          handleClickChart={(_data: OptionDropdownType) => {}}
                         />
                       ) : (
                         <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
@@ -554,7 +557,7 @@ const PercentageTeamTags = ({
                       classNameOption="!text-sm"
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
-                      onChange={(data) => handleSelectMedium(data)}
+                      onChange={(data) => handleSelectSmall(data)}
                       disabled={!selectedLarge}
                     />
                     <p className="text-sm text-black my-[26px]">

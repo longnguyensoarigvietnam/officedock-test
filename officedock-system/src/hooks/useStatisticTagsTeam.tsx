@@ -15,6 +15,7 @@ interface FilterProps {
   fromDate: string | Date;
   largeCategoryId?: number;
   mediumCategoryId?: number;
+  smallCategoryId?: number;
   organizationIds?: string;
   tagIds?: OptionDropdownType[];
 }
@@ -43,6 +44,10 @@ const useStatisticTagsTeam = ({
     }${
       filter?.mediumCategoryId
         ? `&medium_category_id=${filter.mediumCategoryId}`
+        : ''
+    }${
+      filter?.smallCategoryId
+        ? `&small_category_id=${filter.smallCategoryId}`
         : ''
     }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 

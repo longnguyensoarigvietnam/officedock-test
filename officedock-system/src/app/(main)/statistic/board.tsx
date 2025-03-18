@@ -35,6 +35,7 @@ const StatisticBoard = () => {
     selectedOrganization,
     selectedTags,
     tagsOptions,
+    selectedSmall,
     setSelectedTags,
     setSelectedLarge,
     setSelectedMedium,
@@ -50,6 +51,9 @@ const StatisticBoard = () => {
     setTotalDurationLargeCompare,
     setTotalDurationMediumCompare,
     setTotalDurationSmallCompare,
+    setTotalDurationTask,
+    setTotalDurationTaskCompare,
+
     setTagsOptions,
   } = useContext(StatisticStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
@@ -82,6 +86,20 @@ const StatisticBoard = () => {
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
+      if (data.largeTotalDuration) {
+        if (data.mediumTotalDuration) {
+          if (data.smallTotalDuration) {
+            setTotalDurationTask(data.smallTotalDuration);
+          } else {
+            if (selectedSmall && selectedSmall.value) return;
+
+            setTotalDurationTask(data.mediumTotalDuration);
+          }
+        } else {
+          if (selectedLarge && selectedLarge.value) return;
+          setTotalDurationTask(data.largeTotalDuration);
+        }
+      }
     },
   });
 
@@ -99,6 +117,20 @@ const StatisticBoard = () => {
       setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
       setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
+      if (data.largeTotalDuration) {
+        if (data.mediumTotalDuration) {
+          if (data.smallTotalDuration) {
+            setTotalDurationTaskCompare(data.smallTotalDuration);
+          } else {
+            if (selectedSmall && selectedSmall.value) return;
+
+            setTotalDurationTaskCompare(data.mediumTotalDuration);
+          }
+        } else {
+          if (selectedLarge && selectedLarge.value) return;
+          setTotalDurationTaskCompare(data.largeTotalDuration);
+        }
+      }
     },
   });
 
@@ -139,6 +171,7 @@ const StatisticBoard = () => {
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
+    setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations?.find(
       (org) => org.id === data.value,
@@ -159,6 +192,7 @@ const StatisticBoard = () => {
   const handleSelectLarge = (data: OptionDropdownType) => {
     setSelectedLarge(data);
     setSelectedMedium(null);
+    setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organizations.find(
       (org) => org.id === selectedOrganization?.value,
@@ -387,6 +421,7 @@ const StatisticBoard = () => {
           removeTag={removeTag}
           statisticCategoryList={statisticCategoryList}
           handleSelectOrganization={handleSelectOrganization}
+          handleSelectSmall={handleSelectSmall}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
         />

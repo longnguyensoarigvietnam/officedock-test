@@ -34,6 +34,7 @@ const StatisticTeamTagBoard = () => {
     selectedOrganization,
     selectedTags,
     tagsOptions,
+    selectedSmall,
     setTagsOptions,
     setSelectedTags,
     setSelectedLarge,
@@ -66,6 +67,8 @@ const StatisticTeamTagBoard = () => {
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
+
       tagIds: selectedTags,
     },
     onSuccess: (data) => {
@@ -95,6 +98,8 @@ const StatisticTeamTagBoard = () => {
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
+
       isCompare: isCheckCompare,
     },
     onSuccess: (data) => {
@@ -153,6 +158,7 @@ const StatisticTeamTagBoard = () => {
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
+    setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organization;
     if (organization) {
@@ -171,6 +177,7 @@ const StatisticTeamTagBoard = () => {
   const handleSelectLarge = (data: OptionDropdownType) => {
     setSelectedLarge(data);
     setSelectedMedium(null);
+    setSelectedSmall(null);
 
     const organization = creationDataStatisticData?.organization;
     const largeCategory = organization?.statisticCategories.find(
@@ -373,6 +380,7 @@ const StatisticTeamTagBoard = () => {
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
+          handleSelectSmall={handleSelectSmall}
         />
       )}
 

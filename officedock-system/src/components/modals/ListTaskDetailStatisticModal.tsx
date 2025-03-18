@@ -29,8 +29,10 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   selectedTags: OptionDropdownType[];
-  selectedLarge?: OptionDropdownType | null;
-  selectedMedium?: OptionDropdownType | null;
+  selectedLarge: OptionDropdownType | null;
+  selectedMedium: OptionDropdownType | null;
+  selectedSmall: OptionDropdownType | null;
+
   onClose: () => void;
   handleScroll: () => void;
 };
@@ -40,10 +42,11 @@ const ListTaskDetailStatisticModal = ({
   startDate,
   endDate,
   selectedLarge,
-  selectedMedium,
   detailCategory,
   selectedOrganization,
   selectedTags,
+  selectedMedium,
+  selectedSmall,
   onClose,
   handleScroll,
 }: Props) => {
@@ -62,17 +65,26 @@ const ListTaskDetailStatisticModal = ({
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: selectedLarge && (selectedLarge.value as number),
-      mediumCategoryId:
-        detailCategory &&
-        (detailCategory.type === EventWorkCategory.MEDIUM ||
-          detailCategory.type === EventWorkCategory.SMALL)
-          ? selectedMedium && (selectedMedium.value as number)
-          : undefined,
-      smallCategoryId:
-        detailCategory && detailCategory.type === EventWorkCategory.SMALL
+      largeCategoryId:
+        detailCategory && detailCategory.type === EventWorkCategory.ALL
           ? (detailCategory.id as number)
-          : undefined,
+          : detailCategory && detailCategory.type !== ''
+            ? (selectedLarge?.value as number)
+            : null,
+      mediumCategoryId:
+        detailCategory && detailCategory.type === EventWorkCategory.LARGE
+          ? detailCategory && (detailCategory.id as number)
+          : detailCategory && detailCategory.type !== EventWorkCategory.ALL
+            ? (selectedMedium?.value as number)
+            : null,
+      smallCategoryId:
+        detailCategory && detailCategory.type === EventWorkCategory.MEDIUM
+          ? (detailCategory.id as number)
+          : detailCategory &&
+              detailCategory.type !== EventWorkCategory.ALL &&
+              detailCategory.type !== EventWorkCategory.LARGE
+            ? (selectedSmall?.value as number)
+            : null,
       page: 1,
       totalDuration: detailCategory?.totalDuration,
       ordering: ordering,

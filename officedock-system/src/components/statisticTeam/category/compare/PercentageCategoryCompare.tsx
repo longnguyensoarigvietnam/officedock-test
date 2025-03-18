@@ -96,7 +96,13 @@ const PercentageTeamCategoryCompare = ({
       id: -1,
       label: 'その他',
       percentage: otherItems.reduce((sum, item) => sum + item.percent, 0),
-      mergedItems: otherItems.map((item) => ({ ...item })),
+      mergedItems: otherItems.map((item) => ({
+        ...item,
+        categoryColor:
+          item.categoryColor ||
+          (colorData && lightenColor(colorData, item.percent)) ||
+          getRandomColor(),
+      })),
       color: colorData || getRandomColor(),
       totalDuration: '',
       optionData: otherItems
@@ -321,7 +327,7 @@ const PercentageTeamCategoryCompare = ({
                           dataCompare={dataChartLargeCompare}
                           handleClickTooltip={() => {}}
                           handleClickChart={(data: number) => {
-                            if (data) {
+                            if (data && String(data) !== '未設定') {
                               const select = largeOptions.find(
                                 (item) => item.value === data,
                               );
@@ -375,7 +381,7 @@ const PercentageTeamCategoryCompare = ({
                           totalDurationCompare={totalDurationMediumCompare}
                           handleClickTooltip={() => {}}
                           handleClickChart={(data: number) => {
-                            if (data) {
+                            if (data && String(data) !== '未設定') {
                               const select = mediumOptions.find(
                                 (item) => item.value === data,
                               );
@@ -427,7 +433,7 @@ const PercentageTeamCategoryCompare = ({
                           totalDurationCompare={totalDurationSmallCompare}
                           handleClickTooltip={() => {}}
                           handleClickChart={(data: number) => {
-                            if (data) {
+                            if (data && String(data) !== '未設定') {
                               const select = smallOptions.find(
                                 (item) => item.value === data,
                               );

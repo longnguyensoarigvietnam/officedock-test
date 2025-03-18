@@ -54,14 +54,10 @@ const TaskListStatistic = ({
     selectedMedium,
     selectedOrganization,
     selectedSmall,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationLargeCompare,
-    totalDurationMediumCompare,
-    totalDurationSmallCompare,
     selectedTags,
     tagsOptions,
+    totalDurationTask,
+    totalDurationTaskCompare,
     setSelectedTags,
   } = useContext(StatisticStateContext);
 
@@ -84,27 +80,15 @@ const TaskListStatistic = ({
   const [isShowCompare, setIsShowCompare] = useState(false);
 
   const getTotalDuration = () => {
-    if (selectedOrganization?.value) {
-      if (selectedLarge?.value) {
-        if (selectedMedium?.value) {
-          return totalDurationSmall;
-        }
-        return totalDurationMedium;
-      }
-      return totalDurationLarge;
+    if (totalDurationTask) {
+      return totalDurationTask;
     }
     return '00:00:00';
   };
   // Get total compare
   const getTotalDurationCompare = () => {
-    if (selectedOrganization?.value) {
-      if (selectedLarge?.value) {
-        if (selectedMedium?.value) {
-          return totalDurationSmallCompare;
-        }
-        return totalDurationMediumCompare;
-      }
-      return totalDurationLargeCompare;
+    if (totalDurationTaskCompare) {
+      return totalDurationTaskCompare;
     }
     return '00:00:00';
   };
