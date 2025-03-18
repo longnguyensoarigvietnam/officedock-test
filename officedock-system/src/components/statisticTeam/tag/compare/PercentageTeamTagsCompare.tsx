@@ -37,6 +37,7 @@ const PercentageTeamTagsCompare = ({
   statisticTagsListTeamCompare,
   statisticTagsListTeam,
   removeTag,
+  handleSelectSmall,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
@@ -386,7 +387,7 @@ const PercentageTeamTagsCompare = ({
                       />
                     </div>
                     <div>
-                      <div className="flex gap-2 ">
+                      <div className="flex gap-2  flex-wrap">
                         {selectedTags.map((item) => {
                           return (
                             <div
@@ -579,13 +580,14 @@ const PercentageTeamTagsCompare = ({
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
-                      onChange={(data) => handleSelectMedium(data)}
+                      onChange={(data) => handleSelectSmall(data)}
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px]">
                       {
                         <PercentageBarCompareTeam
-                          isTag
+                          isTag          
+                          isLast             
                           data={dataChartCategory}
                           startDate={startDate}
                           endDate={endDate}

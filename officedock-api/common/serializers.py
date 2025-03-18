@@ -199,7 +199,11 @@ class CreationDataOrganizationWithStructCategorySerializer(
         Transform statistic category list to serializer data
         """
         statistic_categories = (
-            obj.organizations_statistic_categories.all().order_by("index")
+            obj.organizations_statistic_categories.filter(
+                large_statistic_category__isnull=False
+            )
+            .all()
+            .order_by("index")
         )
         statistic_categories = StatisticCategoryStructionSerializer(
             statistic_categories, many=True

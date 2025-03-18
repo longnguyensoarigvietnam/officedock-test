@@ -127,7 +127,7 @@ const PercentageCategoryTeam = ({
     }
 
     // Get list percent
-    const listPercent = categories.map((percent) => percent.percent);
+    const listPercent = filteredCategories.map((percent) => percent.percent);
 
     // Get list color
     const listColor = filteredCategories.map(
@@ -137,13 +137,13 @@ const PercentageCategoryTeam = ({
         getRandomColor(),
     );
     // Get list label
-    const listLabel = categories.map((label) => label.categoryName);
+    const listLabel = filteredCategories.map((label) => label.categoryName);
     // Get list value
-    const listValueActualChart = categories.map((item) =>
+    const listValueActualChart = filteredCategories.map((item) =>
       convertToJapaneseTime(item.duration),
     );
     // Get list options
-    const listDataOptions = categories.map(
+    const listDataOptions = filteredCategories.map(
       (item) =>
         item.users?.slice(0, 6).map((user) => ({
           label: user.user.fullName,
@@ -151,9 +151,9 @@ const PercentageCategoryTeam = ({
         })) || [],
     );
     // Get list id
-    const listDataIds = categories.map((item) => item.categoryId);
+    const listDataIds = filteredCategories.map((item) => item.categoryId);
     // Get list duration
-    const listDuration = categories.map(
+    const listDuration = filteredCategories.map(
       (item) => item.users?.map((user) => user.duration) || [],
     );
 

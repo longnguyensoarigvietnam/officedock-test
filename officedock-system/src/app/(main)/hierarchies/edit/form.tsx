@@ -175,6 +175,8 @@ const TableComponent = ({
   categoryList,
   organizationName,
   dataOptionsSkill,
+  newCategory,
+  setNewCategory,
   setHierarchyList,
   setSelectedHierarchiesToDelete,
   setSelectedHierarchiesToUpdate,
@@ -186,10 +188,22 @@ const TableComponent = ({
     value: number;
     label: string;
   }[];
+  newCategory: {
+    name: string;
+    uuid: string;
+    type: string;
+    rowInfo: rowDataType;
+}
   setHierarchyList: Dispatch<SetStateAction<HierarchyDetail[]>>;
   setSelectedHierarchiesToDelete: Dispatch<
     SetStateAction<string[] | undefined>
   >;
+  setNewCategory: Dispatch<SetStateAction<{
+    name: string;
+    uuid: string;
+    type: string;
+    rowInfo: rowDataType;
+}>>
   setSelectedHierarchiesToUpdate: Dispatch<
     SetStateAction<
       {
@@ -221,39 +235,7 @@ const TableComponent = ({
     status: false,
   });
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [newCategory, setNewCategory] = useState<{
-    name: string;
-    uuid: string;
-    type: string;
-    rowInfo: rowDataType;
-  }>({
-    name: '',
-    uuid: '',
-    type: '',
-    rowInfo: {
-      id: '',
-      large: {
-        value: '',
-        label: '',
-        showBy: '',
-        isValid: false,
-      },
-      medium: {
-        value: '',
-        label: '',
-        showBy: '',
-        isValid: false,
-      },
-      small: {
-        value: '',
-        label: '',
-        showBy: '',
-        isValid: false,
-      },
-      skills: [],
-      color: '',
-    },
-  });
+  
 
   const findLastUniqueMediumIndexes = (data: rowDataType[]): number[] => {
     const lastIndexes: number[] = [];

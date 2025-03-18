@@ -423,6 +423,7 @@ const PercentageTeamCategoryCompare = ({
                     <div className="min-h-[280px] mt-[30px]">
                       {
                         <PercentageBarCompareTeam
+                        isLast
                           data={dataChartSmall}
                           startDate={startDate}
                           endDate={endDate}
@@ -437,8 +438,7 @@ const PercentageTeamCategoryCompare = ({
                               const select = smallOptions.find(
                                 (item) => item.value === data,
                               );
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
+
                               if (select) {
                                 handleSelectSmall(select);
                               }

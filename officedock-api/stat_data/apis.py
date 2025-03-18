@@ -738,15 +738,6 @@ class StatisticViewSet(BaseAPIViewSet):
             },
         ).data
         merged_duration = list(chain(list_task, list_event))
-        merged_duration = sorted(
-            merged_duration, key=lambda x: x["created_at"], reverse=True
-        )
-
-        if ordering:
-            # Sort by created_at in descending order (newest first)
-            merged_duration = sorted(
-                merged_duration, key=lambda x: x[ordering], reverse=True
-            )
 
         def adjust_percentages(cards):
             """
@@ -765,10 +756,23 @@ class StatisticViewSet(BaseAPIViewSet):
 
             return cards
 
+        if ordering:
+            merged_duration = sorted(
+                merged_duration,
+                key=lambda x: (x.get(ordering, "")),
+                reverse=False,
+            )
+        else:
+            merged_duration = sorted(
+                merged_duration,
+                key=lambda x: (x.get("total_duration", "")),
+                reverse=True,
+            )
+
+        merged_duration = adjust_percentages(merged_duration)
+
         paginator = self.pagination_class()
-        paginated_data = paginator.paginate_queryset(
-            adjust_percentages(merged_duration), request
-        )
+        paginated_data = paginator.paginate_queryset(merged_duration, request)
 
         return paginator.get_paginated_response(paginated_data)
 

@@ -10,6 +10,7 @@ import ImageRound from '../ImageRound';
 
 interface Props {
   isTag?: boolean;
+  isLast? : boolean ;
   data: DataPercentCompareType[];
   dataCompare: DataPercentCompareType[];
   startDate: Date;
@@ -28,6 +29,7 @@ const PercentageBarCompare = ({
   startDate,
   endDate,
   isTag = false,
+  isLast = false ,
   startDateCompare,
   endDateCompare,
   totalDuration,
@@ -37,7 +39,7 @@ const PercentageBarCompare = ({
 }: Props) => {
   return (
     <div>
-      <div className="mb-[14px]">
+      <div className={`mt-[14px] ${!isTag && 'flex justify-between'}`}>
         <div className="flex items-center ">
           <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
             基準
@@ -83,7 +85,7 @@ const PercentageBarCompare = ({
                 style={{
                   boxShadow: '0px 2px 8px 0px #0000001A',
                 }}
-                className="absolute top-0 left-[70%] w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+                className={`absolute top-0 ${isLast ? 'left-[10%]' : 'left-[70%]'}  w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                 {item.mergedItems.length > 0 ? (
                   <>
                     <p className="text-xs text-start font-medium text-[#77858F] mb-5">
@@ -233,7 +235,7 @@ const PercentageBarCompare = ({
                 style={{
                   boxShadow: '0px 2px 8px 0px #0000001A',
                 }}
-                className="absolute top-0 left-[70%] w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+                className={`absolute top-0 ${isLast ? 'left-[10%]' : 'left-[70%]'} w-[250px]  rounded-md p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-1`}>
                 {item.mergedItems.length > 0 ? (
                   <>
                     <p className="text-xs text-start font-medium text-[#77858F] mb-5">
@@ -364,7 +366,7 @@ const PercentageBarCompare = ({
           <div className="w-full h-full bg-[#EBF1F7]"></div>
         )}
       </div>
-      <div className="mt-[14px]">
+      <div className={`mt-[14px] ${!isTag && 'flex justify-between'}`}>
         <div className="flex items-center">
           <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
             比較
