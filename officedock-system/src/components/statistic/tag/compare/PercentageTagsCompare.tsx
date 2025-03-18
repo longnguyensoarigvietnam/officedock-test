@@ -540,6 +540,7 @@ const PercentageTagsCompare = ({
                       {
                         <PercentageBarCompare
                           isTag
+                          isLast
                           data={dataChartCategory}
                           startDate={startDate}
                           endDate={endDate}
