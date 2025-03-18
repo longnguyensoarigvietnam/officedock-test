@@ -283,7 +283,15 @@ def aggregate_durations(
                         small_statistic_category__id=category_id,
                     ).exists()
                 )
-                if check_medium_category_exists or check_small_category_exists:
+                if (
+                    check_medium_category_exists
+                    or check_small_category_exists
+                    or (
+                        large_category_id
+                        and medium_category_id
+                        and not category_id
+                    )
+                ):
                     category_dict["empty_category"] = {
                         "category_id": None,
                         "category_name": NONE_CATEGORY,
@@ -387,11 +395,17 @@ def process_categories(
         TaskCategoryTypes.MEDIUM.value: "categories__medium_statistic_category__id",
         TaskCategoryTypes.SMALL.value: "categories__small_statistic_category__id",
     }
+    category_in_map = {
+        TaskCategoryTypes.LARGE.value: "categories__large_statistic_category__in",
+        TaskCategoryTypes.MEDIUM.value: "categories__medium_statistic_category__in",
+        TaskCategoryTypes.SMALL.value: "categories__small_statistic_category__in",
+    }
     category_id_null_map = {
         TaskCategoryTypes.LARGE.value: "categories__large_statistic_category__isnull",
         TaskCategoryTypes.MEDIUM.value: "categories__medium_statistic_category__isnull",
         TaskCategoryTypes.SMALL.value: "categories__small_statistic_category__isnull",
     }
+    category_ids = [item["category_id"] for item in category_list]
     for cat in category_list:
         data = {
             "category_id": None,
@@ -411,10 +425,12 @@ def process_categories(
                 event_filter = events.filter(Q(**{filter_key: category_id}))
             else:
                 task_filter = tasks.filter(
-                    **{category_id_null_map[category_type]: True}
+                    Q(**{category_id_null_map[category_type]: True})
+                    | ~Q(**{category_in_map[category_type]: category_ids})
                 )
                 event_filter = events.filter(
-                    **{category_id_null_map[category_type]: True}
+                    Q(**{category_id_null_map[category_type]: True})
+                    | ~Q(**{category_in_map[category_type]: category_ids})
                 )
             if is_with_tasks:
                 data["tasks"] = (
