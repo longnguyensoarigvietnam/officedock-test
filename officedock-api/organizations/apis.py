@@ -583,7 +583,7 @@ class OrganizationCategoryHierarchyViewSet(
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
         data_to_create = serializer_data.pop("items", [])
-        ids_do_delete = serializer_data.pop("ids", [])
+        ids_to_delete = serializer_data.pop("ids", [])
 
         if data_to_create:
             for item in data_to_create:
@@ -644,8 +644,13 @@ class OrganizationCategoryHierarchyViewSet(
                     large_statistic_category=large_statistic_category,
                     medium_statistic_category=medium_statistic_category,
                     small_statistic_category=small_statistic_category,
-                ).order_by("-id")
-                records.exclude(id=records.first().id).delete()
+                ).order_by("-updated_at")
+                ids = records.exclude(id=records.first().id).values_list(
+                    "id", flat=True
+                )
+                ids_to_delete = set(ids_to_delete) | set(
+                    ids
+                )  # Merge ids to delete
 
                 # Create new organization category skills
                 if organization_statistic_category and skills:
@@ -655,9 +660,9 @@ class OrganizationCategoryHierarchyViewSet(
                             skill=skill,
                         )
 
-        if ids_do_delete:
+        if ids_to_delete:
             OrganizationsStatisticCategories.objects.filter(
-                id__in=ids_do_delete
+                id__in=ids_to_delete
             ).delete()
 
         return self.response_created()
