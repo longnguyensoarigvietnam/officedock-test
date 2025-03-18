@@ -142,7 +142,6 @@ const PercentageTags = ({
     // Get list color
     const listColor = filteredCategories.map(
       (color, index) =>
-        color.categoryColor ||
         lightenColor(colorData as string, listPercent[index]) ||
         getRandomColor(),
     );

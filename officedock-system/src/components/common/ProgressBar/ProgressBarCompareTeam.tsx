@@ -6,6 +6,7 @@ import { getRandomColor } from '@utils';
 import AvatarIconWithDynamicColor from '../AvatarIcon';
 
 interface Props {
+  isTag?: boolean;
   data: DataPercentCompareType[];
   dataCompare: DataPercentCompareType[];
   startDate: Date;
@@ -23,6 +24,7 @@ const PercentageBarCompareTeam = ({
   dataCompare,
   startDate,
   endDate,
+  isTag = false,
   startDateCompare,
   endDateCompare,
   totalDuration,
@@ -49,7 +51,7 @@ const PercentageBarCompareTeam = ({
           <div>-</div>
         )}
       </div>
-      <div className="w-[280px]  h-[100px] flex">
+      <div className={`${isTag ? 'w-[220px]' : 'w-[280px]'}  h-[100px] flex`}>
         {data.length > 0 ? (
           data.map((item, index) => (
             <div
@@ -174,7 +176,8 @@ const PercentageBarCompareTeam = ({
           <div className="w-full h-full bg-[#EBF1F7]"></div>
         )}
       </div>
-      <div className="w-[280px] flex  h-[100px] mt-[30px]">
+      <div
+        className={`${isTag ? 'w-[220px]' : 'w-[280px]'} flex  h-[100px] mt-[30px]`}>
         {dataCompare.length > 0 ? (
           dataCompare.map((item, index) => (
             <div

@@ -5,6 +5,7 @@ import { DataPercentCompareType } from '@interfaces/common';
 import ImageRound from '../ImageRound';
 
 interface Props {
+  isTag?: boolean;
   data: DataPercentCompareType[];
   dataCompare: DataPercentCompareType[];
   startDate: Date;
@@ -22,6 +23,7 @@ const PercentageBarCompare = ({
   dataCompare,
   startDate,
   endDate,
+  isTag = false,
   startDateCompare,
   endDateCompare,
   totalDuration,
@@ -49,7 +51,7 @@ const PercentageBarCompare = ({
           <div>-</div>
         )}
       </div>
-      <div className="w-[220px]  h-[100px] flex">
+      <div className={`${isTag ? 'w-[220px]' : 'w-[280px]'}  h-[100px] flex`}>
         {data.length > 0 ? (
           data.map((item, index) => (
             <div
@@ -181,7 +183,8 @@ const PercentageBarCompare = ({
           <div className="w-full h-full bg-[#EBF1F7]"></div>
         )}
       </div>
-      <div className="w-[220px] flex  h-[100px] mt-[30px]">
+      <div
+        className={`${isTag ? 'w-[220px]' : 'w-[280px]'}  flex  h-[100px] mt-[30px]`}>
         {dataCompare.length > 0 ? (
           dataCompare.map((item, index) => (
             <div
@@ -251,7 +254,7 @@ const PercentageBarCompare = ({
                           <div className="flex w-full justify-end mt-3">
                             <div
                               onClick={() => {
-                                handleClickTooltip(mergeItem.categoryId, false);
+                                handleClickTooltip(mergeItem.categoryId, true);
                               }}
                               className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
                               <span>タスクを見る</span>
@@ -301,7 +304,7 @@ const PercentageBarCompare = ({
                     <div className="flex w-full justify-end mt-3">
                       <div
                         onClick={() => {
-                          handleClickTooltip(item.id, false);
+                          handleClickTooltip(item.id, true);
                         }}
                         className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md">
                         <span>タスクを見る</span>

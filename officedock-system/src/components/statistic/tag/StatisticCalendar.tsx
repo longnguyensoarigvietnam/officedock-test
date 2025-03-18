@@ -119,14 +119,18 @@ function StatisticTagCalendar() {
   // Selection option time
   const handleSelectTimeOption = (option: TimeOptionsType) => {
     setIsTypeTime(option);
+    if (!dataEndDate) {
+      setDataEndDate(new Date());
+    }
+    const dataResource = dataEndDate || new Date();
 
-    if (!endDate) return;
+    if (!dataResource) return;
 
-    const newStartDate: Date = new Date(endDate);
+    const newStartDate: Date = new Date(dataResource);
 
     switch (option) {
       case TimeOptionsType.WEEK: {
-        const days = getDaysFromTimeOption(option, endDate, true);
+        const days = getDaysFromTimeOption(option, dataResource, true);
         newStartDate.setDate(newStartDate.getDate() - days + 1);
         setIsDisableCalendar(true);
         if (isCheckCompare) {
@@ -136,7 +140,8 @@ function StatisticTagCalendar() {
       }
 
       case TimeOptionsType.MONTH: {
-        const days = getDaysFromTimeOption(option, endDate, true);
+        const days = getDaysFromTimeOption(option, dataResource, true);
+
         newStartDate.setDate(newStartDate.getDate() - days + 1);
         setIsDisableCalendar(true);
         if (isCheckCompare) {
@@ -146,7 +151,7 @@ function StatisticTagCalendar() {
       }
 
       case TimeOptionsType.HALF_YEAR: {
-        const days = getDaysFromTimeOption(option, endDate, true);
+        const days = getDaysFromTimeOption(option, dataResource, true);
         newStartDate.setDate(newStartDate.getDate() - days + 1);
         setIsDisableCalendar(true);
         if (isCheckCompare) {
@@ -156,7 +161,7 @@ function StatisticTagCalendar() {
       }
 
       case TimeOptionsType.YEAR: {
-        const days = getDaysFromTimeOption(option, endDate, true);
+        const days = getDaysFromTimeOption(option, dataResource, true);
         newStartDate.setDate(newStartDate.getDate() - days + 1);
         setIsDisableCalendar(true);
         if (isCheckCompare) {

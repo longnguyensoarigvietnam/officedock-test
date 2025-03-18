@@ -29,6 +29,8 @@ type Props = {
   startDate: Date;
   endDate: Date | null;
   selectedTags: OptionDropdownType[];
+  selectedLarge: OptionDropdownType | null;
+  selectedMedium: OptionDropdownType | null;
   onClose: () => void;
   handleScroll: () => void;
 };
@@ -37,6 +39,8 @@ const ListTaskDetailStatisticModal = ({
   open,
   startDate,
   endDate,
+  selectedLarge,
+  selectedMedium,
   detailCategory,
   selectedOrganization,
   selectedTags,
@@ -58,12 +62,15 @@ const ListTaskDetailStatisticModal = ({
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId:
-        detailCategory && detailCategory.type === EventWorkCategory.LARGE
-          ? (detailCategory.id as number)
-          : undefined,
+      largeCategoryId: selectedLarge && (selectedLarge.value as number),
       mediumCategoryId:
-        detailCategory && detailCategory.type === EventWorkCategory.MEDIUM
+        detailCategory &&
+        (detailCategory.type === EventWorkCategory.MEDIUM ||
+          detailCategory.type === EventWorkCategory.SMALL)
+          ? selectedMedium && (selectedMedium.value as number)
+          : undefined,
+      smallCategoryId:
+        detailCategory && detailCategory.type === EventWorkCategory.SMALL
           ? (detailCategory.id as number)
           : undefined,
       page: 1,

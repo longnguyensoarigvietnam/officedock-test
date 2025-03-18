@@ -236,7 +236,7 @@ const PercentageCategory = ({
   const handleClickTooltip = (id: number | null, type: string) => {
     let duration: string = '00:00:00';
 
-    if (type === EventWorkCategory.LARGE) {
+    if (type === EventWorkCategory.LARGE || type === 'ALL') {
       duration =
         statisticCategoryList?.largeCategories.find(
           (item) => item.categoryId == id,
@@ -266,6 +266,12 @@ const PercentageCategory = ({
   const handleScroll = () => {
     const item = largeOptions.find((item) => item.value === detailCategory?.id);
     item && handleSelectLarge(item);
+    if (String(detailCategory?.id) == '未設定') {
+      handleSelectLarge({
+        label: '未設定',
+        value: '未設定',
+      });
+    }
 
     const element = document.getElementById('task-list-statistic');
     setIsShowModal(false);
@@ -402,7 +408,7 @@ const PercentageCategory = ({
                           optionsData={dataChartLarge.optionData}
                           listIdData={dataChartLarge.listId}
                           handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.LARGE);
+                            handleClickTooltip(id, 'ALL');
                           }}
                           handleClickChart={(data: OptionDropdownType) => {
                             if (data.value) {
@@ -463,7 +469,7 @@ const PercentageCategory = ({
                           className="w-[280px] h-[280px] ml-5"
                           listIdData={dataChartMedium.listId}
                           handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.MEDIUM);
+                            handleClickTooltip(id, EventWorkCategory.LARGE);
                           }}
                           handleClickChart={(data: OptionDropdownType) => {
                             if (data.value) {
@@ -522,7 +528,7 @@ const PercentageCategory = ({
                           optionsData={dataChartSmall.optionData}
                           listIdData={dataChartSmall.listId}
                           handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.SMALL);
+                            handleClickTooltip(id, EventWorkCategory.MEDIUM);
                           }}
                           isClickTooltip
                         />
@@ -541,6 +547,8 @@ const PercentageCategory = ({
         <ListTaskDetailStatisticModal
           open={isShowModal}
           selectedTags={selectedTags}
+          selectedLarge={selectedLarge}
+          selectedMedium={selectedMedium}
           startDate={startDate}
           endDate={endDate}
           detailCategory={detailCategory}
