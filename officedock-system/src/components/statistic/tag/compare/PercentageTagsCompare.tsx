@@ -37,6 +37,7 @@ const PercentageTagsCompare = ({
   statisticTagsCompareList,
   statisticTagsList,
   removeTag,
+  handleSelectSmall,
   handleSelectLarge,
   handleSelectMedium,
   handleSelectOrganization,
@@ -405,7 +406,11 @@ const PercentageTagsCompare = ({
                             id: number | null,
                             isCompare: boolean,
                           ) => {
-                            handleClickTooltip(id, '', isCompare);
+                            handleClickTooltip(
+                              id,
+                              EventWorkCategory.ALL,
+                              isCompare,
+                            );
                           }}
                         />
                       }
@@ -528,7 +533,7 @@ const PercentageTagsCompare = ({
                       labelTextClass="!text-[#77858F] !text-xs !font-medium"
                       options={smallOptions}
                       selectedOption={selectedSmall || undefined}
-                      onChange={(data) => handleSelectMedium(data)}
+                      onChange={(data) => handleSelectSmall(data)}
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px]">

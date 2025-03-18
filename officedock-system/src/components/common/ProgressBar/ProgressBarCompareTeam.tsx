@@ -182,8 +182,15 @@ const PercentageBarCompareTeam = ({
                       {item.optionData.map((item, index) => (
                         <li
                           key={index}
-                          className="break-all text-start line-clamp-3 text-[#77858F] text-sm font-normal]">
-                          {item.label}
+                          className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal]">
+                          <AvatarIconWithDynamicColor
+                            color={getRandomColor()}
+                            size={30}
+                          />
+                          <span className="relative top-[-3px]">
+                            {' '}
+                            {item.label}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -327,8 +334,15 @@ const PercentageBarCompareTeam = ({
                       {item.optionData.map((item, index) => (
                         <li
                           key={index}
-                          className="break-all text-start line-clamp-3 text-[#77858F] text-sm font-normal]">
-                          {item.label}
+                          className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal]">
+                          <AvatarIconWithDynamicColor
+                            color={getRandomColor()}
+                            size={30}
+                          />
+                          <span className="relative top-[-3px]">
+                            {' '}
+                            {item.label}
+                          </span>
                         </li>
                       ))}
                     </ul>
