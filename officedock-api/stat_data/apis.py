@@ -587,6 +587,7 @@ class StatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="total_duration", type=str),
             OpenApiParameter(name="ordering", type=str),
             OpenApiParameter(name="created_at", type=datetime),
+            OpenApiParameter(name="is_tag_page", type=bool),
         ]
     )
     @action(
@@ -613,6 +614,7 @@ class StatisticViewSet(BaseAPIViewSet):
         total_duration = request.query_params.get("total_duration")
         ordering = request.query_params.get("ordering")
         created_at = request.query_params.get("created_at")
+        is_tag_page = request.query_params.get("is_tag_page")
         # Validate date format using regex
         if (
             not from_date
@@ -703,9 +705,7 @@ class StatisticViewSet(BaseAPIViewSet):
             )
         elif small_category_id == NONE_CATEGORY:
             filters &= Q(
-                Q(
-                    categories__small_statistic_category__isnull=small_category_id
-                )
+                Q(categories__small_statistic_category__isnull=True)
                 | ~Q(
                     categories__small_statistic_category__in=small_category_ids
                 )
@@ -723,6 +723,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 "start_of_day": start_of_day,
                 "end_of_day": end_of_day,
                 "total_duration": total_duration,
+                "tag_ids": tag_ids if is_tag_page else None,
             },
         ).data
         list_event = StatisticEventSerializer(
@@ -732,6 +733,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 "start_of_day": start_of_day,
                 "end_of_day": end_of_day,
                 "total_duration": total_duration,
+                "tag_ids": tag_ids if is_tag_page else None,
             },
         ).data
         merged_duration = list(chain(list_task, list_event))
@@ -1394,7 +1396,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                                 events,
                                 start_of_day,
                                 end_of_day,
-                                is_get_total_duration=False,
+                                is_get_total_duration=True,
                                 is_tag=True,
                                 tag_ids=tag_ids,
                             )

@@ -117,6 +117,7 @@ class DailyTaskSerializer(TaskCommonSerializer):
         """
         start_of_day = self.context.get("start_of_day")
         end_of_day = self.context.get("end_of_day")
+        tag_ids = self.context.get("tag_ids")
         durations = _get_list_durations(obj, start_of_day, end_of_day)
 
         total_duration = timedelta()
@@ -128,7 +129,9 @@ class DailyTaskSerializer(TaskCommonSerializer):
                 else timezone.now()
             )
             total_duration += paused_at - task_duration.started_at
-
+        if tag_ids:
+            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
+            total_duration = total_duration * related_tag_count
         # Format the output as desired (HH:MM:SS)
         return format_duration(total_duration)
 
@@ -214,6 +217,7 @@ class DailyEventSerializer(serializers.ModelSerializer):
         """
         start_of_day = self.context.get("start_of_day")
         end_of_day = self.context.get("end_of_day")
+        tag_ids = self.context.get("tag_ids")
         durations = _get_list_durations(obj, start_of_day, end_of_day)
 
         total_duration = timedelta()
@@ -225,7 +229,9 @@ class DailyEventSerializer(serializers.ModelSerializer):
                 else timezone.now()
             )
             total_duration += paused_at - task_duration.started_at
-
+        if tag_ids:
+            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
+            total_duration = total_duration * related_tag_count
         # Format the output as desired (HH:MM:SS)
         return format_duration(total_duration)
 
@@ -257,6 +263,7 @@ class StatisticTaskSerializer(DailyTaskSerializer):
         start_of_day = self.context.get("start_of_day")
         end_of_day = self.context.get("end_of_day")
         total_duration = self.context.get("total_duration")
+        tag_ids = self.context.get("tag_ids")
         if not total_duration:
             return None
 
@@ -271,7 +278,9 @@ class StatisticTaskSerializer(DailyTaskSerializer):
                 else timezone.now()
             )
             duration += paused_at - task_duration.started_at
-
+        if tag_ids:
+            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
+            duration = duration * related_tag_count
         if time_str_to_timedelta(total_duration).total_seconds() > 0:
             percent_per_total_duration = (
                 duration.total_seconds()
@@ -311,6 +320,7 @@ class StatisticEventSerializer(DailyEventSerializer):
         start_of_day = self.context.get("start_of_day")
         end_of_day = self.context.get("end_of_day")
         total_duration = self.context.get("total_duration")
+        tag_ids = self.context.get("tag_ids")
         if not total_duration:
             return None
         durations = _get_list_durations(obj, start_of_day, end_of_day)
@@ -324,7 +334,9 @@ class StatisticEventSerializer(DailyEventSerializer):
                 else timezone.now()
             )
             duration += paused_at - task_duration.started_at
-
+        if tag_ids:
+            related_tag_count = obj.tags.filter(id__in=tag_ids).count()
+            duration = duration * related_tag_count
         if time_str_to_timedelta(total_duration).total_seconds() > 0:
             percent_per_total_duration = (
                 duration.total_seconds()
