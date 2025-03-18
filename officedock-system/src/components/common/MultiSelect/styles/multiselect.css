@@ -18,3 +18,6 @@
   box-shadow: none !important;
   display: none;
 }
+.custom-input input:focus{
+  box-shadow: none;
+}

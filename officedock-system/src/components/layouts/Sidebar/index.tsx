@@ -48,7 +48,8 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
     if (updatedItem.href) {
       const isActive =
         pathname === updatedItem.href ||
-        (pathname.startsWith(updatedItem.href + "/") && updatedItem.href !== "/");
+        (pathname.startsWith(updatedItem.href + '/') &&
+          updatedItem.href !== '/');
 
       updatedItem.current = isActive;
     }
@@ -214,9 +215,29 @@ const Sidebar = ({ className }: Props) => {
     (item) => item.href == pageRouters.MEMBER_MANAGEMENT.href,
   );
 
+  let defaultOrganization = {
+    label: '',
+    value: '',
+  };
   const mainOrganization = authenticatedUser?.organizations.find(
     (organization) => organization.isMain,
   );
+  if (mainOrganization) {
+    defaultOrganization = {
+      label: mainOrganization.name,
+      value: String(mainOrganization.id),
+    };
+  } else {
+    if (
+      authenticatedUser?.organizations.length &&
+      authenticatedUser?.organizations.length > 0
+    ) {
+      defaultOrganization = {
+        label: authenticatedUser?.organizations[0].name,
+        value: String(authenticatedUser?.organizations[0].id),
+      };
+    }
+  }
 
   return (
     <aside
@@ -433,10 +454,10 @@ const Sidebar = ({ className }: Props) => {
                         className="!bg-[#182A4B33] !border-none !rounded-[6px] !w-full mb-1 !text-white !font-medium !text-sm !pr-0"
                         selectedOption={
                           selectedOrganization || {
-                            label: mainOrganization?.name || '',
-                            value: mainOrganization?.id || '',
+                            label: defaultOrganization?.label || '',
+                            value: defaultOrganization?.value || '',
                             imgComponent: organizationList.find(
-                              (org) => org.value == mainOrganization?.id,
+                              (org) => org.value == defaultOrganization?.value,
                             )?.imgComponent,
                           }
                         }
@@ -504,6 +525,37 @@ const Sidebar = ({ className }: Props) => {
                                     const params = new URLSearchParams(
                                       searchParams.toString(),
                                     );
+                                    let defaultOrganization = {
+                                      label: '',
+                                      value: '',
+                                    };
+                                    const mainOrganization =
+                                      authenticatedUser?.organizations.find(
+                                        (organization) => organization.isMain,
+                                      );
+                                    if (mainOrganization) {
+                                      defaultOrganization = {
+                                        label: mainOrganization.name,
+                                        value: String(mainOrganization.id),
+                                      };
+                                    } else {
+                                      if (
+                                        authenticatedUser?.organizations
+                                          .length &&
+                                        authenticatedUser?.organizations
+                                          .length > 0
+                                      ) {
+                                        defaultOrganization = {
+                                          label:
+                                            authenticatedUser?.organizations[0]
+                                              .name,
+                                          value: String(
+                                            authenticatedUser?.organizations[0]
+                                              .id,
+                                          ),
+                                        };
+                                      }
+                                    }
                                     if (!organizationId) {
                                       if (selectedOrganization) {
                                         params.set(
@@ -511,27 +563,20 @@ const Sidebar = ({ className }: Props) => {
                                           selectedOrganization.value as string,
                                         );
                                       } else {
-                                        const mainOrganization = {
-                                          label:
-                                            authenticatedUser?.organizations.find(
-                                              (organization) =>
-                                                organization.isMain,
-                                            )?.name || '',
-                                          value:
-                                            authenticatedUser?.organizations.find(
-                                              (organization) =>
-                                                organization.isMain,
-                                            )?.id || '',
-                                        };
-                                        setSelectedOrganization({
-                                          label: mainOrganization.label,
-                                          value: mainOrganization.value,
-                                        });
+                                        if (
+                                          defaultOrganization.label &&
+                                          defaultOrganization.value
+                                        ) {
+                                          setSelectedOrganization({
+                                            label: defaultOrganization.label,
+                                            value: defaultOrganization.value,
+                                          });
 
-                                        params.set(
-                                          'organization',
-                                          mainOrganization.value as string,
-                                        );
+                                          params.set(
+                                            'organization',
+                                            defaultOrganization.value as string,
+                                          );
+                                        }
                                       }
                                     }
                                     params.set('tabId', '1');

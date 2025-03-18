@@ -37,7 +37,7 @@ const PercentageBarCompareTeam = ({
 }: Props) => {
   return (
     <div>
-      <div className="mb-[14px]">
+      <div className={`mt-[14px] ${!isTag && 'flex justify-between'}`}>
         <div className="flex items-center ">
           <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
             基準
@@ -355,7 +355,7 @@ const PercentageBarCompareTeam = ({
           <div className="w-full h-full bg-[#EBF1F7]"></div>
         )}
       </div>
-      <div className="mt-[14px]">
+      <div className={`mt-[14px] ${!isTag && 'flex justify-between'}`}>
         <div className="flex items-center ">
           <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
             比較
