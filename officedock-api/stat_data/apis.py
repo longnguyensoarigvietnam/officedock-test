@@ -655,7 +655,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 large_category_ids = [
                     item["large_statistic_category"]["id"]
                     for item in organization_categories
-                    if "large_statistic_category" in item
+                    if item["large_statistic_category"]
                 ]
                 medium_category_ids = {
                     item["medium_statistic_category"]["id"]
@@ -844,10 +844,10 @@ class StatisticViewSet(BaseAPIViewSet):
                 annotate_duration(tasks, start_of_day, end_of_day),
                 annotate_duration(events, start_of_day, end_of_day),
             )
-            data["large_total_duration"] = format_duration(total_duration)
 
             # Process large categories
             if category_list:
+                data["large_total_duration"] = format_duration(total_duration)
                 data["large_categories"] = process_categories(
                     category_list,
                     total_duration,
@@ -992,8 +992,8 @@ class StatisticViewSet(BaseAPIViewSet):
                 end_of_day,
                 is_get_total_duration=True,
             )
-            data["large_total_duration"] = format_duration(total_duration)
             if tag_list:
+                data["large_total_duration"] = format_duration(total_duration)
                 data["large_categories"] = process_tags(
                     tag_list,
                     total_duration,
@@ -1163,10 +1163,9 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 is_get_total_duration=True,
             )
 
-            data["large_total_duration"] = format_duration(total_duration)
-
             # Process large categories
             if category_list:
+                data["large_total_duration"] = format_duration(total_duration)
                 data["large_categories"] = process_categories(
                     category_list,
                     total_duration,
@@ -1314,8 +1313,8 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 is_tag=True,
                 tag_ids=tag_ids,
             )
-            data["large_total_duration"] = format_duration(total_duration)
             if tag_list:
+                data["large_total_duration"] = format_duration(total_duration)
                 data["large_categories"] = process_tags(
                     tag_list,
                     total_duration,
