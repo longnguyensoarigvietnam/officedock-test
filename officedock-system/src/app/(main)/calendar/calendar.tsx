@@ -1063,7 +1063,7 @@ const EventCalendar = () => {
 
             if (event.end) {
               const end = new Date(event.end);
-              if (start.toDateString() !== end.toDateString() && event.allDay) {
+              if ((start.toDateString() !== end.toDateString() && event.allDay) || isMidnight(new Date(event.end))) {
                 end.setDate(end.getDate() + 1);
                 event.end = end.toISOString();
               }
@@ -1543,10 +1543,9 @@ const EventCalendar = () => {
             const dataEndDate =
               data.startDate &&
               data.endDate &&
-              new Date(data.startDate).toDateString() !==
+              ((new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              !isMidnight(new Date(data.endDate)) &&
-              data.isAllDay
+              data.isAllDay) || isMidnight(new Date(data.endDate)))
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
@@ -1720,10 +1719,9 @@ const EventCalendar = () => {
             const dataEndDate =
               data.startDate &&
               data.endDate &&
-              new Date(data.startDate).toDateString() !==
+              ((new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              !isMidnight(new Date(data.endDate)) &&
-              data.isAllDay
+              data.isAllDay) || isMidnight(new Date(data.endDate)))
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )

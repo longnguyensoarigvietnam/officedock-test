@@ -1055,7 +1055,7 @@ const TableComponent = ({
                           <div className="mb-1 !h-full w-full" ref={inputRef}>
                             <input
                               type="text"
-                              className={`w-full !h-full p-2 text-black rounded-md ${!row.original.large.isValid && !isUUID(row.original.large.label) && 'border-red-500'}`}
+                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-md ${!row.original.large.isValid && !isUUID(row.original.large.label) && 'border-red-500'}`}
                               placeholder="新しいカテゴリーを入力"
                               value={
                                 newCategory.name !== '' &&
@@ -1085,6 +1085,7 @@ const TableComponent = ({
                       ) : (
                         row.original.large.showBy == 'pulldown' && (
                           <TableDropdown
+                            key={JSON.stringify(row.original.large)}
                             options={[
                               ...categoryList.filter(
                                 (option) =>
@@ -1395,7 +1396,7 @@ const TableComponent = ({
                             <div className="mb-1 !h-full w-full" ref={inputRef}>
                               <input
                                 type="text"
-                                className={`w-full !h-full p-2 text-black rounded-md ${!row.original.medium.isValid && !isUUID(row.original.medium.label) && 'border-red-500'}`}
+                                className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-md ${!row.original.medium.isValid && !isUUID(row.original.medium.label) && 'border-red-500'}`}
                                 placeholder="新しいカテゴリーを入力"
                                 value={
                                   newCategory.name !== '' &&
@@ -1427,6 +1428,7 @@ const TableComponent = ({
                           row.original.medium.showBy == 'pulldown' && (
                             <div className={`w-full h-full`}>
                               <TableDropdown
+                                key={JSON.stringify(row.original.medium)}
                                 options={[
                                   ...categoryList.filter(
                                     (option) =>
@@ -1786,7 +1788,7 @@ const TableComponent = ({
                           <div className="mb-1 !h-full w-full" ref={inputRef}>
                             <input
                               type="text"
-                              className={`w-full !h-full p-2 text-black rounded-md ${!row.original.small.isValid && !isUUID(row.original.small.label) && 'border-red-500'}`}
+                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-md ${!row.original.small.isValid && !isUUID(row.original.small.label) && 'border-red-500'}`}
                               placeholder="新しいカテゴリーを入力"
                               value={
                                 newCategory.name !== '' &&
@@ -1817,6 +1819,7 @@ const TableComponent = ({
                         row.original.small.showBy == 'pulldown' && (
                           <div className="w-full h-full">
                             <TableDropdown
+                              key={JSON.stringify(row.original.small)}
                               options={[
                                 ...categoryList.filter(
                                   (option) =>
