@@ -651,21 +651,22 @@ class StatisticViewSet(BaseAPIViewSet):
             organization_categories = OrganizationDetailSerializer(
                 organization
             ).data["statistic_categories"]
-            large_category_ids = [
-                item["large_statistic_category"]["id"]
-                for item in organization_categories
-                if "large_statistic_category" in item
-            ]
-            medium_category_ids = {
-                item["medium_statistic_category"]["id"]
-                for item in organization_categories
-                if item["medium_statistic_category"]
-            }
-            small_category_ids = {
-                item["small_statistic_category"]["id"]
-                for item in organization_categories
-                if item["small_statistic_category"]
-            }
+            if organization_categories:
+                large_category_ids = [
+                    item["large_statistic_category"]["id"]
+                    for item in organization_categories
+                    if "large_statistic_category" in item
+                ]
+                medium_category_ids = {
+                    item["medium_statistic_category"]["id"]
+                    for item in organization_categories
+                    if item["medium_statistic_category"]
+                }
+                small_category_ids = {
+                    item["small_statistic_category"]["id"]
+                    for item in organization_categories
+                    if item["small_statistic_category"]
+                }
 
         if tag_ids_param:
             for id in tag_ids_param.split(","):
