@@ -642,6 +642,7 @@ class StatisticViewSet(BaseAPIViewSet):
                     continue
         large_category_ids = []
         medium_category_ids = []
+        small_category_ids = []
         if organization := Organization.objects.filter(
             id=organization_ids[0]
         ).first():
@@ -658,6 +659,12 @@ class StatisticViewSet(BaseAPIViewSet):
                 for item in organization_categories
                 if item["medium_statistic_category"]
             }
+            small_category_ids = {
+                item["small_statistic_category"]["id"]
+                for item in organization_categories
+                if item["small_statistic_category"]
+            }
+
         if tag_ids_param:
             for id in tag_ids_param.split(","):
                 try:
@@ -696,7 +703,12 @@ class StatisticViewSet(BaseAPIViewSet):
             )
         elif small_category_id == NONE_CATEGORY:
             filters &= Q(
-                categories__small_statistic_category__isnull=small_category_id
+                Q(
+                    categories__small_statistic_category__isnull=small_category_id
+                )
+                | ~Q(
+                    categories__small_statistic_category__in=small_category_ids
+                )
             )
         elif created_at:
             filters &= Q(created_at__lt=created_at)
