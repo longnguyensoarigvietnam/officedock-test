@@ -1,6 +1,10 @@
 import React from 'react';
 
-import { formatShowStatisticTask, formatTimeToJapanese } from '@utils/date';
+import {
+  formatShowStatisticTask,
+  formatTimeToJapanese,
+  getJapaneseDayName,
+} from '@utils/date';
 import { DataPercentCompareType } from '@interfaces/common';
 import ImageRound from '../ImageRound';
 
@@ -33,10 +37,10 @@ const PercentageBarCompare = ({
 }: Props) => {
   return (
     <div>
-      <div className="mb-[14px] flex justify-between items-center">
+      <div className="mb-[14px]">
         <div className="flex items-center ">
           <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
-            比較
+            基準
           </p>
           <div className="text-black text-xs font-normal flex items-center gap-[2px]">
             <p>{startDate && formatShowStatisticTask(startDate)}</p>~
@@ -45,7 +49,7 @@ const PercentageBarCompare = ({
         </div>
         {data.length > 0 ? (
           <div className="font-medium text-sm text-black ">
-            基準 {totalDuration && formatTimeToJapanese(totalDuration)}
+            合計 {totalDuration && formatTimeToJapanese(totalDuration)}
           </div>
         ) : (
           <div>-</div>
@@ -85,7 +89,6 @@ const PercentageBarCompare = ({
                     <p className="text-xs text-start font-medium text-[#77858F] mb-5">
                       その他
                     </p>
-
                     {item.mergedItems.map((mergeItem, indexMerge) => {
                       return (
                         <div key={mergeItem.categoryId}>
@@ -132,12 +135,29 @@ const PercentageBarCompare = ({
                   </>
                 ) : (
                   <>
+                    <div className="flex items-center ">
+                      <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                        基準期間
+                      </p>
+                      <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                        <p>
+                          {startDate && formatShowStatisticTask(startDate)}(
+                          {getJapaneseDayName(String(startDate))})
+                        </p>
+                        ~
+                        <p>
+                          {endDate && formatShowStatisticTask(endDate)}(
+                          {getJapaneseDayName(String(endDate))})
+                        </p>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-1">
                       <div
                         style={{
                           backgroundColor: item.color,
                         }}
                         className="w-3 h-3"></div>
+
                       <span className="truncate font-bold text-base text-black">
                         {item.label}
                       </span>
@@ -275,6 +295,24 @@ const PercentageBarCompare = ({
                   </>
                 ) : (
                   <>
+                    <div className="flex items-center ">
+                      <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                        比較期間
+                      </p>
+                      <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                        <p>
+                          {startDateCompare &&
+                            formatShowStatisticTask(startDateCompare)}
+                          ({getJapaneseDayName(String(startDateCompare))})
+                        </p>
+                        ~
+                        <p>
+                          {endDateCompare &&
+                            formatShowStatisticTask(endDateCompare)}
+                          ({getJapaneseDayName(String(endDateCompare))})
+                        </p>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-1">
                       <div
                         style={{
@@ -326,7 +364,7 @@ const PercentageBarCompare = ({
           <div className="w-full h-full bg-[#EBF1F7]"></div>
         )}
       </div>
-      <div className="mt-[14px] flex items-center justify-between">
+      <div className="mt-[14px]">
         <div className="flex items-center">
           <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
             比較

@@ -45,17 +45,19 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
   return menuItems.map((item) => {
     const updatedItem = { ...item };
 
-    if (updatedItem.href && pathname == updatedItem.href) {
-      updatedItem.current = true;
-    } else if (updatedItem.children) {
-      const childWithMatchingHref = updatedItem.children.find((child) =>
-        child.href.startsWith(pathname),
-      );
-      if (childWithMatchingHref) {
-        updatedItem.current = true;
-        childWithMatchingHref.current = true;
-      }
+    if (updatedItem.href) {
+      const isActive =
+        pathname === updatedItem.href ||
+        (pathname.startsWith(updatedItem.href + "/") && updatedItem.href !== "/");
+
+      updatedItem.current = isActive;
+    }
+
+    if (updatedItem.children) {
       updatedItem.children = updateCurrent(updatedItem.children, pathname);
+      if (updatedItem.children.some((child) => child.current)) {
+        updatedItem.current = true;
+      }
     }
 
     return updatedItem;
