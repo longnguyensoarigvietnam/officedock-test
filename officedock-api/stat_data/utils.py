@@ -126,7 +126,8 @@ def get_category_durations(
     )
     if large_category_id:
         with_large = with_large.filter(
-            categories__large_statistic_category__id=large_category_id
+            Q(categories__medium_statistic_category__isnull=False)
+            & Q(categories__large_statistic_category__id=large_category_id)
         ).values(
             "categories__medium_statistic_category__id",
             "categories__medium_statistic_category__name",
@@ -134,7 +135,8 @@ def get_category_durations(
         )
     if medium_category_id:
         with_large = with_large.filter(
-            categories__medium_statistic_category__id=medium_category_id
+            Q(categories__medium_statistic_category__id=medium_category_id)
+            & Q(categories__small_statistic_category__isnull=False)
         ).values(
             "categories__small_statistic_category__id",
             "categories__small_statistic_category__name",
@@ -146,15 +148,15 @@ def get_category_durations(
         Q(categories__large_statistic_category__isnull=True)
     )
     if large_category_id:
-        without_large = without_large.filter(
+        without_large = queryset.filter(
             Q(categories__large_statistic_category__id=large_category_id)
             & Q(categories__medium_statistic_category__isnull=True)
         )
-    if medium_category_id:
-        without_large = without_large.filter(
-            Q(categories__medium_statistic_category__id=medium_category_id)
-            & Q(categories__small_statistic_category__isnull=True)
-        )
+        if medium_category_id:
+            without_large = without_large.filter(
+                Q(categories__medium_statistic_category__id=medium_category_id)
+                & Q(categories__small_statistic_category__isnull=True)
+            )
     without_large = without_large.annotate(duration=Sum("duration")).values(
         "duration"
     )
