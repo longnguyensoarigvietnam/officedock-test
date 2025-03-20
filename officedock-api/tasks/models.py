@@ -7,7 +7,6 @@ from tasks.constants import (
     INDEX_INCREMENT,
     INITIAL_INDEX_VALUE,
     TaskTypes,
-    TaskPriorities,
 )
 from users.models import User
 
@@ -30,9 +29,6 @@ class Task(BaseModel):
         null=True,
         blank=True,
         related_name="tasks",
-    )
-    priority = models.CharField(
-        choices=TaskPriorities.choices(), max_length=100, null=True, blank=True
     )
     deadline = models.DateTimeField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
@@ -63,6 +59,7 @@ class Task(BaseModel):
         blank=True,
         related_name="tasks",
     )
+    recurring = models.JSONField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         """

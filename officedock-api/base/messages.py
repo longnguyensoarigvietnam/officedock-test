@@ -84,6 +84,8 @@ _ERROR_MESSAGES = {
         "status_invalid": _("Status {key} is invalid"),
         "boolean_field": _("Status of tab {key} should be True or False"),
         "max_file_size": _("File size must not exceed 5GB."),
+        "select_day": _("Must select at least one day."),
+        "select_month": _("Must select at least one month."),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -146,6 +148,8 @@ _ERROR_MESSAGES = {
         "status_invalid": _("{key}ステータスは無効です。"),
         "boolean_field": _("{key}タブのステータスは「True」 か「 False」でなければなりません。"),
         "max_file_size": _("5GB以下のファイルをアップロードしてください。"),
+        "select_day": _("いずれか1日を選択してください。"),
+        "select_month": _("いずれか1月を選択してください。"),
     },
 }
 
