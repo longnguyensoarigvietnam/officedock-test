@@ -31,6 +31,14 @@ interface ContextValue {
   startDateCompare: Date;
   totalDurationCategory: string;
   totalDurationCategoryCompare: string;
+  isSkeletonCategory: boolean;
+  setIsSkeletonCategory: Dispatch<SetStateAction<boolean>>;
+  isSkeletonCategoryCompare: boolean;
+  setIsSkeletonCategoryCompare: Dispatch<SetStateAction<boolean>>;
+  isSkeletonCategoryTask: boolean;
+  setIsSkeletonCategoryTask: Dispatch<SetStateAction<boolean>>;
+  isSkeletonCategoryTaskCompare: boolean;
+  setIsSkeletonCategoryTaskCompare: Dispatch<SetStateAction<boolean>>;
 
   // Tag
   tagsOptions: OptionDropdownType[];
@@ -119,6 +127,14 @@ const defaultValue: ContextValue = {
   selectedTags: [],
   setSelectedTags: () => {},
   setTagsOptions: () => {},
+  isSkeletonCategory: false,
+  setIsSkeletonCategory: () => {},
+  isSkeletonCategoryCompare: false,
+  setIsSkeletonCategoryCompare: () => {},
+  isSkeletonCategoryTask: false,
+  setIsSkeletonCategoryTask: () => {},
+  isSkeletonCategoryTaskCompare: false,
+  setIsSkeletonCategoryTaskCompare: () => {},
 };
 
 export const StatisticStateContext = createContext<ContextValue>(defaultValue);
@@ -128,8 +144,15 @@ export const StatisticStateProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
+  // Loading
+  const [isSkeletonCategory, setIsSkeletonCategory] = useState(false);
+  const [isSkeletonCategoryCompare, setIsSkeletonCategoryCompare] =
+    useState(false);
+  const [isSkeletonCategoryTask, setIsSkeletonCategoryTask] = useState(false);
+  const [isSkeletonCategoryTaskCompare, setIsSkeletonCategoryTaskCompare] =
+    useState(false);
 
+  const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
   const [mediumOptions, setMediumOptions] = useState<OptionDropdownType[]>([]);
   const [listOptionsOrganization, setListOptionsOrganization] = useState<
@@ -249,6 +272,14 @@ export const StatisticStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
+    isSkeletonCategory,
+    setIsSkeletonCategory,
+    isSkeletonCategoryCompare,
+    setIsSkeletonCategoryCompare,
+    isSkeletonCategoryTask,
+    setIsSkeletonCategoryTask,
+    isSkeletonCategoryTaskCompare,
+    setIsSkeletonCategoryTaskCompare,
   };
 
   return (

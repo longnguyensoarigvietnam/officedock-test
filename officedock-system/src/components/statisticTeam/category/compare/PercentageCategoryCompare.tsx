@@ -3,6 +3,7 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import StatisticCompareLoading from '@components/common/SkeletonLoading/StatisticCompareLoading';
 
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -58,6 +59,8 @@ const PercentageTeamCategoryCompare = ({
     selectedTags,
     tagsOptions,
     smallOptions,
+    isSkeletonCategoryTeam,
+    isSkeletonCategoryTeamCompare,
     setSelectedTags,
   } = useContext(StatisticTeamStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -317,7 +320,10 @@ const PercentageTeamCategoryCompare = ({
                       onChange={(data) => handleSelectOrganization(data)}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonCategoryTeam ||
+                      isSkeletonCategoryTeamCompare ? (
+                        <StatisticCompareLoading />
+                      ) : (
                         <PercentageBarCompareTeam
                           data={dataChartLarge}
                           startDate={startDate}
@@ -342,7 +348,7 @@ const PercentageTeamCategoryCompare = ({
                             }
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -371,7 +377,10 @@ const PercentageTeamCategoryCompare = ({
                       disabled={!selectedOrganization}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonCategoryTeam ||
+                      isSkeletonCategoryTeamCompare ? (
+                        <StatisticCompareLoading />
+                      ) : (
                         <PercentageBarCompareTeam
                           data={dataChartMedium}
                           startDate={startDate}
@@ -394,7 +403,7 @@ const PercentageTeamCategoryCompare = ({
                             }
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -423,7 +432,10 @@ const PercentageTeamCategoryCompare = ({
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonCategoryTeam ||
+                      isSkeletonCategoryTeamCompare ? (
+                        <StatisticCompareLoading />
+                      ) : (
                         <PercentageBarCompareTeam
                           isLast
                           data={dataChartSmall}
@@ -447,7 +459,7 @@ const PercentageTeamCategoryCompare = ({
                             }
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>

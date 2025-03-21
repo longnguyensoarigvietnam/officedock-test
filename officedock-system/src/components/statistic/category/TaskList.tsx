@@ -5,6 +5,7 @@ import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import Checkbox from '@components/common/Checkbox';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
 import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
@@ -62,6 +63,8 @@ const TaskListStatistic = ({
     tagsOptions,
     totalDurationTask,
     totalDurationTaskCompare,
+    isSkeletonCategoryTask,
+    isSkeletonCategoryTaskCompare,
     setSelectedTags,
   } = useContext(StatisticStateContext);
 
@@ -410,22 +413,27 @@ const TaskListStatistic = ({
             </div>
           )}
           <div className="mt-5 px-[30px]">
-            <TableChart
-              ordering={ordering}
-              taskList={
-                isCheckCompare && isShowCompare ? taskListCompare : taskList
-              }
-              totalDuration={
-                isCheckCompare && isShowCompare
-                  ? getTotalDurationCompare()
-                  : getTotalDuration()
-              }
-              listOptionsOrganization={listOptionsOrganization}
-              creationDataStatisticData={creationDataStatisticData}
-              setOrdering={(ord: string) => {
-                setOrdering(ord);
-              }}
-            />
+            {isSkeletonCategoryTask ||
+            (isShowCompare && isSkeletonCategoryTaskCompare) ? (
+              <FormSkeleton />
+            ) : (
+              <TableChart
+                ordering={ordering}
+                taskList={
+                  isCheckCompare && isShowCompare ? taskListCompare : taskList
+                }
+                totalDuration={
+                  isCheckCompare && isShowCompare
+                    ? getTotalDurationCompare()
+                    : getTotalDuration()
+                }
+                listOptionsOrganization={listOptionsOrganization}
+                creationDataStatisticData={creationDataStatisticData}
+                setOrdering={(ord: string) => {
+                  setOrdering(ord);
+                }}
+              />
+            )}
           </div>
           <div className="flex justify-center top-[10px] relative min-h-16">
             {isShowCompare ? (

@@ -5,6 +5,7 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 import { EventWorkCategory } from '@constants/enums';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
@@ -54,6 +55,7 @@ const PercentageTags = ({
     totalDurationCategory,
     tagsOptions,
     selectedTags,
+    isSkeletonTag,
     setSelectedTags,
   } = useContext(StatisticTagStateContext);
 
@@ -410,7 +412,9 @@ const PercentageTags = ({
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
                     <div className="min-h-[220px] flex justify-center">
-                      {dataChartLarge.data.length > 0 ? (
+                      {isSkeletonTag ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartLarge.data.length > 0 ? (
                         <PieChartCustom
                           isClickTooltip
                           mergedItems={dataChartLarge.mergedItems}
@@ -460,7 +464,9 @@ const PercentageTags = ({
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
                     <div className="flex justify-center">
-                      {dataChartMedium.data.length > 0 ? (
+                      {isSkeletonTag ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartMedium.data.length > 0 ? (
                         <PieChartCustom
                           isClickTooltip
                           mergedItems={dataChartMedium.mergedItems}
@@ -510,7 +516,9 @@ const PercentageTags = ({
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
                     <div className="flex justify-center">
-                      {dataChartSmall.data.length > 0 ? (
+                      {isSkeletonTag ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartSmall.data.length > 0 ? (
                         <PieChartCustom
                           mergedItems={dataChartSmall.mergedItems}
                           colors={dataChartSmall.colors}
@@ -559,7 +567,9 @@ const PercentageTags = ({
                         formatTimeToJapanese(totalDurationCategory)}
                     </p>
                     <div className="flex justify-center">
-                      {dataChartCategory.data.length > 0 ? (
+                      {isSkeletonTag ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartCategory.data.length > 0 ? (
                         <PieChartCustom
                           mergedItems={dataChartCategory.mergedItems}
                           colors={dataChartCategory.colors}

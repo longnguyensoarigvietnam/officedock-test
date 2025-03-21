@@ -57,6 +57,14 @@ interface ContextValue {
   setStartDate: Dispatch<SetStateAction<Date>>;
   setEndDateCompare: Dispatch<SetStateAction<Date | null>>;
   setStartDateCompare: Dispatch<SetStateAction<Date>>;
+  isSkeletonTag: boolean;
+  setIsSkeletonTag: Dispatch<SetStateAction<boolean>>;
+  isSkeletonTagCompare: boolean;
+  setIsSkeletonTagCompare: Dispatch<SetStateAction<boolean>>;
+  isSkeletonTagTask: boolean;
+  setIsSkeletonTagTask: Dispatch<SetStateAction<boolean>>;
+  isSkeletonTagTaskCompare: boolean;
+  setIsSkeletonTagTaskCompare: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -110,6 +118,14 @@ const defaultValue: ContextValue = {
   selectedTags: [],
   setSelectedTags: () => {},
   setTagsOptions: () => {},
+  isSkeletonTag: false,
+  setIsSkeletonTag: () => {},
+  isSkeletonTagCompare: false,
+  setIsSkeletonTagCompare: () => {},
+  isSkeletonTagTask: false,
+  setIsSkeletonTagTask: () => {},
+  isSkeletonTagTaskCompare: false,
+  setIsSkeletonTagTaskCompare: () => {},
 };
 
 export const StatisticTagStateContext =
@@ -120,6 +136,13 @@ export const StatisticTagStateProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  // Loading
+  const [isSkeletonTag, setIsSkeletonTag] = useState(false);
+  const [isSkeletonTagCompare, setIsSkeletonTagCompare] = useState(false);
+  const [isSkeletonTagTask, setIsSkeletonTagTask] = useState(false);
+  const [isSkeletonTagTaskCompare, setIsSkeletonTagTaskCompare] =
+    useState(false);
+
   const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
 
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
@@ -228,6 +251,14 @@ export const StatisticTagStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
+    isSkeletonTag,
+    setIsSkeletonTag,
+    isSkeletonTagCompare,
+    setIsSkeletonTagCompare,
+    isSkeletonTagTask,
+    setIsSkeletonTagTask,
+    isSkeletonTagTaskCompare,
+    setIsSkeletonTagTaskCompare,
   };
 
   return (

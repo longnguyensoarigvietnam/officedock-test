@@ -5,6 +5,7 @@ import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import StatisticCompareLoading from '@components/common/SkeletonLoading/StatisticCompareLoading';
 
 import { EventWorkCategory } from '@constants/enums';
 
@@ -66,6 +67,8 @@ const PercentageTeamTagsCompare = ({
     tagsOptions,
     smallOptions,
     selectedSmall,
+    isSkeletonTagTeam,
+    isSkeletonTagTeamCompare,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -440,7 +443,9 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectOrganization(data)}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-centers">
-                      {
+                      {isSkeletonTagTeam || isSkeletonTagTeamCompare ? (
+                        <StatisticCompareLoading className="!w-[220px]" />
+                      ) : (
                         <PercentageBarCompareTeam
                           isTag
                           data={dataChartLarge}
@@ -463,7 +468,7 @@ const PercentageTeamTagsCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -489,7 +494,9 @@ const PercentageTeamTagsCompare = ({
                       disabled={!selectedOrganization}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonTagTeam || isSkeletonTagTeamCompare ? (
+                        <StatisticCompareLoading className="!w-[220px]" />
+                      ) : (
                         <PercentageBarCompareTeam
                           isTag
                           data={dataChartMedium}
@@ -512,7 +519,7 @@ const PercentageTeamTagsCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -538,7 +545,9 @@ const PercentageTeamTagsCompare = ({
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonTagTeam || isSkeletonTagTeamCompare ? (
+                        <StatisticCompareLoading className="!w-[220px]" />
+                      ) : (
                         <PercentageBarCompareTeam
                           isTag
                           data={dataChartSmall}
@@ -561,7 +570,7 @@ const PercentageTeamTagsCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -587,7 +596,9 @@ const PercentageTeamTagsCompare = ({
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonTagTeam || isSkeletonTagTeamCompare ? (
+                        <StatisticCompareLoading className="!w-[220px]" />
+                      ) : (
                         <PercentageBarCompareTeam
                           isTag
                           isLast
@@ -611,7 +622,7 @@ const PercentageTeamTagsCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>

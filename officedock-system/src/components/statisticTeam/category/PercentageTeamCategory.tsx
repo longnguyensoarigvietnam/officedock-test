@@ -4,6 +4,7 @@ import PieChart from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -47,6 +48,7 @@ const PercentageCategoryTeam = ({
     totalDurationSmall,
     selectedTags,
     tagsOptions,
+    isSkeletonCategoryTeam,
     setSelectedTags,
   } = useContext(StatisticTeamStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -351,7 +353,9 @@ const PercentageCategoryTeam = ({
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
                     <div className="min-h-[280px] flex justify-center">
-                      {dataChartLarge.data.length > 0 ? (
+                      {isSkeletonCategoryTeam ? (
+                        <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
+                      ) : dataChartLarge.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
                           isTeam
@@ -409,7 +413,9 @@ const PercentageCategoryTeam = ({
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
                     <div className="flex justify-center">
-                      {dataChartMedium.data.length > 0 ? (
+                      {isSkeletonCategoryTeam ? (
+                        <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
+                      ) : dataChartMedium.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
                           isTeam
@@ -464,7 +470,9 @@ const PercentageCategoryTeam = ({
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
                     <div className="flex justify-center">
-                      {dataChartSmall.data.length > 0 ? (
+                      {isSkeletonCategoryTeam ? (
+                        <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
+                      ) : dataChartSmall.data.length > 0 ? (
                         <PieChart
                           isTeam
                           isLast

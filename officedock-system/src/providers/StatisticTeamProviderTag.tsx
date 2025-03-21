@@ -73,6 +73,14 @@ interface ContextValue {
       }[]
     >
   >;
+  isSkeletonTagTeam: boolean;
+  setIsSkeletonTagTeam: Dispatch<SetStateAction<boolean>>;
+  isSkeletonTagTeamCompare: boolean;
+  setIsSkeletonTagTeamCompare: Dispatch<SetStateAction<boolean>>;
+  isSkeletonTagTeamTask: boolean;
+  setIsSkeletonTagTeamTask: Dispatch<SetStateAction<boolean>>;
+  isSkeletonTagTeamTaskCompare: boolean;
+  setIsSkeletonTagTeamTaskCompare: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -127,6 +135,14 @@ const defaultValue: ContextValue = {
   selectedTags: [],
   setSelectedTags: () => {},
   setTagsOptions: () => {},
+  isSkeletonTagTeam: false,
+  setIsSkeletonTagTeam: () => {},
+  isSkeletonTagTeamCompare: false,
+  setIsSkeletonTagTeamCompare: () => {},
+  isSkeletonTagTeamTask: false,
+  setIsSkeletonTagTeamTask: () => {},
+  isSkeletonTagTeamTaskCompare: false,
+  setIsSkeletonTagTeamTaskCompare: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -137,6 +153,14 @@ export const StatisticTeamTagsStateProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  // Loading
+  const [isSkeletonTagTeam, setIsSkeletonTagTeam] = useState(false);
+  const [isSkeletonTagTeamCompare, setIsSkeletonTagTeamCompare] =
+    useState(false);
+  const [isSkeletonTagTeamTask, setIsSkeletonTagTeamTask] = useState(false);
+  const [isSkeletonTagTeamTaskCompare, setIsSkeletonTagTeamTaskCompare] =
+    useState(false);
+
   const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
 
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
@@ -260,6 +284,14 @@ export const StatisticTeamTagsStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
+    isSkeletonTagTeam,
+    setIsSkeletonTagTeam,
+    isSkeletonTagTeamCompare,
+    setIsSkeletonTagTeamCompare,
+    isSkeletonTagTeamTask,
+    setIsSkeletonTagTeamTask,
+    isSkeletonTagTeamTaskCompare,
+    setIsSkeletonTagTeamTaskCompare,
   };
 
   return (

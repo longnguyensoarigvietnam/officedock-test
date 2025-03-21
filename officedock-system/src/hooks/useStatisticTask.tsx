@@ -2,13 +2,18 @@
 
 import { useQuery } from 'react-query';
 import { useSession } from 'next-auth/react';
+import { useContext } from 'react';
+import { AxiosError } from 'axios';
 
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
-import { AxiosError } from 'axios';
 import { BasePagination, OptionDropdownType } from '@interfaces/common';
 import { DataTaskListStatisticListType } from '@interfaces/statistic';
+import { StatisticStateContext } from '@providers/StatisticProvider';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 interface FilterProps {
   page: number;
@@ -45,11 +50,23 @@ const useStatisticTask = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
+  const { setIsSkeletonCategoryTask } = useContext(StatisticStateContext);
+  const { setIsSkeletonTagTask } = useContext(StatisticTagStateContext);
+  const { setIsSkeletonCategoryTeamTask } = useContext(
+    StatisticTeamStateContext,
+  );
+  const { setIsSkeletonTagTeamTask } = useContext(
+    StatisticTeamTagsStateContext,
+  );
 
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
     if (!filter?.organizationIds) return null;
     if (isTeam && !filter.user_id) return [];
+    setIsSkeletonCategoryTask(true);
+    setIsSkeletonTagTask(true);
+    setIsSkeletonCategoryTeamTask(true);
+    setIsSkeletonTagTeamTask(true);
 
     const params = new URLSearchParams();
     if (filter?.fromDate) params.append('from_date', String(filter.fromDate));
@@ -101,7 +118,12 @@ const useStatisticTask = ({
     onError: (error: AxiosError) => {
       onError && onError(error);
     },
-    onSettled: () => {},
+    onSettled: () => {
+      setIsSkeletonCategoryTask(false);
+      setIsSkeletonTagTask(false);
+      setIsSkeletonCategoryTeamTask(false);
+      setIsSkeletonTagTeamTask(false);
+    },
   });
 
   return {

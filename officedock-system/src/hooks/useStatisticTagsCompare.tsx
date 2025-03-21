@@ -1,14 +1,16 @@
 'use client';
 
 import { useQuery } from 'react-query';
+import { useContext } from 'react';
 import { useSession } from 'next-auth/react';
+import { AxiosError } from 'axios';
 
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
-import { AxiosError } from 'axios';
 import { OptionDropdownType } from '@interfaces/common';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 interface FilterProps {
   isCompare: boolean;
@@ -33,12 +35,13 @@ const useStatisticsTagsCompare = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
+  const { setIsSkeletonTagCompare } = useContext(StatisticTagStateContext);
 
   // Handle call API get statistic tags list
   const getStatisticTagsList = async () => {
     if (!filter?.isCompare) return [];
     if (!filter?.organizationIds) return [];
-    // setIsLoading(true);
+    setIsSkeletonTagCompare(true);
 
     const apiUrl = `${apiRouters.STATISTICS_TAGS}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -82,7 +85,9 @@ const useStatisticsTagsCompare = ({
     onError: (error: AxiosError) => {
       onError && onError(error);
     },
-    onSettled: () => {},
+    onSettled: () => {
+      setIsSkeletonTagCompare(false);
+    },
   });
 
   return {

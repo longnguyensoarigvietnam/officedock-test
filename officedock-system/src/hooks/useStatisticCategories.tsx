@@ -2,16 +2,15 @@
 
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
+import { AxiosError } from 'axios';
 import { useSession } from 'next-auth/react';
-
-import { LoadingContext } from '@providers/LoadingProvider';
 
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
-import { AxiosError } from 'axios';
 import { OptionDropdownType } from '@interfaces/common';
+import { StatisticStateContext } from '@providers/StatisticProvider';
 
 interface FilterProps {
   endDate: string | Date;
@@ -34,12 +33,12 @@ const useStatisticCategories = ({
   const { data: session } = useSession();
   const token = session?.accessToken;
 
-  const { setIsLoading } = useContext(LoadingContext);
+  const { setIsSkeletonCategory } = useContext(StatisticStateContext);
 
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
     if (!filter?.organizationIds) return [];
-    setIsLoading(true);
+    setIsSkeletonCategory(true);
 
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -80,7 +79,7 @@ const useStatisticCategories = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsLoading(false);
+      setIsSkeletonCategory(false);
     },
   });
 

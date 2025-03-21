@@ -5,6 +5,7 @@ import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompare from '@components/common/ProgressBar/ProgressBarCompare';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import StatisticCompareLoading from '@components/common/SkeletonLoading/StatisticCompareLoading';
 
 import { EventWorkCategory } from '@constants/enums';
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
@@ -14,7 +15,6 @@ import {
 } from '@interfaces/statistic';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import { LoadingContext } from '@providers/LoadingProvider';
 
 type Props = {
   startDate: Date;
@@ -61,12 +61,12 @@ const PercentageCategoryCompare = ({
     selectedTags,
     tagsOptions,
     smallOptions,
+    isSkeletonCategory,
+    isSkeletonCategoryCompare,
     setSelectedTags,
-
     setTotalDurationTask,
     setTotalDurationTaskCompare,
   } = useContext(StatisticStateContext);
-  const { setIsLoading } = useContext(LoadingContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -179,7 +179,6 @@ const PercentageCategoryCompare = ({
           color?.categoryColor,
         ),
       );
-      setIsLoading(false);
     }
   }, [statisticCategoryList]);
 
@@ -207,7 +206,6 @@ const PercentageCategoryCompare = ({
           color?.categoryColor,
         ),
       );
-      setIsLoading(false);
     }
   }, [statisticCategoryCompareList]);
 
@@ -516,7 +514,9 @@ const PercentageCategoryCompare = ({
                       onChange={(data) => handleSelectOrganization(data)}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonCategory || isSkeletonCategoryCompare ? (
+                        <StatisticCompareLoading />
+                      ) : (
                         <PercentageBarCompare
                           data={dataChartLarge}
                           startDate={startDate}
@@ -549,7 +549,7 @@ const PercentageCategoryCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -580,7 +580,9 @@ const PercentageCategoryCompare = ({
                       disabled={!selectedOrganization}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonCategory || isSkeletonCategoryCompare ? (
+                        <StatisticCompareLoading />
+                      ) : (
                         <PercentageBarCompare
                           data={dataChartMedium}
                           startDate={startDate}
@@ -612,7 +614,7 @@ const PercentageCategoryCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -643,7 +645,9 @@ const PercentageCategoryCompare = ({
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonCategory || isSkeletonCategoryCompare ? (
+                        <StatisticCompareLoading />
+                      ) : (
                         <PercentageBarCompare
                           isLast
                           data={dataChartSmall}
@@ -676,7 +680,7 @@ const PercentageCategoryCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
