@@ -9,6 +9,8 @@ import { ServerStatusCode } from '@constants/enums';
 import { KanbanDataTeamResponse } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
+import { useContext } from 'react';
+import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 
 interface FilterProps {
   userId?: string;
@@ -29,10 +31,13 @@ const useTaskBoardTeam = ({
 }) => {
   const { data: session } = useSession();
   const router = useRouter();
+  const { setIsLoadingDataTask } = useContext(TaskTeamStateContext);
+
   const token = session?.accessToken;
   // Handle call API get task board list
   const getTaskBoardListTeam = async () => {
     if (!organization_id) return null;
+    setIsLoadingDataTask(true);
     const apiUrl = `${apiRouters.TASK_TEAM_LIST}?organization_id=${organization_id}${ordering ? `&ordering=${ordering}` : ''}${filter?.userId ? `&user_id=${filter.userId}` : ''}${filter?.tagId ? `&tag_id=${filter.tagId}` : ''}${filter?.search ? `&search=${filter.search}` : ''}`;
 
     const { data } = await api.get<KanbanDataTeamResponse>(apiUrl);
@@ -62,7 +67,9 @@ const useTaskBoardTeam = ({
         }
       }
     },
-    onSettled: () => {},
+    onSettled: () => {
+      setIsLoadingDataTask(false);
+    },
   });
 
   return { taskBoardListTeam, refetchTaskBoardListTeam, isFetchedTaskBoards };

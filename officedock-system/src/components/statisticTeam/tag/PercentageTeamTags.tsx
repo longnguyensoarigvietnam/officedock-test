@@ -5,6 +5,7 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 import { EventWorkCategory } from '@constants/enums';
 
@@ -55,6 +56,7 @@ const PercentageTeamTags = ({
     tagsOptions,
     selectedTags,
     selectedSmall,
+    isSkeletonTagTeam,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
 
@@ -416,7 +418,9 @@ const PercentageTeamTags = ({
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
                     <div className="min-h-[220px] flex justify-center">
-                      {dataChartLarge.data.length > 0 ? (
+                      {isSkeletonTagTeam ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartLarge.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
                           isTeam
@@ -467,7 +471,9 @@ const PercentageTeamTags = ({
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
                     <div className="flex justify-center">
-                      {dataChartMedium.data.length > 0 ? (
+                      {isSkeletonTagTeam ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartMedium.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
                           isTeam
@@ -518,7 +524,9 @@ const PercentageTeamTags = ({
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
                     <div className="flex justify-center">
-                      {dataChartSmall.data.length > 0 ? (
+                      {isSkeletonTagTeam ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartSmall.data.length > 0 ? (
                         <PieChart
                           isTeam
                           mergedItems={dataChartLarge.mergedItems}
@@ -568,7 +576,9 @@ const PercentageTeamTags = ({
                         formatTimeToJapanese(totalDurationCategory)}
                     </p>
                     <div className="flex justify-center">
-                      {dataChartCategory.data.length > 0 ? (
+                      {isSkeletonTagTeam ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartCategory.data.length > 0 ? (
                         <PieChart
                           isTeam
                           isLast

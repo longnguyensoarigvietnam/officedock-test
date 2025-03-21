@@ -5,6 +5,7 @@ import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompare from '@components/common/ProgressBar/ProgressBarCompare';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import StatisticCompareLoading from '@components/common/SkeletonLoading/StatisticCompareLoading';
 
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -64,6 +65,8 @@ const PercentageTagsCompare = ({
     tagsOptions,
     smallOptions,
     selectedSmall,
+    isSkeletonTag,
+    isSkeletonTagCompare,
     setSelectedTags,
   } = useContext(StatisticTagStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -393,7 +396,9 @@ const PercentageTagsCompare = ({
                       onChange={(data) => handleSelectOrganization(data)}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonTag || isSkeletonTagCompare ? (
+                        <StatisticCompareLoading className="!w-[220px]" />
+                      ) : (
                         <PercentageBarCompare
                           isTag
                           data={dataChartLarge}
@@ -416,7 +421,7 @@ const PercentageTagsCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -442,7 +447,9 @@ const PercentageTagsCompare = ({
                       disabled={!selectedOrganization}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonTag || isSkeletonTagCompare ? (
+                        <StatisticCompareLoading className="!w-[220px]" />
+                      ) : (
                         <PercentageBarCompare
                           isTag
                           data={dataChartMedium}
@@ -465,7 +472,7 @@ const PercentageTagsCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -491,7 +498,9 @@ const PercentageTagsCompare = ({
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonTag || isSkeletonTagCompare ? (
+                        <StatisticCompareLoading className="!w-[220px]" />
+                      ) : (
                         <PercentageBarCompare
                           isTag
                           data={dataChartSmall}
@@ -514,7 +523,7 @@ const PercentageTagsCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -540,7 +549,9 @@ const PercentageTagsCompare = ({
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {
+                      {isSkeletonTag || isSkeletonTagCompare ? (
+                        <StatisticCompareLoading className="!w-[220px]" />
+                      ) : (
                         <PercentageBarCompare
                           isTag
                           isLast
@@ -564,7 +575,7 @@ const PercentageTagsCompare = ({
                             );
                           }}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>

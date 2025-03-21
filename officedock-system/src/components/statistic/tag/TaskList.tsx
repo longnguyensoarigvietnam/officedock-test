@@ -5,6 +5,7 @@ import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Checkbox from '@components/common/Checkbox';
+import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
@@ -64,6 +65,8 @@ const TaskListStatisticTags = ({
     totalDurationSmallCompare,
     selectedTags,
     tagsOptions,
+    isSkeletonTagTask,
+    isSkeletonTagTaskCompare,
     setSelectedTags,
   } = useContext(StatisticTagStateContext);
 
@@ -427,28 +430,33 @@ const TaskListStatisticTags = ({
             </div>
           )}
           <div className="mt-5 px-[30px]">
-            <TableChart
-              ordering={ordering}
-              taskList={
-                isCheckCompare && isShowCompare
-                  ? selectedTags.length > 0
-                    ? taskListCompare
-                    : taskListCompare
-                  : selectedTags.length > 0
-                    ? taskList
-                    : []
-              }
-              totalDuration={
-                isCheckCompare && isShowCompare
-                  ? getTotalDurationCompare()
-                  : getTotalDuration()
-              }
-              listOptionsOrganization={listOptionsOrganization}
-              creationDataStatisticData={creationDataStatisticData}
-              setOrdering={(ord: string) => {
-                setOrdering(ord);
-              }}
-            />
+            {isSkeletonTagTask ||
+            (isShowCompare && isSkeletonTagTaskCompare) ? (
+              <FormSkeleton />
+            ) : (
+              <TableChart
+                ordering={ordering}
+                taskList={
+                  isCheckCompare && isShowCompare
+                    ? selectedTags.length > 0
+                      ? taskListCompare
+                      : taskListCompare
+                    : selectedTags.length > 0
+                      ? taskList
+                      : []
+                }
+                totalDuration={
+                  isCheckCompare && isShowCompare
+                    ? getTotalDurationCompare()
+                    : getTotalDuration()
+                }
+                listOptionsOrganization={listOptionsOrganization}
+                creationDataStatisticData={creationDataStatisticData}
+                setOrdering={(ord: string) => {
+                  setOrdering(ord);
+                }}
+              />
+            )}
           </div>
           <div className="flex justify-center top-[10px] relative min-h-16">
             {isShowCompare ? (

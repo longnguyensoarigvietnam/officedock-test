@@ -26,10 +26,12 @@ import { OptionDropdownType } from '@interfaces/common';
 import { TransformedStatuses, TransformedUser } from '@interfaces/task';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import Dropdown from '@components/common/Dropdown';
+import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
 
 const KanbanBoardTaskTeam = () => {
   // Context
   const {
+    isLoadingDataTask,
     selectedOptionZoom,
     setSelectedOptionZoom,
     setColumnWidth,
@@ -41,7 +43,6 @@ const KanbanBoardTaskTeam = () => {
   // State
   const searchParams = useSearchParams();
   const organizationId = searchParams.get('organization');
-  const [isLoadingDataTask, _setIsLoadingDataTask] = useState(false);
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   // Team task list
@@ -435,13 +436,19 @@ const KanbanBoardTaskTeam = () => {
 
         {/* BOARD DATA */}
         <div className="h-fit overflow-y-auto mt-6 w-full overflow-x-auto">
-          <DragDropContext onDragEnd={onDragEnd}>
-            <div className="flex gap-4 overflow-x-auto w-[calc(100vw_-_270px)]">
-              {listDataKanbanTeam.map((user) => (
-                <UserColumnTeam key={user.id} user={user} />
-              ))}
+          {!isLoadingDataTask ? (
+            <DragDropContext onDragEnd={onDragEnd}>
+              <div className="flex gap-4 overflow-x-auto w-[calc(100vw_-_270px)]">
+                {listDataKanbanTeam.map((user) => (
+                  <UserColumnTeam key={user.id} user={user} />
+                ))}
+              </div>
+            </DragDropContext>
+          ) : (
+            <div className="h-[calc(100vh_-_257px)] w-full">
+              <ColumnsSkeleton numberOfColumns={4} />
             </div>
-          </DragDropContext>
+          )}
         </div>
       </div>
 

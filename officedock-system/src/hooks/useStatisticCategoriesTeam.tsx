@@ -1,14 +1,16 @@
 'use client';
 
 import { useQuery } from 'react-query';
+import { useContext } from 'react';
+import { AxiosError } from 'axios';
 import { useSession } from 'next-auth/react';
 
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
-import { AxiosError } from 'axios';
 import { OptionDropdownType } from '@interfaces/common';
+import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 interface FilterProps {
   endDate: string | Date;
@@ -30,10 +32,12 @@ const useStatisticCategoriesTeam = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
+  const { setIsSkeletonCategoryTeam } = useContext(StatisticTeamStateContext);
 
   // Handle call API get statistic category list team
   const getStatisticCategoryListTeam = async () => {
     if (!filter?.organizationIds) return [];
+    setIsSkeletonCategoryTeam(true);
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(parseInt(filter?.organizationIds))}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
@@ -68,7 +72,9 @@ const useStatisticCategoriesTeam = ({
     onError: (error: AxiosError) => {
       onError && onError(error);
     },
-    onSettled: () => {},
+    onSettled: () => {
+      setIsSkeletonCategoryTeam(false);
+    },
   });
 
   return {

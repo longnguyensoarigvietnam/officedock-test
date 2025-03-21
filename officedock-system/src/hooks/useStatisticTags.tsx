@@ -1,16 +1,16 @@
 'use client';
 
 import { useQuery } from 'react-query';
+import { useContext } from 'react';
+import { AxiosError } from 'axios';
 import { useSession } from 'next-auth/react';
 
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
-import { AxiosError } from 'axios';
 import { OptionDropdownType } from '@interfaces/common';
-import { useContext } from 'react';
-import { LoadingContext } from '@providers/LoadingProvider';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 interface FilterProps {
   endDate: string | Date;
@@ -33,11 +33,12 @@ const useStatisticsTags = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-  const { setIsLoading } = useContext(LoadingContext);
+  const { setIsSkeletonTag } = useContext(StatisticTagStateContext);
 
   // Handle call API get statistic tags list
   const getStatisticTagsList = async () => {
     if (!filter?.organizationIds) return [];
+    setIsSkeletonTag(true);
 
     const apiUrl = `${apiRouters.STATISTICS_TAGS}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -82,7 +83,7 @@ const useStatisticsTags = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsLoading(false);
+      setIsSkeletonTag(false);
     },
   });
 

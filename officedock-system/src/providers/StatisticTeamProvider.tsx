@@ -71,6 +71,14 @@ interface ContextValue {
       }[]
     >
   >;
+  isSkeletonCategoryTeam: boolean;
+  setIsSkeletonCategoryTeam: Dispatch<SetStateAction<boolean>>;
+  isSkeletonCategoryTeamCompare: boolean;
+  setIsSkeletonCategoryTeamCompare: Dispatch<SetStateAction<boolean>>;
+  isSkeletonCategoryTeamTask: boolean;
+  setIsSkeletonCategoryTeamTask: Dispatch<SetStateAction<boolean>>;
+  isSkeletonCategoryTeamTaskCompare: boolean;
+  setIsSkeletonCategoryTeamTaskCompare: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -122,6 +130,14 @@ const defaultValue: ContextValue = {
   selectedTags: [],
   setSelectedTags: () => {},
   setTagsOptions: () => {},
+  isSkeletonCategoryTeam: false,
+  setIsSkeletonCategoryTeam: () => {},
+  isSkeletonCategoryTeamCompare: false,
+  setIsSkeletonCategoryTeamCompare: () => {},
+  isSkeletonCategoryTeamTask: false,
+  setIsSkeletonCategoryTeamTask: () => {},
+  isSkeletonCategoryTeamTaskCompare: false,
+  setIsSkeletonCategoryTeamTaskCompare: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -132,6 +148,17 @@ export const StatisticTeamStateProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  // Loading
+  const [isSkeletonCategoryTeam, setIsSkeletonCategoryTeam] = useState(false);
+  const [isSkeletonCategoryTeamCompare, setIsSkeletonCategoryTeamCompare] =
+    useState(false);
+  const [isSkeletonCategoryTeamTask, setIsSkeletonCategoryTeamTask] =
+    useState(false);
+  const [
+    isSkeletonCategoryTeamTaskCompare,
+    setIsSkeletonCategoryTeamTaskCompare,
+  ] = useState(false);
+
   const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
 
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
@@ -251,6 +278,14 @@ export const StatisticTeamStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
+    isSkeletonCategoryTeam,
+    setIsSkeletonCategoryTeam,
+    isSkeletonCategoryTeamCompare,
+    setIsSkeletonCategoryTeamCompare,
+    isSkeletonCategoryTeamTask,
+    setIsSkeletonCategoryTeamTask,
+    isSkeletonCategoryTeamTaskCompare,
+    setIsSkeletonCategoryTeamTaskCompare,
   };
 
   return (

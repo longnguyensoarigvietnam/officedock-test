@@ -35,6 +35,8 @@ interface ContextValue {
   setSelectedOptionZoom: Dispatch<SetStateAction<OptionDropdownType>>;
   handleZoomInKanban: () => void;
   handleZoomOutKanban: () => void;
+  isLoadingDataTask: boolean;
+  setIsLoadingDataTask: (isLoading: boolean) => void;
 }
 
 const defaultValue: ContextValue = {
@@ -46,6 +48,8 @@ const defaultValue: ContextValue = {
     label: '100%',
     value: 100,
   },
+  isLoadingDataTask: false,
+  setIsLoadingDataTask: () => {},
   setSelectedOptionZoom: () => {},
   handleZoomInKanban: () => {},
   handleZoomOutKanban: () => {},
@@ -64,6 +68,10 @@ export const TaskTeamStateProvider = ({
 }) => {
   const [creationDataTaskData, setCreationDataTaskData] =
     useState<CreationDataTask>();
+  // Loading
+  const [isLoadingDataTask, setIsLoadingDataTask] = useState(false);
+
+  // Filter
   const [orderingRequest, setOrderingRequest] = useState<string>('');
 
   const [orderingOptions, setOrderingOptions] = useState<{
@@ -102,6 +110,8 @@ export const TaskTeamStateProvider = ({
     setSelectedOptionZoom,
     handleZoomInKanban,
     handleZoomOutKanban,
+    isLoadingDataTask,
+    setIsLoadingDataTask,
   };
 
   return (
