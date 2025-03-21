@@ -4,6 +4,12 @@ import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Checkbox from '@components/common/Checkbox';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import TableChart from './TableChart';
+
+import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
+import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
@@ -11,11 +17,7 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 import useStatisticTask from '@hooks/useStatisticTask';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
-import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
-import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
-import TableChart from './TableChart';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 type Props = {
   isCheckCompare: boolean;

@@ -113,6 +113,12 @@ export const pageRouters = {
     href: '/calendar',
   },
 
+  // TASK TEAM
+  TASKS_TEAM_MANAGEMENT: {
+    name: 'マイタスク',
+    href: '/task-teams',
+  },
+
   // CHAT
   CHAT_MANAGEMENT: {
     name: 'チャット',
@@ -360,6 +366,9 @@ export const apiRouters = {
 
   TASK_COPY: (id: string) => `/tasks/${id}/copy/`,
   TASK_PIN: (id: string) => `/tasks/${id}/pin/`,
+
+  // TASK TEAM
+  TASK_TEAM_LIST: '/tasks/teamdock/',
 
   // DURATION
   TASK_DURATION: `/durations/`,

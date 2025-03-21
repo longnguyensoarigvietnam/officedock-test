@@ -1,18 +1,21 @@
 import React, { useContext, useEffect, useState } from 'react';
+
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompare from '@components/common/ProgressBar/ProgressBarCompare';
+import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
+
 import { EventWorkCategory } from '@constants/enums';
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
-import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
 type Props = {
   startDate: Date;
@@ -377,7 +380,7 @@ const PercentageTagsCompare = ({
               </div>
               <div className="flex gap-[10px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4 ">
                     <Dropdown
                       label="チーム選択"
@@ -389,7 +392,7 @@ const PercentageTagsCompare = ({
                       selectedOption={selectedOrganization || undefined}
                       onChange={(data) => handleSelectOrganization(data)}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompare
                           isTag
@@ -425,7 +428,7 @@ const PercentageTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
@@ -438,7 +441,7 @@ const PercentageTagsCompare = ({
                       onChange={(data) => handleSelectLarge(data)}
                       disabled={!selectedOrganization}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompare
                           isTag
@@ -474,7 +477,7 @@ const PercentageTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
@@ -487,7 +490,7 @@ const PercentageTagsCompare = ({
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompare
                           isTag
@@ -523,7 +526,7 @@ const PercentageTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 4 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4">
                     <Dropdown
                       label="小カテゴリー選択"
@@ -536,7 +539,7 @@ const PercentageTagsCompare = ({
                       onChange={(data) => handleSelectSmall(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompare
                           isTag

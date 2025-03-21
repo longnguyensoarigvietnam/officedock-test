@@ -1,21 +1,25 @@
 import React, { useContext, useState } from 'react';
+
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import Checkbox from '@components/common/Checkbox';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import TableChart from './TableChart';
+
+import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+
 import useStatisticTask from '@hooks/useStatisticTask';
-import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
-import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
+
+import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 type Props = {
   isCheckCompare: boolean;

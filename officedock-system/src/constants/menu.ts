@@ -198,6 +198,16 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
 ];
 export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
   {
+    ...pageRouters.TASKS_TEAM_MANAGEMENT,
+    name: pageRouters.TASKS_TEAM_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/task-active.svg' : '/icons/task.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.MY_TASK_VIEW,
+  },
+  {
     ...pageRouters.STATISTIC_TEAM_MANAGEMENT,
     name: pageRouters.STATISTIC_TEAM_MANAGEMENT.name,
     iconUrl: (active: boolean) => {

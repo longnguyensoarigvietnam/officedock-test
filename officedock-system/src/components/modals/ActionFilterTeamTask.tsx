@@ -9,20 +9,21 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { CreationDataTask, Team } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
-import { TaskContext } from '@providers/TaskProvider';
+import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 
 type ActionTaskFilterProp = {
   creationDataTaskData: CreationDataTask | undefined;
   handleClose: () => void;
 };
 
-const ActionFilterTask = ({
+const ActionFilterTaskTeam = ({
   creationDataTaskData,
   handleClose,
 }: ActionTaskFilterProp) => {
   const boxListRef = useRef<HTMLDivElement | null>(null);
 
-  const { orderingOptions, setOrderingOptions } = useContext(TaskContext);
+  const { orderingOptions, setOrderingOptions } =
+    useContext(TaskTeamStateContext);
   const [isOpen, setIsOpen] = useState(false);
   const [
     dataOptionsOrganizationsCategory,
@@ -316,7 +317,7 @@ const ActionFilterTask = ({
                               <span
                                 className="w-3 h-3 rounded-sm relative top-2"
                                 style={{
-                                  backgroundColor: category.color || '',
+                                  backgroundColor: category.color || 'white',
                                 }}
                               />
                             </div>
@@ -371,4 +372,4 @@ const ActionFilterTask = ({
   );
 };
 
-export default ActionFilterTask;
+export default ActionFilterTaskTeam;

@@ -1,21 +1,24 @@
 import React, { useContext, useEffect, useState } from 'react';
+
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import Checkbox from '@components/common/Checkbox';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import TableChart from './TableChart';
+
+import useStatisticTask from '@hooks/useStatisticTask';
+import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
+import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
-import useStatisticTask from '@hooks/useStatisticTask';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
-import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
-import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
-import TableChart from './TableChart';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 type Props = {
   isCheckCompare: boolean;
@@ -312,7 +315,7 @@ const TaskListTeamStatistic = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                    classNameOption='!text-sm'
+                    classNameOption="!text-sm"
                     options={listOptionsOrganization}
                     selectedOption={selectedOrganization || undefined}
                     onChange={(data) => handleSelectOrganization(data)}
@@ -343,7 +346,7 @@ const TaskListTeamStatistic = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                    classNameOption='!text-sm'
+                    classNameOption="!text-sm"
                     options={largeOptions}
                     selectedOption={selectedLarge || undefined}
                     onChange={(data) => handleSelectLarge(data)}
@@ -406,7 +409,7 @@ const TaskListTeamStatistic = ({
                     placeholderClass="!text-black text-sm font-normal"
                     className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                    classNameOption='!text-sm'
+                    classNameOption="!text-sm"
                     options={smallOptions}
                     selectedOption={selectedSmall || undefined}
                     onChange={(data) => handleSelectSmall(data)}

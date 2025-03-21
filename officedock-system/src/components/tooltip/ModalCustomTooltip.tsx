@@ -1,9 +1,11 @@
+import React from 'react';
+
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
+
 import { StatisticCategoryInfo } from '@interfaces/statistic';
 import { getRandomColor } from '@utils';
 import { convertToJapaneseTime } from '@utils/date';
-import React from 'react';
 
 type Props = {
   isTeam: boolean;

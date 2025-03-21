@@ -2,15 +2,17 @@ import React, { useContext, useEffect, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
+
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 type Props = {
   startDate: Date;
@@ -299,7 +301,7 @@ const PercentageTeamCategoryCompare = ({
             <div>
               <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[280px]">
+                <div className="w-full">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     大カテゴリー
                   </div>
@@ -314,7 +316,7 @@ const PercentageTeamCategoryCompare = ({
                       selectedOption={selectedOrganization || undefined}
                       onChange={(data) => handleSelectOrganization(data)}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompareTeam
                           data={dataChartLarge}
@@ -352,7 +354,7 @@ const PercentageTeamCategoryCompare = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[280px]">
+                <div className="w-full">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
@@ -368,7 +370,7 @@ const PercentageTeamCategoryCompare = ({
                       onChange={(data) => handleSelectLarge(data)}
                       disabled={!selectedOrganization}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompareTeam
                           data={dataChartMedium}
@@ -404,7 +406,7 @@ const PercentageTeamCategoryCompare = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[280px]">
+                <div className="w-full ">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     小カテゴリー
                   </div>
@@ -420,10 +422,10 @@ const PercentageTeamCategoryCompare = ({
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompareTeam
-                        isLast
+                          isLast
                           data={dataChartSmall}
                           startDate={startDate}
                           endDate={endDate}

@@ -3,18 +3,20 @@ import React, { useEffect, useState, useContext } from 'react';
 import PieChartCustom from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
+import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
+import { EventWorkCategory } from '@constants/enums';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
+
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
-import { EventWorkCategory } from '@constants/enums';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
-import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
 type Props = {
   startDate: Date;
@@ -389,7 +391,7 @@ const PercentageTags = ({
               </div>
               <div className="flex gap-[17px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4">
                     <Dropdown
                       label="チーム選択"
@@ -407,7 +409,7 @@ const PercentageTags = ({
                       {totalDurationLarge &&
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
-                    <div className="min-h-[220px]">
+                    <div className="min-h-[220px] flex justify-center">
                       {dataChartLarge.data.length > 0 ? (
                         <PieChartCustom
                           isClickTooltip
@@ -438,7 +440,7 @@ const PercentageTags = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
@@ -457,7 +459,7 @@ const PercentageTags = ({
                       {totalDurationMedium &&
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
-                    <div>
+                    <div className="flex justify-center">
                       {dataChartMedium.data.length > 0 ? (
                         <PieChartCustom
                           isClickTooltip
@@ -488,7 +490,7 @@ const PercentageTags = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
@@ -507,7 +509,7 @@ const PercentageTags = ({
                       {totalDurationSmall &&
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
-                    <div>
+                    <div className="flex justify-center">
                       {dataChartSmall.data.length > 0 ? (
                         <PieChartCustom
                           mergedItems={dataChartSmall.mergedItems}
@@ -537,7 +539,7 @@ const PercentageTags = ({
                   />
                 </div>
                 {/* Pie Chart 4 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4">
                     <Dropdown
                       label="小カテゴリー選択"
@@ -556,7 +558,7 @@ const PercentageTags = ({
                       {totalDurationCategory &&
                         formatTimeToJapanese(totalDurationCategory)}
                     </p>
-                    <div>
+                    <div className="flex justify-center">
                       {dataChartCategory.data.length > 0 ? (
                         <PieChartCustom
                           mergedItems={dataChartCategory.mergedItems}

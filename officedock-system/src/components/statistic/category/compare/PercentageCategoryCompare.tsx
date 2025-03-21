@@ -1,18 +1,20 @@
 import React, { useContext, useEffect, useState } from 'react';
+
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompare from '@components/common/ProgressBar/ProgressBarCompare';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
+import { EventWorkCategory } from '@constants/enums';
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
-import { EventWorkCategory } from '@constants/enums';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 type Props = {
   startDate: Date;
@@ -498,7 +500,7 @@ const PercentageCategoryCompare = ({
             <div>
               <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[280px]">
+                <div className="w-full">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     大カテゴリー
                   </div>
@@ -513,7 +515,7 @@ const PercentageCategoryCompare = ({
                       selectedOption={selectedOrganization || undefined}
                       onChange={(data) => handleSelectOrganization(data)}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompare
                           data={dataChartLarge}
@@ -561,7 +563,7 @@ const PercentageCategoryCompare = ({
                   </div>
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[280px] ">
+                <div className="w-full ">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
@@ -577,7 +579,7 @@ const PercentageCategoryCompare = ({
                       onChange={(data) => handleSelectLarge(data)}
                       disabled={!selectedOrganization}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompare
                           data={dataChartMedium}
@@ -624,7 +626,7 @@ const PercentageCategoryCompare = ({
                   </div>
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[280px]">
+                <div className="w-full">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     小カテゴリー
                   </div>
@@ -640,7 +642,7 @@ const PercentageCategoryCompare = ({
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompare
                           isLast
