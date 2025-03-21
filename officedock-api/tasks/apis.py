@@ -1,13 +1,11 @@
 from datetime import datetime, time, timedelta
 from time import timezone
 
+from dateutil import rrule
 from django.db import transaction
 from django.db.models import (
-    Case,
-    IntegerField,
     OuterRef,
     Subquery,
-    When,
     Q,
     Value,
     DateTimeField,
@@ -15,6 +13,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from django.utils.timezone import make_aware, now
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import (
     extend_schema,
@@ -48,10 +47,10 @@ from common.utils import (
 )
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
-    TaskPriorities,
     INITIAL_INDEX_VALUE,
     TaskTypes,
     TaskStatus,
+    FrequencyMap,
 )
 from tasks.utils import (
     create_task_schedule,
@@ -135,6 +134,14 @@ class TaskViewSet(
         task_type = serializer_data.get("type", None)
         remind_countdown = serializer_data.pop("remind_countdown", None)
         remind_type = serializer_data.pop("remind_type", None)
+        # Item for loop task schedule
+        plan_start_date = serializer_data.pop("plan_start_date", None)
+        plan_end_date = serializer_data.pop("plan_end_date", None)
+        repeat_type = serializer_data.pop("repeat_type", None)
+        repeat_interval = serializer_data.pop("repeat_interval", None)
+        week_day = serializer_data.pop("week_day", None)
+        month_day = serializer_data.pop("month_day", None)
+        month = serializer_data.pop("month", None)
 
         # Implement create task template base on T146
         if task_type == TaskTypes.MY_TEMPLATE.value:
@@ -154,6 +161,16 @@ class TaskViewSet(
             serializer_data["reminds"] = {
                 "type": remind_type,
                 "countdown": remind_countdown,
+            }
+        if repeat_type:
+            serializer_data["recurring"] = {
+                "repeat_type": repeat_type,
+                "plan_start_date": plan_start_date.isoformat(),
+                "plan_end_date": plan_end_date.isoformat(),
+                "repeat_interval": repeat_interval,
+                "week_day": week_day,
+                "month_day": month_day,
+                "month": month,
             }
 
         task = serializer.save(company=company, created_by=user)
@@ -239,6 +256,101 @@ class TaskViewSet(
         # Create or update categories
         if categories is not None:
             create_categories_by_model(task, categories)
+        # Create task schedule base on repeat
+        if repeat_type and task.status.name == TaskStatus.MY_ROUTINE.value:
+            self._generate_loop_task_schedules(
+                task,
+                plan_start_date,
+                repeat_type,
+                repeat_interval,
+                week_day,
+                month_day,
+                plan_end_date,
+                month,
+            )
+
+    def _generate_loop_task_schedules(
+        self,
+        task,
+        start_date,
+        repeat_type,
+        repeat_interval=1,
+        weekday=None,
+        month_day=None,
+        end_date=None,
+        month=None,
+    ):
+        """
+        Handle loop task and store in task schedule
+        """
+        start_date = (
+            make_aware(start_date)
+            if isinstance(start_date, datetime)
+            else now()
+        )
+
+        if repeat_type == FrequencyMap.ONCE.value:
+            TaskSchedule.objects.create(
+                task=task,
+                company=task.company,
+                plan_start_date=start_date,
+                plan_end_date=end_date,
+            )
+            return
+        end_time = end_date.timetz()
+
+        # Make rule repeat
+        rule_params = {
+            "freq": FrequencyMap.to_rrule(FrequencyMap[repeat_type]),
+            "interval": repeat_interval,
+            "dtstart": start_date,
+        }
+
+        if repeat_type == FrequencyMap.WEEKLY.value and weekday is not None:
+            rule_params["byweekday"] = weekday
+            days_ahead = (weekday - start_date.weekday()) % 7
+            rule_params["dtstart"] = start_date + timedelta(days=days_ahead)
+        elif (
+            repeat_type == FrequencyMap.MONTHLY.value and month_day is not None
+        ):
+            rule_params["bymonthday"] = month_day
+            if month_day >= start_date.day:
+                rule_params["dtstart"] = start_date.replace(day=month_day)
+            else:
+                rule_params["dtstart"] = start_date.replace(
+                    day=month_day
+                ) + timedelta(days=30)
+        elif (
+            repeat_type == FrequencyMap.YEARLY.value
+            and month is not None
+            and month_day is not None
+        ):
+            rule_params["bymonth"] = month
+            if month >= start_date.month:
+                rule_params["dtstart"] = start_date.replace(
+                    day=month_day, month=month
+                )
+            else:
+                rule_params["dtstart"] = start_date.replace(
+                    day=month_day, month=month
+                ) + timedelta(days=365)
+        rule_params["until"] = rule_params["dtstart"] + timedelta(
+            days=365
+        )  # Set default end_date is 1 year
+        rule = rrule.rrule(**rule_params)
+
+        schedules = [
+            TaskSchedule(
+                task=task,
+                company=task.company,
+                plan_start_date=occurrence,
+                plan_end_date=datetime.combine(
+                    occurrence.date(), end_time, occurrence.tzinfo
+                ),
+            )
+            for occurrence in rule
+        ]
+        TaskSchedule.objects.bulk_create(schedules)
 
     def _send_to_task_space(self, user, message):
         """
@@ -492,15 +604,20 @@ class TaskViewSet(
         task_schedules = serializer_data.pop("task_schedules", None)
         todo_list = serializer_data.pop("todo_list", None)
         categories = serializer_data.pop("category_ids", None)
-        # Update the first item in schedules
-        plan_start_date = serializer_data.get("plan_start_date")
-        plan_end_date = serializer_data.get("plan_end_date")
         # Get data for send to chat
         send_to_chat = serializer_data.pop("send_to_chat", None)
         chat_room_code = serializer_data.pop("chat_room_code", None)
         serializer_data.get("type", None)
         remind_countdown = serializer_data.pop("remind_countdown", None)
         remind_type = serializer_data.pop("remind_type", None)
+        # Item for loop task schedule
+        plan_start_date = serializer_data.pop("plan_start_date", None)
+        plan_end_date = serializer_data.pop("plan_end_date", None)
+        repeat_type = serializer_data.pop("repeat_type", None)
+        repeat_interval = serializer_data.pop("repeat_interval", None)
+        week_day = serializer_data.pop("week_day", None)
+        month_day = serializer_data.pop("month_day", None)
+        month = serializer_data.pop("month", None)
 
         # Implement create task template base on T146
         if current_task.type == TaskTypes.MY_TEMPLATE.value:
@@ -517,26 +634,6 @@ class TaskViewSet(
                 and task_status.name == TaskStatus.MY_ROUTINE.value
             ):
                 serializer_data["deadline"] = None
-            else:
-                is_current_status_is_my_routine = (
-                    current_task.status.name == TaskStatus.MY_ROUTINE.value
-                )
-                if task_status:
-                    is_update_status_is_my_routine = (
-                        task_status.name == TaskStatus.MY_ROUTINE.value
-                    )
-                    if (
-                        is_current_status_is_my_routine
-                        and not is_update_status_is_my_routine
-                    ) or (
-                        not is_current_status_is_my_routine
-                        and is_update_status_is_my_routine
-                    ):
-                        raise ValidationError(
-                            {
-                                "detail": ERROR_MESSAGES["cannot_updated"],
-                            }
-                        )
 
         if serializer_data.get("deadline"):
             serializer_data["reminds"] = {
@@ -556,20 +653,20 @@ class TaskViewSet(
             )
         ):
             reset_sort_task(user)
-
+        if repeat_type:
+            serializer_data["recurring"] = {
+                "repeat_type": repeat_type,
+                "plan_start_date": plan_start_date.isoformat(),
+                "plan_end_date": plan_end_date.isoformat(),
+                "repeat_interval": repeat_interval,
+                "week_day": week_day,
+                "month_day": month_day,
+                "month": month,
+            }
         # Update task
         task = serializer.save()
 
-        # TODO: Remove code for case save first schedule
-        # Save data to first task schedule
-        if plan_start_date and plan_end_date:
-            schedule = TaskSchedule.objects.filter(task=current_task).first()
-            if schedule:
-                update_task_schedule(schedule, serializer_data)
-            else:
-                create_task_schedule(current_task, serializer_data)
         # Handle send to chat
-
         if send_to_chat:
             self._send_to_chat(
                 user,
@@ -579,7 +676,10 @@ class TaskViewSet(
                 ChatMessageTypes.EDIT_TASK.value,
             )
         # Handle task schedules creation
-        if task_schedules is not None:
+        if (
+            task_schedules is not None
+            and task.status.name != TaskStatus.MY_ROUTINE.value
+        ):
             # Get all existing task schedule IDs for the current task
             old_task_schedule_ids = set(
                 current_task.task_schedules.values_list("id", flat=True)
@@ -759,6 +859,23 @@ class TaskViewSet(
                     user=user,
                 )
 
+        # Create task schedule base on repeat
+        if (
+            task.status.name == TaskStatus.MY_ROUTINE.value
+            and task.recurring != current_task.recurring
+        ):
+            task.task_schedules.all().delete()
+            self._generate_loop_task_schedules(
+                task,
+                plan_start_date,
+                repeat_type,
+                repeat_interval,
+                week_day,
+                month_day,
+                plan_end_date,
+                month,
+            )
+
     def destroy(self, request, *args, **kwargs):
         """
         Handle destroying the task with send message realtime.
@@ -899,24 +1016,6 @@ class TaskViewSet(
                 return self.response(status_code=status.HTTP_400_BAD_REQUEST)
 
             if task_status:
-                is_current_status_is_my_routine = (
-                    task.status.name == TaskStatus.MY_ROUTINE.value
-                )
-                is_update_status_is_my_routine = (
-                    task_status.name == TaskStatus.MY_ROUTINE.value
-                )
-                if (
-                    is_current_status_is_my_routine
-                    and not is_update_status_is_my_routine
-                ) or (
-                    not is_current_status_is_my_routine
-                    and is_update_status_is_my_routine
-                ):
-                    raise ValidationError(
-                        {
-                            "detail": ERROR_MESSAGES["cannot_updated"],
-                        }
-                    )
                 task.status = task_status
                 task.save()
                 for user in task.people_in_charge.all():
@@ -1103,19 +1202,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     API endpoint to show Tasks to the Board.
     """
 
-    queryset = (
-        Task.objects.annotate(
-            priority_number=Case(
-                When(priority=TaskPriorities.HIGH.value, then=4),
-                When(priority=TaskPriorities.MEDIUM.value, then=3),
-                When(priority=TaskPriorities.LOW.value, then=2),
-                default=1,
-                output_field=IntegerField(),
-            )
-        )
-        .exclude(type=TaskTypes.MY_TEMPLATE.value)
-        .all()
-    )
+    queryset = Task.objects.exclude(type=TaskTypes.MY_TEMPLATE.value).all()
     serializer_class = TaskBoardSerializer
     permission_classes = [ActionPermission]
     screen_name = Screens.MY_TASK.value
@@ -1128,14 +1215,12 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     ordering_fields = {
         "is_important": "is_important",
         "deadline": "deadline",
-        "priority": "priority_number",
         "id": "id",
     }
     filterset_class = TaskBoardFilter
     search_fields = [
         "title",
         "status__name",
-        "priority",
         "description",
         "tags__name",
         "people_in_charge__profile__full_name",
@@ -1153,7 +1238,6 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         self.search_fields = [
             "title",
             "status__name",
-            "priority",
             "description",
             "tags__name",
             "people_in_charge__profile__full_name",
@@ -1227,23 +1311,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         else:
             # Handle filter when pagination
             if id := self.request.query_params.get("task_id"):
-                if "priority" in ordering:
-                    priority = self.request.query_params.get("priority")
-                    match priority:
-                        case TaskPriorities.HIGH.value:
-                            priority_number = 4
-                        case TaskPriorities.MEDIUM.value:
-                            priority_number = 3
-                        case TaskPriorities.LOW.value:
-                            priority_number = 2
-                        case __:
-                            priority_number = 1
-
-                    queryset = queryset.filter(
-                        Q(priority_number=priority_number, id__lt=id)
-                        | Q(priority_number__lt=priority_number)
-                    )
-                elif "deadline" in ordering:
+                if "deadline" in ordering:
                     if deadline := self.request.query_params.get("deadline"):
                         queryset = queryset.filter(
                             Q(deadline__gt=deadline) | Q(deadline__isnull=True)
@@ -1305,7 +1373,6 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         parameters=[
             OpenApiParameter("deadline", type=datetime),
             OpenApiParameter("pin_at", type=datetime),
-            OpenApiParameter("priority", type=str),
             OpenApiParameter("task_id", type=int),
             OpenApiParameter("index", type=float),
             OpenApiParameter("ids", type=str),

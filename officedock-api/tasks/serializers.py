@@ -30,7 +30,12 @@ from tasks.models import (
     TaskStatus,
     TodoList,
 )
-from tasks.constants import INITIAL_INDEX_VALUE, DatetimeUnitTypes
+from tasks.constants import (
+    INITIAL_INDEX_VALUE,
+    DatetimeUnitTypes,
+    FrequencyMap,
+    TaskStatus as TaskStatusConstant,
+)
 from users.serializers import ProfileSerializer, UsersForCreationSerializer
 from users.models import User
 
@@ -303,6 +308,21 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
     remind_type = serializers.ChoiceField(
         allow_null=True, required=False, choices=DatetimeUnitTypes.choices()
     )
+    plan_start_date = serializers.DateTimeField(allow_null=True, required=False)
+    plan_end_date = serializers.DateTimeField(allow_null=True, required=False)
+    repeat_type = serializers.ChoiceField(
+        choices=FrequencyMap.choices(), allow_null=True, required=False
+    )
+    repeat_interval = serializers.IntegerField(allow_null=True, required=False)
+    week_day = serializers.IntegerField(
+        min_value=0, max_value=6, required=False, allow_null=True
+    )
+    month_day = serializers.IntegerField(
+        min_value=1, max_value=31, required=False, allow_null=True
+    )
+    month = serializers.IntegerField(
+        min_value=1, max_value=12, required=False, allow_null=True
+    )
 
     class Meta:
         model = Task
@@ -317,7 +337,6 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "task_duration",
             "is_start",
             "is_my_task",
-            "priority",
             "deadline",
             "remind_at",
             "description",
@@ -340,6 +359,13 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "is_schedule_in_today",
             "remind_countdown",
             "remind_type",
+            "plan_start_date",
+            "plan_end_date",
+            "repeat_interval",
+            "repeat_type",
+            "week_day",
+            "month_day",
+            "month",
         ]
 
         read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
@@ -348,7 +374,33 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         """Validation data"""
         task_schedules = attrs.get("task_schedules")
         people_in_charge_ids = attrs.get("people_in_charge_ids")
+        repeat_type = attrs.get("repeat_type")
+        week_day = attrs.get("week_day", None)
+        month_day = attrs.get("month_day", None)
+        plan_start_date = attrs.get("plan_start_date", None)
+        plan_end_date = attrs.get("plan_end_date", None)
+        month = attrs.get("month", None)
         instance = self.instance
+
+        if repeat_type == FrequencyMap.WEEKLY.value and week_day is None:
+            raise serializers.ValidationError(
+                {"week_day": ERROR_MESSAGES["select_day"]}
+            )
+
+        if repeat_type == FrequencyMap.MONTHLY.value and month_day is None:
+            raise serializers.ValidationError(
+                {"month_day": ERROR_MESSAGES["select_day"]}
+            )
+
+        if repeat_type == FrequencyMap.YEARLY.value and month is None:
+            raise serializers.ValidationError(
+                {"month": ERROR_MESSAGES["select_month"]}
+            )
+
+        if plan_start_date and plan_end_date is None:
+            raise serializers.ValidationError(
+                {"plan_end_date": ERROR_MESSAGES["select_day"]}
+            )
 
         # Sort list by plan start date
         if task_schedules:
@@ -434,6 +486,18 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         if instance.reminds:
             representation["remind_countdown"] = instance.reminds["countdown"]
             representation["remind_type"] = instance.reminds["type"]
+        if recurring := instance.recurring:
+            fields = [
+                "plan_start_date",
+                "plan_end_date",
+                "repeat_type",
+                "repeat_interval",
+                "week_day",
+                "month_day",
+                "month",
+            ]
+            for field in fields:
+                representation[field] = recurring.get(field)
         return representation
 
     def get_index(self, instance):
@@ -474,7 +538,6 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "status",
             "is_start",
             "is_my_task",
-            "priority",
             "is_important",
             "deadline",
             "is_schedule_in_today",
@@ -483,6 +546,28 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "type",
             "categories",
         ]
+
+    def to_representation(self, instance):
+        """
+        Custom representation
+        """
+        representation = super().to_representation(instance)
+        if instance.status.name == TaskStatusConstant.MY_ROUTINE.value:
+            recurring = instance.recurring
+            fields = [
+                "plan_start_date",
+                "plan_end_date",
+                "repeat_type",
+                "repeat_interval",
+                "week_day",
+                "month_day",
+                "month",
+            ]
+            for field in fields:
+                representation[field] = (
+                    recurring.get(field) if recurring else None
+                )
+        return representation
 
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
