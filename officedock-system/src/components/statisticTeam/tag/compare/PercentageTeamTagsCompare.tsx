@@ -1,18 +1,21 @@
 import React, { useContext, useEffect, useState } from 'react';
+
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
+import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
+import { EventWorkCategory } from '@constants/enums';
+
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
-import { EventWorkCategory } from '@constants/enums';
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
 type Props = {
   startDate: Date;
@@ -424,7 +427,7 @@ const PercentageTeamTagsCompare = ({
               </div>
               <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4 ">
                     <Dropdown
                       label="チーム選択"
@@ -436,7 +439,7 @@ const PercentageTeamTagsCompare = ({
                       selectedOption={selectedOrganization || undefined}
                       onChange={(data) => handleSelectOrganization(data)}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-centers">
                       {
                         <PercentageBarCompareTeam
                           isTag
@@ -472,7 +475,7 @@ const PercentageTeamTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
@@ -485,7 +488,7 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectLarge(data)}
                       disabled={!selectedOrganization}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompareTeam
                           isTag
@@ -521,7 +524,7 @@ const PercentageTeamTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
@@ -534,7 +537,7 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompareTeam
                           isTag
@@ -570,7 +573,7 @@ const PercentageTeamTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 4 */}
-                <div className="w-[220px]">
+                <div className="w-full">
                   <div className="mt-4">
                     <Dropdown
                       label="小カテゴリー選択"
@@ -583,11 +586,11 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectSmall(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
+                    <div className="min-h-[280px] mt-[30px] flex justify-center">
                       {
                         <PercentageBarCompareTeam
-                          isTag          
-                          isLast             
+                          isTag
+                          isLast
                           data={dataChartCategory}
                           startDate={startDate}
                           endDate={endDate}

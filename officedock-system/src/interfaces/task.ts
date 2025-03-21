@@ -3,7 +3,6 @@ import { OptionDropdownType } from './common';
 import { PeopleInCharge, TagId, Tags } from './tag';
 import { Organizations } from './organization';
 import { EventParticipant } from './calendar';
-import { Category } from './category';
 
 export interface TaskRequest {
   id?: number | string;
@@ -323,4 +322,53 @@ export interface DataDetailEventType {
   address?: string;
   isAllDay: boolean;
   type: OptionDropdownType;
+}
+//Team
+interface Category {
+  id: number;
+  name: string;
+  color: string | null;
+  type: string;
+}
+
+interface StatusTeam {
+  id: number;
+  name: string;
+  total: number;
+  hasNext: boolean;
+  tasks: Task[];
+}
+
+interface ProfileTeam {
+  id: number;
+  fullName: string;
+  birthday: string | null;
+  gender: string | null;
+}
+
+export interface ResultTeam {
+  id: number;
+  profile: ProfileTeam;
+  status: StatusTeam[];
+}
+export interface KanbanDataTeamResponse {
+  count: number;
+  numPages: number;
+  results: ResultTeam[];
+  hasNext: boolean;
+}
+
+// Transformer data team Task
+
+export interface TransformedStatuses {
+  NOT_STARTED: Task[];
+  IN_PROGRESS: Task[];
+  CONFIRMING: Task[];
+  COMPLETED: Task[];
+}
+
+export interface TransformedUser {
+  id: string;
+  name: string;
+  statuses: TransformedStatuses;
 }

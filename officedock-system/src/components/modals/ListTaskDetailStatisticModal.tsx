@@ -10,13 +10,13 @@ import {
 } from '@components/common/SkeletonLoading';
 import { Table, TableBody } from '@components/common/Table';
 
+import useStatisticTask from '@hooks/useStatisticTask';
 import { PAGINATION_PAGE_SIZE_SMALL } from '@constants';
 import { EventWorkCategory, OrderingDataType } from '@constants/enums';
 
 import { formatDateToYMD, formatTimeToJapanese } from '@utils/date';
 import { DataTaskListStatisticListType } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
-import useStatisticTask from '@hooks/useStatisticTask';
 
 type Props = {
   detailCategory: {

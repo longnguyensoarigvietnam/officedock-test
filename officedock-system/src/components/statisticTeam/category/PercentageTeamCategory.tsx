@@ -3,6 +3,8 @@ import React, { useEffect, useState, useContext } from 'react';
 import PieChart from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
@@ -10,11 +12,11 @@ import {
   StatisticsCategories,
   UserListStatisticType,
 } from '@interfaces/statistic';
+
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 type Props = {
   startDate: Date;
@@ -327,7 +329,7 @@ const PercentageCategoryTeam = ({
             <div>
               <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[280px]">
+                <div className="w-full">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     大カテゴリー
                   </div>
@@ -348,7 +350,7 @@ const PercentageCategoryTeam = ({
                       {totalDurationLarge &&
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
-                    <div className="min-h-[280px]">
+                    <div className="min-h-[280px] flex justify-center">
                       {dataChartLarge.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
@@ -358,7 +360,7 @@ const PercentageCategoryTeam = ({
                           data={dataChartLarge?.data}
                           labels={dataChartLarge?.labels}
                           actualValues={dataChartLarge?.actualValue}
-                          className="w-[280px] h-[280px] ml-5"
+                          className="w-[280px] h-[280px]"
                           optionsData={dataChartLarge.optionData}
                           listIdData={dataChartLarge.listId}
                           handleClickTooltip={() => {}}
@@ -371,7 +373,7 @@ const PercentageCategoryTeam = ({
                           }}
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
                       )}
                     </div>
                   </div>
@@ -384,7 +386,7 @@ const PercentageCategoryTeam = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[280px]">
+                <div className="w-full">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
@@ -406,7 +408,7 @@ const PercentageCategoryTeam = ({
                       {totalDurationMedium &&
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
-                    <div>
+                    <div className="flex justify-center">
                       {dataChartMedium.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
@@ -417,7 +419,7 @@ const PercentageCategoryTeam = ({
                           labels={dataChartMedium?.labels}
                           actualValues={dataChartMedium?.actualValue}
                           optionsData={dataChartMedium.optionData}
-                          className="w-[280px] h-[280px] ml-5"
+                          className="w-[280px] h-[280px] "
                           listIdData={dataChartMedium.listId}
                           handleClickChart={(data: OptionDropdownType) => {
                             if (data.value && data.value !== '未設定') {
@@ -426,7 +428,7 @@ const PercentageCategoryTeam = ({
                           }}
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[280px] h-[280px] rounded-full bg-[#EBF1F7]"></div>
                       )}
                     </div>
                   </div>
@@ -439,7 +441,7 @@ const PercentageCategoryTeam = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[280px]">
+                <div className="w-full">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     小カテゴリー
                   </div>
@@ -461,7 +463,7 @@ const PercentageCategoryTeam = ({
                       {totalDurationSmall &&
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
-                    <div>
+                    <div className="flex justify-center">
                       {dataChartSmall.data.length > 0 ? (
                         <PieChart
                           isTeam
@@ -471,13 +473,13 @@ const PercentageCategoryTeam = ({
                           data={dataChartSmall?.data}
                           labels={dataChartSmall?.labels}
                           actualValues={dataChartSmall?.actualValue}
-                          className="w-[280px] h-[280px] ml-5"
+                          className="w-[280px] h-[280px] "
                           optionsData={dataChartSmall.optionData}
                           listIdData={dataChartSmall.listId}
                           isClickTooltip
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
                       )}
                     </div>
                   </div>

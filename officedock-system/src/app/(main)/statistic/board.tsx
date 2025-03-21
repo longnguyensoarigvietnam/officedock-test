@@ -1,4 +1,5 @@
 'use client';
+import { useRouter } from 'next/navigation';
 import React, { useContext, useState } from 'react';
 
 import Button from '@components/common/Button';
@@ -7,18 +8,17 @@ import ImageRound from '@components/common/ImageRound';
 import StatisticCalendar from '@components/statistic/category/StatisticCalendar';
 import PercentageCategory from '@components/statistic/category/PercentageCategory';
 import TaskListStatistic from '@components/statistic/category/TaskList';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
 
+import { pageRouters } from '@constants/routers';
+import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
 import useStatisticCategories from '@hooks/useStatisticCategories';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
-import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
-import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import { useRouter } from 'next/navigation';
-import { pageRouters } from '@constants/routers';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 const StatisticBoard = () => {
   const {

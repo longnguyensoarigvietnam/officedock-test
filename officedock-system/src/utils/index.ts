@@ -12,7 +12,7 @@ import {
   ScreenName,
 } from '@constants/enums';
 import { formatTime24h } from './date';
-import { Task } from '@interfaces/task';
+import { ResultTeam, Task, TransformedUser } from '@interfaces/task';
 import { MAX_HEX_COLOR_VALUE } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
@@ -701,4 +701,38 @@ export function lightenColor(color: string | null, percent: number): string {
     ) as [number, number, number];
 
   return rgbToHex(mixWithWhite(hexToRgb(color || defaultColor), percent));
+}
+
+// Transform data team task
+export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
+  return result.map((user) => ({
+    id: `user_${user.id}`,
+    name: user.profile.fullName,
+    statuses: {
+      NOT_STARTED:
+        user.status
+          .find((status) => status.id === 1)
+          ?.tasks.map((task) => ({
+            ...task,
+          })) || [],
+      IN_PROGRESS:
+        user.status
+          .find((status) => status.id === 2)
+          ?.tasks.map((task) => ({
+            ...task,
+          })) || [],
+      CONFIRMING:
+        user.status
+          .find((status) => status.id === 3)
+          ?.tasks.map((task) => ({
+            ...task,
+          })) || [],
+      COMPLETED:
+        user.status
+          .find((status) => status.id === 4)
+          ?.tasks.map((task) => ({
+            ...task,
+          })) || [],
+    },
+  }));
 }
