@@ -193,17 +193,19 @@ const TableComponent = ({
     uuid: string;
     type: string;
     rowInfo: rowDataType;
-}
+  };
   setHierarchyList: Dispatch<SetStateAction<HierarchyDetail[]>>;
   setSelectedHierarchiesToDelete: Dispatch<
     SetStateAction<string[] | undefined>
   >;
-  setNewCategory: Dispatch<SetStateAction<{
-    name: string;
-    uuid: string;
-    type: string;
-    rowInfo: rowDataType;
-}>>
+  setNewCategory: Dispatch<
+    SetStateAction<{
+      name: string;
+      uuid: string;
+      type: string;
+      rowInfo: rowDataType;
+    }>
+  >;
   setSelectedHierarchiesToUpdate: Dispatch<
     SetStateAction<
       {
@@ -235,7 +237,6 @@ const TableComponent = ({
     status: false,
   });
   const inputRef = useRef<HTMLInputElement | null>(null);
-  
 
   const findLastUniqueMediumIndexes = (data: rowDataType[]): number[] => {
     const lastIndexes: number[] = [];
@@ -1076,7 +1077,8 @@ const TableComponent = ({
                                   option.value !== '',
                               ),
                             ]}
-                            className="h-full !rounded-[5px] w-full flex-grow !border-[1px] !border-[#77858F]"
+                            className="h-full !rounded-[5px] w-full flex-grow"
+                            valueClassName="!border-[#77858F]"
                             selectedOption={categoryList.find(
                               (element) =>
                                 element.value === row.original.large.value,
@@ -1421,7 +1423,8 @@ const TableComponent = ({
                                       option.value !== '',
                                   ),
                                 ]}
-                                className="h-full !rounded-[5px] w-full flex-grow !border-[1px] !border-[#77858F]"
+                                className="h-full !rounded-[5px] w-full flex-grow"
+                                valueClassName="!border-[#77858F]"
                                 selectedOption={categoryList.find(
                                   (element) =>
                                     element.value === row.original.medium.value,
@@ -1812,7 +1815,8 @@ const TableComponent = ({
                                     option.value !== '',
                                 ),
                               ]}
-                              className="w-full !rounded-[5px] !border-[1px] !border-[#77858F]"
+                              className="h-full !rounded-[5px]"
+                              valueClassName="!border-[#77858F]"
                               selectedOption={categoryList.find(
                                 (element) =>
                                   element.value == row.original.small.value,
@@ -2039,7 +2043,6 @@ const TableComponent = ({
                   <MultiSelect
                     key={JSON.stringify(row.original.skills)}
                     className="w-full"
-                    customControlMaxWidth="300px"
                     defaultValue={row.original.skills.map((skill) => {
                       return {
                         value: skill.value as number,

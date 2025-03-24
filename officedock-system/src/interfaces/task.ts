@@ -42,6 +42,13 @@ export interface TaskRequest {
   remindCountdown?: string | null;
   remindType?: string | null;
   remind_at?: string | null;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  planStartDate?: string | null;
+  planEndDate?: string | null;
 }
 export interface TaskFormData {
   id?: string;
@@ -80,6 +87,13 @@ export interface TaskFormData {
   plans: PlanItem[] | null;
   oldIdStatus?: string;
   organization?: OptionDropdownType | null;
+  repeatType?: OptionDropdownType;
+  repeatInterval?: OptionDropdownType;
+  weekDay?: OptionDropdownType;
+  monthDay?: OptionDropdownType;
+  month?: OptionDropdownType;
+  repeatStartTime?: string | null;
+  repeatEndTime?: string | null;
 }
 
 export interface StatusTask {
@@ -142,6 +156,13 @@ export interface Task {
   organization?: Organizations;
   remindCountdown?: string | null;
   remindType?: string | null;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  planStartDate?: string | null;
+  planEndDate?: string | null;
 }
 export interface TaskRunningType {
   id: number;

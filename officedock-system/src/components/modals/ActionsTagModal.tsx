@@ -165,7 +165,7 @@ const ActionsTagModal = ({
               register={register('name', {
                 required: watch('name') !== null ? true : false,
               })}
-              placeholder="新規スケジュール"
+              placeholder="新規タグ"
               error={errors.name?.message}
               disabled={isDisabled}
             />
