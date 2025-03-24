@@ -1097,7 +1097,7 @@ export const handleSetStartDateAfter = (
 
 // Get Japanese week day
 export function getJapaneseWeekDay(dayIndex: number) {
-  const weekdayNames: string[] = ['日', '月', '火', '水', '木', '金', '土'];
+  const weekdayNames: string[] = ['月', '火', '水', '木', '金', '土', '日'];
 
   return weekdayNames[dayIndex];
 }

@@ -342,7 +342,7 @@ const ListViewItem = ({
         break;
       case TaskRepetitiveValue.YEARLY:
         title =
-          '毎年' + item.month + '月' + repeatStartTime + '~' + repeatEndTime;
+          '毎年' + item.month + '月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
         break;
     }
     return title;

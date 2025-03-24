@@ -181,10 +181,10 @@ const ListSubmitLevels = () => {
             <th className="w-[346px] max-w-[346px] text-left">
               <span>申請者</span>
             </th>
-            <th className="w-36 max-w-[144ppx]">
+            <th className="w-36 max-w-[144px]">
               <span>組織</span>
             </th>
-            <th className="w-36 max-w-[144ppx]">
+            <th className="w-36 max-w-[144px]">
               <span>申請日</span>
             </th>
             <th className="w-36">操作</th>
@@ -200,10 +200,10 @@ const ListSubmitLevels = () => {
                   <td className="w-[346px] max-w-[346px] text-left truncate">
                     {element.staff.profile.fullName}
                   </td>
-                  <td className="w-36 max-w-[144ppx] truncate">
+                  <td className="w-36 max-w-[144px] truncate">
                     {element.organization.name}
                   </td>
-                  <td className="w-36 max-w-[144ppx] truncate">
+                  <td className="w-36 max-w-[144px] truncate">
                     {getSubmitLevelFormattedDate(new Date(element.createdAt))}
                   </td>
                   <td className="w-36">

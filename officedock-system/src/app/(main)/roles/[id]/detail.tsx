@@ -16,10 +16,12 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { RoleStateContext } from '@providers/RoleProvider';
 
 import useRoleDetail from '@hooks/useRoleDetail';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const DetailRoleTable = () => {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const { expanded } = useContext(GlobalStateContext);
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
   const { dataRoleDetail, setDataRoleDetail } = useContext(RoleStateContext);
@@ -54,8 +56,8 @@ const DetailRoleTable = () => {
 
   return (
     <div>
-      <div className="w-96 mb-10">
-        <ViewInfo label="ロール名">{dataRoleDetail?.name} </ViewInfo>
+      <div className="mb-10">
+        <ViewInfo label="ロール名" className={`break-words ${expanded ? '!w-[calc(100%_-_200px)]' : '!w-[calc(100%_-_60px)]'}`}>{dataRoleDetail?.name} </ViewInfo>
       </div>
       <div className="flex flex-col h-[calc(100%_-_95px)] justify-between">
         <div

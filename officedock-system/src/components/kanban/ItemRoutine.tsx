@@ -48,7 +48,7 @@ interface ItemProps {
   index: number;
   content: Task;
   creationDataTaskData?: CreationDataTask;
-  handleActionEditTask: (id: number) => void;
+  handleActionEditTask: (id: number, type?: string) => void
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTask: UseMutateFunction<
@@ -275,7 +275,7 @@ const ItemRoutine = ({
     if (isClicked) return;
 
     setIsClicked(true);
-    handleActionEditTask(parseInt(`${content.id}`));
+    handleActionEditTask(parseInt(`${content.id}`), ItemStartType.FIXED_TASK);
 
     setTimeout(() => setIsClicked(false), 2000);
   };
@@ -329,7 +329,7 @@ const ItemRoutine = ({
         break;
       case TaskRepetitiveValue.YEARLY:
         title =
-          '毎年' + item.month + '月' + repeatStartTime + '~' + repeatEndTime;
+          '毎年' + item.month + '月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
         break;
     }
     return title;

@@ -451,10 +451,10 @@ export const MessageDetail = ({
               className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} py-1 ml-5 mr-3 group-hover:rounded-md`}>
               {renderAvatar(dataMsgDetail.sender.id)}
               <div className={`ml-3 !w-[96%]`}>
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                    <p>{dataMsgDetail.sender.fullName} </p>
-                    <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
+                <div className="flex justify-between items-center pb-2">
+                  <div className="flex gap-2 items-center font-semibold text-[15px]">
+                    <p className="truncate max-w-[500px]">{dataMsgDetail.sender.fullName} </p>
+                    <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                       {dataMsgDetail.sender?.organizations?.name}
                     </p>
                     {dataMsgDetail.isBookmark && (
@@ -1076,8 +1076,8 @@ export const MessageDetail = ({
                     </div>
                   ) : (
                     <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                      <p>{messageDetail.sender.fullName} </p>
-                      <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
+                      <p className="truncate max-w-[500px]">{messageDetail.sender.fullName} </p>
+                      <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
                       </p>
                     </div>
@@ -1217,8 +1217,8 @@ export const MessageDetail = ({
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                    <p>{messageDetail.sender.fullName} </p>
-                    <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
+                    <p className="truncate max-w-[500px]">{messageDetail.sender.fullName} </p>
+                    <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                       {messageDetail.sender?.organizations?.name}
                     </p>
                     {messageDetail.isBookmark && (
@@ -1355,8 +1355,8 @@ export const MessageDetail = ({
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                    <p>{messageDetail.sender.fullName}</p>
-                    <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
+                    <p className="truncate max-w-[500px]">{messageDetail.sender.fullName}</p>
+                    <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                       {messageDetail.sender?.organizations?.name}
                     </p>
                     {messageDetail.isBookmark && (
@@ -1398,7 +1398,7 @@ export const MessageDetail = ({
                         </p>
                       </div>
                       <div className="flex gap-1 text-sm font-medium">
-                        <p className="text-[#0068B6]">
+                        <p className="text-[#0068B6] max-w-[500px] truncate">
                           {messageDetail.sender.fullName}
                         </p>
                         <p>

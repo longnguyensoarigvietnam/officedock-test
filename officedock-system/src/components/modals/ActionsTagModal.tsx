@@ -210,6 +210,7 @@ const ActionsTagModal = ({
                 options={dataOrganizationList}
                 optionClassName="!border-[1px] !border-[#77858F]"
                 labelClass="max-w-[460px]"
+                labelOptionClass='w-[460px]'
                 customLabel={
                   (watch('organizations') ?? [])
                     .filter((org: OptionDropdownType) => org.value)

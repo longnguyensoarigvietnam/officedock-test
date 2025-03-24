@@ -204,7 +204,7 @@ const ListOrganizations = () => {
             <th className="w-[346px] max-w-[346px] text-left">
               <span>上位組織</span>
             </th>
-            <th className="w-36 max-w-[144ppx]">
+            <th className="w-36 max-w-[144px]">
               <span>ユーザー数</span>
             </th>
             <th className="w-36">操作</th>
@@ -220,7 +220,7 @@ const ListOrganizations = () => {
                   <td className="w-[346px] max-w-[346px] text-left truncate">
                     {element?.superior?.name}
                   </td>
-                  <td className="w-36 max-w-[144ppx] truncate">
+                  <td className="w-36 max-w-[144px] truncate">
                     {element.userCount}
                   </td>
                   <td className="w-36">
