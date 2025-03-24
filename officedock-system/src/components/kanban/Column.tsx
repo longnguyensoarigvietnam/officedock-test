@@ -373,7 +373,9 @@ const Column = ({
                       padding: '5px',
                     }}
                     className={`rounded-full cursor-pointer w-fit ${Number(columnId) != StatusValueTask.MY_ROUTINE ? 'bg-[#E3EAED]' : 'bg-[#EBF2F7]'}`}
-                    onClick={() => addTask(columnId)}>
+                    onClick={() => {
+                      addTask(columnId);
+                    }}>
                     <ImageRound
                       src={`/icons/add.svg`}
                       name="Add"

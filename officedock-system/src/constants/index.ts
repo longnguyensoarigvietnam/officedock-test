@@ -2,6 +2,7 @@ import {
   ItemStartType,
   PermissionType,
   ReactionIconValue,
+  TaskRepetitiveType,
   WorkItemType,
 } from './enums';
 
@@ -272,6 +273,64 @@ export const HIERARCHY_COLOR_LIST = [
   '#70CB7E',
   '#45AFD9',
   '#899FEB',
-]
+];
 
-export const ALL_TEAMS_OPTION = 'すべてのチーム'
+export const ALL_TEAMS_OPTION = 'すべてのチーム';
+
+export const TASK_REPETITIVE_OPTIONS = [
+  {
+    label: TaskRepetitiveType.ONCE,
+    value: 'ONCE',
+  },
+  {
+    label: TaskRepetitiveType.DAILY,
+    value: 'DAILY',
+  },
+  {
+    label: TaskRepetitiveType.WEEKLY,
+    value: 'WEEKLY',
+  },
+  {
+    label: TaskRepetitiveType.MONTHLY,
+    value: 'MONTHLY',
+  },
+  {
+    label: TaskRepetitiveType.YEARLY,
+    value: 'YEARLY',
+  },
+];
+
+export const WEEKDAY_OPTIONS = [
+  { label: '月', value: 0 }, 
+  { label: '火', value: 1 }, 
+  { label: '水', value: 2 }, 
+  { label: '木', value: 3 }, 
+  { label: '金', value: 4 }, 
+  { label: '土', value: 5 }, 
+  { label: '日', value: 6 }, 
+];
+
+export const DAY_OPTIONS: { label: string, value: number }[] = Array.from(
+  { length: 31 },
+  (_, i) => ({
+    label: `${i + 1}`, 
+    value: i + 1,
+  })
+);
+
+export const MONTH_OPTIONS: { label: string, value: number }[] = Array.from(
+  { length: 12 },
+  (_, i) => ({
+    label: `${i + 1}`, 
+    value: i + 1,
+  })
+);
+
+export const REPEAT_INTERVAL_OPTIONS: { label: string, value: number }[] = Array.from(
+  { length: 10 },
+  (_, i) => ({
+    label: `${i + 1}`, 
+    value: i + 1,
+  })
+);
+

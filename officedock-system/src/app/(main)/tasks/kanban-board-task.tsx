@@ -39,7 +39,6 @@ import InputSearch from '@components/common/InputSearch';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import BoardKanban from '@components/kanban/Board';
 import ActionFilterTask from '@components/modals/ActionFilterTask';
-import FixedTaskData from './fixed-task';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useTaskBoardList from '@hooks/useTaskBoardList';
@@ -245,15 +244,18 @@ const KanbanBoardTask = () => {
   const [columnsKanbanData, setColumnsKanbanData] = useState<Columns>();
 
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
+  const [showFrequentlyTasks, setShowFrequentlyTasks] = useState(false);
+  const [frequentlyTasks, setFrequentlyTasks] = useState<Task[]>([]);
+  const [orderTaskSave, setOrderTaskSave] = useState<Task[]>([]);
+
+  // Template
   const [dataTemplateEdit, setDataTemplateEdit] = useState<Template | null>(
     null,
   );
-  const [showFrequentlyTasks, setShowFrequentlyTasks] = useState(false);
-  const [frequentlyTasks, setFrequentlyTasks] = useState<Task[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [orderTaskSave, setOrderTaskSave] = useState<Task[]>([]);
   const [showTemplateModal, setShowTemplateModal] = useState<boolean>(false);
 
+  // Fixed task
   const [isReadyToFetch, setIsReadyToFetch] = useState(false);
 
   const { dashboardMemberList } = useDashboardMemberList();
@@ -1381,17 +1383,6 @@ const KanbanBoardTask = () => {
           setColumnsKanbanData(newColumns);
           return;
         } else {
-          if (
-            source.droppableId == String(StatusValueTask.MY_ROUTINE) &&
-            destination.droppableId != String(StatusValueTask.MY_ROUTINE)
-          )
-            return;
-
-          if (
-            source.droppableId != String(StatusValueTask.MY_ROUTINE) &&
-            destination.droppableId == String(StatusValueTask.MY_ROUTINE)
-          )
-            return;
           const sourceColumn = columnsKanbanData[source.droppableId];
           const destColumn = columnsKanbanData[destination.droppableId];
           let sourceItems = Array.from(sourceColumn.items);
@@ -1400,6 +1391,18 @@ const KanbanBoardTask = () => {
               ? sourceItems
               : Array.from(destColumn.items);
           const [movedItem] = sourceItems.splice(source.index, 1); // Remove item from its original position
+          if (
+            (source.droppableId == String(StatusValueTask.MY_ROUTINE) &&
+              destination.droppableId != String(StatusValueTask.MY_ROUTINE)) ||
+            (source.droppableId != String(StatusValueTask.MY_ROUTINE) &&
+              destination.droppableId == String(StatusValueTask.MY_ROUTINE))
+          ) {
+            handleSetParam({
+              id: `${movedItem.id}`,
+              action: ActionTask.EDIT,
+            });
+            getDataDetailTask(movedItem.id);
+          }
 
           // Update the status of the item when dropped into a new column
           movedItem.status = {
@@ -1650,7 +1653,7 @@ const KanbanBoardTask = () => {
     handleSetTemplateParam({
       id: `${id}`,
       action: TemplateAction.EDIT,
-      type: 'TEMPLATE',
+      type: ItemStartType.TEMPLATE,
     });
   };
 
@@ -1841,26 +1844,28 @@ const KanbanBoardTask = () => {
         .filter((item) => item.value !== '')
         .map((item) => ({ peopleInChargeId: item.value }));
 
-    const planList = data.plans
-      ? data.plans
-          .filter((item) => item.planStartDate !== null)
-          .map((item) => {
-            return {
-              scheduleId: item.scheduleId || null,
-              planStartDate:
-                item.planStartDate && item.planStartTime
-                  ? addTimeToDate(
-                      item.planStartDate as Date,
-                      item.planStartTime,
-                    )
-                  : null,
-              planEndDate:
-                item.planEndDate && item.planEndTime
-                  ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
-                  : null,
-            };
-          })
-      : null;
+    const planList =
+      data.plans &&
+      data.plans.filter((item) => item.planStartDate !== null).length > 0
+        ? data.plans
+            .filter((item) => item.planStartDate !== null)
+            .map((item) => {
+              return {
+                scheduleId: item.scheduleId || null,
+                planStartDate:
+                  item.planStartDate && item.planStartTime
+                    ? addTimeToDate(
+                        item.planStartDate as Date,
+                        item.planStartTime,
+                      )
+                    : null,
+                planEndDate:
+                  item.planEndDate && item.planEndTime
+                    ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
+                    : null,
+              };
+            })
+        : null;
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
 
@@ -1907,7 +1912,12 @@ const KanbanBoardTask = () => {
       categoryIds: newWorkCategories,
       isImportant: data.isImportant,
       todoList: todoListData,
-      taskSchedules: planList && planList.length ? planList : [],
+      taskSchedules:
+        data.statusId?.value != StatusValueTask.MY_ROUTINE
+          ? planList && planList.length
+            ? planList
+            : []
+          : null,
       oldIdStatus: data.oldIdStatus,
       sendToChat: true,
       peopleInChargeIds: peopleInChargeIds,
@@ -1920,6 +1930,48 @@ const KanbanBoardTask = () => {
       remindType: data.deadlineRemindType?.value
         ? `${data.deadlineRemindType?.value}`
         : null,
+      repeatType:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatType && data.repeatType.value
+            ? String(data.repeatType.value)
+            : null
+          : null,
+      repeatInterval:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatInterval && data.repeatInterval.value
+            ? Number(data.repeatInterval.value)
+            : null
+          : null,
+      weekDay:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.weekDay && data.weekDay.value
+            ? Number(data.weekDay.value)
+            : null
+          : null,
+      monthDay:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.monthDay && data.monthDay.value
+            ? Number(data.monthDay.value)
+            : null
+          : null,
+      month:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.month && data.month.value
+            ? Number(data.month.value)
+            : null
+          : null,
+      planStartDate:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatStartTime
+            ? addTimeToDate(new Date(), data.repeatStartTime)
+            : null
+          : null,
+      planEndDate:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatEndTime
+            ? addTimeToDate(new Date(), data.repeatEndTime)
+            : null
+          : null,
     });
     const isCheckPeopleInCharge =
       data.peopleInChargeIds &&
@@ -2172,29 +2224,31 @@ const KanbanBoardTask = () => {
           .map((item) => ({ tagId: item.value }))
       : [];
 
-    const planList = data.plans
-      ? data.plans
-          .filter((item) => item.planStartDate !== null)
-          .map((item) => {
-            return {
-              scheduleId:
-                actionType && actionType === ActionTask.CREATE
-                  ? item.scheduleId || null
-                  : null,
-              planStartDate:
-                item.planStartDate && item.planStartTime
-                  ? addTimeToDate(
-                      item.planStartDate as Date,
-                      item.planStartTime,
-                    )
-                  : null,
-              planEndDate:
-                item.planEndDate && item.planEndTime
-                  ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
-                  : null,
-            };
-          })
-      : null;
+    const planList =
+      data.plans &&
+      data.plans.filter((item) => item.planStartDate !== null).length > 0
+        ? data.plans
+            .filter((item) => item.planStartDate !== null)
+            .map((item) => {
+              return {
+                scheduleId:
+                  actionType && actionType === ActionTask.CREATE
+                    ? item.scheduleId || null
+                    : null,
+                planStartDate:
+                  item.planStartDate && item.planStartTime
+                    ? addTimeToDate(
+                        item.planStartDate as Date,
+                        item.planStartTime,
+                      )
+                    : null,
+                planEndDate:
+                  item.planEndDate && item.planEndTime
+                    ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
+                    : null,
+              };
+            })
+        : null;
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
 
@@ -2257,6 +2311,48 @@ const KanbanBoardTask = () => {
         !data.deadlineRemindCountdown?.value && !data.deadlineRemindType?.value
           ? null
           : undefined,
+      repeatType:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatType && data.repeatType.value
+            ? String(data.repeatType.value)
+            : null
+          : null,
+      repeatInterval:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatInterval && data.repeatInterval.value
+            ? Number(data.repeatInterval.value)
+            : null
+          : null,
+      weekDay:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.weekDay && data.weekDay.value
+            ? Number(data.weekDay.value)
+            : null
+          : null,
+      monthDay:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.monthDay && data.monthDay.value
+            ? Number(data.monthDay.value)
+            : null
+          : null,
+      month:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.month && data.month.value
+            ? Number(data.month.value)
+            : null
+          : null,
+      planStartDate:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatStartTime
+            ? addTimeToDate(new Date(), data.repeatStartTime)
+            : null
+          : null,
+      planEndDate:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatEndTime
+            ? addTimeToDate(new Date(), data.repeatEndTime)
+            : null
+          : null,
     });
   };
 
@@ -2682,6 +2778,13 @@ const KanbanBoardTask = () => {
     },
   );
 
+  useEffect(() => {
+    const container = document.getElementById("kanbanContainer");
+    if (container) {
+      container.scrollTop = 0;
+    }
+  }, [isListView]);
+
   return (
     <>
       <div className="flex flex-row flex-grow h-[calc(100vh_-_76px)] gap-0 bg-[#F8FAFC] ">
@@ -2721,7 +2824,8 @@ const KanbanBoardTask = () => {
                     ? ` calc(${Math.max(viewportWidth, 1280)}px - ${500 - (656 - widthCalendar)}px)`
                     : `calc(${Math.max(viewportWidth, 1280)}px - 500px) `,
               }}
-              className={`h-full overflow-x-auto flex flex-col gap-2 py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}>
+              className={`h-full overflow-x-auto flex flex-col gap-2 py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
+              id='kanbanContainer'>
               <FrequentlyTask
                 setShowModalTask={() => {
                   handleSetParam({
@@ -2735,7 +2839,7 @@ const KanbanBoardTask = () => {
                   handleSetTemplateParam({
                     id: null,
                     action: TemplateAction.CREATE,
-                    type: 'TEMPLATE',
+                    type: ItemStartType.TEMPLATE,
                   });
                   setShowTemplateModal(true);
                 }}
@@ -2931,44 +3035,6 @@ const KanbanBoardTask = () => {
                       gap: `${(columnWidth / 247) * 12}px`,
                     }}
                     className="flex ">
-                    {columnsKanbanData &&
-                      !isLoadingDataTask &&
-                      columnsKanbanData[StatusValueTask.MY_ROUTINE] && (
-                        <FixedTaskData
-                          data={
-                            columnsKanbanData &&
-                            columnsKanbanData[StatusValueTask.MY_ROUTINE]
-                          }
-                          showFrequentlyTasks={showFrequentlyTasks}
-                          numberPagesData={numberPagesData}
-                          searchValue={searchValue}
-                          orderTaskSave={orderTaskSave}
-                          tagSelected={tagSelected}
-                          columnsKanbanData={columnsKanbanData}
-                          orderingRequest={orderingRequest}
-                          setNumberPagesData={setNumberPagesData}
-                          setColumnsKanbanData={setColumnsKanbanData}
-                          pinItemToTop={pinItemToTop}
-                          addTask={(id: string) => {
-                            setColumnId(id);
-                            setShowEditTaskModal(true);
-                            handleSetParam({
-                              id: null,
-                              action: ActionTask.CREATE,
-                            });
-                          }}
-                          handleConfirmDrop={(result: DropResult) => {
-                            setDataItemDrop(result);
-                            isDragEndExecuteRef.current = true;
-                          }}
-                          editTaskInline={editTaskInline}
-                          handleActionEditTask={handleActionEditTask}
-                          handleConfirmCopyTask={handleActionCopyTask}
-                          handleUpdateItemInline={handleUpdateItemInline}
-                          creationDataTaskData={creationDataTaskData}
-                          selectedOptionZoom={selectedOptionZoom}
-                        />
-                      )}
                     <div className="flex-grow">
                       <BoardKanban
                         columnsKanbanData={columnsKanbanData}
