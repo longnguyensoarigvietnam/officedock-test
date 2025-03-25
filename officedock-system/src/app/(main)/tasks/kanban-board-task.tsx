@@ -1951,17 +1951,19 @@ const KanbanBoardTask = () => {
           : null,
       weekDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? Number(data.weekDay ? data.weekDay.value : 0)
+          ? data.weekDay != null && data.weekDay != undefined
+            ? Number(data.weekDay.value)
+            : null
           : null,
       monthDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.monthDay && data.monthDay.value
+          ? data.monthDay != null && data.monthDay != undefined
             ? Number(data.monthDay.value)
             : null
           : null,
       month:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.month && data.month.value
+          ? data.month != null && data.month != undefined
             ? Number(data.month.value)
             : null
           : null,
@@ -2334,17 +2336,19 @@ const KanbanBoardTask = () => {
           : null,
       weekDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? Number(data.weekDay ? data.weekDay.value : 0)
+          ? data.weekDay != null && data.weekDay != undefined
+            ? Number(data.weekDay.value)
+            : null
           : null,
       monthDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.monthDay && data.monthDay.value
+          ? data.monthDay != null && data.monthDay != undefined
             ? Number(data.monthDay.value)
             : null
           : null,
       month:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.month && data.month.value
+          ? data.month != null && data.month != undefined
             ? Number(data.month.value)
             : null
           : null,

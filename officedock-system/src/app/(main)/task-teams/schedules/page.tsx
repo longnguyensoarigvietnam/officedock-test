@@ -1,0 +1,22 @@
+import React from 'react';
+
+import MainLayout from '@components/layouts/MainLayout';
+
+import { PermissionsSystem } from '@constants/enums';
+import { pageRouters } from '@constants/routers';
+
+import ScheduleTeamBoard from './board';
+
+const ScheduleTeamPage = () => {
+  return (
+    <MainLayout
+      title={pageRouters.TASKS_MANAGEMENT.name}
+      permission={PermissionsSystem.MY_TASK_VIEW}
+      className="!py-0 pl-10 pr-0 !bg-[#EBF1F7]"
+      showFooter={false}>
+      <ScheduleTeamBoard />
+    </MainLayout>
+  );
+};
+
+export default ScheduleTeamPage;

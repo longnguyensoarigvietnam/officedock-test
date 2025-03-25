@@ -103,7 +103,7 @@ const DetailRoleTable = () => {
             );
           })}
         </div>
-        <div className="w-full flex items-center flex-col mt-8">
+        <div className="w-full flex items-center flex-col my-8">
           <Button
             className="w-[426px]"
             variant="secondary"
