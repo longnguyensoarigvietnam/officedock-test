@@ -51,6 +51,7 @@ from tasks.constants import (
     TaskTypes,
     TaskStatus,
     FrequencyMap,
+    LIMIT_DAY,
 )
 from tasks.utils import (
     create_task_schedule,
@@ -279,6 +280,7 @@ class TaskViewSet(
         month_day=None,
         end_date=None,
         month=None,
+        old_recurring=None,
     ):
         """
         Handle loop task and store in task schedule
@@ -290,12 +292,6 @@ class TaskViewSet(
         )
 
         if repeat_type == FrequencyMap.ONCE.value:
-            TaskSchedule.objects.create(
-                task=task,
-                company=task.company,
-                plan_start_date=start_date,
-                plan_end_date=end_date,
-            )
             return
         end_time = end_date.timetz()
 
@@ -333,23 +329,107 @@ class TaskViewSet(
             else:
                 rule_params["dtstart"] = start_date.replace(
                     day=month_day, month=month
-                ) + timedelta(days=365)
+                ) + timedelta(days=LIMIT_DAY)
         rule_params["until"] = rule_params["dtstart"] + timedelta(
-            days=365
+            days=LIMIT_DAY
         )  # Set default end_date is 1 year
         rule = rrule.rrule(**rule_params)
-
-        schedules = [
-            TaskSchedule(
-                task=task,
-                company=task.company,
-                plan_start_date=occurrence,
-                plan_end_date=datetime.combine(
-                    occurrence.date(), end_time, occurrence.tzinfo
-                ),
+        schedules = []
+        if task.task_schedules.exists():
+            plan_start_time = datetime.strptime(
+                old_recurring["plan_start_date"], "%Y-%m-%dT%H:%M:%S"
+            ).timetz()
+            plan_end_time = datetime.strptime(
+                old_recurring["plan_end_date"], "%Y-%m-%dT%H:%M:%S"
+            ).timetz()
+            # Check edited schedules
+            list_task_schedule_edited = task.task_schedules.filter(
+                Q(plan_start_date__gt=now())
+                & ~Q(plan_start_date__time=plan_start_time)
+                & ~Q(plan_end_date__time=plan_end_time)
             )
-            for occurrence in rule
-        ]
+            # Remove task schedules not edited
+            task.task_schedules.exclude(
+                id__in=list_task_schedule_edited.values_list("id", flat=True)
+            ).delete()
+            for occurrence in rule:
+                plan_end_date = datetime.combine(
+                    occurrence.date(), end_time, occurrence.tzinfo
+                )
+                # Check validate task schedule is exists datetime
+                if not TaskSchedule.objects.filter(
+                    Q(
+                        Q(plan_start_date__lt=plan_end_date)
+                        | Q(plan_start_date__lte=occurrence)
+                    )
+                    & Q(
+                        Q(plan_end_date__gt=occurrence)
+                        | Q(plan_end_date__gte=plan_end_date)
+                    )
+                    & Q(
+                        task__people_in_charge_tasks__user__in=task.people_in_charge_tasks.values_list(
+                            "user", flat=True
+                        )
+                    )
+                ).exists():
+                    # Check not have task edited in the day
+                    if not list_task_schedule_edited.filter(
+                        Q(plan_start_date__date=occurrence.date())
+                        & Q(plan_end_date__date=occurrence.date())
+                    ).exists():
+                        schedules.append(
+                            TaskSchedule(
+                                task=task,
+                                company=task.company,
+                                plan_start_date=occurrence,
+                                plan_end_date=plan_end_date,
+                            )
+                        )
+                else:
+                    raise ValidationError(
+                        {
+                            "task_schedules": ERROR_MESSAGES[
+                                "exists_task_schedule"
+                            ]
+                        }
+                    )
+
+        else:
+            for occurrence in rule:
+                plan_end_date = datetime.combine(
+                    occurrence.date(), end_time, occurrence.tzinfo
+                )
+                if not TaskSchedule.objects.filter(
+                    Q(
+                        Q(plan_start_date__lt=plan_end_date)
+                        | Q(plan_start_date__lte=occurrence)
+                    )
+                    & Q(
+                        Q(plan_end_date__gt=occurrence)
+                        | Q(plan_end_date__gte=plan_end_date)
+                    )
+                    & Q(
+                        task__people_in_charge_tasks__user__in=task.people_in_charge_tasks.values_list(
+                            "user", flat=True
+                        )
+                    )
+                ).exists():
+                    schedules.append(
+                        TaskSchedule(
+                            task=task,
+                            company=task.company,
+                            plan_start_date=occurrence,
+                            plan_end_date=plan_end_date,
+                        )
+                    )
+                else:
+                    raise ValidationError(
+                        {
+                            "task_schedules": ERROR_MESSAGES[
+                                "exists_task_schedule"
+                            ]
+                        }
+                    )
         TaskSchedule.objects.bulk_create(schedules)
 
     def _send_to_task_space(self, user, message):
@@ -675,10 +755,21 @@ class TaskViewSet(
                 people_in_charge_ids,
                 ChatMessageTypes.EDIT_TASK.value,
             )
-        # Handle task schedules creation
+
         if (
+            current_task.recurring
+            and current_task.recurring["repeat_type"] == FrequencyMap.ONCE.value
+            and repeat_type != FrequencyMap.ONCE.value
+        ) or (
+            current_task.recurring
+            and current_task.recurring["repeat_type"] != FrequencyMap.ONCE.value
+            and repeat_type == FrequencyMap.ONCE.value
+        ):
+            task.task_schedules.all().delete()
+        # Handle task schedules creation
+        if (task_schedules is not None) or (
             task_schedules is not None
-            and task.status.name != TaskStatus.MY_ROUTINE.value
+            and repeat_type == FrequencyMap.ONCE.value
         ):
             # Get all existing task schedule IDs for the current task
             old_task_schedule_ids = set(
@@ -864,7 +955,6 @@ class TaskViewSet(
             task.status.name == TaskStatus.MY_ROUTINE.value
             and task.recurring != current_task.recurring
         ):
-            task.task_schedules.all().delete()
             self._generate_loop_task_schedules(
                 task,
                 plan_start_date,
@@ -874,6 +964,7 @@ class TaskViewSet(
                 month_day,
                 plan_end_date,
                 month,
+                old_recurring=current_task.recurring,
             )
 
     def destroy(self, request, *args, **kwargs):
