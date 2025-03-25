@@ -5,7 +5,7 @@ from base.constants import EnumChoices
 DEFAULT_PAGE_SIZE = 4  # Set a default value or raise an error if necessary
 INITIAL_INDEX_VALUE = 10000  # Constant to define the initial index value when no existing index is found
 INDEX_INCREMENT = 1  # Constant to define the increment value for index updates
-COPY_TEXT = "コピー"  # Constant to define the text for the title task copy
+LIMIT_DAY = 364  # Constant to define limit store loop date
 
 
 class TaskTypes(EnumChoices):
