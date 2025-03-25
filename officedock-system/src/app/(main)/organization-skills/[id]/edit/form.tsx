@@ -571,16 +571,14 @@ const EditOrganizationSkillForm = () => {
                                 />
                               ) : (
                                 <div className="py-3 pl-3">
-                                  <p className="!w-[250px]">
-                                    <span className="truncate text-center">
-                                      {
+                                  <p className="!w-[210px] max-w-[210px] truncate text-left">
+                                  {
                                         initialSkillOptions?.find(
                                           (element) =>
                                             Number(element.value) ==
                                             Number(row.skillId),
                                         )?.label
                                       }
-                                    </span>
                                   </p>
                                 </div>
                               )}

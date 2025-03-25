@@ -1079,6 +1079,7 @@ const TableComponent = ({
                             ]}
                             className="h-full !rounded-[5px] w-full flex-grow"
                             valueClassName="!border-[#77858F]"
+                            labelClass="w-[160px]"
                             selectedOption={categoryList.find(
                               (element) =>
                                 element.value === row.original.large.value,
@@ -1425,6 +1426,7 @@ const TableComponent = ({
                                 ]}
                                 className="h-full !rounded-[5px] w-full flex-grow"
                                 valueClassName="!border-[#77858F]"
+                                labelClass="w-[160px]"
                                 selectedOption={categoryList.find(
                                   (element) =>
                                     element.value === row.original.medium.value,
@@ -1817,6 +1819,7 @@ const TableComponent = ({
                               ]}
                               className="h-full !rounded-[5px]"
                               valueClassName="!border-[#77858F]"
+                              labelClass="w-[160px]"
                               selectedOption={categoryList.find(
                                 (element) =>
                                   element.value == row.original.small.value,

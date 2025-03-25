@@ -58,8 +58,8 @@ import {
 import {
   ActionTask,
   EventWorkCategory,
+  ItemStartType,
   PermissionsSystem,
-  ScreenName,
   StatusValueTask,
   TaskRepetitiveType,
   TimeType,
@@ -73,6 +73,7 @@ import {
   TodoItem,
 } from '@interfaces/task';
 import { Profile, User } from '@interfaces/user';
+import { CategoryStructure } from '@interfaces/skills';
 
 import {
   convertDateToStartDate,
@@ -88,13 +89,14 @@ import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
-import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
-import { CategoryStructure } from '@interfaces/skills';
+
+import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
 export type ActionTaskModalProps = {
   open: boolean;
   dataTask?: Task | null;
   errorPerson?: TaskErrorPerson;
+  type: string;
   action?: string;
   columnId?: string;
   peopleDefaultId?: string;
@@ -114,6 +116,7 @@ export type ActionTaskModalProps = {
 const ActionsTaskModal = ({
   open,
   action = ActionTask.CREATE,
+  type = ItemStartType.TASK,
   authenticatedUser,
   dataTask,
   errorPerson,
@@ -237,13 +240,14 @@ const ActionsTaskModal = ({
     name: 'organization.value',
   });
 
-  const { refetchOrganizationStatisticCategories } =
-    useOrganizationStatisticCategories({
-      organizationId: Number(organizationValue),
-      condition: [Boolean(organizationValue)],
-      currentScreen: ScreenName.MY_TASK,
-      onSuccess: (data) => {
-        const organizationCategories = data.map((category) => {
+  const { refetchCreationDataStatistic } = useCreationDataStatisticTeam({
+    organization_id: organizationValue ? String(organizationValue) : '',
+    isTeam: true,
+    onSuccess: (data) => {
+      if (!data) return;
+
+      const organizationCategories = data.organization.statisticCategories.map(
+        (category) => {
           const largeCategory = category.LARGE || {
             id: NO_OPTION_CATEGORY,
             name: NO_OPTION_CATEGORY,
@@ -272,34 +276,41 @@ const ActionsTaskModal = ({
             LARGE: largeCategory,
             MEDIUM: mediumCategories,
           };
-        });
+        },
+      );
 
-        setDataOrganizationCategories(organizationCategories);
-        setDataOptionsCategoryLarge(() => {
-          const largeCategories: OptionDropdownType[] = [
-            {
-              label: NO_OPTION_CATEGORY,
-              value: NO_OPTION_CATEGORY,
-            },
-          ];
-          data.map((category) => {
-            if (category.LARGE) {
-              largeCategories.push({
-                label: category.LARGE.name,
-                value: category.LARGE.id,
-              });
-            }
-          });
-          return largeCategories;
+      setDataOrganizationCategories(organizationCategories);
+      setDataOptionsCategoryLarge(() => {
+        const largeCategories: OptionDropdownType[] = [
+          {
+            label: NO_OPTION_CATEGORY,
+            value: NO_OPTION_CATEGORY,
+          },
+        ];
+        data.organization.statisticCategories.map((category) => {
+          if (category.LARGE) {
+            largeCategories.push({
+              label: category.LARGE.name,
+              value: category.LARGE.id,
+            });
+          }
         });
-      },
-    });
+        return largeCategories;
+      });
+      setDataOptionsTagIds(
+        data.tags.map((org) => ({
+          label: String(org.name),
+          value: String(org.id),
+        })),
+      );
+    },
+  });
 
   useEffect(() => {
     if (organizationValue) {
-      refetchOrganizationStatisticCategories();
+      refetchCreationDataStatistic();
     }
-  }, [organizationValue, refetchOrganizationStatisticCategories]);
+  }, [organizationValue, refetchCreationDataStatistic]);
 
   const defaultValues = useMemo<TaskFormData>(() => {
     const value: TaskFormData = {
@@ -487,7 +498,7 @@ const ActionsTaskModal = ({
             value: '',
           };
 
-      value.weekDay = dataTask.weekDay
+      value.weekDay = dataTask.weekDay != undefined && dataTask.weekDay != null
         ? {
             label: `${dataTask.weekDay}`,
             value: dataTask.weekDay,
@@ -720,12 +731,6 @@ const ActionsTaskModal = ({
         creationDataTaskData.status.map((org) => ({
           label: org.name,
           value: org.id as number,
-        })),
-      );
-      setDataOptionsTagIds(
-        creationDataTaskData.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
         })),
       );
     }
@@ -1081,12 +1086,8 @@ const ActionsTaskModal = ({
       },
     ]);
   };
-  const isRoutineTaskModal =
-    (Number(columnId) == StatusValueTask.MY_ROUTINE &&
-      action === ActionTask.CREATE) ||
-    (dataTask &&
-      dataTask.status?.id == StatusValueTask.MY_ROUTINE &&
-      action === ActionTask.EDIT);
+
+  const isRoutineTaskModal = type == ItemStartType.FIXED_TASK;
 
   return (
     <Drawer
@@ -1147,11 +1148,6 @@ const ActionsTaskModal = ({
             className="mt-1 w-3 h-[14px] hover:cursor-pointer"
             src="/icons/drawer-close-white.svg"
             name="Close icon"
-            onClick={() => {
-              resetDataCategoryOptions();
-              reset();
-              onClose();
-            }}
           />
         </div>
       </header>
@@ -1217,9 +1213,9 @@ const ActionsTaskModal = ({
                 rules={{ required: ORGANIZATION_REQUIRED_MESSAGE }}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs  rounded-md !border-none !shadow-none !w-fit !pl-0"
+                    className="h-[34px] !py-1 text-xs max-w-[515px] rounded-md !border-none !shadow-none !w-fit !pl-0"
                     classNameTextData="!text-xs !w-fit"
-                    classNameOption="!text-xs !w-fit"
+                    classNameOption="!text-xs !w-fit max-w-[515px]"
                     classNameError="!text-xs !w-fit"
                     placeholder="選択してください"
                     disabled={isCheckActionPermission}
@@ -1371,6 +1367,7 @@ const ActionsTaskModal = ({
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
+                    labelOptionClass="max-w-[400px] !truncate"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
                       let updatedTagIds = [];
@@ -2174,7 +2171,7 @@ const ActionsTaskModal = ({
                             rules={{
                               required: true,
                             }}
-                            render={({ field: { value, onChange } }) => (
+                            render={({ field: { onChange } }) => (
                               <Dropdown
                                 className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
                                 classNameTextData="!text-xs"
@@ -2184,7 +2181,7 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={REPEAT_INTERVAL_OPTIONS}
                                 selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) => element.value === value?.value,
+                                  (element) => element.value === watch('repeatInterval')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2212,7 +2209,7 @@ const ActionsTaskModal = ({
                             rules={{
                               required: true,
                             }}
-                            render={({ field: { value, onChange } }) => (
+                            render={({ field: { onChange } }) => (
                               <Dropdown
                                 className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.weekDay ? '!border-[#77858F]' : '!border-error'}`}
                                 classNameTextData="!text-xs"
@@ -2222,7 +2219,7 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={WEEKDAY_OPTIONS}
                                 selectedOption={WEEKDAY_OPTIONS.find(
-                                  (element) => element.value === value?.value,
+                                  (element) => element.value === watch('weekDay')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2240,7 +2237,7 @@ const ActionsTaskModal = ({
                             rules={{
                               required: true,
                             }}
-                            render={({ field: { value, onChange } }) => (
+                            render={({ field: { onChange } }) => (
                               <Dropdown
                                 className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
                                 classNameTextData="!text-xs"
@@ -2250,7 +2247,7 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={REPEAT_INTERVAL_OPTIONS}
                                 selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) => element.value === value?.value,
+                                  (element) => element.value === watch('repeatInterval')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2274,7 +2271,7 @@ const ActionsTaskModal = ({
                             rules={{
                               required: true,
                             }}
-                            render={({ field: { value, onChange } }) => (
+                            render={({ field: { onChange } }) => (
                               <Dropdown
                                 className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.monthDay ? '!border-[#77858F]' : '!border-error'}`}
                                 classNameTextData="!text-xs"
@@ -2284,7 +2281,7 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={DAY_OPTIONS}
                                 selectedOption={DAY_OPTIONS.find(
-                                  (element) => element.value === value?.value,
+                                  (element) => element.value === watch('monthDay')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2302,7 +2299,7 @@ const ActionsTaskModal = ({
                             rules={{
                               required: true,
                             }}
-                            render={({ field: { value, onChange } }) => (
+                            render={({ field: { onChange } }) => (
                               <Dropdown
                                 className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
                                 classNameTextData="!text-xs"
@@ -2312,7 +2309,7 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={REPEAT_INTERVAL_OPTIONS}
                                 selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) => element.value === value?.value,
+                                  (element) => element.value === watch('repeatInterval')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2336,7 +2333,7 @@ const ActionsTaskModal = ({
                             rules={{
                               required: true,
                             }}
-                            render={({ field: { value, onChange } }) => (
+                            render={({ field: { onChange } }) => (
                               <Dropdown
                                 className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.month ? '!border-[#77858F]' : '!border-error'}`}
                                 classNameTextData="!text-xs"
@@ -2346,7 +2343,7 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={MONTH_OPTIONS}
                                 selectedOption={MONTH_OPTIONS.find(
-                                  (element) => element.value === value?.value,
+                                  (element) => element.value === watch('month')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2364,7 +2361,7 @@ const ActionsTaskModal = ({
                             rules={{
                               required: true,
                             }}
-                            render={({ field: { value, onChange } }) => (
+                            render={({ field: { onChange } }) => (
                               <Dropdown
                                 className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.monthDay ? '!border-[#77858F]' : '!border-error'}`}
                                 classNameTextData="!text-xs"
@@ -2374,7 +2371,7 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={DAY_OPTIONS}
                                 selectedOption={DAY_OPTIONS.find(
-                                  (element) => element.value === value?.value,
+                                  (element) => element.value === watch('monthDay')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2392,7 +2389,7 @@ const ActionsTaskModal = ({
                             rules={{
                               required: true,
                             }}
-                            render={({ field: { value, onChange } }) => (
+                            render={({ field: { onChange } }) => (
                               <Dropdown
                                 className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
                                 classNameTextData="!text-xs"
@@ -2402,7 +2399,7 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={REPEAT_INTERVAL_OPTIONS}
                                 selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) => element.value === value?.value,
+                                  (element) => element.value === watch('repeatInterval')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);

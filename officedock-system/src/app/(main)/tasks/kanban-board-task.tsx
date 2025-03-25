@@ -1400,6 +1400,10 @@ const KanbanBoardTask = () => {
             handleSetParam({
               id: `${movedItem.id}`,
               action: ActionTask.EDIT,
+              type:
+                destination.droppableId == String(StatusValueTask.MY_ROUTINE)
+                  ? ItemStartType.FIXED_TASK
+                  : ItemStartType.TASK,
             });
             getDataDetailTask(movedItem.id);
           }
@@ -1604,15 +1608,17 @@ const KanbanBoardTask = () => {
   const handleSetParam = ({
     id,
     action,
+    type = ItemStartType.TASK,
   }: {
     id: string | null;
     action: string;
+    type?: string;
   }) => {
     if (id) {
       params.set('task', id);
     }
     params.set('action', action);
-    params.set('type', ItemStartType.TASK);
+    params.set('type', type);
     router.push(`?${params.toString()}`);
   };
   const handleRemoveParam = () => {
@@ -1729,10 +1735,11 @@ const KanbanBoardTask = () => {
       },
     },
   );
-  const handleActionEditTask = (id: number) => {
+  const handleActionEditTask = (id: number, type?: string) => {
     handleSetParam({
       id: `${id}`,
       action: ActionTask.EDIT,
+      type: type,
     });
   };
   //  Handle call api edit task
@@ -1944,9 +1951,7 @@ const KanbanBoardTask = () => {
           : null,
       weekDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.weekDay && data.weekDay.value
-            ? Number(data.weekDay.value)
-            : null
+          ? Number(data.weekDay ? data.weekDay.value : 0)
           : null,
       monthDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
@@ -1982,7 +1987,11 @@ const KanbanBoardTask = () => {
   };
 
   useEffect(() => {
-    if (actionType && typeDetail === ItemStartType.TASK) {
+    if (
+      actionType &&
+      (typeDetail === ItemStartType.TASK ||
+        typeDetail === ItemStartType.FIXED_TASK)
+    ) {
       if (taskDetailId) {
         setShowEditTaskModal(true);
         getDataDetailTask(parseInt(taskDetailId));
@@ -2325,9 +2334,7 @@ const KanbanBoardTask = () => {
           : null,
       weekDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.weekDay && data.weekDay.value
-            ? Number(data.weekDay.value)
-            : null
+          ? Number(data.weekDay ? data.weekDay.value : 0)
           : null,
       monthDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
@@ -2779,7 +2786,7 @@ const KanbanBoardTask = () => {
   );
 
   useEffect(() => {
-    const container = document.getElementById("kanbanContainer");
+    const container = document.getElementById('kanbanContainer');
     if (container) {
       container.scrollTop = 0;
     }
@@ -2825,7 +2832,7 @@ const KanbanBoardTask = () => {
                     : `calc(${Math.max(viewportWidth, 1280)}px - 500px) `,
               }}
               className={`h-full overflow-x-auto flex flex-col gap-2 py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
-              id='kanbanContainer'>
+              id="kanbanContainer">
               <FrequentlyTask
                 setShowModalTask={() => {
                   handleSetParam({
@@ -3056,6 +3063,10 @@ const KanbanBoardTask = () => {
                           handleSetParam({
                             id: null,
                             action: ActionTask.CREATE,
+                            type:
+                              id == String(StatusValueTask.MY_ROUTINE)
+                                ? ItemStartType.FIXED_TASK
+                                : ItemStartType.TASK,
                           });
                         }}
                         selectedOptionZoom={selectedOptionZoom}
@@ -3092,6 +3103,7 @@ const KanbanBoardTask = () => {
                   open={showEditTaskModal}
                   dataTask={dataTaskEdit}
                   columnId={columnId}
+                  type={typeDetail || ItemStartType.TASK}
                   action={actionType || ActionTask.CREATE}
                   peopleDefaultId={peopleDefaultId || `${session?.user.id}`}
                   setDataErrorTask={setDataErrorTask}

@@ -54,7 +54,7 @@ interface BoardKanbanProps {
     TaskRequest,
     unknown
   >;
-  handleActionEditTask: (id: number) => void;
+  handleActionEditTask: (id: number, type?: string) => void
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   pinItemToTop: (itemId: string | number) => void;

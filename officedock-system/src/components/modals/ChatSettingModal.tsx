@@ -231,12 +231,12 @@ const ChatSettingModal = memo(
               .map((member) => {
                 return (
                   <div
-                    className={`flex items-center justify-between py-2 px-4 hover:cursor-pointer hover:bg-[#EBF1F7]`}
+                    className={`flex items-center justify-between gap-2 py-2 px-4 hover:cursor-pointer hover:bg-[#EBF1F7]`}
                     key={member.id}>
                     <div className="flex gap-2 items-center">
                       {renderAvatar(member.id)}
                       <p
-                        className={`truncate font-medium text-[15px] max-w-[300px] text-black`}>
+                        className={`truncate font-medium text-[15px] max-w-[210px] text-black`}>
                         <span className="font-normal text-sm text-black">
                           {member.fullName}
                         </span>

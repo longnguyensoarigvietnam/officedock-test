@@ -359,11 +359,11 @@ const ListCategory = () => {
             {dataCategories && dataCategories.length ? (
               dataCategories.map((element, index) => (
                 <tr key={index} className="text-black">
-                  <td className="border-r-[1px] border-r-[#D2DBE1] truncate">
-                    <div className="flex justify-between items-center gap-3">
+                  <td className="border-r-[1px] border-r-[#D2DBE1] w-[calc((100%_-_680px))] max-w-[calc(100%_-_680px)]">
+                    <div className="flex justify-between items-center gap-3 w-full">
                       {selectedCategoryToUpdate.uuid == element.uuid &&
                       selectedCategoryToUpdate.status ? (
-                        <div ref={categoryNameInputRef} className="!w-[93%]">
+                        <div ref={categoryNameInputRef} className="!w-[90%]">
                           <Input
                             placeholder="カテゴリー名を入力"
                             className={`!border-[1px] !border-[#77858F] ${selectedCategoryToUpdate.showError && '!border-error'} w-full !text-sm !h-[34px]`}
@@ -379,11 +379,11 @@ const ListCategory = () => {
                           />
                         </div>
                       ) : (
-                        <p className="text-left truncate max-w-[500px] text-[16px] font-medium">
+                        <p className="text-justify w-[90%] text-[16px] font-medium">
                           {element.name}
                         </p>
                       )}
-                      <div className="flex gap-3 justify-end">
+                      <div className="flex gap-3 w-[10%] justify-end">
                         {session?.user.permissions &&
                         hasPermissionInArray(
                           session?.user.permissions,
@@ -464,7 +464,7 @@ const ListCategory = () => {
                     </p>
                   </td>
                   <td>
-                    <p className="text-left text-sm font-medium">
+                    <p className="text-justify text-sm font-medium">
                       {element.organizations
                         ?.map((org: { id: number; name: string }) => org.name)
                         .join('/ ')}

@@ -229,7 +229,8 @@ const Header = ({ className }: HeaderProps) => {
   );
 
   useEffect(() => {
-    if (actionType && typeDetail === ItemStartType.TASK && !isTaskPage) {
+    if (actionType && (typeDetail === ItemStartType.TASK ||
+            typeDetail === ItemStartType.FIXED_TASK) && !isTaskPage) {
       if (taskDetailId) {
         getDataDetailTask(parseInt(taskDetailId));
       } else {
@@ -838,6 +839,7 @@ const Header = ({ className }: HeaderProps) => {
       {isShowModalTask && (
         <ActionsTaskModal
           open={isShowModalTask}
+          type={typeDetail || ItemStartType.TASK}
           dataTask={dataTaskEdit}
           columnId={`${StatusValueTask.NOT_STARTED}`}
           action={actionType || ActionTask.CREATE}

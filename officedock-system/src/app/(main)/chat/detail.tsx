@@ -648,7 +648,7 @@ const ChatDetail = ({
       Placeholder.configure({
         placeholder: 'メッセージを入力',
       }),
-      CustomReaction
+      CustomReaction,
     ],
     content: message,
     onUpdate: ({ editor }: { editor: Editor }) => {
@@ -1888,7 +1888,8 @@ const ChatDetail = ({
   useEffect(() => {
     if (
       actionType &&
-      typeDetail === ItemStartType.TASK &&
+      (typeDetail === ItemStartType.TASK ||
+        typeDetail === ItemStartType.FIXED_TASK) &&
       dataTaskEdit != null
     ) {
       if (taskDetailId) {
@@ -2155,7 +2156,7 @@ const ChatDetail = ({
           className="flex flex-col flex-grow w-[calc(100vw_-_600px)] !bg-[#F8FAFC] !h-[100vh]"
           onClick={handleResetChatRoomNotification}>
           <div
-            className="flex justify-between items-center px-4 py-2 !w-full border-b-[2px] text-white"
+            className="flex justify-between items-center px-4 py-2 min-h-[78px] !w-full border-b-[2px] text-white"
             style={{
               background: 'linear-gradient(to right, #0E8DC5, #0D6FBA)',
             }}>
@@ -2634,10 +2635,86 @@ const ChatDetail = ({
               )}
             </>
           ) : (
-            <div className="flex flex-col items-start ml-3">
-              <RowSkeleton className="!h-[50px] w-[700px] mb-2" />
-              <RowSkeleton className="!h-[80px] w-[600px] mb-2" />
-              <RowSkeleton className="!h-[100px] w-[720px] mb-2" />
+            <div className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
+              <div className="flex justify-between items-center">
+                <div className="flex gap-1 items-center">
+                  <Tippy
+                    content={'メンション'}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    offset={[0, 8]}>
+                    <div className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer">
+                      <ImageRound
+                        name="Mention"
+                        src="/icons/mention.svg"
+                        className="w-[16px] h-[16px]"
+                      />
+                    </div>
+                  </Tippy>
+                  <Tippy
+                    content={'ファイルを送信'}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    offset={[0, 8]}>
+                    <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                      <ImageRound
+                        name="Add file"
+                        src="/icons/add-file.svg"
+                        className="w-[16px] h-[16px]"
+                      />
+                    </div>
+                  </Tippy>
+                  <Tippy
+                    content={'リアクション'}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    offset={[0, 8]}>
+                    <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
+                      <ImageRound
+                        name="Smile"
+                        src="/icons/smile.svg"
+                        className="w-[16px] h-[16px]"
+                      />
+                    </div>
+                  </Tippy>
+                  <Tippy
+                    content={'タスクを引用'}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    offset={[0, 8]}>
+                    <div className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer">
+                      <ImageRound
+                        name="Quote checker"
+                        src="/icons/quote-checker.svg"
+                        className="w-[18px] h-[18px]"
+                      />
+                    </div>
+                  </Tippy>
+                  <Tippy
+                    content={'書式設定'}
+                    arrow={false}
+                    delay={1000}
+                    placement="top"
+                    offset={[0, 8]}>
+                    <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
+                      <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
+                    </p>
+                  </Tippy>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Button className="w-[100px]" disabled={true}>
+                    送信
+                  </Button>
+                </div>
+              </div>
+              <div className="mt-5">
+                <EditorContent editor={editor} />
+              </div>
             </div>
           )}
         </div>
@@ -2862,6 +2939,7 @@ const ChatDetail = ({
         <ActionsTaskModal
           open={isShowModalTask}
           columnId={`${StatusValueTask.NOT_STARTED}`}
+          type={typeDetail || ItemStartType.TASK}
           action={ActionTask.CREATE}
           dataTask={dataTaskEdit}
           authenticatedUser={loggedInUser}

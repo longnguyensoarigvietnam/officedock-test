@@ -611,7 +611,11 @@ const ActionsTemplateModal = ({
     <Drawer
       open={open}
       className="font-primary  bg-white h-screen w-[700px] !rounded-tl-xl !p-0"
-      onClose={() => {}}>
+      onClose={() => {
+        resetDataCategoryOptions();
+        reset();
+        onClose();
+      }}>
       <header
         className="px-8 rounded-tl-xl h-[50px] flex items-center justify-between"
         style={{
@@ -650,11 +654,6 @@ const ActionsTemplateModal = ({
             className="mt-1 w-3 h-[14px] hover:cursor-pointer"
             src="/icons/drawer-close-white.svg"
             name="Close icon"
-            onClick={() => {
-              resetDataCategoryOptions();
-              reset();
-              onClose();
-            }}
           />
         </div>
       </header>
@@ -715,9 +714,9 @@ const ActionsTemplateModal = ({
                 name={'organization'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs border-[#77858F] rounded-md !border-none !shadow-none !w-fit !pl-0"
+                    className="h-[34px] !py-1 text-xs max-w-[515px] border-[#77858F] rounded-md !border-none !shadow-none !w-fit !pl-0"
                     classNameTextData="!text-xs !w-fit"
-                    classNameOption="!text-xs !w-fit"
+                    classNameOption="!text-xs !w-fit max-w-[515px]"
                     classNameError="!text-xs !w-fit"
                     placeholder="選択してください"
                     disabled={isCheckActionPermission}
