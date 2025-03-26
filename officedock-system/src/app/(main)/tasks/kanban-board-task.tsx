@@ -1919,12 +1919,7 @@ const KanbanBoardTask = () => {
       categoryIds: newWorkCategories,
       isImportant: data.isImportant,
       todoList: todoListData,
-      taskSchedules:
-        data.statusId?.value != StatusValueTask.MY_ROUTINE
-          ? planList && planList.length
-            ? planList
-            : []
-          : null,
+      taskSchedules: planList && planList.length ? planList : null,
       oldIdStatus: data.oldIdStatus,
       sendToChat: true,
       peopleInChargeIds: peopleInChargeIds,
@@ -1951,19 +1946,19 @@ const KanbanBoardTask = () => {
           : null,
       weekDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.weekDay != null && data.weekDay != undefined
+          ? data.weekDay && data.weekDay.value != ''
             ? Number(data.weekDay.value)
             : null
           : null,
       monthDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.monthDay != null && data.monthDay != undefined
+          ? data.monthDay && data.monthDay.value != ''
             ? Number(data.monthDay.value)
             : null
           : null,
       month:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.month != null && data.month != undefined
+          ? data.month && data.month.value != ''
             ? Number(data.month.value)
             : null
           : null,
@@ -2336,19 +2331,19 @@ const KanbanBoardTask = () => {
           : null,
       weekDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.weekDay != null && data.weekDay != undefined
+          ? data.weekDay && data.weekDay.value != ''
             ? Number(data.weekDay.value)
             : null
           : null,
       monthDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.monthDay != null && data.monthDay != undefined
+          ? data.monthDay && data.monthDay.value != ''
             ? Number(data.monthDay.value)
             : null
           : null,
       month:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.month != null && data.month != undefined
+          ? data.month && data.month.value != ''
             ? Number(data.month.value)
             : null
           : null,
@@ -2416,6 +2411,7 @@ const KanbanBoardTask = () => {
         handleRemoveParam();
         setDataTaskEdit(null);
         setShowEditTaskModal(false);
+        setColumnId(`${StatusValueTask.NOT_STARTED}`);
       },
       onError: (error: AxiosError<any>) => {
         if (error.response?.data.taskSchedules) {
@@ -2429,7 +2425,6 @@ const KanbanBoardTask = () => {
         setTimeout(() => {
           setIsLoading(false);
         }, 500);
-        setColumnId(`${StatusValueTask.NOT_STARTED}`);
       },
     },
   );

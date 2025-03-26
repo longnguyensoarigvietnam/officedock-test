@@ -2103,6 +2103,7 @@ const EventCalendar = () => {
                       numberOfResources={
                         searchParams.get('view') == ViewOptions.WEEK ? 7 : 2
                       }
+                      className={`${searchParams.get('view') == ViewOptions.WEEK && 'mt-[27px]'}`}
                     />
                   </div>
                 )}

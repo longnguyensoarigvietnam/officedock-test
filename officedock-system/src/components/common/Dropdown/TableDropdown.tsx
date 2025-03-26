@@ -150,9 +150,9 @@ const TableDropdown = ({
           <div
             key={option.value}
             className={`relative hover:cursor-pointer select-none hover:bg-[#f8fafc] py-2 pl-0 pr-3 ${
-              option.value == selected?.label
-                ? ' text-blue-600'
-                : 'text-gray-900'
+              option.value == selected?.value
+                ? ' !text-blue-600'
+                : '!text-gray-900'
             }`}
             onClick={(e) => {
               e.stopPropagation();

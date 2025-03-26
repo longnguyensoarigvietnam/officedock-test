@@ -653,11 +653,9 @@ const TimeSchedule = memo(
               });
             setTaskTimeScheduleList((prevEvents) => {
               const taskMap = new Map<string, TaskTimeSchedule>();
-
               prevEvents.forEach((event) => {
                 taskMap.set(event.uuid || '', event);
               });
-
               tasksActualSchedule.forEach((task) => {
                 taskMap.set(task.uuid || '', task);
               });

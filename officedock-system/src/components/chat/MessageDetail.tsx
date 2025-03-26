@@ -453,7 +453,9 @@ export const MessageDetail = ({
               <div className={`ml-3 !w-[96%]`}>
                 <div className="flex justify-between items-center pb-2">
                   <div className="flex gap-2 items-center font-semibold text-[15px]">
-                    <p className="truncate max-w-[500px]">{dataMsgDetail.sender.fullName} </p>
+                    <p className="truncate max-w-[500px]">
+                      {dataMsgDetail.sender.fullName}{' '}
+                    </p>
                     <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                       {dataMsgDetail.sender?.organizations?.name}
                     </p>
@@ -571,6 +573,7 @@ export const MessageDetail = ({
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
                                   <p className="w-fit font-semibold text-black">
+                                    {dataMsgDetail.sender.fullName}{' '}
                                     {EVENT_DELETED}
                                   </p>
                                   <p className="font-semibold mt-2">日時</p>
@@ -1076,7 +1079,9 @@ export const MessageDetail = ({
                     </div>
                   ) : (
                     <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                      <p className="truncate max-w-[500px]">{messageDetail.sender.fullName} </p>
+                      <p className="truncate max-w-[500px]">
+                        {messageDetail.sender.fullName}{' '}
+                      </p>
                       <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
                       </p>
@@ -1217,7 +1222,9 @@ export const MessageDetail = ({
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                    <p className="truncate max-w-[500px]">{messageDetail.sender.fullName} </p>
+                    <p className="truncate max-w-[500px]">
+                      {messageDetail.sender.fullName}{' '}
+                    </p>
                     <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                       {messageDetail.sender?.organizations?.name}
                     </p>
@@ -1355,7 +1362,9 @@ export const MessageDetail = ({
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                    <p className="truncate max-w-[500px]">{messageDetail.sender.fullName}</p>
+                    <p className="truncate max-w-[500px]">
+                      {messageDetail.sender.fullName}
+                    </p>
                     <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                       {messageDetail.sender?.organizations?.name}
                     </p>
