@@ -1,47 +1,79 @@
 steps:
   # Get ENV from SecretManager and write to .env
-  - id: 'Write ENV'
+  - id: "Write ENV"
     name: gcr.io/cloud-builders/gcloud
-    entrypoint: 'bash'
-    secretEnv: ['_ADMIN_ENV']
-    args: ['-c', 'echo "$$_ADMIN_ENV" > officedock-admin/.env']
+    entrypoint: "bash"
+    secretEnv: ["_ADMIN_ENV"]
+    args: ["-c", 'echo "$$_ADMIN_ENV" > officedock-admin/.env']
 
   # Build Docker Image on Cloud Build
-  - id: 'Build Docker Image'
-    name: 'gcr.io/cloud-builders/docker'
-    entrypoint: 'bash'
-    secretEnv: ['_ADMIN_ARTIFACT_REGISTORY_PATH']
+  - id: "Build Docker Image"
+    name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    secretEnv: ["_ADMIN_ARTIFACT_REGISTORY_PATH"]
     args:
       [
-        '-c',
-        'docker build --platform linux/amd64 -t $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA -f Dockerfile.production .',
+        "-c",
+        "docker build --platform linux/amd64 -t $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA -f Dockerfile.production .",
       ]
-    dir: 'officedock-admin'
+    dir: "officedock-admin"
 
   # Push built Docker Image on Artifact Registry
-  - id: 'Push Docker Image'
-    name: 'gcr.io/cloud-builders/docker'
-    entrypoint: 'bash'
-    secretEnv: ['_ADMIN_ARTIFACT_REGISTORY_PATH']
-    args: ['-c', 'docker push $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA']
+  - id: "Push Docker Image"
+    name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    secretEnv: ["_ADMIN_ARTIFACT_REGISTORY_PATH"]
+    args: ["-c", "docker push $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA"]
 
   # Run built Docker Image on Cloud Run
-  - id: 'Run Docker Image'
-    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'bash'
+  - id: "Run Docker Image"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
     secretEnv:
-      ['_ADMIN_ARTIFACT_REGISTORY_PATH', '_ADMIN_REGION', '_ADMIN_SERVICE_NAME']
-    args: [
-        '-c',
-        "gcloud run deploy $$_ADMIN_SERVICE_NAME \
-        --image $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA \
-        --region $$_ADMIN_REGION \
-        --port 3000 \
-        --allow-unauthenticated",
-      ]
+      ["_ADMIN_ARTIFACT_REGISTORY_PATH", "_ADMIN_REGION", "_ADMIN_SERVICE_NAME"]
+    args:
+      - "-c"
+      - |
+        set -eux
+
+        # Replace dot with hyphen. (e.g. v1.0.0 -> v1-0-0)
+        NORMALIZED_TAG_NAME="$(echo "$TAG_NAME" | sed 's/\./-/g')"
+
+        gcloud run deploy $$_ADMIN_SERVICE_NAME \
+          --image $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA \
+          --region $$_ADMIN_REGION \
+          --tag "$$NORMALIZED_TAG_NAME" \
+          --service-account $_CR_SERVICE_ACCOUNT \
+          --port 3000 \
+          --network $_NETWORK \
+          --subnet $_CR_EGRESS_SUBNET \
+          --ingress $_CR_INGRESS  \
+          --vpc-egress $_CR_VPC_EGRESS \
+          --allow-unauthenticated \
+          --cpu=$_CR_CPU \
+          --memory=$_CR_MEMORY \
+          --concurrency $_CR_CONCURRENCY \
+          --min-instances $_CR_MIN_INSTANCES \
+          --max-instances $_CR_MAX_INSTANCES
 
 options:
   logging: CLOUD_LOGGING_ONLY
+
+# Please configure these substitutions in Cloud Build trigger.
+substitutions:
+  # They should match the name of VPC and subnet
+  _NETWORK:
+  _CR_EGRESS_SUBNET:
+  _CR_SERVICE_ACCOUNT:
+
+  # Cloud Run settings
+  _CR_INGRESS: internal-and-cloud-load-balancing # all / internal / internal-and-cloud-load-balancing
+  _CR_VPC_EGRESS: all-traffic # all / all-traffic / private-ranges-only
+  _CR_CPU: "1"
+  _CR_MEMORY: "512Mi"
+  _CR_CONCURRENCY: "50"
+  _CR_MIN_INSTANCES: "0" # "0" means cold start
+  _CR_MAX_INSTANCES: "50"
 
 # Settings SecretManager
 availableSecrets:
