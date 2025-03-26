@@ -103,7 +103,7 @@ const DatePickerCustom = ({
         </label>
       )}
       <div
-        className={`relative flex items-center ${label ? 'mt-1' : ''}`}
+        className={`relative single-date flex items-center ${label ? 'mt-1' : ''}`}
         onClick={() => {
           setIsOpen(true);
         }}>

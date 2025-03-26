@@ -853,6 +853,7 @@ const ActionsTemplateModal = ({
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
+                    labelOptionClass="break-words w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
                       let updatedTagIds = [];

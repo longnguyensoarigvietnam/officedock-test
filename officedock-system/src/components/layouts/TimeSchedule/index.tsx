@@ -549,6 +549,7 @@ const TimeSchedule = memo(
                     isImportant: item.isImportant,
                     deadline: item.deadline,
                     resourceId: ItemScheduleType.PLANS,
+                    statusId: item.status?.id
                   };
                 }),
               );
@@ -2039,6 +2040,7 @@ const TimeSchedule = memo(
       end: string;
       title: string;
       eventList: any[];
+      statusId: number,
       clientX: number;
       clientY: number;
     }) => {
@@ -2054,6 +2056,7 @@ const TimeSchedule = memo(
         deadline: data.deadline,
         start: data.start,
         isRunning: data.isRunning,
+        statusId: data.statusId,
         left: adjustPositionForViewportSchedule({
           top: Number(data.clientY),
           left: Number(data.clientX),
@@ -2124,6 +2127,7 @@ const TimeSchedule = memo(
           start: clickInfo.event.extendedProps.planStartDate,
           end: clickInfo.event.extendedProps.planEndDate,
           eventList: taskTimeScheduleList,
+          statusId: clickInfo.event.extendedProps.statusId,
           clientX: clickInfo.jsEvent.clientX,
           clientY: clickInfo.jsEvent.clientY,
         });

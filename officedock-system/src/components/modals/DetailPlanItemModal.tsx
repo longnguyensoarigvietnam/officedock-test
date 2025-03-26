@@ -9,7 +9,12 @@ import React, {
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import ImageRound from '@components/common/ImageRound';
-import { ActionTask, ItemScheduleType, ItemStartType } from '@constants/enums';
+import {
+  ActionTask,
+  ItemScheduleType,
+  ItemStartType,
+  StatusValueTask,
+} from '@constants/enums';
 import { ERROR_DELETE_TASK_RUNNING } from '@constants/message';
 import { DataDetailTaskType } from '@interfaces/task';
 import {
@@ -78,14 +83,16 @@ const DetailPlanItemModal = ({
   const handleSetParam = ({
     id,
     action,
+    type = ItemStartType.TASK,
   }: {
     id: string | null;
     action: string;
+    type?: string;
   }) => {
     if (id) {
       params.set('task', id);
     }
-    params.set('type', ItemStartType.TASK);
+    params.set('type', type);
     params.set('action', action);
     router.push(`?${params.toString()}`);
   };
@@ -374,6 +381,10 @@ const DetailPlanItemModal = ({
                   handleSetParam({
                     id: `${popoverInfo.taskId}`,
                     action: ActionTask.EDIT,
+                    type:
+                      popoverInfo.statusId == Number(StatusValueTask.MY_ROUTINE)
+                        ? ItemStartType.FIXED_TASK
+                        : ItemStartType.TASK,
                   });
                   onClose();
                 }}

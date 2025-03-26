@@ -507,7 +507,7 @@ const EditUserForm = () => {
               <p>ID</p>
             </div>
           </div>
-          <div className="w-1/2 flex flex-col gap-4">
+          <div className="w-1/2 max-w-[50%] flex flex-col gap-4">
             <Input
               label="名前"
               name="name"
@@ -627,37 +627,45 @@ const EditUserForm = () => {
                 }}
               />
             </div>
-            <div className="grid gap-3 mt-3">
+            <div className="grid gap-3 mt-3 w-full">
               <label className="text-sm ">組織 副</label>
               {fields.map((field, index) => (
-                <div className="flex gap-3" key={field.id}>
-                  <Controller
-                    control={control}
-                    name={`organizations.${index}`}
-                    render={({ field: { value, onChange } }) => {
-                      return (
-                        <Dropdown
-                          isLoading={isLoadingOrganization}
-                          options={unSelectedOrganizationOptions}
-                          placeholder="選択してください"
-                          selectedOption={originalOrganizationOptions.find(
-                            (element) =>
-                              element.value == value?.value &&
-                              value.type == OrganizationType.SUB,
-                          )}
-                          onChange={(option: OptionDropdownType) => {
-                            onChange({ ...option, type: OrganizationType.SUB });
-                            handleSelectedOrganization(index, {
-                              ...option,
-                              type: OrganizationType.SUB,
-                            });
-                          }}
-                        />
-                      );
-                    }}
-                  />
+                <div
+                  className="flex gap-3 relative max-w-[calc(50%_-_109px)]"
+                  key={field.id}>
+                  <div className="flex-1 min-w-0">
+                    <Controller
+                      control={control}
+                      name={`organizations.${index}`}
+                      render={({ field: { value, onChange } }) => {
+                        return (
+                          <Dropdown
+                            classActive="max-w-[100%]"
+                            isLoading={isLoadingOrganization}
+                            options={unSelectedOrganizationOptions}
+                            placeholder="選択してください"
+                            selectedOption={originalOrganizationOptions.find(
+                              (element) =>
+                                element.value == value?.value &&
+                                value.type == OrganizationType.SUB,
+                            )}
+                            onChange={(option: OptionDropdownType) => {
+                              onChange({
+                                ...option,
+                                type: OrganizationType.SUB,
+                              });
+                              handleSelectedOrganization(index, {
+                                ...option,
+                                type: OrganizationType.SUB,
+                              });
+                            }}
+                          />
+                        );
+                      }}
+                    />
+                  </div>
 
-                  <div className="mt-[2.5px]">
+                  <div className="mt-[2.5px]  flex-shrink-0">
                     <Button
                       sz="sm"
                       variant="outline"

@@ -2076,30 +2076,32 @@ const DailyReportBoard = () => {
                     大カテゴリー
                   </div>
 
-                  {dataCategory.map((item, index) => {
-                    return (
-                      <div
-                        key={index}
-                        className="flex items-start justify-start gap-5 text-base font-medium">
-                        <div className="flex items-start justify-center gap-1  ">
-                          <div
-                            style={{
-                              backgroundColor: item.color,
-                            }}
-                            className={`w-3 h-3 mt-[7px] `}></div>
-                          <span className="w-[200px] break-all">
-                            {item.categoryName}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-5">
-                          <div className="ml-[30px] w-[100px] flex items-start">
-                            {convertToJapaneseTime(item.duration)}
+                  {dataCategory
+                    .filter((item) => item.percent > 0)
+                    .map((item, index) => {
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-start justify-start gap-5 text-base font-medium">
+                          <div className="flex items-start justify-center gap-1  ">
+                            <div
+                              style={{
+                                backgroundColor: item.color,
+                              }}
+                              className={`w-3 h-3 mt-[7px] `}></div>
+                            <span className="w-[200px] break-all">
+                              {item.categoryName}
+                            </span>
                           </div>
-                          <div>{item.percent}%</div>
+                          <div className="flex items-center gap-5">
+                            <div className="ml-[30px] w-[100px] flex items-start">
+                              {convertToJapaneseTime(item.duration)}
+                            </div>
+                            <div>{item.percent}%</div>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </section>
               </div>
             </div>

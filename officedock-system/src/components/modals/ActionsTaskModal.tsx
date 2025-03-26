@@ -460,10 +460,7 @@ const ActionsTaskModal = ({
             label: `${dataTask.repeatInterval}`,
             value: dataTask.repeatInterval,
           }
-        : {
-            label: '',
-            value: '',
-          };
+        : undefined;
 
       value.repeatType = dataTask.repeatType
         ? {
@@ -473,10 +470,7 @@ const ActionsTaskModal = ({
               )?.label || '',
             value: dataTask.repeatType,
           }
-        : {
-            label: '',
-            value: '',
-          };
+        : undefined;
 
       value.repeatStartTime = dataTask.planStartDate
         ? convertToTimeString(dataTask.planStartDate)
@@ -490,20 +484,14 @@ const ActionsTaskModal = ({
             label: `${dataTask.month}`,
             value: dataTask.month,
           }
-        : {
-            label: '',
-            value: '',
-          };
+        : undefined;
 
       value.monthDay = dataTask.monthDay
         ? {
             label: `${dataTask.monthDay}`,
             value: dataTask.monthDay,
           }
-        : {
-            label: '',
-            value: '',
-          };
+        : undefined;
 
       value.weekDay =
         dataTask.weekDay != undefined && dataTask.weekDay != null
@@ -511,10 +499,7 @@ const ActionsTaskModal = ({
               label: `${dataTask.weekDay}`,
               value: dataTask.weekDay,
             }
-          : {
-              label: '',
-              value: '',
-            };
+          : undefined;
 
       if (dataTask.tags) {
         value.tagIds = dataTask.tags.map((tag) => {
@@ -1375,7 +1360,7 @@ const ActionsTaskModal = ({
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
-                    labelOptionClass="max-w-[400px] !truncate"
+                    labelOptionClass="break-words w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
                       let updatedTagIds = [];
@@ -2142,9 +2127,6 @@ const ActionsTaskModal = ({
                       <Controller
                         control={control}
                         name={'repeatType'}
-                        rules={{
-                          required: true,
-                        }}
                         render={({ field: { onChange } }) => {
                           return (
                             <Dropdown
@@ -2166,6 +2148,12 @@ const ActionsTaskModal = ({
                                 setValue('weekDay', undefined);
                                 setValue('monthDay', undefined);
                                 setValue('month', undefined);
+                                setValue('plans', [{
+                                  planStartDate: null,
+                                  planEndTime: '',
+                                  planEndDate: null,
+                                  planStartTime: '',
+                                }])
                               }}
                             />
                           );
@@ -2967,8 +2955,7 @@ const ActionsTaskModal = ({
                             },
                             validate: (value) => {
                               if (
-                                watch('repeatType') &&
-                                !watch('repeatType')?.value
+                                !watch('repeatType')
                               )
                                 return true;
                               return (
