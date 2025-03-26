@@ -56,7 +56,10 @@ const PercentageTeamTags = ({
     tagsOptions,
     selectedTags,
     selectedSmall,
-    isSkeletonTagTeam,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    isLoadingSmall,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
 
@@ -418,7 +421,7 @@ const PercentageTeamTags = ({
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
                     <div className="min-h-[220px] flex justify-center">
-                      {isSkeletonTagTeam ? (
+                      {isLoadingOrganization ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
                       ) : dataChartLarge.data.length > 0 ? (
                         <PieChart
@@ -471,7 +474,7 @@ const PercentageTeamTags = ({
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
                     <div className="flex justify-center">
-                      {isSkeletonTagTeam ? (
+                      {isLoadingLarge ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
                       ) : dataChartMedium.data.length > 0 ? (
                         <PieChart
@@ -524,7 +527,7 @@ const PercentageTeamTags = ({
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
                     <div className="flex justify-center">
-                      {isSkeletonTagTeam ? (
+                      {isLoadingMedium ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
                       ) : dataChartSmall.data.length > 0 ? (
                         <PieChart
@@ -576,7 +579,7 @@ const PercentageTeamTags = ({
                         formatTimeToJapanese(totalDurationCategory)}
                     </p>
                     <div className="flex justify-center">
-                      {isSkeletonTagTeam ? (
+                      {isLoadingSmall ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
                       ) : dataChartCategory.data.length > 0 ? (
                         <PieChart

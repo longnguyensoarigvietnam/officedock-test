@@ -32,12 +32,18 @@ const useStatisticCategoriesTeam = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-  const { setIsSkeletonCategoryTeam } = useContext(StatisticTeamStateContext);
+  const {
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+  } = useContext(StatisticTeamStateContext);
 
   // Handle call API get statistic category list team
   const getStatisticCategoryListTeam = async () => {
     if (!filter?.organizationIds) return [];
-    setIsSkeletonCategoryTeam(true);
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(parseInt(filter?.organizationIds))}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
@@ -73,7 +79,12 @@ const useStatisticCategoriesTeam = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsSkeletonCategoryTeam(false);
+      setIsLoadingLarge(false);
+      setIsLoadingMedium(false);
+      setIsLoadingOrganization(false);
+      setIsLoadingLargeCompare(false);
+      setIsLoadingMediumCompare(false);
+      setIsLoadingOrganizationCompare(false);
     },
   });
 

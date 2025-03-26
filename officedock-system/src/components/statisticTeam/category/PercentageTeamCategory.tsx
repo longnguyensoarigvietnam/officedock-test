@@ -24,6 +24,7 @@ type Props = {
   endDate: Date | null;
   statisticTeamCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
+  handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
@@ -35,6 +36,7 @@ const PercentageCategoryTeam = ({
   handleSelectMedium,
   handleSelectOrganization,
   removeTag,
+  handleSelectOrganizationCustom,
 }: Props) => {
   const {
     largeOptions,
@@ -48,7 +50,9 @@ const PercentageCategoryTeam = ({
     totalDurationSmall,
     selectedTags,
     tagsOptions,
-    isSkeletonCategoryTeam,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
     setSelectedTags,
   } = useContext(StatisticTeamStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -353,7 +357,7 @@ const PercentageCategoryTeam = ({
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
                     <div className="min-h-[280px] flex justify-center">
-                      {isSkeletonCategoryTeam ? (
+                      {isLoadingOrganization ? (
                         <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
                       ) : dataChartLarge.data.length > 0 ? (
                         <PieChart
@@ -371,7 +375,9 @@ const PercentageCategoryTeam = ({
                           handleClickChart={(data: OptionDropdownType) => {
                             if (data.value && data.value !== '未設定') {
                               selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
+                                handleSelectOrganizationCustom(
+                                  selectedOrganization,
+                                );
                               handleSelectLarge(data);
                             }
                           }}
@@ -413,7 +419,7 @@ const PercentageCategoryTeam = ({
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
                     <div className="flex justify-center">
-                      {isSkeletonCategoryTeam ? (
+                      {isLoadingLarge ? (
                         <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
                       ) : dataChartMedium.data.length > 0 ? (
                         <PieChart
@@ -470,7 +476,7 @@ const PercentageCategoryTeam = ({
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
                     <div className="flex justify-center">
-                      {isSkeletonCategoryTeam ? (
+                      {isLoadingMedium ? (
                         <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
                       ) : dataChartSmall.data.length > 0 ? (
                         <PieChart

@@ -3,7 +3,6 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
-import StatisticCompareLoading from '@components/common/SkeletonLoading/StatisticCompareLoading';
 
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -24,6 +23,7 @@ type Props = {
   startDateCompare: Date;
   endDateCompare: Date | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;
+  handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
@@ -41,6 +41,7 @@ const PercentageTeamCategoryCompare = ({
   handleSelectMedium,
   handleSelectSmall,
   handleSelectOrganization,
+  handleSelectOrganizationCustom,
   removeTag,
 }: Props) => {
   const {
@@ -59,8 +60,12 @@ const PercentageTeamCategoryCompare = ({
     selectedTags,
     tagsOptions,
     smallOptions,
-    isSkeletonCategoryTeam,
-    isSkeletonCategoryTeamCompare,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    isLoadingLargeCompare,
+    isLoadingMediumCompare,
+    isLoadingOrganizationCompare,
     setSelectedTags,
   } = useContext(StatisticTeamStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -320,35 +325,34 @@ const PercentageTeamCategoryCompare = ({
                       onChange={(data) => handleSelectOrganization(data)}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {isSkeletonCategoryTeam ||
-                      isSkeletonCategoryTeamCompare ? (
-                        <StatisticCompareLoading />
-                      ) : (
-                        <PercentageBarCompareTeam
-                          data={dataChartLarge}
-                          startDate={startDate}
-                          endDate={endDate}
-                          totalDuration={totalDurationLarge}
-                          totalDurationCompare={totalDurationLargeCompare}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartLargeCompare}
-                          handleClickTooltip={() => {}}
-                          handleClickChart={(data: number) => {
-                            if (data && String(data) !== '未設定') {
-                              const select = largeOptions.find(
-                                (item) => item.value === data,
-                              );
+                      <PercentageBarCompareTeam
+                        data={dataChartLarge}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingOrganization}
+                        isLoadingCompare={isLoadingOrganizationCompare}
+                        totalDuration={totalDurationLarge}
+                        totalDurationCompare={totalDurationLargeCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartLargeCompare}
+                        handleClickTooltip={() => {}}
+                        handleClickChart={(data: number) => {
+                          if (data && String(data) !== '未設定') {
+                            const select = largeOptions.find(
+                              (item) => item.value === data,
+                            );
 
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
-                              if (select) {
-                                handleSelectLarge(select);
-                              }
+                            selectedOrganization &&
+                              handleSelectOrganizationCustom(
+                                selectedOrganization,
+                              );
+                            if (select) {
+                              handleSelectLarge(select);
                             }
-                          }}
-                        />
-                      )}
+                          }
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -377,33 +381,30 @@ const PercentageTeamCategoryCompare = ({
                       disabled={!selectedOrganization}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {isSkeletonCategoryTeam ||
-                      isSkeletonCategoryTeamCompare ? (
-                        <StatisticCompareLoading />
-                      ) : (
-                        <PercentageBarCompareTeam
-                          data={dataChartMedium}
-                          startDate={startDate}
-                          endDate={endDate}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartMediumCompare}
-                          totalDuration={totalDurationMedium}
-                          totalDurationCompare={totalDurationMediumCompare}
-                          handleClickTooltip={() => {}}
-                          handleClickChart={(data: number) => {
-                            if (data && String(data) !== '未設定') {
-                              const select = mediumOptions.find(
-                                (item) => item.value === data,
-                              );
+                      <PercentageBarCompareTeam
+                        data={dataChartMedium}
+                        startDate={startDate}
+                        endDate={endDate}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        isLoading={isLoadingLarge}
+                        isLoadingCompare={isLoadingLargeCompare}
+                        dataCompare={dataChartMediumCompare}
+                        totalDuration={totalDurationMedium}
+                        totalDurationCompare={totalDurationMediumCompare}
+                        handleClickTooltip={() => {}}
+                        handleClickChart={(data: number) => {
+                          if (data && String(data) !== '未設定') {
+                            const select = mediumOptions.find(
+                              (item) => item.value === data,
+                            );
 
-                              if (select) {
-                                handleSelectMedium(select);
-                              }
+                            if (select) {
+                              handleSelectMedium(select);
                             }
-                          }}
-                        />
-                      )}
+                          }
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -432,34 +433,31 @@ const PercentageTeamCategoryCompare = ({
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {isSkeletonCategoryTeam ||
-                      isSkeletonCategoryTeamCompare ? (
-                        <StatisticCompareLoading />
-                      ) : (
-                        <PercentageBarCompareTeam
-                          isLast
-                          data={dataChartSmall}
-                          startDate={startDate}
-                          endDate={endDate}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartSmallCompare}
-                          totalDuration={totalDurationSmall}
-                          totalDurationCompare={totalDurationSmallCompare}
-                          handleClickTooltip={() => {}}
-                          handleClickChart={(data: number) => {
-                            if (data && String(data) !== '未設定') {
-                              const select = smallOptions.find(
-                                (item) => item.value === data,
-                              );
+                      <PercentageBarCompareTeam
+                        isLast
+                        data={dataChartSmall}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingMedium}
+                        isLoadingCompare={isLoadingMediumCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartSmallCompare}
+                        totalDuration={totalDurationSmall}
+                        totalDurationCompare={totalDurationSmallCompare}
+                        handleClickTooltip={() => {}}
+                        handleClickChart={(data: number) => {
+                          if (data && String(data) !== '未設定') {
+                            const select = smallOptions.find(
+                              (item) => item.value === data,
+                            );
 
-                              if (select) {
-                                handleSelectSmall(select);
-                              }
+                            if (select) {
+                              handleSelectSmall(select);
                             }
-                          }}
-                        />
-                      )}
+                          }
+                        }}
+                      />
                     </div>
                   </div>
                 </div>

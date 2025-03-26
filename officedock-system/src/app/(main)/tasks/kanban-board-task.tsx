@@ -2359,6 +2359,7 @@ const KanbanBoardTask = () => {
             ? addTimeToDate(new Date(), data.repeatEndTime)
             : null
           : null,
+      isTeamTask: false,
     });
   };
 

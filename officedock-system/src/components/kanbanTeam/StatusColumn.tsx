@@ -1,19 +1,47 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
+import Image from 'next/image';
 
 import ItemTeam from './ItemTeam';
 import ImageRound from '@components/common/ImageRound';
 
-import { StatusTask } from '@constants/enums';
-import { TransformedStatuses, TransformedUser } from '@interfaces/task';
+import { StatusTask, StatusValueTask } from '@constants/enums';
+import {
+  KanbanDataResponse,
+  Task,
+  TransformedStatuses,
+  TransformedUser,
+} from '@interfaces/task';
+import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
+import { findStatusTeamByUser } from '@utils';
+import api from '@base/api';
+import { apiRouters } from '@constants/routers';
+import { useMutation } from 'react-query';
+import Spinner from '@components/common/Spinner';
 
 type Props = {
   user: TransformedUser;
   status: keyof TransformedStatuses;
+  handleSetParamEditTask: (id: number) => void;
+  handleSetParamCopyTask: (id: number) => void;
+  pinItemToTop: (itemId: string | number) => void;
 };
 
-const StatusColumn = ({ user, status }: Props) => {
+const StatusColumn = ({
+  user,
+  status,
+  pinItemToTop,
+  handleSetParamEditTask,
+  handleSetParamCopyTask,
+}: Props) => {
+  // Context
+  const { dataTotalStatus, setListDataKanbanTeam, setDataTotalStatus } =
+    useContext(TaskTeamStateContext);
+
+  // State
   const [isExtendData, setIsExtendData] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   function getStatusColor(statusKey: string): string {
     const status = StatusTask[statusKey as keyof typeof StatusTask];
 
@@ -32,6 +60,123 @@ const StatusColumn = ({ user, status }: Props) => {
         return '';
     }
   }
+
+  const statusValue = StatusValueTask[status as keyof typeof StatusValueTask];
+
+  // Update total with has next
+  const updateUserStatusHasNext = ({
+    userId,
+    statusKey,
+    hasNext,
+  }: {
+    userId: string;
+    statusKey: string;
+    hasNext: boolean;
+  }) => {
+    setDataTotalStatus((prevState) =>
+      prevState.map((user) =>
+        user.id === userId
+          ? {
+              ...user,
+              statuses: user.statuses.map((status) =>
+                status.name === StatusTask[statusKey as keyof typeof StatusTask]
+                  ? { ...status, hasNext: hasNext }
+                  : status,
+              ),
+            }
+          : user,
+      ),
+    );
+  };
+
+  // Update more data into list
+  const updateKanbanData = ({
+    newTasks,
+    userId,
+    statusValue,
+  }: {
+    newTasks: Task[];
+    userId: string;
+    statusValue: StatusValueTask;
+  }) => {
+    setListDataKanbanTeam((prevState) =>
+      prevState.map((user) =>
+        user.id === userId
+          ? {
+              ...user,
+              statuses: {
+                ...user.statuses,
+                [StatusValueTask[statusValue]]: [
+                  ...user.statuses[
+                    StatusValueTask[statusValue] as keyof TransformedStatuses
+                  ],
+                  ...newTasks,
+                ],
+              },
+            }
+          : user,
+      ),
+    );
+  };
+
+  // API  get more task team
+  const handleGetDataTaskMore = async () => {
+    setIsLoadingMore(true);
+    const apiUrl = `${apiRouters.TASK_BOARD_LIST}?status_id=${statusValue}&user_id=${user.id.replace('user_', '')}`;
+
+    // if (pinAtLast) {
+    //   apiUrl += `&pin_at=${pinAtLast}`;
+    // }
+    // if (lastIndex) {
+    //   apiUrl += `&index=${lastIndex}`;
+    // }
+    // if (searchValue) {
+    //   apiUrl += `&search=${searchValue}${idTasks ? `&ids=${idTasks}` : ''}`;
+    // }
+    // if (orderingOptions?.organization_ids?.length) {
+    //   apiUrl += `&organization_ids=${orderingOptions.organization_ids.map((item) => item.value).join(',')}`;
+    // }
+
+    // if (orderingOptions?.category_ids?.length) {
+    //   apiUrl += `&category_ids=${orderingOptions.category_ids.map((item) => item.value).join(',')}`;
+    // }
+
+    // if (orderingOptions?.tag_ids?.length) {
+    //   apiUrl += `&tag_ids=${orderingOptions.tag_ids.map((item) => item.value).join(',')}`;
+    // }
+
+    return await api.get<KanbanDataResponse>(apiUrl);
+  };
+  // Handle call API get more team
+  const { mutate: getDataListTaskMore } = useMutation(
+    'getDataListTaskMore',
+    handleGetDataTaskMore,
+    {
+      onSuccess: ({ data }) => {
+        updateKanbanData({
+          newTasks: data.results,
+          userId: user.id,
+          statusValue: statusValue,
+        });
+        updateUserStatusHasNext({
+          userId: user.id,
+          hasNext: data.hasNext,
+          statusKey: status,
+        });
+      },
+      onError: () => {},
+      onSettled: () => {
+        setIsLoadingMore(false);
+      },
+    },
+  );
+
+  const result = findStatusTeamByUser(
+    dataTotalStatus,
+    user.id,
+    status as keyof typeof StatusTask,
+  );
+
   return (
     <Droppable droppableId={`${user.id}-${status}`}>
       {(provided) => (
@@ -47,7 +192,9 @@ const StatusColumn = ({ user, status }: Props) => {
               <span>
                 {status && StatusTask[status as keyof typeof StatusTask]}
               </span>
-              <span className="font-medium text-sm text-[#77858F]">12</span>
+              <span className="font-medium text-sm text-[#77858F]">
+                {result && result.total}
+              </span>
             </div>
             <div onClick={() => setIsExtendData(!isExtendData)}>
               <ImageRound
@@ -83,17 +230,55 @@ const StatusColumn = ({ user, status }: Props) => {
                         id={String(task.id)}
                         index={index}
                         content={task}
-                        handleActionEditTask={() => {}}
-                        handleConfirmCopyTask={() => {}}
+                        handleActionEditTask={handleSetParamEditTask}
+                        handleConfirmCopyTask={handleSetParamCopyTask}
                         handleUpdateItemInline={() => {}}
                         editTask={() => {}}
-                        handlePinItem={() => {}}
+                        handlePinItem={pinItemToTop}
+                        handleUnPinItem={(id: string) => {
+                          if (
+                            user.statuses[status] &&
+                            user.statuses[status].length > 4 &&
+                            result &&
+                            result.hasNext &&
+                            user.statuses[status][
+                              user.statuses[status].length - 1
+                            ].pinAt
+                          ) {
+                            getDataListTaskMore();
+                            pinItemToTop(id);
+                          } else {
+                            pinItemToTop(id);
+                          }
+                        }}
                       />
                     </div>
                   )}
                 </Draggable>
               ))}
               {provided.placeholder}
+              {isLoadingMore ? (
+                <div className="h-7">
+                  <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
+                </div>
+              ) : (
+                result &&
+                result.hasNext && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => getDataListTaskMore()}
+                      className="text-center font-medium flex items-center gap-[6px] w-fit justify-center text-xs text-[#77858F]">
+                      さらに表示
+                      <Image
+                        alt="Arrow dropdown icon"
+                        src={'/icons/arrow-down.svg'}
+                        width={16}
+                        height={16}
+                      />
+                    </button>
+                  </div>
+                )
+              )}
             </div>
           )}
         </div>

@@ -33,13 +33,12 @@ const useStatisticCategories = ({
   const { data: session } = useSession();
   const token = session?.accessToken;
 
-  const { setIsSkeletonCategory } = useContext(StatisticStateContext);
+  const { setIsLoadingLarge, setIsLoadingMedium, setIsLoadingOrganization } =
+    useContext(StatisticStateContext);
 
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
     if (!filter?.organizationIds) return [];
-    setIsSkeletonCategory(true);
-
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
@@ -79,7 +78,9 @@ const useStatisticCategories = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsSkeletonCategory(false);
+      setIsLoadingLarge(false);
+      setIsLoadingMedium(false);
+      setIsLoadingOrganization(false);
     },
   });
 

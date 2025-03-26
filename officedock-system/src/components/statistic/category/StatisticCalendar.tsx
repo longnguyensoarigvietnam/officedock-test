@@ -26,11 +26,16 @@ function StatisticCalendar() {
     setEndDate,
     setStartDateCompare,
     setEndDateCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
   } = useContext(StatisticStateContext);
   const modalRef = useRef<HTMLDivElement | null>(null);
   const buttonPrev = useRef<HTMLDivElement | null>(null);
   const buttonNext = useRef<HTMLDivElement | null>(null);
-
 
   const [isTypeTime, setIsTypeTime] = useState<TimeOptionsType>(
     TimeOptionsType.MONTH,
@@ -208,6 +213,11 @@ function StatisticCalendar() {
 
   // Save data time
   const handleSaveCalendar = () => {
+    if (dataEndDate !== endDate || dataStartDate !== startDate) {
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingOrganization(true);
+    }
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setIsCheckCompare(isDataCheckCompare);
@@ -224,6 +234,20 @@ function StatisticCalendar() {
 
   // Save data time compare
   const handleSaveCalendarCompare = () => {
+    if (dataEndDate !== endDate || dataStartDate !== startDate) {
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingOrganization(true);
+    }
+    if (
+      dataEndDateCompare !== endDateCompare ||
+      dataStartDateCompare !== startDateCompare
+    ) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
+
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setStartDateCompare(dataStartDateCompare);

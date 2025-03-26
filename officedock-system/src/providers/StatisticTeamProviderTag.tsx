@@ -73,14 +73,30 @@ interface ContextValue {
       }[]
     >
   >;
-  isSkeletonTagTeam: boolean;
-  setIsSkeletonTagTeam: Dispatch<SetStateAction<boolean>>;
-  isSkeletonTagTeamCompare: boolean;
-  setIsSkeletonTagTeamCompare: Dispatch<SetStateAction<boolean>>;
   isSkeletonTagTeamTask: boolean;
   setIsSkeletonTagTeamTask: Dispatch<SetStateAction<boolean>>;
   isSkeletonTagTeamTaskCompare: boolean;
   setIsSkeletonTagTeamTaskCompare: Dispatch<SetStateAction<boolean>>;
+
+  isLoadingLarge: boolean;
+  isLoadingMedium: boolean;
+  isLoadingSmall: boolean;
+
+  isLoadingOrganization: boolean;
+  setIsLoadingLarge: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMedium: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingSmall: Dispatch<SetStateAction<boolean>>;
+
+  setIsLoadingOrganization: Dispatch<SetStateAction<boolean>>;
+
+  isLoadingLargeCompare: boolean;
+  isLoadingMediumCompare: boolean;
+  isLoadingSmallCompare: boolean;
+  isLoadingOrganizationCompare: boolean;
+  setIsLoadingLargeCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMediumCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingSmallCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingOrganizationCompare: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -135,14 +151,28 @@ const defaultValue: ContextValue = {
   selectedTags: [],
   setSelectedTags: () => {},
   setTagsOptions: () => {},
-  isSkeletonTagTeam: false,
-  setIsSkeletonTagTeam: () => {},
-  isSkeletonTagTeamCompare: false,
-  setIsSkeletonTagTeamCompare: () => {},
   isSkeletonTagTeamTask: false,
   setIsSkeletonTagTeamTask: () => {},
   isSkeletonTagTeamTaskCompare: false,
   setIsSkeletonTagTeamTaskCompare: () => {},
+
+  isLoadingLarge: false,
+  isLoadingMedium: false,
+  isLoadingSmall: false,
+  isLoadingOrganization: false,
+  setIsLoadingLarge: () => {},
+  setIsLoadingMedium: () => {},
+  setIsLoadingSmall: () => {},
+  setIsLoadingOrganization: () => {},
+
+  isLoadingLargeCompare: false,
+  isLoadingMediumCompare: false,
+  isLoadingSmallCompare: false,
+  isLoadingOrganizationCompare: false,
+  setIsLoadingLargeCompare: () => {},
+  setIsLoadingMediumCompare: () => {},
+  setIsLoadingSmallCompare: () => {},
+  setIsLoadingOrganizationCompare: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -154,9 +184,17 @@ export const StatisticTeamTagsStateProvider = ({
   children: ReactNode;
 }) => {
   // Loading
-  const [isSkeletonTagTeam, setIsSkeletonTagTeam] = useState(false);
-  const [isSkeletonTagTeamCompare, setIsSkeletonTagTeamCompare] =
+  const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
+  const [isLoadingLarge, setIsLoadingLarge] = useState(false);
+  const [isLoadingMedium, setIsLoadingMedium] = useState(false);
+  const [isLoadingSmall, setIsLoadingSmall] = useState(false);
+
+  const [isLoadingOrganizationCompare, setIsLoadingOrganizationCompare] =
     useState(false);
+  const [isLoadingLargeCompare, setIsLoadingLargeCompare] = useState(false);
+  const [isLoadingMediumCompare, setIsLoadingMediumCompare] = useState(false);
+  const [isLoadingSmallCompare, setIsLoadingSmallCompare] = useState(false);
+
   const [isSkeletonTagTeamTask, setIsSkeletonTagTeamTask] = useState(false);
   const [isSkeletonTagTeamTaskCompare, setIsSkeletonTagTeamTaskCompare] =
     useState(false);
@@ -284,14 +322,28 @@ export const StatisticTeamTagsStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
-    isSkeletonTagTeam,
-    setIsSkeletonTagTeam,
-    isSkeletonTagTeamCompare,
-    setIsSkeletonTagTeamCompare,
     isSkeletonTagTeamTask,
     setIsSkeletonTagTeamTask,
     isSkeletonTagTeamTaskCompare,
     setIsSkeletonTagTeamTaskCompare,
+
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingSmall,
+    isLoadingOrganization,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingOrganization,
+
+    isLoadingLargeCompare,
+    isLoadingMediumCompare,
+    isLoadingSmallCompare,
+    isLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingSmallCompare,
+    setIsLoadingOrganizationCompare,
   };
 
   return (

@@ -55,7 +55,10 @@ const PercentageTags = ({
     totalDurationCategory,
     tagsOptions,
     selectedTags,
-    isSkeletonTag,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    isLoadingSmall,
     setSelectedTags,
   } = useContext(StatisticTagStateContext);
 
@@ -412,7 +415,7 @@ const PercentageTags = ({
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
                     <div className="min-h-[220px] flex justify-center">
-                      {isSkeletonTag ? (
+                      {isLoadingOrganization ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
                       ) : dataChartLarge.data.length > 0 ? (
                         <PieChartCustom
@@ -464,7 +467,7 @@ const PercentageTags = ({
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
                     <div className="flex justify-center">
-                      {isSkeletonTag ? (
+                      {isLoadingLarge ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
                       ) : dataChartMedium.data.length > 0 ? (
                         <PieChartCustom
@@ -516,7 +519,7 @@ const PercentageTags = ({
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
                     <div className="flex justify-center">
-                      {isSkeletonTag ? (
+                      {isLoadingMedium ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
                       ) : dataChartSmall.data.length > 0 ? (
                         <PieChartCustom
@@ -567,7 +570,7 @@ const PercentageTags = ({
                         formatTimeToJapanese(totalDurationCategory)}
                     </p>
                     <div className="flex justify-center">
-                      {isSkeletonTag ? (
+                      {isLoadingSmall ? (
                         <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
                       ) : dataChartCategory.data.length > 0 ? (
                         <PieChartCustom

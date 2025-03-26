@@ -36,6 +36,8 @@ export interface TaskRequest {
   sendToChat?: boolean;
   chatRoomCode?: string;
   oldIdStatus?: string;
+  oldNameStatus?: string;
+  oldIdPeople?: string;
   action?: string;
   copyTaskId?: string | null;
   organizationId?: number | null;
@@ -49,6 +51,7 @@ export interface TaskRequest {
   month?: number | null;
   planStartDate?: string | null;
   planEndDate?: string | null;
+  isTeamTask?: boolean;
 }
 export interface TaskFormData {
   id?: string;
@@ -70,7 +73,7 @@ export interface TaskFormData {
   actualEndTime?: string | null;
   description?: string;
   tagIds?: OptionDropdownType[] | null;
-  peopleInChargeIds?: OptionDropdownType[];
+  peopleInChargeIds?: OptionDropdownType[]; // Fake focus data
   isStart?: boolean;
   isMyTask?: boolean;
   isAnotherTaskStarted?: boolean;
@@ -86,6 +89,8 @@ export interface TaskFormData {
   todoList?: TodoItem[];
   plans: PlanItem[] | null;
   oldIdStatus?: string;
+  oldNameStatus?: string;
+  oldIdPeople?: string;
   organization?: OptionDropdownType | null;
   repeatType?: OptionDropdownType;
   repeatInterval?: OptionDropdownType;
@@ -94,6 +99,7 @@ export interface TaskFormData {
   month?: OptionDropdownType;
   repeatStartTime?: string | null;
   repeatEndTime?: string | null;
+  peopleInChart?: OptionDropdownType;
 }
 
 export interface StatusTask {
@@ -392,4 +398,17 @@ export interface TransformedUser {
   id: string;
   name: string;
   statuses: TransformedStatuses;
+}
+
+// Transformer total status
+export interface StatusSummary {
+  name: string;
+  total: number;
+  hasNext: boolean;
+}
+
+export interface UserTotalStatus {
+  id: string;
+  fullName: string;
+  statuses: StatusSummary[];
 }

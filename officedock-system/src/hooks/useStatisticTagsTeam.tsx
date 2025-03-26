@@ -33,12 +33,20 @@ const useStatisticTagsTeam = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-  const { setIsSkeletonTagTeam } = useContext(StatisticTeamTagsStateContext);
+  const {
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+    setIsLoadingSmall,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingSmallCompare,
+  } = useContext(StatisticTeamTagsStateContext);
 
   // Handle call API get statistic tags list team
   const getStatisticTagsListTeam = async () => {
     if (!filter?.organizationIds) return [];
-    setIsSkeletonTagTeam(true);
     const apiUrl = `${apiRouters.STATISTICS_TAGS_TEAM(parseInt(filter?.organizationIds))}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
@@ -78,7 +86,14 @@ const useStatisticTagsTeam = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsSkeletonTagTeam(false);
+      setIsLoadingLarge(false);
+      setIsLoadingMedium(false);
+      setIsLoadingOrganization(false);
+      setIsLoadingSmall(false);
+      setIsLoadingLargeCompare(false);
+      setIsLoadingMediumCompare(false);
+      setIsLoadingOrganizationCompare(false);
+      setIsLoadingSmallCompare(false);
     },
   });
 

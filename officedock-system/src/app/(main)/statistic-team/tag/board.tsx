@@ -54,6 +54,14 @@ const StatisticTeamTagBoard = () => {
     setListMemberTeam,
     setTotalDurationCategory,
     setTotalDurationCategoryCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingOrganization,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingSmallCompare,
   } = useContext(StatisticTeamTagsStateContext);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -155,6 +163,10 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingOrganizationCompare(true);
+    }
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -175,6 +187,10 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    setIsLoadingLarge(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+    }
     setSelectedLarge(data);
     setSelectedMedium(null);
     setSelectedSmall(null);
@@ -198,6 +214,10 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    setIsLoadingMedium(true);
+    if (isCheckCompare) {
+      setIsLoadingMediumCompare(true);
+    }
     setSelectedMedium(data);
     setSelectedSmall(null);
 
@@ -225,6 +245,10 @@ const StatisticTeamTagBoard = () => {
   // Handle choose small
 
   const handleSelectSmall = (data: OptionDropdownType) => {
+    setIsLoadingSmall(true);
+    if (isCheckCompare) {
+      setIsLoadingSmallCompare(true);
+    }
     setSelectedSmall(data);
   };
   const getParticipantAvatars = (

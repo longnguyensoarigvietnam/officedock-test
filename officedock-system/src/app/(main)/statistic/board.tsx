@@ -53,7 +53,12 @@ const StatisticBoard = () => {
     setTotalDurationSmallCompare,
     setTotalDurationTask,
     setTotalDurationTaskCompare,
-
+    setIsLoadingOrganization,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
     setTagsOptions,
   } = useContext(StatisticStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
@@ -168,6 +173,31 @@ const StatisticBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingOrganizationCompare(true);
+    }
+    setSelectedOrganization(data);
+    setSelectedLarge(null);
+    setSelectedMedium(null);
+    setSelectedSmall(null);
+
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
+    if (organization) {
+      const largeCategories = organization.statisticCategories.map((stat) => ({
+        value: stat.LARGE.id,
+        label: stat.LARGE.name,
+      }));
+      setLargeOptions(largeCategories);
+    } else {
+      setLargeOptions([]);
+    }
+    setMediumOptions([]);
+  };
+  // Handle Choose organization with setup options medium
+  const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -190,7 +220,12 @@ const StatisticBoard = () => {
 
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    setIsLoadingLarge(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+    }
     setSelectedLarge(data);
+
     setSelectedMedium(null);
     setSelectedSmall(null);
 
@@ -214,6 +249,10 @@ const StatisticBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    setIsLoadingMedium(true);
+    if (isCheckCompare) {
+      setIsLoadingMediumCompare(true);
+    }
     setSelectedMedium(data);
     setSelectedSmall(null);
 
@@ -413,6 +452,7 @@ const StatisticBoard = () => {
           statisticCategoryList={statisticCategoryList}
           statisticCategoryCompareList={statisticCategoryCompareList}
           handleSelectOrganization={handleSelectOrganization}
+          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           handleSelectSmall={handleSelectSmall}
@@ -424,6 +464,7 @@ const StatisticBoard = () => {
           removeTag={removeTag}
           statisticCategoryList={statisticCategoryList}
           handleSelectOrganization={handleSelectOrganization}
+          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
           handleSelectSmall={handleSelectSmall}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}

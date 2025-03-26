@@ -33,12 +33,16 @@ const useStatisticsTags = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-  const { setIsSkeletonTag } = useContext(StatisticTagStateContext);
+  const {
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+    setIsLoadingSmall,
+  } = useContext(StatisticTagStateContext);
 
   // Handle call API get statistic tags list
   const getStatisticTagsList = async () => {
     if (!filter?.organizationIds) return [];
-    setIsSkeletonTag(true);
 
     const apiUrl = `${apiRouters.STATISTICS_TAGS}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -74,6 +78,8 @@ const useStatisticsTags = ({
     queryFn: getStatisticTagsList,
     retry: 0,
     enabled: !!token,
+    staleTime: 0,
+    cacheTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: StatisticsCategories) => {
@@ -83,7 +89,10 @@ const useStatisticsTags = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsSkeletonTag(false);
+      setIsLoadingLarge(false);
+      setIsLoadingMedium(false);
+      setIsLoadingOrganization(false);
+      setIsLoadingSmall(false);
     },
   });
 
