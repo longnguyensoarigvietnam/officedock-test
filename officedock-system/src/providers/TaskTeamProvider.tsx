@@ -1,6 +1,10 @@
 'use client';
 import { OptionDropdownType } from '@interfaces/common';
-import { CreationDataTask } from '@interfaces/task';
+import {
+  CreationDataTask,
+  TransformedUser,
+  UserTotalStatus,
+} from '@interfaces/task';
 import {
   ReactNode,
   createContext,
@@ -37,6 +41,10 @@ interface ContextValue {
   handleZoomOutKanban: () => void;
   isLoadingDataTask: boolean;
   setIsLoadingDataTask: (isLoading: boolean) => void;
+  dataTotalStatus: UserTotalStatus[];
+  setDataTotalStatus: Dispatch<SetStateAction<UserTotalStatus[]>>;
+  listDataKanbanTeam: TransformedUser[];
+  setListDataKanbanTeam: Dispatch<SetStateAction<TransformedUser[]>>;
 }
 
 const defaultValue: ContextValue = {
@@ -49,6 +57,10 @@ const defaultValue: ContextValue = {
     value: 100,
   },
   isLoadingDataTask: false,
+  dataTotalStatus: [],
+  listDataKanbanTeam: [],
+  setListDataKanbanTeam: () => {},
+  setDataTotalStatus: () => {},
   setIsLoadingDataTask: () => {},
   setSelectedOptionZoom: () => {},
   handleZoomInKanban: () => {},
@@ -97,6 +109,15 @@ export const TaskTeamStateProvider = ({
     setColumnWidth((prev) => Math.max(prev - 24.7, minColumnWidth));
   };
 
+  // Total  & hasNext status
+  const [dataTotalStatus, setDataTotalStatus] = useState<UserTotalStatus[]>([]);
+
+  // Team task list
+
+  const [listDataKanbanTeam, setListDataKanbanTeam] = useState<
+    TransformedUser[]
+  >([]);
+
   const contextValue: ContextValue = {
     orderingOptions,
     creationDataTaskData,
@@ -112,6 +133,10 @@ export const TaskTeamStateProvider = ({
     handleZoomOutKanban,
     isLoadingDataTask,
     setIsLoadingDataTask,
+    dataTotalStatus,
+    setDataTotalStatus,
+    listDataKanbanTeam,
+    setListDataKanbanTeam,
   };
 
   return (

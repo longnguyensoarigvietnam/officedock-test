@@ -10,9 +10,16 @@ import {
   PermissionType,
   ScreenAction,
   ScreenName,
+  StatusTask,
 } from '@constants/enums';
 import { formatTime24h } from './date';
-import { ResultTeam, Task, TransformedUser } from '@interfaces/task';
+import {
+  ResultTeam,
+  StatusSummary,
+  Task,
+  TransformedUser,
+  UserTotalStatus,
+} from '@interfaces/task';
 import { MAX_HEX_COLOR_VALUE } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
@@ -706,7 +713,7 @@ export function lightenColor(color: string | null, percent: number): string {
 // Transform data team task
 export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
   return result.map((user) => ({
-    id: `user_${user.id}`,
+    id: `${user.id}`,
     name: user.profile.fullName,
     statuses: {
       NOT_STARTED:
@@ -736,3 +743,27 @@ export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
     },
   }));
 }
+// Transformer data total status
+export const transformDataTotalStatus = (
+  data: ResultTeam[],
+): UserTotalStatus[] => {
+  return data.map((user) => ({
+    id: `${user.id}`,
+    fullName: user.profile.fullName,
+    statuses: user.status.map((status) => ({
+      name: status.name,
+      total: status.total,
+      hasNext: status.hasNext,
+    })),
+  }));
+};
+
+// Convert data total status
+export const findStatusTeamByUser = (
+  users: UserTotalStatus[],
+  userId: string,
+  status: keyof typeof StatusTask,
+): StatusSummary | undefined => {
+  const user = users.find((user) => user.id === userId);
+  return user?.statuses.find((s) => s.name === StatusTask[status]);
+};

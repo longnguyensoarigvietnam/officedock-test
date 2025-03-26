@@ -23,6 +23,7 @@ type Props = {
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
+  handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
@@ -38,6 +39,7 @@ const PercentageCategory = ({
   handleSelectMedium,
   handleSelectOrganization,
   handleSelectSmall,
+  handleSelectOrganizationCustom,
 }: Props) => {
   const {
     largeOptions,
@@ -53,7 +55,9 @@ const PercentageCategory = ({
     totalDurationSmall,
     tagsOptions,
     selectedTags,
-    isSkeletonCategory,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
     setTotalDurationTask,
     setTotalDurationCategory,
     setSelectedTags,
@@ -454,7 +458,7 @@ const PercentageCategory = ({
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
                     <div className="min-h-[280px] flex justify-center w-full">
-                      {isSkeletonCategory ? (
+                      {isLoadingOrganization ? (
                         <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
                       ) : (
                         <>
@@ -475,7 +479,7 @@ const PercentageCategory = ({
                               handleClickChart={(data: OptionDropdownType) => {
                                 if (data.value && data.value !== '未設定') {
                                   selectedOrganization &&
-                                    handleSelectOrganization(
+                                    handleSelectOrganizationCustom(
                                       selectedOrganization,
                                     );
                                   handleSelectLarge(data);
@@ -523,7 +527,7 @@ const PercentageCategory = ({
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
                     <div className="flex justify-center">
-                      {isSkeletonCategory ? (
+                      {isLoadingLarge ? (
                         <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
                       ) : (
                         <>
@@ -588,7 +592,7 @@ const PercentageCategory = ({
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
                     <div className="flex justify-center">
-                      {isSkeletonCategory ? (
+                      {isLoadingMedium ? (
                         <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
                       ) : (
                         <>

@@ -5,7 +5,7 @@ import {
   PopoverPanel,
   Transition,
 } from '@headlessui/react';
-import React, { Fragment, useContext, useState } from 'react';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 
@@ -20,14 +20,56 @@ import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useTaskBoardTeam from '@hooks/useTaskBoardTeam';
 
-import { FilterTypeKanban } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
-import { getRandomColor, transformDataTeamTask } from '@utils';
+import {
+  ActionTask,
+  EventWorkCategory,
+  FilterTypeKanban,
+  ItemStartType,
+  StatusValueTask,
+} from '@constants/enums';
+import {
+  compareItems,
+  getRandomColor,
+  transformDataTeamTask,
+  transformDataTotalStatus,
+} from '@utils';
 import { OptionDropdownType } from '@interfaces/common';
-import { TransformedStatuses, TransformedUser } from '@interfaces/task';
+import {
+  Task,
+  TaskErrorPerson,
+  TaskFormData,
+  TaskPinResponse,
+  TaskRequest,
+  TransformedStatuses,
+} from '@interfaces/task';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import Dropdown from '@components/common/Dropdown';
 import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
+import ActionsTaskModalTeam from '@components/modals/ActionsTaskModalTeam';
+import { useSession } from 'next-auth/react';
+import api from '@base/api';
+import { apiRouters } from '@constants/routers';
+import { useMutation } from 'react-query';
+import { addTimeToDate, convertDateStringFull } from '@utils/date';
+import { NO_OPTION_CATEGORY } from '@constants';
+import {
+  ERROR_CREATE_MESSAGE,
+  ERROR_DELETE_MESSAGE,
+  ERROR_MESSAGE_OVERLAP_TASK,
+  ERROR_SAVE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_CREATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
+  SUCCESS_UPDATE_MESSAGE,
+} from '@constants/message';
+import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
+import { AxiosError } from 'axios';
+import { useErrorToast } from '@hooks/useErrorToast';
+import { ResponseError } from '@interfaces/response';
+import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -39,21 +81,39 @@ const KanbanBoardTaskTeam = () => {
     setCreationDataTaskData,
     orderingOptions,
     setOrderingOptions,
+    setDataTotalStatus,
+    listDataKanbanTeam,
+    setListDataKanbanTeam,
   } = useContext(TaskTeamStateContext);
+  const { setIsLoading } = useContext(LoadingContext);
+  const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
 
-  // State
+  const { data: session } = useSession();
+
+  // Param
   const searchParams = useSearchParams();
   const router = useRouter();
   const organizationId = searchParams.get('organization');
+  const actionType = searchParams.get('action');
+  const taskDetailId = searchParams.get('task');
+  const typeDetail = searchParams.get('type');
+
+  // State
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
-
-  // Team task list
-
-  const [listDataKanbanTeam, setListDataKanbanTeam] = useState<
-    TransformedUser[]
-  >([]);
-
+  const [isShowModalEditTeam, setIsShowModalEditTeam] = useState(false);
+  const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
+  const [dataErrorTask, setDataErrorTask] = useState<TaskErrorPerson>();
+  const [peopleDefaultId, setPeopleDefaultId] = useState<string>('');
+  const [openConfirmDeleteTaskModal, setOpenConfirmDeleteTaskModal] =
+    useState(false);
   const [dataOrderRing, setDataOrderRing] = useState<string>('');
+  const [openWarningCloseModal, setOpenWarningCloseModal] =
+    useState<boolean>(false);
+  const [resetFunctions, setResetFunctions] = useState<{
+    resetDataCategoryOptions?: () => void;
+    reset?: () => void;
+  }>({});
 
   // State
   // Member
@@ -106,6 +166,10 @@ const KanbanBoardTaskTeam = () => {
         const newData = transformDataTeamTask(data.results);
 
         setListDataKanbanTeam(newData);
+
+        const newTotalStatus = transformDataTotalStatus(data.results);
+
+        setDataTotalStatus(newTotalStatus);
       }
     },
   });
@@ -254,9 +318,885 @@ const KanbanBoardTaskTeam = () => {
     return (baseWidth * percentage) / 100;
   };
 
+  // Remove params
+  const handleRemoveParam = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('task');
+    params.delete('action');
+    params.delete('type');
+
+    router.replace(`?${params.toString()}`);
+    setIsShowModalEditTeam(false);
+  };
+
+  useEffect(() => {
+    if (actionType && typeDetail === ItemStartType.TASK) {
+      if (taskDetailId) {
+        setIsShowModalEditTeam(true);
+        getDataDetailTask(parseInt(taskDetailId));
+      } else {
+        setIsShowModalEditTeam(true);
+      }
+    } else {
+      setIsShowModalEditTeam(false);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskDetailId, actionType, typeDetail]);
+
+  // API
+
+  // Get detail task
+  const handleGetDataDetailTask = async (id: number) => {
+    setIsLoading(true);
+    const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
+    return response;
+  };
+  // Handle Call API get detail task
+  const { mutate: getDataDetailTask } = useMutation(
+    'getDetailTask',
+    handleGetDataDetailTask,
+    {
+      onSuccess: async (data) => {
+        setDataTaskEdit(data);
+        setIsShowModalEditTeam(true);
+      },
+      onError: () => {
+        handleRemoveParam();
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  // Action create
+  // Function create  tasks
+  const handleConfirmCreateTask = (data: TaskFormData) => {
+    const tagIds = data.tagIds
+      ? data.tagIds
+          .filter((item) => item.value !== '')
+          .map((item) => ({ tagId: item.value }))
+      : [];
+
+    const planList =
+      data.plans &&
+      data.plans.filter((item) => item.planStartDate !== null).length > 0
+        ? data.plans
+            .filter((item) => item.planStartDate !== null)
+            .map((item) => {
+              return {
+                scheduleId:
+                  actionType && actionType === ActionTask.CREATE
+                    ? item.scheduleId || null
+                    : null,
+                planStartDate:
+                  item.planStartDate && item.planStartTime
+                    ? addTimeToDate(
+                        item.planStartDate as Date,
+                        item.planStartTime,
+                      )
+                    : null,
+                planEndDate:
+                  item.planEndDate && item.planEndTime
+                    ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
+                    : null,
+              };
+            })
+        : null;
+    const todoListData =
+      data.todoList && data.todoList.filter((item) => item.content !== '');
+
+    const newWorkCategories = [];
+    if (data.categories.LARGE?.value) {
+      newWorkCategories.push({
+        categoryId:
+          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+            ? null
+            : `${data.categories.LARGE.value}`,
+        type: EventWorkCategory.LARGE,
+      });
+    }
+    if (data.categories.MEDIUM.value) {
+      newWorkCategories.push({
+        categoryId:
+          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+            ? null
+            : `${data.categories.MEDIUM.value}`,
+        type: EventWorkCategory.MEDIUM,
+      });
+    }
+    if (data.categories.SMALL.value) {
+      newWorkCategories.push({
+        categoryId:
+          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+            ? null
+            : `${data.categories.SMALL.value}`,
+        type: EventWorkCategory.SMALL,
+      });
+    }
+
+    createTask({
+      title: data.title || '',
+      statusId: data.statusId ? (data.statusId.value as number) : null,
+      priority: data.priority ? data.priority.value.toString() : '',
+      deadline:
+        data.deadlineDate && data.deadlineTime
+          ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
+          : null,
+      description: data.description || '',
+      tagIds: tagIds,
+      isImportant: data.isImportant,
+      todoList: todoListData,
+      taskSchedules: planList && planList.length ? planList : null,
+      sendToChat: false,
+      categoryIds: newWorkCategories,
+      copyTaskId: actionType === ActionTask.COPY ? taskDetailId : null,
+      organizationId: data.organization
+        ? Number(data.organization.value)
+        : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
+        : null,
+      remind_at:
+        !data.deadlineRemindCountdown?.value && !data.deadlineRemindType?.value
+          ? null
+          : undefined,
+      repeatType:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatType && data.repeatType.value
+            ? String(data.repeatType.value)
+            : null
+          : null,
+      repeatInterval:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatInterval && data.repeatInterval.value
+            ? Number(data.repeatInterval.value)
+            : null
+          : null,
+      weekDay:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.weekDay && data.weekDay.value
+            ? Number(data.weekDay.value)
+            : null
+          : null,
+      monthDay:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.monthDay && data.monthDay.value
+            ? Number(data.monthDay.value)
+            : null
+          : null,
+      month:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.month && data.month.value
+            ? Number(data.month.value)
+            : null
+          : null,
+      planStartDate:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatStartTime
+            ? addTimeToDate(new Date(), data.repeatStartTime)
+            : null
+          : null,
+      planEndDate:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatEndTime
+            ? addTimeToDate(new Date(), data.repeatEndTime)
+            : null
+          : null,
+      // DATA PEOPLE CHOOSE
+      peopleInChargeIds: data.peopleInChart
+        ? [{ peopleInChargeId: data.peopleInChart.value }]
+        : [],
+      isTeamTask: true,
+    });
+  };
+  //  Handle call api create task
+  const handleCreateTask = async (data: TaskRequest) => {
+    setIsLoading(true);
+    return await api.post(apiRouters.CREATE_TASK, data);
+  };
+  // Handle create task and response
+  const { mutate: createTask } = useMutation(
+    'postCreateUser',
+    handleCreateTask,
+    {
+      onSuccess: async ({ data }: { data: Task }) => {
+        // queryClient.refetchQueries(['getDataTaskHeaderList']);
+        if (actionType && actionType === ActionTask.COPY) {
+          copyTaskInKanban({
+            dataTask: data,
+            taskCopyId: `${taskDetailId}`,
+          });
+        } else {
+          addTaskToKanban(data);
+        }
+        updateTotalStatusAdd({
+          userId:
+            data.peopleInCharge && data.peopleInCharge.length > 0
+              ? String(data.peopleInCharge[0].id)
+              : '',
+          statusName: data.status?.name || '',
+        });
+
+        showToast({
+          description: SUCCESS_CREATE_MESSAGE,
+        });
+
+        handleRemoveParam();
+        setDataTaskEdit(null);
+        setIsShowModalEditTeam(false);
+      },
+      onError: (error: AxiosError<any>) => {
+        if (error.response?.data.taskSchedules) {
+          showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+        } else {
+          showErrorToast(error, ERROR_CREATE_MESSAGE);
+        }
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  //Action edit
+  // Action call api edit task
+  const handleConfirmEditTask = (data: TaskFormData) => {
+    const tagIds = data.tagIds
+      ? data.tagIds
+          .filter((item) => item.value !== '')
+          .map((item) => ({ tagId: item.value }))
+      : [];
+
+    const planList =
+      data.plans &&
+      data.plans.filter((item) => item.planStartDate !== null).length > 0
+        ? data.plans
+            .filter((item) => item.planStartDate !== null)
+            .map((item) => {
+              return {
+                scheduleId: item.scheduleId || null,
+                planStartDate:
+                  item.planStartDate && item.planStartTime
+                    ? addTimeToDate(
+                        item.planStartDate as Date,
+                        item.planStartTime,
+                      )
+                    : null,
+                planEndDate:
+                  item.planEndDate && item.planEndTime
+                    ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
+                    : null,
+              };
+            })
+        : null;
+    const todoListData =
+      data.todoList && data.todoList.filter((item) => item.content !== '');
+
+    const newWorkCategories = [];
+    if (data.categories.LARGE?.value) {
+      newWorkCategories.push({
+        categoryId:
+          `${data.categories.LARGE.value}` == NO_OPTION_CATEGORY
+            ? null
+            : `${data.categories.LARGE.value}`,
+        type: EventWorkCategory.LARGE,
+      });
+    }
+    if (data.categories.MEDIUM.value) {
+      newWorkCategories.push({
+        categoryId:
+          `${data.categories.MEDIUM.value}` == NO_OPTION_CATEGORY
+            ? null
+            : `${data.categories.MEDIUM.value}`,
+        type: EventWorkCategory.MEDIUM,
+      });
+    }
+    if (data.categories.SMALL.value) {
+      newWorkCategories.push({
+        categoryId:
+          `${data.categories.SMALL.value}` == NO_OPTION_CATEGORY
+            ? null
+            : `${data.categories.SMALL.value}`,
+        type: EventWorkCategory.SMALL,
+      });
+    }
+
+    editTask({
+      id: data.id,
+      title: data.title,
+      statusId: data.statusId ? (data.statusId.value as number) : null,
+      priority: data.priority ? data.priority.value.toString() : '',
+      deadline:
+        data.deadlineDate && data.deadlineTime
+          ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
+          : null,
+      description: data.description,
+      tagIds: tagIds,
+      categoryIds: newWorkCategories,
+      isImportant: data.isImportant,
+      todoList: todoListData,
+      taskSchedules:
+        data.statusId?.value != StatusValueTask.MY_ROUTINE
+          ? planList && planList.length
+            ? planList
+            : []
+          : null,
+      oldIdStatus: data.oldIdStatus,
+      oldNameStatus: data.oldNameStatus,
+      oldIdPeople: data.oldIdPeople,
+      sendToChat: true,
+      organizationId: data.organization
+        ? Number(data.organization.value)
+        : null,
+      remindCountdown: data.deadlineRemindCountdown?.value
+        ? `${data.deadlineRemindCountdown?.value}`
+        : null,
+      remindType: data.deadlineRemindType?.value
+        ? `${data.deadlineRemindType?.value}`
+        : null,
+      repeatType:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatType && data.repeatType.value
+            ? String(data.repeatType.value)
+            : null
+          : null,
+      repeatInterval:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatInterval && data.repeatInterval.value
+            ? Number(data.repeatInterval.value)
+            : null
+          : null,
+      weekDay:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.weekDay && data.weekDay.value
+            ? Number(data.weekDay.value)
+            : null
+          : null,
+      monthDay:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.monthDay && data.monthDay.value
+            ? Number(data.monthDay.value)
+            : null
+          : null,
+      month:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.month && data.month.value
+            ? Number(data.month.value)
+            : null
+          : null,
+      planStartDate:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatStartTime
+            ? addTimeToDate(new Date(), data.repeatStartTime)
+            : null
+          : null,
+      planEndDate:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatEndTime
+            ? addTimeToDate(new Date(), data.repeatEndTime)
+            : null
+          : null,
+      // DATA PEOPLE CHOOSE
+      peopleInChargeIds: data.peopleInChart
+        ? [{ peopleInChargeId: data.peopleInChart.value }]
+        : [],
+      isTeamTask: true,
+    });
+  };
+  //  Handle call api edit task
+  const handleEditTask = async (data: TaskRequest) => {
+    setIsLoading(true);
+    return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
+  };
+  const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
+    onSuccess: async ({ data }, variant) => {
+      editTaskInKanban({
+        taskData: data,
+        oldIdStatus: parseInt(`${variant.oldIdStatus}`),
+        oldUserId: variant.oldIdPeople as string,
+      });
+      updateTaskStatusTotal({
+        taskData: data,
+        oldUserId: variant.oldIdPeople as string,
+        oldStatusName: variant.oldNameStatus || '',
+      });
+      handleRemoveParam();
+      showToast({
+        description: SUCCESS_UPDATE_MESSAGE,
+      });
+      setDataTaskEdit(null);
+    },
+    onError: ({
+      response,
+    }: ResponseError<{
+      detail: TaskErrorPerson;
+      taskSchedules: TaskErrorPerson;
+    }>) => {
+      if (response?.data.detail) {
+        setDataErrorTask(response?.data.detail);
+      } else if (response?.data.taskSchedules) {
+        showToast({
+          variant: 'error',
+          description: ERROR_MESSAGE_OVERLAP_TASK,
+        });
+      } else {
+        showToast({
+          variant: 'error',
+          description: ERROR_UPDATE_MESSAGE,
+        });
+      }
+    },
+    onSettled: () => {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    },
+  });
+
+  // Handle delete task
+  const handleDeleteTask = async (id: string) => {
+    const { data: response } = await api.delete(
+      apiRouters.TASK_DETAIL(`${id}`),
+    );
+    return response;
+  };
+
+  const { mutate: deleteTask } = useMutation('deleteTask', handleDeleteTask, {
+    onSuccess: async () => {
+      setIsShowModalEditTeam(false);
+      handleRemoveParam();
+      updateTotalStatusSubtract({
+        userId:
+          dataTaskEdit?.peopleInCharge && dataTaskEdit.peopleInCharge.length > 0
+            ? String(dataTaskEdit.peopleInCharge[0].id)
+            : '',
+        statusName: dataTaskEdit?.status?.name || '',
+      });
+      removeTaskById({
+        statusId: dataTaskEdit?.status?.id as number,
+        taskId: dataTaskEdit?.id as number,
+        userId:
+          dataTaskEdit?.peopleInCharge && dataTaskEdit.peopleInCharge.length > 0
+            ? String(dataTaskEdit.peopleInCharge[0].id)
+            : '',
+      });
+
+      showToast({
+        description: SUCCESS_DELETE_MESSAGE,
+      });
+      setOpenConfirmDeleteTaskModal(false);
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_DELETE_MESSAGE);
+      setIsLoading(false);
+    },
+    onSettled: () => {
+      setIsLoading(false);
+    },
+  });
+
+  // Action add new task into kanban
+  const addTaskToKanban = (task: Task) => {
+    const userTask =
+      task.peopleInCharge.length > 0 ? `${task.peopleInCharge[0].id}` : '';
+    setListDataKanbanTeam((prevList) => {
+      return prevList.map((user) => {
+        if (user.id !== userTask) return user;
+
+        const statusKey = Object.entries(StatusValueTask).find(
+          ([, value]) => value === task.status?.id,
+        )?.[0] as keyof TransformedStatuses;
+
+        if (!statusKey || !user.statuses[statusKey]) return user;
+
+        const updatedTasks = [...user.statuses[statusKey], task].sort(
+          compareItems,
+        );
+
+        return {
+          ...user,
+          statuses: {
+            ...user.statuses,
+            [statusKey]: updatedTasks,
+          },
+        };
+      });
+    });
+  };
+
+  // Action edit task into kanban
+  const editTaskInKanban = ({
+    taskData,
+    oldIdStatus,
+    oldUserId,
+  }: {
+    taskData: Task;
+    oldIdStatus: number;
+    oldUserId: string;
+  }) => {
+    setListDataKanbanTeam((prevList) => {
+      return prevList.map((user) => {
+        const updatedStatuses: TransformedStatuses = { ...user.statuses };
+        const userTask =
+          taskData.peopleInCharge.length > 0
+            ? `${taskData.peopleInCharge[0].id}`
+            : '';
+
+        if (oldUserId !== userTask) {
+          // If user changes, delete task from old user
+          if (user.id === oldUserId) {
+            (
+              Object.keys(updatedStatuses) as (keyof TransformedStatuses)[]
+            ).forEach((status) => {
+              updatedStatuses[status] = updatedStatuses[status].filter(
+                (task) => task.id !== taskData.id,
+              );
+            });
+          }
+
+          // Add task to new user
+          if (user.id === userTask) {
+            const statusKey = Object.entries(StatusValueTask).find(
+              ([, value]) => value === taskData.status?.id,
+            )?.[0] as keyof TransformedStatuses;
+
+            if (statusKey) {
+              const existingTasks = updatedStatuses[statusKey] || [];
+              const updatedTaskList = [...existingTasks, taskData].sort(
+                compareItems,
+              );
+
+              // Check if the last task has pinAt or not, if not add it
+              if (
+                !existingTasks.length ||
+                !existingTasks[existingTasks.length - 1].pinAt
+              ) {
+                updatedStatuses[statusKey] = updatedTaskList;
+              }
+            }
+          }
+        } else if (oldIdStatus !== taskData.status?.id) {
+          // If only changing state within the same user
+          (
+            Object.keys(updatedStatuses) as (keyof TransformedStatuses)[]
+          ).forEach((status) => {
+            updatedStatuses[status] = updatedStatuses[status].filter(
+              (task) => task.id !== taskData.id,
+            );
+          });
+
+          const statusKey = Object.entries(StatusValueTask).find(
+            ([, value]) => value === taskData.status?.id,
+          )?.[0] as keyof TransformedStatuses;
+
+          if (statusKey) {
+            const existingTasks = updatedStatuses[statusKey] || [];
+            const updatedTaskList = [...existingTasks, taskData].sort(
+              compareItems,
+            );
+
+            // Check if the last task has pinAt or not, if not add it
+            if (
+              !existingTasks.length ||
+              !existingTasks[existingTasks.length - 1].pinAt
+            ) {
+              updatedStatuses[statusKey] = updatedTaskList;
+            }
+          }
+        } else {
+          // If user is not changed and state is not changed, check if task exists
+          const statusKey = Object.entries(StatusValueTask).find(
+            ([, value]) => value === taskData.status?.id,
+          )?.[0] as keyof TransformedStatuses;
+
+          if (
+            statusKey &&
+            updatedStatuses[statusKey].some((task) => task.id === taskData.id)
+          ) {
+            // If the task exists, update it
+            updatedStatuses[statusKey] = updatedStatuses[statusKey].map(
+              (task) => (task.id === taskData.id ? taskData : task),
+            );
+          }
+        }
+
+        return { ...user, statuses: updatedStatuses };
+      });
+    });
+  };
+
+  // Action copy task
+  // Action Copy task into kanban
+  const copyTaskInKanban = ({
+    taskCopyId,
+    dataTask,
+  }: {
+    taskCopyId: string;
+    dataTask: Task;
+  }) => {
+    setListDataKanbanTeam((prevList) => {
+      return prevList.map((user) => {
+        const updatedStatuses: TransformedStatuses = { ...user.statuses };
+
+        (Object.keys(updatedStatuses) as (keyof TransformedStatuses)[]).forEach(
+          (status) => {
+            const tasks = updatedStatuses[status];
+            const taskIndex = tasks.findIndex(
+              (task) => String(task.id) === taskCopyId,
+            );
+
+            if (taskIndex !== -1) {
+              const updatedTasks = [
+                ...tasks.slice(0, taskIndex + 1),
+                dataTask,
+                ...tasks.slice(taskIndex + 1),
+              ].sort(compareItems);
+
+              updatedStatuses[status] = updatedTasks;
+            }
+          },
+        );
+
+        return { ...user, statuses: updatedStatuses };
+      });
+    });
+  };
+  // Action delete task
+  // Action delete
+  const handleConfirmDeleteTask = () => {
+    if (taskDetailId) {
+      setIsLoading(true);
+      deleteTask(taskDetailId);
+      setDataTaskEdit(null);
+
+      return;
+    }
+  };
+
+  // Action PIN / UNPIN
+  // API pin task
+  const handlePinTask = async (data: { id: string; pinAt?: string }) => {
+    const { data: response } = await api.put(
+      apiRouters.TASK_PIN(`${data.id}`),
+      {
+        pinAt: data.pinAt,
+        team: organizationId,
+      },
+    );
+    return response;
+  };
+
+  const { mutate: pinTask } = useMutation('pinTask', handlePinTask, {
+    onSuccess: async (data: TaskPinResponse) => {
+      if (data.pinAt !== null) {
+        pinTaskInKanban(data);
+      } else {
+        unpinTaskInKanban(data);
+      }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_SAVE_MESSAGE);
+    },
+    onSettled: () => {},
+  });
+  const pinTaskInKanban = (taskPinData: TaskPinResponse) => {
+    setListDataKanbanTeam((prevList) => {
+      return prevList.map((user) => {
+        if (user.id !== String(taskPinData.user)) return user;
+
+        const updatedStatuses: TransformedStatuses = { ...user.statuses };
+
+        (Object.keys(updatedStatuses) as (keyof TransformedStatuses)[]).forEach(
+          (status) => {
+            let tasks = updatedStatuses[status];
+
+            const taskIndex = tasks.findIndex(
+              (task) => task.id === taskPinData.task,
+            );
+            if (taskIndex !== -1) {
+              const taskToUpdate = {
+                ...tasks[taskIndex],
+                pinAt: taskPinData.pinAt,
+              };
+              tasks = [
+                taskToUpdate,
+                ...tasks.filter((task) => task.id !== taskPinData.task),
+              ].sort(compareItems);
+              updatedStatuses[status] = tasks;
+            }
+          },
+        );
+
+        return { ...user, statuses: updatedStatuses };
+      });
+    });
+  };
+  const unpinTaskInKanban = (taskPinData: TaskPinResponse) => {
+    setListDataKanbanTeam((prevList) => {
+      return prevList.map((user) => {
+        const updatedStatuses: TransformedStatuses = { ...user.statuses };
+        (Object.keys(updatedStatuses) as (keyof TransformedStatuses)[]).forEach(
+          (status) => {
+            const tasks = updatedStatuses[status];
+            const taskIndex = tasks.findIndex(
+              (task) => task.id === taskPinData.task,
+            );
+
+            if (taskIndex !== -1) {
+              const updatedTasks = tasks
+                .map((task) =>
+                  task.id === taskPinData.task
+                    ? { ...task, pinAt: null, index: taskPinData.index }
+                    : task,
+                )
+                .sort(compareItems);
+
+              updatedStatuses[status] = updatedTasks;
+            }
+          },
+        );
+
+        return { ...user, statuses: updatedStatuses };
+      });
+    });
+  };
+
+  // Handle call api pin / unpin
+  const pinItemToTop = (itemId: string | number) => {
+    pinTask({
+      id: `${itemId}`,
+      pinAt: convertDateStringFull(new Date()),
+    });
+  };
+
+  // Action update total
+  const updateTotalStatusAdd = ({
+    userId,
+    statusName,
+  }: {
+    userId: string;
+    statusName: string;
+  }) => {
+    setDataTotalStatus((prevData) => {
+      return prevData.map((user) => {
+        if (user.id === userId) {
+          return {
+            ...user,
+            statuses: user.statuses.map((status) =>
+              status.name === statusName
+                ? { ...status, total: status.total + 1 }
+                : status,
+            ),
+          };
+        }
+        return user;
+      });
+    });
+  };
+  const updateTotalStatusSubtract = ({
+    userId,
+    statusName,
+  }: {
+    userId: string;
+    statusName: string;
+  }) => {
+    setDataTotalStatus((prevData) =>
+      prevData.map((user) =>
+        user.id === userId
+          ? {
+              ...user,
+              statuses: user.statuses.map((status) =>
+                status.name === statusName && status.total > 0
+                  ? { ...status, total: status.total - 1 }
+                  : status,
+              ),
+            }
+          : user,
+      ),
+    );
+  };
+
+  const updateTaskStatusTotal = ({
+    taskData,
+    oldStatusName,
+    oldUserId,
+  }: {
+    taskData: Task;
+    oldStatusName: string;
+    oldUserId: string;
+  }) => {
+    setDataTotalStatus((prevData) => {
+      return prevData.map((user) => {
+        if (user.id === oldUserId) {
+          return {
+            ...user,
+            statuses: user.statuses.map((status) => {
+              if (status.name === oldStatusName) {
+                return { ...status, total: status.total - 1 };
+              }
+              if (status.name === taskData.status?.name) {
+                return { ...status, total: status.total + 1 };
+              }
+              return status;
+            }),
+          };
+        }
+        if (user.id === String(taskData.peopleInCharge[0]?.id)) {
+          return {
+            ...user,
+            statuses: user.statuses.map((status) =>
+              status.name === taskData.status?.name
+                ? { ...status, total: status.total + 1 }
+                : status,
+            ),
+          };
+        }
+        return user;
+      });
+    });
+  };
+
+  const removeTaskById = ({
+    userId,
+    statusId,
+    taskId,
+  }: {
+    userId: string;
+    statusId: number;
+    taskId: number;
+  }) => {
+    setListDataKanbanTeam((prevList) =>
+      prevList.map((user) => {
+        if (user.id !== userId) return user;
+
+        const statusKey = Object.keys(StatusValueTask).find(
+          (key) =>
+            StatusValueTask[key as keyof typeof StatusValueTask] === statusId,
+        ) as keyof TransformedStatuses;
+
+        if (!statusKey) return user;
+        return {
+          ...user,
+          statuses: {
+            ...user.statuses,
+            [statusKey]: user.statuses[statusKey].filter(
+              (task) => task.id !== taskId,
+            ),
+          },
+        };
+      }),
+    );
+    setDataTaskEdit(null);
+  };
+
   return (
     <>
-      <div className="pt-[30px] pr-10  font-medium  w-full">
+      <div className="pt-[30px] pr-10  font-medium  w-full pb-10">
         <div className="mb-[30px] flex items-center justify-between">
           <div className="flex items-center gap-5 ">
             <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
@@ -269,9 +1209,6 @@ const KanbanBoardTaskTeam = () => {
             </div>
             <span className="text-[26px] font-medium relative top-[-2px] max-w-[350px] truncate">
               {selectedOrganization?.label}
-            </span>
-            <span className="text-[26px] font-medium relative top-[-2px]">
-              チーム集計
             </span>
             <div className="flex justify-center items-center gap-2 ">
               <Button
@@ -446,7 +1383,14 @@ const KanbanBoardTaskTeam = () => {
             <DragDropContext onDragEnd={onDragEnd}>
               <div className="flex gap-4 overflow-x-auto w-[calc(100vw_-_270px)]">
                 {listDataKanbanTeam.map((user) => (
-                  <UserColumnTeam key={user.id} user={user} />
+                  <UserColumnTeam
+                    key={user.id}
+                    user={user}
+                    onAdd={(id: string) => {
+                      setPeopleDefaultId(id);
+                    }}
+                    pinItemToTop={pinItemToTop}
+                  />
                 ))}
               </div>
             </DragDropContext>
@@ -502,6 +1446,70 @@ const KanbanBoardTaskTeam = () => {
           />
         </div>
       </div>
+      {isShowModalEditTeam && (
+        <ActionsTaskModalTeam
+          open={isShowModalEditTeam}
+          dataTask={dataTaskEdit}
+          organizationId={organizationId}
+          action={actionType || ActionTask.CREATE}
+          peopleDefaultId={peopleDefaultId || `${session?.user.id}`}
+          setDataErrorTask={setDataErrorTask}
+          errorPerson={dataErrorTask}
+          listMemberTeam={listMemberTeam}
+          creationDataTaskData={creationDataTaskData}
+          onClose={() => {
+            setIsShowModalEditTeam(false);
+            handleRemoveParam();
+            setDataTaskEdit(null);
+          }}
+          onSubmit={handleConfirmCreateTask}
+          onEdit={handleConfirmEditTask}
+          onCopy={handleConfirmCreateTask}
+          onDelete={() => {
+            setOpenConfirmDeleteTaskModal(true);
+          }}
+          onWarning={({
+            reset,
+            resetDataCategoryOptions,
+          }: {
+            reset: () => void;
+            resetDataCategoryOptions: () => void;
+          }) => {
+            setResetFunctions({
+              resetDataCategoryOptions,
+              reset,
+            });
+            setOpenWarningCloseModal(true);
+          }}
+        />
+      )}
+      {openConfirmDeleteTaskModal && (
+        <ConfirmDeleteModal
+          open={openConfirmDeleteTaskModal}
+          type="タスク"
+          onConfirm={handleConfirmDeleteTask}
+          onClose={() => {
+            setOpenConfirmDeleteTaskModal(false);
+          }}
+        />
+      )}
+      {openWarningCloseModal && (
+        <WarningCloseTaskModal
+          open={openWarningCloseModal}
+          onClose={() => {
+            setOpenWarningCloseModal(false);
+          }}
+          onConfirm={() => {
+            setIsShowModalEditTeam(false);
+            setOpenWarningCloseModal(false);
+            handleRemoveParam();
+            setDataTaskEdit(null);
+            setIsLoading(false);
+            resetFunctions.resetDataCategoryOptions?.();
+            resetFunctions.reset?.();
+          }}
+        />
+      )}
     </>
   );
 };

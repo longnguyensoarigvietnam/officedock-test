@@ -71,14 +71,25 @@ interface ContextValue {
       }[]
     >
   >;
-  isSkeletonCategoryTeam: boolean;
-  setIsSkeletonCategoryTeam: Dispatch<SetStateAction<boolean>>;
-  isSkeletonCategoryTeamCompare: boolean;
-  setIsSkeletonCategoryTeamCompare: Dispatch<SetStateAction<boolean>>;
   isSkeletonCategoryTeamTask: boolean;
   setIsSkeletonCategoryTeamTask: Dispatch<SetStateAction<boolean>>;
   isSkeletonCategoryTeamTaskCompare: boolean;
   setIsSkeletonCategoryTeamTaskCompare: Dispatch<SetStateAction<boolean>>;
+
+  // Loading
+  isLoadingLarge: boolean;
+  isLoadingMedium: boolean;
+  isLoadingOrganization: boolean;
+  setIsLoadingLarge: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMedium: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingOrganization: Dispatch<SetStateAction<boolean>>;
+
+  isLoadingLargeCompare: boolean;
+  isLoadingMediumCompare: boolean;
+  isLoadingOrganizationCompare: boolean;
+  setIsLoadingLargeCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMediumCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingOrganizationCompare: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -130,14 +141,24 @@ const defaultValue: ContextValue = {
   selectedTags: [],
   setSelectedTags: () => {},
   setTagsOptions: () => {},
-  isSkeletonCategoryTeam: false,
-  setIsSkeletonCategoryTeam: () => {},
-  isSkeletonCategoryTeamCompare: false,
-  setIsSkeletonCategoryTeamCompare: () => {},
   isSkeletonCategoryTeamTask: false,
   setIsSkeletonCategoryTeamTask: () => {},
   isSkeletonCategoryTeamTaskCompare: false,
   setIsSkeletonCategoryTeamTaskCompare: () => {},
+  // Loading
+  isLoadingLarge: false,
+  isLoadingMedium: false,
+  isLoadingOrganization: false,
+  setIsLoadingLarge: () => {},
+  setIsLoadingMedium: () => {},
+  setIsLoadingOrganization: () => {},
+
+  isLoadingLargeCompare: false,
+  isLoadingMediumCompare: false,
+  isLoadingOrganizationCompare: false,
+  setIsLoadingLargeCompare: () => {},
+  setIsLoadingMediumCompare: () => {},
+  setIsLoadingOrganizationCompare: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -149,9 +170,14 @@ export const StatisticTeamStateProvider = ({
   children: ReactNode;
 }) => {
   // Loading
-  const [isSkeletonCategoryTeam, setIsSkeletonCategoryTeam] = useState(false);
-  const [isSkeletonCategoryTeamCompare, setIsSkeletonCategoryTeamCompare] =
+  const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
+  const [isLoadingLarge, setIsLoadingLarge] = useState(false);
+  const [isLoadingMedium, setIsLoadingMedium] = useState(false);
+  const [isLoadingOrganizationCompare, setIsLoadingOrganizationCompare] =
     useState(false);
+  const [isLoadingLargeCompare, setIsLoadingLargeCompare] = useState(false);
+  const [isLoadingMediumCompare, setIsLoadingMediumCompare] = useState(false);
+
   const [isSkeletonCategoryTeamTask, setIsSkeletonCategoryTeamTask] =
     useState(false);
   const [
@@ -278,14 +304,25 @@ export const StatisticTeamStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
-    isSkeletonCategoryTeam,
-    setIsSkeletonCategoryTeam,
-    isSkeletonCategoryTeamCompare,
-    setIsSkeletonCategoryTeamCompare,
+
     isSkeletonCategoryTeamTask,
     setIsSkeletonCategoryTeamTask,
     isSkeletonCategoryTeamTaskCompare,
     setIsSkeletonCategoryTeamTaskCompare,
+
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+
+    isLoadingLargeCompare,
+    isLoadingMediumCompare,
+    isLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
   };
 
   return (

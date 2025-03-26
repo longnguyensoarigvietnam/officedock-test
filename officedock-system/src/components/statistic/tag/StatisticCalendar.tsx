@@ -26,6 +26,14 @@ function StatisticTagCalendar() {
     setEndDate,
     setStartDateCompare,
     setEndDateCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingOrganization,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingSmallCompare,
+    setIsLoadingOrganizationCompare,
   } = useContext(StatisticTagStateContext);
   const modalRef = useRef<HTMLDivElement | null>(null);
   const buttonPrev = useRef<HTMLDivElement | null>(null);
@@ -207,6 +215,13 @@ function StatisticTagCalendar() {
 
   // Save data time
   const handleSaveCalendar = () => {
+    if (dataEndDate !== endDate || dataStartDate !== startDate) {
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingOrganization(true);
+      setIsLoadingSmall(true);
+    }
+    setIsLoadingOrganization(true);
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setIsCheckCompare(isDataCheckCompare);
@@ -223,6 +238,24 @@ function StatisticTagCalendar() {
 
   // Save data time compare
   const handleSaveCalendarCompare = () => {
+    // Loading
+    if (dataEndDate !== endDate || dataStartDate !== startDate) {
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingSmall(true);
+      setIsLoadingOrganization(true);
+    }
+    if (
+      dataEndDateCompare !== endDateCompare ||
+      dataStartDateCompare !== startDateCompare
+    ) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingSmallCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
+
+    // data
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setStartDateCompare(dataStartDateCompare);

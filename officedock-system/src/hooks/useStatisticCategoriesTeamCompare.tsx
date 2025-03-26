@@ -33,15 +33,16 @@ const useStatisticCategoriesTeamCompare = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-  const { setIsSkeletonCategoryTeamCompare } = useContext(
-    StatisticTeamStateContext,
-  );
+  const {
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
+  } = useContext(StatisticTeamStateContext);
 
   // Handle call API get statistic category list team
   const getStatisticCategoryListTeamCompare = async () => {
     if (!filter?.organizationIds) return [];
     if (!filter?.isCompare) return [];
-    setIsSkeletonCategoryTeamCompare(true);
 
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(parseInt(filter?.organizationIds))}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -78,7 +79,9 @@ const useStatisticCategoriesTeamCompare = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsSkeletonCategoryTeamCompare(false);
+      setIsLoadingLargeCompare(false);
+      setIsLoadingMediumCompare(false);
+      setIsLoadingOrganizationCompare(false);
     },
   });
 

@@ -56,12 +56,15 @@ interface ItemProps {
     unknown
   >;
   handlePinItem: (id: string) => void;
+  handleUnPinItem: (id: string) => void;
+
   disableDraggable?: boolean;
 }
 const ItemTeam = ({
   content,
   editTask,
   handlePinItem,
+  handleUnPinItem,
   handleUpdateItemInline,
   handleConfirmCopyTask,
   handleActionEditTask,
@@ -333,7 +336,11 @@ const ItemTeam = ({
                       }}
                       onClick={() => {
                         if (isPermissionUpdate) {
-                          handlePinItem(`${content.id}`);
+                          if (content.pinAt) {
+                            handleUnPinItem(`${content.id}`);
+                          } else {
+                            handlePinItem(`${content.id}`);
+                          }
                         }
                       }}
                       className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>

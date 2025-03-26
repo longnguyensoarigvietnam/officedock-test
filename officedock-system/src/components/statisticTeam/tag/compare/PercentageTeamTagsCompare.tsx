@@ -67,8 +67,14 @@ const PercentageTeamTagsCompare = ({
     tagsOptions,
     smallOptions,
     selectedSmall,
-    isSkeletonTagTeam,
-    isSkeletonTagTeamCompare,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    isLoadingSmall,
+    isLoadingOrganizationCompare,
+    isLoadingLargeCompare,
+    isLoadingMediumCompare,
+    isLoadingSmallCompare,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -443,32 +449,30 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectOrganization(data)}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-centers">
-                      {isSkeletonTagTeam || isSkeletonTagTeamCompare ? (
-                        <StatisticCompareLoading className="!w-[220px]" />
-                      ) : (
-                        <PercentageBarCompareTeam
-                          isTag
-                          data={dataChartLarge}
-                          startDate={startDate}
-                          endDate={endDate}
-                          totalDuration={totalDurationLarge}
-                          totalDurationCompare={totalDurationLargeCompare}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartLargeCompare}
-                          handleClickChart={(_data: number) => {}}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.ALL,
-                              isCompare,
-                            );
-                          }}
-                        />
-                      )}
+                      <PercentageBarCompareTeam
+                        isTag
+                        data={dataChartLarge}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingOrganization}
+                        isLoadingCompare={isLoadingOrganizationCompare}
+                        totalDuration={totalDurationLarge}
+                        totalDurationCompare={totalDurationLargeCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartLargeCompare}
+                        handleClickChart={(_data: number) => {}}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.ALL,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -494,7 +498,7 @@ const PercentageTeamTagsCompare = ({
                       disabled={!selectedOrganization}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {isSkeletonTagTeam || isSkeletonTagTeamCompare ? (
+                      {isLoadingLarge || isLoadingLargeCompare ? (
                         <StatisticCompareLoading className="!w-[220px]" />
                       ) : (
                         <PercentageBarCompareTeam
@@ -502,6 +506,8 @@ const PercentageTeamTagsCompare = ({
                           data={dataChartMedium}
                           startDate={startDate}
                           endDate={endDate}
+                          isLoading={isLoadingLarge}
+                          isLoadingCompare={isLoadingLargeCompare}
                           startDateCompare={startDateCompare}
                           endDateCompare={endDateCompare}
                           dataCompare={dataChartMediumCompare}
@@ -545,32 +551,30 @@ const PercentageTeamTagsCompare = ({
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {isSkeletonTagTeam || isSkeletonTagTeamCompare ? (
-                        <StatisticCompareLoading className="!w-[220px]" />
-                      ) : (
-                        <PercentageBarCompareTeam
-                          isTag
-                          data={dataChartSmall}
-                          startDate={startDate}
-                          endDate={endDate}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartSmallCompare}
-                          totalDuration={totalDurationSmall}
-                          totalDurationCompare={totalDurationSmallCompare}
-                          handleClickChart={(_data: number) => {}}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.MEDIUM,
-                              isCompare,
-                            );
-                          }}
-                        />
-                      )}
+                      <PercentageBarCompareTeam
+                        isTag
+                        data={dataChartSmall}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingMedium}
+                        isLoadingCompare={isLoadingMediumCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartSmallCompare}
+                        totalDuration={totalDurationSmall}
+                        totalDurationCompare={totalDurationSmallCompare}
+                        handleClickChart={(_data: number) => {}}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.MEDIUM,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -596,33 +600,31 @@ const PercentageTeamTagsCompare = ({
                       disabled={!selectedLarge}
                     />
                     <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {isSkeletonTagTeam || isSkeletonTagTeamCompare ? (
-                        <StatisticCompareLoading className="!w-[220px]" />
-                      ) : (
-                        <PercentageBarCompareTeam
-                          isTag
-                          isLast
-                          data={dataChartCategory}
-                          startDate={startDate}
-                          endDate={endDate}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartCategoryCompare}
-                          totalDuration={totalDurationCategory}
-                          totalDurationCompare={totalDurationCategoryCompare}
-                          handleClickChart={(_data: number) => {}}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.SMALL,
-                              isCompare,
-                            );
-                          }}
-                        />
-                      )}
+                      <PercentageBarCompareTeam
+                        isTag
+                        isLast
+                        data={dataChartCategory}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingSmall}
+                        isLoadingCompare={isLoadingSmallCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartCategoryCompare}
+                        totalDuration={totalDurationCategory}
+                        totalDurationCompare={totalDurationCategoryCompare}
+                        handleClickChart={(_data: number) => {}}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.SMALL,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>

@@ -54,6 +54,12 @@ const StatisticTeamBoard = () => {
     setTotalDurationMediumCompare,
     setTotalDurationSmallCompare,
     setListMemberTeam,
+    setIsLoadingOrganization,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
   } = useContext(StatisticTeamStateContext);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -146,6 +152,30 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingOrganizationCompare(true);
+    }
+    setSelectedOrganization(data);
+    setSelectedLarge(null);
+    setSelectedMedium(null);
+    setSelectedSmall(null);
+
+    const organization = creationDataStatisticData?.organization;
+    if (organization) {
+      const largeCategories = organization.statisticCategories.map((stat) => ({
+        value: stat.LARGE.id,
+        label: stat.LARGE.name,
+      }));
+      setLargeOptions(largeCategories);
+    } else {
+      setLargeOptions([]);
+    }
+    setMediumOptions([]);
+  };
+
+  // Handle Choose organization with option large
+  const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -166,6 +196,10 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    setIsLoadingLarge(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+    }
     setSelectedLarge(data);
     setSelectedMedium(null);
     setSelectedSmall(null);
@@ -189,6 +223,10 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    setIsLoadingMedium(true);
+    if (isCheckCompare) {
+      setIsLoadingMediumCompare(true);
+    }
     setSelectedMedium(data);
     setSelectedSmall(null);
 
@@ -430,6 +468,7 @@ const StatisticTeamBoard = () => {
           statisticTeamCategoryList={statisticCategoryListTeam}
           statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
           handleSelectOrganization={handleSelectOrganization}
+          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           removeTag={removeTag}
@@ -441,6 +480,7 @@ const StatisticTeamBoard = () => {
           endDate={endDate}
           statisticTeamCategoryList={statisticCategoryListTeam}
           handleSelectOrganization={handleSelectOrganization}
+          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           removeTag={removeTag}

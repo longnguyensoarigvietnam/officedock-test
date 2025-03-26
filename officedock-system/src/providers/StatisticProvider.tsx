@@ -31,10 +31,6 @@ interface ContextValue {
   startDateCompare: Date;
   totalDurationCategory: string;
   totalDurationCategoryCompare: string;
-  isSkeletonCategory: boolean;
-  setIsSkeletonCategory: Dispatch<SetStateAction<boolean>>;
-  isSkeletonCategoryCompare: boolean;
-  setIsSkeletonCategoryCompare: Dispatch<SetStateAction<boolean>>;
   isSkeletonCategoryTask: boolean;
   setIsSkeletonCategoryTask: Dispatch<SetStateAction<boolean>>;
   isSkeletonCategoryTaskCompare: boolean;
@@ -70,6 +66,21 @@ interface ContextValue {
   setTotalDurationTask: Dispatch<SetStateAction<string>>;
   totalDurationTaskCompare: string;
   setTotalDurationTaskCompare: Dispatch<SetStateAction<string>>;
+
+  // Loading
+  isLoadingLarge: boolean;
+  isLoadingMedium: boolean;
+  isLoadingOrganization: boolean;
+  setIsLoadingLarge: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMedium: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingOrganization: Dispatch<SetStateAction<boolean>>;
+
+  isLoadingLargeCompare: boolean;
+  isLoadingMediumCompare: boolean;
+  isLoadingOrganizationCompare: boolean;
+  setIsLoadingLargeCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMediumCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingOrganizationCompare: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -127,14 +138,25 @@ const defaultValue: ContextValue = {
   selectedTags: [],
   setSelectedTags: () => {},
   setTagsOptions: () => {},
-  isSkeletonCategory: false,
-  setIsSkeletonCategory: () => {},
-  isSkeletonCategoryCompare: false,
-  setIsSkeletonCategoryCompare: () => {},
+
   isSkeletonCategoryTask: false,
   setIsSkeletonCategoryTask: () => {},
   isSkeletonCategoryTaskCompare: false,
   setIsSkeletonCategoryTaskCompare: () => {},
+
+  isLoadingLarge: false,
+  isLoadingMedium: false,
+  isLoadingOrganization: false,
+  setIsLoadingLarge: () => {},
+  setIsLoadingMedium: () => {},
+  setIsLoadingOrganization: () => {},
+
+  isLoadingLargeCompare: false,
+  isLoadingMediumCompare: false,
+  isLoadingOrganizationCompare: false,
+  setIsLoadingLargeCompare: () => {},
+  setIsLoadingMediumCompare: () => {},
+  setIsLoadingOrganizationCompare: () => {},
 };
 
 export const StatisticStateContext = createContext<ContextValue>(defaultValue);
@@ -145,9 +167,14 @@ export const StatisticStateProvider = ({
   children: ReactNode;
 }) => {
   // Loading
-  const [isSkeletonCategory, setIsSkeletonCategory] = useState(false);
-  const [isSkeletonCategoryCompare, setIsSkeletonCategoryCompare] =
+  const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
+  const [isLoadingLarge, setIsLoadingLarge] = useState(false);
+  const [isLoadingMedium, setIsLoadingMedium] = useState(false);
+  const [isLoadingOrganizationCompare, setIsLoadingOrganizationCompare] =
     useState(false);
+  const [isLoadingLargeCompare, setIsLoadingLargeCompare] = useState(false);
+  const [isLoadingMediumCompare, setIsLoadingMediumCompare] = useState(false);
+
   const [isSkeletonCategoryTask, setIsSkeletonCategoryTask] = useState(false);
   const [isSkeletonCategoryTaskCompare, setIsSkeletonCategoryTaskCompare] =
     useState(false);
@@ -272,14 +299,24 @@ export const StatisticStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
-    isSkeletonCategory,
-    setIsSkeletonCategory,
-    isSkeletonCategoryCompare,
-    setIsSkeletonCategoryCompare,
     isSkeletonCategoryTask,
     setIsSkeletonCategoryTask,
     isSkeletonCategoryTaskCompare,
     setIsSkeletonCategoryTaskCompare,
+
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+
+    isLoadingLargeCompare,
+    isLoadingMediumCompare,
+    isLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
   };
 
   return (

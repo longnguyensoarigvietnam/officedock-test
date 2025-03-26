@@ -50,6 +50,14 @@ const StatisticTagBoard = () => {
     setLargeOptions,
     setMediumOptions,
     setSmallOptions,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingOrganization,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingSmallCompare,
   } = useContext(StatisticTagStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
   const router = useRouter();
@@ -149,6 +157,10 @@ const StatisticTagBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    setIsLoadingOrganization(true);
+    if (isCheckCompare) {
+      setIsLoadingOrganizationCompare(true);
+    }
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -168,9 +180,12 @@ const StatisticTagBoard = () => {
     }
     setMediumOptions([]);
   };
-
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    setIsLoadingLarge(true);
+    if (isCheckCompare) {
+      setIsLoadingLargeCompare(true);
+    }
     setSelectedLarge(data);
     setSelectedMedium(null);
     setSelectedSmall(null);
@@ -196,6 +211,10 @@ const StatisticTagBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    setIsLoadingMedium(true);
+    if (isCheckCompare) {
+      setIsLoadingMediumCompare(true);
+    }
     setSelectedMedium(data);
     setSelectedSmall(null);
 
@@ -222,8 +241,11 @@ const StatisticTagBoard = () => {
     }
   };
   // Handle choose small
-
   const handleSelectSmall = (data: OptionDropdownType) => {
+    setIsLoadingSmall(true);
+    if (isCheckCompare) {
+      setIsLoadingSmallCompare(true);
+    }
     setSelectedSmall(data);
   };
 

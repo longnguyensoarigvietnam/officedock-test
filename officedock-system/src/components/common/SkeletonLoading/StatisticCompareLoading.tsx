@@ -7,8 +7,7 @@ interface props {
 
 const StatisticCompareLoading = ({ className }: props) => {
   return (
-    <div className={`flex flex-col gap-[30px]  w-[280px] pt-8 ${className} `}>
-      <SkeletonElement className="!h-[100px] !rounded-sm w-full" />
+    <div className={`w-[280px] ${className} `}>
       <SkeletonElement className="!h-[100px] !rounded-sm w-full" />
     </div>
   );

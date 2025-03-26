@@ -3,7 +3,7 @@ import { SkeletonContainer, SkeletonElement } from '.';
 
 const FormSkeleton = () => {
   return (
-    <SkeletonContainer className="!p-0 !gap-0 w-full border border-gray-200">
+    <SkeletonContainer className="!p-0 !gap-0 mt-8 w-full border border-gray-200">
       <div className="flex flex-col gap-4 p-6">
         {[...Array(3)].map((_, index) => (
           <div

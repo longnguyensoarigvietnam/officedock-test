@@ -35,13 +35,17 @@ const useStatisticsTagsCompare = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-  const { setIsSkeletonTagCompare } = useContext(StatisticTagStateContext);
+  const {
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingSmallCompare,
+  } = useContext(StatisticTagStateContext);
 
   // Handle call API get statistic tags list
   const getStatisticTagsList = async () => {
     if (!filter?.isCompare) return [];
     if (!filter?.organizationIds) return [];
-    setIsSkeletonTagCompare(true);
 
     const apiUrl = `${apiRouters.STATISTICS_TAGS}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -77,6 +81,8 @@ const useStatisticsTagsCompare = ({
     queryFn: getStatisticTagsList,
     retry: 0,
     enabled: !!token,
+    staleTime: 0,
+    cacheTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: StatisticsCategories) => {
@@ -86,7 +92,10 @@ const useStatisticsTagsCompare = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsSkeletonTagCompare(false);
+      setIsLoadingLargeCompare(false);
+      setIsLoadingMediumCompare(false);
+      setIsLoadingOrganizationCompare(false);
+      setIsLoadingSmallCompare(false);
     },
   });
 
