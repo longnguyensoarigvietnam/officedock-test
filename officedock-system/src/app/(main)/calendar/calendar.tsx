@@ -1001,7 +1001,7 @@ const EventCalendar = () => {
           top: Number(clientY),
           left: Number(clientX),
         },
-        5,
+        6,
       ).top,
     });
   };
@@ -1299,7 +1299,7 @@ const EventCalendar = () => {
             top: Number(clickInfo.jsEvent.clientY),
             left: Number(clickInfo.jsEvent.clientX),
           },
-          5,
+          6,
         ).top,
       });
     } else {

@@ -368,7 +368,7 @@ export const adjustPositionForViewport = (
   numberOfEvents: number,
 ) => {
   let { top, left } = position;
-  const popupWidth = 250;
+  const popupWidth = 320;
   let popupHeight = 300;
   switch (true) {
     case numberOfEvents >= 10:

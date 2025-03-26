@@ -34,7 +34,6 @@ import {
 } from '@constants';
 import { ChatRoomType, MessageType, SubmitLevelStatus } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
-import { MENTION_NAME_REGEX } from '@constants/regex';
 
 import {
   ChatDashboardMember,
@@ -266,46 +265,26 @@ export const MessageDetail = ({
     if (!mentions || mentions.length === 0)
       return parseReactionsToImages(message);
 
-    let processedHtml = '';
-    let i = 0;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(message, 'text/html');
 
-    while (i < message.length) {
-      if (message[i] === '@') {
-        let j = i + 1;
-        while (j < message.length && MENTION_NAME_REGEX.test(message[j])) j++;
+    doc.querySelectorAll('.mention').forEach((mention) => {
+      let mentionName = mention.textContent?.trim() || '';
 
-        const mentionName = message.substring(i + 1, j).trim();
-        if (
-          mentionName === MENTION_ALL_MEMBERS &&
-          chatRoomDetail?.participants.every((participant) =>
-            [...mentions, Number(session?.user.id)].includes(
-              Number(participant.id),
-            ),
-          )
-        ) {
-          processedHtml += `<span style="color: #0068B7;">@${mentionName}</span>`;
-          i = j;
-          continue;
-        }
-
-        const matchedUser = dashboardMembers.find(
-          (member) => member.fullName === mentionName,
-        );
-
-        if (matchedUser) {
-          const color =
-            matchedUser.id == session?.user.id ? '#0068B7' : '#77858F';
-          processedHtml += `<span style="color: ${color};">@${mentionName}</span>`;
-          i = j;
-          continue;
-        }
+      if (mentionName.startsWith('@')) {
+        mentionName = mentionName.slice(1);
       }
 
-      processedHtml += message[i];
-      i++;
-    }
+      const matchedUser = dashboardMembers.find(
+        (member) => member.fullName === mentionName,
+      );
 
-    return parseReactionsToImages(processedHtml);
+      const color =
+        (matchedUser?.id === session?.user.id || mentionName === MENTION_ALL_MEMBERS) ? '#0068B7' : '#77858F';
+      mention.setAttribute('style', `color: ${color};`);
+    });
+
+    return parseReactionsToImages(doc.body.innerHTML);
   };
 
   const processMessage = (message: string, mentions: number[]) => {
