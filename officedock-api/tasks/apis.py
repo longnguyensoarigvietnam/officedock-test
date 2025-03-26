@@ -166,8 +166,12 @@ class TaskViewSet(
         if repeat_type:
             serializer_data["recurring"] = {
                 "repeat_type": repeat_type,
-                "plan_start_date": plan_start_date.isoformat(),
-                "plan_end_date": plan_end_date.isoformat(),
+                "plan_start_date": plan_start_date.isoformat()
+                if plan_start_date
+                else None,
+                "plan_end_date": plan_end_date.isoformat()
+                if plan_end_date
+                else None,
                 "repeat_interval": repeat_interval,
                 "week_day": week_day,
                 "month_day": month_day,
@@ -736,8 +740,12 @@ class TaskViewSet(
         if repeat_type:
             serializer_data["recurring"] = {
                 "repeat_type": repeat_type,
-                "plan_start_date": plan_start_date.isoformat(),
-                "plan_end_date": plan_end_date.isoformat(),
+                "plan_start_date": plan_start_date.isoformat()
+                if plan_start_date
+                else None,
+                "plan_end_date": plan_end_date.isoformat()
+                if plan_end_date
+                else None,
                 "repeat_interval": repeat_interval,
                 "week_day": week_day,
                 "month_day": month_day,
@@ -760,10 +768,6 @@ class TaskViewSet(
             current_task.recurring
             and current_task.recurring["repeat_type"] == FrequencyMap.ONCE.value
             and repeat_type != FrequencyMap.ONCE.value
-        ) or (
-            current_task.recurring
-            and current_task.recurring["repeat_type"] != FrequencyMap.ONCE.value
-            and repeat_type == FrequencyMap.ONCE.value
         ):
             task.task_schedules.all().delete()
         # Handle task schedules creation
