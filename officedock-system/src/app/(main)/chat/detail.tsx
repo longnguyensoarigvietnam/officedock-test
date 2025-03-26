@@ -2713,7 +2713,7 @@ const ChatDetail = ({
                 </div>
               </div>
               <div className="mt-5">
-                <EditorContent editor={editor} />
+                <div className='border-[1px] border-[#77858f] rounded-[6px] h-[150px] w-full p-[14px]'></div>
               </div>
             </div>
           )}
