@@ -460,6 +460,7 @@ export const SearchMessagesModal = ({
                                     <div
                                       className={`flex flex-col items-start`}>
                                       <p className="w-fit font-semibold text-black">
+                                        {messageDetail.sender.fullName}{' '}
                                         {EVENT_DELETED}
                                       </p>
                                       <p className="font-semibold mt-2">日時</p>
@@ -935,7 +936,10 @@ export const SearchMessagesModal = ({
                           )}
                         </div>
                       )}
-                      {(chatRoomType === ChatRoomType.TASK || (chatRoomType == ChatRoomType.BOOKMARK && messageDetail.chatRoom?.type == ChatRoomType.TASK) )  && (
+                      {(chatRoomType === ChatRoomType.TASK ||
+                        (chatRoomType == ChatRoomType.BOOKMARK &&
+                          messageDetail.chatRoom?.type ==
+                            ChatRoomType.TASK)) && (
                         <div className="flex flex-col">
                           {messageDetail.deletedAt ? (
                             <p
@@ -1008,7 +1012,10 @@ export const SearchMessagesModal = ({
                           )}
                         </div>
                       )}
-                      {(chatRoomType === ChatRoomType.SKILL || (chatRoomType == ChatRoomType.BOOKMARK && messageDetail.chatRoom?.type == ChatRoomType.SKILL) ) && (
+                      {(chatRoomType === ChatRoomType.SKILL ||
+                        (chatRoomType == ChatRoomType.BOOKMARK &&
+                          messageDetail.chatRoom?.type ==
+                            ChatRoomType.SKILL)) && (
                         <div className="flex flex-col">
                           {messageDetail.deletedAt ||
                           (!messageDetail.submitLevel &&
@@ -1078,7 +1085,10 @@ export const SearchMessagesModal = ({
                           )}
                         </div>
                       )}
-                      {(chatRoomType === ChatRoomType.CALENDAR || (chatRoomType == ChatRoomType.BOOKMARK && messageDetail.chatRoom?.type == ChatRoomType.CALENDAR) ) && (
+                      {(chatRoomType === ChatRoomType.CALENDAR ||
+                        (chatRoomType == ChatRoomType.BOOKMARK &&
+                          messageDetail.chatRoom?.type ==
+                            ChatRoomType.CALENDAR)) && (
                         <div className="flex flex-col gap-3">
                           <div
                             className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer"

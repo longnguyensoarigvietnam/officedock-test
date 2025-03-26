@@ -322,7 +322,7 @@ const ListViewItem = ({
       : '';
     switch (item.repeatType) {
       case TaskRepetitiveValue.ONCE:
-        title = repeatStartTime + '~' + repeatEndTime;
+        title = '';
         break;
       case TaskRepetitiveValue.DAILY:
         title = '毎日' + repeatStartTime + '~' + repeatEndTime;

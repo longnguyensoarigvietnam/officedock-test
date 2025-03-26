@@ -322,7 +322,7 @@ export const MessageDetailBookmark = ({
                               className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                               <div className={`flex flex-col items-start`}>
                                 <p className="w-fit font-semibold text-black">
-                                  {EVENT_DELETED}
+                                {messageDetail.sender.fullName}{' '}{EVENT_DELETED}
                                 </p>
                                 <p className="font-semibold mt-2">日時</p>
                                 <p>

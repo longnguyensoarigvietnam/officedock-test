@@ -24,6 +24,7 @@ import { calculateActualDuration, convertToTimeString } from '@utils/date';
 const ActualDurationsDetail = () => {
   const params = useParams<{ id: string }>();
   const { showToast } = useToast();
+  const { expanded } = useContext(GlobalStateContext);
   const router = useRouter();
   const [taskScheduleDetail, setTaskScheduleDetail] =
     useState<ActualDurationDefaultData>();
@@ -88,7 +89,7 @@ const ActualDurationsDetail = () => {
   return (
     <div className="flex flex-col justify-between h-full">
       <div className="flex flex-col gap-4 items-center">
-        <ViewInfo label="タイトル名" className={`break-words`}>
+        <ViewInfo label="タイトル名" className={`break-words`} childrenClassName={`${expanded ? '!w-[calc(100%_-_210px)]' : '!w-[calc(100%_-_60px)]'}`}>
           {taskScheduleDetail?.title || '未設定'}{' '}
         </ViewInfo>
         <ViewInfo label="業務の種類">
