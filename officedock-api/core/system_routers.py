@@ -1,6 +1,10 @@
 from rest_framework import routers
 
-from calendars.apis import CalendarViewSet, ScheduleViewSet
+from calendars.apis import (
+    CalendarViewSet,
+    ScheduleViewSet,
+    ScheduleTeamdockViewSet,
+)
 from skills.apis import StatisticCategoryViewSet, SkillMapViewSet, SkillViewSet
 from stat_data.apis import (
     StatDataViewSet,
@@ -82,6 +86,9 @@ api_router.register(
     basename="org_category_hierarchies",
 )
 api_router.register("schedules", ScheduleViewSet, basename="schedules")
+api_router.register(
+    "teamdock/schedules", ScheduleTeamdockViewSet, basename="teamdock-schedules"
+)
 api_router.register("calendars", CalendarViewSet, basename="calendars")
 api_router.register("durations", DurationViewSet, basename="durations")
 api_router.register(
