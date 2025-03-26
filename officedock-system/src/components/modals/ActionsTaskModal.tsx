@@ -378,7 +378,14 @@ const ActionsTaskModal = ({
               )?.id || '',
           }
         : null,
-      repeatType: undefined,
+      repeatType: {
+        label: TaskRepetitiveType.ONCE,
+        value: String(
+          TASK_REPETITIVE_OPTIONS.find(
+            (option) => option.label == TaskRepetitiveType.ONCE,
+          )?.value,
+        ),
+      },
       repeatInterval: undefined,
       repeatStartTime: '',
       repeatEndTime: '',
@@ -498,15 +505,16 @@ const ActionsTaskModal = ({
             value: '',
           };
 
-      value.weekDay = dataTask.weekDay != undefined && dataTask.weekDay != null
-        ? {
-            label: `${dataTask.weekDay}`,
-            value: dataTask.weekDay,
-          }
-        : {
-            label: '',
-            value: '',
-          };
+      value.weekDay =
+        dataTask.weekDay != undefined && dataTask.weekDay != null
+          ? {
+              label: `${dataTask.weekDay}`,
+              value: dataTask.weekDay,
+            }
+          : {
+              label: '',
+              value: '',
+            };
 
       if (dataTask.tags) {
         value.tagIds = dataTask.tags.map((tag) => {
@@ -2137,28 +2145,31 @@ const ActionsTaskModal = ({
                         rules={{
                           required: true,
                         }}
-                        render={({ field: { value, onChange } }) => (
-                          <Dropdown
-                            className="h-[34px] !py-1 text-xs !border-[#77858F]"
-                            classNameTextData="!text-xs"
-                            classNameOption="!text-xs"
-                            classNameError="!text-xs"
-                            labelOptionClass="!pr-0"
-                            disabled={isCheckActionPermission}
-                            options={TASK_REPETITIVE_OPTIONS}
-                            selectedOption={TASK_REPETITIVE_OPTIONS.find(
-                              (element) => element.value === value?.value,
-                            )}
-                            onChange={(e) => {
-                              setIsFormTouched(true);
-                              onChange(e);
-                              setValue('repeatInterval', undefined);
-                              setValue('weekDay', undefined);
-                              setValue('monthDay', undefined);
-                              setValue('month', undefined);
-                            }}
-                          />
-                        )}
+                        render={({ field: { onChange } }) => {
+                          return (
+                            <Dropdown
+                              className="h-[34px] !py-1 text-xs !border-[#77858F]"
+                              classNameTextData="!text-xs"
+                              classNameOption="!text-xs"
+                              classNameError="!text-xs"
+                              labelOptionClass="!pr-0"
+                              disabled={isCheckActionPermission}
+                              options={TASK_REPETITIVE_OPTIONS}
+                              selectedOption={TASK_REPETITIVE_OPTIONS.find(
+                                (element) =>
+                                  element.value === watch('repeatType')?.value,
+                              )}
+                              onChange={(e) => {
+                                setIsFormTouched(true);
+                                onChange(e);
+                                setValue('repeatInterval', undefined);
+                                setValue('weekDay', undefined);
+                                setValue('monthDay', undefined);
+                                setValue('month', undefined);
+                              }}
+                            />
+                          );
+                        }}
                       />
                     </div>
                     {watch('repeatType') &&
@@ -2181,7 +2192,9 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={REPEAT_INTERVAL_OPTIONS}
                                 selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) => element.value === watch('repeatInterval')?.value,
+                                  (element) =>
+                                    element.value ===
+                                    watch('repeatInterval')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2218,9 +2231,10 @@ const ActionsTaskModal = ({
                                 labelOptionClass="!pr-0"
                                 disabled={isCheckActionPermission}
                                 options={WEEKDAY_OPTIONS}
-                                selectedOption={WEEKDAY_OPTIONS.find(
-                                  (element) => element.value === watch('weekDay')?.value,
-                                )}
+                                selectedOption={(watch('weekDay')?.value != null && watch('weekDay')?.value != undefined) ? WEEKDAY_OPTIONS.find(
+                                  (element) =>
+                                    element.value === watch('weekDay')?.value,
+                                ) : undefined}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
                                   onChange(e);
@@ -2247,7 +2261,9 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={REPEAT_INTERVAL_OPTIONS}
                                 selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) => element.value === watch('repeatInterval')?.value,
+                                  (element) =>
+                                    element.value ===
+                                    watch('repeatInterval')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2281,7 +2297,8 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={DAY_OPTIONS}
                                 selectedOption={DAY_OPTIONS.find(
-                                  (element) => element.value === watch('monthDay')?.value,
+                                  (element) =>
+                                    element.value === watch('monthDay')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2309,7 +2326,9 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={REPEAT_INTERVAL_OPTIONS}
                                 selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) => element.value === watch('repeatInterval')?.value,
+                                  (element) =>
+                                    element.value ===
+                                    watch('repeatInterval')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2343,7 +2362,8 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={MONTH_OPTIONS}
                                 selectedOption={MONTH_OPTIONS.find(
-                                  (element) => element.value === watch('month')?.value,
+                                  (element) =>
+                                    element.value === watch('month')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2371,7 +2391,8 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={DAY_OPTIONS}
                                 selectedOption={DAY_OPTIONS.find(
-                                  (element) => element.value === watch('monthDay')?.value,
+                                  (element) =>
+                                    element.value === watch('monthDay')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);
@@ -2399,7 +2420,9 @@ const ActionsTaskModal = ({
                                 disabled={isCheckActionPermission}
                                 options={REPEAT_INTERVAL_OPTIONS}
                                 selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) => element.value === watch('repeatInterval')?.value,
+                                  (element) =>
+                                    element.value ===
+                                    watch('repeatInterval')?.value,
                                 )}
                                 onChange={(e) => {
                                   setIsFormTouched(true);

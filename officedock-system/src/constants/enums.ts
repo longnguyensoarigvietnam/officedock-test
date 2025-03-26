@@ -426,3 +426,7 @@ export enum TaskRepetitiveValue {
   MONTHLY = 'MONTHLY',
   YEARLY = 'YEARLY'
 }
+export enum ScheduleType {
+  PLAN = 'PLAN',
+  ACTUAL = 'ACTUAL',
+}

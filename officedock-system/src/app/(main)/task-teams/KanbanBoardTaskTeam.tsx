@@ -6,7 +6,7 @@ import {
   Transition,
 } from '@headlessui/react';
 import React, { Fragment, useContext, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 
 import Button from '@components/common/Button';
@@ -21,6 +21,7 @@ import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useTaskBoardTeam from '@hooks/useTaskBoardTeam';
 
 import { FilterTypeKanban } from '@constants/enums';
+import { pageRouters } from '@constants/routers';
 import { getRandomColor, transformDataTeamTask } from '@utils';
 import { OptionDropdownType } from '@interfaces/common';
 import { TransformedStatuses, TransformedUser } from '@interfaces/task';
@@ -42,6 +43,7 @@ const KanbanBoardTaskTeam = () => {
 
   // State
   const searchParams = useSearchParams();
+  const router = useRouter();
   const organizationId = searchParams.get('organization');
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
@@ -275,14 +277,18 @@ const KanbanBoardTaskTeam = () => {
               <Button
                 variant={'primary'}
                 className={`!py-0 !px-0 font-bold w-[80px] h-7 
-              !rounded-[20px] text-xs  `}>
-                カテゴリー
+              !rounded-[20px] text-xs`}>
+                タスク
               </Button>
               <Button
-                onClick={() => {}}
+                onClick={() => {
+                  router.push(
+                    `${pageRouters.TASKS_TEAM_MANAGEMENT.href}/schedules?organization=${selectedOrganization?.value}&tabId=1`,
+                  );
+                }}
                 variant={'outline'}
-                className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
-                タグ
+                className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[90px] h-7 !rounded-[20px] text-xs`}>
+                スケジュール
               </Button>
             </div>{' '}
           </div>

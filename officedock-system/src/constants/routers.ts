@@ -370,6 +370,10 @@ export const apiRouters = {
   // TASK TEAM
   TASK_TEAM_LIST: '/tasks/teamdock/',
 
+  // TEAM SCHEDULE
+  PLAN_TEAM_SCHEDULE_LIST: '/teamdock/schedules/plan/',
+  ACTUAL_TEAM_SCHEDULE_LIST: '/teamdock/schedules/actual/',
+
   // DURATION
   TASK_DURATION: `/durations/`,
   TASK_CHECK_START: () => `/durations/another-started/`,
