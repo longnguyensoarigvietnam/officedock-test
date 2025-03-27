@@ -95,7 +95,7 @@ const UserColumnTeam = ({ user, onAdd, pinItemToTop }: Props) => {
                   }}
                   className={`rounded-full cursor-pointer w-fit bg-white `}
                   onClick={() => {
-                    onAdd(user.id);
+                    onAdd(user.id.replace('user_', ''));
                     handleSetParam({
                       id: null,
                       action: ActionTask.CREATE,

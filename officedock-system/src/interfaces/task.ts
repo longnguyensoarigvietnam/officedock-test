@@ -245,7 +245,9 @@ export interface UpdateTaskKanbanRequest {
   tag?: number | string | null;
   user?: number | string | null;
   pinAt?: string | null;
+  peopleInCharge?: string;
   isBeginUnpin?: boolean;
+  team?: string;
 }
 
 export interface TaskDuration {
