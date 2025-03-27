@@ -335,6 +335,7 @@ export interface DataDetailTaskType {
   taskId: string | number;
   isImportant?: boolean | null;
   deadline?: string;
+  statusId?: number;
   uuid: string;
   isRunning?: boolean;
 }

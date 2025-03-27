@@ -37,15 +37,17 @@ const PieChart = ({
     'rgba(75, 192, 192, 0.8)',
   ];
 
+  const filteredData = data
+  .map((value, index) => ({ value, label: labels[index], color: colors?.[index], actualValue: actualValues[index] }))
+  .filter((item) => item.value > 0);
+
   const chartData: ChartData<'pie', number[], string> = {
-    labels,
+    labels: filteredData.map((item) => item.label),
     datasets: [
       {
-        data,
-        backgroundColor: colors || defaultColors,
-        borderColor:
-          colors?.map((color) => color.replace('1', '1')) ||
-          defaultColors.map((color) => color.replace('1', '1')),
+        data: filteredData.map((item) => item.value),
+        backgroundColor: filteredData.map((item) => item.color || defaultColors[0]),
+        borderColor: filteredData.map((item) => (item.color || defaultColors[0]).replace('1', '1')),
         borderWidth: 1,
         hoverOffset: 0,
       },

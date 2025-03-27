@@ -910,7 +910,7 @@ const ActionsEventModal = ({
                   <Dropdown
                     className="h-8 !py-1 text-xs max-w-[513px] !border-[1px] !border-[#77858F] rounded-md"
                     classNameTextData="!text-xs"
-                    classNameOption="!text-xs max-w-[513px]"
+                    classNameOption="!text-xs w-[513px]"
                     classNameError="!text-xs"
                     placeholder="選択してください"
                     disabled={isDisabled}
@@ -1093,7 +1093,7 @@ const ActionsEventModal = ({
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
-                    labelOptionClass="max-w-[400px] !truncate"
+                    labelOptionClass="break-words w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
                       let updatedTagIds = [];
