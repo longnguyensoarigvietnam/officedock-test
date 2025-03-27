@@ -743,7 +743,9 @@ class StatisticViewSet(BaseAPIViewSet):
             """
             Adjust percentages
             """
-            total_percent = sum(task["percent"] for task in cards)
+            total_percent = sum(
+                task["percent"] if task["percent"] else 0 for task in cards
+            )
 
             if total_percent > 100:
                 excess = total_percent - 100
