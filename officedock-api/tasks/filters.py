@@ -88,7 +88,10 @@ class TaskBoardFilter(django_filters.FilterSet):
     status_id = django_filters.NumberFilter(
         field_name="status__id", lookup_expr="exact"
     )
+    organization_id = django_filters.NumberFilter(
+        field_name="organization__id", lookup_expr="exact"
+    )
 
     class Meta:
         model = Task
-        fields = ["user_id", "status_id"]
+        fields = ["user_id", "status_id", "organization__id"]
