@@ -1810,6 +1810,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             OpenApiParameter("organization_id", type=str, required=False),
             OpenApiParameter("user_ids", type=str, required=False),
             OpenApiParameter("page_size", type=int),
+            OpenApiParameter("ordering", type=str),
         ]
     )
     def list(self, request, *args, **kwargs):

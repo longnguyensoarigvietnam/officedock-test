@@ -42,38 +42,6 @@ def update_index_for_team(apps, schema_editor):
             task.people_in_charge.set(
                 [people[0]], through_defaults={"company": company}
             )
-        elif not people:
-            # Get all users in the company
-            users = list(company.users.all())
-            users_with_org = [
-                user for user in users if user.organizations.exists()
-            ]
-
-            if users_with_org:
-                # Pick a random user that has an organization
-                random_user = random.choice(users_with_org)
-                org = random_user.organizations.first()
-            elif users:
-                # Pick a random user without an organization and create a temporary organization
-                random_user = random.choice(users)
-                org = random.choice(organizations)
-                if not org:
-                    org = Organization.objects.create(
-                        name=FAKE_ORG_NAME, company=company
-                    )
-
-                random_user.organizations.add(
-                    org, through_defaults={"company": company}
-                )
-            else:
-                continue
-
-            # Assign the user and organization to the task
-            task.people_in_charge.set(
-                [random_user], through_defaults={"company": company}
-            )
-            task.organization = org
-            task.save(update_fields=["organization"])
 
         # Ensure the task has an organization
         if not task.organization and people:
