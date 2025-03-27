@@ -851,40 +851,46 @@ class TaskTeamdockSerializer(serializers.ModelSerializer):
             ]
 
             # Validate ordering before applying it
-            if ordering and ordering in allowed_orderings:
-                tasks = tasks.annotate(
-                    coalesced_ordering_datetime=Coalesce(
-                        "deadline",
-                        Value(REPLACE_NULL_DATE, output_field=DateTimeField()),
+            if ordering:
+                if ordering in allowed_orderings:
+                    tasks = tasks.annotate(
+                        coalesced_ordering_datetime=Coalesce(
+                            "deadline",
+                            Value(
+                                REPLACE_NULL_DATE, output_field=DateTimeField()
+                            ),
+                        )
                     )
-                )
 
-                # Replace 'deadline' with 'coalesced_ordering_datetime' for sorting
-                field_name = ordering.replace(
-                    "deadline", "coalesced_ordering_datetime"
-                )
-                tasks = tasks.order_by(field_name, "-updated_at")
+                    # Replace 'deadline' with 'coalesced_ordering_datetime' for sorting
+                    field_name = ordering.replace(
+                        "deadline", "coalesced_ordering_datetime"
+                    )
+                    tasks = tasks.order_by(field_name, "-updated_at")
 
-                # Update team task index only if sorting by deadline or importance
-                for idx, task in enumerate(tasks):
-                    team_task_index = task.team_task_index.filter(
-                        team_id=organization_id
-                    ).first()
-                    if team_task_index:
-                        if team_task_index.pin_at:
-                            team_task_index.pin_at = timezone.now() - timedelta(
-                                minutes=INITIAL_INDEX_VALUE + idx
-                            )
-                        team_task_index.index = INITIAL_INDEX_VALUE - idx
-                        team_task_index.save()
-            else:
-                raise ValidationError(
-                    {
-                        "detail": ERROR_MESSAGES[
-                            "invalid_ordering_field"
-                        ].format(field_name=ordering)
-                    }
-                )
+                    # Update team task index only if sorting by deadline or importance
+                    for idx, task in enumerate(tasks):
+                        team_task_index = task.team_task_index.filter(
+                            team_id=organization_id
+                        ).first()
+                        if team_task_index:
+                            if team_task_index.pin_at:
+                                team_task_index.pin_at = (
+                                    timezone.now()
+                                    - timedelta(
+                                        minutes=INITIAL_INDEX_VALUE + idx
+                                    )
+                                )
+                            team_task_index.index = INITIAL_INDEX_VALUE - idx
+                            team_task_index.save()
+                else:
+                    raise ValidationError(
+                        {
+                            "detail": ERROR_MESSAGES[
+                                "invalid_ordering_field"
+                            ].format(field_name=ordering)
+                        }
+                    )
 
             # Fetch task index and pinned status for the user
             task_pin = TeamTaskIndex.objects.filter(
