@@ -757,6 +757,8 @@ class TaskViewSet(
                 "month_day": month_day,
                 "month": month,
             }
+        else:
+            serializer_data["recurring"] = None
         # Update task
         task = serializer.save()
 
@@ -973,6 +975,7 @@ class TaskViewSet(
         # Create task schedule base on repeat
         if (
             task.status.name == TaskStatus.MY_ROUTINE.value
+            and task.recurring
             and task.recurring != current_task.recurring
         ):
             self._generate_loop_task_schedules(
