@@ -339,22 +339,28 @@ class TaskViewSet(
         )  # Set default end_date is 1 year
         rule = rrule.rrule(**rule_params)
         schedules = []
+        if not old_recurring:
+            task.task_schedules.all().delete()
         if task.task_schedules.exists():
-            plan_start_time = datetime.strptime(
-                old_recurring["plan_start_date"], "%Y-%m-%dT%H:%M:%S"
-            ).timetz()
-            plan_end_time = datetime.strptime(
-                old_recurring["plan_end_date"], "%Y-%m-%dT%H:%M:%S"
-            ).timetz()
-            # Check edited schedules
-            list_task_schedule_edited = task.task_schedules.filter(
-                Q(plan_start_date__gt=now())
-                & ~Q(plan_start_date__time=plan_start_time)
-                & ~Q(plan_end_date__time=plan_end_time)
-            )
+            list_task_schedule_edited = None
+            if old_recurring:
+                plan_start_time = datetime.strptime(
+                    old_recurring["plan_start_date"], "%Y-%m-%dT%H:%M:%S"
+                ).timetz()
+                plan_end_time = datetime.strptime(
+                    old_recurring["plan_end_date"], "%Y-%m-%dT%H:%M:%S"
+                ).timetz()
+                # Check edited schedules
+                list_task_schedule_edited = task.task_schedules.filter(
+                    Q(plan_start_date__gt=now())
+                    & ~Q(plan_start_date__time=plan_start_time)
+                    & ~Q(plan_end_date__time=plan_end_time)
+                )
             # Remove task schedules not edited
             task.task_schedules.exclude(
                 id__in=list_task_schedule_edited.values_list("id", flat=True)
+                if list_task_schedule_edited
+                else []
             ).delete()
             for occurrence in rule:
                 plan_end_date = datetime.combine(
@@ -765,9 +771,19 @@ class TaskViewSet(
             )
 
         if (
-            current_task.recurring
-            and current_task.recurring["repeat_type"] == FrequencyMap.ONCE.value
-            and repeat_type != FrequencyMap.ONCE.value
+            (
+                current_task.recurring
+                and current_task.recurring["repeat_type"]
+                == FrequencyMap.ONCE.value
+                and repeat_type != FrequencyMap.ONCE.value
+            )
+            or (
+                current_task.recurring
+                and current_task.recurring["repeat_type"]
+                != FrequencyMap.ONCE.value
+                and repeat_type == FrequencyMap.ONCE.value
+            )
+            or task_schedules is None
         ):
             task.task_schedules.all().delete()
         # Handle task schedules creation
