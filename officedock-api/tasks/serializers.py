@@ -28,6 +28,7 @@ from tasks.models import (
     TaskIndex,
     TaskSchedule,
     TaskStatus,
+    TeamTaskIndex,
     TodoList,
 )
 from tasks.constants import (
@@ -35,6 +36,7 @@ from tasks.constants import (
     DatetimeUnitTypes,
     FrequencyMap,
     TaskStatus as TaskStatusConstant,
+    TaskTypes,
 )
 from users.serializers import ProfileSerializer, UsersForCreationSerializer
 from users.models import User
@@ -225,7 +227,7 @@ class TodoListSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-def get_task_index(instance, request, user_id=None):
+def get_task_index(instance, request, user_id=None, team_id=None):
     """
     Return the last TaskIndex for the given task and user.
     """
@@ -235,11 +237,17 @@ def get_task_index(instance, request, user_id=None):
         or getattr(request.user, "id", None)
     )
 
-    return (
-        TaskIndex.objects.filter(task=instance, user_id=user_id).last()
-        if user_id
-        else None
-    )
+    task_index = None
+    if team_id:
+        task_index = TeamTaskIndex.objects.filter(
+            task=instance, team_id=team_id
+        ).last()
+    elif user_id:
+        task_index = TaskIndex.objects.filter(
+            task=instance, user_id=user_id
+        ).last()
+
+    return task_index
 
 
 class CategoryForCreationTaskSerializer(serializers.Serializer):
@@ -293,6 +301,8 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         allow_null=True,
         required=False,
     )
+    # Detect data generation in my task or team task to respond with accurate index
+    is_team_task = serializers.BooleanField(write_only=True, required=False)
     categories = serializers.SerializerMethodField(read_only=True)
     category_ids = CategoryForCreationTaskSerializer(
         many=True, required=False, allow_null=True, write_only=True
@@ -337,6 +347,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "task_duration",
             "is_start",
             "is_my_task",
+            "is_team_task",
             "deadline",
             "remind_at",
             "description",
@@ -505,7 +516,10 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         Return index of task
         """
         last_task = get_task_index(
-            instance, self.context.get("request"), self.context.get("user_id")
+            instance,
+            self.context.get("request"),
+            self.context.get("user_id"),
+            self.context.get("organization_id"),
         )
         return last_task.index if last_task else INITIAL_INDEX_VALUE
 
@@ -514,7 +528,10 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         Return pin time of task
         """
         last_task = get_task_index(
-            instance, self.context.get("request"), self.context.get("user_id")
+            instance,
+            self.context.get("request"),
+            self.context.get("user_id"),
+            self.context.get("organization_id"),
         )
 
         return last_task.pin_at if last_task else None
@@ -581,7 +598,10 @@ class TaskBoardSerializer(TaskCommonSerializer):
         Return index of task
         """
         last_task = get_task_index(
-            instance, self.context.get("request"), self.context.get("user_id")
+            instance,
+            self.context.get("request"),
+            self.context.get("user_id"),
+            self.context.get("organization_id"),
         )
         return last_task.index if last_task else INITIAL_INDEX_VALUE
 
@@ -590,7 +610,10 @@ class TaskBoardSerializer(TaskCommonSerializer):
         Return pin time of task
         """
         last_task = get_task_index(
-            instance, self.context.get("request"), self.context.get("user_id")
+            instance,
+            self.context.get("request"),
+            self.context.get("user_id"),
+            self.context.get("organization_id"),
         )
         return last_task.pin_at if last_task else None
 
@@ -715,10 +738,31 @@ class TaskIndexSerializer(serializers.ModelSerializer):
     is_begin_unpin = serializers.BooleanField(
         required=False, default=False, write_only=True
     )
+    team = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
+    people_in_charge = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
 
     class Meta:
         model = TaskIndex
-        fields = ["index", "user", "task", "status", "pin_at", "is_begin_unpin"]
+        fields = [
+            "index",
+            "user",
+            "team",
+            "task",
+            "status",
+            "pin_at",
+            "is_begin_unpin",
+            "people_in_charge",
+        ]
 
 
 class TaskIndexForCreationSerializer(serializers.Serializer):
@@ -735,10 +779,16 @@ class TaskIndexPinAtSerializer(TaskIndexSerializer):
     """
 
     pin_at = serializers.DateTimeField(required=True)
+    team = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
 
     class Meta:
         model = TaskIndex
-        fields = ["id", "index", "user", "task", "pin_at"]
+        fields = ["id", "index", "user", "team", "task", "pin_at"]
         read_only_fields = ["id", "index", "user", "task"]
 
 
@@ -776,21 +826,26 @@ class TaskTeamdockSerializer(serializers.ModelSerializer):
         """
         Retrieve the task status along with tasks assigned to the user.
         """
-        per_page = 5
         request = self.context.get("request")
-        statuses = TaskStatus.objects.order_by("id")
+        organization_id = request.query_params.get("organization_id")
+        page_size = int(request.query_params.get("page_size", 5))
+        statuses = TaskStatus.objects.exclude(
+            name=TaskStatusConstant.MY_ROUTINE.value
+        ).order_by("id")
         results = []
 
         for status in statuses:
-            tasks = obj.in_charge_tasks.filter(status=status)
+            tasks = obj.in_charge_tasks.filter(
+                status=status, organization_id=organization_id
+            ).exclude(type=TaskTypes.MY_TEMPLATE.value)
             tasks_total = tasks.count()
 
             # Fetch task index and pinned status for the user
-            task_pin = TaskIndex.objects.filter(
-                task=OuterRef("pk"), user_id=obj.id
+            task_pin = TeamTaskIndex.objects.filter(
+                task=OuterRef("pk"), team_id=organization_id
             ).values("pin_at")[:1]
-            task_index = TaskIndex.objects.filter(
-                task=OuterRef("pk"), user_id=obj.id
+            task_index = TeamTaskIndex.objects.filter(
+                task=OuterRef("pk"), team_id=organization_id
             ).values("index")[:1]
 
             # Annotate tasks with task index and pin timestamp
@@ -801,7 +856,7 @@ class TaskTeamdockSerializer(serializers.ModelSerializer):
                     Value(REPLACE_NULL_DATE),
                     output_field=DateTimeField(),
                 ),
-            ).order_by("-coalesced_pin_at", "-index")[:per_page]
+            ).order_by("-coalesced_pin_at", "-index")[:page_size]
 
             # Append formatted status data
             results.append(
@@ -809,11 +864,15 @@ class TaskTeamdockSerializer(serializers.ModelSerializer):
                     "id": status.id,
                     "name": status.name,
                     "total": tasks_total,
-                    "has_next": tasks_total > per_page,
+                    "has_next": tasks_total > page_size,
                     "tasks": TaskBoardSerializer(
                         tasks,
                         many=True,
-                        context={"request": request, "user_id": obj.id},
+                        context={
+                            "request": request,
+                            "user_id": obj.id,
+                            "organization_id": organization_id,
+                        },
                     ).data,
                 }
             )

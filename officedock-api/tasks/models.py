@@ -9,6 +9,7 @@ from tasks.constants import (
     TaskTypes,
 )
 from users.models import User
+from organizations.models import Organization
 
 
 class Task(BaseModel):
@@ -276,6 +277,110 @@ class TaskIndex(BaseModel):
                 TaskIndex.objects.create(
                     task=task,
                     user=user,
+                    company=task.company,
+                    index=index,
+                )
+
+
+class TeamTaskIndex(BaseModel):
+    """
+    Team task index model.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    index = models.FloatField()
+    user = models.ForeignKey(
+        "users.User",
+        related_name="team_task_index",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    team = models.ForeignKey(
+        "organizations.Organization",
+        related_name="team_task_index",
+        on_delete=models.CASCADE,
+    )
+    task = models.ForeignKey(
+        "Task", related_name="team_task_index", on_delete=models.CASCADE
+    )
+    pin_at = models.DateTimeField(null=True, blank=True)
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="team_task_indexes",
+        on_delete=models.CASCADE,
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Set default company
+        """
+        if self.index is None:
+            last_task_index = TeamTaskIndex.objects.filter(
+                team=self.team, user=self.user, task__status=self.task.status
+            ).aggregate(Max("index"))
+
+            self.index = (
+                last_task_index["index__max"] + INDEX_INCREMENT
+                if last_task_index["index__max"] is not None
+                else INITIAL_INDEX_VALUE
+            )
+
+        self.company = self.task.company
+        super().save(*args, **kwargs)
+
+    def update_max_index_for_user(
+        user: User, task: Task, team: Organization, is_update=True
+    ):
+        """
+        Update last index if add new user
+        """
+        # Calculate the maximum index for the given user
+        max_index = TeamTaskIndex.objects.filter(
+            user=user, team=team, task__status=task.status
+        ).aggregate(Max("index"))["index__max"]
+
+        # Determine the new index value
+        new_index = (
+            (max_index + INDEX_INCREMENT)
+            if max_index is not None
+            else INITIAL_INDEX_VALUE
+        )
+
+        # Create the TeamTaskIndex entry if it doesn't already exist
+        if not TeamTaskIndex.objects.filter(task=task, team=team).exists():
+            TeamTaskIndex.objects.create(
+                task=task,
+                user=user,
+                team=team,
+                company=task.company,
+                index=new_index,
+            )
+        else:
+            # Update the index if the TeamTaskIndex entry exists
+            TeamTaskIndex.objects.filter(task=task, team=team).update(
+                index=new_index, user=user
+            )
+
+    def update_index_for_user(
+        user: User, task: Task, team: Organization, is_update=True, index=None
+    ):
+        """
+        Update last index if add new user
+        """
+
+        if is_update:
+            # Update the index if the TeamTaskIndex entry exists
+            TeamTaskIndex.objects.filter(task=task, team=team).update(
+                index=index, user=user
+            )
+        else:
+            # Create the TeamTaskIndex entry if it doesn't already exist
+            if not TeamTaskIndex.objects.filter(task=task, team=team).exists():
+                TeamTaskIndex.objects.create(
+                    task=task,
+                    user=user,
+                    team=team,
                     company=task.company,
                     index=index,
                 )
