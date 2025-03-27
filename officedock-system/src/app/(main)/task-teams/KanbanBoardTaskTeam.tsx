@@ -26,6 +26,7 @@ import {
   EventWorkCategory,
   FilterTypeKanban,
   ItemStartType,
+  StatusTask,
   StatusValueTask,
 } from '@constants/enums';
 import {
@@ -42,6 +43,7 @@ import {
   TaskPinResponse,
   TaskRequest,
   TransformedStatuses,
+  UpdateTaskKanbanRequest,
 } from '@interfaces/task';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import Dropdown from '@components/common/Dropdown';
@@ -51,8 +53,12 @@ import { useSession } from 'next-auth/react';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 import { useMutation } from 'react-query';
-import { addTimeToDate, convertDateStringFull } from '@utils/date';
-import { NO_OPTION_CATEGORY } from '@constants';
+import {
+  addTimeToDate,
+  convertDateStringFull,
+  getRandomDateTimeBetween,
+} from '@utils/date';
+import { INITIAL_INDEX_VALUE, NO_OPTION_CATEGORY } from '@constants';
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
@@ -105,6 +111,7 @@ const KanbanBoardTaskTeam = () => {
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
   const [dataErrorTask, setDataErrorTask] = useState<TaskErrorPerson>();
   const [peopleDefaultId, setPeopleDefaultId] = useState<string>('');
+  const [isDragging, setDragging] = useState(false);
   const [openConfirmDeleteTaskModal, setOpenConfirmDeleteTaskModal] =
     useState(false);
   const [dataOrderRing, setDataOrderRing] = useState<string>('');
@@ -248,9 +255,29 @@ const KanbanBoardTaskTeam = () => {
       </>
     );
   };
+  //  Handle call api update index task when drag and drop
+  const handleUpdateTaskIndex = async (data: {
+    tasks: UpdateTaskKanbanRequest[];
+  }) => {
+    return await api.put(apiRouters.UPDATE_TASK_INDEX, {
+      ...data,
+    });
+  };
+
+  // Handle update index task and response
+  const { mutate: updateTaskIndex } = useMutation(
+    'postUpdateTaskIndex',
+    handleUpdateTaskIndex,
+    {
+      onSuccess: async () => {},
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
 
   // Handle Drag & drop
   const onDragEnd = (result: DropResult) => {
+    setDragging(false);
     const { source, destination } = result;
     if (!destination) return;
 
@@ -274,21 +301,8 @@ const KanbanBoardTaskTeam = () => {
 
       const sourceUser = newUsers.find((user) => user.id === sourceUserId);
       const destUser = newUsers.find((user) => user.id === destUserId);
-
       if (!sourceUser || !destUser) return prevUsers;
 
-      // If dragging in the same state -> reorder the array only
-      if (sourceUser === destUser && sourceStatus === destStatus) {
-        const tasks = [
-          ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
-        ];
-        const [movedTask] = tasks.splice(source.index, 1);
-        tasks.splice(destination.index, 0, movedTask);
-        sourceUser.statuses[sourceStatus as keyof TransformedStatuses] = tasks;
-        return newUsers;
-      }
-
-      // If you drag to another status or to another user
       const sourceTasks = [
         ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
       ];
@@ -296,15 +310,160 @@ const KanbanBoardTaskTeam = () => {
         ...destUser.statuses[destStatus as keyof TransformedStatuses],
       ];
 
-      // Get the task to move
       const [movedTask] = sourceTasks.splice(source.index, 1);
+      if (!movedTask) return prevUsers;
 
-      // Check if the task already exists in destTasks (avoid duplicate errors)
-      if (!destTasks.some((task) => task.id === movedTask.id)) {
-        destTasks.splice(destination.index, 0, movedTask);
+      // Item
+      const belowItem = destTasks[destination.index];
+      const aboveItem = destTasks[destination.index - 1]; // Item phía trên vị trí thả
+
+      if (movedTask.pinAt) {
+        if (!belowItem?.pinAt && !aboveItem?.pinAt) {
+          // Nếu cả trên và dưới đều không có pinAt -> Đưa item lên đầu danh sách
+          const newPinAt = convertDateStringFull(new Date());
+          destTasks.unshift({
+            ...movedTask,
+            pinAt: newPinAt,
+            status: {
+              id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+              name: StatusTask[destStatus as keyof typeof StatusTask],
+            },
+          });
+          updateTaskIndex({
+            tasks: [
+              {
+                task: movedTask.id as number,
+                index: movedTask.index,
+                status:
+                  StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                pinAt: newPinAt,
+                peopleInCharge: destUserId.replace('user_', ''),
+                team: organizationId as string,
+              },
+            ],
+          });
+        } else {
+          const dateAtPrev = aboveItem ? aboveItem.pinAt : null;
+          const dateAtNext = belowItem ? belowItem.pinAt : null;
+
+          // Tạo pinAt mới cho movedTask
+          const newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
+          // Nếu có pinAt ở trên hoặc dưới -> Chèn vào đúng vị trí thả
+          destTasks.splice(destination.index, 0, {
+            ...movedTask,
+            pinAt: newPinAt,
+            status: {
+              id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+              name: StatusTask[destStatus as keyof typeof StatusTask],
+            },
+          });
+          updateTaskIndex({
+            tasks: [
+              {
+                task: movedTask.id as number,
+                index: movedTask.index,
+                status:
+                  StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                pinAt: newPinAt,
+                peopleInCharge: destUserId.replace('user_', ''),
+                team: organizationId as string,
+              },
+            ],
+          });
+        }
+      } else {
+        // Nếu item không có pinAt
+        if (belowItem?.pinAt) {
+          // Nếu item phía sau có pinAt -> Đưa xuống dưới tất cả item có pinAt
+          const indexBelowPinnedItems = destTasks.findIndex(
+            (task) => !task.pinAt,
+          );
+
+          if (indexBelowPinnedItems !== -1) {
+            const firstNonPinnedItem = destTasks[indexBelowPinnedItems];
+            const indexNew = firstNonPinnedItem.index + INITIAL_INDEX_VALUE;
+            destTasks.splice(indexBelowPinnedItems, 0, {
+              ...movedTask,
+              index: indexNew,
+              status: {
+                id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                name: StatusTask[destStatus as keyof typeof StatusTask],
+              },
+            });
+            updateTaskIndex({
+              tasks: [
+                {
+                  task: movedTask.id as number,
+                  status:
+                    StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                  index: indexNew,
+                  peopleInCharge: destUserId.replace('user_', ''),
+                  team: organizationId as string,
+                },
+              ],
+            });
+          } else {
+            const indexNew = INITIAL_INDEX_VALUE * 1000;
+            destTasks.push({
+              ...movedTask,
+              index: indexNew,
+              status: {
+                id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                name: StatusTask[destStatus as keyof typeof StatusTask],
+              },
+            });
+            updateTaskIndex({
+              tasks: [
+                {
+                  task: movedTask.id as number,
+                  status:
+                    StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                  index: indexNew,
+                  peopleInCharge: destUserId.replace('user_', ''),
+                  team: organizationId as string,
+                },
+              ],
+            });
+          }
+        } else {
+          // Nếu không có pinAt phía sau -> Chèn vào đúng vị trí thả
+          let prevItemIndex = belowItem ? belowItem.index : INITIAL_INDEX_VALUE;
+          if (belowItem && belowItem.pinAt) {
+            prevItemIndex = INITIAL_INDEX_VALUE;
+          }
+          const nextItemIndex = aboveItem
+            ? aboveItem.index
+            : -INITIAL_INDEX_VALUE;
+          const dataIndex =
+            prevItemIndex === INITIAL_INDEX_VALUE ||
+            nextItemIndex === INITIAL_INDEX_VALUE
+              ? prevItemIndex + nextItemIndex
+              : (prevItemIndex + nextItemIndex) / 2;
+
+          destTasks.splice(destination.index, 0, {
+            ...movedTask,
+            index: dataIndex,
+            status: {
+              id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+              name: StatusTask[destStatus as keyof typeof StatusTask],
+            },
+          });
+          updateTaskIndex({
+            tasks: [
+              {
+                task: movedTask.id as number,
+                status:
+                  StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                index: dataIndex,
+                peopleInCharge: destUserId.replace('user_', ''),
+                team: organizationId as string,
+              },
+            ],
+          });
+        }
       }
 
-      // Update status list
+      // Cập nhật dữ liệu
       sourceUser.statuses[sourceStatus as keyof TransformedStatuses] =
         sourceTasks;
       destUser.statuses[destStatus as keyof TransformedStatuses] = destTasks;
@@ -537,7 +696,7 @@ const KanbanBoardTaskTeam = () => {
         updateTotalStatusAdd({
           userId:
             data.peopleInCharge && data.peopleInCharge.length > 0
-              ? String(data.peopleInCharge[0].id)
+              ? `user_${data.peopleInCharge[0].id}`
               : '',
           statusName: data.status?.name || '',
         });
@@ -718,11 +877,11 @@ const KanbanBoardTaskTeam = () => {
       editTaskInKanban({
         taskData: data,
         oldIdStatus: parseInt(`${variant.oldIdStatus}`),
-        oldUserId: variant.oldIdPeople as string,
+        oldUserId: `user_${variant.oldIdPeople}`,
       });
       updateTaskStatusTotal({
         taskData: data,
-        oldUserId: variant.oldIdPeople as string,
+        oldUserId: `user_${variant.oldIdPeople}`,
         oldStatusName: variant.oldNameStatus || '',
       });
       handleRemoveParam();
@@ -773,7 +932,7 @@ const KanbanBoardTaskTeam = () => {
       updateTotalStatusSubtract({
         userId:
           dataTaskEdit?.peopleInCharge && dataTaskEdit.peopleInCharge.length > 0
-            ? String(dataTaskEdit.peopleInCharge[0].id)
+            ? `user_${dataTaskEdit.peopleInCharge[0].id}`
             : '',
         statusName: dataTaskEdit?.status?.name || '',
       });
@@ -782,7 +941,7 @@ const KanbanBoardTaskTeam = () => {
         taskId: dataTaskEdit?.id as number,
         userId:
           dataTaskEdit?.peopleInCharge && dataTaskEdit.peopleInCharge.length > 0
-            ? String(dataTaskEdit.peopleInCharge[0].id)
+            ? `user_${dataTaskEdit.peopleInCharge[0].id}`
             : '',
       });
 
@@ -803,7 +962,7 @@ const KanbanBoardTaskTeam = () => {
   // Action add new task into kanban
   const addTaskToKanban = (task: Task) => {
     const userTask =
-      task.peopleInCharge.length > 0 ? `${task.peopleInCharge[0].id}` : '';
+      task.peopleInCharge.length > 0 ? `user_${task.peopleInCharge[0].id}` : '';
     setListDataKanbanTeam((prevList) => {
       return prevList.map((user) => {
         if (user.id !== userTask) return user;
@@ -844,9 +1003,8 @@ const KanbanBoardTaskTeam = () => {
         const updatedStatuses: TransformedStatuses = { ...user.statuses };
         const userTask =
           taskData.peopleInCharge.length > 0
-            ? `${taskData.peopleInCharge[0].id}`
+            ? `user_${taskData.peopleInCharge[0].id}`
             : '';
-
         if (oldUserId !== userTask) {
           // If user changes, delete task from old user
           if (user.id === oldUserId) {
@@ -881,31 +1039,37 @@ const KanbanBoardTaskTeam = () => {
             }
           }
         } else if (oldIdStatus !== taskData.status?.id) {
-          // If only changing state within the same user
-          (
-            Object.keys(updatedStatuses) as (keyof TransformedStatuses)[]
-          ).forEach((status) => {
-            updatedStatuses[status] = updatedStatuses[status].filter(
-              (task) => task.id !== taskData.id,
-            );
-          });
+          // If only changing state in the same user
+          if (user.id === oldUserId) {
+            const oldStatusKey = Object.entries(StatusValueTask).find(
+              ([, value]) => value === oldIdStatus,
+            )?.[0] as keyof TransformedStatuses;
 
-          const statusKey = Object.entries(StatusValueTask).find(
-            ([, value]) => value === taskData.status?.id,
-          )?.[0] as keyof TransformedStatuses;
+            const newStatusKey = Object.entries(StatusValueTask).find(
+              ([, value]) => value === taskData.status?.id,
+            )?.[0] as keyof TransformedStatuses;
 
-          if (statusKey) {
-            const existingTasks = updatedStatuses[statusKey] || [];
-            const updatedTaskList = [...existingTasks, taskData].sort(
-              compareItems,
-            );
+            if (oldStatusKey && newStatusKey) {
+              // Remove task from old state
+              updatedStatuses[oldStatusKey] = updatedStatuses[
+                oldStatusKey
+              ].filter((task) => task.id !== taskData.id);
 
-            // Check if the last task has pinAt or not, if not add it
-            if (
-              !existingTasks.length ||
-              !existingTasks[existingTasks.length - 1].pinAt
-            ) {
-              updatedStatuses[statusKey] = updatedTaskList;
+              // Add task to new state
+              const updatedTaskList = [
+                ...(updatedStatuses[newStatusKey] || []),
+                taskData,
+              ].sort(compareItems);
+
+              // Check if the last task does not have `pinAt`, then keep the list as is
+              if (
+                !updatedStatuses[newStatusKey].length ||
+                !updatedStatuses[newStatusKey][
+                  updatedStatuses[newStatusKey].length - 1
+                ].pinAt
+              ) {
+                updatedStatuses[newStatusKey] = updatedTaskList;
+              }
             }
           }
         } else {
@@ -1007,7 +1171,7 @@ const KanbanBoardTaskTeam = () => {
   const pinTaskInKanban = (taskPinData: TaskPinResponse) => {
     setListDataKanbanTeam((prevList) => {
       return prevList.map((user) => {
-        if (user.id !== String(taskPinData.user)) return user;
+        if (user.id !== `user_${taskPinData.user}`) return user;
 
         const updatedStatuses: TransformedStatuses = { ...user.statuses };
 
@@ -1146,7 +1310,7 @@ const KanbanBoardTaskTeam = () => {
             }),
           };
         }
-        if (user.id === String(taskData.peopleInCharge[0]?.id)) {
+        if (user.id === `user_${taskData.peopleInCharge[0]?.id}`) {
           return {
             ...user,
             statuses: user.statuses.map((status) =>
@@ -1196,7 +1360,8 @@ const KanbanBoardTaskTeam = () => {
 
   return (
     <>
-      <div className="pt-[30px] pr-10  font-medium  w-full pb-10">
+      <div
+        className={`pt-[30px] pr-10 h-[calc(100vh_-_76px)] ${isDragging ? 'overflow-hidden' : 'overflow-y-auto'}   font-medium  w-full pb-10`}>
         <div className="mb-[30px] flex items-center justify-between">
           <div className="flex items-center gap-5 ">
             <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
@@ -1380,7 +1545,11 @@ const KanbanBoardTaskTeam = () => {
         {/* BOARD DATA */}
         <div className="h-fit overflow-y-auto mt-6 w-full overflow-x-auto">
           {!isLoadingDataTask ? (
-            <DragDropContext onDragEnd={onDragEnd}>
+            <DragDropContext
+              onDragStart={() => {
+                setDragging(true);
+              }}
+              onDragEnd={onDragEnd}>
               <div className="flex gap-4 overflow-x-auto w-[calc(100vw_-_270px)]">
                 {listDataKanbanTeam.map((user) => (
                   <UserColumnTeam

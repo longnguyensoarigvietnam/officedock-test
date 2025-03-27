@@ -713,7 +713,7 @@ export function lightenColor(color: string | null, percent: number): string {
 // Transform data team task
 export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
   return result.map((user) => ({
-    id: `${user.id}`,
+    id: `user_${user.id}`,
     name: user.profile.fullName,
     statuses: {
       NOT_STARTED:
@@ -748,7 +748,7 @@ export const transformDataTotalStatus = (
   data: ResultTeam[],
 ): UserTotalStatus[] => {
   return data.map((user) => ({
-    id: `${user.id}`,
+    id: `user_${user.id}`,
     fullName: user.profile.fullName,
     statuses: user.status.map((status) => ({
       name: status.name,

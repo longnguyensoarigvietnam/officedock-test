@@ -38,7 +38,7 @@ const useTaskBoardTeam = ({
   const getTaskBoardListTeam = async () => {
     if (!organization_id) return null;
     setIsLoadingDataTask(true);
-    const apiUrl = `${apiRouters.TASK_TEAM_LIST}?organization_id=${organization_id}${ordering ? `&ordering=${ordering}` : ''}${filter?.userId ? `&user_id=${filter.userId}` : ''}${filter?.tagId ? `&tag_id=${filter.tagId}` : ''}${filter?.search ? `&search=${filter.search}` : ''}`;
+    const apiUrl = `${apiRouters.TASK_TEAM_LIST}?organization_id=${organization_id}&page_size=10${ordering ? `&ordering=${ordering}` : ''}${filter?.userId ? `&user_id=${filter.userId}` : ''}${filter?.tagId ? `&tag_id=${filter.tagId}` : ''}${filter?.search ? `&search=${filter.search}` : ''}`;
 
     const { data } = await api.get<KanbanDataTeamResponse>(apiUrl);
     return data;

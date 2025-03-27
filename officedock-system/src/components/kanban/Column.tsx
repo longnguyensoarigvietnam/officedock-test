@@ -55,7 +55,7 @@ interface ColumnProps {
   addTask: (columnId: string) => void;
   creationDataTaskData?: CreationDataTask;
   showFrequentlyTasks: boolean;
-  handleActionEditTask: (id: number, type?: string) => void
+  handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   setColumnsKanbanData: Dispatch<SetStateAction<Columns | undefined>>;
