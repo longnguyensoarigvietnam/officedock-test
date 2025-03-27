@@ -622,6 +622,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "task_schedules",
             "type",
             "categories",
+            "status",
         ]
 
     def get_type(self, instance):
