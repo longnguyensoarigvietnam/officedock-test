@@ -434,29 +434,31 @@ const PercentageCategory = ({
             {/* Line */}
             <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
             <div>
-              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex  justify-between px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-full">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     大カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="チーム選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      classNameOption="!text-sm"
-                      options={listOptionsOrganization}
-                      selectedOption={selectedOrganization || undefined}
-                      onChange={(data) => handleSelectOrganization(data)}
-                    />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationLarge &&
-                        formatTimeToJapanese(totalDurationLarge)}
-                    </p>
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="チーム選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
+                        options={listOptionsOrganization}
+                        selectedOption={selectedOrganization || undefined}
+                        onChange={(data) => handleSelectOrganization(data)}
+                      />
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationLarge &&
+                          formatTimeToJapanese(totalDurationLarge)}
+                      </p>
+                    </div>
                     <div className="min-h-[280px] flex justify-center w-full">
                       {isLoadingOrganization ? (
                         <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
@@ -504,28 +506,30 @@ const PercentageCategory = ({
                   </div>
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-full">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="大カテゴリー選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      classNameOption="!text-sm"
-                      options={largeOptions}
-                      selectedOption={selectedLarge || undefined}
-                      onChange={(data) => handleSelectLarge(data)}
-                      disabled={!selectedOrganization}
-                    />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationMedium &&
-                        formatTimeToJapanese(totalDurationMedium)}
-                    </p>
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="大カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
+                        options={largeOptions}
+                        selectedOption={selectedLarge || undefined}
+                        onChange={(data) => handleSelectLarge(data)}
+                        disabled={!selectedOrganization}
+                      />
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationMedium &&
+                          formatTimeToJapanese(totalDurationMedium)}
+                      </p>
+                    </div>
                     <div className="flex justify-center">
                       {isLoadingLarge ? (
                         <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
@@ -569,28 +573,30 @@ const PercentageCategory = ({
                   </div>
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-full">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     小カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="中カテゴリー選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      classNameOption="!text-sm"
-                      options={mediumOptions}
-                      selectedOption={selectedMedium || undefined}
-                      onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge}
-                    />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationSmall &&
-                        formatTimeToJapanese(totalDurationSmall)}
-                    </p>
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="中カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
+                        options={mediumOptions}
+                        selectedOption={selectedMedium || undefined}
+                        onChange={(data) => handleSelectMedium(data)}
+                        disabled={!selectedLarge}
+                      />
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationSmall &&
+                          formatTimeToJapanese(totalDurationSmall)}
+                      </p>
+                    </div>
                     <div className="flex justify-center">
                       {isLoadingMedium ? (
                         <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />

@@ -44,6 +44,7 @@ const useStatisticCategoriesTeam = ({
   // Handle call API get statistic category list team
   const getStatisticCategoryListTeam = async () => {
     if (!filter?.organizationIds) return [];
+
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES_TEAM(parseInt(filter?.organizationIds))}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${

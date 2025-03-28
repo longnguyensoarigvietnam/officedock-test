@@ -38,16 +38,25 @@ const PieChart = ({
   ];
 
   const filteredData = data
-  .map((value, index) => ({ value, label: labels[index], color: colors?.[index], actualValue: actualValues[index] }))
-  .filter((item) => item.value > 0);
+    .map((value, index) => ({
+      value,
+      label: labels[index],
+      color: colors?.[index],
+      actualValue: actualValues[index],
+    }))
+    .filter((item) => item.value > 0);
 
   const chartData: ChartData<'pie', number[], string> = {
     labels: filteredData.map((item) => item.label),
     datasets: [
       {
         data: filteredData.map((item) => item.value),
-        backgroundColor: filteredData.map((item) => item.color || defaultColors[0]),
-        borderColor: filteredData.map((item) => (item.color || defaultColors[0]).replace('1', '1')),
+        backgroundColor: filteredData.map(
+          (item) => item.color || defaultColors[0],
+        ),
+        borderColor: filteredData.map((item) =>
+          (item.color || defaultColors[0]).replace('1', '1'),
+        ),
         borderWidth: 1,
         hoverOffset: 0,
       },
@@ -71,8 +80,15 @@ const PieChart = ({
       },
       datalabels: {
         formatter: (value, context: Context) => {
-          const label = context.chart.data.labels?.[context.dataIndex];
-          return label ? `${label}\n${value}%` : `${value}%`;
+          const label = String(
+            context.chart.data.labels?.[context.dataIndex] || '',
+          );
+          const maxLabelLength = 10;
+          const truncatedLabel =
+            label.length > maxLabelLength
+              ? `${label.substring(0, maxLabelLength)}...`
+              : label;
+          return `${truncatedLabel}\n${value}%`;
         },
         color: '#fff',
         font: {

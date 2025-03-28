@@ -27,12 +27,19 @@ type Props = {
   handleSetParamEditTask: (id: number) => void;
   handleSetParamCopyTask: (id: number) => void;
   pinItemToTop: (itemId: string | number) => void;
+  onUpdateInline: (data: {
+    status: string;
+    task: number;
+    oldIdStatus: string;
+    oldNameStatus: string;
+  }) => void;
 };
 
 const StatusColumn = ({
   user,
   status,
   pinItemToTop,
+  onUpdateInline,
   handleSetParamEditTask,
   handleSetParamCopyTask,
 }: Props) => {
@@ -290,7 +297,7 @@ const StatusColumn = ({
                             handleActionEditTask={handleSetParamEditTask}
                             handleConfirmCopyTask={handleSetParamCopyTask}
                             handleUpdateItemInline={() => {}}
-                            editTask={() => {}}
+                            editTask={onUpdateInline}
                             handlePinItem={pinItemToTop}
                             handleUnPinItem={(id: string) => {
                               if (

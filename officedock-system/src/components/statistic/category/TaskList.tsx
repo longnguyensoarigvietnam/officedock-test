@@ -44,6 +44,7 @@ const TaskListStatistic = ({
   endDateCompare,
   isCheckCompare,
   creationDataStatisticData,
+  statisticCategoryList,
   removeTag,
   handleSelectLarge,
   handleSelectMedium,
@@ -90,17 +91,18 @@ const TaskListStatistic = ({
     if (totalDurationTask) {
       return totalDurationTask;
     }
-    return '00:00:00';
+    return '';
   };
   // Get total compare
   const getTotalDurationCompare = () => {
     if (totalDurationTaskCompare) {
       return totalDurationTaskCompare;
     }
-    return '00:00:00';
+    return '';
   };
 
   useStatisticTask({
+    parentData: statisticCategoryList,
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',

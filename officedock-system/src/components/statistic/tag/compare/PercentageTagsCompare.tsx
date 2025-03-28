@@ -366,10 +366,8 @@ const PercentageTagsCompare = ({
                           return (
                             <div
                               key={item.value}
-                              className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                              <span className="w-[32px] truncate">
-                                {item.label}
-                              </span>
+                              className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                              <span className=" truncate">{item.label}</span>
                               <ImageRound
                                 onClick={() => {
                                   removeTag(item);
@@ -386,21 +384,23 @@ const PercentageTagsCompare = ({
                   </div>
                 </div>
               </div>
-              <div className="flex gap-[10px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex gap-[10px] justify-between px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4 ">
-                    <Dropdown
-                      label="チーム選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      options={listOptionsOrganization}
-                      selectedOption={selectedOrganization || undefined}
-                      onChange={(data) => handleSelectOrganization(data)}
-                    />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="w-[220px]">
+                      <Dropdown
+                        label="チーム選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        options={listOptionsOrganization}
+                        selectedOption={selectedOrganization || undefined}
+                        onChange={(data) => handleSelectOrganization(data)}
+                      />
+                    </div>
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
                         isTag
                         data={dataChartLarge}
@@ -428,7 +428,7 @@ const PercentageTagsCompare = ({
                     </div>
                   </div>
                 </div>
-                <div>
+                <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit relative top-9 `}
                     src="/icons/drawer-blue.svg"
@@ -436,7 +436,7 @@ const PercentageTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
@@ -449,7 +449,7 @@ const PercentageTagsCompare = ({
                       onChange={(data) => handleSelectLarge(data)}
                       disabled={!selectedOrganization}
                     />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
                         isTag
                         data={dataChartMedium}
@@ -485,7 +485,7 @@ const PercentageTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
@@ -498,7 +498,7 @@ const PercentageTagsCompare = ({
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
                         isTag
                         data={dataChartSmall}
@@ -526,7 +526,7 @@ const PercentageTagsCompare = ({
                     </div>
                   </div>
                 </div>
-                <div>
+                <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit relative top-9 `}
                     src="/icons/drawer-blue.svg"
@@ -534,7 +534,7 @@ const PercentageTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 4 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="小カテゴリー選択"
@@ -547,7 +547,7 @@ const PercentageTagsCompare = ({
                       onChange={(data) => handleSelectSmall(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
                         isTag
                         isLast

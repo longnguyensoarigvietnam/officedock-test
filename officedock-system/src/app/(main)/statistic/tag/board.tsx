@@ -312,8 +312,8 @@ const StatisticTagBoard = () => {
                   return (
                     <div
                       key={item.value}
-                      className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="w-[32px] truncate">{item.label}</span>
+                      className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className=" truncate">{item.label}</span>
                       <ImageRound
                         onClick={() => {
                           removeTag(item);

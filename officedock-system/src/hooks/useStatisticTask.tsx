@@ -9,7 +9,10 @@ import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { BasePagination, OptionDropdownType } from '@interfaces/common';
-import { DataTaskListStatisticListType } from '@interfaces/statistic';
+import {
+  DataTaskListStatisticListType,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
@@ -35,11 +38,12 @@ const useStatisticTask = ({
   filter,
   isTeam = false,
   is_tag_page = false,
+  parentData,
   onSuccess,
   onError,
 }: {
   is_tag_page?: boolean;
-
+  parentData?: StatisticsCategories;
   isScroll?: boolean;
   created_at?: string;
   isTeam?: boolean;
@@ -62,6 +66,8 @@ const useStatisticTask = ({
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
     if (!filter?.organizationIds) return null;
+    if (filter?.totalDuration === '') return null;
+
     if (isTeam && !filter.user_id) return [];
     setIsSkeletonCategoryTask(true);
     setIsSkeletonTagTask(true);
@@ -109,7 +115,7 @@ const useStatisticTask = ({
     queryKey: ['getStatisticTaskList', [filter]],
     queryFn: getStatisticCategoryList,
     retry: 0,
-    enabled: !!token,
+    enabled: !!parentData && !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: BasePagination<DataTaskListStatisticListType[]>) => {

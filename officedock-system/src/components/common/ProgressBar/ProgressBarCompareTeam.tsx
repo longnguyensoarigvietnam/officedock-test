@@ -46,7 +46,7 @@ const PercentageBarCompareTeam = ({
     <div>
       {isLoading ? (
         <StatisticCompareLoading
-          className={isTag ? 'w-[220px]' : 'w-[280px]'}
+          className={isTag ? '!w-[220px] mt-[76px]' : 'w-[280px] mt-12'}
         />
       ) : (
         <>
@@ -69,7 +69,7 @@ const PercentageBarCompareTeam = ({
             )}
           </div>
           <div
-            className={`${isTag ? 'w-[220px]' : 'w-[280px]'}  h-[100px] flex`}>
+            className={`${isTag ? 'w-[220px]' : 'w-[280px]'} mt-[14px]  h-[100px] flex`}>
             {data.length > 0 ? (
               data.map((item, index) => (
                 <div
@@ -222,7 +222,7 @@ const PercentageBarCompareTeam = ({
       )}
       {isLoadingCompare ? (
         <StatisticCompareLoading
-          className={isTag ? 'w-[220px] mt-6' : 'w-[280px] mt-6'}
+          className={isTag ? '!w-[220px] mt-6' : 'w-[280px] mt-6'}
         />
       ) : (
         <>

@@ -549,7 +549,7 @@ const TimeSchedule = memo(
                     isImportant: item.isImportant,
                     deadline: item.deadline,
                     resourceId: ItemScheduleType.PLANS,
-                    statusId: item.status?.id
+                    statusId: item.status?.id,
                   };
                 }),
               );
@@ -1759,6 +1759,8 @@ const TimeSchedule = memo(
               resourceId: isCheckWeek,
               start: droppedEvent.start || new Date(),
               end: droppedEvent.end || new Date(),
+              planStartDate: String(droppedEvent.start) || '',
+              planEndDate: String(droppedEvent.end) || '',
             };
             return newData;
           } else {
@@ -1910,6 +1912,8 @@ const TimeSchedule = memo(
               resourceId: isCheckDay,
               start: droppedEvent.start || new Date(),
               end: droppedEvent.end || new Date(),
+              planStartDate: String(droppedEvent.start) || '',
+              planEndDate: String(droppedEvent.end) || '',
             };
             return newData;
           } else {
@@ -2040,7 +2044,7 @@ const TimeSchedule = memo(
       end: string;
       title: string;
       eventList: any[];
-      statusId: number,
+      statusId: number;
       clientX: number;
       clientY: number;
     }) => {

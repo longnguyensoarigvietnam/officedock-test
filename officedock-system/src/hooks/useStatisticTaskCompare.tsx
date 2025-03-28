@@ -61,6 +61,8 @@ const useStatisticTaskCompare = ({
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
     if (!filter?.isCompare) return [];
+    if (filter?.totalDuration === '') return null;
+
     if (!filter?.organizationIds) return null;
     if (isTeam && !filter.user_id) return [];
     setIsSkeletonCategoryTaskCompare(true);

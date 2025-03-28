@@ -46,7 +46,7 @@ const PercentageBarCompare = ({
     <div>
       {isLoading ? (
         <StatisticCompareLoading
-          className={isTag ? 'w-[220px]' : 'w-[280px]'}
+          className={isTag ? '!w-[220px] mt-[76px]' : 'w-[280px] mt-10'}
         />
       ) : (
         <>
@@ -61,15 +61,15 @@ const PercentageBarCompare = ({
               </div>
             </div>
             {data.length > 0 ? (
-              <div className="font-medium text-sm text-black ">
+              <div className="font-medium text-sm text-black mt-[10px]">
                 合計 {totalDuration && formatTimeToJapanese(totalDuration)}
               </div>
             ) : (
-              <div>-</div>
+              <div className="mt-[10px]">-</div>
             )}
           </div>
           <div
-            className={`${isTag ? 'w-[220px]' : 'w-[280px]'}  h-[100px] flex`}>
+            className={`${isTag ? 'w-[220px]' : 'w-[280px]'}  h-[100px] mt-[14px] flex`}>
             {data.length > 0 ? (
               data.map((item, index) => (
                 <div
@@ -225,7 +225,7 @@ const PercentageBarCompare = ({
       )}
       {isLoadingCompare ? (
         <StatisticCompareLoading
-          className={isTag ? 'w-[220px] mt-6' : 'w-[280px] mt-6'}
+          className={isTag ? '!w-[220px] mt-6' : 'w-[280px] mt-6'}
         />
       ) : (
         <>

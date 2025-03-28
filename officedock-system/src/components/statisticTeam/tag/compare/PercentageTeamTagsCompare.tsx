@@ -5,7 +5,6 @@ import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
-import StatisticCompareLoading from '@components/common/SkeletonLoading/StatisticCompareLoading';
 
 import { EventWorkCategory } from '@constants/enums';
 
@@ -404,10 +403,8 @@ const PercentageTeamTagsCompare = ({
                           return (
                             <div
                               key={item.value}
-                              className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                              <span className="w-[32px] truncate">
-                                {item.label}
-                              </span>
+                              className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                              <span className=" truncate">{item.label}</span>
                               <ImageRound
                                 onClick={() => {
                                   removeTag(item);
@@ -434,9 +431,9 @@ const PercentageTeamTagsCompare = ({
                   </span>
                 </div>
               </div>
-              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex justify-between px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4 ">
                     <Dropdown
                       label="チーム選択"
@@ -448,7 +445,7 @@ const PercentageTeamTagsCompare = ({
                       selectedOption={selectedOrganization || undefined}
                       onChange={(data) => handleSelectOrganization(data)}
                     />
-                    <div className="min-h-[280px] mt-[30px] flex justify-centers">
+                    <div className="min-h-[280px] mt-[10px] flex justify-centers">
                       <PercentageBarCompareTeam
                         isTag
                         data={dataChartLarge}
@@ -484,7 +481,7 @@ const PercentageTeamTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
@@ -497,35 +494,31 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectLarge(data)}
                       disabled={!selectedOrganization}
                     />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
-                      {isLoadingLarge || isLoadingLargeCompare ? (
-                        <StatisticCompareLoading className="!w-[220px]" />
-                      ) : (
-                        <PercentageBarCompareTeam
-                          isTag
-                          data={dataChartMedium}
-                          startDate={startDate}
-                          endDate={endDate}
-                          isLoading={isLoadingLarge}
-                          isLoadingCompare={isLoadingLargeCompare}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartMediumCompare}
-                          totalDuration={totalDurationMedium}
-                          totalDurationCompare={totalDurationMediumCompare}
-                          handleClickChart={(_data: number) => {}}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.LARGE,
-                              isCompare,
-                            );
-                          }}
-                        />
-                      )}
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
+                      <PercentageBarCompareTeam
+                        isTag
+                        data={dataChartMedium}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingLarge}
+                        isLoadingCompare={isLoadingLargeCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartMediumCompare}
+                        totalDuration={totalDurationMedium}
+                        totalDurationCompare={totalDurationMediumCompare}
+                        handleClickChart={(_data: number) => {}}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.LARGE,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -537,7 +530,7 @@ const PercentageTeamTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
@@ -550,7 +543,7 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
                         isTag
                         data={dataChartSmall}
@@ -586,7 +579,7 @@ const PercentageTeamTagsCompare = ({
                   />
                 </div>
                 {/* Pie Chart 4 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="小カテゴリー選択"
@@ -599,7 +592,7 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectSmall(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
                         isTag
                         isLast

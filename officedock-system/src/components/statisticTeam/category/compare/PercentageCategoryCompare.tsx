@@ -194,7 +194,7 @@ const PercentageTeamCategoryCompare = ({
     if (statisticCategoryListTeamCompare) {
       const color =
         statisticCategoryListTeamCompare &&
-        statisticCategoryListTeamCompare.largeCategories.find(
+        statisticCategoryListTeamCompare.largeCategories?.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
       setDataChartLargeCompare(
@@ -307,9 +307,9 @@ const PercentageTeamCategoryCompare = ({
             {/* Line */}
             <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
             <div>
-              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex justify-between px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-full">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     大カテゴリー
                   </div>
@@ -324,7 +324,7 @@ const PercentageTeamCategoryCompare = ({
                       selectedOption={selectedOrganization || undefined}
                       onChange={(data) => handleSelectOrganization(data)}
                     />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
                         data={dataChartLarge}
                         startDate={startDate}
@@ -364,7 +364,7 @@ const PercentageTeamCategoryCompare = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-full">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
@@ -380,7 +380,7 @@ const PercentageTeamCategoryCompare = ({
                       onChange={(data) => handleSelectLarge(data)}
                       disabled={!selectedOrganization}
                     />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
                         data={dataChartMedium}
                         startDate={startDate}
@@ -416,7 +416,7 @@ const PercentageTeamCategoryCompare = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-full ">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     小カテゴリー
                   </div>
@@ -432,7 +432,7 @@ const PercentageTeamCategoryCompare = ({
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
                         isLast
                         data={dataChartSmall}

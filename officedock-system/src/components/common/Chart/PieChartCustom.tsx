@@ -127,19 +127,15 @@ const PieChartCustom = ({
 
       datalabels: {
         formatter: (value, context: Context) => {
-          const maxLength = 20;
-          const label = context.chart.data.labels?.[context.dataIndex];
-
-          if (typeof label === 'string') {
-            const truncatedLabel =
-              label.length > maxLength
-                ? `${label.substring(0, maxLength)}...`
-                : label;
-
-            return `${truncatedLabel}\n${value}%`;
-          }
-
-          return `${value}%`;
+          const label = String(
+            context.chart.data.labels?.[context.dataIndex] || '',
+          );
+          const maxLabelLength = 10;
+          const truncatedLabel =
+            label.length > maxLabelLength
+              ? `${label.substring(0, maxLabelLength)}...`
+              : label;
+          return `${truncatedLabel}\n${value}%`;
         },
         color: '#fff',
         font: {
