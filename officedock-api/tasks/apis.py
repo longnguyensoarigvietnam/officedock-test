@@ -44,6 +44,7 @@ from common.utils import (
     send_web_socket_event,
     create_categories_by_model,
     check_task_overtime,
+    split_id_from_string,
 )
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
@@ -1215,7 +1216,6 @@ class TaskViewSet(
 
         # Extract tasks from validated data
         tasks_data = validated_data.get("tasks", [])
-        print(tasks_data)
 
         # Validate and save each task
         for item in tasks_data:
@@ -1223,7 +1223,6 @@ class TaskViewSet(
             user = item.get("user")
             team = item.get("team")
             people_in_charge = item.pop("people_in_charge", None)
-            print(people_in_charge)
             task_status = item.pop("status", None)
             is_begin_unpin = item.pop("is_begin_unpin")
 
@@ -1263,9 +1262,7 @@ class TaskViewSet(
             else:
                 return self.response(status_code=status.HTTP_400_BAD_REQUEST)
 
-            print("1", task.people_in_charge.all())
             if people_in_charge:
-                print("people_in_charge", people_in_charge)
                 task.people_in_charge.set(
                     [people_in_charge],
                     through_defaults={"company": task.company},
@@ -1284,7 +1281,6 @@ class TaskViewSet(
                         },
                         user,
                     )
-            print("2", task.people_in_charge.all())
 
         return self.response_ok()
 
@@ -1652,23 +1648,11 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 queryset = queryset.exclude(id__in=exclude_ids)
 
         if tag_ids := self.request.query_params.get("tag_ids"):
-            ids = []
-            for id in tag_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(tag_ids):
                 queryset = queryset.filter(tags_tasks__tag__id__in=ids)
 
         if category_ids := self.request.query_params.get("category_ids"):
-            ids = []
-            for id in category_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(category_ids):
                 queryset = queryset.filter(
                     Q(categories__large_statistic_category__in=ids)
                 )
@@ -1676,13 +1660,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if organization_ids := self.request.query_params.get(
             "organization_ids"
         ):
-            ids = []
-            for id in organization_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(organization_ids):
                 queryset = queryset.filter(Q(organization__in=ids))
 
         return queryset
@@ -1794,13 +1772,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         # Filter by user ids
         if user_ids := self.request.query_params.get("user_ids"):
-            ids = []
-            for id in user_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(user_ids):
                 queryset = queryset.filter(id__in=ids)
 
         return queryset
@@ -1811,6 +1783,10 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             OpenApiParameter("user_ids", type=str, required=False),
             OpenApiParameter("page_size", type=int),
             OpenApiParameter("ordering", type=str),
+            OpenApiParameter("tag_ids", type=str),
+            OpenApiParameter("category_ids", type=str),
+            OpenApiParameter("organization_ids", type=str),
+            OpenApiParameter("search", type=str),
         ]
     )
     def list(self, request, *args, **kwargs):

@@ -31,6 +31,7 @@ from common.utils import (
     send_web_socket_event,
     create_categories_by_model,
     get_common_categories,
+    split_id_from_string,
 )
 from tasks.models import TaskSchedule, TaskDuration
 from base.permissions import ActionPermission
@@ -579,6 +580,9 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             OpenApiParameter("start_date", type=datetime),
             OpenApiParameter("end_date", type=datetime),
             OpenApiParameter("search", type=str),
+            OpenApiParameter("tag_ids", type=str),
+            OpenApiParameter("category_ids", type=str),
+            OpenApiParameter("organization_ids", type=str),
         ],
         responses={
             status.HTTP_200_OK: OpenApiResponse(
@@ -634,20 +638,37 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                 | Q(plan_end_date__lte=end_date)
             )
 
-        # # Filter by user ids
+        # Handle filter data
         if user_ids := self.request.query_params.get("user_ids"):
-            ids = []
-            for id in user_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(user_ids):
                 schedules = schedules.filter(
                     participants__id__in=ids
                 ).distinct()
                 task_schedules = task_schedules.filter(
                     task__people_in_charge__id__in=ids
+                ).distinct()
+
+        if tag_ids := request.query_params.get("tag_ids"):
+            if ids := split_id_from_string(tag_ids):
+                schedules = schedules.filter(tags__in=ids).distinct()
+                task_schedules = task_schedules.filter(
+                    task__tags__in=ids
+                ).distinct()
+
+        if category_ids := request.query_params.get("category_ids"):
+            if ids := split_id_from_string(category_ids):
+                schedules = schedules.filter(
+                    categories__large_statistic_category__in=ids
+                ).distinct()
+                task_schedules = task_schedules.filter(
+                    task__categories__large_statistic_category__in=ids
+                ).distinct()
+
+        if organization_ids := request.query_params.get("organization_ids"):
+            if ids := split_id_from_string(organization_ids):
+                schedules = schedules.filter(organization__in=ids).distinct()
+                task_schedules = task_schedules.filter(
+                    task__organization__in=ids
                 ).distinct()
 
         results = []
@@ -689,6 +710,9 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             OpenApiParameter("end_date", type=datetime),
             OpenApiParameter("user_ids", type=str),
             OpenApiParameter("search", type=str),
+            OpenApiParameter("tag_ids", type=str),
+            OpenApiParameter("category_ids", type=str),
+            OpenApiParameter("organization_ids", type=str),
         ],
         responses={
             status.HTTP_200_OK: OpenApiResponse(
@@ -734,18 +758,32 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                 Q(started_at__lte=end_date) | Q(paused_at__lte=end_date)
             )
 
-        # # Filter by user ids
+        # Handle filter data
         if user_ids := self.request.query_params.get("user_ids"):
-            ids = []
-            for id in user_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(user_ids):
                 durations = durations.filter(
                     Q(schedule__participants__id__in=ids)
                     | Q(task__people_in_charge__id__in=ids)
+                ).distinct()
+
+        if tag_ids := request.query_params.get("tag_ids"):
+            if ids := split_id_from_string(tag_ids):
+                durations = durations.filter(
+                    Q(schedule__tags__id__in=ids) | Q(task__tags__id__in=ids)
+                ).distinct()
+
+        if category_ids := request.query_params.get("category_ids"):
+            if ids := split_id_from_string(category_ids):
+                durations = durations.filter(
+                    Q(schedule__categories__large_statistic_category__in=ids)
+                    | Q(task__categories__large_statistic_category__in=ids)
+                ).distinct()
+
+        if organization_ids := request.query_params.get("organization_ids"):
+            if ids := split_id_from_string(organization_ids):
+                durations = durations.filter(
+                    Q(schedule__organization_id__in=ids)
+                    | Q(task__organization_id__in=ids)
                 ).distinct()
 
         results = []
