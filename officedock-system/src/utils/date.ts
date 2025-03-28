@@ -1101,3 +1101,21 @@ export function getJapaneseWeekDay(dayIndex: number) {
 
   return weekdayNames[dayIndex];
 }
+
+// Calculate total durations for statistic
+export const totalDurationsForStatistic = (durations: string[]) => {
+  const totalSeconds = durations.reduce((acc, duration) => {
+    const [hours, minutes, seconds] = duration.split(":").map(Number);
+    return acc + hours * 3600 + minutes * 60 + seconds;
+  }, 0);
+
+  const hh = Math.floor(totalSeconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const mm = Math.floor((totalSeconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const ss = (totalSeconds % 60).toString().padStart(2, "0");
+
+  return `${hh}:${mm}:${ss}`;
+};

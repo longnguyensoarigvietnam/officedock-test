@@ -20,7 +20,6 @@ type Props = {
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
   statisticCategoryCompareList: StatisticsCategories | undefined;
-
   startDateCompare: Date;
   endDateCompare: Date | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;

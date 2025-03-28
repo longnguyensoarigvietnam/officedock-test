@@ -9,7 +9,9 @@ import StatisticCalendar from '@components/statistic/category/StatisticCalendar'
 import PercentageCategory from '@components/statistic/category/PercentageCategory';
 import TaskListStatistic from '@components/statistic/category/TaskList';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import AllocationCategory from '@components/statistic/category/AllocationCategory';
 import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
+import AllocationCategoryCompare from '@components/statistic/category/compare/AllocationCategoryCompare';
 
 import { pageRouters } from '@constants/routers';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
@@ -441,53 +443,69 @@ const StatisticBoard = () => {
           </div>
         </div>
       </div>
-      {/* Percentage of categories */}
+
       {isCheckCompare ? (
-        <PercentageCategoryCompare
-          startDate={startDate}
-          endDate={endDate}
-          removeTag={removeTag}
-          startDateCompare={startDateCompare}
-          endDateCompare={endDateCompare}
-          statisticCategoryList={statisticCategoryList}
-          statisticCategoryCompareList={statisticCategoryCompareList}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          handleSelectSmall={handleSelectSmall}
-        />
+        <>
+          {/* Percentage of categories */}
+          <PercentageCategoryCompare
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticCategoryList={statisticCategoryList}
+            statisticCategoryCompareList={statisticCategoryCompareList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Progress bar */}
+          <AllocationCategoryCompare
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticCategoryList={statisticCategoryList}
+            statisticCategoryCompareList={statisticCategoryCompareList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+        </>
       ) : (
-        <PercentageCategory
-          startDate={startDate}
-          endDate={endDate}
-          removeTag={removeTag}
-          statisticCategoryList={statisticCategoryList}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
-          handleSelectSmall={handleSelectSmall}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-        />
+        <>
+          {/* Percentage of categories */}
+          <PercentageCategory
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            statisticCategoryList={statisticCategoryList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+            handleSelectSmall={handleSelectSmall}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+          />
+          {/* Progress bar */}
+          <AllocationCategory
+            startDate={startDate}
+            endDate={endDate}
+            statisticCategoryList={statisticCategoryList}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+        </>
       )}
-      {/* TODO: Time allocation for each category */}
-      {/* <AllocationCategory
-        startDate={startDate}
-        endDate={endDate}
-        totalDurationLarge={totalDurationLarge}
-        totalDurationMedium={totalDurationMedium}
-        totalDurationSmall={totalDurationSmall}
-        statisticCategoryList={statisticCategoryList}
-        listOptionsOrganization={listOptionsOrganization}
-        selectedOrganization={selectedOrganization}
-        largeOptions={largeOptions}
-        selectedLarge={selectedLarge}
-        mediumOptions={mediumOptions}
-        selectedMedium={selectedMedium}
-        handleSelectOrganization={handleSelectOrganization}
-        handleSelectLarge={handleSelectLarge}
-        handleSelectMedium={handleSelectMedium}
-      /> */}
+
       {/* Task list */}
       <TaskListStatistic
         startDate={startDate}

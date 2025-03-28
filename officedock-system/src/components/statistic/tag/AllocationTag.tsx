@@ -8,21 +8,19 @@ import { OptionDropdownType } from '@interfaces/common';
 import { formatTimeToJapanese } from '@utils/date';
 import { EventWorkCategory } from '@constants/enums';
 
-import { StatisticStateContext } from '@providers/StatisticProvider';
-
-import ProgressBarStatistic from './ProgressBarStatistic';
-import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import ProgressBarStatistic from './ProgressBarStatistic';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 import { getRandomColor, lightenColor } from '@utils';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
-  statisticCategoryList: StatisticsCategories | undefined;
+  statisticTagsList: StatisticsCategories | undefined;
   removeTag: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
-  handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
@@ -37,14 +35,13 @@ type ProgressDataType = {
   optionData: string[];
 };
 
-const AllocationCategory = memo(
+const AllocationTag = memo(
   ({
     startDate,
     endDate,
-    statisticCategoryList,
+    statisticTagsList,
     removeTag,
     handleSelectOrganization,
-    handleSelectOrganizationCustom,
     handleSelectLarge,
     handleSelectMedium,
     handleSelectSmall,
@@ -66,10 +63,14 @@ const AllocationCategory = memo(
     const [progressDataSmall, setProgressDataSmall] = useState<
       ProgressDataType[]
     >([]);
+    const [progressDataCategory, setProgressDataCategory] = useState<
+      ProgressDataType[]
+    >([]);
     const {
       totalDurationLarge,
       totalDurationMedium,
       totalDurationSmall,
+      totalDurationCategory,
       listOptionsOrganization,
       largeOptions,
       mediumOptions,
@@ -80,23 +81,24 @@ const AllocationCategory = memo(
       selectedTags,
       selectedSmall,
       tagsOptions,
+      setSelectedTags,
       isLoadingLarge,
       isLoadingMedium,
       isLoadingOrganization,
-      setSelectedTags,
-      setTotalDurationTask,
-      setTotalDurationCategory,
-    } = useContext(StatisticStateContext);
+      isLoadingSmall,
+    } = useContext(StatisticTagStateContext);
 
     useEffect(() => {
-      if (statisticCategoryList) {
-        if (statisticCategoryList.largeCategories) {
-          const listDataLarge = statisticCategoryList.largeCategories.map(
+      if (statisticTagsList) {
+        if (statisticTagsList.largeCategories) {
+          const listDataLarge = statisticTagsList.largeCategories.map(
             (item) => ({
-              id: item.categoryId,
-              label: item.categoryName,
+              id: item.tagId as number,
+              label: item.tagName as string,
               value: item.percent,
-              color: item.categoryColor,
+              color:
+                lightenColor('#2E9267' as string, item.percent) ||
+                getRandomColor(),
               duration: item.duration,
               optionData: item.tasks.slice(0, 3).map((task) => task.title),
             }),
@@ -105,39 +107,31 @@ const AllocationCategory = memo(
         } else {
           setProgressDataLarge([]);
         }
-        if (statisticCategoryList.mediumCategories) {
-          const color = statisticCategoryList.largeCategories.find(
-            (item) => item.categoryId === selectedLarge?.value,
-          )?.categoryColor;
-          const listDataMedium = statisticCategoryList.mediumCategories.map(
+        if (statisticTagsList.mediumCategories) {
+          const listDataMedium = statisticTagsList.mediumCategories.map(
             (item) => ({
-              label: item.categoryName,
+              id: item.tagId as number,
+              label: item.tagName as string,
               value: item.percent,
               color:
-                item.categoryColor ||
-                (color && lightenColor(color, item.percent)) ||
+                lightenColor('#2E9267' as string, item.percent) ||
                 getRandomColor(),
               duration: item.duration,
               optionData: item.tasks.slice(0, 3).map((task) => task.title),
-              id: item.categoryId,
             }),
           );
           setProgressDataMedium(listDataMedium);
         } else {
           setProgressDataMedium([]);
         }
-        if (statisticCategoryList.smallCategories) {
-          const color = statisticCategoryList.largeCategories.find(
-            (item) => item.categoryId === selectedLarge?.value,
-          )?.categoryColor;
-          const listDataSmall = statisticCategoryList.smallCategories.map(
+        if (statisticTagsList.smallCategories) {
+          const listDataSmall = statisticTagsList.smallCategories.map(
             (item) => ({
-              id: item.categoryId,
-              label: item.categoryName,
+              id: item.tagId as number,
+              label: item.tagName as string,
               value: item.percent,
               color:
-                item.categoryColor ||
-                (color && lightenColor(color, item.percent)) ||
+                lightenColor('#2E9267' as string, item.percent) ||
                 getRandomColor(),
               duration: item.duration,
               optionData: item.tasks.slice(0, 3).map((task) => task.title),
@@ -148,29 +142,47 @@ const AllocationCategory = memo(
         } else {
           setProgressDataSmall([]);
         }
+        if (statisticTagsList.category) {
+          const listDataCategory = statisticTagsList.category.map((item) => ({
+            id: item.tagId as number,
+            label: item.tagName as string,
+            value: item.percent,
+            color:
+              lightenColor('#2E9267' as string, item.percent) ||
+              getRandomColor(),
+            duration: item.duration,
+            optionData: item.tasks.slice(0, 3).map((task) => task.title),
+          }));
+
+          setProgressDataCategory(listDataCategory);
+        } else {
+          setProgressDataCategory([]);
+        }
       }
-    }, [statisticCategoryList]);
+    }, [statisticTagsList]);
 
     const handleClickTooltip = (id: number | null, type: string) => {
       let duration: string = '00:00:00';
-
       if (type === EventWorkCategory.ALL) {
         duration =
-          statisticCategoryList?.largeCategories.find(
-            (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          statisticTagsList?.largeCategories.find((item) => item.tagId == id)
+            ?.duration || '00:00:00';
       }
+
       if (type === EventWorkCategory.LARGE) {
         duration =
-          statisticCategoryList?.mediumCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          statisticTagsList?.mediumCategories?.find((item) => item.tagId == id)
+            ?.duration || '00:00:00';
       }
       if (type === EventWorkCategory.MEDIUM) {
         duration =
-          statisticCategoryList?.smallCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
+          statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
+            ?.duration || '00:00:00';
+      }
+      if (type === EventWorkCategory.SMALL) {
+        duration =
+          statisticTagsList?.category?.find((item) => item.tagId == id)
+            ?.duration || '00:00:00';
       }
       setDetailCategory({
         id: id,
@@ -182,60 +194,10 @@ const AllocationCategory = memo(
     };
 
     const handleScroll = () => {
-      if (detailCategory?.type === EventWorkCategory.ALL) {
-        const item = largeOptions.find(
-          (item) => item.value === detailCategory?.id,
-        );
-        item && handleSelectLarge(item);
-
-        setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
-          handleSelectLarge({
-            label: '未設定',
-            value: '未設定',
-          });
-        }
-      }
-      if (detailCategory?.type === EventWorkCategory.LARGE) {
-        const item = mediumOptions.find(
-          (item) => item.value === detailCategory?.id,
-        );
-        item && handleSelectMedium(item);
-        setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
-          handleSelectMedium({
-            label: '未設定',
-            value: '未設定',
-          });
-        }
-      }
-      if (detailCategory?.type === EventWorkCategory.MEDIUM) {
-        const item = smallOptions.find(
-          (item) => item.value === detailCategory?.id,
-        );
-        item && handleSelectSmall(item);
-        setTotalDurationTask(detailCategory.totalDuration);
-        if (String(detailCategory?.id) == '未設定') {
-          handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
-          });
-        }
-      }
-      if (detailCategory?.type === EventWorkCategory.SMALL) {
-        const item = smallOptions.find(
-          (item) => item.value === detailCategory?.id,
-        );
-        item && handleSelectSmall(item);
-        if (String(detailCategory?.id) == '未設定') {
-          handleSelectSmall({
-            label: '未設定',
-            value: '未設定',
-          });
-          setTotalDurationCategory(detailCategory.totalDuration);
-        }
-      }
-
+      const item = largeOptions.find(
+        (item) => item.value === detailCategory?.id,
+      );
+      item && handleSelectLarge(item);
       const element = document.getElementById('task-list-statistic');
       setIsShowModal(false);
 
@@ -264,60 +226,6 @@ const AllocationCategory = memo(
                   カテゴリーごとのタグの時間配分
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-[240px]  relative">
-                  <MultiSelectDropdown
-                    isShowIconFilter
-                    options={tagsOptions}
-                    placeholder="集計対象のタグを選択"
-                    className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
-                    selectedOptions={selectedTags || []}
-                    onChange={(selected) => {
-                      let updatedTagIds = [];
-                      const currentTagIds = selectedTags || [];
-                      const foundItemIndex = currentTagIds.findIndex(
-                        (tag) => tag.value == selected.value,
-                      );
-                      if (foundItemIndex == -1) {
-                        updatedTagIds = [...currentTagIds, selected];
-                      } else {
-                        updatedTagIds = currentTagIds.filter(
-                          (tag) => tag.value != selected.value,
-                        );
-                      }
-                      setSelectedTags(updatedTagIds);
-                    }}
-                  />
-                  {selectedTags.length === 0 && (
-                    <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
-                      タグの絞り込み
-                    </span>
-                  )}
-                </div>
-                <div className="relative right-[224px] top-0">
-                  <div className="flex gap-2 ">
-                    {selectedTags.map((item) => {
-                      return (
-                        <div
-                          key={item.value}
-                          className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className="min-w-[32px] max-w-[80px] truncate">
-                            {item.label}
-                          </span>
-                          <ImageRound
-                            onClick={() => {
-                              removeTag(item);
-                            }}
-                            src={`/icons/close-white.svg`}
-                            name="close"
-                            className="w-fit h-fit cursor-pointer"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
             </div>
             <ImageRound
               src="/icons/extend-calendar.svg"
@@ -335,12 +243,62 @@ const AllocationCategory = memo(
               {/* Line */}
               <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
               <div>
+                {/* List tags  */}
+                <div>
+                  <div className="flex justify-between w-full my-8 px-[30px]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-[240px]">
+                        <MultiSelectDropdown
+                          options={tagsOptions}
+                          placeholder="集計対象のタグを選択"
+                          className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                          selectedOptions={selectedTags || []}
+                          onChange={(selected) => {
+                            let updatedTagIds = [];
+                            const currentTagIds = selectedTags || [];
+                            const foundItemIndex = currentTagIds.findIndex(
+                              (tag) => tag.value == selected.value,
+                            );
+                            if (foundItemIndex == -1) {
+                              updatedTagIds = [...currentTagIds, selected];
+                            } else {
+                              updatedTagIds = currentTagIds.filter(
+                                (tag) => tag.value != selected.value,
+                              );
+                            }
+                            setSelectedTags(updatedTagIds);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <div className="flex gap-2 flex-wrap ">
+                          {selectedTags.map((item) => {
+                            return (
+                              <div
+                                key={item.value}
+                                className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                                <span className="w-[32px] truncate">
+                                  {item.label}
+                                </span>
+                                <ImageRound
+                                  onClick={() => {
+                                    removeTag(item);
+                                  }}
+                                  src={`/icons/close-white.svg`}
+                                  name="close"
+                                  className="w-fit h-fit cursor-pointer"
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
                   {/* Column Chart 1 */}
                   <div className="w-full">
-                    <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
-                      大カテゴリー
-                    </div>
                     <div className="mt-4">
                       <Dropdown
                         label="チーム選択"
@@ -376,16 +334,8 @@ const AllocationCategory = memo(
                                   handleClickTooltip(id, EventWorkCategory.ALL);
                                 }}
                                 handleClickChart={(
-                                  data: OptionDropdownType,
-                                ) => {
-                                  if (data.value && data.value !== '未設定') {
-                                    selectedOrganization &&
-                                      handleSelectOrganizationCustom(
-                                        selectedOrganization,
-                                      );
-                                    handleSelectLarge(data);
-                                  }
-                                }}
+                                  _data: OptionDropdownType,
+                                ) => {}}
                                 {...item}
                               />
                             ))}
@@ -393,20 +343,8 @@ const AllocationCategory = memo(
                       )}
                     </div>
                   </div>
-                  <div>
-                    <div className="relative w-[18px] top-[6px]">
-                      <ImageRound
-                        className={`w-[18px] h-6 `}
-                        src="/icons/drawer-blue.svg"
-                        name="icon chevron right"
-                      />
-                    </div>
-                  </div>
                   {/* Column Chart 2 */}
                   <div className="w-full">
-                    <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
-                      中カテゴリー
-                    </div>
                     <div className="mt-4">
                       <Dropdown
                         label="大カテゴリー選択"
@@ -445,12 +383,8 @@ const AllocationCategory = memo(
                                   );
                                 }}
                                 handleClickChart={(
-                                  data: OptionDropdownType,
-                                ) => {
-                                  if (data.value && data.value !== '未設定') {
-                                    handleSelectMedium(data);
-                                  }
-                                }}
+                                  _data: OptionDropdownType,
+                                ) => {}}
                                 {...item}
                               />
                             ))}
@@ -458,20 +392,8 @@ const AllocationCategory = memo(
                       )}
                     </div>
                   </div>
-                  <div>
-                    <div className="relative w-[18px] top-[6px]">
-                      <ImageRound
-                        className={`w-[18px] h-6 `}
-                        src="/icons/drawer-blue.svg"
-                        name="icon chevron right"
-                      />
-                    </div>
-                  </div>
                   {/* Column Chart 3 */}
                   <div className="w-full">
-                    <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
-                      小カテゴリー
-                    </div>
                     <div className="mt-4">
                       <Dropdown
                         label="中カテゴリー選択"
@@ -516,20 +438,65 @@ const AllocationCategory = memo(
                       )}
                     </div>
                   </div>
+                  {/* Column Chart 4 */}
+                  <div className="w-full">
+                    <div className="mt-4">
+                      <Dropdown
+                        label="小カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md text-sm font-normal !py-0 !border !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
+                        options={smallOptions}
+                        selectedOption={selectedSmall || undefined}
+                        onChange={(data) => handleSelectSmall(data)}
+                        disabled={!selectedLarge}
+                      />
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationCategory &&
+                          formatTimeToJapanese(totalDurationCategory)}
+                      </p>
+                      {isLoadingSmall ? (
+                        <div className="flex flex-col gap-8">
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-4">
+                          {progressDataCategory.length > 0 &&
+                            progressDataCategory.map((item, index) => (
+                              <ProgressBarStatistic
+                                key={index}
+                                classProgressClass="h-[20px] rounded-[4px]"
+                                handleClickTooltip={(id: number | null) => {
+                                  handleClickTooltip(
+                                    id,
+                                    EventWorkCategory.SMALL,
+                                  );
+                                }}
+                                {...item}
+                              />
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </>
           )}
         </div>
         {isShowModal && (
-          <ListTaskDetailStatisticModal
+          <ListTaskDetailStatisticTagModal
             open={isShowModal}
-            selectedTags={selectedTags}
+            startDate={startDate}
+            endDate={endDate}
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}
             selectedSmall={selectedSmall}
-            startDate={startDate}
-            endDate={endDate}
             detailCategory={detailCategory}
             selectedOrganization={selectedOrganization}
             onClose={() => {
@@ -543,4 +510,4 @@ const AllocationCategory = memo(
   },
 );
 
-export default AllocationCategory;
+export default AllocationTag;
