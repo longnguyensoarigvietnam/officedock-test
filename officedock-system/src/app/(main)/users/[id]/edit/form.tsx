@@ -631,7 +631,7 @@ const EditUserForm = () => {
               <label className="text-sm ">組織 副</label>
               {fields.map((field, index) => (
                 <div
-                  className="flex gap-3 relative max-w-[calc(50%_-_109px)]"
+                  className="flex gap-3 relative max-w-[calc(100%)]"
                   key={field.id}>
                   <div className="flex-1 min-w-0">
                     <Controller

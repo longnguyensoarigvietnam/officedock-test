@@ -18,6 +18,8 @@ import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import AllocationTag from '@components/statistic/tag/AllocationTag';
+import AllocationTagCompare from '@components/statistic/tag/compare/AllocationTagCompare';
 
 const StatisticTagBoard = () => {
   const {
@@ -332,32 +334,63 @@ const StatisticTagBoard = () => {
         </div>
         <div className="my-8"></div>
       </div>
-      {/* Percentage of categories */}
+
       {isCheckCompare ? (
-        <PercentageTagsCompare
-          startDate={startDate}
-          endDate={endDate}
-          startDateCompare={startDateCompare}
-          endDateCompare={endDateCompare}
-          statisticTagsList={statisticTagsList}
-          statisticTagsCompareList={statisticTagsListCompare}
-          removeTag={removeTag}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          handleSelectSmall={handleSelectSmall}
-        />
+        <>
+          {/* Percentage of categories */}
+          <PercentageTagsCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticTagsList={statisticTagsList}
+            statisticTagsCompareList={statisticTagsListCompare}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Progress bar */}
+          <AllocationTagCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticTagsList={statisticTagsList}
+            statisticTagsCompareList={statisticTagsListCompare}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+        </>
       ) : (
-        <PercentageTags
-          startDate={startDate}
-          endDate={endDate}
-          statisticTagsList={statisticTagsList}
-          removeTag={removeTag}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectSmall={handleSelectSmall}
-          handleSelectMedium={handleSelectMedium}
-        />
+        <>
+          {/* Percentage of categories */}
+          <PercentageTags
+            startDate={startDate}
+            endDate={endDate}
+            statisticTagsList={statisticTagsList}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectSmall={handleSelectSmall}
+            handleSelectMedium={handleSelectMedium}
+          />
+          {/* Progress bar */}
+          <AllocationTag
+            startDate={startDate}
+            endDate={endDate}
+            statisticTagsList={statisticTagsList}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+        </>
       )}
 
       {/* Task list */}
