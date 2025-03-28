@@ -333,29 +333,31 @@ const PercentageCategoryTeam = ({
             {/* Line */}
             <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
             <div>
-              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex  justify-between px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-full">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     大カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="チーム選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      classNameOption="!text-sm"
-                      options={listOptionsOrganization}
-                      selectedOption={selectedOrganization || undefined}
-                      onChange={(data) => handleSelectOrganization(data)}
-                    />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationLarge &&
-                        formatTimeToJapanese(totalDurationLarge)}
-                    </p>
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="チーム選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
+                        options={listOptionsOrganization}
+                        selectedOption={selectedOrganization || undefined}
+                        onChange={(data) => handleSelectOrganization(data)}
+                      />
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationLarge &&
+                          formatTimeToJapanese(totalDurationLarge)}
+                      </p>
+                    </div>
                     <div className="min-h-[280px] flex justify-center">
                       {isLoadingOrganization ? (
                         <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
@@ -388,7 +390,7 @@ const PercentageCategoryTeam = ({
                     </div>
                   </div>
                 </div>
-                <div>
+                <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit `}
                     src="/icons/drawer-blue.svg"
@@ -396,7 +398,7 @@ const PercentageCategoryTeam = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-full">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
@@ -445,7 +447,7 @@ const PercentageCategoryTeam = ({
                     </div>
                   </div>
                 </div>
-                <div>
+                <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit `}
                     src="/icons/drawer-blue.svg"
@@ -453,7 +455,7 @@ const PercentageCategoryTeam = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-full">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     小カテゴリー
                   </div>

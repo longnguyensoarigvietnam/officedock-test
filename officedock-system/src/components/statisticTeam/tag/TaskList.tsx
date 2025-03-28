@@ -265,10 +265,8 @@ const TaskListStatisticTeamTags = ({
                         return (
                           <div
                             key={item.value}
-                            className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className="w-[32px] truncate">
-                              {item.label}
-                            </span>
+                            className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                            <span className=" truncate">{item.label}</span>
                             <ImageRound
                               onClick={() => {
                                 removeTag(item);
@@ -313,8 +311,8 @@ const TaskListStatisticTeamTags = ({
               ))}
             </div>
 
-            <div className="flex items-end gap-[20px] justify-center px-[30px] text-sm font-medium">
-              <div className="w-1/4 ">
+            <div className="flex items-end justify-between px-[30px] text-sm font-medium">
+              <div className="w-[220px]">
                 <div className="mt-4">
                   <Dropdown
                     label="チーム選択"
@@ -345,7 +343,7 @@ const TaskListStatisticTeamTags = ({
                 )}
               </div>
               {/* Large category */}
-              <div className="w-1/4 ">
+              <div className="w-[220px]">
                 <div className="mt-4">
                   <Dropdown
                     label="大カテゴリー選択"
@@ -377,7 +375,7 @@ const TaskListStatisticTeamTags = ({
                 )}
               </div>
               {/* Medium category */}
-              <div className="w-1/4">
+              <div className="w-[220px]">
                 <div className="mt-4">
                   <Dropdown
                     label="中カテゴリー選択"
@@ -409,7 +407,7 @@ const TaskListStatisticTeamTags = ({
                 )}
               </div>
               {/* Small category */}
-              <div className="w-1/4">
+              <div className="w-[220px]">
                 <div className="mt-4">
                   <Dropdown
                     label="小カテゴリー選択"

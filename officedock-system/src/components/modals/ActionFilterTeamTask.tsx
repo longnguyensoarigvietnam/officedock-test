@@ -1,40 +1,49 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import Image from 'next/image';
-
-import Checkbox from '@components/common/Checkbox';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { CreationDataTask, Team } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
+import MultiSelectUserDropdown from '@components/common/MultiSelectDropdown/MultiSelectUserDropdown';
 
 type ActionTaskFilterProp = {
   creationDataTaskData: CreationDataTask | undefined;
+  listMemberTeam: {
+    id: number;
+    fullName: string;
+    color: string;
+  }[];
   handleClose: () => void;
+  handleReadyToFetch: () => void;
 };
 
 const ActionFilterTaskTeam = ({
   creationDataTaskData,
+  listMemberTeam,
   handleClose,
+  handleReadyToFetch,
 }: ActionTaskFilterProp) => {
   const boxListRef = useRef<HTMLDivElement | null>(null);
 
   const { orderingOptions, setOrderingOptions } =
     useContext(TaskTeamStateContext);
-  const [isOpen, setIsOpen] = useState(false);
+  const [_isOpen, setIsOpen] = useState(false);
   const [
-    dataOptionsOrganizationsCategory,
+    _dataOptionsOrganizationsCategory,
     setDataOptionsOrganizationsCategory,
   ] = useState<Team[]>([]);
-  const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
+  const [_dataOptionsTagIds, setDataOptionsTagIds] = useState<
+    OptionDropdownType[]
+  >([]);
+  const [dataOptionsUserIds, setDataOptionsUserIds] = useState<
     OptionDropdownType[]
   >([]);
 
-  const { getValues, setValue, watch, reset } = useForm<{
+  const { getValues, watch, setValue, reset } = useForm<{
     tagIds: OptionDropdownType[];
+    userIds: OptionDropdownType[];
   }>({
     mode: 'onSubmit',
     defaultValues: {},
@@ -42,16 +51,27 @@ const ActionFilterTaskTeam = ({
 
   const defaultValues = useMemo<{
     tagIds: OptionDropdownType[];
+    userIds: OptionDropdownType[];
   }>(() => {
     const value: {
       tagIds: OptionDropdownType[];
+      userIds: OptionDropdownType[];
     } = {
       tagIds: [],
+      userIds: [],
     };
 
     if (orderingOptions) {
       if (orderingOptions.tag_ids) {
         value.tagIds = orderingOptions.tag_ids.map((tag) => {
+          return {
+            value: tag.value,
+            label: tag.label,
+          };
+        });
+      }
+      if (orderingOptions.user_ids) {
+        value.userIds = orderingOptions.user_ids.map((tag) => {
           return {
             value: tag.value,
             label: tag.label,
@@ -79,6 +99,17 @@ const ActionFilterTaskTeam = ({
       );
     }
   }, [creationDataTaskData]);
+  useEffect(() => {
+    if (listMemberTeam) {
+      setDataOptionsUserIds(
+        listMemberTeam.map((org) => ({
+          label: String(org.fullName),
+          value: String(org.id),
+          imgUrl: org.color,
+        })),
+      );
+    }
+  }, [listMemberTeam]);
 
   const [selectedTeams, setSelectedTeams] = useState<{
     [key: number]: { id: number; name: string; selected: boolean };
@@ -148,7 +179,7 @@ const ActionFilterTaskTeam = ({
   }, []);
 
   // Click team
-  const toggleTeam = (teamId: number, teamName: string) => {
+  const _toggleTeam = (teamId: number, teamName: string) => {
     setSelectedTeams((prev) => {
       const isSelected = !prev[teamId]?.selected;
       return {
@@ -165,7 +196,7 @@ const ActionFilterTaskTeam = ({
     }
   };
   // Click category
-  const toggleCategory = (
+  const _toggleCategory = (
     teamId: number,
     category: { id: number; name: string },
   ) => {
@@ -183,6 +214,7 @@ const ActionFilterTaskTeam = ({
   };
 
   const handleSearch = () => {
+    handleReadyToFetch();
     const selectedTeamsList = Object.values(selectedTeams)
       .filter((team) => team.selected)
       .map((team) => ({ value: team.id, label: team.name }));
@@ -202,14 +234,17 @@ const ActionFilterTaskTeam = ({
       category_ids: selectedCategoriesList,
       organization_ids: selectedTeamsList,
       tag_ids: getValues('tagIds'),
+      user_ids: getValues('userIds'),
     });
     handleClose();
   };
   const handleReset = () => {
+    handleReadyToFetch();
     setOrderingOptions({
       category_ids: [],
       organization_ids: [],
       tag_ids: [],
+      user_ids: [],
     });
   };
 
@@ -237,124 +272,31 @@ const ActionFilterTaskTeam = ({
           </div>
         </div>
         <div className="mt-[10px] flex  flex-col gap-[14px] ">
-          {/* Organization */}
-          <div ref={boxListRef} className="relative">
-            <div
-              onClick={() => setIsOpen(true)}
-              className="relative rounded-md flex items-center pl-3 text-sm font-medium text-black border border-[#77858F] h-[34px]">
-              <span>チーム&カテゴリー</span>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                <Image
-                  src="/icons/arrow-down.svg"
-                  alt="Arrow down"
-                  width={16}
-                  height={16}
-                  className={`${isOpen ? 'rotate-180' : 'rotate-0'}`}
-                />
-              </div>
-            </div>
-            {isOpen && (
-              <div className="w-[370px] h-fit max-h-[400px] overflow-y-auto absolute top-10 z-20 right-0 rounded-md p-1  border border-[#77858F] bg-white">
-                {dataOptionsOrganizationsCategory.map((team) => (
-                  <div
-                    key={team.organization.id}
-                    className="border-b last:border-none">
-                    <div
-                      className={`flex items-center relative  justify-between p-2 border-b border-transparent cursor-pointer  ${selectedTeams[team.organization.id] ? 'bg-[#F6F9FA] border-b border-[#EBF1F4]  rounded' : ''}`}
-                      onClick={() =>
-                        toggleTeam(team.organization.id, team.organization.name)
-                      }>
-                      <div onClick={() => {}} className="w-full">
-                        <Checkbox
-                          isChecked={
-                            !!selectedTeams[team.organization.id]?.selected
-                          }
-                          onChange={() => {}}
-                          label={team.organization.name}
-                          classLabel="break-words  line-clamp-2"
-                        />
-                      </div>
-                      <div className="absolute z-30  inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                        <Image
-                          onClick={() => {}}
-                          src="/icons/arrow-down.svg"
-                          alt="Arrow down"
-                          width={16}
-                          height={16}
-                          className={`${selectedTeams[team.organization.id] && selectedTeams[team.organization.id].selected ? 'rotate-180' : 'rotate-0'}`}
-                        />
-                      </div>
-                    </div>
-                    {selectedTeams[team.organization.id] &&
-                      selectedTeams[team.organization.id].selected && (
-                        <div
-                          style={{
-                            display:
-                              team.categories.length > 0 ? 'flex' : 'none',
-                          }}
-                          className="pl-10 py-1 flex-col gap-2">
-                          {team.categories.map((category) => (
-                            <div
-                              key={category.id}
-                              className="flex items-start   py-1  pr-3 ">
-                              <div className="w-full">
-                                <Checkbox
-                                  isChecked={
-                                    !!selectedCategories[
-                                      team.organization.id
-                                    ]?.[category.id as number]?.selected
-                                  }
-                                  onChange={() =>
-                                    toggleCategory(
-                                      team.organization.id,
-                                      category as { id: number; name: string },
-                                    )
-                                  }
-                                  label={category.name}
-                                  classLabel="break-words  line-clamp-2 max-w-[260px]"
-                                />
-                              </div>
-                              <span
-                                className="w-3 h-3 rounded-sm relative top-2"
-                                style={{
-                                  backgroundColor: category.color || 'white',
-                                }}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* TagIds */}
+          {/*  User */}
           <div>
-            <MultiSelectDropdown
+            <MultiSelectUserDropdown
               className="!h-[34px] !rounded-md"
               labelClass="!min-h-0 !text-sm font-medium"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
               optionClassName="!border-[1px] !border-[#77858F]"
               labelOptionClass="break-words max-w-[300px] line-clamp-2 !text-sm"
-              options={dataOptionsTagIds}
-              selectedOptions={watch('tagIds') ?? []}
-              customLabel="タグ"
+              options={dataOptionsUserIds}
+              selectedOptions={watch('userIds') ?? []}
+              customLabel="メンバー"
               onChange={(selected) => {
-                let updatedTagIds = [];
-                const currentTagIds = getValues('tagIds') || [];
-                const foundItemIndex = currentTagIds.findIndex(
+                let updatedUserIds = [];
+                const currentUserIds = getValues('userIds') || [];
+                const foundItemIndex = currentUserIds.findIndex(
                   (tag) => tag.value == selected.value,
                 );
                 if (foundItemIndex == -1) {
-                  updatedTagIds = [...currentTagIds, selected];
+                  updatedUserIds = [...currentUserIds, selected];
                 } else {
-                  updatedTagIds = currentTagIds.filter(
+                  updatedUserIds = currentUserIds.filter(
                     (tag) => tag.value != selected.value,
                   );
                 }
-                setValue('tagIds', updatedTagIds);
+                setValue('userIds', updatedUserIds);
               }}
             />
           </div>

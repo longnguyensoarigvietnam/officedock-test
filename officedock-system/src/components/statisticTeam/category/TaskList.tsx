@@ -309,8 +309,8 @@ const TaskListTeamStatistic = ({
                 </div>
               ))}
             </div>
-            <div className="flex items-end gap-[20px] justify-center px-[30px] text-sm font-medium">
-              <div className="w-1/4 ">
+            <div className="flex items-end justify-between px-[30px] text-sm font-medium">
+              <div className="w-[220px]">
                 <div className="mt-4">
                   <Dropdown
                     label="チーム選択"
@@ -341,7 +341,7 @@ const TaskListTeamStatistic = ({
                 )}
               </div>
               {/* Large category */}
-              <div className="w-1/4 ">
+              <div className="w-[220px]">
                 <div className="mt-4">
                   <Dropdown
                     label="大カテゴリー選択"
@@ -373,7 +373,7 @@ const TaskListTeamStatistic = ({
                 )}
               </div>
               {/* Medium category */}
-              <div className="w-1/4">
+              <div className="w-[220px]">
                 <div className="mt-4">
                   <Dropdown
                     label="中カテゴリー選択"
@@ -404,7 +404,7 @@ const TaskListTeamStatistic = ({
                 )}
               </div>
               {/* Small category */}
-              <div className="w-1/4">
+              <div className="w-[220px]">
                 <div className="mt-4">
                   <Dropdown
                     label="小カテゴリー選択"

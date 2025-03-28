@@ -35,10 +35,7 @@ import Dropdown from '@components/common/Dropdown';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
-import {
-  CalendarViewOptions,
-  FilterTypeKanban,
-} from '@constants/enums';
+import { CalendarViewOptions, ItemScheduleTitleType } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -101,7 +98,9 @@ const ScheduleTeamBoard = () => {
     start: '',
     end: '',
   });
-  const [dataOrderRing, _setDataOrderRing] = useState<string>('');
+  const [selectedOptionShow, setOptionShow] = useState<string>(
+    ItemScheduleTitleType.PLANS,
+  );
 
   // State
   // Member
@@ -238,9 +237,18 @@ const ScheduleTeamBoard = () => {
     }
   };
 
-  const debouncedFetchCalendarData = useRef(
+  const debouncedFetchCalendarDataPlan = useRef(
     debounce(async (startDate, endDate) => {
       await getPlanEventCalendarByTeam({
+        organizationId: String(organizationId),
+        startDate,
+        endDate,
+      });
+    }, 1000),
+  ).current;
+  const debouncedFetchCalendarDataActual = useRef(
+    debounce(async (startDate, endDate) => {
+      await getActualEventCalendarByTeam({
         organizationId: String(organizationId),
         startDate,
         endDate,
@@ -260,8 +268,11 @@ const ScheduleTeamBoard = () => {
       const endDateISOString = formatQueryEndDateForCalendar(
         calendarApi.view.activeEnd,
       );
-
-      debouncedFetchCalendarData(startDateISOString, endDateISOString);
+      if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
+        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+      } else {
+        debouncedFetchCalendarDataActual(startDateISOString, endDateISOString);
+      }
     }
   };
 
@@ -278,7 +289,11 @@ const ScheduleTeamBoard = () => {
         calendarApi.view.activeEnd,
       );
 
-      debouncedFetchCalendarData(startDateISOString, endDateISOString);
+      if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
+        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+      } else {
+        debouncedFetchCalendarDataActual(startDateISOString, endDateISOString);
+      }
     }
   };
 
@@ -294,7 +309,38 @@ const ScheduleTeamBoard = () => {
         calendarApi.view.activeEnd,
       );
 
-      debouncedFetchCalendarData(startDateISOString, endDateISOString);
+      if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
+        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+      } else {
+        debouncedFetchCalendarDataActual(startDateISOString, endDateISOString);
+      }
+    }
+  };
+  const handleCallDataWithFilter = () => {
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      const startDateISOString = formatQueryStartDateForCalendar(
+        calendarApi.view.activeStart,
+      );
+      const endDateISOString = formatQueryEndDateForCalendar(
+        calendarApi.view.activeEnd,
+      );
+
+      calendarRef.current?.getApi().refetchEvents();
+
+      if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
+        getPlanEventCalendarByTeam({
+          organizationId: String(organizationId),
+          startDate: startDateISOString,
+          endDate: endDateISOString,
+        });
+      } else {
+        getActualEventCalendarByTeam({
+          organizationId: String(organizationId),
+          startDate: startDateISOString,
+          endDate: endDateISOString,
+        });
+      }
     }
   };
 
@@ -307,12 +353,22 @@ const ScheduleTeamBoard = () => {
     startDate?: string;
     endDate?: string;
   }) => {
-    const apiUrl = `${apiRouters.ACTUAL_TEAM_SCHEDULE_LIST}?${organizationId ? `&organization_id=${organizationId}` : ''}${startDate ? `&start_date=${startDate}` : `&start_date=${currentRange.start}`}${endDate ? `&end_date=${endDate}` : `&end_date=${currentRange.end}`}`;
+    const params = new URLSearchParams({
+      ...(organizationId && { organization_id: String(organizationId) }),
+      start_date: startDate || String(currentRange.start),
+      end_date: endDate || String(currentRange.end),
+      ...(orderingOptions?.user_ids?.length && {
+        user_id: orderingOptions.user_ids.map((item) => item.value).join(','),
+      }),
+    });
+
+    const apiUrl = `${apiRouters.ACTUAL_TEAM_SCHEDULE_LIST}?${params.toString()}`;
     const { data } = await api.get(apiUrl);
+
     return data;
   };
 
-  const { mutateAsync: _getActualEventCalendarByTeam } = useMutation(
+  const { mutateAsync: getActualEventCalendarByTeam } = useMutation(
     'getActualEventCalendarByTeam',
     handleGetActualEventCalendarByTeam,
     {
@@ -372,7 +428,16 @@ const ScheduleTeamBoard = () => {
     startDate?: string;
     endDate?: string;
   }) => {
-    const apiUrl = `${apiRouters.PLAN_TEAM_SCHEDULE_LIST}?${organizationId ? `&organization_id=${organizationId}` : ''}${startDate ? `&start_date=${startDate}` : `&start_date=${currentRange.start}`}${endDate ? `&end_date=${endDate}` : `&end_date=${currentRange.end}`}`;
+    const params = new URLSearchParams({
+      ...(organizationId && { organization_id: String(organizationId) }),
+      start_date: startDate || String(currentRange.start),
+      end_date: endDate || String(currentRange.end),
+      ...(orderingOptions?.user_ids?.length && {
+        user_id: orderingOptions.user_ids.map((item) => item.value).join(','),
+      }),
+    });
+
+    const apiUrl = `${apiRouters.PLAN_TEAM_SCHEDULE_LIST}?${params.toString()}`;
     const { data } = await api.get(apiUrl);
     return data;
   };
@@ -463,6 +528,10 @@ const ScheduleTeamBoard = () => {
           ...item,
           category: 'category_ids',
         })),
+        ...orderingOptions.user_ids.map((item) => ({
+          ...item,
+          category: 'user_ids',
+        })),
       ]
     : [];
 
@@ -527,6 +596,12 @@ const ScheduleTeamBoard = () => {
   const calculateWidth = (baseWidth: number, percentage: number): number => {
     return (baseWidth * percentage) / 100;
   };
+
+  useEffect(() => {
+    if (orderingOptions) {
+      handleCallDataWithFilter();
+    }
+  }, [orderingOptions && orderingOptions?.user_ids]);
 
   return (
     <>
@@ -623,28 +698,88 @@ const ScheduleTeamBoard = () => {
             <>
               {isDateLessThanToday(currentDate) ? (
                 <Button
-                  variant='primary'
-                  className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                  variant="primary"
+                  className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
                   実績
                 </Button>
               ) : isTodaySchedule(currentDate) ? (
                 <>
                   <Button
-                    variant='outline'
-                    className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                    variant={
+                      isLoadingDataTask
+                        ? 'outline'
+                        : selectedOptionShow === ItemScheduleTitleType.PLANS
+                          ? 'primary'
+                          : 'outline'
+                    }
+                    onClick={() => {
+                      if (selectedOptionShow !== ItemScheduleTitleType.PLANS) {
+                        setOptionShow(ItemScheduleTitleType.PLANS);
+                        if (calendarRef.current) {
+                          const calendarApi = calendarRef.current.getApi();
+                          const startDateISOString =
+                            formatQueryStartDateForCalendar(
+                              calendarApi.view.activeStart,
+                            );
+                          const endDateISOString =
+                            formatQueryEndDateForCalendar(
+                              calendarApi.view.activeEnd,
+                            );
+
+                          calendarRef.current?.getApi().refetchEvents();
+
+                          getPlanEventCalendarByTeam({
+                            organizationId: String(organizationId),
+                            startDate: startDateISOString,
+                            endDate: endDateISOString,
+                          });
+                        }
+                      }
+                    }}
+                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[80px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
                     予定
                   </Button>
                   <Button
-                    variant='primary'
-                    className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                    variant={
+                      isLoadingDataTask
+                        ? 'outline'
+                        : selectedOptionShow === ItemScheduleTitleType.ACTUAL
+                          ? 'primary'
+                          : 'outline'
+                    }
+                    onClick={() => {
+                      if (selectedOptionShow !== ItemScheduleTitleType.ACTUAL) {
+                        setOptionShow(ItemScheduleTitleType.ACTUAL);
+                        if (calendarRef.current) {
+                          const calendarApi = calendarRef.current.getApi();
+                          const startDateISOString =
+                            formatQueryStartDateForCalendar(
+                              calendarApi.view.activeStart,
+                            );
+                          const endDateISOString =
+                            formatQueryEndDateForCalendar(
+                              calendarApi.view.activeEnd,
+                            );
+
+                          calendarRef.current?.getApi().refetchEvents();
+
+                          getActualEventCalendarByTeam({
+                            organizationId: String(organizationId),
+                            startDate: startDateISOString,
+                            endDate: endDateISOString,
+                          });
+                        }
+                      }
+                    }}
+                    className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
                     実績
                   </Button>
                 </>
               ) : (
                 <>
                   <Button
-                    variant='outline'
-                    className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                    variant="primary"
+                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[80px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
                     予定
                   </Button>
                 </>
@@ -731,10 +866,12 @@ const ScheduleTeamBoard = () => {
                     leave="transition ease-in duration-150"
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1">
-                    <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
+                    <PopoverPanel className="absolute left-0 top-5 z-[30] w-[400px] transform">
                       <ActionFilterTaskTeam
                         creationDataTaskData={creationDataTaskData}
                         handleClose={() => setIsOpenModalFilter(false)}
+                        listMemberTeam={listMemberTeam}
+                        handleReadyToFetch={() => {}}
                       />
                     </PopoverPanel>
                   </Transition>

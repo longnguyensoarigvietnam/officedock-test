@@ -1,6 +1,6 @@
 'use client';
 import { Controller, useForm } from 'react-hook-form';
-import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -18,13 +18,7 @@ import {
   StatusValueTask,
 } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
-import {
-  Task,
-  TaskErrorPerson,
-  TaskFormData,
-  TaskRequest,
-} from '@interfaces/task';
-import { ResponseError } from '@interfaces/response';
+import { Task, TaskFormData } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
 
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
@@ -47,14 +41,12 @@ interface ItemProps {
   handleActionEditTask: (id: number) => void;
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
-  editTask: UseMutateFunction<
-    Task,
-    ResponseError<{
-      detail: TaskErrorPerson;
-    }>,
-    TaskRequest,
-    unknown
-  >;
+  editTask: (data: {
+    status: string;
+    task: number;
+    oldIdStatus: string;
+    oldNameStatus: string;
+  }) => void;
   handlePinItem: (id: string) => void;
   handleUnPinItem: (id: string) => void;
 
@@ -629,9 +621,10 @@ const ItemTeam = ({
                             onChange={(e) => {
                               onChange(e);
                               editTask({
-                                id: `${content.id}`,
                                 oldIdStatus: `${content.status?.id}`,
-                                statusId: watch('statusId')?.value as number,
+                                status: watch('statusId')?.value as string,
+                                task: content.id,
+                                oldNameStatus: content.status?.name || '',
                               });
                             }}
                             error={errors.statusId?.message}

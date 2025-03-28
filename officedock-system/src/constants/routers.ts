@@ -115,7 +115,7 @@ export const pageRouters = {
 
   // TASK TEAM
   TASKS_TEAM_MANAGEMENT: {
-    name: 'マイタスク',
+    name: 'チームタスク',
     href: '/task-teams',
   },
 
@@ -139,11 +139,11 @@ export const pageRouters = {
   },
   // STATISTIC TEAM
   STATISTIC_TEAM_MANAGEMENT: {
-    name: '集計',
+    name: 'チーム集計',
     href: '/statistic-team',
   },
   STATISTIC_TEAM_TAG_MANAGEMENT: {
-    name: '集計',
+    name: 'チーム集計',
     href: '/statistic-team/tag',
   },
 

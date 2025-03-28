@@ -508,17 +508,19 @@ const PercentageCategoryCompare = ({
                     大カテゴリー
                   </div>
                   <div className="mt-4 ">
-                    <Dropdown
-                      label="チーム選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      options={listOptionsOrganization}
-                      selectedOption={selectedOrganization || undefined}
-                      onChange={(data) => handleSelectOrganization(data)}
-                    />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="チーム選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        options={listOptionsOrganization}
+                        selectedOption={selectedOrganization || undefined}
+                        onChange={(data) => handleSelectOrganization(data)}
+                      />
+                    </div>
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
                         data={dataChartLarge}
                         startDate={startDate}
@@ -573,18 +575,20 @@ const PercentageCategoryCompare = ({
                     中カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="大カテゴリー選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      options={largeOptions}
-                      selectedOption={selectedLarge || undefined}
-                      onChange={(data) => handleSelectLarge(data)}
-                      disabled={!selectedOrganization}
-                    />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="大カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        options={largeOptions}
+                        selectedOption={selectedLarge || undefined}
+                        onChange={(data) => handleSelectLarge(data)}
+                        disabled={!selectedOrganization}
+                      />
+                    </div>
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
                         data={dataChartMedium}
                         startDate={startDate}
@@ -636,18 +640,20 @@ const PercentageCategoryCompare = ({
                     小カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="中カテゴリー選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      options={mediumOptions}
-                      selectedOption={selectedMedium || undefined}
-                      onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge}
-                    />
-                    <div className="min-h-[280px] mt-[30px] flex justify-center">
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="中カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        options={mediumOptions}
+                        selectedOption={selectedMedium || undefined}
+                        onChange={(data) => handleSelectMedium(data)}
+                        disabled={!selectedLarge}
+                      />
+                    </div>
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
                         isLast
                         data={dataChartSmall}

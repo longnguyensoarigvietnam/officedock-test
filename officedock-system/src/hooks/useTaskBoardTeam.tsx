@@ -11,9 +11,10 @@ import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
 import { useContext } from 'react';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
+import { OptionDropdownType } from '@interfaces/common';
 
 interface FilterProps {
-  userId?: string;
+  userId?: OptionDropdownType[];
   tagId?: string;
   search?: string;
 }
@@ -22,11 +23,15 @@ const useTaskBoardTeam = ({
   organization_id,
   filter,
   ordering,
+  isReadyToFetch,
   onSuccess,
 }: {
   organization_id?: string;
   filter?: FilterProps;
   ordering?: string;
+
+  isReadyToFetch?: boolean;
+
   onSuccess?: (data: KanbanDataTeamResponse) => void;
 }) => {
   const { data: session } = useSession();
@@ -38,7 +43,18 @@ const useTaskBoardTeam = ({
   const getTaskBoardListTeam = async () => {
     if (!organization_id) return null;
     setIsLoadingDataTask(true);
-    const apiUrl = `${apiRouters.TASK_TEAM_LIST}?organization_id=${organization_id}&page_size=10${ordering ? `&ordering=${ordering}` : ''}${filter?.userId ? `&user_id=${filter.userId}` : ''}${filter?.tagId ? `&tag_id=${filter.tagId}` : ''}${filter?.search ? `&search=${filter.search}` : ''}`;
+    const params = new URLSearchParams({
+      organization_id: String(organization_id),
+      page_size: '10',
+      ...(ordering && { ordering }),
+      ...(filter?.userId && {
+        user_ids: filter.userId.map((item) => item.value).join(','),
+      }),
+      ...(filter?.tagId && { tag_id: String(filter.tagId) }),
+      ...(filter?.search && { search: filter.search }),
+    });
+
+    const apiUrl = `${apiRouters.TASK_TEAM_LIST}?${params.toString()}`;
 
     const { data } = await api.get<KanbanDataTeamResponse>(apiUrl);
     return data;
@@ -50,10 +66,12 @@ const useTaskBoardTeam = ({
     refetch: refetchTaskBoardListTeam,
     isFetched: isFetchedTaskBoards,
   } = useQuery({
-    queryKey: ['getTaskTeamList', [filter, ordering, organization_id]],
+    queryKey: isReadyToFetch
+      ? ['getTaskTeamList', [filter, ordering, organization_id]]
+      : ['getTaskTeamList'],
     queryFn: getTaskBoardListTeam,
     retry: 0,
-    enabled: !!token,
+    enabled: isReadyToFetch && !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: KanbanDataTeamResponse) => {

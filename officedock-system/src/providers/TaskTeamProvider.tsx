@@ -20,6 +20,7 @@ interface ContextValue {
     category_ids: OptionDropdownType[];
     tag_ids: OptionDropdownType[];
     organization_ids: OptionDropdownType[];
+    user_ids: OptionDropdownType[];
   } | null;
   setCreationDataTaskData: Dispatch<
     SetStateAction<CreationDataTask | undefined>
@@ -29,6 +30,7 @@ interface ContextValue {
       category_ids: OptionDropdownType[];
       tag_ids: OptionDropdownType[];
       organization_ids: OptionDropdownType[];
+      user_ids: OptionDropdownType[];
     } | null>
   >;
   setOrderingRequest: Dispatch<SetStateAction<string>>;
@@ -90,6 +92,7 @@ export const TaskTeamStateProvider = ({
     category_ids: OptionDropdownType[];
     tag_ids: OptionDropdownType[];
     organization_ids: OptionDropdownType[];
+    user_ids: OptionDropdownType[];
   } | null>(null);
 
   // Zoom

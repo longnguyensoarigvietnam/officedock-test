@@ -380,10 +380,8 @@ const PercentageTeamTags = ({
                           return (
                             <div
                               key={item.value}
-                              className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                              <span className="w-[32px] truncate">
-                                {item.label}
-                              </span>
+                              className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                              <span className=" truncate">{item.label}</span>
                               <ImageRound
                                 onClick={() => {
                                   removeTag(item);
@@ -400,9 +398,9 @@ const PercentageTeamTags = ({
                   </div>
                 </div>
               </div>
-              <div className="flex gap-[17px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex justify-between px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="チーム選択"
@@ -454,7 +452,7 @@ const PercentageTeamTags = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="大カテゴリー選択"
@@ -507,7 +505,7 @@ const PercentageTeamTags = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="中カテゴリー選択"
@@ -559,7 +557,7 @@ const PercentageTeamTags = ({
                   />
                 </div>
                 {/* Pie Chart 4 */}
-                <div className="w-full">
+                <div className="w-[220px]">
                   <div className="mt-4">
                     <Dropdown
                       label="小カテゴリー選択"

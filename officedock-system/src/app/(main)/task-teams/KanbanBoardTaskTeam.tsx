@@ -114,6 +114,8 @@ const KanbanBoardTaskTeam = () => {
   const [isDragging, setDragging] = useState(false);
   const [openConfirmDeleteTaskModal, setOpenConfirmDeleteTaskModal] =
     useState(false);
+
+  const [isReadyToFetch, setIsReadyToFetch] = useState(true);
   const [dataOrderRing, setDataOrderRing] = useState<string>('');
   const [openWarningCloseModal, setOpenWarningCloseModal] =
     useState<boolean>(false);
@@ -168,6 +170,11 @@ const KanbanBoardTaskTeam = () => {
   // get list data team
   useTaskBoardTeam({
     organization_id: organizationId as string,
+    filter: {
+      userId: orderingOptions?.user_ids,
+    },
+    isReadyToFetch: isReadyToFetch,
+    ordering: dataOrderRing,
     onSuccess: (data) => {
       if (data.results) {
         const newData = transformDataTeamTask(data.results);
@@ -180,33 +187,10 @@ const KanbanBoardTaskTeam = () => {
       }
     },
   });
-
-  // Show data filter
-  const allLabels = orderingOptions
-    ? [
-        ...orderingOptions.organization_ids.map((item) => ({
-          ...item,
-          category: 'organization_ids',
-        })),
-        ...orderingOptions.tag_ids.map((item) => ({
-          ...item,
-          category: 'tag_ids',
-        })),
-        ...orderingOptions.category_ids.map((item) => ({
-          ...item,
-          category: 'category_ids',
-        })),
-      ]
-    : [];
-
-  const firstThree = allLabels.slice(0, 3);
-
-  const remainingCount = allLabels.length - firstThree.length;
-
   // Handle remove option filter
 
   const handleRemoveItem = (
-    category: 'organization_ids' | 'tag_ids' | 'category_ids',
+    category: 'organization_ids' | 'tag_ids' | 'category_ids' | 'user_ids',
     value: string | number,
   ) => {
     setOrderingOptions((prevData) => {
@@ -234,6 +218,10 @@ const KanbanBoardTaskTeam = () => {
 
     return (
       <>
+        <p className="mr-8 text-[#77858F] font-medium text-[13px]">
+          メンバー{participants.length}人
+        </p>
+
         {slicedParticipants.map((item) => {
           return (
             <div
@@ -275,6 +263,47 @@ const KanbanBoardTaskTeam = () => {
     },
   );
 
+  const handleUpdatePeopleIndex = async (data: {
+    task: number;
+    peopleInCharge?: string;
+    statusId?: string;
+    oldIdStatus: string;
+    oldNameStatus: string;
+  }) => {
+    return await api.patch(apiRouters.TASK_DETAIL(`${data.task}`), {
+      peopleInChargeIds: data.peopleInCharge
+        ? [{ peopleInChargeId: data.peopleInCharge }]
+        : null,
+      statusId: data.statusId,
+    });
+  };
+
+  // Handle update people index task and response
+  const { mutate: updatePeopleIndex } = useMutation(
+    'postUpdatePeopleIndex',
+    handleUpdatePeopleIndex,
+    {
+      onSuccess: async ({ data }, variant) => {
+        const userTask =
+          data.peopleInCharge.length > 0
+            ? `user_${data.peopleInCharge[0].id}`
+            : '';
+        editTaskInKanban({
+          taskData: data,
+          oldIdStatus: parseInt(`${variant.oldIdStatus}`),
+          oldUserId: userTask,
+        });
+        updateTaskStatusTotal({
+          taskData: data,
+          oldUserId: userTask,
+          oldStatusName: variant.oldNameStatus || '',
+        });
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
   // Handle Drag & drop
   const onDragEnd = (result: DropResult) => {
     setDragging(false);
@@ -302,7 +331,6 @@ const KanbanBoardTaskTeam = () => {
       const sourceUser = newUsers.find((user) => user.id === sourceUserId);
       const destUser = newUsers.find((user) => user.id === destUserId);
       if (!sourceUser || !destUser) return prevUsers;
-
       const sourceTasks = [
         ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
       ];
@@ -311,15 +339,24 @@ const KanbanBoardTaskTeam = () => {
       ];
 
       const [movedTask] = sourceTasks.splice(source.index, 1);
+
       if (!movedTask) return prevUsers;
 
       // Item
       const belowItem = destTasks[destination.index];
-      const aboveItem = destTasks[destination.index - 1]; // Item phía trên vị trí thả
+      const aboveItem = destTasks[destination.index - 1]; // Item above drop position
+
+      if (sourceUserId !== destUserId || sourceStatus !== destStatus) {
+        setIsReadyToFetch(false);
+        setDataOrderRing('');
+      }
+      if (sourceUserId !== destUserId && movedTask.hasActualDuration) {
+        return newUsers;
+      }
 
       if (movedTask.pinAt) {
         if (!belowItem?.pinAt && !aboveItem?.pinAt) {
-          // Nếu cả trên và dưới đều không có pinAt -> Đưa item lên đầu danh sách
+          // If neither top nor bottom has pinAt -> Move item to top of list
           const newPinAt = convertDateStringFull(new Date());
           destTasks.unshift({
             ...movedTask,
@@ -333,11 +370,12 @@ const KanbanBoardTaskTeam = () => {
             tasks: [
               {
                 task: movedTask.id as number,
+                peopleInCharge: destUserId.replace('user_', ''),
+
                 index: movedTask.index,
                 status:
                   StatusValueTask[destStatus as keyof typeof StatusValueTask],
                 pinAt: newPinAt,
-                peopleInCharge: destUserId.replace('user_', ''),
                 team: organizationId as string,
               },
             ],
@@ -346,9 +384,9 @@ const KanbanBoardTaskTeam = () => {
           const dateAtPrev = aboveItem ? aboveItem.pinAt : null;
           const dateAtNext = belowItem ? belowItem.pinAt : null;
 
-          // Tạo pinAt mới cho movedTask
+          // Create new pinAt for movedTask
           const newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
-          // Nếu có pinAt ở trên hoặc dưới -> Chèn vào đúng vị trí thả
+          // If there is pinAt above or below -> Insert at the correct drop position
           destTasks.splice(destination.index, 0, {
             ...movedTask,
             pinAt: newPinAt,
@@ -362,19 +400,20 @@ const KanbanBoardTaskTeam = () => {
               {
                 task: movedTask.id as number,
                 index: movedTask.index,
+                peopleInCharge: destUserId.replace('user_', ''),
+
                 status:
                   StatusValueTask[destStatus as keyof typeof StatusValueTask],
                 pinAt: newPinAt,
-                peopleInCharge: destUserId.replace('user_', ''),
                 team: organizationId as string,
               },
             ],
           });
         }
       } else {
-        // Nếu item không có pinAt
+        // If item does not have pinAt
         if (belowItem?.pinAt) {
-          // Nếu item phía sau có pinAt -> Đưa xuống dưới tất cả item có pinAt
+          // If the item behind has pinAt -> Move all items with pinAt down
           const indexBelowPinnedItems = destTasks.findIndex(
             (task) => !task.pinAt,
           );
@@ -416,17 +455,17 @@ const KanbanBoardTaskTeam = () => {
               tasks: [
                 {
                   task: movedTask.id as number,
+                  peopleInCharge: destUserId.replace('user_', ''),
                   status:
                     StatusValueTask[destStatus as keyof typeof StatusValueTask],
                   index: indexNew,
-                  peopleInCharge: destUserId.replace('user_', ''),
                   team: organizationId as string,
                 },
               ],
             });
           }
         } else {
-          // Nếu không có pinAt phía sau -> Chèn vào đúng vị trí thả
+          // If there is no pinAt behind -> Insert into the correct drop position
           let prevItemIndex = belowItem ? belowItem.index : INITIAL_INDEX_VALUE;
           if (belowItem && belowItem.pinAt) {
             prevItemIndex = INITIAL_INDEX_VALUE;
@@ -452,10 +491,10 @@ const KanbanBoardTaskTeam = () => {
             tasks: [
               {
                 task: movedTask.id as number,
+                peopleInCharge: destUserId.replace('user_', ''),
                 status:
                   StatusValueTask[destStatus as keyof typeof StatusValueTask],
                 index: dataIndex,
-                peopleInCharge: destUserId.replace('user_', ''),
                 team: organizationId as string,
               },
             ],
@@ -463,7 +502,6 @@ const KanbanBoardTaskTeam = () => {
         }
       }
 
-      // Cập nhật dữ liệu
       sourceUser.statuses[sourceStatus as keyof TransformedStatuses] =
         sourceTasks;
       destUser.statuses[destStatus as keyof TransformedStatuses] = destTasks;
@@ -1040,6 +1078,7 @@ const KanbanBoardTaskTeam = () => {
           }
         } else if (oldIdStatus !== taskData.status?.id) {
           // If only changing state in the same user
+
           if (user.id === oldUserId) {
             const oldStatusKey = Object.entries(StatusValueTask).find(
               ([, value]) => value === oldIdStatus,
@@ -1358,6 +1397,32 @@ const KanbanBoardTaskTeam = () => {
     setDataTaskEdit(null);
   };
 
+  // Show data filter
+  const allLabels = orderingOptions
+    ? [
+        ...orderingOptions.organization_ids.map((item) => ({
+          ...item,
+          category: 'organization_ids',
+        })),
+        ...orderingOptions.tag_ids.map((item) => ({
+          ...item,
+          category: 'tag_ids',
+        })),
+        ...orderingOptions.category_ids.map((item) => ({
+          ...item,
+          category: 'category_ids',
+        })),
+        ...orderingOptions.user_ids.map((item) => ({
+          ...item,
+          category: 'user_ids',
+        })),
+      ]
+    : [];
+
+  const firstThree = allLabels.slice(0, 3);
+
+  const remainingCount = allLabels.length - firstThree.length;
+
   return (
     <>
       <div
@@ -1410,6 +1475,7 @@ const KanbanBoardTaskTeam = () => {
                 disabled={isLoadingDataTask}
                 onClick={() => {
                   if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
+                    setIsReadyToFetch(true);
                     setDataOrderRing(FilterTypeKanban.DEADLINE);
                   }
                 }}
@@ -1427,6 +1493,8 @@ const KanbanBoardTaskTeam = () => {
                 disabled={isLoadingDataTask}
                 onClick={() => {
                   if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+                    setIsReadyToFetch(true);
+
                     setDataOrderRing(FilterTypeKanban.IMPORTANT);
                   }
                 }}
@@ -1461,16 +1529,18 @@ const KanbanBoardTaskTeam = () => {
                         {firstThree.slice(0, 3).map((item, index) => (
                           <div
                             key={index}
-                            onClick={() =>
+                            onClick={() => {
+                              setIsReadyToFetch(true);
                               handleRemoveItem(
                                 item.category as
                                   | 'organization_ids'
                                   | 'tag_ids'
+                                  | 'user_ids'
                                   | 'category_ids',
                                 item.value,
-                              )
-                            }
-                            className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                              );
+                            }}
+                            className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
                             <span className="w-[71px] truncate">
                               {item.label}
                             </span>
@@ -1491,6 +1561,7 @@ const KanbanBoardTaskTeam = () => {
                           <div
                             key={index}
                             onClick={() => {
+                              setIsReadyToFetch(true);
                               handleRemoveItem(
                                 item.category as
                                   | 'organization_ids'
@@ -1499,7 +1570,7 @@ const KanbanBoardTaskTeam = () => {
                                 item.value,
                               );
                             }}
-                            className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
+                            className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
                             <span className="w-[71px] truncate">
                               {item.label}
                             </span>
@@ -1525,7 +1596,9 @@ const KanbanBoardTaskTeam = () => {
                     <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
                       <ActionFilterTaskTeam
                         creationDataTaskData={creationDataTaskData}
+                        listMemberTeam={listMemberTeam}
                         handleClose={() => setIsOpenModalFilter(false)}
+                        handleReadyToFetch={() => setIsReadyToFetch(true)}
                       />
                     </PopoverPanel>
                   </Transition>
@@ -1559,6 +1632,19 @@ const KanbanBoardTaskTeam = () => {
                       setPeopleDefaultId(id);
                     }}
                     pinItemToTop={pinItemToTop}
+                    onUpdateInline={(data: {
+                      status: string;
+                      task: number;
+                      oldIdStatus: string;
+                      oldNameStatus: string;
+                    }) => {
+                      updatePeopleIndex({
+                        task: data.task,
+                        statusId: data.status,
+                        oldIdStatus: data.oldIdStatus,
+                        oldNameStatus: data.oldNameStatus,
+                      });
+                    }}
                   />
                 ))}
               </div>

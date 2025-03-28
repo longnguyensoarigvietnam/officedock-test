@@ -15,6 +15,12 @@ type Props = {
   user: TransformedUser;
   onAdd: (id: string) => void;
   pinItemToTop: (itemId: string | number) => void;
+  onUpdateInline: (data: {
+    status: string;
+    task: number;
+    oldIdStatus: string;
+    oldNameStatus: string;
+  }) => void;
 };
 const statuses: (keyof TransformedStatuses)[] = [
   'NOT_STARTED',
@@ -23,7 +29,12 @@ const statuses: (keyof TransformedStatuses)[] = [
   'COMPLETED',
 ];
 
-const UserColumnTeam = ({ user, onAdd, pinItemToTop }: Props) => {
+const UserColumnTeam = ({
+  user,
+  onAdd,
+  pinItemToTop,
+  onUpdateInline,
+}: Props) => {
   const { columnWidth } = useContext(TaskTeamStateContext);
   const [isExtendUser, setIsExtendUser] = useState(true);
   const userColor = getRandomColor();
@@ -150,6 +161,7 @@ const UserColumnTeam = ({ user, onAdd, pinItemToTop }: Props) => {
                   });
                 }}
                 pinItemToTop={pinItemToTop}
+                onUpdateInline={onUpdateInline}
               />
             ))}
           </div>

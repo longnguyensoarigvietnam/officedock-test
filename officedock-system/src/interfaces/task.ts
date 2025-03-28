@@ -169,6 +169,7 @@ export interface Task {
   month?: number | null;
   planStartDate?: string | null;
   planEndDate?: string | null;
+  hasActualDuration?: boolean;
 }
 export interface TaskRunningType {
   id: number;

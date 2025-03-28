@@ -177,6 +177,7 @@ const StatisticBoard = () => {
     if (isCheckCompare) {
       setIsLoadingOrganizationCompare(true);
     }
+    setTotalDurationTask('');
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);

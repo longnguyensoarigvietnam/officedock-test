@@ -2022,13 +2022,14 @@ const DailyReportDetailBoard = () => {
                   }}
                 />
               </div>
-
-              <ImageRound
-                onClick={() => handleNextDay()}
-                className=" h-fit w-fit cursor-pointer"
-                src="/icons/right-statistic.svg"
-                name="right"
-              />
+              {!isTodaySchedule(currentDate) && (
+                <ImageRound
+                  onClick={() => handleNextDay()}
+                  className=" h-fit w-fit cursor-pointer"
+                  src="/icons/right-statistic.svg"
+                  name="right"
+                />
+              )}
             </div>
             <div className="flex gap-4">
               <Button
