@@ -1267,6 +1267,15 @@ class TaskViewSet(
                     [people_in_charge],
                     through_defaults={"company": task.company},
                 )
+                # Delete index for task if change people in charge
+                TaskIndex.objects.filter(task=task).exclude(
+                    user_id=people_in_charge
+                ).delete()
+
+                # Update last index if add new user
+                TaskIndex.update_max_index_for_user(
+                    user=people_in_charge, task=task, is_update=False
+                )
 
             if task_status:
                 task.status = task_status
