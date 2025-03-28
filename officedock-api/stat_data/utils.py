@@ -764,3 +764,75 @@ def process_merge_card_per_tag(
     tag_list = [{"tag_id": k, **v} for k, v in tag_list.items()]
 
     return total_duration, tag_list
+
+
+def split_weeks(from_date, end_date):
+    """
+    Split week by range time
+    """
+    weeks = []
+    current_start = from_date
+
+    # If the start date is not Monday, get the first Sunday
+    if current_start.weekday() != 0:  # 0 = Monday, 6 = Sunday
+        first_sunday = current_start + timedelta(
+            days=(6 - current_start.weekday())
+        )
+        weeks.append((current_start, min(first_sunday, end_date)))
+        current_start = first_sunday + timedelta(days=1)  # Move to next Monday
+
+    # Generate full Monday-Sunday weeks
+    while current_start <= end_date:
+        week_end = current_start + timedelta(days=6)
+        weeks.append((current_start, min(week_end, end_date)))
+        current_start = week_end + timedelta(days=1)  # Move to next Monday
+
+    return weeks
+
+
+def build_category_filters(
+    large_category_id=None,
+    medium_category_id=None,
+    small_category_id=None,
+    large_category_ids=None,
+    medium_category_ids=None,
+    small_category_ids=None,
+    created_at=None,
+    NONE_CATEGORY=None,
+):
+    """
+    Handle build category filter
+    """
+    filters = Q()
+
+    # Large Category Filtering
+    if large_category_id and large_category_id != NONE_CATEGORY:
+        filters &= Q(categories__large_statistic_category__id=large_category_id)
+    elif large_category_id == NONE_CATEGORY:
+        filters &= Q(categories__large_statistic_category__isnull=True) | ~Q(
+            categories__large_statistic_category__in=large_category_ids
+        )
+
+    # Medium Category Filtering
+    if medium_category_id and medium_category_id != NONE_CATEGORY:
+        filters &= Q(
+            categories__medium_statistic_category__id=medium_category_id
+        )
+    elif medium_category_id == NONE_CATEGORY:
+        filters &= Q(categories__medium_statistic_category__isnull=True) | ~Q(
+            categories__medium_statistic_category__in=medium_category_ids
+        )
+
+    # Small Category Filtering
+    if small_category_id and small_category_id != NONE_CATEGORY:
+        filters &= Q(categories__small_statistic_category__id=small_category_id)
+    elif small_category_id == NONE_CATEGORY:
+        filters &= Q(categories__small_statistic_category__isnull=True) | ~Q(
+            categories__small_statistic_category__in=small_category_ids
+        )
+
+    # Created At Filter
+    if created_at:
+        filters &= Q(created_at__lt=created_at)
+
+    return filters
