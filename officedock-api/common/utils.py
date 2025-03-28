@@ -491,3 +491,16 @@ def check_task_overtime(task, task_duration, limit_time=None):
             break
 
     return is_send_sk, is_over_estimate
+
+
+def split_id_from_string(string_ids):
+    """
+    Convert a comma-separated string of IDs into a list of integers.
+    """
+    ids = []
+    for id in string_ids.split(","):
+        try:
+            ids.append(int(id))
+        except ValueError:
+            continue
+    return ids

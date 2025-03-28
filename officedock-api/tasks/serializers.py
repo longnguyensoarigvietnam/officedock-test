@@ -18,7 +18,7 @@ from base.constants import REPLACE_NULL_DATE
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 from chat.constants import ChatMessageTypes
 from common.serializers import CreationDataUserSerializer
-from common.utils import get_common_categories
+from common.utils import get_common_categories, split_id_from_string
 from organizations.models import Organization
 from organizations.serializers import OrganizationSerializer
 from skills.models import StatisticCategory
@@ -891,6 +891,23 @@ class TaskTeamdockSerializer(serializers.ModelSerializer):
                             ].format(field_name=ordering)
                         }
                     )
+            # Handle filter data
+            if tag_ids := request.query_params.get("tag_ids"):
+                if ids := split_id_from_string(tag_ids):
+                    tasks = tasks.filter(tags__id__in=ids)
+
+            if category_ids := request.query_params.get("category_ids"):
+                if ids := split_id_from_string(category_ids):
+                    tasks = tasks.filter(
+                        categories__large_statistic_category__in=ids
+                    )
+
+            if organization_ids := request.query_params.get("organization_ids"):
+                if ids := split_id_from_string(organization_ids):
+                    tasks = tasks.filter(organization_id__in=ids)
+
+            if search := request.query_params.get("search"):
+                tasks = tasks.filter(title__icontains=search)
 
             # Fetch task index and pinned status for the user
             task_pin = TeamTaskIndex.objects.filter(
