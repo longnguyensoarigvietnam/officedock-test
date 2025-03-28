@@ -547,6 +547,7 @@ class TaskBoardSerializer(TaskCommonSerializer):
     pin_at = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
     categories = serializers.SerializerMethodField(read_only=True)
+    has_actual_duration = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Task
@@ -563,6 +564,7 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "pin_at",
             "type",
             "categories",
+            "has_actual_duration",
         ]
 
     def to_representation(self, instance):
@@ -623,6 +625,12 @@ class TaskBoardSerializer(TaskCommonSerializer):
         Return task type for duration
         """
         return CalendarTypes.TASK.value
+
+    def get_has_actual_duration(self, instance):
+        """
+        Check task has actual duration
+        """
+        return instance.task_durations.exists()
 
 
 class TaskCalendarSerializer(TaskCommonSerializer):
