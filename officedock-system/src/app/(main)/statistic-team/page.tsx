@@ -9,7 +9,7 @@ import { StatisticTeamStateProvider } from '@providers/StatisticTeamProvider';
 const StatisticTeamPage = () => {
   return (
     <MainLayout
-      title={pageRouters.STATISTIC_MANAGEMENT.name}
+      title={pageRouters.STATISTIC_TEAM_MANAGEMENT.name}
       permission={PermissionsSystem.STATISTIC_VIEW}
       className="!py-0 pl-10 pr-0 !bg-[#EBF1F7]"
       showFooter={false}>

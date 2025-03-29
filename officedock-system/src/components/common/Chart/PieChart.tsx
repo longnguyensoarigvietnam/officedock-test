@@ -80,6 +80,8 @@ const PieChart = ({
       },
       datalabels: {
         formatter: (value, context: Context) => {
+          if (value < 20) return `${value}%`;
+
           const label = String(
             context.chart.data.labels?.[context.dataIndex] || '',
           );
@@ -88,6 +90,7 @@ const PieChart = ({
             label.length > maxLabelLength
               ? `${label.substring(0, maxLabelLength)}...`
               : label;
+
           return `${truncatedLabel}\n${value}%`;
         },
         color: '#fff',

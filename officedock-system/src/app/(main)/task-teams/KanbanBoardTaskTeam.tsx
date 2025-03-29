@@ -275,6 +275,7 @@ const KanbanBoardTaskTeam = () => {
         ? [{ peopleInChargeId: data.peopleInCharge }]
         : null,
       statusId: data.statusId,
+      isTeamTask: true,
     });
   };
 
@@ -321,6 +322,13 @@ const KanbanBoardTaskTeam = () => {
     const [destUserId, destStatus] = destination.droppableId.split('-');
 
     if (!sourceUserId || !sourceStatus || !destUserId || !destStatus) return;
+    // Update total
+    updateTaskStatusTotalWhenDrop({
+      newUserId: destUserId,
+      oldUserId: sourceUserId,
+      newStatusName: StatusTask[destStatus as keyof typeof StatusTask],
+      oldStatusName: StatusTask[sourceStatus as keyof typeof StatusTask],
+    });
 
     setListDataKanbanTeam((prevUsers) => {
       const newUsers = prevUsers.map((user) => ({
@@ -350,6 +358,7 @@ const KanbanBoardTaskTeam = () => {
         setIsReadyToFetch(false);
         setDataOrderRing('');
       }
+      // Return if task is running
       if (sourceUserId !== destUserId && movedTask.hasActualDuration) {
         return newUsers;
       }
@@ -1354,6 +1363,57 @@ const KanbanBoardTaskTeam = () => {
             ...user,
             statuses: user.statuses.map((status) =>
               status.name === taskData.status?.name
+                ? { ...status, total: status.total + 1 }
+                : status,
+            ),
+          };
+        }
+        return user;
+      });
+    });
+  };
+  const updateTaskStatusTotalWhenDrop = ({
+    oldStatusName,
+    oldUserId,
+    newStatusName,
+    newUserId,
+  }: {
+    oldStatusName: string;
+    oldUserId: string;
+    newStatusName: string;
+    newUserId: string;
+  }) => {
+    setDataTotalStatus((prevData) => {
+      return prevData.map((user) => {
+        if (user.id === oldUserId && user.id === newUserId) {
+          return {
+            ...user,
+            statuses: user.statuses.map((status) => {
+              if (status.name === oldStatusName) {
+                return { ...status, total: Math.max(0, status.total - 1) };
+              }
+              if (status.name === newStatusName) {
+                return { ...status, total: status.total + 1 };
+              }
+              return status;
+            }),
+          };
+        }
+        if (user.id === oldUserId) {
+          return {
+            ...user,
+            statuses: user.statuses.map((status) =>
+              status.name === oldStatusName
+                ? { ...status, total: Math.max(0, status.total - 1) }
+                : status,
+            ),
+          };
+        }
+        if (user.id === newUserId) {
+          return {
+            ...user,
+            statuses: user.statuses.map((status) =>
+              status.name === newStatusName
                 ? { ...status, total: status.total + 1 }
                 : status,
             ),

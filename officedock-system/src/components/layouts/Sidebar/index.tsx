@@ -447,7 +447,7 @@ const Sidebar = ({ className }: Props) => {
             <ul role="list" className="flex flex-col gap-y-6 list-none">
               <li className="flex-1">
                 <ul role="list" className="list-none pl-2">
-                  {expanded && (
+                  {expanded ? (
                     <div className="flex justify-center pr-2 mb-2">
                       <Dropdown
                         options={organizationList}
@@ -461,7 +461,8 @@ const Sidebar = ({ className }: Props) => {
                             )?.imgComponent,
                           }
                         }
-                        labelOptionClass="!text-sm"
+                        labelClass="max-w-[100px]"
+                        labelOptionClass="!text-sm !break-all"
                         imgClassname="!w-6 !h-6"
                         onChange={(e: OptionDropdownType) => {
                           setSelectedOrganization({
@@ -479,6 +480,16 @@ const Sidebar = ({ className }: Props) => {
                           router.push(`${pathname}?${params.toString()}`);
                         }}
                       />
+                    </div>
+                  ) : (
+                    <div className="px-4">
+                      {selectedOrganization?.imgComponent || {
+                        label: defaultOrganization?.label || '',
+                        value: defaultOrganization?.value || '',
+                        imgComponent: organizationList.find(
+                          (org) => org.value == defaultOrganization?.value,
+                        )?.imgComponent,
+                      }}
                     </div>
                   )}
 

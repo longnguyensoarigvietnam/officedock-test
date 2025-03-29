@@ -58,7 +58,6 @@ const ItemTeam = ({
   handlePinItem,
   handleUnPinItem,
   handleUpdateItemInline,
-  handleConfirmCopyTask,
   handleActionEditTask,
 }: ItemProps) => {
   const queryClient = useQueryClient();
@@ -295,7 +294,7 @@ const ItemTeam = ({
       PermissionsSystem.MY_TASK_UPDATE,
     );
 
-  const isPermissionAdd =
+  const _isPermissionAdd =
     session?.user.permissions &&
     hasPermissionInArray(
       session?.user.permissions,
@@ -363,7 +362,8 @@ const ItemTeam = ({
                   </Tippy>
                 </>
               )}
-              {isPermissionAdd && (
+              {/* TODO: Action copy */}
+              {/* {isPermissionAdd && (
                 <Tippy
                   content="タスクを複製"
                   arrow={false}
@@ -403,7 +403,7 @@ const ItemTeam = ({
                     />
                   </div>
                 </Tippy>
-              )}
+              )} */}
             </div>
             <div
               style={{

@@ -15,6 +15,7 @@ export interface EventCalendarDetail {
   participants?: EventParticipant[];
   resourceIds?: string[];
   address?: string;
+  largeColor?: string;
 }
 
 export interface EventCalendarDayRange {
