@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
 import Image from 'next/image';
 
@@ -19,7 +19,6 @@ import { apiRouters } from '@constants/routers';
 import { useMutation } from 'react-query';
 import Spinner from '@components/common/Spinner';
 import { useSearchParams } from 'next/navigation';
-import { useInView } from 'react-intersection-observer';
 
 type Props = {
   user: TransformedUser;
@@ -57,10 +56,6 @@ const StatusColumn = ({
   const searchParams = useSearchParams();
 
   const organizationId = searchParams.get('organization');
-
-  const { ref: listTaskRef, inView: inViewListTask } = useInView({
-    threshold: 0.2,
-  });
 
   function getStatusColor(statusKey: string): string {
     const status = StatusTask[statusKey as keyof typeof StatusTask];
@@ -189,6 +184,7 @@ const StatusColumn = ({
       },
       onError: () => {},
       onSettled: () => {
+        setIsFetching(false);
         setIsLoadingMore(false);
       },
     },
@@ -227,12 +223,40 @@ const StatusColumn = ({
       getDataListTaskMore();
     }
   }, [result, status, user]);
+  const listTaskRef = useRef<HTMLDivElement | null>(null);
+  const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
-    if (inViewListTask && result && result.hasNext && isShowMore) {
-      getDataListTaskMore();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (
+          entry.isIntersecting &&
+          result?.hasNext &&
+          isShowMore &&
+          !isFetching
+        ) {
+          setIsFetching(true);
+          getDataListTaskMore();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.2,
+      },
+    );
+
+    if (listTaskRef.current) {
+      observer.observe(listTaskRef.current);
     }
-  }, [inViewListTask, result, isShowMore, getDataListTaskMore]);
+
+    return () => {
+      if (listTaskRef.current) {
+        observer.unobserve(listTaskRef.current);
+      }
+    };
+  }, [result, isShowMore, isFetching]);
 
   const items = isShowMore
     ? user.statuses[status]
@@ -244,8 +268,9 @@ const StatusColumn = ({
         <div
           style={{
             gap: `6px`,
+            marginBottom: isExtendData ? '14px' : '0',
           }}
-          className="flex items-center text-sm break-all font-medium mb-[14px] ">
+          className="flex items-center text-sm break-all font-medium  ">
           <span
             className={`w-[10px] h-[10px] rounded-full ${status && getStatusColor(status)}`}></span>
           <span>{status && StatusTask[status as keyof typeof StatusTask]}</span>
@@ -265,14 +290,14 @@ const StatusColumn = ({
           />
         </div>
       </div>
-      <div className="min-h-[130px] max-h-[420px] overflow-y-auto">
-        <Droppable droppableId={`${user.id}-${status}`}>
-          {(provided, snapshot) => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              className={`${snapshot.isDraggingOver ? 'bg-gray-200' : ''}`}>
-              {isExtendData && (
+      {isExtendData && (
+        <div className="min-h-[130px] max-h-[420px] overflow-y-auto">
+          <Droppable droppableId={`${user.id}-${status}`}>
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className={`${snapshot.isDraggingOver ? 'bg-gray-200' : ''}`}>
                 <div
                   style={{
                     paddingRight: '10px',
@@ -334,45 +359,45 @@ const StatusColumn = ({
                     </div>
                   )}
                 </div>
-              )}
-              {isExtendData && hasShowMore && (
-                <>
-                  {isShowMore ? (
-                    <div className="flex justify-center">
-                      <button
-                        onClick={() => setShowMore(false)}
-                        className="text-center font-medium flex items-center gap-[6px] w-fit justify-center text-xs text-[#77858F]">
-                        さらに表示
-                        <Image
-                          alt="Arrow dropdown icon"
-                          src={'/icons/arrow-down.svg'}
-                          className="rotate-180"
-                          width={16}
-                          height={16}
-                        />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex justify-center">
-                      <button
-                        onClick={() => setShowMore(true)}
-                        className="text-center font-medium flex items-center gap-[6px] w-fit justify-center text-xs text-[#77858F]">
-                        表示を減らす
-                        <Image
-                          alt="Arrow dropdown icon"
-                          src={'/icons/arrow-down.svg'}
-                          width={16}
-                          height={16}
-                        />
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
+              </div>
+            )}
+          </Droppable>
+        </div>
+      )}
+      {result && result.total > 3 && hasShowMore && (
+        <>
+          {isShowMore ? (
+            <div className="flex justify-center">
+              <button
+                onClick={() => setShowMore(false)}
+                className="text-center font-medium flex items-center gap-[6px] w-fit justify-center text-xs text-[#77858F]">
+                表示を減らす
+                <Image
+                  alt="Arrow dropdown icon"
+                  src={'/icons/arrow-down.svg'}
+                  className="rotate-180"
+                  width={16}
+                  height={16}
+                />
+              </button>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <button
+                onClick={() => setShowMore(true)}
+                className="text-center font-medium flex items-center gap-[6px] w-fit justify-center text-xs text-[#77858F]">
+                さらに表示
+                <Image
+                  alt="Arrow dropdown icon"
+                  src={'/icons/arrow-down.svg'}
+                  width={16}
+                  height={16}
+                />
+              </button>
             </div>
           )}
-        </Droppable>
-      </div>
+        </>
+      )}
     </div>
   );
 };

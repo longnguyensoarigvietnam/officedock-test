@@ -176,7 +176,9 @@ const Dropdown = ({
                             className={`w-4 h-4 ${imgClassname}`}
                           />
                         )}
-                        {selected.imgComponent}
+                        {selected.imgComponent && (
+                          <div className="w-8">{selected.imgComponent}</div>
+                        )}
                         <span
                           className={`${selected.imgUrl && 'ml-3'} ${selected.imgComponent && 'ml-2'} block truncate ${labelClass} ${classActive} `}>
                           {selected.label}

@@ -30,12 +30,15 @@ import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import InputSearch from '@components/common/InputSearch';
 import ActionFilterTaskTeam from '@components/modals/ActionFilterTeamTask';
 import DatePicker from '@components/common/DatePicker';
-import Dropdown from '@components/common/Dropdown';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
-import { CalendarViewOptions, ItemScheduleTitleType } from '@constants/enums';
+import {
+  CalendarViewOptions,
+  EventWorkCategory,
+  ItemScheduleTitleType,
+} from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -56,20 +59,19 @@ import {
   formatQueryStartDateForCalendar,
   formatShowDeadlineAllDayEvent,
   getJapaneseDayName,
+  getMinuteDifference,
   isDateLessThanToday,
   isMidnight,
   isMoreThanThirtyMinutes,
   isTodaySchedule,
 } from '@utils/date';
 import { getRandomColor } from '@utils';
+import RangeSlider from '@components/common/RangeSlider';
 
 const ScheduleTeamBoard = () => {
   // Context
   const {
     isLoadingDataTask,
-    selectedOptionZoom,
-    setSelectedOptionZoom,
-    setColumnWidth,
     setCreationDataTaskData,
     orderingOptions,
     setOrderingOptions,
@@ -81,6 +83,16 @@ const ScheduleTeamBoard = () => {
   const router = useRouter();
   const organizationId = searchParams.get('organization');
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+  const screenHeight = window.innerHeight;
+
+  const baseHeight = Math.round(43 * (screenHeight / 890));
+  const baseSlider = Math.round(43 * (screenHeight / 890));
+
+  const [sliderValue, setSliderValue] = useState(baseSlider);
+  const [slotHeight, setSlotHeight] = useState(baseHeight);
+  const [resetTrigger, _setResetTrigger] = useState(0);
+
+  const [isOptionZoomSchedule, setIsOptionZoomSchedule] = useState('00:15:00');
 
   // Calendar
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -111,6 +123,7 @@ const ScheduleTeamBoard = () => {
       color: string;
     }[]
   >([]);
+
   const [selectedOrganization, setSelectedOrganization] =
     useState<OptionDropdownType | null>({
       label: '',
@@ -176,6 +189,8 @@ const ScheduleTeamBoard = () => {
   const handleEventContent = (eventContent: any) => {
     const calendarApi = eventContent.view.calendar;
     const currentView = calendarApi.view.type;
+
+    const largeColor = eventContent?.event?.extendedProps?.largeColor || '';
     if (currentView === CalendarViewOptions.VIEW_BY_DAY) {
       if (eventContent.event.allDay) {
         const end = new Date(eventContent.event?.end);
@@ -184,55 +199,95 @@ const ScheduleTeamBoard = () => {
           end.setDate(end.getDate() - 1);
         }
         return (
-          <div className="mb-1 hover:cursor-pointer">
+          <div>
             <div
-              className={`text-black bg-white flex gap-2 items-center overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
-              style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
-              <p className="truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px]">
-                {eventContent.event.title !== 'null'
-                  ? eventContent.event.title
-                  : ''}
-              </p>
-              <div className="flex gap-2">
-                <p>終日</p>
-                <p>{`${formatShowDeadlineAllDayEvent(start)} ~ ${formatShowDeadlineAllDayEvent(end)}`}</p>
-              </div>
-            </div>{' '}
+              style={{
+                boxShadow: '0px 2px 8px 0px #0000001A',
+                borderLeftColor:
+                  selectedOptionShow === ItemScheduleTitleType.PLANS
+                    ? largeColor || 'white'
+                    : '',
+                backgroundColor:
+                  selectedOptionShow === ItemScheduleTitleType.PLANS
+                    ? 'white'
+                    : largeColor
+                      ? largeColor
+                      : '#A7B9C2',
+              }}
+              className={`mb-1 hover:cursor-pointer  px-[10px] py-1 ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-md`}>
+              <div
+                className={` flex gap-2 items-center overflow-hidden !w-[calc(100%_-_1px)] py-0.5 text-[12px] font-normal px-1`}>
+                <p className="truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px]">
+                  {eventContent.event.title !== 'null'
+                    ? eventContent.event.title
+                    : ''}
+                </p>
+                <div className="flex gap-2">
+                  <p>終日</p>
+                  <p>{`${formatShowDeadlineAllDayEvent(start)} ~ ${formatShowDeadlineAllDayEvent(end)}`}</p>
+                </div>
+              </div>{' '}
+            </div>
           </div>
         );
       }
+
       return (
-        <div className="overflow-hidden">
-          <div className={` text-black font-medium px-1 pt-1 text-[14px]`}>
-            <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
-              {eventContent.event.title != 'null'
-                ? eventContent.event.title
-                : ''}
-            </p>
-          </div>{' '}
-          <div className={` text-black text-[12px] font-normal px-1`}>
-            {new Date(eventContent.event.start).getDate() !=
-            new Date(eventContent.event.end).getDate() ? (
-              <>
-                <p className="whitespace-nowrap">
-                  {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
-                  ~{' '}
-                  {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
+        <>
+          <div
+            style={{
+              borderLeftColor:
+                selectedOptionShow === ItemScheduleTitleType.PLANS
+                  ? largeColor || 'white'
+                  : '',
+              backgroundColor:
+                selectedOptionShow === ItemScheduleTitleType.PLANS
+                  ? 'white'
+                  : largeColor
+                    ? largeColor
+                    : '#A7B9C2',
+            }}
+            className={`h-full px-[10px] pt-2  ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-md  `}>
+            <div className="overflow-hidden">
+              <div className={`  font-medium px-1 pt-1 text-[14px]`}>
+                <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
+                  {eventContent.event.title != 'null'
+                    ? eventContent.event.title
+                    : ''}
                 </p>
-                <p>{eventContent.event.extendedProps.address}</p>
-              </>
-            ) : (
-              <>
-                {isMoreThanThirtyMinutes(eventContent.timeText) && (
-                  <div className="text-black text-[12px] font-normal px-1">
-                    <p>{eventContent.timeText}</p>
-                    <p>{eventContent.event.extendedProps.address}</p>
-                  </div>
-                )}
-              </>
-            )}
+              </div>{' '}
+              <div className="flex items-center">
+                <div className={`  text-[12px] font-normal px-1`}>
+                  {new Date(eventContent.event.start).getDate() !=
+                  new Date(eventContent.event.end).getDate() ? (
+                    <>
+                      <p className="whitespace-nowrap">
+                        {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
+                        ~{' '}
+                        {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
+                      </p>
+                      <p>{eventContent.event.extendedProps.address}</p>
+                    </>
+                  ) : (
+                    <>
+                      {isMoreThanThirtyMinutes(eventContent.timeText) && (
+                        <div className=" text-[12px] font-normal px-1">
+                          <p>{eventContent.timeText}</p>
+                          <p>{eventContent.event.extendedProps.address}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                <p className="text-[12px] font-normal px-1">
+                  {selectedOptionShow === ItemScheduleTitleType.ACTUAL && (
+                    <p>{getMinuteDifference(eventContent.event.timeText)}分</p>
+                  )}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       );
     }
   };
@@ -316,33 +371,6 @@ const ScheduleTeamBoard = () => {
       }
     }
   };
-  const handleCallDataWithFilter = () => {
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      const startDateISOString = formatQueryStartDateForCalendar(
-        calendarApi.view.activeStart,
-      );
-      const endDateISOString = formatQueryEndDateForCalendar(
-        calendarApi.view.activeEnd,
-      );
-
-      calendarRef.current?.getApi().refetchEvents();
-
-      if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
-        getPlanEventCalendarByTeam({
-          organizationId: String(organizationId),
-          startDate: startDateISOString,
-          endDate: endDateISOString,
-        });
-      } else {
-        getActualEventCalendarByTeam({
-          organizationId: String(organizationId),
-          startDate: startDateISOString,
-          endDate: endDateISOString,
-        });
-      }
-    }
-  };
 
   const handleGetActualEventCalendarByTeam = async ({
     organizationId,
@@ -358,7 +386,7 @@ const ScheduleTeamBoard = () => {
       start_date: startDate || String(currentRange.start),
       end_date: endDate || String(currentRange.end),
       ...(orderingOptions?.user_ids?.length && {
-        user_id: orderingOptions.user_ids.map((item) => item.value).join(','),
+        user_ids: orderingOptions.user_ids.map((item) => item.value).join(','),
       }),
     });
 
@@ -376,6 +404,12 @@ const ScheduleTeamBoard = () => {
         if (data) {
           const eventList: EventCalendarDetail[] = data.map(
             (event: EventCalendarProps) => {
+              const largeColor =
+                event.categories &&
+                event.categories.find(
+                  (item) => item.type === EventWorkCategory.LARGE,
+                )?.color;
+
               return {
                 title: event.title,
                 start: `${event.startDate}`,
@@ -385,6 +419,7 @@ const ScheduleTeamBoard = () => {
                 type: event.type,
                 participants: event.participants || [],
                 address: event.address || '',
+                largeColor: largeColor,
                 resourceIds: [
                   ...(event.participants?.map(
                     (participant) => participant.id,
@@ -433,7 +468,7 @@ const ScheduleTeamBoard = () => {
       start_date: startDate || String(currentRange.start),
       end_date: endDate || String(currentRange.end),
       ...(orderingOptions?.user_ids?.length && {
-        user_id: orderingOptions.user_ids.map((item) => item.value).join(','),
+        user_ids: orderingOptions.user_ids.map((item) => item.value).join(','),
       }),
     });
 
@@ -450,6 +485,11 @@ const ScheduleTeamBoard = () => {
         if (data) {
           const eventList: EventCalendarDetail[] = data.map(
             (event: EventCalendarProps) => {
+              const largeColor =
+                event.categories &&
+                event.categories.find(
+                  (item) => item.type === EventWorkCategory.LARGE,
+                )?.color;
               return {
                 title: event.title,
                 start: `${event.startDate}`,
@@ -459,6 +499,7 @@ const ScheduleTeamBoard = () => {
                 type: event.type,
                 participants: event.participants || [],
                 address: event.address || '',
+                largeColor: largeColor,
                 resourceIds: [
                   ...(event.participants?.map(
                     (participant) => participant.id,
@@ -570,6 +611,9 @@ const ScheduleTeamBoard = () => {
 
     return (
       <>
+        <p className="mr-8 text-[#77858F] font-medium text-[13px]">
+          メンバー{participants.length}人
+        </p>
         {slicedParticipants.map((item) => {
           return (
             <div
@@ -592,16 +636,60 @@ const ScheduleTeamBoard = () => {
     );
   };
 
-  // Calculate width kanban
-  const calculateWidth = (baseWidth: number, percentage: number): number => {
-    return (baseWidth * percentage) / 100;
-  };
-
   useEffect(() => {
     if (orderingOptions) {
-      handleCallDataWithFilter();
+      const newListMemberData =
+        orderingOptions?.user_ids?.length > 0
+          ? listMemberTeam.filter((member) =>
+              orderingOptions.user_ids.some(
+                (option) => String(option.value) === String(member.id),
+              ),
+            )
+          : listMemberTeam;
+
+      setCurrentResources(
+        newListMemberData.map((member) => ({
+          id: String(member.id),
+          title: member.fullName,
+        })),
+      );
     }
   }, [orderingOptions && orderingOptions?.user_ids]);
+
+  // ZOOM IN / ZOOM OUT SCHEDULE
+  useEffect(() => {
+    const slots = document.querySelectorAll('.fc-timegrid-slot');
+
+    slots.forEach((slot) => {
+      const slotElement = slot as HTMLElement;
+      slotElement.style.height = `${slotHeight}px`;
+      slotElement.style.minHeight = `${slotHeight}px`;
+    });
+  }, [slotHeight, searchParams]);
+
+  const calculateSlotHeight = (value: number): number => {
+    if (value < 40) {
+      return 93 - (40 - value);
+    } else if (value < 94) {
+      return value;
+    }
+    return 24 + (value - 94);
+  };
+  const calculateSlotDuration = (value: number): string => {
+    if (value < 40) {
+      return '01:00:00';
+    } else if (value >= 94) {
+      return '00:05:00';
+    }
+    return '00:15:00';
+  };
+  const getAllDayEventCountText = (events: EventCalendarDetail[]) => {
+    if (!events || events.length === 0) return 'zero-all-day-events';
+    const allDayCount = events.filter((event) => event.allDay).length;
+    if (allDayCount === 1) return 'one-all-day-event';
+    if (allDayCount >= 2) return 'many-all-day-events';
+    return 'zero-all-day-events';
+  };
 
   return (
     <>
@@ -618,9 +706,6 @@ const ScheduleTeamBoard = () => {
             </div>
             <span className="text-[26px] font-medium relative top-[-2px] max-w-[350px] truncate">
               {selectedOrganization?.label}
-            </span>
-            <span className="text-[26px] font-medium relative top-[-2px]">
-              チーム集計
             </span>
             <div className="flex justify-center items-center gap-2 ">
               <Button
@@ -645,7 +730,8 @@ const ScheduleTeamBoard = () => {
             {listMemberTeam.length > 0 && getParticipantAvatars(listMemberTeam)}
           </div>
         </div>
-        <div className={`flex gap-7 mb-6 w-fit min-w-[300px]`}>
+        <div
+          className={`flex gap-7 justify-between items-center w-full mb-6 min-w-[300px]`}>
           <div className="flex items-center gap-2">
             <div className="flex items-center ml-[-1rem] gap-4">
               <ImageRound
@@ -878,19 +964,18 @@ const ScheduleTeamBoard = () => {
                 </>
               )}
             </Popover>
-
-            <InputSearch
-              className="w-[300px] h-[34px] py-0 bg-white !rounded-[20px]"
-              inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm"
-              iconClassName="w-[14px] h-[14px]"
-              placeholder="タスク、キーワードを検索"
-            />
           </div>
+          <InputSearch
+            className="w-[300px] h-[34px] py-0 bg-white !rounded-[20px]"
+            inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm"
+            iconClassName="w-[14px] h-[14px]"
+            placeholder="タスク、キーワードを検索"
+          />
         </div>
       </div>
 
       <div
-        className={`w-full relative calendar-team-custom`}
+        className={`w-full relative calendar-team-custom day ${getAllDayEventCountText(events)} `}
         style={{ overflowX: 'auto', width: '100%' }}>
         <FullCalendar
           ref={calendarRef}
@@ -916,7 +1001,7 @@ const ScheduleTeamBoard = () => {
                   color: avatarColor || '',
                   size: 36,
                 })}
-                <p className="truncate max-w-[100px] text-[15px] font-medium text-black">
+                <p className="truncate  max-w-[100px] text-[15px] font-medium text-black">
                   {resource.resource.title}
                 </p>
               </div>
@@ -982,8 +1067,8 @@ const ScheduleTeamBoard = () => {
             meridiem: false,
             hour12: false,
           }}
-          slotDuration="00:30:00"
-          slotLabelInterval="00:30:00"
+          slotDuration={isOptionZoomSchedule}
+          // slotLabelInterval={isOptionZoomSchedule}
           slotEventOverlap={false}
           slotLabelContent={({ text }: { text: any }) => (
             <div className="text-[12px] text-[#77858F]">{text}</div>
@@ -1009,48 +1094,22 @@ const ScheduleTeamBoard = () => {
       </div>
 
       {/* Option select value zoom */}
-      <div className="fixed flex items-center gap-2 bottom-5 right-20 z-20 ">
-        <div className="w-[80px] !h-[30px]">
-          <Dropdown
-            labelOptionClass="!ml-0 !pr-0 !pl-0 flex justify-center w-full "
-            className="text-sm h-8 !py-0 !pl-0 !pr-0 !px-[14px] !rounded-lg"
-            classActive="!pr-[10px] !ml-0 w-full text-center left-[52px]"
-            classNameOption="top-[-150px] !px-0 text-sm"
-            selectedOption={selectedOptionZoom}
-            options={[
-              {
-                label: '100%',
-                value: 100,
-              },
-              {
-                label: '90%',
-                value: 90,
-              },
-              {
-                label: '75%',
-                value: 75,
-              },
-              {
-                label: '50%',
-                value: 50,
-              },
-              {
-                label: '25%',
-                value: 25,
-              },
-            ]}
-            onChange={(selectedOption) => {
-              setSelectedOptionZoom(selectedOption);
-              if (selectedOption.value === 25) {
-                setColumnWidth(calculateWidth(247, 50));
-              } else {
-                setColumnWidth(
-                  calculateWidth(247, selectedOption.value as number),
-                );
-              }
-            }}
-          />
-        </div>
+      <div
+        className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-md right-[10px] bottom-[5px] bg-white flex items-center `}>
+        <RangeSlider
+          min={18}
+          max={100}
+          initialValue={sliderValue}
+          resetTrigger={resetTrigger}
+          onChange={(value) => {
+            setSliderValue(value);
+            const calculatedHeight = calculateSlotHeight(value);
+            const calculatedDuration = calculateSlotDuration(value);
+
+            setSlotHeight(calculatedHeight);
+            setIsOptionZoomSchedule(calculatedDuration);
+          }}
+        />
       </div>
     </>
   );

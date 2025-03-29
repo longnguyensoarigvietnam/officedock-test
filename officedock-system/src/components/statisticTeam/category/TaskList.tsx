@@ -303,7 +303,7 @@ const TaskListTeamStatistic = ({
                       color={member.color}
                     />
                   </div>
-                  <span className="max-w-[90px] w-full truncate">
+                  <span className="break-all w-full truncate">
                     {member.fullName}
                   </span>
                 </div>

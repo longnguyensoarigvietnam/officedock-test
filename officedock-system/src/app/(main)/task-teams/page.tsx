@@ -8,7 +8,7 @@ import { TaskTeamStateProvider } from '@providers/TaskTeamProvider';
 const TaskPage = () => {
   return (
     <MainLayout
-      title={pageRouters.TASKS_MANAGEMENT.name}
+      title={pageRouters.TASKS_TEAM_MANAGEMENT.name}
       className="!py-0 pl-10 pr-0 !bg-[#EBF1F7] !overflow-hidden"
       permission={PermissionsSystem.MY_TASK_VIEW}
       showFooter={false}>

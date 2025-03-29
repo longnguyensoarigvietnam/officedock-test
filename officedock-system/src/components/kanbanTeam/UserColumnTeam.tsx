@@ -35,7 +35,8 @@ const UserColumnTeam = ({
   pinItemToTop,
   onUpdateInline,
 }: Props) => {
-  const { columnWidth } = useContext(TaskTeamStateContext);
+  const { columnWidth, selectedOptionZoom, dataTotalStatus } =
+    useContext(TaskTeamStateContext);
   const [isExtendUser, setIsExtendUser] = useState(true);
   const userColor = getRandomColor();
   const searchParams = useSearchParams();
@@ -57,6 +58,13 @@ const UserColumnTeam = ({
     router.push(`?${params.toString()}`);
   };
 
+  const getTotalByUserId = (userId: string): number => {
+    const user = dataTotalStatus.find((item) => item.id === userId);
+    return user
+      ? user.statuses.reduce((sum, status) => sum + status.total, 0)
+      : 0;
+  };
+
   return (
     <>
       {isExtendUser ? (
@@ -72,22 +80,33 @@ const UserColumnTeam = ({
             className="flex justify-between ">
             <div
               style={{
-                gap: `${(columnWidth / 247) * 10}px`,
-                fontSize: `${(columnWidth / 247) * 15}px`,
+                gap: `${(247 / 247) * 10}px`,
+                fontSize: `${(247 / 247) * 15}px`,
               }}
               className="flex items-center gap-[10px] font-medium text-[15px] ">
               <AvatarIconWithDynamicColor
                 color={userColor}
-                size={(columnWidth / 247) * 33}
+                size={(247 / 247) * 33}
               />
               <p
                 style={{
-                  maxWidth: `${(columnWidth / 247) * 128}px`,
-                  top: `${(columnWidth / 247) * 2}px`,
+                  maxWidth:
+                    (selectedOptionZoom.value as number) > 50
+                      ? `${(columnWidth / 247) * 108}px`
+                      : `${(columnWidth / 247) * 40}px`,
                 }}
-                className="truncate relative ">
+                className="truncate  ">
                 {user.name}
               </p>
+              {user.id && (
+                <p
+                  style={{
+                    maxWidth: `${(columnWidth / 247) * 20}px`,
+                  }}
+                  className="truncate  text-sm font-medium text-[#77858F] ">
+                  {getTotalByUserId(user.id)}
+                </p>
+              )}
             </div>
             <div
               style={{
@@ -116,8 +135,8 @@ const UserColumnTeam = ({
                     src={`/icons/add.svg`}
                     name="Add"
                     style={{
-                      width: `${(columnWidth / 247) * 9}px`,
-                      height: `${(columnWidth / 247) * 9}px`,
+                      width: `${(247 / 247) * 9}px`,
+                      height: `${(247 / 247) * 9}px`,
                     }}
                   />
                 </div>
@@ -205,7 +224,7 @@ const UserColumnTeam = ({
                 fontSize: `14px`,
               }}
               className="text-[#77858F] w-full text-center text-sm">
-              10
+              {user.id && getTotalByUserId(user.id)}
             </p>
           </div>
           <div className="w-full flex justify-center">

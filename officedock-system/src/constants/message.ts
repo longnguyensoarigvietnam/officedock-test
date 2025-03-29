@@ -66,8 +66,7 @@ export const INVALID_URL_MESSAGE = 'URLの形式で入力してください。';
 export const ERROR_UPDATE_MESSAGE = '更新に失敗しました。';
 export const ERROR_SAVE_MESSAGE = '保存に失敗しました。';
 export const ERROR_TIME_START_MESSAGE = '予定時間をオーバーしています';
-export const ERROR_DELETE_TASK_RUNNING =
-  '計測中のカードを削除することができません。';
+export const ERROR_DELETE_TASK_RUNNING = '計測中のカードを削除できません。';
 
 export const OTP_CODE_INVALID =
   '認証コードが無効であるか、有効期限が切れています。';
