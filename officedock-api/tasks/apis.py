@@ -1034,7 +1034,7 @@ class TaskViewSet(
                 team=organization, user=user, task=task, is_update=False
             )
             team_task_index = TeamTaskIndex.objects.filter(
-                team=organization, task=task, task__status=task.status
+                team=organization, user=user, task=task
             ).first()
             # reset_sort_task(user) # TODO: Handle sort team task
             # Reset pin at to now
@@ -1575,8 +1575,13 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     {"organization_id": ERROR_MESSAGES["field_required"]}
                 )
 
+            if not user_id:
+                raise ValidationError(
+                    {"user_id": ERROR_MESSAGES["field_required"]}
+                )
+
             task_pin = TeamTaskIndex.objects.filter(
-                task=OuterRef("pk"), team_id=organization_id
+                task=OuterRef("pk"), team_id=organization_id, user_id=user_id
             ).values("pin_at")[:1]
         else:
             task_pin = TaskIndex.objects.filter(
@@ -1592,7 +1597,9 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if is_team_task:
                 # Handle load more for team tasks
                 task_index = TeamTaskIndex.objects.filter(
-                    task=OuterRef("pk"), team_id=organization_id
+                    task=OuterRef("pk"),
+                    team_id=organization_id,
+                    user_id=user_id,
                 ).values("index")[:1]
                 # Annotate the queryset with the index from TaskIndex
                 queryset = queryset.annotate(
@@ -1757,7 +1764,17 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     },
                 )
 
-        return self.response_pagination(request, queryset, TaskBoardSerializer)
+        # Fill context to serializer
+        context = {}
+        if self.request.query_params.get("is_team_task"):
+            context["organization_id"] = self.request.query_params.get(
+                "organization_id"
+            )
+            context["user_id"] = self.request.query_params.get("user_id")
+
+        return self.response_pagination(
+            request, queryset, TaskBoardSerializer, extra_context=context
+        )
 
 
 @extend_schema(tags=["System > Task"])
