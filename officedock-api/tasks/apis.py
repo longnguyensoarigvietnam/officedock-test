@@ -867,6 +867,14 @@ class TaskViewSet(
             or task_schedules is None
         ):
             task.task_schedules.all().delete()
+        if (
+            task_status.name == TaskStatus.MY_ROUTINE.value
+            and repeat_type is None
+        ):
+            task.task_schedules.all().delete()
+            task.recurring = {}
+            task.save()
+
         # Handle task schedules creation
         if (task_schedules is not None) or (
             task_schedules is not None

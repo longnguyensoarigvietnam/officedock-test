@@ -953,6 +953,7 @@ class StatisticViewSet(BaseAPIViewSet):
         #
         #             start_date += timedelta(days=1)  # Move to next day
         if statistic_by == FilterTime.WEEK.value:
+            weeks = split_weeks(from_date, end_date)
             for category in category_list:
                 percent = 100
                 if category["category_id"] is None:
@@ -992,20 +993,32 @@ class StatisticViewSet(BaseAPIViewSet):
                         filter_events = filter_events.filter(
                             categories__medium_statistic_category__id=medium_id
                         )
+                        if medium_category_id:
+                            small_id = (
+                                category["category_id"]
+                                if small_category_id is None
+                                else small_category_id
+                            )
+                            filter_tasks = filter_tasks.filter(
+                                categories__small_statistic_category__id=small_id
+                            )
+                            filter_events = filter_events.filter(
+                                categories__small_statistic_category__id=small_id
+                            )
 
                 category.update({"durations": []})
-                for start, end in split_weeks(from_date, end_date):
+                for start, end in weeks:
                     start_date_min = datetime.combine(start, time.min)
                     start_date_max = datetime.combine(end, time.max)
                     reset_tasks = Task.objects.filter(
                         Q(id__in=filter_tasks.values_list("id", flat=True))
-                        & Q(task_durations__started_at__gte=start_of_day)
-                        & Q(task_durations__paused_at__lte=end_of_day)
+                        & Q(task_durations__started_at__gte=start_date_min)
+                        & Q(task_durations__paused_at__lte=start_date_max)
                     ).distinct()
                     reset_events = Schedule.objects.filter(
                         Q(id__in=filter_events.values_list("id", flat=True))
-                        & Q(task_durations__started_at__gte=start_of_day)
-                        & Q(task_durations__paused_at__lte=end_of_day)
+                        & Q(task_durations__started_at__gte=start_date_min)
+                        & Q(task_durations__paused_at__lte=start_date_max)
                     ).distinct()
 
                     merged_duration = merge_task_and_event(
@@ -1037,6 +1050,9 @@ class StatisticViewSet(BaseAPIViewSet):
                     category["durations"].append(
                         {
                             "start_date": start_date_min.strftime(
+                                BASE_DATE_FORMAT
+                            ),
+                            "end_date": start_date_max.strftime(
                                 BASE_DATE_FORMAT
                             ),
                             "duration": format_duration(total_duration),
