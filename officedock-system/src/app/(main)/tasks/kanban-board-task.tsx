@@ -1946,7 +1946,7 @@ const KanbanBoardTask = () => {
           : null,
       weekDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.weekDay && data.weekDay.value != ''
+          ? data.weekDay != undefined && data.weekDay.label != ''
             ? Number(data.weekDay.value)
             : null
           : null,
@@ -2331,7 +2331,7 @@ const KanbanBoardTask = () => {
           : null,
       weekDay:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
-          ? data.weekDay && data.weekDay.value != ''
+          ? data.weekDay && data.weekDay.label != ''
             ? Number(data.weekDay.value)
             : null
           : null,

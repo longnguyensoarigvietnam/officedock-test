@@ -133,7 +133,7 @@ const ProgressBarStatistic = ({
                         backgroundColor: color,
                       }}
                       className="w-3 h-3"></div>
-                    <span className="truncate font-bold text-[16px]">
+                    <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                       {label}
                     </span>
                   </div>
@@ -222,7 +222,7 @@ const ProgressBarStatistic = ({
                                 backgroundColor: item.color,
                               }}
                               className="w-3 h-3"></div>
-                            <span className="truncate font-bold text-[16px]">
+                            <span className="truncate max-w-[calc(100%_-_20px)] font-bold text-[16px]">
                               {item.label}
                             </span>
                           </div>

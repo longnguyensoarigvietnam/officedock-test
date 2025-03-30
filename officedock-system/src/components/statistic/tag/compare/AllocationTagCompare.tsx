@@ -17,6 +17,7 @@ import { EventWorkCategory } from '@constants/enums';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import ProgressBarStatistic from '../ProgressBarStatistic';
 import { getRandomColor, lightenColor } from '@utils';
+import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 type Props = {
   startDate: Date;
@@ -108,6 +109,14 @@ const AllocationTagCompare = memo(
       selectedTags,
       selectedSmall,
       tagsOptions,
+      isLoadingLargeCompare,
+      isLoadingMediumCompare,
+      isLoadingOrganizationCompare,
+      isLoadingLarge,
+      isLoadingMedium,
+      isLoadingOrganization,
+      isLoadingSmall,
+      isLoadingSmallCompare,
       setSelectedTags,
     } = useContext(StatisticTagStateContext);
 
@@ -133,7 +142,9 @@ const AllocationTagCompare = memo(
                 id: item.tagId as number,
                 label: item.tagName as string,
                 value: item.percent,
-                color: lightenColor(colorData as string, item.percent) || getRandomColor(),
+                color:
+                  lightenColor(colorData as string, item.percent) ||
+                  getRandomColor(),
                 duration: item.duration,
                 optionData: item.tasks.slice(0, 3).map((task) => task.title),
               },
@@ -148,7 +159,9 @@ const AllocationTagCompare = memo(
                 id: compareItem.tagId as number,
                 label: compareItem.tagName as string,
                 value: compareItem.percent,
-                color: lightenColor(colorData as string, compareItem.percent) || getRandomColor(),
+                color:
+                  lightenColor(colorData as string, compareItem.percent) ||
+                  getRandomColor(),
                 duration: compareItem.duration,
                 optionData: compareItem.tasks
                   .slice(0, 3)
@@ -161,7 +174,9 @@ const AllocationTagCompare = memo(
                   id: compareItem.tagId as number,
                   label: compareItem.tagName as string,
                   value: compareItem.percent,
-                  color: lightenColor(colorData as string, compareItem.percent) || getRandomColor(),
+                  color:
+                    lightenColor(colorData as string, compareItem.percent) ||
+                    getRandomColor(),
                   duration: compareItem.duration,
                   optionData: compareItem.tasks
                     .slice(0, 3)
@@ -202,11 +217,6 @@ const AllocationTagCompare = memo(
         setProgressDataPairsMedium(mediumPairs);
         setProgressDataPairsSmall(smallPairs);
         setProgressDataPairsCategory(categoryPairs);
-      } else {
-        setProgressDataPairsLarge([]);
-        setProgressDataPairsMedium([]);
-        setProgressDataPairsSmall([]);
-        setProgressDataPairsCategory([]);
       }
     }, [statisticTagsList, statisticTagsCompareList]);
 
@@ -413,76 +423,93 @@ const AllocationTagCompare = memo(
                           <div>-</div>
                         )}
                       </div>
-                      <div className="mt-5 flex flex-col gap-4">
-                        {progressDataPairsLarge.map((pair, index) => {
-                          return (
-                            <div key={index}>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium truncate max-w-40">
-                                  {pair.main
-                                    ? pair.main.label
-                                    : pair.compare?.label || ''}
-                                </span>
-                                <span className="text-sm font-medium truncate max-w-24">
-                                  {pair.main?.duration
-                                    ? formatTimeToJapanese(pair.main?.duration)
-                                    : formatTimeToJapanese(
-                                        pair.compare?.duration || '',
-                                      )}
-                                </span>
+                      {isLoadingOrganizationCompare || isLoadingOrganization ? (
+                        <div className="flex flex-col mt-[50px]">
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
+                        </div>
+                      ) : (
+                        <div className="mt-5 flex flex-col gap-4">
+                          {progressDataPairsLarge.map((pair, index) => {
+                            return (
+                              <div key={index}>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-medium truncate max-w-40">
+                                    {pair.main
+                                      ? pair.main.label
+                                      : pair.compare?.label || ''}
+                                  </span>
+                                  <span className="text-sm font-medium truncate max-w-24">
+                                    {pair.main?.duration
+                                      ? formatTimeToJapanese(
+                                          pair.main?.duration,
+                                        )
+                                      : formatTimeToJapanese(
+                                          pair.compare?.duration || '',
+                                        )}
+                                  </span>
+                                </div>
+                                <ProgressBarStatistic
+                                  key={index}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickTooltip={(id: number | null) => {
+                                    handleClickTooltip(
+                                      id,
+                                      EventWorkCategory.ALL,
+                                    );
+                                  }}
+                                  handleClickChart={(
+                                    _data: OptionDropdownType,
+                                  ) => {}}
+                                  id={pair.main ? pair.main.id : 0}
+                                  label={pair.main ? pair.main.label : ''}
+                                  value={pair.main ? pair.main.value : 0}
+                                  color={pair.main ? pair.main.color : ''}
+                                  duration={
+                                    pair.main ? String(pair.main.duration) : ''
+                                  }
+                                  optionData={
+                                    pair.main ? pair.main.optionData : []
+                                  }
+                                  showInfo={false}
+                                  startDate={startDate}
+                                  endDate={endDate}
+                                />
+                                <ProgressBarStatistic
+                                  key={index}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickTooltip={(id: number | null) => {
+                                    handleClickTooltip(
+                                      id,
+                                      EventWorkCategory.ALL,
+                                    );
+                                  }}
+                                  handleClickChart={(
+                                    _data: OptionDropdownType,
+                                  ) => {}}
+                                  id={pair.compare ? pair.compare.id : 0}
+                                  label={pair.compare ? pair.compare.label : ''}
+                                  value={pair.compare ? pair.compare.value : 0}
+                                  color={pair.compare ? pair.compare.color : ''}
+                                  duration={
+                                    pair.compare
+                                      ? String(pair.compare.duration)
+                                      : ''
+                                  }
+                                  optionData={
+                                    pair.compare ? pair.compare.optionData : []
+                                  }
+                                  showInfo={false}
+                                  startDateCompare={startDateCompare}
+                                  endDateCompare={endDateCompare}
+                                />
                               </div>
-                              <ProgressBarStatistic
-                                key={index}
-                                classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(id, EventWorkCategory.ALL);
-                                }}
-                                handleClickChart={(
-                                  _data: OptionDropdownType,
-                                ) => {}}
-                                id={pair.main ? pair.main.id : 0}
-                                label={pair.main ? pair.main.label : ''}
-                                value={pair.main ? pair.main.value : 0}
-                                color={pair.main ? pair.main.color : ''}
-                                duration={
-                                  pair.main ? String(pair.main.duration) : ''
-                                }
-                                optionData={
-                                  pair.main ? pair.main.optionData : []
-                                }
-                                showInfo={false}
-                                startDate={startDate}
-                                endDate={endDate}
-                              />
-                              <ProgressBarStatistic
-                                key={index}
-                                classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(id, EventWorkCategory.ALL);
-                                }}
-                                handleClickChart={(
-                                  _data: OptionDropdownType,
-                                ) => {}}
-                                id={pair.compare ? pair.compare.id : 0}
-                                label={pair.compare ? pair.compare.label : ''}
-                                value={pair.compare ? pair.compare.value : 0}
-                                color={pair.compare ? pair.compare.color : ''}
-                                duration={
-                                  pair.compare
-                                    ? String(pair.compare.duration)
-                                    : ''
-                                }
-                                optionData={
-                                  pair.compare ? pair.compare.optionData : []
-                                }
-                                showInfo={false}
-                                startDateCompare={startDateCompare}
-                                endDateCompare={endDateCompare}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                   {/* Column Chart 2 */}
@@ -553,82 +580,93 @@ const AllocationTagCompare = memo(
                           <div>-</div>
                         )}
                       </div>
-                      <div className="mt-5 flex flex-col gap-4">
-                        {progressDataPairsMedium.map((pair, index) => {
-                          return (
-                            <div key={index}>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium truncate max-w-40">
-                                  {pair.main
-                                    ? pair.main.label
-                                    : pair.compare?.label || ''}
-                                </span>
-                                <span className="text-sm font-medium truncate max-w-24">
-                                  {pair.main?.duration
-                                    ? formatTimeToJapanese(pair.main?.duration)
-                                    : formatTimeToJapanese(
-                                        pair.compare?.duration || '',
-                                      )}
-                                </span>
+                      {isLoadingLargeCompare || isLoadingLarge ? (
+                        <div className="flex flex-col mt-[50px]">
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
+                        </div>
+                      ) : (
+                        <div className="mt-5 flex flex-col gap-4">
+                          {progressDataPairsMedium.map((pair, index) => {
+                            return (
+                              <div key={index}>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-medium truncate max-w-40">
+                                    {pair.main
+                                      ? pair.main.label
+                                      : pair.compare?.label || ''}
+                                  </span>
+                                  <span className="text-sm font-medium truncate max-w-24">
+                                    {pair.main?.duration
+                                      ? formatTimeToJapanese(
+                                          pair.main?.duration,
+                                        )
+                                      : formatTimeToJapanese(
+                                          pair.compare?.duration || '',
+                                        )}
+                                  </span>
+                                </div>
+                                <ProgressBarStatistic
+                                  key={index}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickTooltip={(id: number | null) => {
+                                    handleClickTooltip(
+                                      id,
+                                      EventWorkCategory.LARGE,
+                                    );
+                                  }}
+                                  handleClickChart={(
+                                    _data: OptionDropdownType,
+                                  ) => {}}
+                                  id={pair.main ? pair.main.id : 0}
+                                  label={pair.main ? pair.main.label : ''}
+                                  value={pair.main ? pair.main.value : 0}
+                                  color={pair.main ? pair.main.color : ''}
+                                  duration={
+                                    pair.main ? String(pair.main.duration) : ''
+                                  }
+                                  optionData={
+                                    pair.main ? pair.main.optionData : []
+                                  }
+                                  showInfo={false}
+                                  startDate={startDate}
+                                  endDate={endDate}
+                                />
+                                <ProgressBarStatistic
+                                  key={index}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickTooltip={(id: number | null) => {
+                                    handleClickTooltip(
+                                      id,
+                                      EventWorkCategory.LARGE,
+                                    );
+                                  }}
+                                  handleClickChart={(
+                                    _data: OptionDropdownType,
+                                  ) => {}}
+                                  id={pair.compare ? pair.compare.id : 0}
+                                  label={pair.compare ? pair.compare.label : ''}
+                                  value={pair.compare ? pair.compare.value : 0}
+                                  color={pair.compare ? pair.compare.color : ''}
+                                  duration={
+                                    pair.compare
+                                      ? String(pair.compare.duration)
+                                      : ''
+                                  }
+                                  optionData={
+                                    pair.compare ? pair.compare.optionData : []
+                                  }
+                                  showInfo={false}
+                                  startDateCompare={startDateCompare}
+                                  endDateCompare={endDateCompare}
+                                />
                               </div>
-                              <ProgressBarStatistic
-                                key={index}
-                                classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(
-                                    id,
-                                    EventWorkCategory.LARGE,
-                                  );
-                                }}
-                                handleClickChart={(
-                                  _data: OptionDropdownType,
-                                ) => {}}
-                                id={pair.main ? pair.main.id : 0}
-                                label={pair.main ? pair.main.label : ''}
-                                value={pair.main ? pair.main.value : 0}
-                                color={pair.main ? pair.main.color : ''}
-                                duration={
-                                  pair.main ? String(pair.main.duration) : ''
-                                }
-                                optionData={
-                                  pair.main ? pair.main.optionData : []
-                                }
-                                showInfo={false}
-                                startDate={startDate}
-                                endDate={endDate}
-                              />
-                              <ProgressBarStatistic
-                                key={index}
-                                classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(
-                                    id,
-                                    EventWorkCategory.LARGE,
-                                  );
-                                }}
-                                handleClickChart={(
-                                  _data: OptionDropdownType,
-                                ) => {}}
-                                id={pair.compare ? pair.compare.id : 0}
-                                label={pair.compare ? pair.compare.label : ''}
-                                value={pair.compare ? pair.compare.value : 0}
-                                color={pair.compare ? pair.compare.color : ''}
-                                duration={
-                                  pair.compare
-                                    ? String(pair.compare.duration)
-                                    : ''
-                                }
-                                optionData={
-                                  pair.compare ? pair.compare.optionData : []
-                                }
-                                showInfo={false}
-                                startDateCompare={startDateCompare}
-                                endDateCompare={endDateCompare}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                   {/* Column Chart 3 */}
@@ -699,6 +737,93 @@ const AllocationTagCompare = memo(
                           <div>-</div>
                         )}
                       </div>
+                      {isLoadingMediumCompare || isLoadingMedium ? (
+                        <div className="flex flex-col mt-[50px]">
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
+                        </div>
+                      ) : (
+                        <div className="mt-5 flex flex-col gap-4">
+                          {progressDataPairsSmall.map((pair, index) => {
+                            return (
+                              <div key={index}>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-medium truncate max-w-40">
+                                    {pair.main
+                                      ? pair.main.label
+                                      : pair.compare?.label || ''}
+                                  </span>
+                                  <span className="text-sm font-medium truncate max-w-24">
+                                    {pair.main?.duration
+                                      ? formatTimeToJapanese(
+                                          pair.main?.duration,
+                                        )
+                                      : formatTimeToJapanese(
+                                          pair.compare?.duration || '',
+                                        )}
+                                  </span>
+                                </div>
+                                <ProgressBarStatistic
+                                  key={index}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickTooltip={(id: number | null) => {
+                                    handleClickTooltip(
+                                      id,
+                                      EventWorkCategory.MEDIUM,
+                                    );
+                                  }}
+                                  handleClickChart={(
+                                    _data: OptionDropdownType,
+                                  ) => {}}
+                                  id={pair.main ? pair.main.id : 0}
+                                  label={pair.main ? pair.main.label : ''}
+                                  value={pair.main ? pair.main.value : 0}
+                                  color={pair.main ? pair.main.color : ''}
+                                  duration={
+                                    pair.main ? String(pair.main.duration) : ''
+                                  }
+                                  optionData={
+                                    pair.main ? pair.main.optionData : []
+                                  }
+                                  showInfo={false}
+                                  startDate={startDate}
+                                  endDate={endDate}
+                                />
+                                <ProgressBarStatistic
+                                  key={index}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickTooltip={(id: number | null) => {
+                                    handleClickTooltip(
+                                      id,
+                                      EventWorkCategory.MEDIUM,
+                                    );
+                                  }}
+                                  handleClickChart={(
+                                    _data: OptionDropdownType,
+                                  ) => {}}
+                                  id={pair.compare ? pair.compare.id : 0}
+                                  label={pair.compare ? pair.compare.label : ''}
+                                  value={pair.compare ? pair.compare.value : 0}
+                                  color={pair.compare ? pair.compare.color : ''}
+                                  duration={
+                                    pair.compare
+                                      ? String(pair.compare.duration)
+                                      : ''
+                                  }
+                                  optionData={
+                                    pair.compare ? pair.compare.optionData : []
+                                  }
+                                  showInfo={false}
+                                  startDateCompare={startDateCompare}
+                                  endDateCompare={endDateCompare}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                       <div className="mt-5 flex flex-col gap-4">
                         {progressDataPairsSmall.map((pair, index) => {
                           return (
@@ -848,82 +973,93 @@ const AllocationTagCompare = memo(
                           <div>-</div>
                         )}
                       </div>
-                      <div className="mt-5 flex flex-col gap-4">
-                        {progressDataPairsCategory.map((pair, index) => {
-                          return (
-                            <div key={index}>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium truncate max-w-40">
-                                  {pair.main
-                                    ? pair.main.label
-                                    : pair.compare?.label || ''}
-                                </span>
-                                <span className="text-sm font-medium truncate max-w-24">
-                                  {pair.main?.duration
-                                    ? formatTimeToJapanese(pair.main?.duration)
-                                    : formatTimeToJapanese(
-                                        pair.compare?.duration || '',
-                                      )}
-                                </span>
+                      {isLoadingSmallCompare || isLoadingSmall ? (
+                        <div className="flex flex-col mt-[50px]">
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
+                        </div>
+                      ) : (
+                        <div className="mt-5 flex flex-col gap-4">
+                          {progressDataPairsCategory.map((pair, index) => {
+                            return (
+                              <div key={index}>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-medium truncate max-w-40">
+                                    {pair.main
+                                      ? pair.main.label
+                                      : pair.compare?.label || ''}
+                                  </span>
+                                  <span className="text-sm font-medium truncate max-w-24">
+                                    {pair.main?.duration
+                                      ? formatTimeToJapanese(
+                                          pair.main?.duration,
+                                        )
+                                      : formatTimeToJapanese(
+                                          pair.compare?.duration || '',
+                                        )}
+                                  </span>
+                                </div>
+                                <ProgressBarStatistic
+                                  key={index}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickTooltip={(id: number | null) => {
+                                    handleClickTooltip(
+                                      id,
+                                      EventWorkCategory.SMALL,
+                                    );
+                                  }}
+                                  handleClickChart={(
+                                    _data: OptionDropdownType,
+                                  ) => {}}
+                                  id={pair.main ? pair.main.id : 0}
+                                  label={pair.main ? pair.main.label : ''}
+                                  value={pair.main ? pair.main.value : 0}
+                                  color={pair.main ? pair.main.color : ''}
+                                  duration={
+                                    pair.main ? String(pair.main.duration) : ''
+                                  }
+                                  optionData={
+                                    pair.main ? pair.main.optionData : []
+                                  }
+                                  showInfo={false}
+                                  startDate={startDate}
+                                  endDate={endDate}
+                                />
+                                <ProgressBarStatistic
+                                  key={index}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickTooltip={(id: number | null) => {
+                                    handleClickTooltip(
+                                      id,
+                                      EventWorkCategory.SMALL,
+                                    );
+                                  }}
+                                  handleClickChart={(
+                                    _data: OptionDropdownType,
+                                  ) => {}}
+                                  id={pair.compare ? pair.compare.id : 0}
+                                  label={pair.compare ? pair.compare.label : ''}
+                                  value={pair.compare ? pair.compare.value : 0}
+                                  color={pair.compare ? pair.compare.color : ''}
+                                  duration={
+                                    pair.compare
+                                      ? String(pair.compare.duration)
+                                      : ''
+                                  }
+                                  optionData={
+                                    pair.compare ? pair.compare.optionData : []
+                                  }
+                                  showInfo={false}
+                                  startDateCompare={startDateCompare}
+                                  endDateCompare={endDateCompare}
+                                />
                               </div>
-                              <ProgressBarStatistic
-                                key={index}
-                                classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(
-                                    id,
-                                    EventWorkCategory.SMALL,
-                                  );
-                                }}
-                                handleClickChart={(
-                                  _data: OptionDropdownType,
-                                ) => {}}
-                                id={pair.main ? pair.main.id : 0}
-                                label={pair.main ? pair.main.label : ''}
-                                value={pair.main ? pair.main.value : 0}
-                                color={pair.main ? pair.main.color : ''}
-                                duration={
-                                  pair.main ? String(pair.main.duration) : ''
-                                }
-                                optionData={
-                                  pair.main ? pair.main.optionData : []
-                                }
-                                showInfo={false}
-                                startDate={startDate}
-                                endDate={endDate}
-                              />
-                              <ProgressBarStatistic
-                                key={index}
-                                classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={(id: number | null) => {
-                                  handleClickTooltip(
-                                    id,
-                                    EventWorkCategory.SMALL,
-                                  );
-                                }}
-                                handleClickChart={(
-                                  _data: OptionDropdownType,
-                                ) => {}}
-                                id={pair.compare ? pair.compare.id : 0}
-                                label={pair.compare ? pair.compare.label : ''}
-                                value={pair.compare ? pair.compare.value : 0}
-                                color={pair.compare ? pair.compare.color : ''}
-                                duration={
-                                  pair.compare
-                                    ? String(pair.compare.duration)
-                                    : ''
-                                }
-                                optionData={
-                                  pair.compare ? pair.compare.optionData : []
-                                }
-                                showInfo={false}
-                                startDateCompare={startDateCompare}
-                                endDateCompare={endDateCompare}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

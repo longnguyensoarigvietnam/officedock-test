@@ -70,6 +70,10 @@ const LineChart = ({
   handleSelectSmall,
 }: Props) => {
   const {
+    totalDurationLarge,
+    totalDurationMedium,
+    totalDurationSmall,
+    totalDurationCategory,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -305,7 +309,7 @@ const LineChart = ({
             weight: 500,
           },
           padding: 15,
-          stepSize: 5,
+          stepSize: 10,
         },
       },
     },
@@ -318,6 +322,7 @@ const LineChart = ({
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
       tagIds: selectedTags,
     },
   });
@@ -326,7 +331,6 @@ const LineChart = ({
     if (statisticTagTaskDurationsList) {
       let labelList: string[] = [];
       const datasets: any[] = [];
-      let sumDurations = 0;
       const tableDetail: {
         tagId: number;
         tagName: string;
@@ -340,14 +344,17 @@ const LineChart = ({
           labelList = categoryDetail.durations.map(
             (duration) => duration.startDate,
           );
-          if (index === statisticTagTaskDurationsList.length - 1) {
+          if (
+            index === statisticTagTaskDurationsList.length - 1 &&
+            String(categoryDetail.durations.at(-1)?.endDate) !=
+              String(categoryDetail.durations.at(-1)?.startDate)
+          ) {
             const endDate = categoryDetail.durations.at(-1)?.endDate;
             if (endDate) {
               labelList.push(endDate);
             }
           }
 
-          sumDurations += convertTimeToDecimal(categoryDetail.duration);
           let percent = 0;
           if (!selectedLarge?.value) {
             percent =
@@ -384,7 +391,8 @@ const LineChart = ({
                 y: convertTimeToDecimal(duration.duration) ?? 0,
                 endDate: duration.endDate,
               },
-              ...(index === categoryDetail.durations.length - 1
+              ...(index === categoryDetail.durations.length - 1 &&
+              String(duration.endDate) != String(duration.startDate)
                 ? [
                     {
                       x: duration.endDate,
@@ -415,9 +423,35 @@ const LineChart = ({
         });
 
         setTableData(tableDetail);
-        setTotalDuration(
-          `${convertFromNumberToJapaneseTime(sumDurations).formattedHours}:${convertFromNumberToJapaneseTime(sumDurations).formattedMinutes}`,
-        );
+        if (
+          selectedOrganization?.value &&
+          !selectedLarge?.value &&
+          !selectedMedium?.value &&
+          !selectedSmall?.value
+        ) {
+          setTotalDuration(totalDurationLarge);
+        } else if (
+          selectedOrganization?.value &&
+          selectedLarge?.value &&
+          !selectedMedium?.value &&
+          !selectedSmall?.value
+        ) {
+          setTotalDuration(totalDurationMedium);
+        } else if (
+          selectedOrganization?.value &&
+          selectedLarge?.value &&
+          selectedMedium?.value &&
+          !selectedSmall?.value
+        ) {
+          setTotalDuration(totalDurationSmall);
+        } else if (
+          selectedOrganization?.value &&
+          selectedLarge?.value &&
+          selectedMedium?.value &&
+          selectedSmall?.value
+        ) {
+          setTotalDuration(totalDurationCategory);
+        }
       } else {
         setLineChartData({
           labels: [],
@@ -427,7 +461,18 @@ const LineChart = ({
         setTotalDuration('00:00');
       }
     }
-  }, [statisticTagTaskDurationsList, statisticTagsList]);
+  }, [
+    statisticTagTaskDurationsList,
+    statisticTagsList,
+    selectedOrganization,
+    selectedLarge,
+    selectedMedium,
+    selectedSmall,
+    totalDurationLarge,
+    totalDurationMedium,
+    totalDurationSmall,
+    totalDurationCategory,
+  ]);
 
   const columns: ColumnDef<{
     tagId: number;
@@ -462,14 +507,14 @@ const LineChart = ({
           <div className="font-medium px-[18px] text-[16px] break-all line-clamp-3 text-left text-black flex gap-2 items-center">
             <div
               style={{ backgroundColor: info.row.original.tagColor }}
-              className={`w-4 h-4 rounded-[3px] flex items-center justify-center`}>
+              className={`w-4 h-4 min-w-[16px] rounded-[3px] flex items-center justify-center`}>
               <ImageRound
                 name="Check task"
                 src={'/icons/check-task.svg'}
                 className="w-[10px] h-2"
               />
             </div>{' '}
-            {value}{' '}
+            <p className="break-words max-w-[calc(100%_-_20px)]">{value}</p>{' '}
           </div>
         );
       },
@@ -502,8 +547,8 @@ const LineChart = ({
         const value = info.getValue() as string;
         return (
           <div className="font-medium flex text-[14px] justify-center text-black">
-            <p>{value.split(':')[0]}時間</p>
-            <p>{value.split(':')[1]}分</p>
+            <p>{value.split(':')[0] || 0}時間</p>
+            <p>{value.split(':')[1] || 0}分</p>
           </div>
         );
       },

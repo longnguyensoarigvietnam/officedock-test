@@ -68,6 +68,9 @@ const LineChart = ({
   handleSelectMedium,
 }: Props) => {
   const {
+    totalDurationLarge,
+    totalDurationMedium,
+    totalDurationSmall,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -145,44 +148,44 @@ const LineChart = ({
   const externalTooltipHandler = (context: any) => {
     const tooltipModel = context.tooltip;
     const tooltipEl = tooltipRef.current;
-  
+
     if (!tooltipEl || !tooltipModel) return;
-  
+
     if (!tooltipModel.dataPoints || tooltipModel.dataPoints.length === 0) {
       tooltipEl.style.opacity = '0';
       return;
     }
-  
+
     // Extract necessary data safely
     const dataIndex = tooltipModel.dataPoints[0]?.dataIndex;
     const datasetIndex = tooltipModel.dataPoints[0]?.datasetIndex;
     const dataset = context.chart.data.datasets[datasetIndex];
-  
+
     if (!dataset?.data || dataIndex === undefined) {
       tooltipEl.style.opacity = '0';
       return;
     }
-  
+
     // Hide tooltip for the last data point
     if (dataIndex === dataset.data.length - 1) {
       tooltipEl.style.opacity = '0';
       return;
     }
-  
+
     if (tooltipModel.opacity === 0) {
       tooltipEl.style.opacity = '0';
       return;
     }
-  
+
     const dataPoint = tooltipModel.dataPoints[0]?.raw;
     if (!dataPoint) {
       tooltipEl.style.opacity = '0';
       return;
     }
-  
+
     // Extract dataset label safely
     const datasetLabel = dataset.label ?? 'Unknown';
-  
+
     tooltipEl.innerHTML = `
       <div style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0px 2px 8px 0px #0000001A;">
         <div style="color: #77858F; font-weight: 400; font-size: 14px; margin-bottom: 8px">
@@ -198,7 +201,7 @@ const LineChart = ({
         </p>
       </div>
     `;
-  
+
     const { offsetLeft, offsetTop } = context.chart.canvas;
     tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX + 10}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY}px`;
@@ -301,7 +304,7 @@ const LineChart = ({
             weight: 500,
           },
           padding: 15,
-          stepSize: 5,
+          stepSize: 10,
         },
       },
     },
@@ -327,7 +330,6 @@ const LineChart = ({
 
       let labelList: string[] = [];
       const datasets: any[] = [];
-      let sumDurations = 0;
       const tableDetail: {
         categoryId: number;
         categoryName: string;
@@ -341,14 +343,17 @@ const LineChart = ({
           labelList = categoryDetail.durations.map(
             (duration) => duration.startDate,
           );
-          if (index === statisticTaskDurationsList.length - 1) {
+          if (
+            index === statisticTaskDurationsList.length - 1 &&
+            String(categoryDetail.durations.at(-1)?.endDate) !=
+              String(categoryDetail.durations.at(-1)?.startDate)
+          ) {
             const endDate = categoryDetail.durations.at(-1)?.endDate;
             if (endDate) {
               labelList.push(endDate);
             }
           }
 
-          sumDurations += convertTimeToDecimal(categoryDetail.duration);
           let percent = 0;
           if (!selectedLarge?.value) {
             percent =
@@ -390,7 +395,8 @@ const LineChart = ({
                 y: convertTimeToDecimal(duration.duration) ?? 0,
                 endDate: duration.endDate,
               },
-              ...(index === categoryDetail.durations.length - 1
+              ...(index === categoryDetail.durations.length - 1 &&
+              String(duration.endDate) != String(duration.startDate)
                 ? [
                     {
                       x: duration.endDate,
@@ -423,11 +429,14 @@ const LineChart = ({
           labels: labelList,
           datasets,
         });
-
         setTableData(tableDetail);
-        setTotalDuration(
-          `${convertFromNumberToJapaneseTime(sumDurations).formattedHours}:${convertFromNumberToJapaneseTime(sumDurations).formattedMinutes}`,
-        );
+        if(selectedOrganization?.value && !selectedLarge?.value && !selectedMedium?.value){
+          setTotalDuration(totalDurationLarge)
+        } else if(selectedOrganization?.value && selectedLarge?.value && !selectedMedium?.value){
+          setTotalDuration(totalDurationMedium)
+        } else if(selectedOrganization?.value && selectedLarge?.value && selectedMedium?.value){
+          setTotalDuration(totalDurationSmall)
+        }
       } else {
         setLineChartData({
           labels: [],
@@ -437,7 +446,7 @@ const LineChart = ({
         setTotalDuration('00:00');
       }
     }
-  }, [statisticTaskDurationsList, statisticCategoryList]);
+  }, [statisticTaskDurationsList, statisticCategoryList, selectedOrganization, selectedLarge, selectedMedium, totalDurationLarge, totalDurationMedium, totalDurationSmall]);
 
   const columns: ColumnDef<{
     categoryId: number;
@@ -472,14 +481,14 @@ const LineChart = ({
           <div className="font-medium px-[18px] text-[16px] break-all line-clamp-3 text-left text-black flex gap-2 items-center">
             <div
               style={{ backgroundColor: info.row.original.categoryColor }}
-              className={`w-4 h-4 rounded-[3px] flex items-center justify-center`}>
+              className={`w-4 h-4 min-w-[16px] rounded-[3px] flex items-center justify-center`}>
               <ImageRound
                 name="Check task"
                 src={'/icons/check-task.svg'}
                 className="w-[10px] h-2"
               />
             </div>{' '}
-            {value}{' '}
+            <p className="break-words max-w-[calc(100%_-_20px)]">{value}</p>{' '}
           </div>
         );
       },
@@ -512,8 +521,8 @@ const LineChart = ({
         const value = info.getValue() as string;
         return (
           <div className="font-medium flex text-[14px] justify-center text-black">
-            <p>{value.split(':')[0]}時間</p>
-            <p>{value.split(':')[1]}分</p>
+            <p>{value.split(':')[0] || 0}時間</p>
+            <p>{value.split(':')[1] || 0}分</p>
           </div>
         );
       },
