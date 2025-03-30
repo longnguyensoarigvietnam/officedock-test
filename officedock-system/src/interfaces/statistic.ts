@@ -270,3 +270,28 @@ export interface DataTaskListStatisticListType {
   organization: number;
   createdAt: string;
 }
+
+export interface StatisticsTaskDuration {
+  categoryId: number;
+  categoryName: string;
+  categoryColor: string;
+  duration: string;
+  durations: {
+    startDate: string;
+    endDate: string;
+    duration: string;
+    percent: number;
+  }[];
+}
+
+export interface StatisticsTagTaskDuration {
+  tagId: number;
+  tagName: string;
+  duration: string;
+  durations: {
+    startDate: string;
+    endDate: string;
+    duration: string;
+    percent: number;
+  }[];
+}

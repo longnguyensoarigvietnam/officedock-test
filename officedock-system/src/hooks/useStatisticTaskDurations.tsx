@@ -1,50 +1,43 @@
 'use client';
 
-import { AxiosError } from 'axios';
-import { useContext } from 'react';
 import { useQuery } from 'react-query';
+import { AxiosError } from 'axios';
 import { useSession } from 'next-auth/react';
 
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
-import { StatisticsCategories } from '@interfaces/statistic';
+import { StatisticsTaskDuration } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
-import { StatisticStateContext } from '@providers/StatisticProvider';
 
 interface FilterProps {
-  isCompare: boolean;
   endDate: string | Date;
   fromDate: string | Date;
   largeCategoryId?: number;
   mediumCategoryId?: number;
+  smallCategoryId?: number;
   organizationIds?: string;
   tagIds?: OptionDropdownType[];
+  statisticBy?: OptionDropdownType;
+  isTagPage?: boolean;
 }
 
-const useStatisticCategoriesCompare = ({
+const useStatisticTaskDurations = ({
   filter,
   onSuccess,
-  onError, 
+  onError,
 }: {
   filter?: FilterProps;
-  onSuccess?: (data: StatisticsCategories) => void;
+  onSuccess?: (data: StatisticsTaskDuration[]) => void;
   onError?: (error: AxiosError) => void;
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-  const {
-    setIsLoadingLargeCompare,
-    setIsLoadingMediumCompare,
-    setIsLoadingOrganizationCompare,
-  } = useContext(StatisticStateContext);
 
-  // Handle call API get statistic category list
-  const getStatisticCategoryList = async () => {
-    if (!filter?.isCompare) return [];
+  // Handle call API get statistic task duration list
+  const getStatisticTaskDurations = async () => {
     if (!filter?.organizationIds) return [];
-
-    const apiUrl = `${apiRouters.STATISTICS_CATEGORIES}?${
+    const apiUrl = `${apiRouters.STATISTICS_TASK_DURATIONS}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
     }${filter?.endDate ? `&end_date=${filter.endDate}` : ''}${
       filter?.largeCategoryId
@@ -58,42 +51,46 @@ const useStatisticCategoriesCompare = ({
       filter?.organizationIds
         ? `&organization_ids=${filter.organizationIds}`
         : ''
+    }${
+      filter?.smallCategoryId
+        ? `&small_category_id=${filter.smallCategoryId}`
+        : ''
+    }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy.value}` : '&statistic_by=WEEK'}${
+      filter?.isTagPage
+        ? `&is_tag_page=${filter.isTagPage ? 'true' : 'false'}`
+        : ''
     }${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
-    const { data } = await api.get<StatisticsCategories[]>(apiUrl);
+    const { data } = await api.get<StatisticsTaskDuration[]>(apiUrl);
     return data;
   };
 
-  // Handle API get statistic category list
+  // Handle API get statistic task duration list
   const {
-    data: statisticCategoryCompareList,
-    refetch: refetchStatisticCategoryList,
-    isFetched: isFetchedStatisticCategoryList,
+    data: statisticTaskDurationsList,
+    refetch: refetchStatisticTaskDurationsList,
+    isFetched: isFetchedStatisticTaskDurationsList,
   } = useQuery({
-    queryKey: ['getStatisticCategoryCompareList', [filter]],
-    queryFn: getStatisticCategoryList,
+    queryKey: ['getStatisticTaskDurations', [filter]],
+    queryFn: getStatisticTaskDurations,
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (data: StatisticsCategories) => {
+    onSuccess: (data: StatisticsTaskDuration[]) => {
       onSuccess && onSuccess(data);
     },
     onError: (error: AxiosError) => {
       onError && onError(error);
     },
-    onSettled: () => {
-      setIsLoadingLargeCompare(false);
-      setIsLoadingMediumCompare(false);
-      setIsLoadingOrganizationCompare(false);
-    },
+    onSettled: () => {},
   });
 
   return {
-    statisticCategoryCompareList,
-    refetchStatisticCategoryList,
-    isFetchedStatisticCategoryList,
+    statisticTaskDurationsList,
+    refetchStatisticTaskDurationsList,
+    isFetchedStatisticTaskDurationsList,
   };
 };
 
-export default useStatisticCategoriesCompare;
+export default useStatisticTaskDurations;

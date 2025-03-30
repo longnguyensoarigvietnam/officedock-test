@@ -455,6 +455,7 @@ export const apiRouters = {
   STATISTICS_CATEGORIES: '/statistics/categories/',
   STATISTICS_TASKS: '/statistics/tasks/',
   STATISTICS_TAGS: '/statistics/tags/',
+  STATISTICS_TASK_DURATIONS: '/statistics/task_durations/',
 
   // STATISTICS TEAM
   STATISTICS_CATEGORIES_TEAM: (id: number) =>

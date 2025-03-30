@@ -22,7 +22,6 @@ type Props = {
   statisticCategoryList: StatisticsCategories | undefined;
   removeTag: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
-  handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
@@ -44,7 +43,6 @@ const AllocationCategory = memo(
     statisticCategoryList,
     removeTag,
     handleSelectOrganization,
-    handleSelectOrganizationCustom,
     handleSelectLarge,
     handleSelectMedium,
     handleSelectSmall,
@@ -261,7 +259,7 @@ const AllocationCategory = memo(
                   src={`/icons/statistic-progress-bar.svg`}
                 />
                 <span className="text-black font-semibold text-[18px] relative top-[2px]">
-                  カテゴリーごとのタグの時間配分
+                  各カテゴリーの時間配分
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -378,12 +376,18 @@ const AllocationCategory = memo(
                                 handleClickChart={(
                                   data: OptionDropdownType,
                                 ) => {
-                                  if (data.value && data.value !== '未設定') {
-                                    selectedOrganization &&
-                                      handleSelectOrganizationCustom(
-                                        selectedOrganization,
-                                      );
-                                    handleSelectLarge(data);
+                                  if (
+                                    data.value &&
+                                    data.value !== '未設定' &&
+                                    data.value != selectedLarge?.value
+                                  ) {
+                                    const select = largeOptions.find(
+                                      (item) => item.value === data.value,
+                                    );
+
+                                    if (select) {
+                                      handleSelectLarge(select);
+                                    }
                                   }
                                 }}
                                 {...item}
@@ -447,8 +451,18 @@ const AllocationCategory = memo(
                                 handleClickChart={(
                                   data: OptionDropdownType,
                                 ) => {
-                                  if (data.value && data.value !== '未設定') {
-                                    handleSelectMedium(data);
+                                  if (
+                                    data.value &&
+                                    data.value !== '未設定' &&
+                                    data.value != selectedMedium?.value
+                                  ) {
+                                    const select = mediumOptions.find(
+                                      (item) => item.value === data.value,
+                                    );
+
+                                    if (select) {
+                                      handleSelectMedium(select);
+                                    }
                                   }
                                 }}
                                 {...item}

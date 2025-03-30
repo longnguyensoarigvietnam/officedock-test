@@ -272,7 +272,7 @@ const AllocationTagCompare = memo(
                   src={`/icons/statistic-progress-bar.svg`}
                 />
                 <span className="text-black font-semibold text-[18px] relative top-[2px]">
-                  カテゴリーごとのタグの時間配分
+                  各カテゴリーの時間配分
                 </span>
               </div>
             </div>

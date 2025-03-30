@@ -1105,17 +1105,93 @@ export function getJapaneseWeekDay(dayIndex: number) {
 // Calculate total durations for statistic
 export const totalDurationsForStatistic = (durations: string[]) => {
   const totalSeconds = durations.reduce((acc, duration) => {
-    const [hours, minutes, seconds] = duration.split(":").map(Number);
+    const [hours, minutes, seconds] = duration.split(':').map(Number);
     return acc + hours * 3600 + minutes * 60 + seconds;
   }, 0);
 
   const hh = Math.floor(totalSeconds / 3600)
     .toString()
-    .padStart(2, "0");
+    .padStart(2, '0');
   const mm = Math.floor((totalSeconds % 3600) / 60)
     .toString()
-    .padStart(2, "0");
-  const ss = (totalSeconds % 60).toString().padStart(2, "0");
+    .padStart(2, '0');
+  const ss = (totalSeconds % 60).toString().padStart(2, '0');
 
   return `${hh}:${mm}:${ss}`;
+};
+
+// Convert time to decimal
+export function convertTimeToDecimal(timeString: string) {
+  const [hours, minutes, seconds] = timeString.split(':').map(Number);
+  return hours + minutes / 60 + seconds / 3600;
+}
+
+// Convert from number to Japanese time
+export const convertFromNumberToJapaneseTime = (
+  decimalHours: number,
+): { formattedHours: string; formattedMinutes: string } => {
+  const hours = Math.floor(decimalHours);
+  const minutes = Math.round((decimalHours - hours) * 60);
+  const formattedHours = String(hours).padStart(2, '0');
+  const formattedMinutes = String(minutes).padStart(2, '0');
+
+  return { formattedHours, formattedMinutes };
+};
+
+// Convert to Japanese date range
+export const convertToJapaneseDateRange = (
+  startDateStr: string,
+  endDateStr: string,
+): string => {
+  const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土'];
+
+  const formatDate = (date: Date) => {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dayOfWeek = daysOfWeek[date.getDay()];
+    return `${month}月${day}日(${dayOfWeek})`;
+  };
+
+  const endDate = new Date(endDateStr);
+  const startDate = new Date(startDateStr);
+
+  return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
+};
+
+export const convertToJapaneseMonthDate = (
+  dateStr: string,
+  showMonth: boolean,
+) => {
+  const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土']; // Japanese days of the week
+  const date = new Date(dateStr);
+
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Ensure two digits
+  const day = String(date.getDate()).padStart(2, '0');
+  const dayOfWeek = daysOfWeek[date.getDay()]; // Get Japanese weekday
+
+  return showMonth
+    ? `${month}月${day}日(${dayOfWeek})`
+    : `${day}日(${dayOfWeek})`;
+};
+
+export const subtractDurations = (
+  standard: string,
+  compare: string,
+): string => {
+  const parseTime = (time: string) => {
+    const [hours, minutes, seconds] = time.split(':').map(Number);
+    return hours * 3600 + minutes * 60 + seconds;
+  };
+
+  const standardSeconds = parseTime(standard);
+  const compareSeconds = parseTime(compare);
+  let diffSeconds = standardSeconds - compareSeconds;
+
+  const sign = diffSeconds < 0 ? '-' : '';
+  diffSeconds = Math.abs(diffSeconds);
+
+  const hh = String(Math.floor(diffSeconds / 3600)).padStart(2, '0');
+  const mm = String(Math.floor((diffSeconds % 3600) / 60)).padStart(2, '0');
+
+  return `${sign}${hh}時間${mm}分`;
 };
