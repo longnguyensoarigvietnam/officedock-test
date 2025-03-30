@@ -32,7 +32,6 @@ type Props = {
   endDateCompare: Date | null;
   removeTag: (selected: OptionDropdownType) => void;
   handleSelectOrganization: (data: OptionDropdownType) => void;
-  handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
@@ -65,7 +64,6 @@ const AllocationCategoryCompare = memo(
     statisticCategoryCompareList,
     removeTag,
     handleSelectOrganization,
-    handleSelectOrganizationCustom,
     handleSelectLarge,
     handleSelectMedium,
     handleSelectSmall,
@@ -119,6 +117,9 @@ const AllocationCategoryCompare = memo(
       isLoadingLargeCompare,
       isLoadingMediumCompare,
       isLoadingOrganizationCompare,
+      isLoadingLarge,
+      isLoadingMedium,
+      isLoadingOrganization,
       setSelectedTags,
       setTotalDurationTask,
       setTotalDurationCategory,
@@ -460,7 +461,7 @@ const AllocationCategoryCompare = memo(
                   src={`/icons/statistic-progress-bar.svg`}
                 />
                 <span className="text-black font-semibold text-[18px] relative top-[2px]">
-                  カテゴリーごとのタグの時間配分
+                  各カテゴリーの時間配分
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -606,12 +607,10 @@ const AllocationCategoryCompare = memo(
                         )}
                       </div>
 
-                      {isLoadingOrganizationCompare ? (
-                        <div className="flex flex-col mt-5">
+                      {isLoadingOrganizationCompare || isLoadingOrganization ? (
+                        <div className="flex flex-col mt-[50px]">
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-5" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-5" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
@@ -647,12 +646,18 @@ const AllocationCategoryCompare = memo(
                                   handleClickChart={(
                                     data: OptionDropdownType,
                                   ) => {
-                                    if (data.value && data.value !== '未設定') {
-                                      selectedOrganization &&
-                                        handleSelectOrganizationCustom(
-                                          selectedOrganization,
-                                        );
-                                      handleSelectLarge(data);
+                                    if (
+                                      data.value &&
+                                      data.value !== '未設定' &&
+                                      data.value != selectedLarge?.value
+                                    ) {
+                                      const select = largeOptions.find(
+                                        (item) => item.value === data.value,
+                                      );
+
+                                      if (select) {
+                                        handleSelectLarge(select);
+                                      }
                                     }
                                   }}
                                   id={pair.main ? pair.main.id : 0}
@@ -681,12 +686,18 @@ const AllocationCategoryCompare = memo(
                                   handleClickChart={(
                                     data: OptionDropdownType,
                                   ) => {
-                                    if (data.value && data.value !== '未設定') {
-                                      selectedOrganization &&
-                                        handleSelectOrganizationCustom(
-                                          selectedOrganization,
-                                        );
-                                      handleSelectLarge(data);
+                                    if (
+                                      data.value &&
+                                      data.value !== '未設定' &&
+                                      data.value != selectedLarge?.value
+                                    ) {
+                                      const select = largeOptions.find(
+                                        (item) => item.value === data.value,
+                                      );
+
+                                      if (select) {
+                                        handleSelectLarge(select);
+                                      }
                                     }
                                   }}
                                   id={pair.compare ? pair.compare.id : 0}
@@ -792,12 +803,10 @@ const AllocationCategoryCompare = memo(
                           <div>-</div>
                         )}
                       </div>
-                      {isLoadingLargeCompare ? (
-                        <div className="flex flex-col mt-5">
+                      {isLoadingLargeCompare || isLoadingLarge ? (
+                        <div className="flex flex-col mt-[50px]">
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-5" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-5" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
@@ -833,12 +842,18 @@ const AllocationCategoryCompare = memo(
                                   handleClickChart={(
                                     data: OptionDropdownType,
                                   ) => {
-                                    if (data.value && data.value !== '未設定') {
-                                      selectedOrganization &&
-                                        handleSelectOrganizationCustom(
-                                          selectedOrganization,
-                                        );
-                                      handleSelectMedium(data);
+                                    if (
+                                      data.value &&
+                                      data.value !== '未設定' &&
+                                      data.value != selectedMedium?.value
+                                    ) {
+                                      const select = mediumOptions.find(
+                                        (item) => item.value === data.value,
+                                      );
+
+                                      if (select) {
+                                        handleSelectMedium(select);
+                                      }
                                     }
                                   }}
                                   id={pair.main ? pair.main.id : 0}
@@ -870,12 +885,18 @@ const AllocationCategoryCompare = memo(
                                   handleClickChart={(
                                     data: OptionDropdownType,
                                   ) => {
-                                    if (data.value && data.value !== '未設定') {
-                                      selectedOrganization &&
-                                        handleSelectOrganizationCustom(
-                                          selectedOrganization,
-                                        );
-                                      handleSelectMedium(data);
+                                    if (
+                                      data.value &&
+                                      data.value !== '未設定' &&
+                                      data.value != selectedMedium?.value
+                                    ) {
+                                      const select = mediumOptions.find(
+                                        (item) => item.value === data.value,
+                                      );
+
+                                      if (select) {
+                                        handleSelectMedium(select);
+                                      }
                                     }
                                   }}
                                   id={pair.compare ? pair.compare.id : 0}
@@ -984,12 +1005,10 @@ const AllocationCategoryCompare = memo(
                           <div>-</div>
                         )}
                       </div>
-                      {isLoadingMediumCompare ? (
-                        <div className="flex flex-col mt-5">
+                      {isLoadingMediumCompare || isLoadingMedium ? (
+                        <div className="flex flex-col mt-[50px]">
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-5" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-5" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
@@ -1022,17 +1041,6 @@ const AllocationCategoryCompare = memo(
                                       EventWorkCategory.MEDIUM,
                                     );
                                   }}
-                                  handleClickChart={(
-                                    data: OptionDropdownType,
-                                  ) => {
-                                    if (data.value && data.value !== '未設定') {
-                                      selectedOrganization &&
-                                        handleSelectOrganizationCustom(
-                                          selectedOrganization,
-                                        );
-                                      handleSelectSmall(data);
-                                    }
-                                  }}
                                   id={pair.main ? pair.main.id : 0}
                                   label={pair.main ? pair.main.label : ''}
                                   value={pair.main ? pair.main.value : 0}
@@ -1055,17 +1063,6 @@ const AllocationCategoryCompare = memo(
                                       id,
                                       EventWorkCategory.MEDIUM,
                                     );
-                                  }}
-                                  handleClickChart={(
-                                    data: OptionDropdownType,
-                                  ) => {
-                                    if (data.value && data.value !== '未設定') {
-                                      selectedOrganization &&
-                                        handleSelectOrganizationCustom(
-                                          selectedOrganization,
-                                        );
-                                      handleSelectSmall(data);
-                                    }
                                   }}
                                   id={pair.compare ? pair.compare.id : 0}
                                   label={pair.compare ? pair.compare.label : ''}

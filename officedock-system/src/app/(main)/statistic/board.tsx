@@ -21,6 +21,8 @@ import useStatisticCategories from '@hooks/useStatisticCategories';
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
+import LineChart from '@components/statistic/category/LineChart';
+import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 
 const StatisticBoard = () => {
   const {
@@ -472,10 +474,22 @@ const StatisticBoard = () => {
             statisticCategoryList={statisticCategoryList}
             statisticCategoryCompareList={statisticCategoryCompareList}
             handleSelectOrganization={handleSelectOrganization}
-            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
             handleSelectSmall={handleSelectSmall}
+          />
+          {/* Line chart */}
+          <LineChartCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            removeTag={removeTag}
+            statisticCategoryList={statisticCategoryList}
+            statisticCategoryCompareList={statisticCategoryCompareList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
           />
         </>
       ) : (
@@ -499,10 +513,19 @@ const StatisticBoard = () => {
             statisticCategoryList={statisticCategoryList}
             removeTag={removeTag}
             handleSelectOrganization={handleSelectOrganization}
-            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}
             handleSelectSmall={handleSelectSmall}
+          />
+          {/* Line chart */}
+          <LineChart
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            statisticCategoryList={statisticCategoryList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
           />
         </>
       )}

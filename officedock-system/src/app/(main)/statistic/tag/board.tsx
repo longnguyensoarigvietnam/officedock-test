@@ -20,6 +20,8 @@ import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import AllocationTag from '@components/statistic/tag/AllocationTag';
 import AllocationTagCompare from '@components/statistic/tag/compare/AllocationTagCompare';
+import LineChart from '@components/statistic/tag/LineChart';
+import LineChartCompare from '@components/statistic/tag/compare/LineChartCompare';
 
 const StatisticTagBoard = () => {
   const {
@@ -365,6 +367,20 @@ const StatisticTagBoard = () => {
             handleSelectMedium={handleSelectMedium}
             handleSelectSmall={handleSelectSmall}
           />
+          {/* Line chart */}
+          <LineChartCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            removeTag={removeTag}
+            statisticTagsList={statisticTagsList}
+            statisticTagsCompareList={statisticTagsListCompare}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
         </>
       ) : (
         <>
@@ -385,6 +401,17 @@ const StatisticTagBoard = () => {
             endDate={endDate}
             statisticTagsList={statisticTagsList}
             removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Line chart */}
+          <LineChart
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            statisticTagsList={statisticTagsList}
             handleSelectOrganization={handleSelectOrganization}
             handleSelectLarge={handleSelectLarge}
             handleSelectMedium={handleSelectMedium}

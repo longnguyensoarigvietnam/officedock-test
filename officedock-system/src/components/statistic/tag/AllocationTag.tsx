@@ -223,7 +223,7 @@ const AllocationTag = memo(
                   src={`/icons/statistic-progress-bar.svg`}
                 />
                 <span className="text-black font-semibold text-[18px] relative top-[2px]">
-                  カテゴリーごとのタグの時間配分
+                  各カテゴリーの時間配分
                 </span>
               </div>
             </div>
@@ -451,7 +451,7 @@ const AllocationTag = memo(
                         options={smallOptions}
                         selectedOption={selectedSmall || undefined}
                         onChange={(data) => handleSelectSmall(data)}
-                        disabled={!selectedLarge}
+                        disabled={!selectedMedium}
                       />
                       <p className="text-sm text-black my-[26px]">
                         合計{' '}
