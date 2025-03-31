@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { getAdjustedStartDateDefault } from '@utils/date';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -226,10 +227,9 @@ export const StatisticStateProvider = ({
   // Data Date calendar
   const [isCheckCompare, setIsCheckCompare] = useState(false);
   const [endDate, setEndDate] = useState<Date | null>(new Date());
+
   const [startDate, setStartDate] = useState<Date>(
-    new Date(
-      new Date().setMonth(new Date().getMonth() - 1) + 24 * 60 * 60 * 1000,
-    ),
+    getAdjustedStartDateDefault(),
   );
 
   // Tag
@@ -239,9 +239,7 @@ export const StatisticStateProvider = ({
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
   const [startDateCompare, setStartDateCompare] = useState<Date>(
-    new Date(
-      new Date().setMonth(new Date().getMonth() - 1) + 24 * 60 * 60 * 1000,
-    ),
+    getAdjustedStartDateDefault(),
   );
 
   const contextValue: ContextValue = {

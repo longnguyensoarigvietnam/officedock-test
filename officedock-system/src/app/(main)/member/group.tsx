@@ -37,11 +37,13 @@ const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
   return (
     <div>
       <div className="flex justify-between">
-        <div className="flex items-center gap-[10px] w-fit">
+        <div className="flex items-start gap-[10px] w-fit">
           <GroupIconWithDynamicColor color={randomColor} />
 
-          <p className="text-[18px] truncate max-w-[500px]">{item.name}</p>
-          <span className="text-[#77858F] text-[13px] ml-[10px]">
+          <p className="text-[18px] break-all line-clamp-3 max-w-[500px]">
+            {item.name}
+          </p>
+          <span className="text-[#77858F] text-[13px] ml-[10px] mt-[2px]">
             メンバー{item.users.length}人
           </span>
         </div>

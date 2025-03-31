@@ -191,6 +191,7 @@ const TaskListStatistic = ({
                 isShowIconFilter
                 options={tagsOptions}
                 placeholder="集計対象のタグを選択"
+                labelOptionClass="break-all"
                 className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {
@@ -221,8 +222,8 @@ const TaskListStatistic = ({
                   return (
                     <div
                       key={item.value}
-                      className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="min-w-[32px] max-w-[80px] truncate">
+                      className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className="min-w-[32px]  truncate">
                         {item.label}
                       </span>
                       <ImageRound
@@ -256,8 +257,8 @@ const TaskListStatistic = ({
           {/* Line */}
           <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
           <div>
-            <div className="flex items-end gap-[20px] justify-center px-[30px] text-sm font-medium">
-              <div className="w-1/4 ">
+            <div className="flex items-end  justify-between px-[30px] text-sm font-medium">
+              <div className="w-[220px] ">
                 <div className="mt-4">
                   <Dropdown
                     label="チーム選択"
@@ -288,7 +289,7 @@ const TaskListStatistic = ({
                 )}
               </div>
               {/* Large category */}
-              <div className="w-1/4 ">
+              <div className="w-[220px] ">
                 <div className="mt-4">
                   <Dropdown
                     label="大カテゴリー選択"
@@ -320,7 +321,7 @@ const TaskListStatistic = ({
                 )}
               </div>
               {/* Medium category */}
-              <div className="w-1/4">
+              <div className="w-[220px]">
                 <div className="mt-4">
                   <Dropdown
                     label="中カテゴリー選択"
@@ -352,7 +353,7 @@ const TaskListStatistic = ({
                 )}
               </div>
               {/* Small category */}
-              <div className="w-1/4">
+              <div className="w-[220px]">
                 <div className="mt-4">
                   <Dropdown
                     label="小カテゴリー選択"

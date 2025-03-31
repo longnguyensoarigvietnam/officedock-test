@@ -181,7 +181,7 @@ const MultiSelectDropdown = ({
                 disabled ? 'opacity-50 cursor-not-allowed' : ''
               } ${valueClassName} `}>
               <p
-                className={`block truncate ${!selected && 'text-gray-300'} text-left min-h-[24px] text-xs ${labelClass}`}>
+                className={`block truncate ${!selected && 'text-gray-300'} text-left min-h-[24px] text-xs  ${labelClass}`}>
                 {customLabel
                   ? customLabel
                   : placeholder || <div className="h-[22px]"></div>}

@@ -465,6 +465,7 @@ const AllocationCategoryCompare = memo(
                   <MultiSelectDropdown
                     isShowIconFilter
                     options={tagsOptions}
+                    labelOptionClass="break-all"
                     placeholder="集計対象のタグを選択"
                     className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                     selectedOptions={selectedTags || []}
@@ -496,8 +497,8 @@ const AllocationCategoryCompare = memo(
                       return (
                         <div
                           key={item.value}
-                          className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className="min-w-[32px] max-w-[80px] truncate">
+                          className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                          <span className="min-w-[32px]  truncate">
                             {item.label}
                           </span>
                           <ImageRound
@@ -531,9 +532,9 @@ const AllocationCategoryCompare = memo(
               {/* Line */}
               <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
               <div>
-                <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+                <div className="flex  justify-between px-[30px] text-sm font-medium">
                   {/* Column Chart 1 */}
-                  <div className="w-full">
+                  <div className="w-[300px]">
                     <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                       大カテゴリー
                     </div>
@@ -735,7 +736,7 @@ const AllocationCategoryCompare = memo(
                     </div>
                   </div>
                   {/* Column Chart 2 */}
-                  <div className="w-full">
+                  <div className="w-[300px]">
                     <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                       中カテゴリー
                     </div>
@@ -937,7 +938,7 @@ const AllocationCategoryCompare = memo(
                     </div>
                   </div>
                   {/* Column Chart 3 */}
-                  <div className="w-full">
+                  <div className="w-[300px]">
                     <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                       小カテゴリー
                     </div>
@@ -1111,6 +1112,7 @@ const AllocationCategoryCompare = memo(
             endDate={endDate}
             detailCategory={detailCategory}
             selectedOrganization={selectedOrganization}
+            statisticCategoryList={statisticCategoryList}
             onClose={() => {
               setIsShowModal(false);
             }}

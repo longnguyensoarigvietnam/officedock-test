@@ -364,7 +364,7 @@ const StatusColumn = ({
           </Droppable>
         </div>
       )}
-      {result && result.total > 3 && hasShowMore && (
+      {result && result.total > 3 && hasShowMore && isExtendData && (
         <>
           {isShowMore ? (
             <div className="flex justify-center">

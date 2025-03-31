@@ -238,8 +238,6 @@ const DailyReportBoard = () => {
 
   useEffect(() => {
     if (dataStatistic) {
-      // Generate color
-
       // Add color for item
       const dataAddColor = dataStatistic.categories.map((item) => ({
         color: item.categoryColor,

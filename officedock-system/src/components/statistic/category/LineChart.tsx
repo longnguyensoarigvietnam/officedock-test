@@ -430,12 +430,24 @@ const LineChart = ({
           datasets,
         });
         setTableData(tableDetail);
-        if(selectedOrganization?.value && !selectedLarge?.value && !selectedMedium?.value){
-          setTotalDuration(totalDurationLarge)
-        } else if(selectedOrganization?.value && selectedLarge?.value && !selectedMedium?.value){
-          setTotalDuration(totalDurationMedium)
-        } else if(selectedOrganization?.value && selectedLarge?.value && selectedMedium?.value){
-          setTotalDuration(totalDurationSmall)
+        if (
+          selectedOrganization?.value &&
+          !selectedLarge?.value &&
+          !selectedMedium?.value
+        ) {
+          setTotalDuration(totalDurationLarge);
+        } else if (
+          selectedOrganization?.value &&
+          selectedLarge?.value &&
+          !selectedMedium?.value
+        ) {
+          setTotalDuration(totalDurationMedium);
+        } else if (
+          selectedOrganization?.value &&
+          selectedLarge?.value &&
+          selectedMedium?.value
+        ) {
+          setTotalDuration(totalDurationSmall);
         }
       } else {
         setLineChartData({
@@ -446,7 +458,16 @@ const LineChart = ({
         setTotalDuration('00:00');
       }
     }
-  }, [statisticTaskDurationsList, statisticCategoryList, selectedOrganization, selectedLarge, selectedMedium, totalDurationLarge, totalDurationMedium, totalDurationSmall]);
+  }, [
+    statisticTaskDurationsList,
+    statisticCategoryList,
+    selectedOrganization,
+    selectedLarge,
+    selectedMedium,
+    totalDurationLarge,
+    totalDurationMedium,
+    totalDurationSmall,
+  ]);
 
   const columns: ColumnDef<{
     categoryId: number;
@@ -597,6 +618,7 @@ const LineChart = ({
               <MultiSelectDropdown
                 isShowIconFilter
                 options={tagsOptions}
+                labelOptionClass="break-all"
                 placeholder="集計対象のタグを選択"
                 className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                 selectedOptions={selectedTags || []}
@@ -628,8 +650,8 @@ const LineChart = ({
                   return (
                     <div
                       key={item.value}
-                      className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="min-w-[32px] max-w-[80px] truncate">
+                      className="min-w-[66px] w-fit h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className="min-w-[32px]  truncate">
                         {item.label}
                       </span>
                       <ImageRound
@@ -663,9 +685,9 @@ const LineChart = ({
           {/* Line */}
           <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
           <div>
-            <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+            <div className="flex  justify-between px-[30px] text-sm font-medium">
               {/* Column Chart 1 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[300px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && !selectedLarge && !selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
@@ -685,7 +707,7 @@ const LineChart = ({
                 </div>
               </div>
               {/* Column Chart 2 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[300px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && selectedLarge && !selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
@@ -706,7 +728,7 @@ const LineChart = ({
                 </div>
               </div>
               {/* Column Chart 3 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[300px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && selectedLarge && selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー

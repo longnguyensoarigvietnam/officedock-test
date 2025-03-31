@@ -14,6 +14,7 @@ import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
+  StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 import useStatisticTask from '@hooks/useStatisticTask';
@@ -26,6 +27,7 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
+  statisticTagsListTeam: StatisticsCategories | undefined;
   creationDataStatisticData: CreationStatisticType;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -41,6 +43,7 @@ const TaskListStatisticTeamTags = ({
   endDateCompare,
   isCheckCompare,
   creationDataStatisticData,
+  statisticTagsListTeam,
   removeTag,
   handleSelectLarge,
   handleSelectMedium,
@@ -125,7 +128,7 @@ const TaskListStatisticTeamTags = ({
   useStatisticTask({
     isTeam: true,
     is_tag_page: true,
-
+    parentData: statisticTagsListTeam,
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -304,7 +307,7 @@ const TaskListStatisticTeamTags = ({
                       color={member.color}
                     />
                   </div>
-                  <span className="break-all w-full truncate">
+                  <span className="break-all w-full max-w-[800px] truncate">
                     {member.fullName}
                   </span>
                 </div>

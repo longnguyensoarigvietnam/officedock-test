@@ -591,6 +591,7 @@ const PercentageTagsCompare = ({
           startDate={startDate}
           endDate={endDate}
           selectedOrganization={selectedOrganization}
+          statisticTagsListTeam={statisticTagsList}
           onClose={() => {
             setIsShowModal(false);
           }}
@@ -607,6 +608,7 @@ const PercentageTagsCompare = ({
           endDate={endDateCompare}
           detailCategory={detailCategoryCompare}
           selectedOrganization={selectedOrganization}
+          statisticTagsListTeam={statisticTagsList}
           onClose={() => {
             setIsShowModalCompare(false);
           }}

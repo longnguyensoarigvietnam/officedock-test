@@ -69,13 +69,18 @@ const PieChartCustom = ({
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
-  const filteredData = data
-    .map((value, index) => ({
-      value,
-      label: labels[index],
-      color: colors?.[index],
-    }))
-    .filter((item) => item.value > 0);
+  const filteredData = data.reduce<
+    { value: number; label: string; color?: string }[]
+  >((acc, value, index) => {
+    if (value > 0) {
+      acc.push({
+        value,
+        label: labels[index],
+        color: colors?.[index],
+      });
+    }
+    return acc;
+  }, []);
 
   const chartData: ChartData<'pie', number[], string> = {
     labels: filteredData.map((item) => item.label),

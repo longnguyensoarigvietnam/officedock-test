@@ -364,6 +364,7 @@
 .calendar-team-custom .fc-timegrid-col-frame {
   overflow: visible !important;
   margin: 0 !important;
+  top: -5px;
 }
 /* Year */
 .calendar-team-custom .fc .fc-multimonth {
