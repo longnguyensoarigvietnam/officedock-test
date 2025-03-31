@@ -10,11 +10,11 @@ steps:
   - id: 'Build Docker Image'
     name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
-    secretEnv: ['_SYSTEM_ARTIFACT_REGISTORY_PATH']
+    secretEnv: ['_SYSTEM_ARTIFACT_REGISTRY_PATH']
     args:
       [
         '-c',
-        'docker build --platform linux/amd64 -t $$_SYSTEM_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA -f Dockerfile.staging .',
+        'docker build --platform linux/amd64 -t $$_SYSTEM_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA -f Dockerfile.staging .',
       ]
     dir: 'officedock-system'
 
@@ -22,8 +22,8 @@ steps:
   - id: 'Push Docker Image'
     name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
-    secretEnv: ['_SYSTEM_ARTIFACT_REGISTORY_PATH']
-    args: ['-c', 'docker push $$_SYSTEM_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA']
+    secretEnv: ['_SYSTEM_ARTIFACT_REGISTRY_PATH']
+    args: ['-c', 'docker push $$_SYSTEM_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA']
 
   # Deploy built Docker Image on Cloud Run
   - id: 'Deploy Docker Image'
@@ -31,14 +31,14 @@ steps:
     entrypoint: 'bash'
     secretEnv:
       [
-        '_SYSTEM_ARTIFACT_REGISTORY_PATH',
+        '_SYSTEM_ARTIFACT_REGISTRY_PATH',
         '_SYSTEM_REGION',
         '_SYSTEM_SERVICE_NAME',
       ]
     args: [
         '-c',
         "gcloud run deploy $$_SYSTEM_SERVICE_NAME \
-        --image $$_SYSTEM_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA \
+        --image $$_SYSTEM_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
         --region $$_SYSTEM_REGION \
         --port 3000 \
         --allow-unauthenticated",
@@ -51,7 +51,7 @@ options:
 availableSecrets:
   secretManager:
     - versionName: projects/${PROJECT_NUMBER}/secrets/STG_SYSTEM_ARTIFACT_REGISTRY_PATH/versions/latest
-      env: _SYSTEM_ARTIFACT_REGISTORY_PATH
+      env: _SYSTEM_ARTIFACT_REGISTRY_PATH
     - versionName: projects/${PROJECT_NUMBER}/secrets/STG_SYSTEM_REGION/versions/latest
       env: _SYSTEM_REGION
     - versionName: projects/${PROJECT_NUMBER}/secrets/STG_SYSTEM_SERVICE_NAME/versions/latest
