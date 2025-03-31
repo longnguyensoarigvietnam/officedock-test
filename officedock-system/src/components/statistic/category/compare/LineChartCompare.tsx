@@ -39,6 +39,7 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import { getRandomColor, lightenColor } from '@utils';
@@ -670,6 +671,27 @@ const LineChartCompare = ({
     totalDurationMediumCompare,
     totalDurationSmallCompare,
   ]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'categoryPercent', desc: true },
+  ]);
+
+  const handleSortingChange = (updater: any) => {
+    setSorting((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      return next.length === 0 ? [{ id: 'categoryPercent', desc: true }] : next;
+    });
+  };
+  const differenceSorting = (rowA: any, rowB: any) => {
+    const standardA = Number(rowA.original.standardInfo?.categoryPercent) || 0;
+    const compareA = Number(rowA.original.compareInfo?.categoryPercent) || 0;
+    const differenceA = standardA - compareA;
+
+    const standardB = Number(rowB.original.standardInfo?.categoryPercent) || 0;
+    const compareB = Number(rowB.original.compareInfo?.categoryPercent) || 0;
+    const differenceB = standardB - compareB;
+
+    return differenceA - differenceB;
+  };
 
   const columns: ColumnDef<MergedTableCategory>[] = [
     {
@@ -833,6 +855,7 @@ const LineChartCompare = ({
         );
       },
       enableSorting: true,
+      sortingFn: differenceSorting,
       cell: (info) => {
         const standardPercent =
           Number(info.row.original.standardInfo?.categoryPercent) || 0;
@@ -868,6 +891,9 @@ const LineChartCompare = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    state: { sorting },
+    sortingFns: { differenceSorting },
+    onSortingChange: handleSortingChange,
   });
 
   return (
