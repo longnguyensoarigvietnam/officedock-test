@@ -45,8 +45,8 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
         boxShadow: '0px 2px 8px 0px #0000001A',
       }}
       className="bg-white p-4 rounded-md font-medium flex gap-3 justify-between">
-      <div className="flex gap-5 items-center">
-        <div className="flex flex-col gap-1 items-center w-10 text-xs  text-[#0068B6]">
+      <div className="flex gap-5 flex-grow items-center">
+        <div className="flex flex-col gap-1 items-center min-w-[50px] text-xs  text-[#0068B6]">
           {isConfirm ? (
             <span>確認済</span>
           ) : (
@@ -70,12 +70,12 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
 
         <div className="flex items-center gap-[10px]">
           <AvatarIconWithDynamicColor color={avatarColor} size={33} />
-          <span className="text-black break-all line-clamp-2 max-w-[200px]">
+          <span className="text-black break-all line-clamp-2 ">
             {userData.fullName}
           </span>
         </div>
       </div>
-      <div className="text-xs font-medium flex items-center gap-[14px]">
+      <div className="text-xs font-medium flex items-center justify-end gap-[14px] min-w-[240px]">
         <span className="text-[#77858F]">合計時間</span>
         <span className="text-black">
           {userData.totalDuration &&

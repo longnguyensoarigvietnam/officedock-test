@@ -348,7 +348,7 @@ const ListActualDurations = () => {
             className={`flex flex-col gap-4 p-4 bg-white`}
             onSubmit={handleSubmit(onSubmit)}>
             <div className="flex gap-4">
-              <div className="w-1/4">
+              <div className="w-[278px]">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -370,7 +370,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-1/4">
+              <div className="w-[278px]">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Input
@@ -381,7 +381,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-1/4">
+              <div className="w-[278px]">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -403,7 +403,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-1/4">
+              <div className="w-[278px]">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -427,7 +427,7 @@ const ListActualDurations = () => {
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="w-1/4">
+              <div className="w-[278px]">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -449,7 +449,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-1/4">
+              <div className="w-[278px]">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -471,7 +471,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-1/4">
+              <div className="w-[278px]">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -493,7 +493,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-1/4"></div>
+              <div className="w-[278px]"></div>
             </div>
             <div className="flex justify-end">
               <Button
