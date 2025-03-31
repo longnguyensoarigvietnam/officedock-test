@@ -7,6 +7,7 @@ export const FULL_NAME_REQUIRED_MESSAGE = '氏名は必須です。';
 export const COMPANY_NAME_REQUIRED_MESSAGE = '法人名は必須です。';
 export const COMPANY_NAME_REGISTER_REQUIRED_MESSAGE = '会社名は必須です。';
 export const STATUS_REQUIRED_MESSAGE = 'ステータスを選択してください。';
+export const PEOPLE_IN_CHART_REQUIRED_MESSAGE = '担当者を選択してください。';
 export const ORGANIZATION_REQUIRED_MESSAGE = '組織を選択してください。';
 export const CATEGORY_SMALL_REQUIRED_MESSAGE = '小カテゴを選択してください。';
 export const CATEGORY_MEDIUM_REQUIRED_MESSAGE =
@@ -46,7 +47,7 @@ export const START_DATE_WRONG_SELECTED = '実施予定日時を入力してく�
 export const DATE_REQUIRED_DURATION = '計測時間を入力してください。';
 export const UPLOAD_FILE_MAXIMUM_SZIE =
   '32MB以上のファイルをアップロードできません。';
-export const INVALID_CATEGORY_NAME = 'カテゴリー名がすでに存在しています。'
+export const INVALID_CATEGORY_NAME = 'カテゴリー名がすでに存在しています。';
 
 // Success message
 export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました。';
@@ -65,8 +66,7 @@ export const INVALID_URL_MESSAGE = 'URLの形式で入力してください。';
 export const ERROR_UPDATE_MESSAGE = '更新に失敗しました。';
 export const ERROR_SAVE_MESSAGE = '保存に失敗しました。';
 export const ERROR_TIME_START_MESSAGE = '予定時間をオーバーしています';
-export const ERROR_DELETE_TASK_RUNNING =
-  '計測中のカードを削除することができません。';
+export const ERROR_DELETE_TASK_RUNNING = '計測中のカードを削除できません。';
 
 export const OTP_CODE_INVALID =
   '認証コードが無効であるか、有効期限が切れています。';

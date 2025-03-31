@@ -35,6 +35,8 @@ import { NO_OPTION_CATEGORY } from '@constants';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
+import { useErrorToast } from '@hooks/useErrorToast';
+
 import { OptionDropdownType } from '@interfaces/common';
 import {
   CreationStatisticType,
@@ -42,7 +44,6 @@ import {
 } from '@interfaces/statistic';
 import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
-import { useErrorToast } from '@hooks/useErrorToast';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 
 interface ListTaskStatistic {

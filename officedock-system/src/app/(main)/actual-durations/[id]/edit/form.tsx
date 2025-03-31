@@ -50,6 +50,8 @@ import { DEFAULT_TASK_SCHEDULE_DURATION, NO_OPTION_CATEGORY } from '@constants';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import {
   addTimeToDate,
   calculateActualDuration,
@@ -65,6 +67,7 @@ const EditActualDurationsForm = () => {
   const params = useParams();
   const [defaultTaskScheduleData, setDefaultTaskScheduleData] =
     useState<ActualDurationDefaultData>();
+  const { expanded } = useContext(GlobalStateContext);
   const searchParams = useSearchParams();
   const { showToast } = useToast();
   const [dataOrganizationCategories, setDataOrganizationCategories] = useState<
@@ -681,7 +684,10 @@ const EditActualDurationsForm = () => {
     <div className="flex flex-col justify-between h-full">
       <div>
         <div>
-          <p className="font-semibold mb-2">{defaultTaskScheduleData?.title}</p>
+          <p
+            className={`font-semibold mb-2 break-words ${expanded ? '!w-[calc(100%_-_210px)]' : '!w-[calc(100%_-_60px)]'}`}>
+            {defaultTaskScheduleData?.title}
+          </p>
         </div>
         <div>
           {searchParams.get('type') == EventCalendarType.SCHEDULE && (
@@ -729,10 +735,10 @@ const EditActualDurationsForm = () => {
                     classNameError="!text-sm"
                     options={dataOptionsCategoryLarge}
                     selectedOption={
-                      dataOptionsCategoryLarge?.find(
+                      (dataOptionsCategoryLarge?.find(
                         (element) =>
                           element.value == (value as OptionDropdownType)?.value,
-                      ) as OptionDropdownType | undefined
+                      ) as OptionDropdownType | undefined) || value
                     }
                     onChange={(e) => {
                       if (e.value != watch('largeCategory.value')) {
@@ -756,10 +762,10 @@ const EditActualDurationsForm = () => {
                     classNameOption="!text-sm"
                     classNameError="!text-sm"
                     selectedOption={
-                      dataOptionsCategoryMedium?.find(
+                      (dataOptionsCategoryMedium?.find(
                         (element) =>
                           element.value == (value as OptionDropdownType)?.value,
-                      ) as OptionDropdownType | undefined
+                      ) as OptionDropdownType | undefined) || value
                     }
                     options={dataOptionsCategoryMedium}
                     onChange={(e) => {
@@ -783,10 +789,10 @@ const EditActualDurationsForm = () => {
                     classNameOption="!text-sm"
                     classNameError="!text-sm"
                     selectedOption={
-                      dataOptionsCategorySmall?.find(
+                      (dataOptionsCategorySmall?.find(
                         (element) =>
                           element.value == (value as OptionDropdownType)?.value,
-                      ) as OptionDropdownType | undefined
+                      ) as OptionDropdownType | undefined) || value
                     }
                     options={dataOptionsCategorySmall}
                     placeholder="小カテゴリ"
@@ -814,7 +820,7 @@ const EditActualDurationsForm = () => {
                         classNameTextData="!text-sm"
                         options={unSelectedTagIdsOptions}
                         selectedOption={dataOptionsTagIds.find(
-                          (element) => element.value === value?.value,
+                          (element) => element.value == value?.value,
                         )}
                         onChange={(option: OptionDropdownType) => {
                           onChange(option);

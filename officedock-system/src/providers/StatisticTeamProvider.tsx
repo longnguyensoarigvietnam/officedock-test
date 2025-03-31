@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { getAdjustedStartDateDefault } from '@utils/date';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -71,6 +72,25 @@ interface ContextValue {
       }[]
     >
   >;
+  isSkeletonCategoryTeamTask: boolean;
+  setIsSkeletonCategoryTeamTask: Dispatch<SetStateAction<boolean>>;
+  isSkeletonCategoryTeamTaskCompare: boolean;
+  setIsSkeletonCategoryTeamTaskCompare: Dispatch<SetStateAction<boolean>>;
+
+  // Loading
+  isLoadingLarge: boolean;
+  isLoadingMedium: boolean;
+  isLoadingOrganization: boolean;
+  setIsLoadingLarge: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMedium: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingOrganization: Dispatch<SetStateAction<boolean>>;
+
+  isLoadingLargeCompare: boolean;
+  isLoadingMediumCompare: boolean;
+  isLoadingOrganizationCompare: boolean;
+  setIsLoadingLargeCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMediumCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingOrganizationCompare: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -122,6 +142,24 @@ const defaultValue: ContextValue = {
   selectedTags: [],
   setSelectedTags: () => {},
   setTagsOptions: () => {},
+  isSkeletonCategoryTeamTask: false,
+  setIsSkeletonCategoryTeamTask: () => {},
+  isSkeletonCategoryTeamTaskCompare: false,
+  setIsSkeletonCategoryTeamTaskCompare: () => {},
+  // Loading
+  isLoadingLarge: false,
+  isLoadingMedium: false,
+  isLoadingOrganization: false,
+  setIsLoadingLarge: () => {},
+  setIsLoadingMedium: () => {},
+  setIsLoadingOrganization: () => {},
+
+  isLoadingLargeCompare: false,
+  isLoadingMediumCompare: false,
+  isLoadingOrganizationCompare: false,
+  setIsLoadingLargeCompare: () => {},
+  setIsLoadingMediumCompare: () => {},
+  setIsLoadingOrganizationCompare: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -132,6 +170,22 @@ export const StatisticTeamStateProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  // Loading
+  const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
+  const [isLoadingLarge, setIsLoadingLarge] = useState(false);
+  const [isLoadingMedium, setIsLoadingMedium] = useState(false);
+  const [isLoadingOrganizationCompare, setIsLoadingOrganizationCompare] =
+    useState(false);
+  const [isLoadingLargeCompare, setIsLoadingLargeCompare] = useState(false);
+  const [isLoadingMediumCompare, setIsLoadingMediumCompare] = useState(false);
+
+  const [isSkeletonCategoryTeamTask, setIsSkeletonCategoryTeamTask] =
+    useState(false);
+  const [
+    isSkeletonCategoryTeamTaskCompare,
+    setIsSkeletonCategoryTeamTaskCompare,
+  ] = useState(false);
+
   const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
 
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
@@ -177,9 +231,7 @@ export const StatisticTeamStateProvider = ({
   const [isCheckCompare, setIsCheckCompare] = useState(false);
   const [endDate, setEndDate] = useState<Date | null>(new Date());
   const [startDate, setStartDate] = useState<Date>(
-    new Date(
-      new Date().setMonth(new Date().getMonth() - 1) + 24 * 60 * 60 * 1000,
-    ),
+    getAdjustedStartDateDefault(),
   );
   // Tag
   const [tagsOptions, setTagsOptions] = useState<OptionDropdownType[]>([]);
@@ -188,9 +240,7 @@ export const StatisticTeamStateProvider = ({
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
   const [startDateCompare, setStartDateCompare] = useState<Date>(
-    new Date(
-      new Date().setMonth(new Date().getMonth() - 1) + 24 * 60 * 60 * 1000,
-    ),
+    getAdjustedStartDateDefault(),
   );
 
   // Member
@@ -251,6 +301,25 @@ export const StatisticTeamStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
+
+    isSkeletonCategoryTeamTask,
+    setIsSkeletonCategoryTeamTask,
+    isSkeletonCategoryTeamTaskCompare,
+    setIsSkeletonCategoryTeamTaskCompare,
+
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+
+    isLoadingLargeCompare,
+    isLoadingMediumCompare,
+    isLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
   };
 
   return (

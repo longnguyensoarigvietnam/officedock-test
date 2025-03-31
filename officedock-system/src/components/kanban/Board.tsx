@@ -7,7 +7,7 @@ import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
 import Column from './Column';
 
 import { ERROR_EXTEND_COLUMN } from '@constants/message';
-import { KanbanType, StatusValueTask } from '@constants/enums';
+import { KanbanType } from '@constants/enums';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import {
@@ -54,7 +54,7 @@ interface BoardKanbanProps {
     TaskRequest,
     unknown
   >;
-  handleActionEditTask: (id: number) => void;
+  handleActionEditTask: (id: number, type?: string) => void
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   pinItemToTop: (itemId: string | number) => void;
@@ -96,10 +96,9 @@ const BoardKanban = ({
 
   const filteredData =
     columnsKanbanData &&
-    Object.fromEntries(
-      Object.entries(columnsKanbanData).filter(
-        ([key]) => key !== `${StatusValueTask.MY_ROUTINE}`,
-      ),
+    Object.values(columnsKanbanData) &&
+    Object.values(columnsKanbanData).map(
+      (_, i, arr) => arr[(i + arr.length - 1) % arr.length],
     );
 
   const handleExtendColumn = async (tabVisibility: Record<string, boolean>) => {
@@ -135,7 +134,7 @@ const BoardKanban = ({
         <div
           {...provided.droppableProps}
           ref={provided.innerRef}
-          className="w-full  ">
+          className="w-full">
           <div
             style={{
               gap: `${(columnWidth / 247) * 12}px`,
@@ -205,7 +204,7 @@ const BoardKanban = ({
     </Droppable>
   ) : (
     <div className="h-[calc(100vh_-_257px)] w-full">
-      <ColumnsSkeleton numberOfColumns={4} />
+      <ColumnsSkeleton numberOfColumns={5} />
     </div>
   );
 };

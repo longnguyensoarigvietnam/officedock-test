@@ -299,12 +299,12 @@ const EditSkillMapForm = () => {
         </div>
 
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="w-[70%] divide-y divide-gray-200 ring-1 ring-gray-200 rounded-2xl">
+          <div className="w-[70%] min-w-[70%] divide-y divide-gray-200 ring-1 ring-gray-200 rounded-2xl">
             <div className="flex bg-[#F3F4F6] py-1 rounded-tl-2xl rounded-tr-2xl ring-1 ring-gray-200 mx-[1px] ">
-              <div className="flex-grow text-center w-1/2 flex items-center justify-center">
+              <div className="flex-grow text-center w-[calc((100%_-_48px)/2)] flex items-center justify-center">
                 スキル
               </div>
-              <div className="flex-grow text-center w-1/2 flex items-center justify-center">
+              <div className="flex-grow text-center w-[calc((100%_-_48px)/2)] flex items-center justify-center">
                 レベル
               </div>
               <div className="flex-grow text-center w-12 flex items-center justify-center"></div>
@@ -337,65 +337,67 @@ const EditSkillMapForm = () => {
                                   name="drag item"
                                 />
                               </div>
-                              <div className="w-1/2 border-r-[1px]">
+                              <div className="w-[calc((100%_-_48px)/2)] max-w-[calc((100%_-_48px)/2)] border-r-[1px]">
                                 {row.isSubmitted ? (
                                   <div className={`py-2 border-[1px]`}>
-                                    <p className="pl-7">
-                                      <span className="truncate max-w-[150px]">
-                                        {
-                                          dataOptionsSkill.find(
-                                            (element) =>
-                                              String(element.value) ===
-                                              String(row.skillId),
-                                          )?.label
-                                        }
-                                      </span>
+                                    <p className="pl-7 truncate max-w-[98%]">
+                                      {
+                                        dataOptionsSkill.find(
+                                          (element) =>
+                                            String(element.value) ===
+                                            String(row.skillId),
+                                        )?.label
+                                      }
                                     </p>
                                   </div>
                                 ) : (
-                                  <TableDropdown
-                                    selectedOption={dataOptionsSkill.find(
-                                      (element) =>
-                                        String(element.value) ===
-                                        String(row.skillId),
-                                    )}
-                                    placeholder="スキル"
-                                    options={
-                                      dataOptionsSkill?.filter(
-                                        (option) =>
-                                          !rows.find(
-                                            (row) =>
-                                              row.skillId == option.value,
-                                          ),
-                                      ) || []
-                                    }
-                                    className="rounded-none"
-                                    labelClass="pl-4"
-                                    searchOption
-                                    onChange={(e) => {
-                                      handleEditCategoryLine(
-                                        row.customId,
-                                        'skillId',
-                                        String(e.value),
-                                      );
-                                      setRows((prevRows) => {
-                                        const updatedRows = [...prevRows];
-                                        const rowIndex = updatedRows.findIndex(
-                                          (r) => r.customId === row.customId,
+                                  <div className='w-full'>
+                                    <TableDropdown
+                                      selectedOption={dataOptionsSkill.find(
+                                        (element) =>
+                                          String(element.value) ===
+                                          String(row.skillId),
+                                      )}
+                                      placeholder="スキル"
+                                      options={
+                                        dataOptionsSkill?.filter(
+                                          (option) =>
+                                            !rows.find(
+                                              (row) =>
+                                                row.skillId == option.value,
+                                            ),
+                                        ) || []
+                                      }
+                                      className="rounded-none"
+                                      labelClass="pl-4"
+                                      searchOption
+                                      onChange={(e) => {
+                                        handleEditCategoryLine(
+                                          row.customId,
+                                          'skillId',
+                                          String(e.value),
                                         );
+                                        setRows((prevRows) => {
+                                          const updatedRows = [...prevRows];
+                                          const rowIndex =
+                                            updatedRows.findIndex(
+                                              (r) =>
+                                                r.customId === row.customId,
+                                            );
 
-                                        if (rowIndex !== -1) {
-                                          updatedRows[rowIndex].skillId =
-                                            String(e.value);
-                                        }
+                                          if (rowIndex !== -1) {
+                                            updatedRows[rowIndex].skillId =
+                                              String(e.value);
+                                          }
 
-                                        return updatedRows;
-                                      });
-                                    }}
-                                  />
+                                          return updatedRows;
+                                        });
+                                      }}
+                                    />
+                                  </div>
                                 )}
                               </div>
-                              <div className="w-1/2 border-r-[1px] border-y-[1px] flex justify-center items-center">
+                              <div className="w-[calc((100%_-_48px)/2)] max-w-[calc((100%_-_48px)/2)] border-r-[1px] border-y-[1px] flex justify-center items-center">
                                 {row.level}
                               </div>
                               {row.isSubmitted ? (

@@ -1,14 +1,19 @@
 'use client';
 
+import { useContext } from 'react';
 import { useQuery } from 'react-query';
 import { useSession } from 'next-auth/react';
+import { AxiosError } from 'axios';
 
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
-import { AxiosError } from 'axios';
 import { BasePagination, OptionDropdownType } from '@interfaces/common';
 import { DataTaskListStatisticListType } from '@interfaces/statistic';
+import { StatisticStateContext } from '@providers/StatisticProvider';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 interface FilterProps {
   page: number;
@@ -42,12 +47,28 @@ const useStatisticTaskCompare = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
+  const { setIsSkeletonCategoryTaskCompare } = useContext(
+    StatisticStateContext,
+  );
+  const { setIsSkeletonTagTaskCompare } = useContext(StatisticTagStateContext);
+  const { setIsSkeletonCategoryTeamTaskCompare } = useContext(
+    StatisticTeamStateContext,
+  );
+  const { setIsSkeletonTagTeamTaskCompare } = useContext(
+    StatisticTeamTagsStateContext,
+  );
 
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
     if (!filter?.isCompare) return [];
+    if (filter?.totalDuration === '') return null;
+
     if (!filter?.organizationIds) return null;
     if (isTeam && !filter.user_id) return [];
+    setIsSkeletonCategoryTaskCompare(true);
+    setIsSkeletonTagTaskCompare(true);
+    setIsSkeletonCategoryTeamTaskCompare(true);
+    setIsSkeletonTagTeamTaskCompare(true);
 
     const params = new URLSearchParams();
 
@@ -99,7 +120,12 @@ const useStatisticTaskCompare = ({
     onError: (error: AxiosError) => {
       onError && onError(error);
     },
-    onSettled: () => {},
+    onSettled: () => {
+      setIsSkeletonCategoryTaskCompare(false);
+      setIsSkeletonTagTaskCompare(false);
+      setIsSkeletonCategoryTeamTaskCompare(false);
+      setIsSkeletonTagTeamTaskCompare(false);
+    },
   });
 
   return {

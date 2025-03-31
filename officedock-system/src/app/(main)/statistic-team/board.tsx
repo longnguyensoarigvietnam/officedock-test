@@ -54,6 +54,12 @@ const StatisticTeamBoard = () => {
     setTotalDurationMediumCompare,
     setTotalDurationSmallCompare,
     setListMemberTeam,
+    setIsLoadingOrganization,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
   } = useContext(StatisticTeamStateContext);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -146,6 +152,32 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    if (data.value !== selectedOrganization?.value) {
+      setIsLoadingOrganization(true);
+      if (isCheckCompare) {
+        setIsLoadingOrganizationCompare(true);
+      }
+    }
+    setSelectedOrganization(data);
+    setSelectedLarge(null);
+    setSelectedMedium(null);
+    setSelectedSmall(null);
+
+    const organization = creationDataStatisticData?.organization;
+    if (organization) {
+      const largeCategories = organization.statisticCategories.map((stat) => ({
+        value: stat.LARGE.id,
+        label: stat.LARGE.name,
+      }));
+      setLargeOptions(largeCategories);
+    } else {
+      setLargeOptions([]);
+    }
+    setMediumOptions([]);
+  };
+
+  // Handle Choose organization with option large
+  const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -166,6 +198,12 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    if (data.value !== selectedLarge?.value) {
+      setIsLoadingLarge(true);
+      if (isCheckCompare) {
+        setIsLoadingLargeCompare(true);
+      }
+    }
     setSelectedLarge(data);
     setSelectedMedium(null);
     setSelectedSmall(null);
@@ -189,6 +227,12 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    if (data.value !== selectedMedium?.value) {
+      setIsLoadingMedium(true);
+      if (isCheckCompare) {
+        setIsLoadingMediumCompare(true);
+      }
+    }
     setSelectedMedium(data);
     setSelectedSmall(null);
 
@@ -264,8 +308,8 @@ const StatisticTeamBoard = () => {
 
   return (
     <div className="pt-[30px] pr-10  font-medium ">
-      <div className="mb-[33px] flex items-center justify-between">
-        <div className="flex items-center gap-5 ">
+      <div className="mb-[33px] flex items-start justify-between">
+        <div className="flex items-start gap-5 ">
           <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
             <ImageRound
               className="w-[34px] h-[34px] rounded-full"
@@ -274,13 +318,13 @@ const StatisticTeamBoard = () => {
               name="Multi users"
             />
           </div>
-          <span className="text-[26px] font-medium relative top-[-2px] max-w-[350px] truncate">
+          <span className="text-[26px] font-medium relative top-[-2px] max-w-[450px] break-all">
             {selectedOrganization?.label}
           </span>
           <span className="text-[26px] font-medium relative top-[-2px]">
             チーム集計
           </span>
-          <div className="flex justify-center items-center gap-2 ">
+          <div className="flex justify-center items-center gap-2 mt-[6px] ">
             <Button
               variant={'primary'}
               className={`!py-0 !px-0 font-bold w-[80px] h-7 
@@ -299,7 +343,7 @@ const StatisticTeamBoard = () => {
             </Button>
           </div>{' '}
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center mt-[6px]">
           {listMemberTeam.length > 0 && getParticipantAvatars(listMemberTeam)}
         </div>
       </div>
@@ -371,6 +415,7 @@ const StatisticTeamBoard = () => {
               isShowIconFilter
               options={tagsOptions}
               placeholder="集計対象のタグを選択"
+              labelOptionClass="break-all"
               className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
               selectedOptions={selectedTags || []}
               onChange={(selected) => {
@@ -401,10 +446,8 @@ const StatisticTeamBoard = () => {
                 return (
                   <div
                     key={item.value}
-                    className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                    <span className="min-w-[32px] max-w-[80px] truncate">
-                      {item.label}
-                    </span>
+                    className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                    <span className="min-w-[32px]  truncate">{item.label}</span>
                     <ImageRound
                       onClick={() => {
                         removeTag(item);
@@ -430,6 +473,7 @@ const StatisticTeamBoard = () => {
           statisticTeamCategoryList={statisticCategoryListTeam}
           statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
           handleSelectOrganization={handleSelectOrganization}
+          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           removeTag={removeTag}
@@ -441,6 +485,7 @@ const StatisticTeamBoard = () => {
           endDate={endDate}
           statisticTeamCategoryList={statisticCategoryListTeam}
           handleSelectOrganization={handleSelectOrganization}
+          handleSelectOrganizationCustom={handleSelectOrganizationCustom}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           removeTag={removeTag}
@@ -454,6 +499,7 @@ const StatisticTeamBoard = () => {
           startDateCompare={startDateCompare}
           endDateCompare={endDateCompare}
           isCheckCompare={isCheckCompare}
+          statisticCategoryListTeam={statisticCategoryListTeam}
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}

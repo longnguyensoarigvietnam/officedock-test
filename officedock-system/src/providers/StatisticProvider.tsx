@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { getAdjustedStartDateDefault } from '@utils/date';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -31,6 +32,10 @@ interface ContextValue {
   startDateCompare: Date;
   totalDurationCategory: string;
   totalDurationCategoryCompare: string;
+  isSkeletonCategoryTask: boolean;
+  setIsSkeletonCategoryTask: Dispatch<SetStateAction<boolean>>;
+  isSkeletonCategoryTaskCompare: boolean;
+  setIsSkeletonCategoryTaskCompare: Dispatch<SetStateAction<boolean>>;
 
   // Tag
   tagsOptions: OptionDropdownType[];
@@ -62,6 +67,21 @@ interface ContextValue {
   setTotalDurationTask: Dispatch<SetStateAction<string>>;
   totalDurationTaskCompare: string;
   setTotalDurationTaskCompare: Dispatch<SetStateAction<string>>;
+
+  // Loading
+  isLoadingLarge: boolean;
+  isLoadingMedium: boolean;
+  isLoadingOrganization: boolean;
+  setIsLoadingLarge: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMedium: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingOrganization: Dispatch<SetStateAction<boolean>>;
+
+  isLoadingLargeCompare: boolean;
+  isLoadingMediumCompare: boolean;
+  isLoadingOrganizationCompare: boolean;
+  setIsLoadingLargeCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMediumCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingOrganizationCompare: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -119,6 +139,25 @@ const defaultValue: ContextValue = {
   selectedTags: [],
   setSelectedTags: () => {},
   setTagsOptions: () => {},
+
+  isSkeletonCategoryTask: false,
+  setIsSkeletonCategoryTask: () => {},
+  isSkeletonCategoryTaskCompare: false,
+  setIsSkeletonCategoryTaskCompare: () => {},
+
+  isLoadingLarge: false,
+  isLoadingMedium: false,
+  isLoadingOrganization: false,
+  setIsLoadingLarge: () => {},
+  setIsLoadingMedium: () => {},
+  setIsLoadingOrganization: () => {},
+
+  isLoadingLargeCompare: false,
+  isLoadingMediumCompare: false,
+  isLoadingOrganizationCompare: false,
+  setIsLoadingLargeCompare: () => {},
+  setIsLoadingMediumCompare: () => {},
+  setIsLoadingOrganizationCompare: () => {},
 };
 
 export const StatisticStateContext = createContext<ContextValue>(defaultValue);
@@ -128,8 +167,20 @@ export const StatisticStateProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
+  // Loading
+  const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
+  const [isLoadingLarge, setIsLoadingLarge] = useState(false);
+  const [isLoadingMedium, setIsLoadingMedium] = useState(false);
+  const [isLoadingOrganizationCompare, setIsLoadingOrganizationCompare] =
+    useState(false);
+  const [isLoadingLargeCompare, setIsLoadingLargeCompare] = useState(false);
+  const [isLoadingMediumCompare, setIsLoadingMediumCompare] = useState(false);
 
+  const [isSkeletonCategoryTask, setIsSkeletonCategoryTask] = useState(false);
+  const [isSkeletonCategoryTaskCompare, setIsSkeletonCategoryTaskCompare] =
+    useState(false);
+
+  const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
   const [mediumOptions, setMediumOptions] = useState<OptionDropdownType[]>([]);
   const [listOptionsOrganization, setListOptionsOrganization] = useState<
@@ -176,10 +227,9 @@ export const StatisticStateProvider = ({
   // Data Date calendar
   const [isCheckCompare, setIsCheckCompare] = useState(false);
   const [endDate, setEndDate] = useState<Date | null>(new Date());
+
   const [startDate, setStartDate] = useState<Date>(
-    new Date(
-      new Date().setMonth(new Date().getMonth() - 1) + 24 * 60 * 60 * 1000,
-    ),
+    getAdjustedStartDateDefault(),
   );
 
   // Tag
@@ -189,9 +239,7 @@ export const StatisticStateProvider = ({
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
   const [startDateCompare, setStartDateCompare] = useState<Date>(
-    new Date(
-      new Date().setMonth(new Date().getMonth() - 1) + 24 * 60 * 60 * 1000,
-    ),
+    getAdjustedStartDateDefault(),
   );
 
   const contextValue: ContextValue = {
@@ -249,6 +297,24 @@ export const StatisticStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
+    isSkeletonCategoryTask,
+    setIsSkeletonCategoryTask,
+    isSkeletonCategoryTaskCompare,
+    setIsSkeletonCategoryTaskCompare,
+
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+
+    isLoadingLargeCompare,
+    isLoadingMediumCompare,
+    isLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
   };
 
   return (

@@ -1,4 +1,5 @@
 'use client';
+import { useRouter } from 'next/navigation';
 import React, { useContext, useState } from 'react';
 
 import Button from '@components/common/Button';
@@ -7,18 +8,21 @@ import ImageRound from '@components/common/ImageRound';
 import StatisticCalendar from '@components/statistic/category/StatisticCalendar';
 import PercentageCategory from '@components/statistic/category/PercentageCategory';
 import TaskListStatistic from '@components/statistic/category/TaskList';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import AllocationCategory from '@components/statistic/category/AllocationCategory';
+import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
+import AllocationCategoryCompare from '@components/statistic/category/compare/AllocationCategoryCompare';
 
+import { pageRouters } from '@constants/routers';
+import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
 import useStatisticCategories from '@hooks/useStatisticCategories';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
-import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
-import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import { useRouter } from 'next/navigation';
-import { pageRouters } from '@constants/routers';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import LineChart from '@components/statistic/category/LineChart';
+import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 
 const StatisticBoard = () => {
   const {
@@ -53,7 +57,12 @@ const StatisticBoard = () => {
     setTotalDurationSmallCompare,
     setTotalDurationTask,
     setTotalDurationTaskCompare,
-
+    setIsLoadingOrganization,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
     setTagsOptions,
   } = useContext(StatisticStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
@@ -168,6 +177,34 @@ const StatisticBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    if (data.value !== selectedOrganization?.value) {
+      setIsLoadingOrganization(true);
+      if (isCheckCompare) {
+        setIsLoadingOrganizationCompare(true);
+      }
+    }
+    setTotalDurationTask('');
+    setSelectedOrganization(data);
+    setSelectedLarge(null);
+    setSelectedMedium(null);
+    setSelectedSmall(null);
+
+    const organization = creationDataStatisticData?.organizations?.find(
+      (org) => org.id === data.value,
+    );
+    if (organization) {
+      const largeCategories = organization.statisticCategories.map((stat) => ({
+        value: stat.LARGE.id,
+        label: stat.LARGE.name,
+      }));
+      setLargeOptions(largeCategories);
+    } else {
+      setLargeOptions([]);
+    }
+    setMediumOptions([]);
+  };
+  // Handle Choose organization with setup options medium
+  const handleSelectOrganizationCustom = (data: OptionDropdownType) => {
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -190,7 +227,15 @@ const StatisticBoard = () => {
 
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    if (data.value !== selectedLarge?.value) {
+      setIsLoadingLarge(true);
+
+      if (isCheckCompare) {
+        setIsLoadingLargeCompare(true);
+      }
+    }
     setSelectedLarge(data);
+
     setSelectedMedium(null);
     setSelectedSmall(null);
 
@@ -214,6 +259,12 @@ const StatisticBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    if (data.value !== selectedMedium?.value) {
+      setIsLoadingMedium(true);
+      if (isCheckCompare) {
+        setIsLoadingMediumCompare(true);
+      }
+    }
     setSelectedMedium(data);
     setSelectedSmall(null);
 
@@ -353,6 +404,7 @@ const StatisticBoard = () => {
                 options={tagsOptions}
                 placeholder="集計対象のタグを選択"
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                labelOptionClass="break-all"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {
                   let updatedTagIds = [];
@@ -382,8 +434,8 @@ const StatisticBoard = () => {
                   return (
                     <div
                       key={item.value}
-                      className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="min-w-[32px] max-w-[80px] truncate">
+                      className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className="min-w-[32px]  truncate">
                         {item.label}
                       </span>
                       <ImageRound
@@ -402,51 +454,90 @@ const StatisticBoard = () => {
           </div>
         </div>
       </div>
-      {/* Percentage of categories */}
+
       {isCheckCompare ? (
-        <PercentageCategoryCompare
-          startDate={startDate}
-          endDate={endDate}
-          removeTag={removeTag}
-          startDateCompare={startDateCompare}
-          endDateCompare={endDateCompare}
-          statisticCategoryList={statisticCategoryList}
-          statisticCategoryCompareList={statisticCategoryCompareList}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          handleSelectSmall={handleSelectSmall}
-        />
+        <>
+          {/* Percentage of categories */}
+          <PercentageCategoryCompare
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticCategoryList={statisticCategoryList}
+            statisticCategoryCompareList={statisticCategoryCompareList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Progress bar */}
+          <AllocationCategoryCompare
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            statisticCategoryList={statisticCategoryList}
+            statisticCategoryCompareList={statisticCategoryCompareList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Line chart */}
+          <LineChartCompare
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            removeTag={removeTag}
+            statisticCategoryList={statisticCategoryList}
+            statisticCategoryCompareList={statisticCategoryCompareList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+          />
+        </>
       ) : (
-        <PercentageCategory
-          startDate={startDate}
-          endDate={endDate}
-          removeTag={removeTag}
-          statisticCategoryList={statisticCategoryList}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectSmall={handleSelectSmall}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-        />
+        <>
+          {/* Percentage of categories */}
+          <PercentageCategory
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            statisticCategoryList={statisticCategoryList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+            handleSelectSmall={handleSelectSmall}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+          />
+          {/* Progress bar */}
+          <AllocationCategory
+            startDate={startDate}
+            endDate={endDate}
+            statisticCategoryList={statisticCategoryList}
+            removeTag={removeTag}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+          />
+          {/* Line chart */}
+          <LineChart
+            startDate={startDate}
+            endDate={endDate}
+            removeTag={removeTag}
+            statisticCategoryList={statisticCategoryList}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+          />
+        </>
       )}
-      {/* TODO: Time allocation for each category */}
-      {/* <AllocationCategory
-        startDate={startDate}
-        endDate={endDate}
-        totalDurationLarge={totalDurationLarge}
-        totalDurationMedium={totalDurationMedium}
-        totalDurationSmall={totalDurationSmall}
-        statisticCategoryList={statisticCategoryList}
-        listOptionsOrganization={listOptionsOrganization}
-        selectedOrganization={selectedOrganization}
-        largeOptions={largeOptions}
-        selectedLarge={selectedLarge}
-        mediumOptions={mediumOptions}
-        selectedMedium={selectedMedium}
-        handleSelectOrganization={handleSelectOrganization}
-        handleSelectLarge={handleSelectLarge}
-        handleSelectMedium={handleSelectMedium}
-      /> */}
+
       {/* Task list */}
       <TaskListStatistic
         startDate={startDate}

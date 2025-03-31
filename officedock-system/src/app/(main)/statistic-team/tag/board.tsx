@@ -54,6 +54,14 @@ const StatisticTeamTagBoard = () => {
     setListMemberTeam,
     setTotalDurationCategory,
     setTotalDurationCategoryCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingOrganization,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingSmallCompare,
   } = useContext(StatisticTeamTagsStateContext);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -155,6 +163,12 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
+    if (data.value !== selectedOrganization?.value) {
+      setIsLoadingOrganization(true);
+      if (isCheckCompare) {
+        setIsLoadingOrganizationCompare(true);
+      }
+    }
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -175,6 +189,12 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
+    if (data.value !== selectedLarge?.value) {
+      setIsLoadingLarge(true);
+      if (isCheckCompare) {
+        setIsLoadingLargeCompare(true);
+      }
+    }
     setSelectedLarge(data);
     setSelectedMedium(null);
     setSelectedSmall(null);
@@ -198,6 +218,12 @@ const StatisticTeamTagBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
+    if (data.value !== selectedMedium?.value) {
+      setIsLoadingMedium(true);
+      if (isCheckCompare) {
+        setIsLoadingMediumCompare(true);
+      }
+    }
     setSelectedMedium(data);
     setSelectedSmall(null);
 
@@ -225,6 +251,12 @@ const StatisticTeamTagBoard = () => {
   // Handle choose small
 
   const handleSelectSmall = (data: OptionDropdownType) => {
+    if (data.value !== selectedSmall?.value) {
+      setIsLoadingSmall(true);
+      if (isCheckCompare) {
+        setIsLoadingSmallCompare(true);
+      }
+    }
     setSelectedSmall(data);
   };
   const getParticipantAvatars = (
@@ -264,8 +296,8 @@ const StatisticTeamTagBoard = () => {
 
   return (
     <div className="pt-[30px] pr-10  font-medium ">
-      <div className="mb-[33px] flex items-center justify-between">
-        <div className="flex items-center gap-5 ">
+      <div className="mb-[33px] flex items-start justify-between">
+        <div className="flex items-start gap-5 ">
           <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
             <ImageRound
               className="w-[34px] h-[34px] rounded-full"
@@ -274,13 +306,13 @@ const StatisticTeamTagBoard = () => {
               name="Multi users"
             />
           </div>
-          <span className="text-[26px] font-medium relative top-[-2px] max-w-[350px] truncate">
+          <span className="text-[26px] font-medium relative top-[-2px] max-w-[450px] break-all">
             {selectedOrganization?.label}
           </span>
           <span className="text-[26px] font-medium relative top-[-2px]">
             チーム集計
           </span>
-          <div className="flex justify-center items-center gap-2 ">
+          <div className="flex justify-center items-center gap-2 mt-[6px]">
             <Button
               variant={'outline'}
               onClick={() => {
@@ -299,7 +331,7 @@ const StatisticTeamTagBoard = () => {
             </Button>
           </div>{' '}
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center mt-[6px]">
           {listMemberTeam.length > 0 && getParticipantAvatars(listMemberTeam)}
         </div>
       </div>
@@ -330,7 +362,7 @@ const StatisticTeamTagBoard = () => {
               />
             </div>
             <div>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap max-w-[450px]">
                 {selectedTags.map((item) => {
                   return (
                     <div
@@ -393,6 +425,7 @@ const StatisticTeamTagBoard = () => {
           startDateCompare={startDateCompare}
           endDateCompare={endDateCompare}
           isCheckCompare={isCheckCompare}
+          statisticTagsListTeam={statisticTagsListTeam}
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}

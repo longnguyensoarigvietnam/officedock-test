@@ -14,6 +14,7 @@ import ErrorMessage from '@components/common/ErrorMessage';
 import InputSearch from '@components/common/InputSearch';
 import Checkbox from '@components/common/Checkbox';
 import Drawer from '@components/common/Drawers';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -29,7 +30,6 @@ import {
   ActionsEvent,
   EventWorkCategory,
   PermissionsSystem,
-  ScreenName,
   ViewOptions,
 } from '@constants/enums';
 import {
@@ -53,9 +53,9 @@ import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
-import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
+
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
 export type ActionsEventModalProps = {
   open: boolean;
@@ -139,19 +139,19 @@ const ActionsEventModal = ({
     name: 'organization.value',
   });
 
-  const { refetchOrganizationStatisticCategories } =
-    useOrganizationStatisticCategories({
-      organizationId: Number(organizationValue),
-      condition: [Boolean(organizationValue)],
-      currentScreen: ScreenName.CALENDAR,
+  const { refetchCreationDataStatistic } = useCreationDataStatisticTeam({
+      organization_id: organizationValue ? String(organizationValue) : '',
+      isTeam: true,
       onSuccess: (data) => {
-        const organizationCategories = data.map((category) => {
+        if (!data) return;
+  
+        const organizationCategories = data.organization.statisticCategories.map((category) => {
           const largeCategory = category.LARGE || {
             id: NO_OPTION_CATEGORY,
             name: NO_OPTION_CATEGORY,
             uuid: '',
           };
-
+  
           const mediumCategories = (category.MEDIUM || []).map(
             (mediumCategory) => {
               const mediumCategoryField = mediumCategory.MEDIUM || {
@@ -162,46 +162,52 @@ const ActionsEventModal = ({
               const smallCategories = mediumCategory.SMALL || [
                 { id: NO_OPTION_CATEGORY, name: NO_OPTION_CATEGORY, uuid: '' },
               ];
-
+  
               return {
                 MEDIUM: mediumCategoryField,
                 SMALL: smallCategories,
               };
             },
           );
-
+  
           return {
             LARGE: largeCategory,
             MEDIUM: mediumCategories,
           };
         });
-
+  
         setDataOrganizationCategories(organizationCategories);
         setDataOptionsCategoryLarge(() => {
-          const largeCategories: OptionDropdownType[] = [];
-          data.map((category) => {
+          const largeCategories: OptionDropdownType[] = [
+            {
+              label: NO_OPTION_CATEGORY,
+              value: NO_OPTION_CATEGORY,
+            },
+          ];
+          data.organization.statisticCategories.map((category) => {
             if (category.LARGE) {
               largeCategories.push({
                 label: category.LARGE.name,
                 value: category.LARGE.id,
               });
-            } else {
-              largeCategories.push({
-                label: NO_OPTION_CATEGORY,
-                value: NO_OPTION_CATEGORY,
-              });
             }
           });
           return largeCategories;
         });
+        setDataOptionsTagIds(
+          data.tags.map((org) => ({
+            label: String(org.name),
+            value: String(org.id),
+          })),
+        );
       },
     });
 
   useEffect(() => {
     if (organizationValue) {
-      refetchOrganizationStatisticCategories();
+      refetchCreationDataStatistic();
     }
-  }, [organizationValue, refetchOrganizationStatisticCategories]);
+  }, [organizationValue, refetchCreationDataStatistic]);
 
   const defaultValues = useMemo<EventEditFormData>(() => {
     const value: EventEditFormData = {
@@ -411,25 +417,8 @@ const ActionsEventModal = ({
         })),
       );
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataOrganizationCategories, largeCategoryValue, watch]);
-
-  const selectedOrganization = watch('organization') as OptionDropdownType;
-
-  useEffect(() => {
-    if (selectedOrganization && creationDataEventCalendar) {
-      const organizationTags =
-        creationDataEventCalendar.organizations.find(
-          (org) => org.id === selectedOrganization.value,
-        )?.tags || [];
-
-      setDataOptionsTagIds(
-        organizationTags.map((tag) => ({
-          label: tag.name,
-          value: tag.id,
-        })),
-      );
-    }
-  }, [selectedOrganization, creationDataEventCalendar, setValue]);
 
   useMemo(() => {
     if (!dataOrganizationCategories || !watch('mediumCategory.value')) {
@@ -471,12 +460,6 @@ const ActionsEventModal = ({
         creationDataEventCalendar.types.map((org) => ({
           label: org,
           value: org,
-        })),
-      );
-      setDataOptionsTagIds(
-        creationDataEventCalendar.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
         })),
       );
       setDataOptionsParticipants(
@@ -584,10 +567,6 @@ const ActionsEventModal = ({
             className="mt-1 w-3 h-[14px] hover:cursor-pointer"
             src="/icons/drawer-close-white.svg"
             name="Close icon"
-            onClick={() => {
-              reset();
-              onClose();
-            }}
           />
         </div>
       </header>
@@ -929,9 +908,9 @@ const ActionsEventModal = ({
                 name={'organization'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
+                    className="h-8 !py-1 text-xs max-w-[513px] !border-[1px] !border-[#77858F] rounded-md"
                     classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
+                    classNameOption="!text-xs w-[513px]"
                     classNameError="!text-xs"
                     placeholder="選択してください"
                     disabled={isDisabled}
@@ -1107,13 +1086,14 @@ const ActionsEventModal = ({
                     disabled={isDisabled}
                     valueClassName="!border-[1px] !border-[#77858F]"
                     options={dataOptionsTagIds}
-                    optionClassName="!border-[1px] !border-[#77858F]"
+                    optionClassName="!border-[1px] !border-[#77858F] max-w-[513px]"
                     customLabel={
                       (watch('tagIds') ?? []).filter((tag) => tag.value)
                         .length > 0
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
+                    labelOptionClass="break-words w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
                       let updatedTagIds = [];

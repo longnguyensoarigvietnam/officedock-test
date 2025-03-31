@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { OptionDropdownType } from '@interfaces/common';
+import { getAdjustedStartDateDefault } from '@utils/date';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -73,6 +74,30 @@ interface ContextValue {
       }[]
     >
   >;
+  isSkeletonTagTeamTask: boolean;
+  setIsSkeletonTagTeamTask: Dispatch<SetStateAction<boolean>>;
+  isSkeletonTagTeamTaskCompare: boolean;
+  setIsSkeletonTagTeamTaskCompare: Dispatch<SetStateAction<boolean>>;
+
+  isLoadingLarge: boolean;
+  isLoadingMedium: boolean;
+  isLoadingSmall: boolean;
+
+  isLoadingOrganization: boolean;
+  setIsLoadingLarge: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMedium: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingSmall: Dispatch<SetStateAction<boolean>>;
+
+  setIsLoadingOrganization: Dispatch<SetStateAction<boolean>>;
+
+  isLoadingLargeCompare: boolean;
+  isLoadingMediumCompare: boolean;
+  isLoadingSmallCompare: boolean;
+  isLoadingOrganizationCompare: boolean;
+  setIsLoadingLargeCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingMediumCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingSmallCompare: Dispatch<SetStateAction<boolean>>;
+  setIsLoadingOrganizationCompare: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -127,6 +152,28 @@ const defaultValue: ContextValue = {
   selectedTags: [],
   setSelectedTags: () => {},
   setTagsOptions: () => {},
+  isSkeletonTagTeamTask: false,
+  setIsSkeletonTagTeamTask: () => {},
+  isSkeletonTagTeamTaskCompare: false,
+  setIsSkeletonTagTeamTaskCompare: () => {},
+
+  isLoadingLarge: false,
+  isLoadingMedium: false,
+  isLoadingSmall: false,
+  isLoadingOrganization: false,
+  setIsLoadingLarge: () => {},
+  setIsLoadingMedium: () => {},
+  setIsLoadingSmall: () => {},
+  setIsLoadingOrganization: () => {},
+
+  isLoadingLargeCompare: false,
+  isLoadingMediumCompare: false,
+  isLoadingSmallCompare: false,
+  isLoadingOrganizationCompare: false,
+  setIsLoadingLargeCompare: () => {},
+  setIsLoadingMediumCompare: () => {},
+  setIsLoadingSmallCompare: () => {},
+  setIsLoadingOrganizationCompare: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -137,6 +184,22 @@ export const StatisticTeamTagsStateProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  // Loading
+  const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
+  const [isLoadingLarge, setIsLoadingLarge] = useState(false);
+  const [isLoadingMedium, setIsLoadingMedium] = useState(false);
+  const [isLoadingSmall, setIsLoadingSmall] = useState(false);
+
+  const [isLoadingOrganizationCompare, setIsLoadingOrganizationCompare] =
+    useState(false);
+  const [isLoadingLargeCompare, setIsLoadingLargeCompare] = useState(false);
+  const [isLoadingMediumCompare, setIsLoadingMediumCompare] = useState(false);
+  const [isLoadingSmallCompare, setIsLoadingSmallCompare] = useState(false);
+
+  const [isSkeletonTagTeamTask, setIsSkeletonTagTeamTask] = useState(false);
+  const [isSkeletonTagTeamTaskCompare, setIsSkeletonTagTeamTaskCompare] =
+    useState(false);
+
   const [smallOptions, setSmallOptions] = useState<OptionDropdownType[]>([]);
 
   const [largeOptions, setLargeOptions] = useState<OptionDropdownType[]>([]);
@@ -182,17 +245,13 @@ export const StatisticTeamTagsStateProvider = ({
   const [isCheckCompare, setIsCheckCompare] = useState(false);
   const [endDate, setEndDate] = useState<Date | null>(new Date());
   const [startDate, setStartDate] = useState<Date>(
-    new Date(
-      new Date().setMonth(new Date().getMonth() - 1) + 24 * 60 * 60 * 1000,
-    ),
+    getAdjustedStartDateDefault(),
   );
 
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
   const [startDateCompare, setStartDateCompare] = useState<Date>(
-    new Date(
-      new Date().setMonth(new Date().getMonth() - 1) + 24 * 60 * 60 * 1000,
-    ),
+    getAdjustedStartDateDefault(),
   );
 
   // Tag
@@ -260,6 +319,28 @@ export const StatisticTeamTagsStateProvider = ({
     selectedTags,
     setSelectedTags,
     setTagsOptions,
+    isSkeletonTagTeamTask,
+    setIsSkeletonTagTeamTask,
+    isSkeletonTagTeamTaskCompare,
+    setIsSkeletonTagTeamTaskCompare,
+
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingSmall,
+    isLoadingOrganization,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingOrganization,
+
+    isLoadingLargeCompare,
+    isLoadingMediumCompare,
+    isLoadingSmallCompare,
+    isLoadingOrganizationCompare,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingSmallCompare,
+    setIsLoadingOrganizationCompare,
   };
 
   return (

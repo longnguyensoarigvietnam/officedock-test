@@ -226,7 +226,7 @@ const EventInfoModal = memo(
                           })}
                         </div>
                       </Tippy>
-                      <p className="text-[#000000] text-[14px] font-medium">
+                      <p className="text-[#000000] text-[14px] font-medium w-[250px] break-words">
                         {dataEvent.participants[0].fullName}
                       </p>
                     </div>

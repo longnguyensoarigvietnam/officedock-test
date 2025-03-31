@@ -15,6 +15,7 @@ export interface EventCalendarDetail {
   participants?: EventParticipant[];
   resourceIds?: string[];
   address?: string;
+  largeColor?: string;
 }
 
 export interface EventCalendarDayRange {
@@ -125,7 +126,7 @@ export interface EventCalendarProps {
   startDate: Date | null;
   title: string;
   type?: EventCalendarType;
-  isMySchedule: boolean;
+  isMySchedule?: boolean;
   isStart: boolean;
   participants?: EventParticipant[];
   address?: string;

@@ -176,7 +176,9 @@ const Dropdown = ({
                             className={`w-4 h-4 ${imgClassname}`}
                           />
                         )}
-                        {selected.imgComponent}
+                        {selected.imgComponent && (
+                          <div className="w-8">{selected.imgComponent}</div>
+                        )}
                         <span
                           className={`${selected.imgUrl && 'ml-3'} ${selected.imgComponent && 'ml-2'} block truncate ${labelClass} ${classActive} `}>
                           {selected.label}
@@ -250,7 +252,7 @@ const Dropdown = ({
                           key={option.value}
                           style={styleClassOption}
                           className={({ focus }) =>
-                            `relative  ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} cursor-default border-b-[1px] border-[#EBF1F7] select-none ${!openByDefault && 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass}`
+                            `relative ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} cursor-default border-b-[1px] border-[#EBF1F7] select-none ${!openByDefault && 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass} overflow-x-hidden`
                           }
                           value={option}
                           onClick={() => handleOptionClick(option)}>
@@ -276,7 +278,7 @@ const Dropdown = ({
                                   />
                                 )}
                                 <p
-                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'}  block truncate  ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'}`}>
+                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'} ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'} w-[100%] break-words`}>
                                   {option.label}
                                 </p>
                                 {isStatusDropdown && (

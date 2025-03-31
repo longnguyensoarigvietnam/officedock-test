@@ -17,6 +17,7 @@ import {
   ItemStartType,
   PermissionsSystem,
   StatusValueTask,
+  TaskRepetitiveValue,
 } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 
@@ -38,7 +39,9 @@ import {
   addHoursToDate,
   compareWithCurrentDate,
   convertToCurrentTimezone,
+  convertToTimeString,
   formatShowDeadlineTask,
+  getJapaneseWeekDay,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
@@ -309,6 +312,42 @@ const ListViewItem = ({
       PermissionsSystem.MY_TASK_ADD,
     );
 
+  const displayRoutineTaskScheduleTitle = (item: Task) => {
+    let title = '';
+    const repeatStartTime = item.planStartDate
+      ? convertToTimeString(item.planStartDate)
+      : '';
+    const repeatEndTime = item.planEndDate
+      ? convertToTimeString(item.planEndDate)
+      : '';
+    switch (item.repeatType) {
+      case TaskRepetitiveValue.ONCE:
+        title = '';
+        break;
+      case TaskRepetitiveValue.DAILY:
+        title = '毎日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+      case TaskRepetitiveValue.WEEKLY:
+        title =
+          '毎週' +
+          getJapaneseWeekDay(Number(item.weekDay || 0)) +
+          '曜日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
+        break;
+      case TaskRepetitiveValue.MONTHLY:
+        title =
+          '毎月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+      case TaskRepetitiveValue.YEARLY:
+        title =
+          '毎年' + item.month + '月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+    }
+    return title;
+  };
+
   return (
     <>
       <Draggable
@@ -509,7 +548,7 @@ const ListViewItem = ({
                 ) : (
                   <>
                     <p className="w-[calc(50%_+_7px)] text-center border-x-2">
-                      毎週水曜日13:00~14:00
+                      {displayRoutineTaskScheduleTitle(content)}
                     </p>
                   </>
                 )}

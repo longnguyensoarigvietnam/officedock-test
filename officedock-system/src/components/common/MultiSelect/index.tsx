@@ -14,7 +14,6 @@ export type MultiSelectProps = {
   )[];
   placeholder?: string;
   className?: string;
-  customControlMaxWidth?: string;
   defaultValue?:
     | PropsValue<{
         value: number;
@@ -35,7 +34,6 @@ const MultiSelect = ({
   placeholder = '選択してください',
   className,
   defaultValue,
-  customControlMaxWidth,
   onChange,
 }: MultiSelectProps) => {
   const animatedComponents = makeAnimated();
@@ -46,7 +44,7 @@ const MultiSelect = ({
       ...base,
       border: 'none',
       boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-      width: customControlMaxWidth || '100%',
+      width: '100%',
       paddingY: '0',
       paddingX: '0',
     }),
@@ -54,6 +52,20 @@ const MultiSelect = ({
       ...base,
       maxWidth: '100%',
       paddingY: '0',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    }),
+    multiValue: (base: any) => ({
+      ...base,
+      maxWidth: '300px',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    }),
+    multiValueLabel: (base: any) => ({
+      ...base,
+      maxWidth: '100%',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',

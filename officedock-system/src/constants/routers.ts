@@ -113,6 +113,12 @@ export const pageRouters = {
     href: '/calendar',
   },
 
+  // TASK TEAM
+  TASKS_TEAM_MANAGEMENT: {
+    name: 'チームタスク',
+    href: '/task-teams',
+  },
+
   // CHAT
   CHAT_MANAGEMENT: {
     name: 'チャット',
@@ -133,11 +139,11 @@ export const pageRouters = {
   },
   // STATISTIC TEAM
   STATISTIC_TEAM_MANAGEMENT: {
-    name: '集計',
+    name: 'チーム集計',
     href: '/statistic-team',
   },
   STATISTIC_TEAM_TAG_MANAGEMENT: {
-    name: '集計',
+    name: 'チーム集計',
     href: '/statistic-team/tag',
   },
 
@@ -361,6 +367,13 @@ export const apiRouters = {
   TASK_COPY: (id: string) => `/tasks/${id}/copy/`,
   TASK_PIN: (id: string) => `/tasks/${id}/pin/`,
 
+  // TASK TEAM
+  TASK_TEAM_LIST: '/tasks/teamdock/',
+
+  // TEAM SCHEDULE
+  PLAN_TEAM_SCHEDULE_LIST: '/teamdock/schedules/plan/',
+  ACTUAL_TEAM_SCHEDULE_LIST: '/teamdock/schedules/actual/',
+
   // DURATION
   TASK_DURATION: `/durations/`,
   TASK_CHECK_START: () => `/durations/another-started/`,
@@ -442,6 +455,7 @@ export const apiRouters = {
   STATISTICS_CATEGORIES: '/statistics/categories/',
   STATISTICS_TASKS: '/statistics/tasks/',
   STATISTICS_TAGS: '/statistics/tags/',
+  STATISTICS_TASK_DURATIONS: '/statistics/task_durations/',
 
   // STATISTICS TEAM
   STATISTICS_CATEGORIES_TEAM: (id: number) =>

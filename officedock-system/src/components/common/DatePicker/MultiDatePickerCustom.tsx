@@ -129,6 +129,7 @@ const MultiDatePickerCustom = ({
     } else if (start && isEndButtonClicked) {
       const days = getDaysFromTimeOption(isTypeTime, start, true);
       const endDate = new Date(start);
+
       endDate.setDate(start.getDate() - (days - 1));
       setStartDate(endDate);
       setEndDate(start);

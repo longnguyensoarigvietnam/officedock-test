@@ -34,7 +34,6 @@ import {
 } from '@constants';
 import { ChatRoomType, MessageType, SubmitLevelStatus } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
-import { MENTION_NAME_REGEX } from '@constants/regex';
 
 import {
   ChatDashboardMember,
@@ -266,46 +265,29 @@ export const MessageDetail = ({
     if (!mentions || mentions.length === 0)
       return parseReactionsToImages(message);
 
-    let processedHtml = '';
-    let i = 0;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(message, 'text/html');
 
-    while (i < message.length) {
-      if (message[i] === '@') {
-        let j = i + 1;
-        while (j < message.length && MENTION_NAME_REGEX.test(message[j])) j++;
+    doc.querySelectorAll('.mention').forEach((mention) => {
+      let mentionName = mention.textContent?.trim() || '';
 
-        const mentionName = message.substring(i + 1, j).trim();
-        if (
-          mentionName === MENTION_ALL_MEMBERS &&
-          chatRoomDetail?.participants.every((participant) =>
-            [...mentions, Number(session?.user.id)].includes(
-              Number(participant.id),
-            ),
-          )
-        ) {
-          processedHtml += `<span style="color: #0068B7;">@${mentionName}</span>`;
-          i = j;
-          continue;
-        }
-
-        const matchedUser = dashboardMembers.find(
-          (member) => member.fullName === mentionName,
-        );
-
-        if (matchedUser) {
-          const color =
-            matchedUser.id == session?.user.id ? '#0068B7' : '#77858F';
-          processedHtml += `<span style="color: ${color};">@${mentionName}</span>`;
-          i = j;
-          continue;
-        }
+      if (mentionName.startsWith('@')) {
+        mentionName = mentionName.slice(1);
       }
 
-      processedHtml += message[i];
-      i++;
-    }
+      const matchedUser = dashboardMembers.find(
+        (member) => member.fullName === mentionName,
+      );
 
-    return parseReactionsToImages(processedHtml);
+      const color =
+        matchedUser?.id === session?.user.id ||
+        mentionName === MENTION_ALL_MEMBERS
+          ? '#0068B7'
+          : '#77858F';
+      mention.setAttribute('style', `color: ${color};`);
+    });
+
+    return parseReactionsToImages(doc.body.innerHTML);
   };
 
   const processMessage = (message: string, mentions: number[]) => {
@@ -451,10 +433,12 @@ export const MessageDetail = ({
               className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} py-1 ml-5 mr-3 group-hover:rounded-md`}>
               {renderAvatar(dataMsgDetail.sender.id)}
               <div className={`ml-3 !w-[96%]`}>
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                    <p>{dataMsgDetail.sender.fullName} </p>
-                    <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
+                <div className="flex justify-between items-center pb-2">
+                  <div className="flex gap-2 items-center font-semibold text-[15px]">
+                    <p className="truncate max-w-[500px]">
+                      {dataMsgDetail.sender.fullName}{' '}
+                    </p>
+                    <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                       {dataMsgDetail.sender?.organizations?.name}
                     </p>
                     {dataMsgDetail.isBookmark && (
@@ -535,6 +519,7 @@ export const MessageDetail = ({
                                                         '',
                                                     )}
                                                     alt="Image"
+                                                    unoptimized={true}
                                                     width={150}
                                                     height={100}
                                                   />
@@ -571,6 +556,7 @@ export const MessageDetail = ({
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
                                   <p className="w-fit font-semibold text-black">
+                                    {dataMsgDetail.sender.fullName}{' '}
                                     {EVENT_DELETED}
                                   </p>
                                   <p className="font-semibold mt-2">日時</p>
@@ -1076,8 +1062,10 @@ export const MessageDetail = ({
                     </div>
                   ) : (
                     <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                      <p>{messageDetail.sender.fullName} </p>
-                      <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
+                      <p className="truncate max-w-[500px]">
+                        {messageDetail.sender.fullName}{' '}
+                      </p>
+                      <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
                       </p>
                     </div>
@@ -1217,8 +1205,10 @@ export const MessageDetail = ({
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                    <p>{messageDetail.sender.fullName} </p>
-                    <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
+                    <p className="truncate max-w-[500px]">
+                      {messageDetail.sender.fullName}{' '}
+                    </p>
+                    <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                       {messageDetail.sender?.organizations?.name}
                     </p>
                     {messageDetail.isBookmark && (
@@ -1355,8 +1345,10 @@ export const MessageDetail = ({
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                    <p>{messageDetail.sender.fullName}</p>
-                    <p className="font-medium text-xs truncate max-w-[400px] text-[#77858F]">
+                    <p className="truncate max-w-[500px]">
+                      {messageDetail.sender.fullName}
+                    </p>
+                    <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
                       {messageDetail.sender?.organizations?.name}
                     </p>
                     {messageDetail.isBookmark && (
@@ -1398,7 +1390,7 @@ export const MessageDetail = ({
                         </p>
                       </div>
                       <div className="flex gap-1 text-sm font-medium">
-                        <p className="text-[#0068B6]">
+                        <p className="text-[#0068B6] max-w-[500px] truncate">
                           {messageDetail.sender.fullName}
                         </p>
                         <p>

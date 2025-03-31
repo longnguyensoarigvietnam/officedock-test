@@ -1,16 +1,16 @@
 'use client';
 
 import { useQuery } from 'react-query';
+import { useContext } from 'react';
+import { AxiosError } from 'axios';
 import { useSession } from 'next-auth/react';
 
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
-import { AxiosError } from 'axios';
 import { OptionDropdownType } from '@interfaces/common';
-import { useContext } from 'react';
-import { LoadingContext } from '@providers/LoadingProvider';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 interface FilterProps {
   endDate: string | Date;
@@ -33,7 +33,12 @@ const useStatisticsTags = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-  const { setIsLoading } = useContext(LoadingContext);
+  const {
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+    setIsLoadingSmall,
+  } = useContext(StatisticTagStateContext);
 
   // Handle call API get statistic tags list
   const getStatisticTagsList = async () => {
@@ -73,6 +78,8 @@ const useStatisticsTags = ({
     queryFn: getStatisticTagsList,
     retry: 0,
     enabled: !!token,
+    staleTime: 0,
+    cacheTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: StatisticsCategories) => {
@@ -82,7 +89,10 @@ const useStatisticsTags = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsLoading(false);
+      setIsLoadingLarge(false);
+      setIsLoadingMedium(false);
+      setIsLoadingOrganization(false);
+      setIsLoadingSmall(false);
     },
   });
 

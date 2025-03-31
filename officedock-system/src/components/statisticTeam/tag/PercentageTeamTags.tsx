@@ -3,6 +3,12 @@ import React, { useEffect, useState, useContext } from 'react';
 import PieChart from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
+import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import { SkeletonElement } from '@components/common/SkeletonLoading';
+
+import { EventWorkCategory } from '@constants/enums';
+
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
@@ -12,10 +18,7 @@ import {
 } from '@interfaces/statistic';
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
-import { EventWorkCategory } from '@constants/enums';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
 type Props = {
   startDate: Date;
@@ -53,6 +56,10 @@ const PercentageTeamTags = ({
     tagsOptions,
     selectedTags,
     selectedSmall,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    isLoadingSmall,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
 
@@ -373,10 +380,8 @@ const PercentageTeamTags = ({
                           return (
                             <div
                               key={item.value}
-                              className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                              <span className="w-[32px] truncate">
-                                {item.label}
-                              </span>
+                              className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                              <span className=" truncate">{item.label}</span>
                               <ImageRound
                                 onClick={() => {
                                   removeTag(item);
@@ -393,7 +398,7 @@ const PercentageTeamTags = ({
                   </div>
                 </div>
               </div>
-              <div className="flex gap-[17px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex justify-between px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
                 <div className="w-[220px]">
                   <div className="mt-4">
@@ -413,8 +418,10 @@ const PercentageTeamTags = ({
                       {totalDurationLarge &&
                         formatTimeToJapanese(totalDurationLarge)}
                     </p>
-                    <div className="min-h-[220px]">
-                      {dataChartLarge.data.length > 0 ? (
+                    <div className="min-h-[220px] flex justify-center">
+                      {isLoadingOrganization ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartLarge.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
                           isTeam
@@ -464,8 +471,10 @@ const PercentageTeamTags = ({
                       {totalDurationMedium &&
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
-                    <div>
-                      {dataChartMedium.data.length > 0 ? (
+                    <div className="flex justify-center">
+                      {isLoadingLarge ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartMedium.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
                           isTeam
@@ -515,8 +524,10 @@ const PercentageTeamTags = ({
                       {totalDurationSmall &&
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
-                    <div>
-                      {dataChartSmall.data.length > 0 ? (
+                    <div className="flex justify-center">
+                      {isLoadingMedium ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartSmall.data.length > 0 ? (
                         <PieChart
                           isTeam
                           mergedItems={dataChartLarge.mergedItems}
@@ -565,8 +576,10 @@ const PercentageTeamTags = ({
                       {totalDurationCategory &&
                         formatTimeToJapanese(totalDurationCategory)}
                     </p>
-                    <div>
-                      {dataChartCategory.data.length > 0 ? (
+                    <div className="flex justify-center">
+                      {isLoadingSmall ? (
+                        <SkeletonElement className="!w-[220px] !h-[220px] !rounded-full" />
+                      ) : dataChartCategory.data.length > 0 ? (
                         <PieChart
                           isTeam
                           isLast
@@ -607,6 +620,7 @@ const PercentageTeamTags = ({
           selectedSmall={selectedSmall}
           selectedMedium={selectedMedium}
           detailCategory={detailCategory}
+          statisticTagsListTeam={statisticTagsListTeam}
           handleScroll={handleScroll}
         />
       )}

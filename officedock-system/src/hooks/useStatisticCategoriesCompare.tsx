@@ -1,16 +1,16 @@
 'use client';
 
+import { AxiosError } from 'axios';
+import { useContext } from 'react';
 import { useQuery } from 'react-query';
 import { useSession } from 'next-auth/react';
 
 import { apiRouters } from '@constants/routers';
 
-import { AxiosError } from 'axios';
-import { useContext } from 'react';
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
-import { LoadingContext } from '@providers/LoadingProvider';
 import { OptionDropdownType } from '@interfaces/common';
+import { StatisticStateContext } from '@providers/StatisticProvider';
 
 interface FilterProps {
   isCompare: boolean;
@@ -25,7 +25,7 @@ interface FilterProps {
 const useStatisticCategoriesCompare = ({
   filter,
   onSuccess,
-  onError,
+  onError, 
 }: {
   filter?: FilterProps;
   onSuccess?: (data: StatisticsCategories) => void;
@@ -33,13 +33,16 @@ const useStatisticCategoriesCompare = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-  const { setIsLoading } = useContext(LoadingContext);
+  const {
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
+  } = useContext(StatisticStateContext);
 
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
     if (!filter?.isCompare) return [];
     if (!filter?.organizationIds) return [];
-    setIsLoading(true);
 
     const apiUrl = `${apiRouters.STATISTICS_CATEGORIES}?${
       filter?.fromDate ? `from_date=${filter.fromDate}` : ''
@@ -80,7 +83,9 @@ const useStatisticCategoriesCompare = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsLoading(false);
+      setIsLoadingLargeCompare(false);
+      setIsLoadingMediumCompare(false);
+      setIsLoadingOrganizationCompare(false);
     },
   });
 

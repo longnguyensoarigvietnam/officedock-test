@@ -28,7 +28,6 @@ from users.models import Role, RoleDetail, User
 from tasks.models import TaskStatus, Task, TaskDuration
 from tasks.constants import (
     TASK_WORK_TYPES,
-    TaskPriorities,
     TaskTypes,
     TaskCategoryTypes,
 )
@@ -266,7 +265,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             ).data,
             "status": CreationDataTaskStatusSerializer(status, many=True).data,
             "types": [item.value for item in TaskTypes],
-            "priorities": [item.value for item in TaskPriorities],
             "organizations": CreationDataOrganizationWithTagSerializer(
                 organizations, many=True
             ).data,
@@ -511,7 +509,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 organizations[0], context={"user": user}
             ).data
             data["members"] = CreationDataUserSerializer(
-                organizations[0].users.all(), many=True
+                organizations[0].users.order_by("created_at"), many=True
             ).data
         else:
             list_org = []

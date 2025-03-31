@@ -3,6 +3,11 @@ import React, { useEffect, useState, useContext } from 'react';
 import PieChartCustom from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
+import { SkeletonElement } from '@components/common/SkeletonLoading';
+
+import { EventWorkCategory } from '@constants/enums';
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
@@ -11,17 +16,14 @@ import {
 } from '@interfaces/statistic';
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
-import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
-import { EventWorkCategory } from '@constants/enums';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import { LoadingContext } from '@providers/LoadingProvider';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
+  handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
@@ -37,6 +39,7 @@ const PercentageCategory = ({
   handleSelectMedium,
   handleSelectOrganization,
   handleSelectSmall,
+  handleSelectOrganizationCustom,
 }: Props) => {
   const {
     largeOptions,
@@ -52,11 +55,13 @@ const PercentageCategory = ({
     totalDurationSmall,
     tagsOptions,
     selectedTags,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
     setTotalDurationTask,
     setTotalDurationCategory,
     setSelectedTags,
   } = useContext(StatisticStateContext);
-  const { setIsLoading } = useContext(LoadingContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -242,7 +247,6 @@ const PercentageCategory = ({
           mergedItems: [],
         });
       }
-      setIsLoading(false);
     }
   }, [statisticCategoryList]);
 
@@ -364,6 +368,7 @@ const PercentageCategory = ({
                 <MultiSelectDropdown
                   isShowIconFilter
                   options={tagsOptions}
+                  labelOptionClass="break-all"
                   placeholder="集計対象のタグを選択"
                   className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                   selectedOptions={selectedTags || []}
@@ -395,8 +400,8 @@ const PercentageCategory = ({
                     return (
                       <div
                         key={item.value}
-                        className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                        <span className="min-w-[32px] max-w-[80px] truncate">
+                        className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                        <span className="min-w-[32px]  truncate">
                           {item.label}
                         </span>
                         <ImageRound
@@ -430,54 +435,64 @@ const PercentageCategory = ({
             {/* Line */}
             <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
             <div>
-              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex  justify-between px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[280px]">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     大カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="チーム選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      classNameOption="!text-sm"
-                      options={listOptionsOrganization}
-                      selectedOption={selectedOrganization || undefined}
-                      onChange={(data) => handleSelectOrganization(data)}
-                    />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationLarge &&
-                        formatTimeToJapanese(totalDurationLarge)}
-                    </p>
-                    <div className="min-h-[280px]">
-                      {dataChartLarge.data.length > 0 ? (
-                        <PieChartCustom
-                          isClickTooltip
-                          mergedItems={dataChartLarge.mergedItems}
-                          colors={dataChartLarge.colors}
-                          data={dataChartLarge?.data}
-                          labels={dataChartLarge?.labels}
-                          actualValues={dataChartLarge?.actualValue}
-                          className="w-[280px] h-[280px] ml-5"
-                          optionsData={dataChartLarge.optionData}
-                          listIdData={dataChartLarge.listId}
-                          handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.ALL);
-                          }}
-                          handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value && data.value !== '未設定') {
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
-                              handleSelectLarge(data);
-                            }
-                          }}
-                        />
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="チーム選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
+                        options={listOptionsOrganization}
+                        selectedOption={selectedOrganization || undefined}
+                        onChange={(data) => handleSelectOrganization(data)}
+                      />
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationLarge &&
+                          formatTimeToJapanese(totalDurationLarge)}
+                      </p>
+                    </div>
+                    <div className="min-h-[280px] flex justify-center w-full">
+                      {isLoadingOrganization ? (
+                        <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <>
+                          {dataChartLarge.data.length > 0 ? (
+                            <PieChartCustom
+                              isClickTooltip
+                              mergedItems={dataChartLarge.mergedItems}
+                              colors={dataChartLarge.colors}
+                              data={dataChartLarge?.data}
+                              labels={dataChartLarge?.labels}
+                              actualValues={dataChartLarge?.actualValue}
+                              className="w-[280px] h-[280px]"
+                              optionsData={dataChartLarge.optionData}
+                              listIdData={dataChartLarge.listId}
+                              handleClickTooltip={(id: number | null) => {
+                                handleClickTooltip(id, EventWorkCategory.ALL);
+                              }}
+                              handleClickChart={(data: OptionDropdownType) => {
+                                if (data.value && data.value !== '未設定') {
+                                  selectedOrganization &&
+                                    handleSelectOrganizationCustom(
+                                      selectedOrganization,
+                                    );
+                                  handleSelectLarge(data);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -492,51 +507,59 @@ const PercentageCategory = ({
                   </div>
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[280px]">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="大カテゴリー選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      classNameOption="!text-sm"
-                      options={largeOptions}
-                      selectedOption={selectedLarge || undefined}
-                      onChange={(data) => handleSelectLarge(data)}
-                      disabled={!selectedOrganization}
-                    />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationMedium &&
-                        formatTimeToJapanese(totalDurationMedium)}
-                    </p>
-                    <div>
-                      {dataChartMedium.data.length > 0 ? (
-                        <PieChartCustom
-                          isClickTooltip
-                          mergedItems={dataChartMedium.mergedItems}
-                          colors={dataChartMedium.colors}
-                          data={dataChartMedium?.data}
-                          labels={dataChartMedium?.labels}
-                          actualValues={dataChartMedium?.actualValue}
-                          optionsData={dataChartMedium.optionData}
-                          className="w-[280px] h-[280px] ml-5"
-                          listIdData={dataChartMedium.listId}
-                          handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.LARGE);
-                          }}
-                          handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value && data.value !== '未設定') {
-                              handleSelectMedium(data);
-                            }
-                          }}
-                        />
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="大カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
+                        options={largeOptions}
+                        selectedOption={selectedLarge || undefined}
+                        onChange={(data) => handleSelectLarge(data)}
+                        disabled={!selectedOrganization}
+                      />
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationMedium &&
+                          formatTimeToJapanese(totalDurationMedium)}
+                      </p>
+                    </div>
+                    <div className="flex justify-center">
+                      {isLoadingLarge ? (
+                        <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <>
+                          {dataChartMedium.data.length > 0 ? (
+                            <PieChartCustom
+                              isClickTooltip
+                              mergedItems={dataChartMedium.mergedItems}
+                              colors={dataChartMedium.colors}
+                              data={dataChartMedium?.data}
+                              labels={dataChartMedium?.labels}
+                              actualValues={dataChartMedium?.actualValue}
+                              optionsData={dataChartMedium.optionData}
+                              className="w-[280px] h-[280px] "
+                              listIdData={dataChartMedium.listId}
+                              handleClickTooltip={(id: number | null) => {
+                                handleClickTooltip(id, EventWorkCategory.LARGE);
+                              }}
+                              handleClickChart={(data: OptionDropdownType) => {
+                                if (data.value && data.value !== '未設定') {
+                                  handleSelectMedium(data);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -551,47 +574,58 @@ const PercentageCategory = ({
                   </div>
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[280px]">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     小カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="中カテゴリー選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      classNameOption="!text-sm"
-                      options={mediumOptions}
-                      selectedOption={selectedMedium || undefined}
-                      onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge}
-                    />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationSmall &&
-                        formatTimeToJapanese(totalDurationSmall)}
-                    </p>
-                    <div>
-                      {dataChartSmall.data.length > 0 ? (
-                        <PieChartCustom
-                          colors={dataChartSmall.colors}
-                          data={dataChartSmall?.data}
-                          isLast
-                          labels={dataChartSmall?.labels}
-                          mergedItems={dataChartSmall.mergedItems}
-                          actualValues={dataChartSmall?.actualValue}
-                          className="w-[280px] h-[280px] ml-5"
-                          optionsData={dataChartSmall.optionData}
-                          listIdData={dataChartSmall.listId}
-                          handleClickTooltip={(id: number | null) => {
-                            handleClickTooltip(id, EventWorkCategory.MEDIUM);
-                          }}
-                          isClickTooltip
-                        />
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="中カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
+                        options={mediumOptions}
+                        selectedOption={selectedMedium || undefined}
+                        onChange={(data) => handleSelectMedium(data)}
+                        disabled={!selectedLarge}
+                      />
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationSmall &&
+                          formatTimeToJapanese(totalDurationSmall)}
+                      </p>
+                    </div>
+                    <div className="flex justify-center">
+                      {isLoadingMedium ? (
+                        <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <>
+                          {dataChartSmall.data.length > 0 ? (
+                            <PieChartCustom
+                              colors={dataChartSmall.colors}
+                              data={dataChartSmall?.data}
+                              isLast
+                              labels={dataChartSmall?.labels}
+                              mergedItems={dataChartSmall.mergedItems}
+                              actualValues={dataChartSmall?.actualValue}
+                              className="w-[280px] h-[280px]"
+                              optionsData={dataChartSmall.optionData}
+                              listIdData={dataChartSmall.listId}
+                              handleClickTooltip={(id: number | null) => {
+                                handleClickTooltip(
+                                  id,
+                                  EventWorkCategory.MEDIUM,
+                                );
+                              }}
+                              isClickTooltip
+                            />
+                          ) : (
+                            <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -610,6 +644,7 @@ const PercentageCategory = ({
           selectedSmall={selectedSmall}
           startDate={startDate}
           endDate={endDate}
+          statisticCategoryList={statisticCategoryList}
           detailCategory={detailCategory}
           selectedOrganization={selectedOrganization}
           onClose={() => {

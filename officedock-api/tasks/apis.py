@@ -1,13 +1,11 @@
 from datetime import datetime, time, timedelta
 from time import timezone
 
+from dateutil import rrule
 from django.db import transaction
 from django.db.models import (
-    Case,
-    IntegerField,
     OuterRef,
     Subquery,
-    When,
     Q,
     Value,
     DateTimeField,
@@ -15,6 +13,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from django.utils.timezone import make_aware, now
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import (
     extend_schema,
@@ -45,13 +44,16 @@ from common.utils import (
     send_web_socket_event,
     create_categories_by_model,
     check_task_overtime,
+    split_id_from_string,
 )
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
-    TaskPriorities,
+    INDEX_INCREMENT,
     INITIAL_INDEX_VALUE,
     TaskTypes,
     TaskStatus,
+    FrequencyMap,
+    LIMIT_DAY,
 )
 from tasks.utils import (
     create_task_schedule,
@@ -73,6 +75,7 @@ from .models import (
     TaskFrequent,
     TaskIndex,
     TaskSchedule,
+    TeamTaskIndex,
     TodoList,
     TaskStatus as TaskStatusModel,
 )
@@ -117,12 +120,14 @@ class TaskViewSet(
         return super().get_queryset().filter(company=self.request.user.company)
 
     @transaction.atomic()
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
         """
         Perform to create a new task.
         """
-        user = self.request.user
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
+        user = self.request.user
         people_in_charge_ids = serializer_data.pop("people_in_charge_ids", None)
         tag_ids = serializer_data.pop("tag_ids", None)
         todo_list = serializer_data.pop("todo_list", None)
@@ -130,11 +135,21 @@ class TaskViewSet(
         send_to_chat = serializer_data.pop("send_to_chat", None)
         chat_room_code = serializer_data.pop("chat_room_code", None)
         copy_task = serializer_data.pop("copy_task", None)
+        organization = serializer_data.get("organization", None)
+        is_team_task = serializer_data.pop("is_team_task", None)
         company = user.company
         categories = serializer_data.pop("category_ids", None)
         task_type = serializer_data.get("type", None)
         remind_countdown = serializer_data.pop("remind_countdown", None)
         remind_type = serializer_data.pop("remind_type", None)
+        # Item for loop task schedule
+        plan_start_date = serializer_data.pop("plan_start_date", None)
+        plan_end_date = serializer_data.pop("plan_end_date", None)
+        repeat_type = serializer_data.pop("repeat_type", None)
+        repeat_interval = serializer_data.pop("repeat_interval", None)
+        week_day = serializer_data.pop("week_day", None)
+        month_day = serializer_data.pop("month_day", None)
+        month = serializer_data.pop("month", None)
 
         # Implement create task template base on T146
         if task_type == TaskTypes.MY_TEMPLATE.value:
@@ -154,6 +169,20 @@ class TaskViewSet(
             serializer_data["reminds"] = {
                 "type": remind_type,
                 "countdown": remind_countdown,
+            }
+        if repeat_type:
+            serializer_data["recurring"] = {
+                "repeat_type": repeat_type,
+                "plan_start_date": plan_start_date.isoformat()
+                if plan_start_date
+                else None,
+                "plan_end_date": plan_end_date.isoformat()
+                if plan_end_date
+                else None,
+                "repeat_interval": repeat_interval,
+                "week_day": week_day,
+                "month_day": month_day,
+                "month": month,
             }
 
         task = serializer.save(company=company, created_by=user)
@@ -180,6 +209,7 @@ class TaskViewSet(
                 )
                 reset_sort_task(user)
                 if copy_task:
+                    # Handle index for my task
                     current_task_index = copy_task.task_index.filter(
                         user=user
                     ).first()
@@ -215,9 +245,58 @@ class TaskViewSet(
                         TaskIndex.update_max_index_for_user(
                             user=user, task=task, is_update=False
                         )
+
+                    # Handle index for team task
+                    current_team_task_index = copy_task.team_task_index.filter(
+                        team=organization
+                    ).first()
+
+                    if (
+                        current_team_task_index
+                        and current_team_task_index.pin_at is None
+                    ):
+                        task_index_bellow_current_task = (
+                            TeamTaskIndex.objects.filter(
+                                task__status=task.status,
+                                team=organization,
+                                index__lt=current_team_task_index.index,
+                                pin_at__isnull=True,
+                            )
+                            .order_by("-index")
+                            .first()
+                        )
+                        if task_index_bellow_current_task:
+                            new_index = (
+                                current_team_task_index.index
+                                + task_index_bellow_current_task.index
+                            ) / 2
+                        else:
+                            new_index = (
+                                current_team_task_index.index - INDEX_INCREMENT
+                            )
+                        # Add index of new user of new task
+                        TeamTaskIndex.update_index_for_user(
+                            user=user,
+                            team=organization,
+                            task=task,
+                            is_update=False,
+                            index=new_index,
+                        )
+                    else:
+                        TeamTaskIndex.update_max_index_for_user(
+                            team=organization,
+                            user=user,
+                            task=task,
+                            is_update=False,
+                        )
                 else:
                     # Create new index for task created with user
                     TaskIndex.objects.create(task=task, user=user)
+
+                    # Create new index for team task created with user
+                    TeamTaskIndex.objects.create(
+                        task=task, user=user, team=organization
+                    )
 
         # Handle send to chat
         if send_to_chat:
@@ -239,6 +318,198 @@ class TaskViewSet(
         # Create or update categories
         if categories is not None:
             create_categories_by_model(task, categories)
+        # Create task schedule base on repeat
+        if repeat_type and task.status.name == TaskStatus.MY_ROUTINE.value:
+            self._generate_loop_task_schedules(
+                task,
+                plan_start_date,
+                repeat_type,
+                repeat_interval,
+                week_day,
+                month_day,
+                plan_end_date,
+                month,
+            )
+
+        return self.response_created(
+            self.get_serializer(
+                task,
+                context={
+                    "request": request,
+                    "organization_id": organization.id
+                    if is_team_task
+                    else None,
+                },
+            ).data
+        )
+
+    def _generate_loop_task_schedules(
+        self,
+        task,
+        start_date,
+        repeat_type,
+        repeat_interval=1,
+        weekday=None,
+        month_day=None,
+        end_date=None,
+        month=None,
+        old_recurring=None,
+    ):
+        """
+        Handle loop task and store in task schedule
+        """
+        start_date = (
+            make_aware(start_date)
+            if isinstance(start_date, datetime)
+            else now()
+        )
+
+        if repeat_type == FrequencyMap.ONCE.value:
+            return
+        end_time = end_date.timetz()
+
+        # Make rule repeat
+        rule_params = {
+            "freq": FrequencyMap.to_rrule(FrequencyMap[repeat_type]),
+            "interval": repeat_interval,
+            "dtstart": start_date,
+        }
+
+        if repeat_type == FrequencyMap.WEEKLY.value and weekday is not None:
+            rule_params["byweekday"] = weekday
+            days_ahead = (weekday - start_date.weekday()) % 7
+            rule_params["dtstart"] = start_date + timedelta(days=days_ahead)
+        elif (
+            repeat_type == FrequencyMap.MONTHLY.value and month_day is not None
+        ):
+            rule_params["bymonthday"] = month_day
+            if month_day >= start_date.day:
+                rule_params["dtstart"] = start_date.replace(day=month_day)
+            else:
+                rule_params["dtstart"] = start_date.replace(
+                    day=month_day
+                ) + timedelta(days=30)
+        elif (
+            repeat_type == FrequencyMap.YEARLY.value
+            and month is not None
+            and month_day is not None
+        ):
+            rule_params["bymonth"] = month
+            if month >= start_date.month:
+                rule_params["dtstart"] = start_date.replace(
+                    day=month_day, month=month
+                )
+            else:
+                rule_params["dtstart"] = start_date.replace(
+                    day=month_day, month=month
+                ) + timedelta(days=LIMIT_DAY)
+        rule_params["until"] = rule_params["dtstart"] + timedelta(
+            days=LIMIT_DAY
+        )  # Set default end_date is 1 year
+        rule = rrule.rrule(**rule_params)
+        schedules = []
+        if not old_recurring:
+            task.task_schedules.all().delete()
+        if task.task_schedules.exists():
+            list_task_schedule_edited = None
+            if old_recurring:
+                plan_start_time = datetime.strptime(
+                    old_recurring["plan_start_date"], "%Y-%m-%dT%H:%M:%S"
+                ).timetz()
+                plan_end_time = datetime.strptime(
+                    old_recurring["plan_end_date"], "%Y-%m-%dT%H:%M:%S"
+                ).timetz()
+                # Check edited schedules
+                list_task_schedule_edited = task.task_schedules.filter(
+                    Q(plan_start_date__gt=now())
+                    & ~Q(plan_start_date__time=plan_start_time)
+                    & ~Q(plan_end_date__time=plan_end_time)
+                )
+            # Remove task schedules not edited
+            task.task_schedules.exclude(
+                id__in=list_task_schedule_edited.values_list("id", flat=True)
+                if list_task_schedule_edited
+                else []
+            ).delete()
+            for occurrence in rule:
+                plan_end_date = datetime.combine(
+                    occurrence.date(), end_time, occurrence.tzinfo
+                )
+                # Check validate task schedule is exists datetime
+                if not TaskSchedule.objects.filter(
+                    Q(
+                        Q(plan_start_date__lt=plan_end_date)
+                        | Q(plan_start_date__lte=occurrence)
+                    )
+                    & Q(
+                        Q(plan_end_date__gt=occurrence)
+                        | Q(plan_end_date__gte=plan_end_date)
+                    )
+                    & Q(
+                        task__people_in_charge_tasks__user__in=task.people_in_charge_tasks.values_list(
+                            "user", flat=True
+                        )
+                    )
+                ).exists():
+                    # Check not have task edited in the day
+                    if not list_task_schedule_edited.filter(
+                        Q(plan_start_date__date=occurrence.date())
+                        & Q(plan_end_date__date=occurrence.date())
+                    ).exists():
+                        schedules.append(
+                            TaskSchedule(
+                                task=task,
+                                company=task.company,
+                                plan_start_date=occurrence,
+                                plan_end_date=plan_end_date,
+                            )
+                        )
+                else:
+                    raise ValidationError(
+                        {
+                            "task_schedules": ERROR_MESSAGES[
+                                "exists_task_schedule"
+                            ]
+                        }
+                    )
+
+        else:
+            for occurrence in rule:
+                plan_end_date = datetime.combine(
+                    occurrence.date(), end_time, occurrence.tzinfo
+                )
+                if not TaskSchedule.objects.filter(
+                    Q(
+                        Q(plan_start_date__lt=plan_end_date)
+                        | Q(plan_start_date__lte=occurrence)
+                    )
+                    & Q(
+                        Q(plan_end_date__gt=occurrence)
+                        | Q(plan_end_date__gte=plan_end_date)
+                    )
+                    & Q(
+                        task__people_in_charge_tasks__user__in=task.people_in_charge_tasks.values_list(
+                            "user", flat=True
+                        )
+                    )
+                ).exists():
+                    schedules.append(
+                        TaskSchedule(
+                            task=task,
+                            company=task.company,
+                            plan_start_date=occurrence,
+                            plan_end_date=plan_end_date,
+                        )
+                    )
+                else:
+                    raise ValidationError(
+                        {
+                            "task_schedules": ERROR_MESSAGES[
+                                "exists_task_schedule"
+                            ]
+                        }
+                    )
+        TaskSchedule.objects.bulk_create(schedules)
 
     def _send_to_task_space(self, user, message):
         """
@@ -479,12 +750,18 @@ class TaskViewSet(
         return super().retrieve(request, *args, **kwargs)
 
     @transaction.atomic()
-    def perform_update(self, serializer):
+    def update(self, request, *args, **kwargs):
         """
         Perform to update a task.
         """
         user = self.request.user
         current_task = self.get_object()
+        current_task_status = current_task.status
+        current_org = current_task.organization
+        serializer = self.get_serializer(
+            current_task, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
         people_in_charge_ids = serializer_data.pop("people_in_charge_ids", None)
         tag_ids = serializer_data.pop("tag_ids", None)
@@ -492,16 +769,26 @@ class TaskViewSet(
         task_schedules = serializer_data.pop("task_schedules", None)
         todo_list = serializer_data.pop("todo_list", None)
         categories = serializer_data.pop("category_ids", None)
-        # Update the first item in schedules
-        plan_start_date = serializer_data.get("plan_start_date")
-        plan_end_date = serializer_data.get("plan_end_date")
+        organization = serializer_data.get(
+            "organization", current_task.organization
+        )
+        is_team_task = serializer_data.pop("is_team_task", None)
         # Get data for send to chat
         send_to_chat = serializer_data.pop("send_to_chat", None)
         chat_room_code = serializer_data.pop("chat_room_code", None)
         serializer_data.get("type", None)
         remind_countdown = serializer_data.pop("remind_countdown", None)
         remind_type = serializer_data.pop("remind_type", None)
-
+        # Item for loop task schedule
+        is_exists_repeat = "repeat_type" in serializer_data
+        plan_start_date = serializer_data.pop("plan_start_date", None)
+        plan_end_date = serializer_data.pop("plan_end_date", None)
+        repeat_type = serializer_data.pop("repeat_type", None)
+        repeat_interval = serializer_data.pop("repeat_interval", None)
+        week_day = serializer_data.pop("week_day", None)
+        month_day = serializer_data.pop("month_day", None)
+        month = serializer_data.pop("month", None)
+        old_recurring = current_task.recurring
         # Implement create task template base on T146
         if current_task.type == TaskTypes.MY_TEMPLATE.value:
             if task_status and task_status.name != TaskStatus.NOT_STARTED.value:
@@ -512,31 +799,11 @@ class TaskViewSet(
             serializer_data["deadline"] = None
         else:
             if (
-                current_task.status.name == TaskStatus.MY_ROUTINE.value
+                current_task_status.name == TaskStatus.MY_ROUTINE.value
                 and task_status
                 and task_status.name == TaskStatus.MY_ROUTINE.value
             ):
                 serializer_data["deadline"] = None
-            else:
-                is_current_status_is_my_routine = (
-                    current_task.status.name == TaskStatus.MY_ROUTINE.value
-                )
-                if task_status:
-                    is_update_status_is_my_routine = (
-                        task_status.name == TaskStatus.MY_ROUTINE.value
-                    )
-                    if (
-                        is_current_status_is_my_routine
-                        and not is_update_status_is_my_routine
-                    ) or (
-                        not is_current_status_is_my_routine
-                        and is_update_status_is_my_routine
-                    ):
-                        raise ValidationError(
-                            {
-                                "detail": ERROR_MESSAGES["cannot_updated"],
-                            }
-                        )
 
         if serializer_data.get("deadline"):
             serializer_data["reminds"] = {
@@ -549,27 +816,33 @@ class TaskViewSet(
                 )
 
         if (
-            (current_task.status.name != TaskStatus.MY_ROUTINE.value)
+            (current_task_status.name != TaskStatus.MY_ROUTINE.value)
             and (current_task.deadline != serializer_data.get("deadline"))
             or (
                 current_task.is_important != serializer_data.get("is_important")
             )
         ):
             reset_sort_task(user)
-
+        if is_exists_repeat:
+            serializer_data["recurring"] = {
+                "repeat_type": repeat_type,
+                "plan_start_date": plan_start_date.isoformat()
+                if plan_start_date
+                else None,
+                "plan_end_date": plan_end_date.isoformat()
+                if plan_end_date
+                else None,
+                "repeat_interval": repeat_interval,
+                "week_day": week_day,
+                "month_day": month_day,
+                "month": month,
+            }
+        else:
+            serializer_data["recurring"] = None
         # Update task
         task = serializer.save()
 
-        # TODO: Remove code for case save first schedule
-        # Save data to first task schedule
-        if plan_start_date and plan_end_date:
-            schedule = TaskSchedule.objects.filter(task=current_task).first()
-            if schedule:
-                update_task_schedule(schedule, serializer_data)
-            else:
-                create_task_schedule(current_task, serializer_data)
         # Handle send to chat
-
         if send_to_chat:
             self._send_to_chat(
                 user,
@@ -578,8 +851,34 @@ class TaskViewSet(
                 people_in_charge_ids,
                 ChatMessageTypes.EDIT_TASK.value,
             )
+
+        if (is_exists_repeat and old_recurring) and (
+            (
+                old_recurring["repeat_type"] == FrequencyMap.ONCE.value
+                and repeat_type != FrequencyMap.ONCE.value
+            )
+            or (
+                old_recurring["repeat_type"] != FrequencyMap.ONCE.value
+                and repeat_type == FrequencyMap.ONCE.value
+            )
+        ):
+            task.task_schedules.all().delete()
+        if (
+            is_exists_repeat
+            and old_recurring
+            and task.status.name == TaskStatus.MY_ROUTINE.value
+            and task.recurring != old_recurring
+            and repeat_type is None
+        ):
+            task.task_schedules.all().delete()
+            task.recurring = {}
+            task.save()
+
         # Handle task schedules creation
-        if task_schedules is not None:
+        if (task_schedules is not None) or (
+            task_schedules is not None
+            and repeat_type == FrequencyMap.ONCE.value
+        ):
             # Get all existing task schedule IDs for the current task
             old_task_schedule_ids = set(
                 current_task.task_schedules.values_list("id", flat=True)
@@ -640,13 +939,17 @@ class TaskViewSet(
             todo_list_to_delete = old_todo_list_ids - new_todo_list_ids
             delete_todo_list_for_task(todo_list_to_delete)
 
+        # Define variable to check change data
+        change_people_in_charge = set()
+
         # Update to last index if change status
         if (
-            current_task.status is not None
+            current_task_status is not None
             and task_status is not None
-            and current_task.status != task_status
+            and current_task_status != task_status
         ):
             for user in current_task.people_in_charge.all():
+                change_people_in_charge.add(user)
                 send_web_socket_event(
                     {
                         "action": WebSocketEventType.CHANGE_TASK_STATUS.value,
@@ -670,6 +973,9 @@ class TaskViewSet(
 
         # Update people in charge task
         if people_in_charge_ids is not None:
+            # Set null change people
+            change_people_in_charge = set()
+
             # Delete index for task if remove user
             TaskIndex.objects.filter(task=task).exclude(
                 user__id__in=[
@@ -686,6 +992,9 @@ class TaskViewSet(
             task.people_in_charge.clear()
             for item in people_in_charge_ids:
                 user = item["people_in_charge"]
+
+                # Detect change people in charge
+                change_people_in_charge.add(user)
 
                 # Make sure that user hasn't tasks started
                 if is_task_started:
@@ -721,6 +1030,24 @@ class TaskViewSet(
         elif people_in_charge_ids == []:
             task.people_in_charge.clear()
             TaskIndex.objects.filter(task=task).delete()
+
+        # Remove index when change organization
+        if current_org != organization:
+            TeamTaskIndex.objects.filter(team=current_org, task=task).delete()
+
+        for user in change_people_in_charge:
+            # Update last index team task if add new user
+            TeamTaskIndex.update_max_index_for_user(
+                team=organization, user=user, task=task, is_update=False
+            )
+            team_task_index = TeamTaskIndex.objects.filter(
+                team=organization, user=user, task=task
+            ).first()
+            # reset_sort_task(user) # TODO: Handle sort team task
+            # Reset pin at to now
+            if team_task_index and team_task_index.pin_at:
+                team_task_index.pin_at = timezone.now()
+                team_task_index.save()
 
         # Update tags in task
         if tag_ids is not None:
@@ -758,6 +1085,35 @@ class TaskViewSet(
                     },
                     user=user,
                 )
+        # Create task schedule base on repeat
+        if (
+            task.status.name == TaskStatus.MY_ROUTINE.value
+            and task.recurring
+            and task.recurring != old_recurring
+        ):
+            self._generate_loop_task_schedules(
+                task,
+                plan_start_date,
+                repeat_type,
+                repeat_interval,
+                week_day,
+                month_day,
+                plan_end_date,
+                month,
+                old_recurring=old_recurring,
+            )
+
+        return self.response_ok(
+            self.get_serializer(
+                task,
+                context={
+                    "request": request,
+                    "organization_id": organization.id
+                    if is_team_task
+                    else None,
+                },
+            ).data
+        )
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -871,52 +1227,63 @@ class TaskViewSet(
         for item in tasks_data:
             task = item.get("task")
             user = item.get("user")
-            tag = item.get("tag")
+            team = item.get("team")
+            people_in_charge = item.pop("people_in_charge", None)
             task_status = item.pop("status", None)
             is_begin_unpin = item.pop("is_begin_unpin")
-            if is_begin_unpin:
-                max_task_index = TaskIndex.objects.filter(
-                    user=user, task__status=task.status, pin_at__isnull=True
-                ).aggregate(Max("index"))["index__max"]
-                item["index"] = (
-                    (max_task_index + INITIAL_INDEX_VALUE)
-                    if max_task_index
-                    else INITIAL_INDEX_VALUE
-                )
-            # Create or update TaskIndex based on the presence of user or tag
+
+            # Create or update TaskIndex based on the presence of user or team
             if user:
-                item.pop("tag", None)
+                if is_begin_unpin:
+                    max_task_index = TaskIndex.objects.filter(
+                        user=user, task__status=task.status, pin_at__isnull=True
+                    ).aggregate(Max("index"))["index__max"]
+                    item["index"] = (
+                        (max_task_index + INITIAL_INDEX_VALUE)
+                        if max_task_index
+                        else INITIAL_INDEX_VALUE
+                    )
+
+                item.pop("team", None)
                 TaskIndex.objects.update_or_create(
                     task=task, user=user, defaults=item
                 )
                 reset_sort_task(user)
-            elif tag:
+            elif team:
+                if is_begin_unpin:
+                    max_task_index = TeamTaskIndex.objects.filter(
+                        team=team, task__status=task.status, pin_at__isnull=True
+                    ).aggregate(Max("index"))["index__max"]
+                    item["index"] = (
+                        (max_task_index + INITIAL_INDEX_VALUE)
+                        if max_task_index
+                        else INITIAL_INDEX_VALUE
+                    )
+
                 item.pop("user", None)
-                TaskIndex.objects.update_or_create(
-                    task=task, tag=tag, defaults=item
+                item["user"] = request.user
+                TeamTaskIndex.objects.update_or_create(
+                    task=task, team=team, defaults=item
                 )
             else:
                 return self.response(status_code=status.HTTP_400_BAD_REQUEST)
 
+            if people_in_charge:
+                task.people_in_charge.set(
+                    [people_in_charge],
+                    through_defaults={"company": task.company},
+                )
+                # Delete index for task if change people in charge
+                TaskIndex.objects.filter(task=task).exclude(
+                    user_id=people_in_charge
+                ).delete()
+
+                # Update last index if add new user
+                TaskIndex.update_max_index_for_user(
+                    user=people_in_charge, task=task, is_update=False
+                )
+
             if task_status:
-                is_current_status_is_my_routine = (
-                    task.status.name == TaskStatus.MY_ROUTINE.value
-                )
-                is_update_status_is_my_routine = (
-                    task_status.name == TaskStatus.MY_ROUTINE.value
-                )
-                if (
-                    is_current_status_is_my_routine
-                    and not is_update_status_is_my_routine
-                ) or (
-                    not is_current_status_is_my_routine
-                    and is_update_status_is_my_routine
-                ):
-                    raise ValidationError(
-                        {
-                            "detail": ERROR_MESSAGES["cannot_updated"],
-                        }
-                    )
                 task.status = task_status
                 task.save()
                 for user in task.people_in_charge.all():
@@ -949,25 +1316,48 @@ class TaskViewSet(
         # Validate the incoming data
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        pin_at = serializer.validated_data.get("pin_at")
-        task_index = TaskIndex.objects.filter(task=task, user=user).first()
+        serializer_data = serializer.validated_data
+        pin_at = serializer_data.get("pin_at")
+        team = serializer_data.get("team")
+
+        if team:
+            task_index = TeamTaskIndex.objects.filter(
+                task=task, team=team
+            ).first()
+        else:
+            task_index = TaskIndex.objects.filter(task=task, user=user).first()
+
         if not task_index:
             raise ValidationError({"detail": ERROR_MESSAGES["task_not_exists"]})
+
         if task_index.pin_at is None and pin_at:
             task_index.pin_at = pin_at
         else:
             task_index.pin_at = None
-            max_task_index = TaskIndex.objects.filter(
-                user=user, task__status=task.status, pin_at__isnull=True
-            ).aggregate(Max("index"))["index__max"]
-            task_index.index = (
-                (max_task_index + INITIAL_INDEX_VALUE)
-                if max_task_index
-                else INITIAL_INDEX_VALUE
-            )
+
+            if team:
+                max_task_index = TeamTaskIndex.objects.filter(
+                    team=team, task__status=task.status, pin_at__isnull=True
+                ).aggregate(Max("index"))["index__max"]
+                task_index.index = (
+                    (max_task_index + INITIAL_INDEX_VALUE)
+                    if max_task_index
+                    else INITIAL_INDEX_VALUE
+                )
+            else:
+                max_task_index = TaskIndex.objects.filter(
+                    user=user, task__status=task.status, pin_at__isnull=True
+                ).aggregate(Max("index"))["index__max"]
+                task_index.index = (
+                    (max_task_index + INITIAL_INDEX_VALUE)
+                    if max_task_index
+                    else INITIAL_INDEX_VALUE
+                )
 
         task_index.save()
-        reset_sort_task(user)
+
+        if not team:
+            reset_sort_task(user)
 
         return self.response_ok(TaskIndexSerializer(task_index).data)
 
@@ -1103,19 +1493,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     API endpoint to show Tasks to the Board.
     """
 
-    queryset = (
-        Task.objects.annotate(
-            priority_number=Case(
-                When(priority=TaskPriorities.HIGH.value, then=4),
-                When(priority=TaskPriorities.MEDIUM.value, then=3),
-                When(priority=TaskPriorities.LOW.value, then=2),
-                default=1,
-                output_field=IntegerField(),
-            )
-        )
-        .exclude(type=TaskTypes.MY_TEMPLATE.value)
-        .all()
-    )
+    queryset = Task.objects.exclude(type=TaskTypes.MY_TEMPLATE.value).all()
     serializer_class = TaskBoardSerializer
     permission_classes = [ActionPermission]
     screen_name = Screens.MY_TASK.value
@@ -1128,14 +1506,12 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     ordering_fields = {
         "is_important": "is_important",
         "deadline": "deadline",
-        "priority": "priority_number",
         "id": "id",
     }
     filterset_class = TaskBoardFilter
     search_fields = [
         "title",
         "status__name",
-        "priority",
         "description",
         "tags__name",
         "people_in_charge__profile__full_name",
@@ -1153,7 +1529,6 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         self.search_fields = [
             "title",
             "status__name",
-            "priority",
             "description",
             "tags__name",
             "people_in_charge__profile__full_name",
@@ -1195,9 +1570,29 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         queryset = super().get_queryset().filter(company=user.company)
         user_id = self.request.query_params.get("user_id")
         ordering = self.request.query_params.get("ordering")
-        task_pin = TaskIndex.objects.filter(
-            task=OuterRef("pk"), user_id=user_id if user_id else user.id
-        ).values("pin_at")[:1]
+        is_team_task = (
+            self.request.query_params.get("is_team_task", "").lower() == "true"
+        )
+
+        if is_team_task:
+            organization_id = self.request.query_params.get("organization_id")
+            if not organization_id:
+                raise ValidationError(
+                    {"organization_id": ERROR_MESSAGES["field_required"]}
+                )
+
+            if not user_id:
+                raise ValidationError(
+                    {"user_id": ERROR_MESSAGES["field_required"]}
+                )
+
+            task_pin = TeamTaskIndex.objects.filter(
+                task=OuterRef("pk"), team_id=organization_id, user_id=user_id
+            ).values("pin_at")[:1]
+        else:
+            task_pin = TaskIndex.objects.filter(
+                task=OuterRef("pk"), user_id=user_id if user_id else user.id
+            ).values("pin_at")[:1]
 
         # Filter tasks by the current user if no user_id is provided
         if not user_id:
@@ -1205,45 +1600,54 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         # Apply custom ordering if 'ordering' parameter is not provided
         if not ordering:
-            task_index = TaskIndex.objects.filter(
-                task=OuterRef("pk"), user_id=user_id if user_id else user.id
-            ).values("index")[:1]
-            # Annotate the queryset with the index from TaskIndex
-            queryset = queryset.annotate(
-                index=Subquery(task_index),
-                coalesced_pin_at=Coalesce(
-                    Subquery(task_pin),
-                    Value(REPLACE_NULL_DATE),
-                    output_field=DateTimeField(),
-                ),
-                task_index_pin_at=Subquery(task_pin),
-            ).order_by("-coalesced_pin_at", "-index")
-            if pin_at := self.request.query_params.get("pin_at"):
-                queryset = queryset.filter(Q(coalesced_pin_at__lt=pin_at))
-            elif index := self.request.query_params.get("index"):
-                queryset = queryset.filter(
-                    index__lt=index, task_index_pin_at__isnull=True
-                )
+            if is_team_task:
+                # Handle load more for team tasks
+                task_index = TeamTaskIndex.objects.filter(
+                    task=OuterRef("pk"),
+                    team_id=organization_id,
+                    user_id=user_id,
+                ).values("index")[:1]
+                # Annotate the queryset with the index from TaskIndex
+                queryset = queryset.annotate(
+                    index=Subquery(task_index),
+                    coalesced_pin_at=Coalesce(
+                        Subquery(task_pin),
+                        Value(REPLACE_NULL_DATE),
+                        output_field=DateTimeField(),
+                    ),
+                    task_index_pin_at=Subquery(task_pin),
+                ).order_by("-coalesced_pin_at", "-index")
+                if pin_at := self.request.query_params.get("pin_at"):
+                    queryset = queryset.filter(Q(coalesced_pin_at__lt=pin_at))
+                elif index := self.request.query_params.get("index"):
+                    queryset = queryset.filter(
+                        index__lt=index, task_index_pin_at__isnull=True
+                    )
+            else:
+                # Handle load more for my tasks
+                task_index = TaskIndex.objects.filter(
+                    task=OuterRef("pk"), user_id=user_id if user_id else user.id
+                ).values("index")[:1]
+                # Annotate the queryset with the index from TaskIndex
+                queryset = queryset.annotate(
+                    index=Subquery(task_index),
+                    coalesced_pin_at=Coalesce(
+                        Subquery(task_pin),
+                        Value(REPLACE_NULL_DATE),
+                        output_field=DateTimeField(),
+                    ),
+                    task_index_pin_at=Subquery(task_pin),
+                ).order_by("-coalesced_pin_at", "-index")
+                if pin_at := self.request.query_params.get("pin_at"):
+                    queryset = queryset.filter(Q(coalesced_pin_at__lt=pin_at))
+                elif index := self.request.query_params.get("index"):
+                    queryset = queryset.filter(
+                        index__lt=index, task_index_pin_at__isnull=True
+                    )
         else:
             # Handle filter when pagination
             if id := self.request.query_params.get("task_id"):
-                if "priority" in ordering:
-                    priority = self.request.query_params.get("priority")
-                    match priority:
-                        case TaskPriorities.HIGH.value:
-                            priority_number = 4
-                        case TaskPriorities.MEDIUM.value:
-                            priority_number = 3
-                        case TaskPriorities.LOW.value:
-                            priority_number = 2
-                        case __:
-                            priority_number = 1
-
-                    queryset = queryset.filter(
-                        Q(priority_number=priority_number, id__lt=id)
-                        | Q(priority_number__lt=priority_number)
-                    )
-                elif "deadline" in ordering:
+                if "deadline" in ordering:
                     if deadline := self.request.query_params.get("deadline"):
                         queryset = queryset.filter(
                             Q(deadline__gt=deadline) | Q(deadline__isnull=True)
@@ -1266,23 +1670,11 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 queryset = queryset.exclude(id__in=exclude_ids)
 
         if tag_ids := self.request.query_params.get("tag_ids"):
-            ids = []
-            for id in tag_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(tag_ids):
                 queryset = queryset.filter(tags_tasks__tag__id__in=ids)
 
         if category_ids := self.request.query_params.get("category_ids"):
-            ids = []
-            for id in category_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(category_ids):
                 queryset = queryset.filter(
                     Q(categories__large_statistic_category__in=ids)
                 )
@@ -1290,13 +1682,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if organization_ids := self.request.query_params.get(
             "organization_ids"
         ):
-            ids = []
-            for id in organization_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(organization_ids):
                 queryset = queryset.filter(Q(organization__in=ids))
 
         return queryset
@@ -1305,13 +1691,13 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         parameters=[
             OpenApiParameter("deadline", type=datetime),
             OpenApiParameter("pin_at", type=datetime),
-            OpenApiParameter("priority", type=str),
             OpenApiParameter("task_id", type=int),
             OpenApiParameter("index", type=float),
             OpenApiParameter("ids", type=str),
             OpenApiParameter("tag_ids", type=str),
             OpenApiParameter("category_ids", type=str),
             OpenApiParameter("organization_ids", type=str),
+            OpenApiParameter("is_team_task", type=bool),
         ],
     )
     def list(self, request, *args, **kwargs):
@@ -1384,7 +1770,17 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     },
                 )
 
-        return self.response_pagination(request, queryset, TaskBoardSerializer)
+        # Fill context to serializer
+        context = {}
+        if self.request.query_params.get("is_team_task"):
+            context["organization_id"] = self.request.query_params.get(
+                "organization_id"
+            )
+            context["user_id"] = self.request.query_params.get("user_id")
+
+        return self.response_pagination(
+            request, queryset, TaskBoardSerializer, extra_context=context
+        )
 
 
 @extend_schema(tags=["System > Task"])
@@ -1408,13 +1804,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         # Filter by user ids
         if user_ids := self.request.query_params.get("user_ids"):
-            ids = []
-            for id in user_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(user_ids):
                 queryset = queryset.filter(id__in=ids)
 
         return queryset
@@ -1423,6 +1813,12 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         parameters=[
             OpenApiParameter("organization_id", type=str, required=False),
             OpenApiParameter("user_ids", type=str, required=False),
+            OpenApiParameter("page_size", type=int),
+            OpenApiParameter("ordering", type=str),
+            OpenApiParameter("tag_ids", type=str),
+            OpenApiParameter("category_ids", type=str),
+            OpenApiParameter("organization_ids", type=str),
+            OpenApiParameter("search", type=str),
         ]
     )
     def list(self, request, *args, **kwargs):

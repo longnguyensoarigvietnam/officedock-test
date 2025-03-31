@@ -11,13 +11,14 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES
 from base.constants import REPLACE_NULL_DATE
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 from chat.constants import ChatMessageTypes
 from common.serializers import CreationDataUserSerializer
-from common.utils import get_common_categories
+from common.utils import get_common_categories, split_id_from_string
 from organizations.models import Organization
 from organizations.serializers import OrganizationSerializer
 from skills.models import StatisticCategory
@@ -28,9 +29,16 @@ from tasks.models import (
     TaskIndex,
     TaskSchedule,
     TaskStatus,
+    TeamTaskIndex,
     TodoList,
 )
-from tasks.constants import INITIAL_INDEX_VALUE, DatetimeUnitTypes
+from tasks.constants import (
+    INITIAL_INDEX_VALUE,
+    DatetimeUnitTypes,
+    FrequencyMap,
+    TaskStatus as TaskStatusConstant,
+    TaskTypes,
+)
 from users.serializers import ProfileSerializer, UsersForCreationSerializer
 from users.models import User
 
@@ -220,7 +228,7 @@ class TodoListSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-def get_task_index(instance, request, user_id=None):
+def get_task_index(instance, request, user_id=None, team_id=None):
     """
     Return the last TaskIndex for the given task and user.
     """
@@ -230,11 +238,17 @@ def get_task_index(instance, request, user_id=None):
         or getattr(request.user, "id", None)
     )
 
-    return (
-        TaskIndex.objects.filter(task=instance, user_id=user_id).last()
-        if user_id
-        else None
-    )
+    task_index = None
+    if team_id:
+        task_index = TeamTaskIndex.objects.filter(
+            task=instance, team_id=team_id
+        ).last()
+    elif user_id:
+        task_index = TaskIndex.objects.filter(
+            task=instance, user_id=user_id
+        ).last()
+
+    return task_index
 
 
 class CategoryForCreationTaskSerializer(serializers.Serializer):
@@ -288,6 +302,8 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         allow_null=True,
         required=False,
     )
+    # Detect data generation in my task or team task to respond with accurate index
+    is_team_task = serializers.BooleanField(write_only=True, required=False)
     categories = serializers.SerializerMethodField(read_only=True)
     category_ids = CategoryForCreationTaskSerializer(
         many=True, required=False, allow_null=True, write_only=True
@@ -303,6 +319,21 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
     remind_type = serializers.ChoiceField(
         allow_null=True, required=False, choices=DatetimeUnitTypes.choices()
     )
+    plan_start_date = serializers.DateTimeField(allow_null=True, required=False)
+    plan_end_date = serializers.DateTimeField(allow_null=True, required=False)
+    repeat_type = serializers.ChoiceField(
+        choices=FrequencyMap.choices(), allow_null=True, required=False
+    )
+    repeat_interval = serializers.IntegerField(allow_null=True, required=False)
+    week_day = serializers.IntegerField(
+        min_value=0, max_value=6, required=False, allow_null=True
+    )
+    month_day = serializers.IntegerField(
+        min_value=1, max_value=31, required=False, allow_null=True
+    )
+    month = serializers.IntegerField(
+        min_value=1, max_value=12, required=False, allow_null=True
+    )
 
     class Meta:
         model = Task
@@ -317,7 +348,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "task_duration",
             "is_start",
             "is_my_task",
-            "priority",
+            "is_team_task",
             "deadline",
             "remind_at",
             "description",
@@ -340,6 +371,13 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "is_schedule_in_today",
             "remind_countdown",
             "remind_type",
+            "plan_start_date",
+            "plan_end_date",
+            "repeat_interval",
+            "repeat_type",
+            "week_day",
+            "month_day",
+            "month",
         ]
 
         read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
@@ -348,7 +386,33 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         """Validation data"""
         task_schedules = attrs.get("task_schedules")
         people_in_charge_ids = attrs.get("people_in_charge_ids")
+        repeat_type = attrs.get("repeat_type")
+        week_day = attrs.get("week_day", None)
+        month_day = attrs.get("month_day", None)
+        plan_start_date = attrs.get("plan_start_date", None)
+        plan_end_date = attrs.get("plan_end_date", None)
+        month = attrs.get("month", None)
         instance = self.instance
+
+        if repeat_type == FrequencyMap.WEEKLY.value and week_day is None:
+            raise serializers.ValidationError(
+                {"week_day": ERROR_MESSAGES["select_day"]}
+            )
+
+        if repeat_type == FrequencyMap.MONTHLY.value and month_day is None:
+            raise serializers.ValidationError(
+                {"month_day": ERROR_MESSAGES["select_day"]}
+            )
+
+        if repeat_type == FrequencyMap.YEARLY.value and month is None:
+            raise serializers.ValidationError(
+                {"month": ERROR_MESSAGES["select_month"]}
+            )
+
+        if plan_start_date and plan_end_date is None:
+            raise serializers.ValidationError(
+                {"plan_end_date": ERROR_MESSAGES["select_day"]}
+            )
 
         # Sort list by plan start date
         if task_schedules:
@@ -434,6 +498,18 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         if instance.reminds:
             representation["remind_countdown"] = instance.reminds["countdown"]
             representation["remind_type"] = instance.reminds["type"]
+        if recurring := instance.recurring:
+            fields = [
+                "plan_start_date",
+                "plan_end_date",
+                "repeat_type",
+                "repeat_interval",
+                "week_day",
+                "month_day",
+                "month",
+            ]
+            for field in fields:
+                representation[field] = recurring.get(field)
         return representation
 
     def get_index(self, instance):
@@ -441,7 +517,10 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         Return index of task
         """
         last_task = get_task_index(
-            instance, self.context.get("request"), self.context.get("user_id")
+            instance,
+            self.context.get("request"),
+            self.context.get("user_id"),
+            self.context.get("organization_id"),
         )
         return last_task.index if last_task else INITIAL_INDEX_VALUE
 
@@ -450,7 +529,10 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         Return pin time of task
         """
         last_task = get_task_index(
-            instance, self.context.get("request"), self.context.get("user_id")
+            instance,
+            self.context.get("request"),
+            self.context.get("user_id"),
+            self.context.get("organization_id"),
         )
 
         return last_task.pin_at if last_task else None
@@ -465,6 +547,7 @@ class TaskBoardSerializer(TaskCommonSerializer):
     pin_at = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
     categories = serializers.SerializerMethodField(read_only=True)
+    has_actual_duration = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Task
@@ -474,7 +557,6 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "status",
             "is_start",
             "is_my_task",
-            "priority",
             "is_important",
             "deadline",
             "is_schedule_in_today",
@@ -482,7 +564,30 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "pin_at",
             "type",
             "categories",
+            "has_actual_duration",
         ]
+
+    def to_representation(self, instance):
+        """
+        Custom representation
+        """
+        representation = super().to_representation(instance)
+        if instance.status.name == TaskStatusConstant.MY_ROUTINE.value:
+            recurring = instance.recurring
+            fields = [
+                "plan_start_date",
+                "plan_end_date",
+                "repeat_type",
+                "repeat_interval",
+                "week_day",
+                "month_day",
+                "month",
+            ]
+            for field in fields:
+                representation[field] = (
+                    recurring.get(field) if recurring else None
+                )
+        return representation
 
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
@@ -496,7 +601,10 @@ class TaskBoardSerializer(TaskCommonSerializer):
         Return index of task
         """
         last_task = get_task_index(
-            instance, self.context.get("request"), self.context.get("user_id")
+            instance,
+            self.context.get("request"),
+            self.context.get("user_id"),
+            self.context.get("organization_id"),
         )
         return last_task.index if last_task else INITIAL_INDEX_VALUE
 
@@ -505,7 +613,10 @@ class TaskBoardSerializer(TaskCommonSerializer):
         Return pin time of task
         """
         last_task = get_task_index(
-            instance, self.context.get("request"), self.context.get("user_id")
+            instance,
+            self.context.get("request"),
+            self.context.get("user_id"),
+            self.context.get("organization_id"),
         )
         return last_task.pin_at if last_task else None
 
@@ -514,6 +625,12 @@ class TaskBoardSerializer(TaskCommonSerializer):
         Return task type for duration
         """
         return CalendarTypes.TASK.value
+
+    def get_has_actual_duration(self, instance):
+        """
+        Check task has actual duration
+        """
+        return instance.task_durations.exists()
 
 
 class TaskCalendarSerializer(TaskCommonSerializer):
@@ -537,6 +654,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "task_schedules",
             "type",
             "categories",
+            "status",
         ]
 
     def get_type(self, instance):
@@ -630,10 +748,31 @@ class TaskIndexSerializer(serializers.ModelSerializer):
     is_begin_unpin = serializers.BooleanField(
         required=False, default=False, write_only=True
     )
+    team = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
+    people_in_charge = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
 
     class Meta:
         model = TaskIndex
-        fields = ["index", "user", "task", "status", "pin_at", "is_begin_unpin"]
+        fields = [
+            "index",
+            "user",
+            "team",
+            "task",
+            "status",
+            "pin_at",
+            "is_begin_unpin",
+            "people_in_charge",
+        ]
 
 
 class TaskIndexForCreationSerializer(serializers.Serializer):
@@ -650,10 +789,16 @@ class TaskIndexPinAtSerializer(TaskIndexSerializer):
     """
 
     pin_at = serializers.DateTimeField(required=True)
+    team = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
 
     class Meta:
         model = TaskIndex
-        fields = ["id", "index", "user", "task", "pin_at"]
+        fields = ["id", "index", "user", "team", "task", "pin_at"]
         read_only_fields = ["id", "index", "user", "task"]
 
 
@@ -691,21 +836,94 @@ class TaskTeamdockSerializer(serializers.ModelSerializer):
         """
         Retrieve the task status along with tasks assigned to the user.
         """
-        per_page = 5
         request = self.context.get("request")
-        statuses = TaskStatus.objects.order_by("id")
+        organization_id = request.query_params.get("organization_id")
+        page_size = int(request.query_params.get("page_size", 5))
+        ordering = request.query_params.get("ordering", None)
+        statuses = TaskStatus.objects.exclude(
+            name=TaskStatusConstant.MY_ROUTINE.value
+        ).order_by("id")
         results = []
 
         for status in statuses:
-            tasks = obj.in_charge_tasks.filter(status=status)
+            tasks = obj.in_charge_tasks.filter(
+                status=status, organization_id=organization_id
+            ).exclude(type=TaskTypes.MY_TEMPLATE.value)
             tasks_total = tasks.count()
 
+            # Define allowed ordering options
+            allowed_orderings = [
+                "deadline",
+                "-deadline",
+                "is_important",
+                "-is_important",
+            ]
+
+            # Validate ordering before applying it
+            if ordering:
+                if ordering in allowed_orderings:
+                    tasks = tasks.annotate(
+                        coalesced_ordering_datetime=Coalesce(
+                            "deadline",
+                            Value(
+                                REPLACE_NULL_DATE, output_field=DateTimeField()
+                            ),
+                        )
+                    )
+
+                    # Replace 'deadline' with 'coalesced_ordering_datetime' for sorting
+                    field_name = ordering.replace(
+                        "deadline", "coalesced_ordering_datetime"
+                    )
+                    tasks = tasks.order_by(field_name, "-updated_at")
+
+                    # Update team task index only if sorting by deadline or importance
+                    for idx, task in enumerate(tasks):
+                        team_task_index = task.team_task_index.filter(
+                            team_id=organization_id
+                        ).first()
+                        if team_task_index:
+                            if team_task_index.pin_at:
+                                team_task_index.pin_at = (
+                                    timezone.now()
+                                    - timedelta(
+                                        minutes=INITIAL_INDEX_VALUE + idx
+                                    )
+                                )
+                            team_task_index.index = INITIAL_INDEX_VALUE - idx
+                            team_task_index.save()
+                else:
+                    raise ValidationError(
+                        {
+                            "detail": ERROR_MESSAGES[
+                                "invalid_ordering_field"
+                            ].format(field_name=ordering)
+                        }
+                    )
+            # Handle filter data
+            if tag_ids := request.query_params.get("tag_ids"):
+                if ids := split_id_from_string(tag_ids):
+                    tasks = tasks.filter(tags__id__in=ids)
+
+            if category_ids := request.query_params.get("category_ids"):
+                if ids := split_id_from_string(category_ids):
+                    tasks = tasks.filter(
+                        categories__large_statistic_category__in=ids
+                    )
+
+            if organization_ids := request.query_params.get("organization_ids"):
+                if ids := split_id_from_string(organization_ids):
+                    tasks = tasks.filter(organization_id__in=ids)
+
+            if search := request.query_params.get("search"):
+                tasks = tasks.filter(title__icontains=search)
+
             # Fetch task index and pinned status for the user
-            task_pin = TaskIndex.objects.filter(
-                task=OuterRef("pk"), user_id=obj.id
+            task_pin = TeamTaskIndex.objects.filter(
+                task=OuterRef("pk"), team_id=organization_id
             ).values("pin_at")[:1]
-            task_index = TaskIndex.objects.filter(
-                task=OuterRef("pk"), user_id=obj.id
+            task_index = TeamTaskIndex.objects.filter(
+                task=OuterRef("pk"), team_id=organization_id
             ).values("index")[:1]
 
             # Annotate tasks with task index and pin timestamp
@@ -716,7 +934,7 @@ class TaskTeamdockSerializer(serializers.ModelSerializer):
                     Value(REPLACE_NULL_DATE),
                     output_field=DateTimeField(),
                 ),
-            ).order_by("-coalesced_pin_at", "-index")[:per_page]
+            ).order_by("-coalesced_pin_at", "-index")[:page_size]
 
             # Append formatted status data
             results.append(
@@ -724,11 +942,15 @@ class TaskTeamdockSerializer(serializers.ModelSerializer):
                     "id": status.id,
                     "name": status.name,
                     "total": tasks_total,
-                    "has_next": tasks_total > per_page,
+                    "has_next": tasks_total > page_size,
                     "tasks": TaskBoardSerializer(
                         tasks,
                         many=True,
-                        context={"request": request, "user_id": obj.id},
+                        context={
+                            "request": request,
+                            "user_id": obj.id,
+                            "organization_id": organization_id,
+                        },
                     ).data,
                 }
             )

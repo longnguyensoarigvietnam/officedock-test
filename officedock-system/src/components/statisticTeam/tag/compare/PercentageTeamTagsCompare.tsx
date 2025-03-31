@@ -1,18 +1,21 @@
 import React, { useContext, useEffect, useState } from 'react';
+
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompareTeam from '@components/common/ProgressBar/ProgressBarCompareTeam';
+import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
+import { EventWorkCategory } from '@constants/enums';
+
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
-import { EventWorkCategory } from '@constants/enums';
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
-import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
 type Props = {
   startDate: Date;
@@ -63,6 +66,14 @@ const PercentageTeamTagsCompare = ({
     tagsOptions,
     smallOptions,
     selectedSmall,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    isLoadingSmall,
+    isLoadingOrganizationCompare,
+    isLoadingLargeCompare,
+    isLoadingMediumCompare,
+    isLoadingSmallCompare,
     setSelectedTags,
   } = useContext(StatisticTeamTagsStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -392,10 +403,8 @@ const PercentageTeamTagsCompare = ({
                           return (
                             <div
                               key={item.value}
-                              className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                              <span className="w-[32px] truncate">
-                                {item.label}
-                              </span>
+                              className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                              <span className=" truncate">{item.label}</span>
                               <ImageRound
                                 onClick={() => {
                                   removeTag(item);
@@ -422,7 +431,7 @@ const PercentageTeamTagsCompare = ({
                   </span>
                 </div>
               </div>
-              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex justify-between px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
                 <div className="w-[220px]">
                   <div className="mt-4 ">
@@ -436,31 +445,31 @@ const PercentageTeamTagsCompare = ({
                       selectedOption={selectedOrganization || undefined}
                       onChange={(data) => handleSelectOrganization(data)}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
-                      {
-                        <PercentageBarCompareTeam
-                          isTag
-                          data={dataChartLarge}
-                          startDate={startDate}
-                          endDate={endDate}
-                          totalDuration={totalDurationLarge}
-                          totalDurationCompare={totalDurationLargeCompare}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartLargeCompare}
-                          handleClickChart={(_data: number) => {}}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.ALL,
-                              isCompare,
-                            );
-                          }}
-                        />
-                      }
+                    <div className="min-h-[280px] mt-[10px] flex justify-centers">
+                      <PercentageBarCompareTeam
+                        isTag
+                        data={dataChartLarge}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingOrganization}
+                        isLoadingCompare={isLoadingOrganizationCompare}
+                        totalDuration={totalDurationLarge}
+                        totalDurationCompare={totalDurationLargeCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartLargeCompare}
+                        handleClickChart={(_data: number) => {}}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.ALL,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -485,31 +494,31 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectLarge(data)}
                       disabled={!selectedOrganization}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
-                      {
-                        <PercentageBarCompareTeam
-                          isTag
-                          data={dataChartMedium}
-                          startDate={startDate}
-                          endDate={endDate}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartMediumCompare}
-                          totalDuration={totalDurationMedium}
-                          totalDurationCompare={totalDurationMediumCompare}
-                          handleClickChart={(_data: number) => {}}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.LARGE,
-                              isCompare,
-                            );
-                          }}
-                        />
-                      }
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
+                      <PercentageBarCompareTeam
+                        isTag
+                        data={dataChartMedium}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingLarge}
+                        isLoadingCompare={isLoadingLargeCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartMediumCompare}
+                        totalDuration={totalDurationMedium}
+                        totalDurationCompare={totalDurationMediumCompare}
+                        handleClickChart={(_data: number) => {}}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.LARGE,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -534,31 +543,31 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectMedium(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
-                      {
-                        <PercentageBarCompareTeam
-                          isTag
-                          data={dataChartSmall}
-                          startDate={startDate}
-                          endDate={endDate}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartSmallCompare}
-                          totalDuration={totalDurationSmall}
-                          totalDurationCompare={totalDurationSmallCompare}
-                          handleClickChart={(_data: number) => {}}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.MEDIUM,
-                              isCompare,
-                            );
-                          }}
-                        />
-                      }
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
+                      <PercentageBarCompareTeam
+                        isTag
+                        data={dataChartSmall}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingMedium}
+                        isLoadingCompare={isLoadingMediumCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartSmallCompare}
+                        totalDuration={totalDurationSmall}
+                        totalDurationCompare={totalDurationSmallCompare}
+                        handleClickChart={(_data: number) => {}}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.MEDIUM,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -583,32 +592,32 @@ const PercentageTeamTagsCompare = ({
                       onChange={(data) => handleSelectSmall(data)}
                       disabled={!selectedLarge}
                     />
-                    <div className="min-h-[280px] mt-[30px]">
-                      {
-                        <PercentageBarCompareTeam
-                          isTag          
-                          isLast             
-                          data={dataChartCategory}
-                          startDate={startDate}
-                          endDate={endDate}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartCategoryCompare}
-                          totalDuration={totalDurationCategory}
-                          totalDurationCompare={totalDurationCategoryCompare}
-                          handleClickChart={(_data: number) => {}}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.SMALL,
-                              isCompare,
-                            );
-                          }}
-                        />
-                      }
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
+                      <PercentageBarCompareTeam
+                        isTag
+                        isLast
+                        data={dataChartCategory}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingSmall}
+                        isLoadingCompare={isLoadingSmallCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartCategoryCompare}
+                        totalDuration={totalDurationCategory}
+                        totalDurationCompare={totalDurationCategoryCompare}
+                        handleClickChart={(_data: number) => {}}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.SMALL,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -622,6 +631,7 @@ const PercentageTeamTagsCompare = ({
           open={isShowModal}
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}
+          statisticTagsListTeam={statisticTagsListTeam}
           selectedSmall={selectedSmall}
           startDate={startDate}
           endDate={endDate}
@@ -638,6 +648,7 @@ const PercentageTeamTagsCompare = ({
           open={isShowModalCompare}
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}
+          statisticTagsListTeam={statisticTagsListTeam}
           selectedSmall={selectedSmall}
           startDate={startDateCompare}
           endDate={endDateCompare}

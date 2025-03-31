@@ -16,6 +16,8 @@ import {
   ItemScheduleType,
   ItemStartType,
   PermissionsSystem,
+  TaskRepetitiveType,
+  TaskRepetitiveValue,
 } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import {
@@ -32,15 +34,21 @@ import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
 
 import api from '@base/api';
-import { addHoursToDate, convertToCurrentTimezone } from '@utils/date';
+import {
+  addHoursToDate,
+  convertToCurrentTimezone,
+  convertToTimeString,
+  getJapaneseWeekDay,
+} from '@utils/date';
 import { hasPermissionInArray } from '@utils';
+import { TASK_REPETITIVE_OPTIONS } from '@constants';
 
 interface ItemProps {
   id: string;
   index: number;
   content: Task;
   creationDataTaskData?: CreationDataTask;
-  handleActionEditTask: (id: number) => void;
+  handleActionEditTask: (id: number, type?: string) => void
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTask: UseMutateFunction<
@@ -115,6 +123,28 @@ const ItemRoutine = ({
       },
       isImportant: false,
       plans: null,
+      repeatType: {
+        label: TaskRepetitiveType.ONCE,
+        value: 'ONCE',
+      },
+      repeatInterval: {
+        label: '',
+        value: '',
+      },
+      repeatStartTime: '',
+      repeatEndTime: '',
+      month: {
+        label: '',
+        value: '',
+      },
+      monthDay: {
+        label: '',
+        value: '',
+      },
+      weekDay: {
+        label: '',
+        value: '',
+      },
     };
     if (content) {
       (value.title = content.title),
@@ -122,6 +152,18 @@ const ItemRoutine = ({
           label: (content.status && content.status.name) || '',
           value: (content.status && content.status.id) || '',
         });
+      value.repeatType = content.repeatType
+        ? {
+            label:
+              TASK_REPETITIVE_OPTIONS.find(
+                (option) => option.value == content.repeatType,
+              )?.label || '',
+            value: content.repeatType,
+          }
+        : {
+            label: '',
+            value: '',
+          };
     }
     return value;
   }, [content]);
@@ -233,7 +275,7 @@ const ItemRoutine = ({
     if (isClicked) return;
 
     setIsClicked(true);
-    handleActionEditTask(parseInt(`${content.id}`));
+    handleActionEditTask(parseInt(`${content.id}`), ItemStartType.FIXED_TASK);
 
     setTimeout(() => setIsClicked(false), 2000);
   };
@@ -256,6 +298,42 @@ const ItemRoutine = ({
     content.categories &&
     content.categories.find((item) => item.type === EventWorkCategory.LARGE)
       ?.color;
+
+  const displayRoutineTaskScheduleTitle = (item: Task) => {
+    let title = '';
+    const repeatStartTime = item.planStartDate
+      ? convertToTimeString(item.planStartDate)
+      : '';
+    const repeatEndTime = item.planEndDate
+      ? convertToTimeString(item.planEndDate)
+      : '';
+    switch (item.repeatType) {
+      case TaskRepetitiveValue.ONCE:
+        title = '';
+        break;
+      case TaskRepetitiveValue.DAILY:
+        title = '毎日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+      case TaskRepetitiveValue.WEEKLY:
+        title =
+          '毎週' +
+          getJapaneseWeekDay(Number(item.weekDay || 0)) +
+          '曜日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
+        break;
+      case TaskRepetitiveValue.MONTHLY:
+        title =
+          '毎月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+      case TaskRepetitiveValue.YEARLY:
+        title =
+          '毎年' + item.month + '月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+    }
+    return title;
+  };
 
   return (
     <>
@@ -436,7 +514,7 @@ const ItemRoutine = ({
                           : '13px',
                     }}
                     className="font-normal ">
-                    毎日9:00~9:15
+                    {displayRoutineTaskScheduleTitle(content)}
                   </div>
                   <Tippy
                     content={content.isStart ? '計測停止' : '計測開始'}

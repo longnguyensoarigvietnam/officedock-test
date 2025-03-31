@@ -95,7 +95,7 @@ const MultiSelectDropdown = ({
   }, [isOpen]);
   const renderOptions = () => (
     <div
-      className={`absolute mt-1 z-50 max-h-60 overflow-auto rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}
+      className={`absolute mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}
       style={{
         top: position.top,
         left: position.left,
@@ -181,7 +181,7 @@ const MultiSelectDropdown = ({
                 disabled ? 'opacity-50 cursor-not-allowed' : ''
               } ${valueClassName} `}>
               <p
-                className={`block truncate ${!selected && 'text-gray-300'} text-left min-h-[24px] text-xs ${labelClass}`}>
+                className={`block truncate ${!selected && 'text-gray-300'} text-left min-h-[24px] text-xs  ${labelClass}`}>
                 {customLabel
                   ? customLabel
                   : placeholder || <div className="h-[22px]"></div>}

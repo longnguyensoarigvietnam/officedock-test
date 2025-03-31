@@ -252,10 +252,8 @@ const DetailOrganizationSkill = () => {
           {rows.map((row) => (
             <div className="flex relative" key={row.id}>
               <div className="py-3 w-[250px] border-r-[1px] border-b-[1px]">
-                <p className="flex flex-col items-center justify-center !w-[250px] text-center">
-                  <span className="truncate text-center">
-                    {row.skill ? row.skill.name : ''}
-                  </span>
+                <p className="!w-[250px] text-left px-2">
+                  {row.skill ? row.skill.name : ''}
                 </p>
               </div>
               <div className="py-3 w-[450px] border-r-[1px] border-b-[1px]">

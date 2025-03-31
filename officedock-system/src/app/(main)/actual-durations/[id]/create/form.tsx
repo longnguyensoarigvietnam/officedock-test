@@ -20,6 +20,8 @@ import ImageRound from '@components/common/ImageRound';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import Dropdown from '@components/common/Dropdown';
 
+import useTaskDetail from '@hooks/useTaskDetail';
+import useEventDetail from '@hooks/useEventDetail';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
@@ -30,7 +32,6 @@ import {
   ActualDurationRequest,
   CreateActualDurationFormData,
 } from '@interfaces/durations';
-import { Task } from '@interfaces/task';
 import { CategoryStructure } from '@interfaces/skills';
 
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -122,7 +123,143 @@ const CreateActualDurationsForm = () => {
   const optionTimeInput = generateTimeOptionsAsObjects();
   const [defaultTaskScheduleData, setDefaultTaskScheduleData] =
     useState<ActualDurationDefaultData>();
-
+  const taskId =
+    searchParams.get('type') === EventCalendarType.TASK
+      ? Number(params.id)
+      : undefined;
+  const scheduleId =
+    searchParams.get('type') !== EventCalendarType.TASK
+      ? Number(params.id)
+      : undefined;
+  useTaskDetail({
+    taskId: taskId ? String(taskId) : '',
+    onSuccess: (data) => {
+      setDefaultTaskScheduleData({
+        title: data.title,
+        taskId: data.id,
+        isImportant: data.isImportant || false,
+        organization: data.organization && data.organization.id,
+        largeCategory: {
+          label: data.categories
+            ? data.categories.find(
+                (category) => category.type === EventWorkCategory.LARGE,
+              )?.name ?? NO_OPTION_CATEGORY
+            : NO_OPTION_CATEGORY,
+          value: data.categories
+            ? data.categories.find(
+                (category) => category.type === EventWorkCategory.LARGE,
+              )?.id ?? NO_OPTION_CATEGORY
+            : NO_OPTION_CATEGORY,
+        },
+        mediumCategory: {
+          label: data.categories
+            ? data.categories.find(
+                (category) => category.type === EventWorkCategory.MEDIUM,
+              )?.name ?? NO_OPTION_CATEGORY
+            : NO_OPTION_CATEGORY,
+          value: data.categories
+            ? data.categories.find(
+                (category) => category.type === EventWorkCategory.MEDIUM,
+              )?.id ?? NO_OPTION_CATEGORY
+            : NO_OPTION_CATEGORY,
+        },
+        smallCategory: {
+          label: data.categories
+            ? data.categories.find(
+                (category) => category.type === EventWorkCategory.SMALL,
+              )?.name ?? NO_OPTION_CATEGORY
+            : NO_OPTION_CATEGORY,
+          value: data.categories
+            ? data.categories.find(
+                (category) => category.type === EventWorkCategory.SMALL,
+              )?.id ?? NO_OPTION_CATEGORY
+            : NO_OPTION_CATEGORY,
+        },
+        tagIds: data.tags as { id: number; name: string }[],
+      });
+    },
+    onError: (error: AxiosError) => {
+      if (error.response?.status === ServerStatusCode.NOT_FOUND) {
+        router.push(pageRouters.ACTUAL_DURATIONS_MANAGEMENT.href);
+        showToast({
+          variant: 'error',
+          description: ERROR_COMMON_MESSAGE,
+        });
+      }
+    },
+  });
+  useEventDetail({
+    scheduleId: scheduleId ? String(scheduleId) : '',
+    onSuccess: (data) => {
+      setDefaultTaskScheduleData({
+        title: data.title,
+        scheduleId: data.id,
+        organization: data.organization && data.organization.id,
+        largeCategory: {
+          label:
+            data.categories.length > 0
+              ? data.categories.find(
+                  (category: { id: number; type: string; name: string }) =>
+                    category.type == EventWorkCategory.LARGE,
+                )?.name ?? NO_OPTION_CATEGORY
+              : NO_OPTION_CATEGORY,
+          value:
+            data.categories.length > 0
+              ? data.categories.find(
+                  (category: { id: number; type: string; name: string }) =>
+                    category.type == EventWorkCategory.LARGE,
+                )?.id ?? NO_OPTION_CATEGORY
+              : NO_OPTION_CATEGORY,
+        },
+        mediumCategory: {
+          label:
+            data.categories.length > 0
+              ? data.categories.find(
+                  (category: { id: number; type: string; name: string }) =>
+                    category.type == EventWorkCategory.MEDIUM,
+                )?.name ?? NO_OPTION_CATEGORY
+              : NO_OPTION_CATEGORY,
+          value:
+            data.categories.length > 0
+              ? data.categories.find(
+                  (category: { id: number; type: string; name: string }) =>
+                    category.type == EventWorkCategory.MEDIUM,
+                )?.id ?? NO_OPTION_CATEGORY
+              : NO_OPTION_CATEGORY,
+        },
+        smallCategory: {
+          label:
+            data.categories.length > 0
+              ? data.categories.find(
+                  (category: { id: number; type: string; name: string }) =>
+                    category.type == EventWorkCategory.SMALL,
+                )?.name ?? NO_OPTION_CATEGORY
+              : NO_OPTION_CATEGORY,
+          value:
+            data.categories.length > 0
+              ? data.categories.find(
+                  (category: { id: number; type: string; name: string }) =>
+                    category.type == EventWorkCategory.SMALL,
+                )?.id ?? NO_OPTION_CATEGORY
+              : NO_OPTION_CATEGORY,
+        },
+        tagIds: data.tags,
+        scheduleType: {
+          label: data.type,
+          value: data.type,
+        },
+      });
+    },
+    onError: (error: AxiosError) => {
+      if (error.response?.status === ServerStatusCode.NOT_FOUND) {
+        router.push(pageRouters.ACTUAL_DURATIONS_MANAGEMENT.href);
+        showToast({
+          variant: 'error',
+          description: ERROR_COMMON_MESSAGE,
+        });
+      }
+    },
+  });
   const {
     control,
     watch,
@@ -176,168 +313,6 @@ const CreateActualDurationsForm = () => {
       );
     }
   }, [creationDataEventCalendar]);
-
-  const handleGetDefaultTaskDetail = async (taskId: number) => {
-    const apiUrl = apiRouters.TASK_DETAIL(`${taskId}`);
-
-    const { data } = await api.get<Task>(apiUrl);
-    return data;
-  };
-
-  const { mutate: getDefaultTaskDetail } = useMutation(
-    'postGetDefaultTaskDetail',
-    handleGetDefaultTaskDetail,
-    {
-      onSuccess: (data) => {
-        setDefaultTaskScheduleData({
-          title: data.title,
-          taskId: data.id,
-          isImportant: data.isImportant || false,
-          organization: data.organization && data.organization.id,
-          largeCategory: {
-            label: data.categories
-              ? data.categories.find(
-                  (category) => category.type === EventWorkCategory.LARGE,
-                )?.name ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
-            value: data.categories
-              ? data.categories.find(
-                  (category) => category.type === EventWorkCategory.LARGE,
-                )?.id ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
-          },
-          mediumCategory: {
-            label: data.categories
-              ? data.categories.find(
-                  (category) => category.type === EventWorkCategory.MEDIUM,
-                )?.name ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
-            value: data.categories
-              ? data.categories.find(
-                  (category) => category.type === EventWorkCategory.MEDIUM,
-                )?.id ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
-          },
-          smallCategory: {
-            label: data.categories
-              ? data.categories.find(
-                  (category) => category.type === EventWorkCategory.SMALL,
-                )?.name ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
-            value: data.categories
-              ? data.categories.find(
-                  (category) => category.type === EventWorkCategory.SMALL,
-                )?.id ?? NO_OPTION_CATEGORY
-              : NO_OPTION_CATEGORY,
-          },
-          tagIds: data.tags as { id: number; name: string; }[],
-        });
-      },
-      onError: (error: AxiosError) => {
-        if (error.response?.status === ServerStatusCode.NOT_FOUND) {
-          router.push(pageRouters.ACTUAL_DURATIONS_MANAGEMENT.href);
-          showToast({
-            variant: 'error',
-            description: ERROR_COMMON_MESSAGE,
-          });
-        }
-      },
-    },
-  );
-
-  const handleGetDefaultEventDetail = async (scheduleId: number) => {
-    const apiUrl = apiRouters.SCHEDULE_DETAIL(`${scheduleId}`);
-
-    const { data } = await api.get(apiUrl);
-    return data;
-  };
-
-  const { mutate: getDefaultEventDetail } = useMutation(
-    'postGetDefaultEventDetail',
-    handleGetDefaultEventDetail,
-    {
-      onSuccess: (data) => {
-        setDefaultTaskScheduleData({
-          title: data.title,
-          scheduleId: data.id,
-          organization: data.organization && data.organization.id,
-          largeCategory: {
-            label:
-              data.categories.length > 0
-                ? data.categories.find(
-                    (category: { id: number; type: string; name: string }) =>
-                      category.type == EventWorkCategory.LARGE,
-                  ).name
-                : NO_OPTION_CATEGORY,
-            value:
-              data.categories.length > 0
-                ? data.categories.find(
-                    (category: { id: number; type: string; name: string }) =>
-                      category.type == EventWorkCategory.LARGE,
-                  ).id
-                : NO_OPTION_CATEGORY,
-          },
-          mediumCategory: {
-            label:
-              data.categories.length > 0
-                ? data.categories.find(
-                    (category: { id: number; type: string; name: string }) =>
-                      category.type == EventWorkCategory.MEDIUM,
-                  ).name
-                : NO_OPTION_CATEGORY,
-            value:
-              data.categories.length > 0
-                ? data.categories.find(
-                    (category: { id: number; type: string; name: string }) =>
-                      category.type == EventWorkCategory.MEDIUM,
-                  ).id
-                : NO_OPTION_CATEGORY,
-          },
-          smallCategory: {
-            label:
-              data.categories.length > 0
-                ? data.categories.find(
-                    (category: { id: number; type: string; name: string }) =>
-                      category.type == EventWorkCategory.SMALL,
-                  ).name
-                : NO_OPTION_CATEGORY,
-            value:
-              data.categories.length > 0
-                ? data.categories.find(
-                    (category: { id: number; type: string; name: string }) =>
-                      category.type == EventWorkCategory.SMALL,
-                  ).id
-                : NO_OPTION_CATEGORY,
-          },
-          tagIds: data.tags,
-          scheduleType: {
-            label: data.type,
-            value: data.type,
-          },
-        });
-      },
-      onError: (error: AxiosError) => {
-        if (error.response?.status === ServerStatusCode.NOT_FOUND) {
-          router.push(pageRouters.ACTUAL_DURATIONS_MANAGEMENT.href);
-          showToast({
-            variant: 'error',
-            description: ERROR_COMMON_MESSAGE,
-          });
-        }
-      },
-    },
-  );
-
-  useEffect(() => {
-    if (searchParams.get('type') && params.id) {
-      if (searchParams.get('type') == EventCalendarType.TASK) {
-        getDefaultTaskDetail(Number(params.id));
-      } else {
-        getDefaultEventDetail(Number(params.id));
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.get('type'), params.id]);
 
   const { refetchOrganizationStatisticCategories } =
     useOrganizationStatisticCategories({
@@ -677,7 +652,7 @@ const CreateActualDurationsForm = () => {
       });
     }
     const actualDurationPayload = {
-      tagIds: data.tagIds.map((tag) => {
+      tagIds: data.tagIds.filter((tag) => tag.value).map((tag) => {
         return Number(tag.value);
       }),
       categoryIds: categoryList,
@@ -864,7 +839,7 @@ const CreateActualDurationsForm = () => {
                         classNameTextData="!text-sm"
                         options={unSelectedTagIdsOptions}
                         selectedOption={dataOptionsTagIds.find(
-                          (element) => element.value === value?.value,
+                          (element) => element.value == value?.value,
                         )}
                         onChange={(option: OptionDropdownType) => {
                           onChange(option);

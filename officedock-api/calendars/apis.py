@@ -31,11 +31,12 @@ from common.utils import (
     send_web_socket_event,
     create_categories_by_model,
     get_common_categories,
+    split_id_from_string,
 )
 from tasks.models import TaskSchedule, TaskDuration
 from base.permissions import ActionPermission
 from roles.constants import Screens
-from users.models import User
+from common.serializers import CreationDataUserSerializer
 
 
 @extend_schema(tags=["System > Schedule"])
@@ -565,15 +566,23 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             ).data
         )
 
+
+@extend_schema(tags=["System > Teamdock > Schedule"])
+class ScheduleTeamdockViewSet(BaseAPIViewSet):
+    """
+    API endpoint for Schedule teamdock
+    """
+
     @extend_schema(
         parameters=[
-            OpenApiParameter("page_size", type=int),
-            OpenApiParameter("page", type=int),
-            OpenApiParameter("organization_id", type=str),
+            OpenApiParameter("organization_id", type=str, required=True),
             OpenApiParameter("user_ids", type=str),
             OpenApiParameter("start_date", type=datetime),
             OpenApiParameter("end_date", type=datetime),
             OpenApiParameter("search", type=str),
+            OpenApiParameter("tag_ids", type=str),
+            OpenApiParameter("category_ids", type=str),
+            OpenApiParameter("organization_ids", type=str),
         ],
         responses={
             status.HTTP_200_OK: OpenApiResponse(
@@ -584,41 +593,236 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     @action(
         methods=["GET"],
         detail=False,
-        url_path="teamdock",
+        url_path="plan",
         serializer_class=ScheduleTeamdockSerializer,
     )
     @transaction.atomic()
-    def teamdock(self, request):
+    def teamdock_plan(self, request):
         """
-        Get list of schedules in teamdock.
+        Get list plan of schedules + tasks in teamdock.
         """
-        organization_id = self.request.query_params.get("organization_id")
-        users = []
+        organization_id = request.query_params.get("organization_id")
+        user_ids = request.query_params.get("user_ids")
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+        search = request.query_params.get("search")
 
-        if not organization_id:
-            return self.response_pagination(
-                request, users, ScheduleTeamdockSerializer
+        # Query data tasks and schedules
+        schedules = Schedule.objects.filter(organization_id=organization_id)
+        task_schedules = TaskSchedule.objects.select_related("task").filter(
+            task__organization_id=organization_id
+        )
+
+        # Handle filter search
+        if search:
+            schedules = schedules.filter(title__icontains=search)
+            task_schedules = task_schedules.filter(
+                task__title__icontains=search
             )
 
-        # Filter by organization id
-        users = User.objects.filter(organizations__id=organization_id).order_by(
-            "created_at"
-        )
+        if start_date:
+            schedules = schedules.filter(
+                Q(start_date__gte=start_date) | Q(end_date__gte=start_date)
+            )
+            task_schedules = task_schedules.filter(
+                Q(plan_start_date__gte=start_date)
+                | Q(plan_end_date__gte=start_date)
+            )
 
-        # Filter by user ids
+        if end_date:
+            schedules = schedules.filter(
+                Q(start_date__lte=end_date) | Q(end_date__lte=end_date)
+            )
+            task_schedules = task_schedules.filter(
+                Q(plan_start_date__lte=end_date)
+                | Q(plan_end_date__lte=end_date)
+            )
+
+        # Handle filter data
         if user_ids := self.request.query_params.get("user_ids"):
-            ids = []
-            for id in user_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
-                users = users.filter(id__in=ids)
+            if ids := split_id_from_string(user_ids):
+                schedules = schedules.filter(
+                    participants__id__in=ids
+                ).distinct()
+                task_schedules = task_schedules.filter(
+                    task__people_in_charge__id__in=ids
+                ).distinct()
 
-        return self.response_pagination(
-            request, users, ScheduleTeamdockSerializer
-        )
+        if tag_ids := request.query_params.get("tag_ids"):
+            if ids := split_id_from_string(tag_ids):
+                schedules = schedules.filter(tags__in=ids).distinct()
+                task_schedules = task_schedules.filter(
+                    task__tags__in=ids
+                ).distinct()
+
+        if category_ids := request.query_params.get("category_ids"):
+            if ids := split_id_from_string(category_ids):
+                schedules = schedules.filter(
+                    categories__large_statistic_category__in=ids
+                ).distinct()
+                task_schedules = task_schedules.filter(
+                    task__categories__large_statistic_category__in=ids
+                ).distinct()
+
+        if organization_ids := request.query_params.get("organization_ids"):
+            if ids := split_id_from_string(organization_ids):
+                schedules = schedules.filter(organization__in=ids).distinct()
+                task_schedules = task_schedules.filter(
+                    task__organization__in=ids
+                ).distinct()
+
+        results = []
+        tasks_result = []
+        for task_schedule in task_schedules:
+            item = {
+                "id": task_schedule.id,
+                "title": task_schedule.task.title,
+                "start_date": task_schedule.plan_start_date,
+                "end_date": task_schedule.plan_end_date,
+                "is_all_day": None,
+                "is_start": task_schedule.task.is_start,
+                "type": CalendarTypes.TASK.value,
+                "participants": CreationDataUserSerializer(
+                    task_schedule.task.people_in_charge.all(), many=True
+                ).data,
+                "event_type": task_schedule.task.type,
+                "categories": []
+                if not task_schedule.task.categories.exists()
+                else get_common_categories(
+                    task_schedule.task.categories.first(), task_schedule.task
+                ),
+            }
+            tasks_result.append(item)
+
+        schedules_result = ScheduleTeamdockSerializer(
+            schedules, many=True, context={"request": request}
+        ).data
+
+        # Merge schedules_result and tasks_result lists
+        results = tasks_result + schedules_result
+
+        return self.response_ok(results)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=str, required=True),
+            OpenApiParameter("start_date", type=datetime),
+            OpenApiParameter("end_date", type=datetime),
+            OpenApiParameter("user_ids", type=str),
+            OpenApiParameter("search", type=str),
+            OpenApiParameter("tag_ids", type=str),
+            OpenApiParameter("category_ids", type=str),
+            OpenApiParameter("organization_ids", type=str),
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=ScheduleTeamdockSerializer(many=True)
+            )
+        },
+    )
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="actual",
+        serializer_class=ScheduleTeamdockSerializer,
+    )
+    @transaction.atomic()
+    def teamdock_actual(self, request):
+        """
+        Get list actual of schedules in teamdock.
+        """
+        organization_id = request.query_params.get("organization_id")
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+        search = request.query_params.get("search")
+
+        durations = TaskDuration.objects.filter(
+            Q(task__organization_id=organization_id)
+            | Q(schedule__organization_id=organization_id)
+        ).all()
+
+        # Handle filter search
+        if search:
+            durations = durations.filter(
+                Q(task__title__icontains=search)
+                | Q(schedule__title__icontains=search)
+            )
+
+        if start_date:
+            durations = durations.filter(
+                Q(started_at__gte=start_date) | Q(paused_at__gte=start_date)
+            )
+
+        if end_date:
+            durations = durations.filter(
+                Q(started_at__lte=end_date) | Q(paused_at__lte=end_date)
+            )
+
+        # Handle filter data
+        if user_ids := self.request.query_params.get("user_ids"):
+            if ids := split_id_from_string(user_ids):
+                durations = durations.filter(
+                    Q(schedule__participants__id__in=ids)
+                    | Q(task__people_in_charge__id__in=ids)
+                ).distinct()
+
+        if tag_ids := request.query_params.get("tag_ids"):
+            if ids := split_id_from_string(tag_ids):
+                durations = durations.filter(
+                    Q(schedule__tags__id__in=ids) | Q(task__tags__id__in=ids)
+                ).distinct()
+
+        if category_ids := request.query_params.get("category_ids"):
+            if ids := split_id_from_string(category_ids):
+                durations = durations.filter(
+                    Q(schedule__categories__large_statistic_category__in=ids)
+                    | Q(task__categories__large_statistic_category__in=ids)
+                ).distinct()
+
+        if organization_ids := request.query_params.get("organization_ids"):
+            if ids := split_id_from_string(organization_ids):
+                durations = durations.filter(
+                    Q(schedule__organization_id__in=ids)
+                    | Q(task__organization_id__in=ids)
+                ).distinct()
+
+        results = []
+        for duration in durations:
+            # Detect model
+            model = None
+            if duration.task:
+                model = duration.task
+            if duration.schedule:
+                model = duration.schedule
+
+            if not model:
+                continue
+
+            users = (
+                model.participants.all()
+                if isinstance(model, Schedule)
+                else model.people_in_charge.all()
+            )
+            item = {
+                "id": duration.id,
+                "title": model.title,
+                "start_date": duration.started_at,
+                "end_date": duration.paused_at,
+                "type": CalendarTypes.SCHEDULE.value
+                if isinstance(model, Schedule)
+                else CalendarTypes.TASK.value,
+                "participants": CreationDataUserSerializer(
+                    users, many=True
+                ).data,
+                "is_start": model.is_start,
+                "event_type": model.type,
+                "categories": []
+                if not model.categories.exists()
+                else get_common_categories(model.categories.first(), model),
+            }
+            results.append(item)
+
+        return self.response_ok(results)
 
 
 @extend_schema(tags=["System > Calendar"])

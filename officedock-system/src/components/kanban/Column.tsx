@@ -55,7 +55,7 @@ interface ColumnProps {
   addTask: (columnId: string) => void;
   creationDataTaskData?: CreationDataTask;
   showFrequentlyTasks: boolean;
-  handleActionEditTask: (id: number) => void;
+  handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   setColumnsKanbanData: Dispatch<SetStateAction<Columns | undefined>>;
@@ -291,19 +291,15 @@ const Column = ({
   switch (selectedOptionZoom.value) {
     case 25:
     case 50:
-      paddingRight = `${(columnWidth / 247) * 17}px`;
+      paddingRight = `${(columnWidth / 247) * 4}px`;
       break;
     case 75:
-      paddingRight = `${(columnWidth / 247) * 19}px`;
-      break;
     case 90:
-      paddingRight = `${(columnWidth / 247) * 20}px`;
-      break;
     case 100:
-      paddingRight = `${(columnWidth / 247) * 22}px`;
+      paddingRight = `${(columnWidth / 247) * 12}px`;
       break;
     default:
-      paddingRight = `${(columnWidth / 247) * 17}px`;
+      paddingRight = `${(columnWidth / 247) * 15}px`;
   }
 
   return extendByStatus.find((item) => String(item.id) == String(columnId))
@@ -373,7 +369,9 @@ const Column = ({
                       padding: '5px',
                     }}
                     className={`rounded-full cursor-pointer w-fit ${Number(columnId) != StatusValueTask.MY_ROUTINE ? 'bg-[#E3EAED]' : 'bg-[#EBF2F7]'}`}
-                    onClick={() => addTask(columnId)}>
+                    onClick={() => {
+                      addTask(columnId);
+                    }}>
                     <ImageRound
                       src={`/icons/add.svg`}
                       name="Add"
@@ -447,12 +445,12 @@ const Column = ({
                 paddingTop: `${(columnWidth / 247) * 14}px`,
                 marginRight: isMyRoutine ? `-${(columnWidth / 247) * 16}px` : 0,
                 paddingRight: isMyRoutine ? paddingRight : '10px',
-                boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 #f8fafc`,
+                boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 ${!isMyRoutine ? '#f8fafc' : '#EBF1F7'}`,
                 minHeight: showFrequentlyTasks
                   ? 'calc(100vh - 372px)'
                   : 'calc(100vh - 280px)',
               }}
-              className={`flex-grow overflow-y-auto
+              className={`flex-grow overflow-y-auto w-[100%]
                 ${isMyRoutine && 'bg-[#EBF1F7] '}
                  overflow-x-hidden scrollbar-gutter-stable ${
                    snapshot.isDraggingOver ? 'bg-gray-200' : ''

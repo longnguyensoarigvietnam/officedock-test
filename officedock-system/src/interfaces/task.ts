@@ -3,7 +3,6 @@ import { OptionDropdownType } from './common';
 import { PeopleInCharge, TagId, Tags } from './tag';
 import { Organizations } from './organization';
 import { EventParticipant } from './calendar';
-import { Category } from './category';
 
 export interface TaskRequest {
   id?: number | string;
@@ -37,12 +36,22 @@ export interface TaskRequest {
   sendToChat?: boolean;
   chatRoomCode?: string;
   oldIdStatus?: string;
+  oldNameStatus?: string;
+  oldIdPeople?: string;
   action?: string;
   copyTaskId?: string | null;
   organizationId?: number | null;
   remindCountdown?: string | null;
   remindType?: string | null;
   remind_at?: string | null;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  planStartDate?: string | null;
+  planEndDate?: string | null;
+  isTeamTask?: boolean;
 }
 export interface TaskFormData {
   id?: string;
@@ -64,7 +73,7 @@ export interface TaskFormData {
   actualEndTime?: string | null;
   description?: string;
   tagIds?: OptionDropdownType[] | null;
-  peopleInChargeIds?: OptionDropdownType[];
+  peopleInChargeIds?: OptionDropdownType[]; // Fake focus data
   isStart?: boolean;
   isMyTask?: boolean;
   isAnotherTaskStarted?: boolean;
@@ -80,7 +89,17 @@ export interface TaskFormData {
   todoList?: TodoItem[];
   plans: PlanItem[] | null;
   oldIdStatus?: string;
+  oldNameStatus?: string;
+  oldIdPeople?: string;
   organization?: OptionDropdownType | null;
+  repeatType?: OptionDropdownType;
+  repeatInterval?: OptionDropdownType;
+  weekDay?: OptionDropdownType;
+  monthDay?: OptionDropdownType;
+  month?: OptionDropdownType;
+  repeatStartTime?: string | null;
+  repeatEndTime?: string | null;
+  peopleInChart?: OptionDropdownType;
 }
 
 export interface StatusTask {
@@ -143,6 +162,14 @@ export interface Task {
   organization?: Organizations;
   remindCountdown?: string | null;
   remindType?: string | null;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  planStartDate?: string | null;
+  planEndDate?: string | null;
+  hasActualDuration?: boolean;
 }
 export interface TaskRunningType {
   id: number;
@@ -219,7 +246,9 @@ export interface UpdateTaskKanbanRequest {
   tag?: number | string | null;
   user?: number | string | null;
   pinAt?: string | null;
+  peopleInCharge?: string;
   isBeginUnpin?: boolean;
+  team?: string;
 }
 
 export interface TaskDuration {
@@ -264,6 +293,7 @@ export interface TaskTimeSchedule {
   address?: string;
   participants?: EventParticipant[];
   isAllDay?: boolean;
+  statusId?: number
 }
 export interface TaskErrorPerson {
   id: string;
@@ -309,6 +339,7 @@ export interface DataDetailTaskType {
   taskId: string | number;
   isImportant?: boolean | null;
   deadline?: string;
+  statusId?: number;
   uuid: string;
   isRunning?: boolean;
 }
@@ -323,4 +354,66 @@ export interface DataDetailEventType {
   address?: string;
   isAllDay: boolean;
   type: OptionDropdownType;
+}
+//Team
+interface Category {
+  id: number;
+  name: string;
+  color: string | null;
+  type: string;
+}
+
+interface StatusTeam {
+  id: number;
+  name: string;
+  total: number;
+  hasNext: boolean;
+  tasks: Task[];
+}
+
+interface ProfileTeam {
+  id: number;
+  fullName: string;
+  birthday: string | null;
+  gender: string | null;
+}
+
+export interface ResultTeam {
+  id: number;
+  profile: ProfileTeam;
+  status: StatusTeam[];
+}
+export interface KanbanDataTeamResponse {
+  count: number;
+  numPages: number;
+  results: ResultTeam[];
+  hasNext: boolean;
+}
+
+// Transformer data team Task
+
+export interface TransformedStatuses {
+  NOT_STARTED: Task[];
+  IN_PROGRESS: Task[];
+  CONFIRMING: Task[];
+  COMPLETED: Task[];
+}
+
+export interface TransformedUser {
+  id: string;
+  name: string;
+  statuses: TransformedStatuses;
+}
+
+// Transformer total status
+export interface StatusSummary {
+  name: string;
+  total: number;
+  hasNext: boolean;
+}
+
+export interface UserTotalStatus {
+  id: string;
+  fullName: string;
+  statuses: StatusSummary[];
 }

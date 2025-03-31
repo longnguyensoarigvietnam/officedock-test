@@ -306,7 +306,7 @@ const ActionFilterTask = ({
                                   onChange={() =>
                                     toggleCategory(
                                       team.organization.id,
-                                      category as { id: number; name: string; },
+                                      category as { id: number; name: string },
                                     )
                                   }
                                   label={category.name}
@@ -315,7 +315,9 @@ const ActionFilterTask = ({
                               </div>
                               <span
                                 className="w-3 h-3 rounded-sm relative top-2"
-                                style={{ backgroundColor: category.color }}
+                                style={{
+                                  backgroundColor: category.color || '',
+                                }}
                               />
                             </div>
                           ))}

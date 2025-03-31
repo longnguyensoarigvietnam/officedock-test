@@ -3,6 +3,9 @@ import React, { useEffect, useState, useContext } from 'react';
 import PieChart from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import { SkeletonElement } from '@components/common/SkeletonLoading';
+
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
   DataTaskModalStatisticType,
@@ -10,17 +13,18 @@ import {
   StatisticsCategories,
   UserListStatisticType,
 } from '@interfaces/statistic';
+
 import { convertToJapaneseTime, formatTimeToJapanese } from '@utils/date';
 import { getRandomColor, lightenColor } from '@utils';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticTeamCategoryList: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
+  handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
@@ -32,6 +36,7 @@ const PercentageCategoryTeam = ({
   handleSelectMedium,
   handleSelectOrganization,
   removeTag,
+  handleSelectOrganizationCustom,
 }: Props) => {
   const {
     largeOptions,
@@ -45,6 +50,9 @@ const PercentageCategoryTeam = ({
     totalDurationSmall,
     selectedTags,
     tagsOptions,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
     setSelectedTags,
   } = useContext(StatisticTeamStateContext);
   const { setIsLoading } = useContext(LoadingContext);
@@ -260,6 +268,7 @@ const PercentageCategoryTeam = ({
                   isShowIconFilter
                   options={tagsOptions}
                   placeholder="集計対象のタグを選択"
+                  labelOptionClass="break-all"
                   className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                   selectedOptions={selectedTags || []}
                   onChange={(selected) => {
@@ -290,8 +299,8 @@ const PercentageCategoryTeam = ({
                     return (
                       <div
                         key={item.value}
-                        className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                        <span className="min-w-[32px] max-w-[80px] truncate">
+                        className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                        <span className="min-w-[32px]  truncate">
                           {item.label}
                         </span>
                         <ImageRound
@@ -325,31 +334,35 @@ const PercentageCategoryTeam = ({
             {/* Line */}
             <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
             <div>
-              <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+              <div className="flex  justify-between px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[280px]">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     大カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="チーム選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      classNameOption="!text-sm"
-                      options={listOptionsOrganization}
-                      selectedOption={selectedOrganization || undefined}
-                      onChange={(data) => handleSelectOrganization(data)}
-                    />
-                    <p className="text-sm text-black my-[26px]">
-                      合計{' '}
-                      {totalDurationLarge &&
-                        formatTimeToJapanese(totalDurationLarge)}
-                    </p>
-                    <div className="min-h-[280px]">
-                      {dataChartLarge.data.length > 0 ? (
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="チーム選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !py-0 text-sm font-normal !rounded-md !border !border-[#77858F] "
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
+                        options={listOptionsOrganization}
+                        selectedOption={selectedOrganization || undefined}
+                        onChange={(data) => handleSelectOrganization(data)}
+                      />
+                      <p className="text-sm text-black my-[26px]">
+                        合計{' '}
+                        {totalDurationLarge &&
+                          formatTimeToJapanese(totalDurationLarge)}
+                      </p>
+                    </div>
+                    <div className="min-h-[280px] flex justify-center">
+                      {isLoadingOrganization ? (
+                        <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
+                      ) : dataChartLarge.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
                           isTeam
@@ -358,25 +371,27 @@ const PercentageCategoryTeam = ({
                           data={dataChartLarge?.data}
                           labels={dataChartLarge?.labels}
                           actualValues={dataChartLarge?.actualValue}
-                          className="w-[280px] h-[280px] ml-5"
+                          className="w-[280px] h-[280px]"
                           optionsData={dataChartLarge.optionData}
                           listIdData={dataChartLarge.listId}
                           handleClickTooltip={() => {}}
                           handleClickChart={(data: OptionDropdownType) => {
                             if (data.value && data.value !== '未設定') {
                               selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
+                                handleSelectOrganizationCustom(
+                                  selectedOrganization,
+                                );
                               handleSelectLarge(data);
                             }
                           }}
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
                       )}
                     </div>
                   </div>
                 </div>
-                <div>
+                <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit `}
                     src="/icons/drawer-blue.svg"
@@ -384,7 +399,7 @@ const PercentageCategoryTeam = ({
                   />
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[280px]">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
@@ -406,8 +421,10 @@ const PercentageCategoryTeam = ({
                       {totalDurationMedium &&
                         formatTimeToJapanese(totalDurationMedium)}
                     </p>
-                    <div>
-                      {dataChartMedium.data.length > 0 ? (
+                    <div className="flex justify-center">
+                      {isLoadingLarge ? (
+                        <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
+                      ) : dataChartMedium.data.length > 0 ? (
                         <PieChart
                           isClickTooltip
                           isTeam
@@ -417,7 +434,7 @@ const PercentageCategoryTeam = ({
                           labels={dataChartMedium?.labels}
                           actualValues={dataChartMedium?.actualValue}
                           optionsData={dataChartMedium.optionData}
-                          className="w-[280px] h-[280px] ml-5"
+                          className="w-[280px] h-[280px] "
                           listIdData={dataChartMedium.listId}
                           handleClickChart={(data: OptionDropdownType) => {
                             if (data.value && data.value !== '未設定') {
@@ -426,12 +443,12 @@ const PercentageCategoryTeam = ({
                           }}
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[280px] h-[280px] rounded-full bg-[#EBF1F7]"></div>
                       )}
                     </div>
                   </div>
                 </div>
-                <div>
+                <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit `}
                     src="/icons/drawer-blue.svg"
@@ -439,7 +456,7 @@ const PercentageCategoryTeam = ({
                   />
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[280px]">
+                <div className="w-[300px]">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     小カテゴリー
                   </div>
@@ -461,8 +478,10 @@ const PercentageCategoryTeam = ({
                       {totalDurationSmall &&
                         formatTimeToJapanese(totalDurationSmall)}
                     </p>
-                    <div>
-                      {dataChartSmall.data.length > 0 ? (
+                    <div className="flex justify-center">
+                      {isLoadingMedium ? (
+                        <SkeletonElement className="!w-[280px] !h-[280px] !rounded-full" />
+                      ) : dataChartSmall.data.length > 0 ? (
                         <PieChart
                           isTeam
                           isLast
@@ -471,13 +490,13 @@ const PercentageCategoryTeam = ({
                           data={dataChartSmall?.data}
                           labels={dataChartSmall?.labels}
                           actualValues={dataChartSmall?.actualValue}
-                          className="w-[280px] h-[280px] ml-5"
+                          className="w-[280px] h-[280px] "
                           optionsData={dataChartSmall.optionData}
                           listIdData={dataChartSmall.listId}
                           isClickTooltip
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
                       )}
                     </div>
                   </div>

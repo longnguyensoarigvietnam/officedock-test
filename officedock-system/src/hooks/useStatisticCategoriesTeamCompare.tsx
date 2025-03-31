@@ -2,6 +2,7 @@
 
 import { useQuery } from 'react-query';
 import { AxiosError } from 'axios';
+import { useContext } from 'react';
 import { useSession } from 'next-auth/react';
 
 import { apiRouters } from '@constants/routers';
@@ -9,6 +10,7 @@ import { apiRouters } from '@constants/routers';
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 
 interface FilterProps {
   isCompare: boolean;
@@ -31,6 +33,11 @@ const useStatisticCategoriesTeamCompare = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
+  const {
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
+  } = useContext(StatisticTeamStateContext);
 
   // Handle call API get statistic category list team
   const getStatisticCategoryListTeamCompare = async () => {
@@ -71,7 +78,11 @@ const useStatisticCategoriesTeamCompare = ({
     onError: (error: AxiosError) => {
       onError && onError(error);
     },
-    onSettled: () => {},
+    onSettled: () => {
+      setIsLoadingLargeCompare(false);
+      setIsLoadingMediumCompare(false);
+      setIsLoadingOrganizationCompare(false);
+    },
   });
 
   return {

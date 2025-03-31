@@ -37,15 +37,30 @@ const PieChart = ({
     'rgba(75, 192, 192, 0.8)',
   ];
 
+  const filteredData = data.reduce<
+    { value: number; label: string; color?: string; actualValue: string }[]
+  >((acc, value, index) => {
+    if (value > 0) {
+      acc.push({
+        value,
+        label: labels[index],
+        color: colors?.[index],
+        actualValue: actualValues[index],
+      });
+    }
+    return acc;
+  }, []);
   const chartData: ChartData<'pie', number[], string> = {
-    labels,
+    labels: filteredData.map((item) => item.label),
     datasets: [
       {
-        data,
-        backgroundColor: colors || defaultColors,
-        borderColor:
-          colors?.map((color) => color.replace('1', '1')) ||
-          defaultColors.map((color) => color.replace('1', '1')),
+        data: filteredData.map((item) => item.value),
+        backgroundColor: filteredData.map(
+          (item) => item.color || defaultColors[0],
+        ),
+        borderColor: filteredData.map((item) =>
+          (item.color || defaultColors[0]).replace('1', '1'),
+        ),
         borderWidth: 1,
         hoverOffset: 0,
       },
@@ -59,18 +74,37 @@ const PieChart = ({
       },
       tooltip: {
         enabled: showTooltip,
+
         callbacks: {
+          title: () => '',
           label: (tooltipItem) => {
             const value = tooltipItem.raw as number;
             const actualValue = actualValues[tooltipItem.dataIndex];
-            return [`${tooltipItem.label} : ${value}%`, `${actualValue}`];
+
+            const maxLabelLength = 15;
+            let label = tooltipItem.label;
+            if (label.length > maxLabelLength) {
+              label = `${label.substring(0, maxLabelLength)}...`;
+            }
+
+            return [`${label} : ${value}%`, `${actualValue}`];
           },
         },
       },
       datalabels: {
         formatter: (value, context: Context) => {
-          const label = context.chart.data.labels?.[context.dataIndex];
-          return label ? `${label}\n${value}%` : `${value}%`;
+          if (value < 20) return `${value}%`;
+
+          const label = String(
+            context.chart.data.labels?.[context.dataIndex] || '',
+          );
+          const maxLabelLength = 10;
+          const truncatedLabel =
+            label.length > maxLabelLength
+              ? `${label.substring(0, maxLabelLength)}...`
+              : label;
+
+          return `${truncatedLabel}\n${value}%`;
         },
         color: '#fff',
         font: {

@@ -1,25 +1,25 @@
 import React, { useContext, useEffect, useState } from 'react';
+
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import PercentageBarCompare from '@components/common/ProgressBar/ProgressBarCompare';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
+import { EventWorkCategory } from '@constants/enums';
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
 import {
   StatisticCategoryInfo,
   StatisticsCategories,
 } from '@interfaces/statistic';
-import { EventWorkCategory } from '@constants/enums';
 import { getRandomColor, lightenColor } from '@utils';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import { LoadingContext } from '@providers/LoadingProvider';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 type Props = {
   startDate: Date;
   endDate: Date | null;
   statisticCategoryList: StatisticsCategories | undefined;
   statisticCategoryCompareList: StatisticsCategories | undefined;
-
   startDateCompare: Date;
   endDateCompare: Date | null;
   handleSelectOrganization: (data: OptionDropdownType) => void;
@@ -27,6 +27,7 @@ type Props = {
   handleSelectMedium: (data: OptionDropdownType) => void;
   handleSelectSmall: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
+  handleSelectOrganizationCustom: (data: OptionDropdownType) => void;
 };
 
 const PercentageCategoryCompare = ({
@@ -41,6 +42,7 @@ const PercentageCategoryCompare = ({
   handleSelectMedium,
   handleSelectSmall,
   handleSelectOrganization,
+  handleSelectOrganizationCustom,
 }: Props) => {
   const {
     largeOptions,
@@ -59,12 +61,16 @@ const PercentageCategoryCompare = ({
     selectedTags,
     tagsOptions,
     smallOptions,
+    isLoadingLarge,
+    isLoadingMedium,
+    isLoadingOrganization,
+    isLoadingLargeCompare,
+    isLoadingMediumCompare,
+    isLoadingOrganizationCompare,
     setSelectedTags,
-
     setTotalDurationTask,
     setTotalDurationTaskCompare,
   } = useContext(StatisticStateContext);
-  const { setIsLoading } = useContext(LoadingContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [isShowModal, setIsShowModal] = useState(false);
@@ -177,7 +183,6 @@ const PercentageCategoryCompare = ({
           color?.categoryColor,
         ),
       );
-      setIsLoading(false);
     }
   }, [statisticCategoryList]);
 
@@ -205,7 +210,6 @@ const PercentageCategoryCompare = ({
           color?.categoryColor,
         ),
       );
-      setIsLoading(false);
     }
   }, [statisticCategoryCompareList]);
 
@@ -431,6 +435,7 @@ const PercentageCategoryCompare = ({
                   isShowIconFilter
                   options={tagsOptions}
                   placeholder="集計対象のタグを選択"
+                  labelOptionClass="break-all"
                   className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                   selectedOptions={selectedTags || []}
                   onChange={(selected) => {
@@ -461,8 +466,8 @@ const PercentageCategoryCompare = ({
                     return (
                       <div
                         key={item.value}
-                        className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                        <span className="min-w-[32px] max-w-[80px] truncate">
+                        className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                        <span className="min-w-[32px]  truncate">
                           {item.label}
                         </span>
                         <ImageRound
@@ -498,56 +503,60 @@ const PercentageCategoryCompare = ({
             <div>
               <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
                 {/* Pie Chart 1 */}
-                <div className="w-[280px]">
+                <div className="w-full">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     大カテゴリー
                   </div>
                   <div className="mt-4 ">
-                    <Dropdown
-                      label="チーム選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      options={listOptionsOrganization}
-                      selectedOption={selectedOrganization || undefined}
-                      onChange={(data) => handleSelectOrganization(data)}
-                    />
-                    <div className="min-h-[280px] mt-[30px]">
-                      {
-                        <PercentageBarCompare
-                          data={dataChartLarge}
-                          startDate={startDate}
-                          endDate={endDate}
-                          totalDuration={totalDurationLarge}
-                          totalDurationCompare={totalDurationLargeCompare}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartLargeCompare}
-                          handleClickChart={(data: number) => {
-                            if (data && String(data) !== '未設定') {
-                              const select = largeOptions.find(
-                                (item) => item.value === data,
-                              );
-                              selectedOrganization &&
-                                handleSelectOrganization(selectedOrganization);
-                              if (select) {
-                                handleSelectLarge(select);
-                              }
-                            }
-                          }}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.ALL,
-                              isCompare,
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="チーム選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        options={listOptionsOrganization}
+                        selectedOption={selectedOrganization || undefined}
+                        onChange={(data) => handleSelectOrganization(data)}
+                      />
+                    </div>
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
+                      <PercentageBarCompare
+                        data={dataChartLarge}
+                        startDate={startDate}
+                        endDate={endDate}
+                        totalDuration={totalDurationLarge}
+                        isLoading={isLoadingOrganization}
+                        isLoadingCompare={isLoadingOrganizationCompare}
+                        totalDurationCompare={totalDurationLargeCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartLargeCompare}
+                        handleClickChart={(data: number) => {
+                          if (data && String(data) !== '未設定') {
+                            const select = largeOptions.find(
+                              (item) => item.value === data,
                             );
-                          }}
-                        />
-                      }
+                            selectedOrganization &&
+                              handleSelectOrganizationCustom(
+                                selectedOrganization,
+                              );
+                            if (select) {
+                              handleSelectLarge(select);
+                            }
+                          }
+                        }}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.ALL,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -561,56 +570,58 @@ const PercentageCategoryCompare = ({
                   </div>
                 </div>
                 {/* Pie Chart 2 */}
-                <div className="w-[280px] ">
+                <div className="w-full ">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     中カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="大カテゴリー選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      options={largeOptions}
-                      selectedOption={selectedLarge || undefined}
-                      onChange={(data) => handleSelectLarge(data)}
-                      disabled={!selectedOrganization}
-                    />
-                    <div className="min-h-[280px] mt-[30px]">
-                      {
-                        <PercentageBarCompare
-                          data={dataChartMedium}
-                          startDate={startDate}
-                          endDate={endDate}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartMediumCompare}
-                          totalDuration={totalDurationMedium}
-                          totalDurationCompare={totalDurationMediumCompare}
-                          handleClickChart={(data: number) => {
-                            if (data && String(data) !== '未設定') {
-                              const select = mediumOptions.find(
-                                (item) => item.value === data,
-                              );
-
-                              if (select) {
-                                handleSelectMedium(select);
-                              }
-                            }
-                          }}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.LARGE,
-                              isCompare,
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="大カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        options={largeOptions}
+                        selectedOption={selectedLarge || undefined}
+                        onChange={(data) => handleSelectLarge(data)}
+                        disabled={!selectedOrganization}
+                      />
+                    </div>
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
+                      <PercentageBarCompare
+                        data={dataChartMedium}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingLarge}
+                        isLoadingCompare={isLoadingLargeCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartMediumCompare}
+                        totalDuration={totalDurationMedium}
+                        totalDurationCompare={totalDurationMediumCompare}
+                        handleClickChart={(data: number) => {
+                          if (data && String(data) !== '未設定') {
+                            const select = mediumOptions.find(
+                              (item) => item.value === data,
                             );
-                          }}
-                        />
-                      }
+
+                            if (select) {
+                              handleSelectMedium(select);
+                            }
+                          }
+                        }}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.LARGE,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -624,57 +635,59 @@ const PercentageCategoryCompare = ({
                   </div>
                 </div>
                 {/* Pie Chart 3 */}
-                <div className="w-[280px]">
+                <div className="w-full">
                   <div className="w-full h-[34px] bg-[#EBF1F7] text-[#0068B6] rounded-md flex items-center justify-center">
                     小カテゴリー
                   </div>
                   <div className="mt-4">
-                    <Dropdown
-                      label="中カテゴリー選択"
-                      placeholder="-"
-                      placeholderClass="!text-black text-sm font-normal"
-                      className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
-                      labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                      options={mediumOptions}
-                      selectedOption={selectedMedium || undefined}
-                      onChange={(data) => handleSelectMedium(data)}
-                      disabled={!selectedLarge}
-                    />
-                    <div className="min-h-[280px] mt-[30px]">
-                      {
-                        <PercentageBarCompare
-                          isLast
-                          data={dataChartSmall}
-                          startDate={startDate}
-                          endDate={endDate}
-                          startDateCompare={startDateCompare}
-                          endDateCompare={endDateCompare}
-                          dataCompare={dataChartSmallCompare}
-                          totalDuration={totalDurationSmall}
-                          totalDurationCompare={totalDurationSmallCompare}
-                          handleClickChart={(data: number) => {
-                            if (data && String(data) !== '未設定') {
-                              const select = smallOptions.find(
-                                (item) => item.value === data,
-                              );
-
-                              if (select) {
-                                handleSelectSmall(select);
-                              }
-                            }
-                          }}
-                          handleClickTooltip={(
-                            id: number | null,
-                            isCompare: boolean,
-                          ) => {
-                            handleClickTooltip(
-                              id,
-                              EventWorkCategory.MEDIUM,
-                              isCompare,
+                    <div className="w-[300px] mx-auto">
+                      <Dropdown
+                        label="中カテゴリー選択"
+                        placeholder="-"
+                        placeholderClass="!text-black text-sm font-normal"
+                        className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
+                        labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        options={mediumOptions}
+                        selectedOption={selectedMedium || undefined}
+                        onChange={(data) => handleSelectMedium(data)}
+                        disabled={!selectedLarge}
+                      />
+                    </div>
+                    <div className="min-h-[280px] mt-[10px] flex justify-center">
+                      <PercentageBarCompare
+                        isLast
+                        data={dataChartSmall}
+                        startDate={startDate}
+                        endDate={endDate}
+                        isLoading={isLoadingMedium}
+                        isLoadingCompare={isLoadingMediumCompare}
+                        startDateCompare={startDateCompare}
+                        endDateCompare={endDateCompare}
+                        dataCompare={dataChartSmallCompare}
+                        totalDuration={totalDurationSmall}
+                        totalDurationCompare={totalDurationSmallCompare}
+                        handleClickChart={(data: number) => {
+                          if (data && String(data) !== '未設定') {
+                            const select = smallOptions.find(
+                              (item) => item.value === data,
                             );
-                          }}
-                        />
-                      }
+
+                            if (select) {
+                              handleSelectSmall(select);
+                            }
+                          }
+                        }}
+                        handleClickTooltip={(
+                          id: number | null,
+                          isCompare: boolean,
+                        ) => {
+                          handleClickTooltip(
+                            id,
+                            EventWorkCategory.MEDIUM,
+                            isCompare,
+                          );
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -688,6 +701,7 @@ const PercentageCategoryCompare = ({
           open={isShowModal}
           startDate={startDate}
           endDate={endDate}
+          statisticCategoryList={statisticCategoryList}
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}
           selectedSmall={selectedSmall}
@@ -705,6 +719,7 @@ const PercentageCategoryCompare = ({
           open={isShowModalCompare}
           selectedTags={selectedTags}
           startDate={startDateCompare}
+          statisticCategoryList={statisticCategoryList}
           endDate={endDateCompare}
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}

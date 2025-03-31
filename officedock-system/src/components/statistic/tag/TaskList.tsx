@@ -1,19 +1,25 @@
 import React, { useContext, useState } from 'react';
+
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Checkbox from '@components/common/Checkbox';
+import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
+import TableChart from './TableChart';
+
+import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
+import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
+  StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+
 import useStatisticTask from '@hooks/useStatisticTask';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
-import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
-import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
-import TableChart from './TableChart';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 type Props = {
@@ -22,6 +28,7 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
+  statisticTagsList: StatisticsCategories | undefined;
   creationDataStatisticData: CreationStatisticType[];
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -37,6 +44,7 @@ const TaskListStatisticTags = ({
   endDateCompare,
   isCheckCompare,
   creationDataStatisticData,
+  statisticTagsList,
   removeTag,
   handleSelectLarge,
   handleSelectMedium,
@@ -60,6 +68,8 @@ const TaskListStatisticTags = ({
     totalDurationSmallCompare,
     selectedTags,
     tagsOptions,
+    isSkeletonTagTask,
+    isSkeletonTagTaskCompare,
     setSelectedTags,
   } = useContext(StatisticTagStateContext);
 
@@ -91,7 +101,7 @@ const TaskListStatisticTags = ({
       }
       return totalDurationLarge;
     }
-    return '00:00:00';
+    return '';
   };
   // Get total compare
   const getTotalDurationCompare = () => {
@@ -104,11 +114,13 @@ const TaskListStatisticTags = ({
       }
       return totalDurationLargeCompare;
     }
-    return '00:00:00';
+    return '';
   };
 
   useStatisticTask({
     is_tag_page: true,
+    parentData: statisticTagsList,
+
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -245,10 +257,8 @@ const TaskListStatisticTags = ({
                         return (
                           <div
                             key={item.value}
-                            className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className="w-[32px] truncate">
-                              {item.label}
-                            </span>
+                            className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                            <span className=" truncate">{item.label}</span>
                             <ImageRound
                               onClick={() => {
                                 removeTag(item);
@@ -265,8 +275,8 @@ const TaskListStatisticTags = ({
                 </div>
               </div>
             </div>
-            <div className="flex items-end gap-[20px] justify-center px-[30px] text-sm font-medium">
-              <div className="w-1/4 ">
+            <div className="flex items-end  justify-between px-[30px] text-sm font-medium">
+              <div className="w-[200px] ">
                 <div className="mt-4">
                   <Dropdown
                     label="チーム選択"
@@ -297,7 +307,7 @@ const TaskListStatisticTags = ({
                 )}
               </div>
               {/* Large category */}
-              <div className="w-1/4 ">
+              <div className="w-[200px] ">
                 <div className="mt-4">
                   <Dropdown
                     label="大カテゴリー選択"
@@ -329,7 +339,7 @@ const TaskListStatisticTags = ({
                 )}
               </div>
               {/* Medium category */}
-              <div className="w-1/4">
+              <div className="w-[200px]">
                 <div className="mt-4">
                   <Dropdown
                     label="中カテゴリー選択"
@@ -360,7 +370,7 @@ const TaskListStatisticTags = ({
                 )}
               </div>
               {/* Small category */}
-              <div className="w-1/4">
+              <div className="w-[200px]">
                 <div className="mt-4">
                   <Dropdown
                     label="小カテゴリー選択"
@@ -423,28 +433,33 @@ const TaskListStatisticTags = ({
             </div>
           )}
           <div className="mt-5 px-[30px]">
-            <TableChart
-              ordering={ordering}
-              taskList={
-                isCheckCompare && isShowCompare
-                  ? selectedTags.length > 0
-                    ? taskListCompare
-                    : taskListCompare
-                  : selectedTags.length > 0
-                    ? taskList
-                    : []
-              }
-              totalDuration={
-                isCheckCompare && isShowCompare
-                  ? getTotalDurationCompare()
-                  : getTotalDuration()
-              }
-              listOptionsOrganization={listOptionsOrganization}
-              creationDataStatisticData={creationDataStatisticData}
-              setOrdering={(ord: string) => {
-                setOrdering(ord);
-              }}
-            />
+            {isSkeletonTagTask ||
+            (isShowCompare && isSkeletonTagTaskCompare) ? (
+              <FormSkeleton />
+            ) : (
+              <TableChart
+                ordering={ordering}
+                taskList={
+                  isCheckCompare && isShowCompare
+                    ? selectedTags.length > 0
+                      ? taskListCompare
+                      : taskListCompare
+                    : selectedTags.length > 0
+                      ? taskList
+                      : []
+                }
+                totalDuration={
+                  isCheckCompare && isShowCompare
+                    ? getTotalDurationCompare()
+                    : getTotalDuration()
+                }
+                listOptionsOrganization={listOptionsOrganization}
+                creationDataStatisticData={creationDataStatisticData}
+                setOrdering={(ord: string) => {
+                  setOrdering(ord);
+                }}
+              />
+            )}
           </div>
           <div className="flex justify-center top-[10px] relative min-h-16">
             {isShowCompare ? (

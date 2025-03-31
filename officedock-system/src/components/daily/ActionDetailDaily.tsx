@@ -233,7 +233,7 @@ const ActionDetailDaily = ({
                                   To Do リスト
                                 </p>
                                 <ul
-                                  className="flex flex-col gap-4"
+                                  className="flex flex-col gap-4 max-h-[200px] overflow-y-auto"
                                   {...provided.droppableProps}
                                   ref={provided.innerRef}>
                                   {todoList.map((todo, index) => (
@@ -326,17 +326,19 @@ const ActionDetailDaily = ({
                         <p className="text-xs font-medium text-[#77858F]">
                           タグ
                         </p>
-                        {dataTagsList.map((item) => {
-                          return (
-                            <div
-                              key={item.value}
-                              className="flex gap-2 items-start">
-                              <div className="break-all text-left w-fit px-[10px] py-2 bg-[#EBF2F7] rounded-[20px]">
-                                {item.label}
+                        <div className="flex flex-col gap-4 max-h-[200px] overflow-y-auto">
+                          {dataTagsList.map((item) => {
+                            return (
+                              <div
+                                key={item.value}
+                                className="flex gap-2 items-start">
+                                <div className="break-all text-left w-fit px-[10px] py-2 bg-[#EBF2F7] rounded-[20px]">
+                                  {item.label}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </PopoverPanel>

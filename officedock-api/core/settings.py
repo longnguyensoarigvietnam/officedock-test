@@ -64,7 +64,7 @@ if GOOGLE_CLOUD_PROJECT_ID := os.environ.get("GOOGLE_CLOUD_PROJECT_ID", None):
     # https://django-storages.readthedocs.io/en/latest/backends/gcloud.html
 
     GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME", None)
-    GS_EXPIRATION = 60 * 60 * 24 * 7  # Expires in 7 days
+    GS_EXPIRATION = 5  # Expires in 5 seconds
     GS_CREDENTIALS = GOOGLE_CLOUD_CREDENTIALS
     GS_QUERYSTRING_AUTH = True
     GS_DEFAULT_ACL = None
@@ -147,9 +147,7 @@ REDIS_URL = os.getenv("REDIS_URL", None)
 ASGI_APPLICATION = "core.asgi.application"
 
 if REDIS_URL:
-    redis_config = {
-        "address": REDIS_URL
-    }
+    redis_config = {"address": REDIS_URL}
 
     ca_data = os.getenv("REDIS_CA_CERTS", None)
     if ca_data:
@@ -160,9 +158,7 @@ if REDIS_URL:
         "default": {
             "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
             "CONFIG": {
-                "hosts": [
-                    redis_config
-                ],
+                "hosts": [redis_config],
             },
         },
     }

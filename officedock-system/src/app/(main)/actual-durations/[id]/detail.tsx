@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { format } from 'date-fns';
@@ -14,13 +14,17 @@ import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { DATE_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 
 import useActualDurationDetail from '@hooks/useActualDurationDetail';
+
 import { useToast } from '@providers/ToastProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import { ActualDurationDefaultData } from '@interfaces/durations';
 import { calculateActualDuration, convertToTimeString } from '@utils/date';
 
 const ActualDurationsDetail = () => {
   const params = useParams<{ id: string }>();
   const { showToast } = useToast();
+  const { expanded } = useContext(GlobalStateContext);
   const router = useRouter();
   const [taskScheduleDetail, setTaskScheduleDetail] =
     useState<ActualDurationDefaultData>();
@@ -85,7 +89,7 @@ const ActualDurationsDetail = () => {
   return (
     <div className="flex flex-col justify-between h-full">
       <div className="flex flex-col gap-4 items-center">
-        <ViewInfo label="タイトル名" className="break-words">
+        <ViewInfo label="タイトル名" className={`break-words`} childrenClassName={`${expanded ? '!w-[calc(100%_-_210px)]' : '!w-[calc(100%_-_60px)]'}`}>
           {taskScheduleDetail?.title || '未設定'}{' '}
         </ViewInfo>
         <ViewInfo label="業務の種類">

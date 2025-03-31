@@ -26,6 +26,12 @@ function StatisticTeamCalendar() {
     setEndDate,
     setStartDateCompare,
     setEndDateCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
   } = useContext(StatisticTeamStateContext);
   const modalRef = useRef<HTMLDivElement | null>(null);
   const buttonPrev = useRef<HTMLDivElement | null>(null);
@@ -208,6 +214,11 @@ function StatisticTeamCalendar() {
 
   // Save data time
   const handleSaveCalendar = () => {
+    if (dataEndDate !== endDate || dataStartDate !== startDate) {
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingOrganization(true);
+    }
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setIsCheckCompare(isDataCheckCompare);
@@ -224,6 +235,21 @@ function StatisticTeamCalendar() {
 
   // Save data time compare
   const handleSaveCalendarCompare = () => {
+    // Loading
+    if (dataEndDate !== endDate || dataStartDate !== startDate) {
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingOrganization(true);
+    }
+    if (
+      dataEndDateCompare !== endDateCompare ||
+      dataStartDateCompare !== startDateCompare
+    ) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+    }
+    // Data
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setStartDateCompare(dataStartDateCompare);

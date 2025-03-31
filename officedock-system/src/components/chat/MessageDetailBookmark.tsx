@@ -286,6 +286,7 @@ export const MessageDetailBookmark = ({
                                                       file?.compressedFile ||
                                                         '',
                                                     )}
+                                                    unoptimized={true}
                                                     alt="Image"
                                                     width={150}
                                                     height={100}
@@ -322,6 +323,7 @@ export const MessageDetailBookmark = ({
                               className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                               <div className={`flex flex-col items-start`}>
                                 <p className="w-fit font-semibold text-black">
+                                  {messageDetail.sender.fullName}{' '}
                                   {EVENT_DELETED}
                                 </p>
                                 <p className="font-semibold mt-2">日時</p>

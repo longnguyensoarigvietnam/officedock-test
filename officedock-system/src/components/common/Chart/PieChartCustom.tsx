@@ -69,12 +69,21 @@ const PieChartCustom = ({
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
-  const filteredData = data
-  .map((value, index) => ({ value, label: labels[index], color: colors?.[index] }))
-  .filter(item => item.value > 0);
+  const filteredData = data.reduce<
+    { value: number; label: string; color?: string }[]
+  >((acc, value, index) => {
+    if (value > 0) {
+      acc.push({
+        value,
+        label: labels[index],
+        color: colors?.[index],
+      });
+    }
+    return acc;
+  }, []);
 
   const chartData: ChartData<'pie', number[], string> = {
-    labels: filteredData.map(item => item.label),
+    labels: filteredData.map((item) => item.label),
     datasets: [
       {
         data,
@@ -123,19 +132,18 @@ const PieChartCustom = ({
 
       datalabels: {
         formatter: (value, context: Context) => {
-          const maxLength = 20;
-          const label = context.chart.data.labels?.[context.dataIndex];
+          if (value < 20) return `${value}%`;
 
-          if (typeof label === 'string') {
-            const truncatedLabel =
-              label.length > maxLength
-                ? `${label.substring(0, maxLength)}...`
-                : label;
+          const label = String(
+            context.chart.data.labels?.[context.dataIndex] || '',
+          );
+          const maxLabelLength = 10;
+          const truncatedLabel =
+            label.length > maxLabelLength
+              ? `${label.substring(0, maxLabelLength)}...`
+              : label;
 
-            return `${truncatedLabel}\n${value}%`;
-          }
-
-          return `${value}%`;
+          return `${truncatedLabel}\n${value}%`;
         },
         color: '#fff',
         font: {
@@ -182,6 +190,10 @@ const PieChartCustom = ({
 
   return (
     <div
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setTooltipData(null);
+      }}
       onClick={(e: any) => {
         handleClick(e);
       }}

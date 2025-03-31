@@ -1,14 +1,16 @@
 'use client';
 
 import { useQuery } from 'react-query';
+import { useContext } from 'react';
+import { AxiosError } from 'axios';
 import { useSession } from 'next-auth/react';
 
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { StatisticsCategories } from '@interfaces/statistic';
-import { AxiosError } from 'axios';
 import { OptionDropdownType } from '@interfaces/common';
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 
 interface FilterProps {
   endDate: string | Date;
@@ -31,6 +33,16 @@ const useStatisticTagsTeam = ({
 }) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
+  const {
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
+    setIsLoadingSmall,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
+    setIsLoadingSmallCompare,
+  } = useContext(StatisticTeamTagsStateContext);
 
   // Handle call API get statistic tags list team
   const getStatisticTagsListTeam = async () => {
@@ -73,7 +85,16 @@ const useStatisticTagsTeam = ({
     onError: (error: AxiosError) => {
       onError && onError(error);
     },
-    onSettled: () => {},
+    onSettled: () => {
+      setIsLoadingLarge(false);
+      setIsLoadingMedium(false);
+      setIsLoadingOrganization(false);
+      setIsLoadingSmall(false);
+      setIsLoadingLargeCompare(false);
+      setIsLoadingMediumCompare(false);
+      setIsLoadingOrganizationCompare(false);
+      setIsLoadingSmallCompare(false);
+    },
   });
 
   return {

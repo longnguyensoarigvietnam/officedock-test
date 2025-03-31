@@ -10,9 +10,16 @@ import {
   PermissionType,
   ScreenAction,
   ScreenName,
+  StatusTask,
 } from '@constants/enums';
 import { formatTime24h } from './date';
-import { Task } from '@interfaces/task';
+import {
+  ResultTeam,
+  StatusSummary,
+  Task,
+  TransformedUser,
+  UserTotalStatus,
+} from '@interfaces/task';
 import { MAX_HEX_COLOR_VALUE } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
@@ -368,7 +375,7 @@ export const adjustPositionForViewport = (
   numberOfEvents: number,
 ) => {
   let { top, left } = position;
-  const popupWidth = 250;
+  const popupWidth = 320;
   let popupHeight = 300;
   switch (true) {
     case numberOfEvents >= 10:
@@ -702,3 +709,61 @@ export function lightenColor(color: string | null, percent: number): string {
 
   return rgbToHex(mixWithWhite(hexToRgb(color || defaultColor), percent));
 }
+
+// Transform data team task
+export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
+  return result.map((user) => ({
+    id: `user_${user.id}`,
+    name: user.profile.fullName,
+    statuses: {
+      NOT_STARTED:
+        user.status
+          .find((status) => status.id === 1)
+          ?.tasks.map((task) => ({
+            ...task,
+          })) || [],
+      IN_PROGRESS:
+        user.status
+          .find((status) => status.id === 2)
+          ?.tasks.map((task) => ({
+            ...task,
+          })) || [],
+      CONFIRMING:
+        user.status
+          .find((status) => status.id === 3)
+          ?.tasks.map((task) => ({
+            ...task,
+          })) || [],
+      COMPLETED:
+        user.status
+          .find((status) => status.id === 4)
+          ?.tasks.map((task) => ({
+            ...task,
+          })) || [],
+    },
+  }));
+}
+// Transformer data total status
+export const transformDataTotalStatus = (
+  data: ResultTeam[],
+): UserTotalStatus[] => {
+  return data.map((user) => ({
+    id: `user_${user.id}`,
+    fullName: user.profile.fullName,
+    statuses: user.status.map((status) => ({
+      name: status.name,
+      total: status.total,
+      hasNext: status.hasNext,
+    })),
+  }));
+};
+
+// Convert data total status
+export const findStatusTeamByUser = (
+  users: UserTotalStatus[],
+  userId: string,
+  status: keyof typeof StatusTask,
+): StatusSummary | undefined => {
+  const user = users.find((user) => user.id === userId);
+  return user?.statuses.find((s) => s.name === StatusTask[status]);
+};

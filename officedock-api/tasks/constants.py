@@ -1,9 +1,13 @@
+from dateutil import rrule
+
 from base.constants import EnumChoices
 
 DEFAULT_PAGE_SIZE = 4  # Set a default value or raise an error if necessary
 INITIAL_INDEX_VALUE = 10000  # Constant to define the initial index value when no existing index is found
-INDEX_INCREMENT = 1  # Constant to define the increment value for index updates
-COPY_TEXT = "コピー"  # Constant to define the text for the title task copy
+INDEX_INCREMENT = (
+    100  # Constant to define the increment value for index updates
+)
+LIMIT_DAY = 364  # Constant to define limit store loop date
 
 
 class TaskTypes(EnumChoices):
@@ -28,16 +32,6 @@ class TaskStatus(EnumChoices):
     CONFIRMING = "確認中"
     COMPLETED = "完了"
     MY_ROUTINE = "固定タスク"
-
-
-class TaskPriorities(EnumChoices):
-    """
-    PriorityTypes constants.
-    """
-
-    HIGH = "高"
-    MEDIUM = "中"
-    LOW = "低"
 
 
 class TaskCategoryTypes(EnumChoices):
@@ -66,3 +60,22 @@ TASK_WORK_TYPES = {
     TaskCategoryTypes.MEDIUM.value: ["中カテゴリ1", "中カテゴリ2", "中カテゴリ3"],
     TaskCategoryTypes.SMALL.value: ["小カテゴリ1", "小カテゴリ2", "小カテゴリ3"],
 }
+
+
+class FrequencyMap(EnumChoices):
+    ONCE = "ONCE"
+    DAILY = "DAILY"
+    WEEKLY = "WEEKLY"
+    MONTHLY = "MONTHLY"
+    YEARLY = "YEARLY"
+
+    @classmethod
+    def to_rrule(cls, value):
+        """Change enum to rrule value"""
+        mapping = {
+            cls.DAILY: rrule.DAILY,
+            cls.WEEKLY: rrule.WEEKLY,
+            cls.MONTHLY: rrule.MONTHLY,
+            cls.YEARLY: rrule.YEARLY,
+        }
+        return mapping.get(value, None)
