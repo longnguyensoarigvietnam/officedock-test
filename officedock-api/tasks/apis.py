@@ -780,6 +780,7 @@ class TaskViewSet(
         remind_countdown = serializer_data.pop("remind_countdown", None)
         remind_type = serializer_data.pop("remind_type", None)
         # Item for loop task schedule
+        is_exists_repeat = "repeat_type" in serializer_data
         plan_start_date = serializer_data.pop("plan_start_date", None)
         plan_end_date = serializer_data.pop("plan_end_date", None)
         repeat_type = serializer_data.pop("repeat_type", None)
@@ -787,7 +788,7 @@ class TaskViewSet(
         week_day = serializer_data.pop("week_day", None)
         month_day = serializer_data.pop("month_day", None)
         month = serializer_data.pop("month", None)
-
+        old_recurring = current_task.recurring
         # Implement create task template base on T146
         if current_task.type == TaskTypes.MY_TEMPLATE.value:
             if task_status and task_status.name != TaskStatus.NOT_STARTED.value:
@@ -822,7 +823,7 @@ class TaskViewSet(
             )
         ):
             reset_sort_task(user)
-        if repeat_type:
+        if is_exists_repeat:
             serializer_data["recurring"] = {
                 "repeat_type": repeat_type,
                 "plan_start_date": plan_start_date.isoformat()
@@ -851,24 +852,22 @@ class TaskViewSet(
                 ChatMessageTypes.EDIT_TASK.value,
             )
 
-        if (
+        if (is_exists_repeat and old_recurring) and (
             (
-                current_task.recurring
-                and current_task.recurring["repeat_type"]
-                == FrequencyMap.ONCE.value
+                old_recurring["repeat_type"] == FrequencyMap.ONCE.value
                 and repeat_type != FrequencyMap.ONCE.value
             )
             or (
-                current_task.recurring
-                and current_task.recurring["repeat_type"]
-                != FrequencyMap.ONCE.value
+                old_recurring["repeat_type"] != FrequencyMap.ONCE.value
                 and repeat_type == FrequencyMap.ONCE.value
             )
-            or task_schedules is None
         ):
             task.task_schedules.all().delete()
         if (
-            task_status.name == TaskStatus.MY_ROUTINE.value
+            is_exists_repeat
+            and old_recurring
+            and task.status.name == TaskStatus.MY_ROUTINE.value
+            and task.recurring != old_recurring
             and repeat_type is None
         ):
             task.task_schedules.all().delete()
@@ -1086,12 +1085,11 @@ class TaskViewSet(
                     },
                     user=user,
                 )
-
         # Create task schedule base on repeat
         if (
             task.status.name == TaskStatus.MY_ROUTINE.value
             and task.recurring
-            and task.recurring != current_task.recurring
+            and task.recurring != old_recurring
         ):
             self._generate_loop_task_schedules(
                 task,
@@ -1102,7 +1100,7 @@ class TaskViewSet(
                 month_day,
                 plan_end_date,
                 month,
-                old_recurring=current_task.recurring,
+                old_recurring=old_recurring,
             )
 
         return self.response_ok(
