@@ -412,7 +412,11 @@ class TaskViewSet(
             task.task_schedules.all().delete()
         if task.task_schedules.exists():
             list_task_schedule_edited = None
-            if old_recurring:
+            if (
+                old_recurring
+                and old_recurring.get("plan_start_date")
+                and old_recurring.get("plan_end_date")
+            ):
                 plan_start_time = datetime.strptime(
                     old_recurring["plan_start_date"], "%Y-%m-%dT%H:%M:%S"
                 ).timetz()
@@ -1088,6 +1092,7 @@ class TaskViewSet(
         # Create task schedule base on repeat
         if (
             task.status.name == TaskStatus.MY_ROUTINE.value
+            and repeat_type
             and task.recurring
             and task.recurring != old_recurring
         ):
