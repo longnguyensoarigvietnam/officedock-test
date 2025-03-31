@@ -14,6 +14,7 @@ import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
+  StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
@@ -27,6 +28,7 @@ type Props = {
   endDate: Date | null;
   startDateCompare: Date;
   endDateCompare: Date | null;
+  statisticTagsList: StatisticsCategories | undefined;
   creationDataStatisticData: CreationStatisticType[];
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
@@ -42,6 +44,7 @@ const TaskListStatisticTags = ({
   endDateCompare,
   isCheckCompare,
   creationDataStatisticData,
+  statisticTagsList,
   removeTag,
   handleSelectLarge,
   handleSelectMedium,
@@ -116,6 +119,8 @@ const TaskListStatisticTags = ({
 
   useStatisticTask({
     is_tag_page: true,
+    parentData: statisticTagsList,
+
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -270,8 +275,8 @@ const TaskListStatisticTags = ({
                 </div>
               </div>
             </div>
-            <div className="flex items-end gap-[20px] justify-center px-[30px] text-sm font-medium">
-              <div className="w-1/4 ">
+            <div className="flex items-end  justify-between px-[30px] text-sm font-medium">
+              <div className="w-[200px] ">
                 <div className="mt-4">
                   <Dropdown
                     label="チーム選択"
@@ -302,7 +307,7 @@ const TaskListStatisticTags = ({
                 )}
               </div>
               {/* Large category */}
-              <div className="w-1/4 ">
+              <div className="w-[200px] ">
                 <div className="mt-4">
                   <Dropdown
                     label="大カテゴリー選択"
@@ -334,7 +339,7 @@ const TaskListStatisticTags = ({
                 )}
               </div>
               {/* Medium category */}
-              <div className="w-1/4">
+              <div className="w-[200px]">
                 <div className="mt-4">
                   <Dropdown
                     label="中カテゴリー選択"
@@ -365,7 +370,7 @@ const TaskListStatisticTags = ({
                 )}
               </div>
               {/* Small category */}
-              <div className="w-1/4">
+              <div className="w-[200px]">
                 <div className="mt-4">
                   <Dropdown
                     label="小カテゴリー選択"

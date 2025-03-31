@@ -14,7 +14,10 @@ import { PAGINATION_PAGE_SIZE_SMALL } from '@constants';
 import { EventWorkCategory, OrderingDataType } from '@constants/enums';
 
 import { formatDateToYMD, formatTimeToJapanese } from '@utils/date';
-import { DataTaskListStatisticListType } from '@interfaces/statistic';
+import {
+  DataTaskListStatisticListType,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 import useStatisticTask from '@hooks/useStatisticTask';
 
@@ -25,6 +28,8 @@ type Props = {
     type: string;
   } | null;
   selectedOrganization: OptionDropdownType | null;
+  statisticTagsListTeam: StatisticsCategories | undefined;
+
   selectedLarge: OptionDropdownType | null;
   selectedMedium: OptionDropdownType | null;
   selectedSmall: OptionDropdownType | null;
@@ -46,6 +51,7 @@ const ListTaskDetailStatisticTagModal = ({
   selectedOrganization,
   onClose,
   handleScroll,
+  statisticTagsListTeam,
 }: Props) => {
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -58,6 +64,7 @@ const ListTaskDetailStatisticTagModal = ({
   const [isSkeletonLoading, setIsSkeletonLoading] = useState(true);
 
   const { refetchStatisticCategoryList } = useStatisticTask({
+    parentData: statisticTagsListTeam,
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',

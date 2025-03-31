@@ -37,15 +37,19 @@ const PieChart = ({
     'rgba(75, 192, 192, 0.8)',
   ];
 
-  const filteredData = data
-    .map((value, index) => ({
-      value,
-      label: labels[index],
-      color: colors?.[index],
-      actualValue: actualValues[index],
-    }))
-    .filter((item) => item.value > 0);
-
+  const filteredData = data.reduce<
+    { value: number; label: string; color?: string; actualValue: string }[]
+  >((acc, value, index) => {
+    if (value > 0) {
+      acc.push({
+        value,
+        label: labels[index],
+        color: colors?.[index],
+        actualValue: actualValues[index],
+      });
+    }
+    return acc;
+  }, []);
   const chartData: ChartData<'pie', number[], string> = {
     labels: filteredData.map((item) => item.label),
     datasets: [
@@ -70,11 +74,20 @@ const PieChart = ({
       },
       tooltip: {
         enabled: showTooltip,
+
         callbacks: {
+          title: () => '',
           label: (tooltipItem) => {
             const value = tooltipItem.raw as number;
             const actualValue = actualValues[tooltipItem.dataIndex];
-            return [`${tooltipItem.label} : ${value}%`, `${actualValue}`];
+
+            const maxLabelLength = 15;
+            let label = tooltipItem.label;
+            if (label.length > maxLabelLength) {
+              label = `${label.substring(0, maxLabelLength)}...`;
+            }
+
+            return [`${label} : ${value}%`, `${actualValue}`];
           },
         },
       },

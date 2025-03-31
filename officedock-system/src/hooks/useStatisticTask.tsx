@@ -66,6 +66,7 @@ const useStatisticTask = ({
   // Handle call API get statistic category list
   const getStatisticCategoryList = async () => {
     if (!filter?.organizationIds) return null;
+
     if (filter?.totalDuration === '') return null;
 
     if (isTeam && !filter.user_id) return [];

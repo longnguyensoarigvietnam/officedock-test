@@ -134,7 +134,7 @@ const MultiSelectUserDropdown = ({
                   size={30}
                   customClassName="mt-[2px]"
                 />
-                <span className="truncate text-sm font-medium">
+                <span className={` text-sm font-medium ${labelOptionClass}`}>
                   {option.label}
                 </span>
               </div>

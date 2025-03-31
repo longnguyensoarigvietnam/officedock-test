@@ -16,6 +16,7 @@ import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import {
   CreationStatisticType,
   DataTaskListStatisticListType,
+  StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
@@ -28,6 +29,7 @@ type Props = {
   startDateCompare: Date;
   endDateCompare: Date | null;
   creationDataStatisticData: CreationStatisticType;
+  statisticCategoryListTeam: StatisticsCategories | undefined;
   handleSelectOrganization: (data: OptionDropdownType) => void;
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
@@ -41,6 +43,7 @@ const TaskListTeamStatistic = ({
   startDateCompare,
   endDateCompare,
   isCheckCompare,
+  statisticCategoryListTeam,
   creationDataStatisticData,
   handleSelectLarge,
   handleSelectMedium,
@@ -118,6 +121,7 @@ const TaskListTeamStatistic = ({
 
   useStatisticTask({
     isTeam: true,
+    parentData: statisticCategoryListTeam,
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -217,6 +221,7 @@ const TaskListTeamStatistic = ({
                 isShowIconFilter
                 options={tagsOptions}
                 placeholder="集計対象のタグを選択"
+                labelOptionClass="break-all"
                 className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {
@@ -247,8 +252,8 @@ const TaskListTeamStatistic = ({
                   return (
                     <div
                       key={item.value}
-                      className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="min-w-[32px] max-w-[80px] truncate">
+                      className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className="min-w-[32px]  truncate">
                         {item.label}
                       </span>
                       <ImageRound
@@ -303,7 +308,7 @@ const TaskListTeamStatistic = ({
                       color={member.color}
                     />
                   </div>
-                  <span className="break-all w-full truncate">
+                  <span className="break-all max-w-[800px] w-full truncate">
                     {member.fullName}
                   </span>
                 </div>

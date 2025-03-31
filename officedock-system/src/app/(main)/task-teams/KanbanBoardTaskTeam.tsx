@@ -322,6 +322,35 @@ const KanbanBoardTaskTeam = () => {
     const [destUserId, destStatus] = destination.droppableId.split('-');
 
     if (!sourceUserId || !sourceStatus || !destUserId || !destStatus) return;
+
+    const newUsers = listDataKanbanTeam.map((user) => ({
+      ...user,
+      statuses: { ...user.statuses },
+    }));
+
+    const sourceUser = newUsers.find((user) => user.id === sourceUserId);
+    const destUser = newUsers.find((user) => user.id === destUserId);
+    if (!sourceUser || !destUser) return;
+
+    const sourceTasks = [
+      ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
+    ];
+    const destTasks = [
+      ...destUser.statuses[destStatus as keyof TransformedStatuses],
+    ];
+
+    const [movedTask] = sourceTasks.splice(source.index, 1);
+    if (!movedTask) return;
+
+    if (sourceUserId !== destUserId || sourceStatus !== destStatus) {
+      setIsReadyToFetch(false);
+      setDataOrderRing('');
+    }
+
+    // Return if task is running
+    if (sourceUserId !== destUserId && movedTask.hasActualDuration) {
+      return;
+    }
     // Update total
     updateTaskStatusTotalWhenDrop({
       newUserId: destUserId,
@@ -330,192 +359,109 @@ const KanbanBoardTaskTeam = () => {
       oldStatusName: StatusTask[sourceStatus as keyof typeof StatusTask],
     });
 
-    setListDataKanbanTeam((prevUsers) => {
-      const newUsers = prevUsers.map((user) => ({
-        ...user,
-        statuses: { ...user.statuses },
-      }));
+    // Item
+    const belowItem = destTasks[destination.index];
+    const aboveItem = destTasks[destination.index - 1]; // Item above drop position
 
-      const sourceUser = newUsers.find((user) => user.id === sourceUserId);
-      const destUser = newUsers.find((user) => user.id === destUserId);
-      if (!sourceUser || !destUser) return prevUsers;
-      const sourceTasks = [
-        ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
-      ];
-      const destTasks = [
-        ...destUser.statuses[destStatus as keyof TransformedStatuses],
-      ];
+    let newPinAt = movedTask.pinAt;
+    let newIndex = movedTask.index;
 
-      const [movedTask] = sourceTasks.splice(source.index, 1);
-
-      if (!movedTask) return prevUsers;
-
-      // Item
-      const belowItem = destTasks[destination.index];
-      const aboveItem = destTasks[destination.index - 1]; // Item above drop position
-
-      if (sourceUserId !== destUserId || sourceStatus !== destStatus) {
-        setIsReadyToFetch(false);
-        setDataOrderRing('');
+    if (movedTask.pinAt) {
+      if (!belowItem?.pinAt && !aboveItem?.pinAt) {
+        // If neither top nor bottom has pinAt -> Move item to top of list
+        newPinAt = convertDateStringFull(new Date());
+        destTasks.unshift({
+          ...movedTask,
+          pinAt: newPinAt,
+          status: {
+            id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+            name: StatusTask[destStatus as keyof typeof StatusTask],
+          },
+        });
+      } else {
+        const dateAtPrev = aboveItem ? aboveItem.pinAt : null;
+        const dateAtNext = belowItem ? belowItem.pinAt : null;
+        newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
+        destTasks.splice(destination.index, 0, {
+          ...movedTask,
+          pinAt: newPinAt,
+          status: {
+            id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+            name: StatusTask[destStatus as keyof typeof StatusTask],
+          },
+        });
       }
-      // Return if task is running
-      if (sourceUserId !== destUserId && movedTask.hasActualDuration) {
-        return newUsers;
-      }
+    } else {
+      if (belowItem?.pinAt) {
+        // If the item behind has pinAt -> Move all items with pinAt down
+        const indexBelowPinnedItems = destTasks.findIndex(
+          (task) => !task.pinAt,
+        );
 
-      if (movedTask.pinAt) {
-        if (!belowItem?.pinAt && !aboveItem?.pinAt) {
-          // If neither top nor bottom has pinAt -> Move item to top of list
-          const newPinAt = convertDateStringFull(new Date());
-          destTasks.unshift({
+        if (indexBelowPinnedItems !== -1) {
+          const firstNonPinnedItem = destTasks[indexBelowPinnedItems];
+          newIndex = firstNonPinnedItem.index + INITIAL_INDEX_VALUE;
+          destTasks.splice(indexBelowPinnedItems, 0, {
             ...movedTask,
-            pinAt: newPinAt,
+            index: newIndex,
             status: {
               id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
               name: StatusTask[destStatus as keyof typeof StatusTask],
             },
-          });
-          updateTaskIndex({
-            tasks: [
-              {
-                task: movedTask.id as number,
-                peopleInCharge: destUserId.replace('user_', ''),
-
-                index: movedTask.index,
-                status:
-                  StatusValueTask[destStatus as keyof typeof StatusValueTask],
-                pinAt: newPinAt,
-                team: organizationId as string,
-              },
-            ],
           });
         } else {
-          const dateAtPrev = aboveItem ? aboveItem.pinAt : null;
-          const dateAtNext = belowItem ? belowItem.pinAt : null;
-
-          // Create new pinAt for movedTask
-          const newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
-          // If there is pinAt above or below -> Insert at the correct drop position
-          destTasks.splice(destination.index, 0, {
+          newIndex = INITIAL_INDEX_VALUE * 1000;
+          destTasks.push({
             ...movedTask,
-            pinAt: newPinAt,
+            index: newIndex,
             status: {
               id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
               name: StatusTask[destStatus as keyof typeof StatusTask],
             },
-          });
-          updateTaskIndex({
-            tasks: [
-              {
-                task: movedTask.id as number,
-                index: movedTask.index,
-                peopleInCharge: destUserId.replace('user_', ''),
-
-                status:
-                  StatusValueTask[destStatus as keyof typeof StatusValueTask],
-                pinAt: newPinAt,
-                team: organizationId as string,
-              },
-            ],
           });
         }
       } else {
-        // If item does not have pinAt
-        if (belowItem?.pinAt) {
-          // If the item behind has pinAt -> Move all items with pinAt down
-          const indexBelowPinnedItems = destTasks.findIndex(
-            (task) => !task.pinAt,
-          );
-
-          if (indexBelowPinnedItems !== -1) {
-            const firstNonPinnedItem = destTasks[indexBelowPinnedItems];
-            const indexNew = firstNonPinnedItem.index + INITIAL_INDEX_VALUE;
-            destTasks.splice(indexBelowPinnedItems, 0, {
-              ...movedTask,
-              index: indexNew,
-              status: {
-                id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
-                name: StatusTask[destStatus as keyof typeof StatusTask],
-              },
-            });
-            updateTaskIndex({
-              tasks: [
-                {
-                  task: movedTask.id as number,
-                  status:
-                    StatusValueTask[destStatus as keyof typeof StatusValueTask],
-                  index: indexNew,
-                  peopleInCharge: destUserId.replace('user_', ''),
-                  team: organizationId as string,
-                },
-              ],
-            });
-          } else {
-            const indexNew = INITIAL_INDEX_VALUE * 1000;
-            destTasks.push({
-              ...movedTask,
-              index: indexNew,
-              status: {
-                id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
-                name: StatusTask[destStatus as keyof typeof StatusTask],
-              },
-            });
-            updateTaskIndex({
-              tasks: [
-                {
-                  task: movedTask.id as number,
-                  peopleInCharge: destUserId.replace('user_', ''),
-                  status:
-                    StatusValueTask[destStatus as keyof typeof StatusValueTask],
-                  index: indexNew,
-                  team: organizationId as string,
-                },
-              ],
-            });
-          }
-        } else {
-          // If there is no pinAt behind -> Insert into the correct drop position
-          let prevItemIndex = belowItem ? belowItem.index : INITIAL_INDEX_VALUE;
-          if (belowItem && belowItem.pinAt) {
-            prevItemIndex = INITIAL_INDEX_VALUE;
-          }
-          const nextItemIndex = aboveItem
-            ? aboveItem.index
-            : -INITIAL_INDEX_VALUE;
-          const dataIndex =
-            prevItemIndex === INITIAL_INDEX_VALUE ||
-            nextItemIndex === INITIAL_INDEX_VALUE
-              ? prevItemIndex + nextItemIndex
-              : (prevItemIndex + nextItemIndex) / 2;
-
-          destTasks.splice(destination.index, 0, {
-            ...movedTask,
-            index: dataIndex,
-            status: {
-              id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
-              name: StatusTask[destStatus as keyof typeof StatusTask],
-            },
-          });
-          updateTaskIndex({
-            tasks: [
-              {
-                task: movedTask.id as number,
-                peopleInCharge: destUserId.replace('user_', ''),
-                status:
-                  StatusValueTask[destStatus as keyof typeof StatusValueTask],
-                index: dataIndex,
-                team: organizationId as string,
-              },
-            ],
-          });
+        // If there is no pinAt behind -> Insert into the correct drop position
+        let prevItemIndex = belowItem ? belowItem.index : INITIAL_INDEX_VALUE;
+        if (belowItem && belowItem.pinAt) {
+          prevItemIndex = INITIAL_INDEX_VALUE;
         }
+        const nextItemIndex = aboveItem
+          ? aboveItem.index
+          : -INITIAL_INDEX_VALUE;
+        newIndex =
+          prevItemIndex === INITIAL_INDEX_VALUE ||
+          nextItemIndex === INITIAL_INDEX_VALUE
+            ? prevItemIndex + nextItemIndex
+            : (prevItemIndex + nextItemIndex) / 2;
+
+        destTasks.splice(destination.index, 0, {
+          ...movedTask,
+          index: newIndex,
+          status: {
+            id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+            name: StatusTask[destStatus as keyof typeof StatusTask],
+          },
+        });
       }
+    }
 
-      sourceUser.statuses[sourceStatus as keyof TransformedStatuses] =
-        sourceTasks;
-      destUser.statuses[destStatus as keyof TransformedStatuses] = destTasks;
+    sourceUser.statuses[sourceStatus as keyof TransformedStatuses] =
+      sourceTasks;
+    destUser.statuses[destStatus as keyof TransformedStatuses] = destTasks;
+    setListDataKanbanTeam(newUsers);
 
-      return newUsers;
+    updateTaskIndex({
+      tasks: [
+        {
+          task: movedTask.id as number,
+          peopleInCharge: destUserId.replace('user_', ''),
+          index: newIndex,
+          status: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+          pinAt: newPinAt,
+          team: organizationId as string,
+        },
+      ],
     });
   };
 

@@ -976,6 +976,9 @@ export const getDaysFromTimeOption = (
         } else {
           date.setMonth(startDate.getMonth() + 1);
         }
+        if (date.getDate() !== startDate.getDate()) {
+          return 31;
+        }
 
         return Math.abs(
           Math.floor(
@@ -1093,6 +1096,17 @@ export const handleSetStartDateAfter = (
   }
 
   return newStartDateAfter;
+};
+
+export const getAdjustedStartDateDefault = () => {
+  const today = new Date();
+
+  if (today.getDate() === 31) {
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+  return new Date(
+    new Date().setMonth(new Date().getMonth() - 1) + 24 * 60 * 60 * 1000,
+  );
 };
 
 // Get Japanese week day

@@ -67,6 +67,7 @@ import {
 } from '@utils/date';
 import { getRandomColor } from '@utils';
 import RangeSlider from '@components/common/RangeSlider';
+import { isAfter, isBefore, isToday } from 'date-fns';
 
 const ScheduleTeamBoard = () => {
   // Context
@@ -175,12 +176,19 @@ const ScheduleTeamBoard = () => {
         );
 
         calendarRef.current?.getApi().refetchEvents();
-
-        getPlanEventCalendarByTeam({
-          organizationId: String(organizationId),
-          startDate: startDateISOString,
-          endDate: endDateISOString,
-        });
+        if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
+          getPlanEventCalendarByTeam({
+            organizationId: String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
+        } else {
+          getActualEventCalendarByTeam({
+            organizationId: String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -354,6 +362,9 @@ const ScheduleTeamBoard = () => {
 
   const handleNavigateToSpecificDay = (date: Date) => {
     if (calendarRef.current) {
+      if (calendarRef.current.getApi().getDate().getTime() == date.getTime()) {
+        return;
+      }
       const calendarApi = calendarRef.current.getApi() as any;
       calendarApi.gotoDate(date);
 
@@ -364,10 +375,24 @@ const ScheduleTeamBoard = () => {
         calendarApi.view.activeEnd,
       );
 
-      if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
-        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
-      } else {
+      const startDate = new Date(startDateISOString);
+      const today = new Date();
+
+      if (isToday(startDate)) {
+        if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
+          debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+        } else {
+          debouncedFetchCalendarDataActual(
+            startDateISOString,
+            endDateISOString,
+          );
+        }
+      } else if (isBefore(startDate, today)) {
+        setOptionShow(ItemScheduleTitleType.ACTUAL);
         debouncedFetchCalendarDataActual(startDateISOString, endDateISOString);
+      } else if (isAfter(startDate, today)) {
+        setOptionShow(ItemScheduleTitleType.PLANS);
+        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
       }
     }
   };
@@ -381,6 +406,8 @@ const ScheduleTeamBoard = () => {
     startDate?: string;
     endDate?: string;
   }) => {
+    setIsLoading(true);
+
     const params = new URLSearchParams({
       ...(organizationId && { organization_id: String(organizationId) }),
       start_date: startDate || String(currentRange.start),
@@ -463,6 +490,7 @@ const ScheduleTeamBoard = () => {
     startDate?: string;
     endDate?: string;
   }) => {
+    setIsLoading(true);
     const params = new URLSearchParams({
       ...(organizationId && { organization_id: String(organizationId) }),
       start_date: startDate || String(currentRange.start),
@@ -741,7 +769,7 @@ const ScheduleTeamBoard = () => {
                 className="!w-[8px] !h-[10px] hover:cursor-pointer"
               />
               <div className="flex items-end font-normal gap-2">
-                <p className="text-[30px] text-[#5B6770] font-medium">
+                <p className="text-[30px] text-[#5B6770]  font-medium">
                   {displayMonth}月
                 </p>
                 <p className="text-[30px] text-[#5B6770] font-medium">
@@ -916,7 +944,7 @@ const ScheduleTeamBoard = () => {
                         </p>
                       </>
                     ) : (
-                      <>
+                      <div className="flex flex-wrap gap-2 w-[340px]">
                         {allLabels.map((item, index) => (
                           <div
                             key={index}
@@ -929,8 +957,8 @@ const ScheduleTeamBoard = () => {
                                 item.value,
                               );
                             }}
-                            className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
-                            <span className="w-[71px] truncate">
+                            className=" h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
+                            <span className="min-w-[71px] truncate">
                               {item.label}
                             </span>
                             <ImageRound
@@ -940,7 +968,7 @@ const ScheduleTeamBoard = () => {
                             />
                           </div>
                         ))}
-                      </>
+                      </div>
                     )}
                   </div>
                   <Transition

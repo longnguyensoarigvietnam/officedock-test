@@ -15,7 +15,10 @@ import { PAGINATION_PAGE_SIZE_SMALL } from '@constants';
 import { EventWorkCategory, OrderingDataType } from '@constants/enums';
 
 import { formatDateToYMD, formatTimeToJapanese } from '@utils/date';
-import { DataTaskListStatisticListType } from '@interfaces/statistic';
+import {
+  DataTaskListStatisticListType,
+  StatisticsCategories,
+} from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
 type Props = {
@@ -25,6 +28,7 @@ type Props = {
     type: string;
   } | null;
   selectedOrganization: OptionDropdownType | null;
+  statisticCategoryList: StatisticsCategories | undefined;
   open: boolean;
   startDate: Date;
   endDate: Date | null;
@@ -49,6 +53,7 @@ const ListTaskDetailStatisticModal = ({
   selectedSmall,
   onClose,
   handleScroll,
+  statisticCategoryList,
 }: Props) => {
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -61,6 +66,7 @@ const ListTaskDetailStatisticModal = ({
   const [isSkeletonLoading, setIsSkeletonLoading] = useState(true);
 
   const { refetchStatisticCategoryList } = useStatisticTask({
+    parentData: statisticCategoryList,
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',

@@ -769,21 +769,29 @@ const LineChartCompare = ({
             <div className="h-[22px]"></div>
             <div className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
-                {info.row.original.standardInfo?.categoryDuration.split(':')[0] || 0}
+                {info.row.original.standardInfo?.categoryDuration.split(
+                  ':',
+                )[0] || 0}
                 時間
               </p>
               <p>
-                {info.row.original.standardInfo?.categoryDuration.split(':')[1] || 0}
+                {info.row.original.standardInfo?.categoryDuration.split(
+                  ':',
+                )[1] || 0}
                 分
               </p>
             </div>
             <div className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
-                {info.row.original.compareInfo?.categoryDuration.split(':')[0] || 0}
+                {info.row.original.compareInfo?.categoryDuration.split(
+                  ':',
+                )[0] || 0}
                 時間
               </p>
               <p>
-                {info.row.original.compareInfo?.categoryDuration.split(':')[1] || 0}
+                {info.row.original.compareInfo?.categoryDuration.split(
+                  ':',
+                )[1] || 0}
                 分
               </p>
             </div>
@@ -886,6 +894,7 @@ const LineChartCompare = ({
               <MultiSelectDropdown
                 isShowIconFilter
                 options={tagsOptions}
+                labelOptionClass="break-all"
                 placeholder="集計対象のタグを選択"
                 className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                 selectedOptions={selectedTags || []}
@@ -917,8 +926,8 @@ const LineChartCompare = ({
                   return (
                     <div
                       key={item.value}
-                      className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="min-w-[32px] max-w-[80px] truncate">
+                      className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className="min-w-[32px]  truncate">
                         {item.label}
                       </span>
                       <ImageRound
@@ -952,9 +961,9 @@ const LineChartCompare = ({
           {/* Line */}
           <div className="w-full border-t border-[#D2DBE1] my-[30px]"></div>
           <div>
-            <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+            <div className="flex  justify-between px-[30px] text-sm font-medium">
               {/* Column Chart 1 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[300px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && !selectedLarge && !selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
@@ -974,7 +983,7 @@ const LineChartCompare = ({
                 </div>
               </div>
               {/* Column Chart 2 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[300px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && selectedLarge && !selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
@@ -995,7 +1004,7 @@ const LineChartCompare = ({
                 </div>
               </div>
               {/* Column Chart 3 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[300px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && selectedLarge && selectedMedium ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー

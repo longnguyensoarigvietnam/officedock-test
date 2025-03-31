@@ -63,7 +63,7 @@ const ModalCustomTooltip = ({
                         backgroundColor: item.categoryColor,
                       }}
                       className="w-3 h-3 rounded-sm"></div>
-                    <span className="font-bold max-w-[105px] line-clamp-3">
+                    <span className="font-bold max-w-[205px] line-clamp-3">
                       {item.categoryName}
                     </span>
                   </div>
@@ -88,7 +88,7 @@ const ModalCustomTooltip = ({
                                   size={30}
                                 />
                               </div>
-                              <span className="inline-block w-20 overflow-hidden whitespace-nowrap text-ellipsis">
+                              <span className="inline-block w-[170px] overflow-hidden whitespace-nowrap text-ellipsis">
                                 {user.user.fullName}
                               </span>
                             </div>
@@ -135,7 +135,7 @@ const ModalCustomTooltip = ({
                   backgroundColor: color,
                 }}
                 className="w-3 h-3 rounded-sm"></div>
-              <span className="font-bold max-w-[105px] line-clamp-3">
+              <span className="font-bold max-w-[224px] line-clamp-3">
                 {label}
               </span>
             </div>
@@ -159,7 +159,7 @@ const ModalCustomTooltip = ({
                               size={30}
                             />
                           </div>
-                          <span className="inline-block w-20 overflow-hidden whitespace-nowrap text-ellipsis">
+                          <span className="inline-block w-[170px] overflow-hidden whitespace-nowrap text-ellipsis">
                             {opt.label}
                           </span>
                         </div>

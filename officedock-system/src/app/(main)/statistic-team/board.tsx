@@ -152,9 +152,11 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose organization
   const handleSelectOrganization = (data: OptionDropdownType) => {
-    setIsLoadingOrganization(true);
-    if (isCheckCompare) {
-      setIsLoadingOrganizationCompare(true);
+    if (data.value !== selectedOrganization?.value) {
+      setIsLoadingOrganization(true);
+      if (isCheckCompare) {
+        setIsLoadingOrganizationCompare(true);
+      }
     }
     setSelectedOrganization(data);
     setSelectedLarge(null);
@@ -196,9 +198,11 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {
-    setIsLoadingLarge(true);
-    if (isCheckCompare) {
-      setIsLoadingLargeCompare(true);
+    if (data.value !== selectedLarge?.value) {
+      setIsLoadingLarge(true);
+      if (isCheckCompare) {
+        setIsLoadingLargeCompare(true);
+      }
     }
     setSelectedLarge(data);
     setSelectedMedium(null);
@@ -223,9 +227,11 @@ const StatisticTeamBoard = () => {
 
   // Handle Choose MEDIUM
   const handleSelectMedium = (data: OptionDropdownType) => {
-    setIsLoadingMedium(true);
-    if (isCheckCompare) {
-      setIsLoadingMediumCompare(true);
+    if (data.value !== selectedMedium?.value) {
+      setIsLoadingMedium(true);
+      if (isCheckCompare) {
+        setIsLoadingMediumCompare(true);
+      }
     }
     setSelectedMedium(data);
     setSelectedSmall(null);
@@ -409,6 +415,7 @@ const StatisticTeamBoard = () => {
               isShowIconFilter
               options={tagsOptions}
               placeholder="集計対象のタグを選択"
+              labelOptionClass="break-all"
               className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
               selectedOptions={selectedTags || []}
               onChange={(selected) => {
@@ -439,10 +446,8 @@ const StatisticTeamBoard = () => {
                 return (
                   <div
                     key={item.value}
-                    className="min-w-[66px] w-fit max-w-[118px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                    <span className="min-w-[32px] max-w-[80px] truncate">
-                      {item.label}
-                    </span>
+                    className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                    <span className="min-w-[32px]  truncate">{item.label}</span>
                     <ImageRound
                       onClick={() => {
                         removeTag(item);
@@ -494,6 +499,7 @@ const StatisticTeamBoard = () => {
           startDateCompare={startDateCompare}
           endDateCompare={endDateCompare}
           isCheckCompare={isCheckCompare}
+          statisticCategoryListTeam={statisticCategoryListTeam}
           handleSelectOrganization={handleSelectOrganization}
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
