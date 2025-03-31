@@ -280,7 +280,10 @@ export const MessageDetail = ({
       );
 
       const color =
-        (matchedUser?.id === session?.user.id || mentionName === MENTION_ALL_MEMBERS) ? '#0068B7' : '#77858F';
+        matchedUser?.id === session?.user.id ||
+        mentionName === MENTION_ALL_MEMBERS
+          ? '#0068B7'
+          : '#77858F';
       mention.setAttribute('style', `color: ${color};`);
     });
 
@@ -516,6 +519,7 @@ export const MessageDetail = ({
                                                         '',
                                                     )}
                                                     alt="Image"
+                                                    unoptimized={true}
                                                     width={150}
                                                     height={100}
                                                   />
