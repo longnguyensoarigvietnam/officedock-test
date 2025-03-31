@@ -675,7 +675,7 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         tasks_result = []
         for task_schedule in task_schedules:
             item = {
-                "id": task_schedule.task.id,
+                "id": task_schedule.id,
                 "title": task_schedule.task.title,
                 "start_date": task_schedule.plan_start_date,
                 "end_date": task_schedule.plan_end_date,
@@ -804,7 +804,7 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                 else model.people_in_charge.all()
             )
             item = {
-                "id": model.id,
+                "id": duration.id,
                 "title": model.title,
                 "start_date": duration.started_at,
                 "end_date": duration.paused_at,
