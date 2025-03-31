@@ -509,7 +509,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 organizations[0], context={"user": user}
             ).data
             data["members"] = CreationDataUserSerializer(
-                organizations[0].users.all(), many=True
+                organizations[0].users.order_by("created_at"), many=True
             ).data
         else:
             list_org = []
