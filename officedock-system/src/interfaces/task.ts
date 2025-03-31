@@ -293,6 +293,7 @@ export interface TaskTimeSchedule {
   address?: string;
   participants?: EventParticipant[];
   isAllDay?: boolean;
+  statusId?: number
 }
 export interface TaskErrorPerson {
   id: string;

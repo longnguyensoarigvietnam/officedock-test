@@ -117,6 +117,14 @@ const LineChartCompare = ({
     selectedOrganization,
     selectedTags,
     tagsOptions,
+    totalDurationLarge,
+    totalDurationMedium,
+    totalDurationSmall,
+    totalDurationCategory,
+    totalDurationLargeCompare,
+    totalDurationMediumCompare,
+    totalDurationSmallCompare,
+    totalDurationCategoryCompare,
     setSelectedTags,
   } = useContext(StatisticTagStateContext);
 
@@ -356,7 +364,7 @@ const LineChartCompare = ({
             weight: 500,
           },
           padding: 15,
-          stepSize: 5,
+          stepSize: 10,
         },
       },
     },
@@ -369,6 +377,7 @@ const LineChartCompare = ({
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
       tagIds: selectedTags,
     },
   });
@@ -381,6 +390,7 @@ const LineChartCompare = ({
         organizationIds: String(selectedOrganization?.value || ''),
         largeCategoryId: Number(selectedLarge?.value),
         mediumCategoryId: Number(selectedMedium?.value),
+        smallCategoryId: Number(selectedSmall?.value),
         tagIds: selectedTags,
       },
     });
@@ -420,8 +430,6 @@ const LineChartCompare = ({
   useEffect(() => {
     if (statisticTagTaskDurationsList && statisticTagTaskDurationsCompareList) {
       let datasets: any[] = [];
-      let sumStandardDurations: number = 0;
-      let sumCompareDurations: number = 0;
       let standardLabels: { name: string; color: string }[] = [];
       let comparedLabels: { name: string; color: string }[] = [];
       let tableDetail: TableCategoryItem[] = [];
@@ -458,9 +466,6 @@ const LineChartCompare = ({
       if (statisticTagTaskDurationsList.length > 0) {
         statisticTagTaskDurationsList.map(
           (categoryDetail: StatisticsTagTaskDuration) => {
-            sumStandardDurations =
-              sumStandardDurations +
-              convertTimeToDecimal(categoryDetail.duration);
             standardLabels = [
               ...standardLabels,
               {
@@ -552,9 +557,6 @@ const LineChartCompare = ({
                 : 0;
             }
 
-            sumCompareDurations =
-              sumCompareDurations +
-              convertTimeToDecimal(categoryDetail.duration);
             comparedLabels = [
               ...comparedLabels,
               {
@@ -605,24 +607,57 @@ const LineChartCompare = ({
       });
 
       setTableData(mergeCategories(tableDetail) || []);
-      setTotalStandardDuration(
-        sumStandardDurations
-          ? `${convertFromNumberToJapaneseTime(sumStandardDurations).formattedHours}:${convertFromNumberToJapaneseTime(sumStandardDurations).formattedMinutes}`
-          : '00:00',
-      );
-      setTotalCompareDuration(
-        sumCompareDurations
-          ? `${convertFromNumberToJapaneseTime(sumCompareDurations).formattedHours}:${convertFromNumberToJapaneseTime(sumCompareDurations).formattedMinutes}`
-          : '00:00',
-      );
+      if (
+        selectedOrganization?.value &&
+        !selectedLarge?.value &&
+        !selectedMedium?.value &&
+        !selectedSmall?.value
+      ) {
+        setTotalStandardDuration(totalDurationLarge || '00:00');
+        setTotalCompareDuration(totalDurationLargeCompare || '00:00');
+      } else if (
+        selectedOrganization?.value &&
+        selectedLarge?.value &&
+        !selectedMedium?.value &&
+        !selectedSmall?.value
+      ) {
+        setTotalStandardDuration(totalDurationMedium || '00:00');
+        setTotalCompareDuration(totalDurationMediumCompare || '00:00');
+      } else if (
+        selectedOrganization?.value &&
+        selectedLarge?.value &&
+        selectedMedium?.value &&
+        !selectedSmall?.value
+      ) {
+        setTotalStandardDuration(totalDurationSmall || '00:00');
+        setTotalCompareDuration(totalDurationSmallCompare || '00:00');
+      } else if (
+        selectedOrganization?.value &&
+        selectedLarge?.value &&
+        selectedMedium?.value &&
+        selectedSmall?.value
+      ) {
+        setTotalStandardDuration(totalDurationCategory || '00:00');
+        setTotalCompareDuration(totalDurationCategoryCompare || '00:00');
+      }
     }
   }, [
     statisticTagTaskDurationsList,
     statisticTagTaskDurationsCompareList,
     statisticTagsList,
     statisticTagsCompareList,
+    selectedOrganization,
     selectedLarge,
     selectedMedium,
+    selectedSmall,
+    totalDurationLarge,
+    totalDurationMedium,
+    totalDurationSmall,
+    totalDurationCategory,
+    totalDurationLargeCompare,
+    totalDurationMediumCompare,
+    totalDurationSmallCompare,
+    totalDurationCategoryCompare,
   ]);
 
   const columns: ColumnDef<MergedTableCategory>[] = [
@@ -652,15 +687,15 @@ const LineChartCompare = ({
           <div className="flex gap-2 px-3 items-start">
             <div
               style={{ backgroundColor: info.row.original.tagColor }}
-              className={`w-[18px] h-4 rounded-[3px] flex items-center justify-center mt-1`}>
+              className={`w-[18px] h-4 min-w-[18px] rounded-[3px] flex items-center justify-center mt-1`}>
               <ImageRound
                 name="Check task"
                 src={'/icons/check-task.svg'}
                 className="w-[10px] h-2"
               />
             </div>
-            <div className="flex flex-col gap-2 w-full">
-              <p className="font-medium text-[16px] break-all text-black">
+            <div className="flex flex-col gap-2 w-[calc(100%_-20px)]">
+              <p className="font-medium text-[16px] truncate text-black !max-w-[calc(100%_-_40px)]">
                 {' '}
                 {value}{' '}
               </p>
@@ -723,20 +758,20 @@ const LineChartCompare = ({
             <div className="h-[22px]"></div>
             <div className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
-                {info.row.original.standardInfo?.tagDuration.split(':')[0]}
+                {info.row.original.standardInfo?.tagDuration.split(':')[0] || 0}
                 時間
               </p>
               <p>
-                {info.row.original.standardInfo?.tagDuration.split(':')[1]}分
+                {info.row.original.standardInfo?.tagDuration.split(':')[1] || 0}分
               </p>
             </div>
             <div className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
-                {info.row.original.compareInfo?.tagDuration.split(':')[0]}
+                {info.row.original.compareInfo?.tagDuration.split(':')[0] || 0}
                 時間
               </p>
               <p>
-                {info.row.original.compareInfo?.tagDuration.split(':')[1]}分
+                {info.row.original.compareInfo?.tagDuration.split(':')[1] || 0}分
               </p>
             </div>
             <div className="font-medium flex text-[14px] justify-center text-black">
@@ -1027,7 +1062,7 @@ const LineChartCompare = ({
                     </div>
                     <p className="font-medium text-[16px]">
                       合計 {totalCompareDuration?.split(':')[0]}時間
-                      {totalCompareDuration?.split(':')[0]}分
+                      {totalCompareDuration?.split(':')[1]}分
                     </p>
                   </div>
                 )}

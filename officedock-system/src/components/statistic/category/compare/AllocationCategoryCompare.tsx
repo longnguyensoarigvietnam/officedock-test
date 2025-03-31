@@ -344,10 +344,6 @@ const AllocationCategoryCompare = memo(
         setProgressDataPairsLarge(largePairs);
         setProgressDataPairsMedium(mediumPairs);
         setProgressDataPairsSmall(smallPairs);
-      } else {
-        setProgressDataPairsLarge([]);
-        setProgressDataPairsMedium([]);
-        setProgressDataPairsSmall([]);
       }
     }, [statisticCategoryList, statisticCategoryCompareList]);
 
@@ -670,6 +666,9 @@ const AllocationCategoryCompare = memo(
                                   optionData={
                                     pair.main ? pair.main.optionData : []
                                   }
+                                  mergedItems={
+                                    pair.main ? pair.main.mergedItems : []
+                                  }
                                   showInfo={false}
                                   startDate={startDate}
                                   endDate={endDate}
@@ -711,6 +710,9 @@ const AllocationCategoryCompare = memo(
                                   }
                                   optionData={
                                     pair.compare ? pair.compare.optionData : []
+                                  }
+                                  mergedItems={
+                                    pair.compare ? pair.compare.mergedItems : []
                                   }
                                   showInfo={false}
                                   startDateCompare={startDateCompare}
@@ -1051,6 +1053,9 @@ const AllocationCategoryCompare = memo(
                                   optionData={
                                     pair.main ? pair.main.optionData : []
                                   }
+                                  mergedItems={
+                                    pair.main ? pair.main.mergedItems : []
+                                  }
                                   showInfo={false}
                                   startDate={startDate}
                                   endDate={endDate}
@@ -1075,6 +1080,9 @@ const AllocationCategoryCompare = memo(
                                   }
                                   optionData={
                                     pair.compare ? pair.compare.optionData : []
+                                  }
+                                  mergedItems={
+                                    pair.compare ? pair.compare.mergedItems : []
                                   }
                                   showInfo={false}
                                   startDateCompare={startDateCompare}
