@@ -59,12 +59,14 @@ import {
   KanbanType,
   SocketActions,
   StatusValueTask,
+  TaskRepetitiveType,
   TemplateAction,
 } from '@constants/enums';
 import {
   INITIAL_INDEX_VALUE,
   MY_TEMPLATE,
   NO_OPTION_CATEGORY,
+  TASK_REPETITIVE_OPTIONS,
 } from '@constants';
 import {
   ERROR_CREATE_MESSAGE,
@@ -1681,7 +1683,21 @@ const KanbanBoardTask = () => {
     handleGetDataDetailTask,
     {
       onSuccess: async (data) => {
-        setDataTaskEdit(data);
+        const isCompletedWithSchedule =
+          data.status.id == StatusValueTask.MY_ROUTINE &&
+          data.repeatType == null &&
+          data.taskSchedules.length > 0;
+
+        const taskDetail = isCompletedWithSchedule
+          ? {
+              ...data,
+              repeatType: TASK_REPETITIVE_OPTIONS.find(
+                (option) => option.label == TaskRepetitiveType.ONCE,
+              )?.value,
+            }
+          : { ...data };
+
+        setDataTaskEdit(taskDetail);
         setIdTaskEditSelected('');
         setShowEditTaskModal(true);
       },

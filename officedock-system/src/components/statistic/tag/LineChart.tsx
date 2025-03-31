@@ -117,6 +117,12 @@ const LineChart = ({
     }[]
   >([]);
   const [totalDuration, setTotalDuration] = useState<string>('00:00');
+  const [standardLabelsInfo, setStandardLabelsInfo] = useState<
+    {
+      color: string;
+      name: string;
+    }[]
+  >([]);
   const { expanded } = useContext(GlobalStateContext);
 
   const viewOptions = [
@@ -198,7 +204,10 @@ const LineChart = ({
           </div>
           <div style="display: flex; align-items: center; margin-bottom: 8px">
             <div style="background-color: ${dataset.borderColor}; margin-right: 4px; width: 12px; height: 12px; border-radius: 2px"></div>
-            <p style="font-weight: 700; font-size: 16px">${datasetLabel}</p>
+            <p style="font-weight: 700; font-size: 16px; max-width: 200px;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;">${datasetLabel}</p>
           </div>
           <p style="font-weight: 400; font-size: 16px">
             ${convertFromNumberToJapaneseTime(dataPoint.y).formattedHours}時間
@@ -218,37 +227,7 @@ const LineChart = ({
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'bottom',
-        align: 'end',
-        labels: {
-          usePointStyle: false,
-          boxWidth: 30,
-          boxHeight: 2,
-          color: '#77858F',
-          generateLabels: (chart: any) => {
-            try {
-              if (!chart || !chart.data || !chart.data.datasets) return [];
-              return chart.data.datasets.map((dataset: any, index: any) => ({
-                text: `${dataset.label}`,
-                fillStyle: dataset.borderColor,
-                strokeStyle: dataset.borderColor,
-                lineWidth: 2,
-                hidden: !chart.isDatasetVisible(index),
-              }));
-            } catch (error) {
-              return [];
-            }
-          },
-        },
-        onClick: (_e: any, legendItem: any, legend: any) => {
-          const chart = legend.chart;
-          if (!chart) return;
-          const index = legendItem.datasetIndex;
-          if (index === undefined) return;
-          chart.getDatasetMeta(index).hidden =
-            !chart.getDatasetMeta(index).hidden;
-          chart.update();
-        },
+        display: false, // Hides the legend
       },
       tooltip: {
         enabled: false, // Disable default tooltip
@@ -331,6 +310,7 @@ const LineChart = ({
     if (statisticTagTaskDurationsList) {
       let labelList: string[] = [];
       const datasets: any[] = [];
+      let standardLabels: { name: string; color: string }[] = [];
       const tableDetail: {
         tagId: number;
         tagName: string;
@@ -374,6 +354,14 @@ const LineChart = ({
                 )?.percent || 0
               : 0;
           }
+
+          standardLabels = [
+            ...standardLabels,
+            {
+              color: lightenColor('#2E9267', percent) || getRandomColor(),
+              name: categoryDetail.tagName,
+            },
+          ];
 
           tableDetail.push({
             tagId: categoryDetail.tagId,
@@ -452,6 +440,7 @@ const LineChart = ({
         ) {
           setTotalDuration(totalDurationCategory);
         }
+        setStandardLabelsInfo(standardLabels);
       } else {
         setLineChartData({
           labels: [],
@@ -459,6 +448,7 @@ const LineChart = ({
         });
         setTableData([]);
         setTotalDuration('00:00');
+        setStandardLabelsInfo([]);
       }
     }
   }, [
@@ -615,7 +605,7 @@ const LineChart = ({
               src={`/icons/statistic-line-chart.svg`}
             />
             <span className="text-black font-semibold text-[18px] relative top-[2px]">
-              期間における時間の推移
+              カテゴリーごとのタグの期間における時間の推移
             </span>
           </div>
         </div>
@@ -688,9 +678,9 @@ const LineChart = ({
                 </div>
               </div>
             </div>
-            <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+            <div className="flex  justify-between px-[30px] text-sm font-medium">
               {/* Column Chart 1 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && !selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   チーム
@@ -710,7 +700,7 @@ const LineChart = ({
                 </div>
               </div>
               {/* Column Chart 2 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
@@ -731,7 +721,7 @@ const LineChart = ({
                 </div>
               </div>
               {/* Column Chart 3 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && selectedLarge && selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
@@ -752,7 +742,7 @@ const LineChart = ({
                 </div>
               </div>
               {/* Column Chart 4 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && selectedLarge && selectedMedium && selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
@@ -820,6 +810,20 @@ const LineChart = ({
                 ref={tooltipRef}
                 style={{ position: 'absolute', opacity: 0 }}
               />
+            </div>
+            <div className="flex gap-8 items-center justify-end mb-3 break-words">
+              {standardLabelsInfo.map((label, index) => {
+                return (
+                  <div key={index} className="flex gap-1 items-center">
+                    <div
+                      className="w-8 h-1"
+                      style={{ backgroundColor: label.color }}></div>
+                    <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                      {label.name}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
             <table className="w-full border border-gray-300 mt-3 rounded-md">
               <thead>
