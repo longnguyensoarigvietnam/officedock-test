@@ -773,6 +773,7 @@ class TaskViewSet(
         people_in_charge_ids = serializer_data.pop("people_in_charge_ids", None)
         tag_ids = serializer_data.pop("tag_ids", None)
         task_status = serializer_data.get("status", None)
+        is_exists_task_schedules = "task_schedules" in serializer_data
         task_schedules = serializer_data.pop("task_schedules", None)
         todo_list = serializer_data.pop("todo_list", None)
         categories = serializer_data.pop("category_ids", None)
@@ -821,6 +822,11 @@ class TaskViewSet(
                 serializer_data["remind_at"] = calculate_new_time(
                     serializer_data["deadline"], remind_countdown, remind_type
                 )
+        elif serializer_data.get("deadline") is None:
+            serializer_data["reminds"] = {
+                "type": None,
+                "countdown": None,
+            }
 
         if (
             (current_task_status.name != TaskStatus.MY_ROUTINE.value)
@@ -902,6 +908,9 @@ class TaskViewSet(
             task.task_schedules.all().delete()
             task.recurring = {}
             task.save()
+        if is_exists_task_schedules and task_schedules is None:
+            task.task_schedules.all().delete()
+
         # Handle task schedules creation
         if (task_schedules is not None) or (
             task_schedules is not None
