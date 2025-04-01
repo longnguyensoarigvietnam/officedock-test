@@ -58,7 +58,13 @@ const AllocationTagCompare = memo(
   }: Props) => {
     const [isExtendData, setIsExtendData] = useState(true);
     const [isShowModal, setIsShowModal] = useState(false);
+    const [isShowModalCompare, setIsShowModalCompare] = useState(false);
     const [detailCategory, setDetailCategory] = useState<{
+      id: number | null;
+      type: string;
+      totalDuration: string;
+    } | null>(null);
+    const [detailCategoryCompare, setDetailCategoryCompare] = useState<{
       id: number | null;
       type: string;
       totalDuration: string;
@@ -220,41 +226,90 @@ const AllocationTagCompare = memo(
       }
     }, [statisticTagsList, statisticTagsCompareList]);
 
-    const handleClickTooltip = (id: number | null, type: string) => {
+    const handleClickTooltip = (
+      id: number | null,
+      type: string,
+      isCompare: boolean,
+    ) => {
       let duration: string = '00:00:00';
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticTagsList?.largeCategories.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
+      if (isCompare) {
+        if (type === EventWorkCategory.ALL) {
+          duration =
+            statisticTagsCompareList?.largeCategories.find(
+              (item) => item.tagId == id,
+            )?.duration || '00:00:00';
+        }
+        if (type === EventWorkCategory.LARGE) {
+          duration =
+            statisticTagsCompareList?.mediumCategories?.find(
+              (item) => item.tagId == id,
+            )?.duration || '00:00:00';
+        }
+        if (type === EventWorkCategory.MEDIUM) {
+          duration =
+            statisticTagsCompareList?.smallCategories?.find(
+              (item) => item.tagId == id,
+            )?.duration || '00:00:00';
+        }
+        if (type === EventWorkCategory.SMALL) {
+          duration =
+            statisticTagsCompareList?.category?.find((item) => item.tagId == id)
+              ?.duration || '00:00:00';
+        }
+        setDetailCategoryCompare({
+          id: id,
+          type: type,
+          totalDuration: duration,
+        });
 
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticTagsList?.mediumCategories?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.SMALL) {
-        duration =
-          statisticTagsList?.category?.find((item) => item.tagId == id)
-            ?.duration || '00:00:00';
-      }
-      setDetailCategory({
-        id: id,
-        type: type,
-        totalDuration: duration,
-      });
+        setIsShowModalCompare(true);
+      } else {
+        if (type === EventWorkCategory.ALL) {
+          duration =
+            statisticTagsList?.largeCategories.find((item) => item.tagId == id)
+              ?.duration || '00:00:00';
+        }
+        if (type === EventWorkCategory.LARGE) {
+          duration =
+            statisticTagsList?.mediumCategories?.find(
+              (item) => item.tagId == id,
+            )?.duration || '00:00:00';
+        }
+        if (type === EventWorkCategory.MEDIUM) {
+          duration =
+            statisticTagsList?.smallCategories?.find((item) => item.tagId == id)
+              ?.duration || '00:00:00';
+        }
+        if (type === EventWorkCategory.SMALL) {
+          duration =
+            statisticTagsList?.category?.find((item) => item.tagId == id)
+              ?.duration || '00:00:00';
+        }
+        setDetailCategory({
+          id: id,
+          type: type,
+          totalDuration: duration,
+        });
 
-      setIsShowModal(true);
+        setIsShowModal(true);
+      }
     };
 
     const handleScroll = () => {
       const item = largeOptions.find(
         (item) => item.value === detailCategory?.id,
+      );
+      item && handleSelectLarge(item);
+      const element = document.getElementById('task-list-statistic');
+      setIsShowModal(false);
+
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+    const handleScrollCompare = () => {
+      const item = largeOptions.find(
+        (item) => item.value === detailCategoryCompare?.id,
       );
       item && handleSelectLarge(item);
       const element = document.getElementById('task-list-statistic');
@@ -282,7 +337,7 @@ const AllocationTagCompare = memo(
                   src={`/icons/statistic-progress-bar.svg`}
                 />
                 <span className="text-black font-semibold text-[18px] relative top-[2px]">
-                  各カテゴリーの時間配分
+                  カテゴリーごとのタグの時間配分
                 </span>
               </div>
             </div>
@@ -356,9 +411,9 @@ const AllocationTagCompare = memo(
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+                <div className="flex  justify-between px-[30px] text-sm font-medium">
                   {/* Column Chart 1 */}
-                  <div className="w-full">
+                  <div className="w-[220px]">
                     <div className="mt-4">
                       <Dropdown
                         label="チーム選択"
@@ -459,6 +514,7 @@ const AllocationTagCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.ALL,
+                                      false,
                                     );
                                   }}
                                   handleClickChart={(
@@ -485,6 +541,7 @@ const AllocationTagCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.ALL,
+                                      true,
                                     );
                                   }}
                                   handleClickChart={(
@@ -514,7 +571,7 @@ const AllocationTagCompare = memo(
                     </div>
                   </div>
                   {/* Column Chart 2 */}
-                  <div className="w-full">
+                  <div className="w-[220px]">
                     <div className="mt-4">
                       <Dropdown
                         label="大カテゴリー選択"
@@ -616,6 +673,7 @@ const AllocationTagCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.LARGE,
+                                      false,
                                     );
                                   }}
                                   handleClickChart={(
@@ -642,6 +700,7 @@ const AllocationTagCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.LARGE,
+                                      true,
                                     );
                                   }}
                                   handleClickChart={(
@@ -671,7 +730,7 @@ const AllocationTagCompare = memo(
                     </div>
                   </div>
                   {/* Column Chart 3 */}
-                  <div className="w-full">
+                  <div className="w-[220px]">
                     <div className="mt-4">
                       <Dropdown
                         label="中カテゴリー選択"
@@ -773,6 +832,7 @@ const AllocationTagCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.MEDIUM,
+                                      false,
                                     );
                                   }}
                                   handleClickChart={(
@@ -799,6 +859,7 @@ const AllocationTagCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.MEDIUM,
+                                      true,
                                     );
                                   }}
                                   handleClickChart={(
@@ -850,6 +911,7 @@ const AllocationTagCompare = memo(
                                   handleClickTooltip(
                                     id,
                                     EventWorkCategory.MEDIUM,
+                                    false,
                                   );
                                 }}
                                 handleClickChart={(
@@ -876,6 +938,7 @@ const AllocationTagCompare = memo(
                                   handleClickTooltip(
                                     id,
                                     EventWorkCategory.MEDIUM,
+                                    true,
                                   );
                                 }}
                                 handleClickChart={(
@@ -904,7 +967,7 @@ const AllocationTagCompare = memo(
                     </div>
                   </div>
                   {/* Column Chart 4 */}
-                  <div className="w-full">
+                  <div className="w-[220px]">
                     <div className="mt-4">
                       <Dropdown
                         label="小カテゴリー選択"
@@ -1009,6 +1072,7 @@ const AllocationTagCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.SMALL,
+                                      false,
                                     );
                                   }}
                                   handleClickChart={(
@@ -1035,6 +1099,7 @@ const AllocationTagCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.SMALL,
+                                      true,
                                     );
                                   }}
                                   handleClickChart={(
@@ -1071,18 +1136,35 @@ const AllocationTagCompare = memo(
         {isShowModal && (
           <ListTaskDetailStatisticTagModal
             open={isShowModal}
-            startDate={startDate}
-            endDate={endDate}
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}
-            selectedSmall={selectedSmall}
             detailCategory={detailCategory}
+            selectedSmall={selectedSmall}
+            startDate={startDate}
+            endDate={endDate}
             selectedOrganization={selectedOrganization}
             statisticTagsListTeam={statisticTagsList}
             onClose={() => {
               setIsShowModal(false);
             }}
             handleScroll={handleScroll}
+          />
+        )}
+        {isShowModalCompare && (
+          <ListTaskDetailStatisticTagModal
+            open={isShowModalCompare}
+            selectedLarge={selectedLarge}
+            selectedMedium={selectedMedium}
+            selectedSmall={selectedSmall}
+            startDate={startDateCompare}
+            endDate={endDateCompare}
+            detailCategory={detailCategoryCompare}
+            selectedOrganization={selectedOrganization}
+            statisticTagsListTeam={statisticTagsList}
+            onClose={() => {
+              setIsShowModalCompare(false);
+            }}
+            handleScroll={handleScrollCompare}
           />
         )}
       </>

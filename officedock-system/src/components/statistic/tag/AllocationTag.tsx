@@ -223,7 +223,7 @@ const AllocationTag = memo(
                   src={`/icons/statistic-progress-bar.svg`}
                 />
                 <span className="text-black font-semibold text-[18px] relative top-[2px]">
-                  各カテゴリーの時間配分
+                  カテゴリーごとのタグの時間配分
                 </span>
               </div>
             </div>
@@ -297,9 +297,9 @@ const AllocationTag = memo(
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+                <div className="flex  justify-between px-[30px] text-sm font-medium">
                   {/* Column Chart 1 */}
-                  <div className="w-full">
+                  <div className="w-[220px]">
                     <div className="mt-4">
                       <Dropdown
                         label="チーム選択"
@@ -345,7 +345,7 @@ const AllocationTag = memo(
                     </div>
                   </div>
                   {/* Column Chart 2 */}
-                  <div className="w-full">
+                  <div className="w-[220px]">
                     <div className="mt-4">
                       <Dropdown
                         label="大カテゴリー選択"
@@ -394,7 +394,7 @@ const AllocationTag = memo(
                     </div>
                   </div>
                   {/* Column Chart 3 */}
-                  <div className="w-full">
+                  <div className="w-[220px]">
                     <div className="mt-4">
                       <Dropdown
                         label="中カテゴリー選択"
@@ -440,7 +440,7 @@ const AllocationTag = memo(
                     </div>
                   </div>
                   {/* Column Chart 4 */}
-                  <div className="w-full">
+                  <div className="w-[220px]">
                     <div className="mt-4">
                       <Dropdown
                         label="小カテゴリー選択"

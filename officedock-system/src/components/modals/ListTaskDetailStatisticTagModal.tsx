@@ -258,17 +258,20 @@ const ListTaskDetailStatisticTagModal = ({
                   return (
                     <div
                       key={index}
-                      className="font-medium border-b  text-base text-black flex items-center min-h-[50px]">
-                      <div className="w-[332px] min-h-[50px] flex items-center text-left !px-4  ">
-                        <p className="break-all min-h-[50px] flex items-center line-clamp-2">
-                          {item.title}
-                        </p>
+                      className="font-medium border-b text-base text-black flex min-h-[50px] items-stretch">
+                      {/* First column - Full text */}
+                      <div className="w-[332px] flex items-center text-left px-4">
+                        <p className="break-all">{item.title}</p>
                       </div>
-                      <div className="border-l  min-h-[50px] flex items-center justify-center text-sm !px-0 border-[#D2DBE1] w-[110px] max-w-[110px] truncate">
+
+                      {/* Second column */}
+                      <div className="border-l w-[110px] max-w-[110px] flex items-center justify-center text-sm px-0 border-[#D2DBE1]">
                         {item.totalDuration &&
                           formatTimeToJapanese(item.totalDuration)}
                       </div>
-                      <div className="border-l  min-h-[50px] flex items-center justify-center text-sm !px-0 border-[#D2DBE1] w-[72px] max-w-[72px] truncate">
+
+                      {/* Third column */}
+                      <div className="border-l w-[72px] max-w-[72px] flex items-center justify-center text-sm px-0 border-[#D2DBE1]">
                         {item.percent}%
                       </div>
                     </div>

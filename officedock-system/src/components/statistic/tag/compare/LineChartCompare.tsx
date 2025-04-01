@@ -218,12 +218,6 @@ const LineChartCompare = ({
       return;
     }
 
-    // Hide tooltip for the last data point
-    if (dataIndex === dataset.data.length - 1) {
-      tooltipEl.style.opacity = '0';
-      return;
-    }
-
     if (tooltipModel.opacity === 0) {
       tooltipEl.style.opacity = '0';
       return;
@@ -234,6 +228,12 @@ const LineChartCompare = ({
 
     const dataPoint = tooltipModel.dataPoints[0]?.raw;
     if (!dataPoint) {
+      tooltipEl.style.opacity = '0';
+      return;
+    }
+
+    // Hide tooltip for the last data point
+    if (tooltipModel.dataPoints[0]?.raw.x === lineChartData.labels.at(-1)) {
       tooltipEl.style.opacity = '0';
       return;
     }
@@ -258,7 +258,10 @@ const LineChartCompare = ({
              height: 12px; 
              border-radius: 2px;
            "></div>
-           <p style="font-weight: 700; font-size: 16px;">${datasetLabel}</p>
+           <p style="font-weight: 700; font-size: 16px; max-width: 200px;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;">${datasetLabel}</p>
          </div>  
    
          <div style="
@@ -437,12 +440,22 @@ const LineChartCompare = ({
       const finalLabelList: string[] = Array.from(
         new Set([
           ...statisticTagTaskDurationsList.flatMap((category) =>
-            category.durations.map((duration) => duration.startDate),
+            category.durations.flatMap((duration, index) =>
+              index === category.durations.length - 1 &&
+              String(category.durations.at(-1)?.endDate) !== String(category.durations.at(-1)?.startDate)
+                ? [duration.startDate, duration.endDate]
+                : duration.startDate
+            )
           ),
           ...statisticTagTaskDurationsCompareList.flatMap((category) =>
-            category.durations.map((duration) => duration.startDate),
+            category.durations.flatMap((duration, index) =>
+              index === category.durations.length - 1 &&
+              String(category.durations.at(-1)?.endDate) !== String(category.durations.at(-1)?.startDate)
+                ? [duration.startDate, duration.endDate]
+                : duration.startDate
+            )
           ),
-        ]),
+        ])
       ).sort((a, b) => a.localeCompare(b));
 
       const generateDataWithAlignment = (durations: any[], type: string) => {
@@ -860,7 +873,7 @@ const LineChartCompare = ({
               src={`/icons/statistic-line-chart.svg`}
             />
             <span className="text-black font-semibold text-[18px] relative top-[2px]">
-              期間における時間の推移
+              カテゴリーごとのタグの期間における時間の推移
             </span>
           </div>
         </div>
@@ -934,9 +947,9 @@ const LineChartCompare = ({
                 </div>
               </div>
             </div>
-            <div className="flex gap-[35px] justify-center px-[30px] text-sm font-medium">
+            <div className="flex  justify-between px-[30px] text-sm font-medium">
               {/* Column Chart 1 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && !selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   チーム
@@ -956,7 +969,7 @@ const LineChartCompare = ({
                 </div>
               </div>
               {/* Column Chart 2 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && selectedLarge && !selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   大カテゴリー
@@ -977,7 +990,7 @@ const LineChartCompare = ({
                 </div>
               </div>
               {/* Column Chart 3 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && selectedLarge && selectedMedium && !selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   中カテゴリー
@@ -998,7 +1011,7 @@ const LineChartCompare = ({
                 </div>
               </div>
               {/* Column Chart 4 */}
-              <div className="w-full flex flex-col items-center">
+              <div className="w-[220px] flex flex-col items-center">
                 <div
                   className={`${selectedOrganization && selectedLarge && selectedMedium && selectedSmall ? 'text-white bg-[#0068B6]' : 'text-[#77858F] bg-[#fff] border-[#77858F] border-[1px]'} rounded-[100px] w-[112px] h-[34px] text-sm flex justify-center items-center`}>
                   小カテゴリー
@@ -1110,7 +1123,7 @@ const LineChartCompare = ({
                     <div
                       className="w-8 h-1"
                       style={{ backgroundColor: label.color }}></div>
-                    <p className="font-medium text-[#77858F] text-xs">
+                    <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
                       {label.name}
                     </p>
                   </div>
@@ -1127,7 +1140,7 @@ const LineChartCompare = ({
                     <div
                       className="w-8 h-1 border-t-2 border-dashed"
                       style={{ borderColor: label.color }}></div>
-                    <p className="font-medium text-[#77858F] text-xs">
+                    <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
                       {label.name}
                     </p>
                   </div>

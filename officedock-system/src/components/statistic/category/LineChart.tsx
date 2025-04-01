@@ -112,6 +112,12 @@ const LineChart = ({
     }[]
   >([]);
   const [totalDuration, setTotalDuration] = useState<string>('00:00');
+  const [standardLabelsInfo, setStandardLabelsInfo] = useState<
+    {
+      color: string;
+      name: string;
+    }[]
+  >([]);
   const { expanded } = useContext(GlobalStateContext);
 
   const viewOptions = [
@@ -193,7 +199,10 @@ const LineChart = ({
         </div>
         <div style="display: flex; align-items: center; margin-bottom: 8px">
           <div style="background-color: ${dataset.borderColor}; margin-right: 4px; width: 12px; height: 12px; border-radius: 2px"></div>
-          <p style="font-weight: 700; font-size: 16px">${datasetLabel}</p>
+          <p style="font-weight: 700; font-size: 16px; max-width: 200px;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;">${datasetLabel}</p>
         </div>
         <p style="font-weight: 400; font-size: 16px">
           ${convertFromNumberToJapaneseTime(dataPoint.y).formattedHours}時間
@@ -213,37 +222,7 @@ const LineChart = ({
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'bottom',
-        align: 'end',
-        labels: {
-          usePointStyle: false,
-          boxWidth: 30,
-          boxHeight: 2,
-          color: '#77858F',
-          generateLabels: (chart: any) => {
-            try {
-              if (!chart || !chart.data || !chart.data.datasets) return [];
-              return chart.data.datasets.map((dataset: any, index: any) => ({
-                text: `${dataset.label}`,
-                fillStyle: dataset.borderColor,
-                strokeStyle: dataset.borderColor,
-                lineWidth: 2,
-                hidden: !chart.isDatasetVisible(index),
-              }));
-            } catch (error) {
-              return [];
-            }
-          },
-        },
-        onClick: (_e: any, legendItem: any, legend: any) => {
-          const chart = legend.chart;
-          if (!chart) return;
-          const index = legendItem.datasetIndex;
-          if (index === undefined) return;
-          chart.getDatasetMeta(index).hidden =
-            !chart.getDatasetMeta(index).hidden;
-          chart.update();
-        },
+        display: false, // Hides the legend
       },
       tooltip: {
         enabled: false, // Disable default tooltip
@@ -329,6 +308,7 @@ const LineChart = ({
         )?.categoryColor || '';
 
       let labelList: string[] = [];
+      let standardLabels: { name: string; color: string }[] = [];
       const datasets: any[] = [];
       const tableDetail: {
         categoryId: number;
@@ -376,6 +356,17 @@ const LineChart = ({
                 )?.percent || 0
               : 0;
           }
+
+          standardLabels = [
+            ...standardLabels,
+            {
+              color:
+                categoryDetail.categoryColor ||
+                (color && lightenColor(color, percent)) ||
+                getRandomColor(),
+              name: categoryDetail.categoryName,
+            },
+          ];
 
           tableDetail.push({
             categoryId: categoryDetail.categoryId,
@@ -449,6 +440,7 @@ const LineChart = ({
         ) {
           setTotalDuration(totalDurationSmall);
         }
+        setStandardLabelsInfo(standardLabels);
       } else {
         setLineChartData({
           labels: [],
@@ -456,6 +448,7 @@ const LineChart = ({
         });
         setTableData([]);
         setTotalDuration('00:00');
+        setStandardLabelsInfo([]);
       }
     }
   }, [
@@ -468,6 +461,12 @@ const LineChart = ({
     totalDurationMedium,
     totalDurationSmall,
   ]);
+
+  const numericSorting = (rowA: any, rowB: any, columnId: any) => {
+    const a = Number(rowA.getValue(columnId)) || 0;
+    const b = Number(rowB.getValue(columnId)) || 0;
+    return a - b;
+  };
 
   const columns: ColumnDef<{
     categoryId: number;
@@ -555,7 +554,7 @@ const LineChart = ({
         const isSorted = column.getIsSorted();
         return (
           <div
-            className="flex gap-1 items-center justify-center"
+            className="flex gap-1 items-center justify-center cursor-pointer"
             onClick={column.getToggleSortingHandler()}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
             <div>
@@ -564,18 +563,21 @@ const LineChart = ({
                 alt="Sort down"
                 width={9}
                 height={10}
-                className={`cursor-pointer justify-self-end ${isSorted == 'asc' && 'rotate-180'} `}
+                className={`cursor-pointer justify-self-end ${
+                  isSorted === 'asc' ? 'rotate-180' : ''
+                }`}
               />
             </div>
           </div>
         );
       },
       enableSorting: true,
+      sortingFn: numericSorting,
       cell: (info) => {
-        const value = info.getValue() as string;
+        const value = Number(info.getValue()) || 0;
         return (
           <div className="font-medium flex text-[14px] justify-center text-black">
-            <p>{Math.round(Number(value))}%</p>
+            <p>{Math.round(value)}%</p>
           </div>
         );
       },
@@ -796,6 +798,20 @@ const LineChart = ({
                 ref={tooltipRef}
                 style={{ position: 'absolute', opacity: 0 }}
               />
+            </div>
+            <div className="flex gap-8 items-center justify-end mb-3 break-words">
+              {standardLabelsInfo.map((label, index) => {
+                return (
+                  <div key={index} className="flex gap-1 items-center">
+                    <div
+                      className="w-8 h-1"
+                      style={{ backgroundColor: label.color }}></div>
+                    <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                      {label.name}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
             <table className="w-full border border-gray-300 mt-3 rounded-md">
               <thead>

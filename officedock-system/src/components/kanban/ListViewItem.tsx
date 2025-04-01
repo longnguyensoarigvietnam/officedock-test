@@ -51,7 +51,7 @@ interface ListViewItemProps {
   index: number;
   content: Task;
   creationDataTaskData?: CreationDataTask;
-  handleActionEditTask: (id: number) => void;
+  handleActionEditTask: (id: number, type?: string) => void
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTask: UseMutateFunction<
@@ -293,7 +293,7 @@ const ListViewItem = ({
     if (isClicked) return;
 
     setIsClicked(true);
-    handleActionEditTask(parseInt(`${content.id}`));
+    handleActionEditTask(parseInt(`${content.id}`), (content.status && content.status.id == StatusValueTask.MY_ROUTINE) ? ItemStartType.FIXED_TASK : ItemStartType.TASK);
 
     setTimeout(() => setIsClicked(false), 2000);
   };
