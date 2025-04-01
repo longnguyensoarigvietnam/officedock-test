@@ -411,7 +411,9 @@ const AllocationCategoryCompare = memo(
           totalDuration: duration,
         });
 
-        setIsShowModal(true);
+        setTimeout(() => {
+          setIsShowModal(true);
+        }, 500);
       }
     };
 

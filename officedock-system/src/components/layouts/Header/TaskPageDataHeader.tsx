@@ -64,6 +64,7 @@ const TaskPageDataHeader = () => {
   const queryClient = useQueryClient();
 
   const isTaskPage = pathname.startsWith('/task');
+  const isTaskTeamPage = pathname.startsWith('/task-teams');
 
   const {
     idEventDelete,
@@ -517,7 +518,7 @@ const TaskPageDataHeader = () => {
                         ? '#0068B6'
                         : '#D2DBE1',
                   }}
-                  disabled={!isTaskPage}
+                  disabled={!isTaskPage || isTaskTeamPage}
                   searchOption
                   selectedOption={
                     taskSelected.value
