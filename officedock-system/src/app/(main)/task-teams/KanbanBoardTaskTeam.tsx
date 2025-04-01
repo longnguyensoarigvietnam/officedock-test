@@ -1171,7 +1171,11 @@ const KanbanBoardTaskTeam = () => {
 
   // Action PIN / UNPIN
   // API pin task
-  const handlePinTask = async (data: { id: string; pinAt?: string }) => {
+  const handlePinTask = async (data: {
+    id: string;
+    pinAt?: string;
+    userId: string;
+  }) => {
     const { data: response } = await api.put(
       apiRouters.TASK_PIN(`${data.id}`),
       {
@@ -1183,11 +1187,16 @@ const KanbanBoardTaskTeam = () => {
   };
 
   const { mutate: pinTask } = useMutation('pinTask', handlePinTask, {
-    onSuccess: async (data: TaskPinResponse) => {
+    onSuccess: async (data: TaskPinResponse, variant) => {
+      const newData = {
+        ...data,
+        user: parseInt(variant.userId),
+      };
+
       if (data.pinAt !== null) {
-        pinTaskInKanban(data);
+        pinTaskInKanban(newData);
       } else {
-        unpinTaskInKanban(data);
+        unpinTaskInKanban(newData);
       }
     },
     onError: (error: AxiosError<any>) => {
@@ -1258,10 +1267,11 @@ const KanbanBoardTaskTeam = () => {
   };
 
   // Handle call api pin / unpin
-  const pinItemToTop = (itemId: string | number) => {
+  const pinItemToTop = (itemId: string | number, userId: string) => {
     pinTask({
       id: `${itemId}`,
       pinAt: convertDateStringFull(new Date()),
+      userId: userId,
     });
   };
 
