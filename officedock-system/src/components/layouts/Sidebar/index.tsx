@@ -462,7 +462,7 @@ const Sidebar = ({ className }: Props) => {
                           }
                         }
                         labelClass="max-w-[100px]"
-                        labelOptionClass="!text-sm !break-all"
+                        labelOptionClass="!text-sm max-w-[200px] !truncate"
                         imgClassname="!w-6 !h-6"
                         onChange={(e: OptionDropdownType) => {
                           setSelectedOrganization({

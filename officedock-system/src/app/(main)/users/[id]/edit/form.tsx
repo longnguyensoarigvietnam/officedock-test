@@ -599,14 +599,14 @@ const EditUserForm = () => {
                 再設定
               </Button>
             </div>
-            <div className="grid gap-3 max-w-[596px] ">
+            <div className="grid gap-3 flex-1 min-w-0">
               <label className="text-sm ">組織 正</label>
               <Controller
                 control={control}
                 name={`mainOrganization`}
                 render={({ field: { value, onChange } }) => {
                   return (
-                    <div className="max-w-[596px]">
+                    <div className="flex-1 min-w-0">
                       <Dropdown
                         isLoading={isLoadingOrganization}
                         options={unSelectedOrganizationOptions}

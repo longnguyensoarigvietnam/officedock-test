@@ -486,7 +486,7 @@ const LineChart = ({
               />
             </div>{' '}
             <p className="text-[#77858F] font-medium text-xs text-left">
-              カテゴリー名
+              タグ名
             </p>
           </div>
         );

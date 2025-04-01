@@ -313,7 +313,7 @@ const AllocationTagCompare = memo(
       );
       item && handleSelectLarge(item);
       const element = document.getElementById('task-list-statistic');
-      setIsShowModal(false);
+      setIsShowModalCompare(false);
 
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });

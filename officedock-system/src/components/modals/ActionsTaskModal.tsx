@@ -1451,10 +1451,7 @@ const ActionsTaskModal = ({
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
                       disabled={
-                        isCheckActionPermission ||
-                        (dataTask
-                          ? dataTask.status?.id === StatusValueTask.MY_ROUTINE
-                          : false)
+                        isCheckActionPermission
                       }
                       options={
                         action === ActionTask.CREATE
@@ -1527,9 +1524,7 @@ const ActionsTaskModal = ({
                         render={({ field: { value, onChange } }) => (
                           <DatePickerCustom
                             disabled={
-                              isCheckActionPermission ||
-                              watch('statusId')?.value ===
-                                StatusValueTask.MY_ROUTINE
+                              isCheckActionPermission
                             }
                             className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
                             selected={value ? new Date(value) : null}
@@ -1552,9 +1547,7 @@ const ActionsTaskModal = ({
                         isShowClockIcon={true}
                         type="text"
                         disabled={
-                          isCheckActionPermission ||
-                          watch('statusId')?.value ===
-                            StatusValueTask.MY_ROUTINE
+                          isCheckActionPermission
                         }
                         register={register('deadlineTime', {
                           required:
