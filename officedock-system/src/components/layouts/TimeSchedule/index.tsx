@@ -1411,7 +1411,7 @@ const TimeSchedule = memo(
             planEndDate: convertDateString(`${newEvent.end}`),
             largeColor: newEvent.extendedProps.largeColor,
             deadline: newEvent.extendedProps.deadline,
-            statusId: newEvent.extendedProps.status.id
+            statusId: newEvent.extendedProps.status.id,
           });
 
           return updatedEvents;
@@ -2132,7 +2132,10 @@ const TimeSchedule = memo(
           start: clickInfo.event.extendedProps.planStartDate,
           end: clickInfo.event.extendedProps.planEndDate,
           eventList: taskTimeScheduleList,
-          statusId: clickInfo.event.extendedProps.statusId || clickInfo.event.extendedProps.status.id,
+          statusId: resourcePlan
+            ? clickInfo.event.extendedProps.statusId ||
+              clickInfo.event.extendedProps.status.id
+            : 0,
           clientX: clickInfo.jsEvent.clientX,
           clientY: clickInfo.jsEvent.clientY,
         });

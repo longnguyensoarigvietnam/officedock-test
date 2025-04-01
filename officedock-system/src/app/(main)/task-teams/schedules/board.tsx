@@ -54,12 +54,15 @@ import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import {
+  adjustEndDate,
+  convertToCurrentTimezone,
   formatHoursAndMinutesForDateTime,
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
   formatShowDeadlineAllDayEvent,
   getJapaneseDayName,
   getMinuteDifference,
+  getNext30MinuteSlot,
   isDateLessThanToday,
   isMidnight,
   isMoreThanThirtyMinutes,
@@ -222,7 +225,7 @@ const ScheduleTeamBoard = () => {
                       ? largeColor
                       : '#A7B9C2',
               }}
-              className={`mb-1 hover:cursor-pointer  px-[10px] py-1 ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-md`}>
+              className={`mb-1 ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} hover:cursor-pointer  px-[10px] py-1 ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-md`}>
               <div
                 className={` flex gap-2 items-center overflow-hidden !w-[calc(100%_-_1px)] py-0.5 text-[12px] font-normal px-1`}>
                 <p className="truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px]">
@@ -255,7 +258,7 @@ const ScheduleTeamBoard = () => {
                     ? largeColor
                     : '#A7B9C2',
             }}
-            className={`h-full px-[10px] pt-2  ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-md  `}>
+            className={`h-full ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-md  `}>
             <div className="overflow-hidden">
               <div className={`  font-medium px-1 pt-1 text-[14px]`}>
                 <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
@@ -289,7 +292,7 @@ const ScheduleTeamBoard = () => {
                 </div>
                 <p className="text-[12px] font-normal px-1">
                   {selectedOptionShow === ItemScheduleTitleType.ACTUAL && (
-                    <p>{getMinuteDifference(eventContent.event.timeText)}分</p>
+                    <p>{getMinuteDifference(eventContent.timeText)}分</p>
                   )}
                 </p>
               </div>
@@ -331,10 +334,24 @@ const ScheduleTeamBoard = () => {
       const endDateISOString = formatQueryEndDateForCalendar(
         calendarApi.view.activeEnd,
       );
-      if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
-        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
-      } else {
+      const startDate = new Date(startDateISOString);
+      const today = new Date();
+
+      if (isToday(startDate)) {
+        if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
+          debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+        } else {
+          debouncedFetchCalendarDataActual(
+            startDateISOString,
+            endDateISOString,
+          );
+        }
+      } else if (isBefore(startDate, today)) {
+        setOptionShow(ItemScheduleTitleType.ACTUAL);
         debouncedFetchCalendarDataActual(startDateISOString, endDateISOString);
+      } else if (isAfter(startDate, today)) {
+        setOptionShow(ItemScheduleTitleType.PLANS);
+        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
       }
     }
   };
@@ -352,10 +369,24 @@ const ScheduleTeamBoard = () => {
         calendarApi.view.activeEnd,
       );
 
-      if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
-        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
-      } else {
+      const startDate = new Date(startDateISOString);
+      const today = new Date();
+
+      if (isToday(startDate)) {
+        if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
+          debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+        } else {
+          debouncedFetchCalendarDataActual(
+            startDateISOString,
+            endDateISOString,
+          );
+        }
+      } else if (isBefore(startDate, today)) {
+        setOptionShow(ItemScheduleTitleType.ACTUAL);
         debouncedFetchCalendarDataActual(startDateISOString, endDateISOString);
+      } else if (isAfter(startDate, today)) {
+        setOptionShow(ItemScheduleTitleType.PLANS);
+        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
       }
     }
   };
@@ -436,13 +467,26 @@ const ScheduleTeamBoard = () => {
                 event.categories.find(
                   (item) => item.type === EventWorkCategory.LARGE,
                 )?.color;
+              const startDateActual = new Date(
+                convertToCurrentTimezone(`${event.startDate}`),
+              );
+
+              const endDateActual = new Date(
+                convertToCurrentTimezone(`${event.endDate}`),
+              );
+              const endTimeCustom = event.endDate
+                ? endDateActual
+                : getNext30MinuteSlot(startDateActual);
 
               return {
                 title: event.title,
                 start: `${event.startDate}`,
-                end: `${event.endDate}`,
+                end: event.endDate
+                  ? adjustEndDate(startDateActual, endDateActual, 5)
+                  : adjustEndDate(startDateActual, endTimeCustom as Date),
                 allDay: event.isAllDay || false,
                 id: `${event.id}`,
+                isStart: event.isStart,
                 type: event.type,
                 participants: event.participants || [],
                 address: event.address || '',
@@ -707,7 +751,7 @@ const ScheduleTeamBoard = () => {
     if (value < 40) {
       return '01:00:00';
     } else if (value >= 94) {
-      return '00:05:00';
+      return '00:15:00';
     }
     return '00:15:00';
   };

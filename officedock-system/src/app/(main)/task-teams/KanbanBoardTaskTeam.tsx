@@ -166,6 +166,11 @@ const KanbanBoardTaskTeam = () => {
       setCreationDataTaskData(data);
     },
   });
+  useEffect(() => {
+    if (organizationId) {
+      setIsReadyToFetch(true);
+    }
+  }, [organizationId]);
 
   // get list data team
   useTaskBoardTeam({
