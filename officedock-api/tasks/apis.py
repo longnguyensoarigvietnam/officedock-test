@@ -4,11 +4,14 @@ from time import timezone
 from dateutil import rrule
 from django.db import transaction
 from django.db.models import (
+    Case,
+    When,
     OuterRef,
     Subquery,
     Q,
     Value,
     DateTimeField,
+    IntegerField,
     Max,
 )
 from django.db.models.functions import Coalesce
@@ -82,16 +85,17 @@ from .models import (
 from .serializers import (
     TaskBoardSerializer,
     TaskCalendarSerializer,
+    TaskCommonSerializer,
     TaskIndexForCreationSerializer,
+    TaskIndexPinAtSerializer,
+    TaskIndexSerializer,
     TaskScheduleForCreationSerializer,
+    TaskScheduleSerializer,
     TaskSerializer,
     TaskTeamdockSerializer,
-    TodoListSerializer,
-    TaskIndexSerializer,
-    TaskIndexPinAtSerializer,
-    TaskCommonSerializer,
-    TaskScheduleSerializer,
     TaskTemplateSerializer,
+    TeamTaskIndexSerializer,
+    TodoListSerializer,
 )
 from .filters import TaskBoardFilter, TaskCalendarFilter, TaskScheduleFilter
 
@@ -1409,7 +1413,13 @@ class TaskViewSet(
         if not team:
             reset_sort_task(user)
 
-        return self.response_ok(TaskIndexSerializer(task_index).data)
+        result = None
+        if team:
+            result = TeamTaskIndexSerializer(task_index).data
+        else:
+            result = TaskIndexSerializer(task_index).data
+
+        return self.response_ok(result)
 
 
 @extend_schema(tags=["System > Task"])
@@ -1839,14 +1849,13 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     API endpoint to show Tasks to the Teamdock.
     """
 
-    queryset = User.objects.order_by("created_at")
+    queryset = User.objects.all()
     serializer_class = TaskTeamdockSerializer
 
     def get_queryset(self):
         """Filter queryset"""
-        queryset = (
-            super().get_queryset().filter(company=self.request.user.company)
-        )
+        user_logged = self.request.user
+        queryset = super().get_queryset().filter(company=user_logged.company)
 
         # Filter by organization id
         if organization_id := self.request.query_params.get("organization_id"):
@@ -1856,6 +1865,15 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if user_ids := self.request.query_params.get("user_ids"):
             if ids := split_id_from_string(user_ids):
                 queryset = queryset.filter(id__in=ids)
+
+        # Sort logged in users at the top
+        queryset = queryset.annotate(
+            is_logged_in=Case(
+                When(id=user_logged.id, then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by("is_logged_in", "created_at")
 
         return queryset
 
