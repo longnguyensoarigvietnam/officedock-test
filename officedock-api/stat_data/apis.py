@@ -27,8 +27,8 @@ from common.utils import (
     format_duration,
     time_str_to_timedelta,
     transform_statistic_categories,
-    generate_random_color,
 )
+from organizations.constants import CategoryColors
 from organizations.models import Organization, OrganizationsStatisticCategories
 from organizations.serializers import OrganizationDetailSerializer
 from stat_data.constants import NONE_CATEGORY, FilterTime
@@ -361,7 +361,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if task_without_large_durations:
             category_dict["empty_category"] = {
                 "category_name": None,
-                "category_color": generate_random_color(),
+                "category_color": CategoryColors.GRAY.value,
                 "duration": timedelta(0),
             }
             for task in task_without_large_durations:
@@ -370,7 +370,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             if category_dict.get("empty_category") is None:
                 category_dict["empty_category"] = {
                     "category_name": None,
-                    "category_color": generate_random_color(),
+                    "category_color": CategoryColors.GRAY.value,
                     "duration": timedelta(0),
                 }
             for event in event_without_large_durations:
@@ -1025,18 +1025,57 @@ class StatisticViewSet(BaseAPIViewSet):
                 for category in category_list:
                     percent = 100
                     if category["category_id"] is None:
-                        filter_tasks = tasks.filter(
-                            Q(categories__large_statistic_category__isnull=True)
-                            | ~Q(
-                                categories__large_statistic_category__in=large_category_ids
+                        if not large_category_id and not medium_category_id:
+                            filter_tasks = tasks.filter(
+                                Q(
+                                    categories__large_statistic_category__isnull=True
+                                )
+                                | ~Q(
+                                    categories__large_statistic_category__in=large_category_ids
+                                )
                             )
-                        )
-                        filter_events = events.filter(
-                            Q(categories__large_statistic_category__isnull=True)
-                            | ~Q(
-                                categories__large_statistic_category__in=large_category_ids
+                            filter_events = events.filter(
+                                Q(
+                                    categories__large_statistic_category__isnull=True
+                                )
+                                | ~Q(
+                                    categories__large_statistic_category__in=large_category_ids
+                                )
                             )
-                        )
+                        elif large_category_id and not medium_category_id:
+                            filter_tasks = tasks.filter(
+                                Q(
+                                    categories__medium_statistic_category__isnull=True
+                                )
+                                | ~Q(
+                                    categories__medium_statistic_category__in=medium_category_ids
+                                )
+                            )
+                            filter_events = events.filter(
+                                Q(
+                                    categories__medium_statistic_category__isnull=True
+                                )
+                                | ~Q(
+                                    categories__medium_statistic_category__in=medium_category_ids
+                                )
+                            )
+                        elif large_category_id and medium_category_id:
+                            filter_tasks = tasks.filter(
+                                Q(
+                                    categories__small_statistic_category__isnull=True
+                                )
+                                | ~Q(
+                                    categories__small_statistic_category__in=small_category_ids
+                                )
+                            )
+                            filter_events = events.filter(
+                                Q(
+                                    categories__small_statistic_category__isnull=True
+                                )
+                                | ~Q(
+                                    categories__small_statistic_category__in=small_category_ids
+                                )
+                            )
                     else:
                         large_id = (
                             category["category_id"]
