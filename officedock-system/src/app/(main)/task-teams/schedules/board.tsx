@@ -62,7 +62,7 @@ import {
   formatQueryStartDateForCalendar,
   formatShowDeadlineAllDayEvent,
   getJapaneseDayName,
-  getMinuteDifference,
+  getMinuteDifferenceTime,
   getNext30MinuteSlot,
   isDateLessThanToday,
   isMidnight,
@@ -264,7 +264,8 @@ const ScheduleTeamBoard = () => {
             className={`h-full ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-tr-md rounded-br-md rounded-tl-sm rounded-bl-sm `}>
             <div className="overflow-hidden">
               <div className={`  font-medium px-1 pt-1 text-[14px]`}>
-                <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
+                <p
+                  className={`truncate max-w-[calc(100%)] font-semibold min-h-5 ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-[#0068B6]'}`}>
                   {eventContent.event.title != 'null'
                     ? eventContent.event.title
                     : ''}
@@ -304,7 +305,13 @@ const ScheduleTeamBoard = () => {
                 <p className="text-[12px] font-normal px-1">
                   {selectedOptionShow === ItemScheduleTitleType.ACTUAL &&
                     !eventContent.event.extendedProps.isStart && (
-                      <p>{getMinuteDifference(eventContent.timeText)}分</p>
+                      <p>
+                        {getMinuteDifferenceTime(
+                          eventContent.event.extendedProps.planStartDate,
+                          eventContent.event.extendedProps.planEndDate,
+                        )}
+                        分
+                      </p>
                     )}
                 </p>
               </div>
@@ -522,6 +529,10 @@ const ScheduleTeamBoard = () => {
                 participants: event.participants || [],
                 address: event.address || '',
                 largeColor: largeColor,
+                planStartDate: `${event.startDate}`,
+                planEndDate: event.endDate
+                  ? adjustEndDate(startDateActual, endDateActual, 0)
+                  : adjustEndDate(startDateActual, endTimeCustom as Date),
                 resourceIds: [
                   ...(event.participants?.map(
                     (participant) => participant.id,
@@ -597,6 +608,8 @@ const ScheduleTeamBoard = () => {
                 title: event.title,
                 start: `${event.startDate}`,
                 end: `${event.endDate}`,
+                planStartDate: `${event.startDate}`,
+                planEndDate: `${event.endDate}`,
                 allDay: event.isAllDay || false,
                 id: `${event.id}`,
                 type: event.type,
