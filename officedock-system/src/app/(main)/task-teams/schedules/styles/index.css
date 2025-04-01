@@ -106,10 +106,6 @@
   font-weight: 500;
 }
 .calendar-team-custom .fc-timegrid-event .fc-event-main {
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 -2px 4px rgba(0, 0, 0, 0.05),
-    0 2px 4px rgba(0, 0, 0, 0.05);
   border-radius: 6px !important;
 }
 .calendar-team-custom .event-type-task.fc-v-event {
@@ -343,7 +339,7 @@
   font-size: 12px;
 }
 .calendar-team-custom .fc-v-event {
-  background-color: #fff;
+  background-color: transparent !important;
   margin-top: 10px;
   height: 100%;
   border-radius: 8px;

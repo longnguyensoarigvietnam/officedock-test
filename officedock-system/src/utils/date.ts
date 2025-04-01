@@ -1209,3 +1209,17 @@ export const subtractDurations = (
 
   return `${sign}${hh}時間${mm}分`;
 };
+export const getMinuteDifferenceTime = (
+  date1: Date | string,
+  date2: Date | string,
+): number => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+
+  if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
+    throw new Error('Invalid date format');
+  }
+
+  const diffInMs = d2.getTime() - d1.getTime();
+  return Math.abs(diffInMs / (1000 * 60));
+};

@@ -17,6 +17,8 @@ export interface EventCalendarDetail {
   address?: string;
   largeColor?: string;
   isStart?: boolean;
+  planStartDate?: string;
+  planEndDate?: string;
 }
 
 export interface EventCalendarDayRange {
