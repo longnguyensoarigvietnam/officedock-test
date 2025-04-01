@@ -1416,6 +1416,15 @@ const KanbanBoardTask = () => {
             name: destColumn.title,
           };
 
+          if (
+            source.droppableId != String(StatusValueTask.MY_ROUTINE) &&
+            destination.droppableId == String(StatusValueTask.MY_ROUTINE)
+          ) {
+            movedItem.repeatType = TASK_REPETITIVE_OPTIONS.find(
+              (option) => option.label == TaskRepetitiveType.ONCE,
+            )?.value;
+          }
+
           const prevMovedItem =
             source.droppableId === destination.droppableId
               ? sourceItems[destination.index - 1]

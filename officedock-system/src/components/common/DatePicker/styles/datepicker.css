@@ -27,11 +27,13 @@
   color: #c32e2e !important;
 }
 
-.single-date .saturday,
-.react-datepicker__day--keyboard-selected.saturday {
+.react-datepicker__day.saturday {
   color: #0068b6 !important;
 }
 
+.saturday.react-datepicker__day--selected{
+  color: white !important
+}
 .small .react-datepicker {
   padding: 20px 20px !important;
   border: none !important;

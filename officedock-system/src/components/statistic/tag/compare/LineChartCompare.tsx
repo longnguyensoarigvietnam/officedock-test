@@ -301,7 +301,7 @@ const LineChartCompare = ({
      `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 30}px`;
+    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 70}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
   };
@@ -689,7 +689,7 @@ const LineChartCompare = ({
               />
             </div>{' '}
             <p className="text-[#77858F] font-medium text-xs text-left">
-              カテゴリー名
+              タグ名
             </p>
           </div>
         );
