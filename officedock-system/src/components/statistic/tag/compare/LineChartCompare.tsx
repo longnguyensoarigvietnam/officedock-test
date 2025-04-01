@@ -1043,7 +1043,7 @@ const LineChartCompare = ({
                 </div>
               </div>
             </div>
-            <div className="flex  justify-between px-[30px] text-sm font-medium">
+            <div className="flex justify-between items-end px-[30px] text-sm font-medium">
               {/* Column Chart 1 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
@@ -1064,6 +1064,20 @@ const LineChartCompare = ({
                   />
                 </div>
               </div>
+              {selectedOrganization &&
+              selectedLarge &&
+              !selectedMedium &&
+              !selectedSmall ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
               {/* Column Chart 2 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
@@ -1085,6 +1099,20 @@ const LineChartCompare = ({
                   />
                 </div>
               </div>
+              {selectedOrganization &&
+              selectedLarge &&
+              selectedMedium &&
+              !selectedSmall ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
               {/* Column Chart 3 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
@@ -1106,6 +1134,20 @@ const LineChartCompare = ({
                   />
                 </div>
               </div>
+              {selectedOrganization &&
+              selectedLarge &&
+              selectedMedium &&
+              selectedSmall ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
               {/* Column Chart 4 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
