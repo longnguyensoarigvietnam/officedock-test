@@ -2092,7 +2092,7 @@ const DailyReportDetailBoard = () => {
 
               <div className="flex items-center gap-[10px]">
                 <AvatarIconWithDynamicColor color={avatarColor} size={33} />
-                <span className="text-black max-w-[300px] truncate">
+                <span className="text-black max-w-[300px] break-all">
                   {dataDetailUser && dataDetailUser?.fullName}
                 </span>
                 <span className="text-[#77858F] text-xs max-w-[300px] truncate relative top-[1px]">

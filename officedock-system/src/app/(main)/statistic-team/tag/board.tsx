@@ -343,6 +343,7 @@ const StatisticTeamTagBoard = () => {
                 placeholder="集計対象のタグを選択"
                 options={tagsOptions}
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                labelOptionClass="break-words w-[190px]"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {
                   let updatedTagIds = [];
@@ -367,8 +368,10 @@ const StatisticTeamTagBoard = () => {
                   return (
                     <div
                       key={item.value}
-                      className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="w-[32px] truncate">{item.label}</span>
+                      className="min-w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className="min-w-[32px] truncate">
+                        {item.label}
+                      </span>
                       <ImageRound
                         onClick={() => {
                           removeTag(item);

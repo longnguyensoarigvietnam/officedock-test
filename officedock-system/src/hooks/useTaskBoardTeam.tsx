@@ -42,6 +42,7 @@ const useTaskBoardTeam = ({
   // Handle call API get task board list
   const getTaskBoardListTeam = async () => {
     if (!organization_id) return null;
+
     setIsLoadingDataTask(true);
     const params = new URLSearchParams({
       organization_id: String(organization_id),

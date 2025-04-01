@@ -52,7 +52,7 @@ import ActionsTaskModalTeam from '@components/modals/ActionsTaskModalTeam';
 import { useSession } from 'next-auth/react';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import {
   addTimeToDate,
   convertDateStringFull,
@@ -76,6 +76,9 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import { ResponseError } from '@interfaces/response';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
+import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
+import { TaskContext } from '@providers/TaskProvider';
+import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -90,12 +93,16 @@ const KanbanBoardTaskTeam = () => {
     setDataTotalStatus,
     listDataKanbanTeam,
     setListDataKanbanTeam,
+    showWarningStartTaskModalTeam,
+    setShowWarningStartTaskModalTeam,
   } = useContext(TaskTeamStateContext);
+
   const { setIsLoading } = useContext(LoadingContext);
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
 
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
 
   // Param
   const searchParams = useSearchParams();
@@ -166,6 +173,11 @@ const KanbanBoardTaskTeam = () => {
       setCreationDataTaskData(data);
     },
   });
+  useEffect(() => {
+    if (organizationId) {
+      setIsReadyToFetch(true);
+    }
+  }, [organizationId]);
 
   // get list data team
   useTaskBoardTeam({
@@ -372,6 +384,8 @@ const KanbanBoardTaskTeam = () => {
         newPinAt = convertDateStringFull(new Date());
         destTasks.unshift({
           ...movedTask,
+          isMyTask:
+            String(session?.user.id) === destUserId.replace('user_', ''),
           pinAt: newPinAt,
           status: {
             id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
@@ -384,6 +398,8 @@ const KanbanBoardTaskTeam = () => {
         newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
         destTasks.splice(destination.index, 0, {
           ...movedTask,
+          isMyTask:
+            String(session?.user.id) === destUserId.replace('user_', ''),
           pinAt: newPinAt,
           status: {
             id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
@@ -403,6 +419,8 @@ const KanbanBoardTaskTeam = () => {
           newIndex = firstNonPinnedItem.index + INITIAL_INDEX_VALUE;
           destTasks.splice(indexBelowPinnedItems, 0, {
             ...movedTask,
+            isMyTask:
+              String(session?.user.id) === destUserId.replace('user_', ''),
             index: newIndex,
             status: {
               id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
@@ -413,6 +431,8 @@ const KanbanBoardTaskTeam = () => {
           newIndex = INITIAL_INDEX_VALUE * 1000;
           destTasks.push({
             ...movedTask,
+            isMyTask:
+              String(session?.user.id) === destUserId.replace('user_', ''),
             index: newIndex,
             status: {
               id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
@@ -437,6 +457,8 @@ const KanbanBoardTaskTeam = () => {
 
         destTasks.splice(destination.index, 0, {
           ...movedTask,
+          isMyTask:
+            String(session?.user.id) === destUserId.replace('user_', ''),
           index: newIndex,
           status: {
             id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
@@ -1429,6 +1451,72 @@ const KanbanBoardTaskTeam = () => {
 
   const remainingCount = allLabels.length - firstThree.length;
 
+  // Handle start and stop task
+  const {
+    idTaskStarting,
+    taskSelected,
+    taskSelectedToStart,
+    statusTaskSelected,
+    setDataRunning,
+    setTaskSelectedAction,
+  } = useContext(TaskContext);
+
+  const { calculateDurationTask } = useCalculateDurationTask({
+    onSuccess: () => {
+      queryClient.refetchQueries(['getDataTaskHeaderList']);
+      taskSelectedToStart &&
+        queryClient.refetchQueries([
+          'getTaskDurationDetail',
+          {
+            id: `${taskSelectedToStart.id}`,
+            type: ItemStartType.TASK,
+          },
+        ]);
+      queryClient.refetchQueries(['getTaskHeaderStart']);
+
+      setTaskSelectedAction({
+        id:
+          taskSelected.type === ItemStartType.TASK
+            ? `${taskSelected.value}`
+            : `${`${taskSelected.value}`.replace('event', '')}event`,
+        isStart: !statusTaskSelected?.isStart,
+        type: `${taskSelected.type}`,
+      });
+      taskSelectedToStart &&
+        updateTaskIsStart(taskSelectedToStart.id as number);
+    },
+  });
+  const handleConfirmStartNewTask = async () => {
+    taskSelectedToStart &&
+      calculateDurationTask({
+        id: `${taskSelectedToStart.id}`.replace('event', ''),
+        type: `${taskSelectedToStart.type}`,
+      });
+    setShowWarningStartTaskModalTeam(false);
+    taskSelectedToStart &&
+      setDataRunning({
+        id: `${taskSelectedToStart.id}`,
+        type: `${taskSelectedToStart.type}`,
+      });
+  };
+  const updateTaskIsStart = (taskId: number, isPause: boolean = false) => {
+    setListDataKanbanTeam((prevData) =>
+      prevData.map((user) => ({
+        ...user,
+        statuses: Object.fromEntries(
+          Object.entries(user.statuses).map(([statusKey, tasks]) => [
+            statusKey,
+            tasks.map((task: Task) => ({
+              ...task,
+              isStart: isPause ? false : task.id === taskId,
+              hasActualDuration: true,
+            })),
+          ]),
+        ) as TransformedStatuses,
+      })),
+    );
+  };
+
   return (
     <>
       <div
@@ -1492,7 +1580,7 @@ const KanbanBoardTaskTeam = () => {
                       ? 'primary'
                       : 'outline'
                 }
-                className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
                 締切期間
               </Button>
               <Button
@@ -1511,7 +1599,7 @@ const KanbanBoardTaskTeam = () => {
                       ? 'primary'
                       : 'outline'
                 }
-                className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[70px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
                 重要
               </Button>
             </>
@@ -1637,6 +1725,7 @@ const KanbanBoardTaskTeam = () => {
                     onAdd={(id: string) => {
                       setPeopleDefaultId(id);
                     }}
+                    updateTaskIsStart={updateTaskIsStart}
                     pinItemToTop={pinItemToTop}
                     onUpdateInline={(data: {
                       status: string;
@@ -1769,6 +1858,16 @@ const KanbanBoardTaskTeam = () => {
             resetFunctions.resetDataCategoryOptions?.();
             resetFunctions.reset?.();
           }}
+        />
+      )}
+      {showWarningStartTaskModalTeam && (
+        <WarningStartTaskModal
+          open={showWarningStartTaskModalTeam}
+          type={idTaskStarting.type === ItemStartType.TASK ? 'タスク' : '予定'}
+          onClose={() => {
+            setShowWarningStartTaskModalTeam(false);
+          }}
+          onConfirm={handleConfirmStartNewTask}
         />
       )}
     </>

@@ -70,7 +70,13 @@ const AllocationCategoryCompare = memo(
   }: Props) => {
     const [isExtendData, setIsExtendData] = useState(true);
     const [isShowModal, setIsShowModal] = useState(false);
+    const [isShowModalCompare, setIsShowModalCompare] = useState(false);
     const [detailCategory, setDetailCategory] = useState<{
+      id: number | null;
+      type: string;
+      totalDuration: string;
+    } | null>(null);
+    const [detailCategoryCompare, setDetailCategoryCompare] = useState<{
       id: number | null;
       type: string;
       totalDuration: string;
@@ -123,6 +129,7 @@ const AllocationCategoryCompare = memo(
       setSelectedTags,
       setTotalDurationTask,
       setTotalDurationCategory,
+      setTotalDurationTaskCompare,
     } = useContext(StatisticStateContext);
 
     useEffect(() => {
@@ -347,34 +354,65 @@ const AllocationCategoryCompare = memo(
       }
     }, [statisticCategoryList, statisticCategoryCompareList]);
 
-    const handleClickTooltip = (id: number | null, type: string) => {
+    const handleClickTooltip = (
+      id: number | null,
+      type: string,
+      isCompare: boolean,
+    ) => {
       let duration: string = '00:00:00';
+      if (isCompare) {
+        if (type === EventWorkCategory.ALL) {
+          duration =
+            statisticCategoryCompareList?.largeCategories.find(
+              (item) => item.categoryId == id,
+            )?.duration || '00:00:00';
+        }
+        if (type === EventWorkCategory.LARGE) {
+          duration =
+            statisticCategoryCompareList?.mediumCategories?.find(
+              (item) => item.categoryId == id,
+            )?.duration || '00:00:00';
+        }
+        if (type === EventWorkCategory.MEDIUM) {
+          duration =
+            statisticCategoryCompareList?.smallCategories?.find(
+              (item) => item.categoryId == id,
+            )?.duration || '00:00:00';
+        }
+        setDetailCategoryCompare({
+          id: id,
+          type: type,
+          totalDuration: duration,
+        });
 
-      if (type === EventWorkCategory.ALL) {
-        duration =
-          statisticCategoryList?.largeCategories.find(
-            (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.LARGE) {
-        duration =
-          statisticCategoryList?.mediumCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
-      }
-      if (type === EventWorkCategory.MEDIUM) {
-        duration =
-          statisticCategoryList?.smallCategories?.find(
-            (item) => item.categoryId == id,
-          )?.duration || '00:00:00';
-      }
-      setDetailCategory({
-        id: id,
-        type: type,
-        totalDuration: duration,
-      });
+        setIsShowModalCompare(true);
+      } else {
+        if (type === EventWorkCategory.ALL) {
+          duration =
+            statisticCategoryList?.largeCategories.find(
+              (item) => item.categoryId == id,
+            )?.duration || '00:00:00';
+        }
+        if (type === EventWorkCategory.LARGE) {
+          duration =
+            statisticCategoryList?.mediumCategories?.find(
+              (item) => item.categoryId == id,
+            )?.duration || '00:00:00';
+        }
+        if (type === EventWorkCategory.MEDIUM) {
+          duration =
+            statisticCategoryList?.smallCategories?.find(
+              (item) => item.categoryId == id,
+            )?.duration || '00:00:00';
+        }
+        setDetailCategory({
+          id: id,
+          type: type,
+          totalDuration: duration,
+        });
 
-      setIsShowModal(true);
+        setIsShowModal(true);
+      }
     };
 
     const handleScroll = () => {
@@ -437,6 +475,77 @@ const AllocationCategoryCompare = memo(
 
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+
+    const handleScrollCompare = () => {
+      if (detailCategoryCompare?.type === EventWorkCategory.ALL) {
+        const item = largeOptions.find(
+          (item) => item.value === detailCategoryCompare?.id,
+        );
+        item && handleSelectLarge(item);
+        setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
+
+        if (String(detailCategoryCompare?.id) == '未設定') {
+          handleSelectLarge({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+      if (detailCategoryCompare?.type === EventWorkCategory.LARGE) {
+        const item = mediumOptions.find(
+          (item) => item.value === detailCategoryCompare?.id,
+        );
+        item && handleSelectMedium(item);
+        setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
+
+        if (String(detailCategoryCompare?.id) == '未設定') {
+          handleSelectMedium({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+
+      if (detailCategoryCompare?.type === EventWorkCategory.MEDIUM) {
+        const item = smallOptions.find(
+          (item) => item.value === detailCategoryCompare?.id,
+        );
+        item && handleSelectSmall(item);
+        setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
+
+        if (String(detailCategoryCompare?.id) == '未設定') {
+          handleSelectSmall({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+      if (detailCategoryCompare?.type === EventWorkCategory.SMALL) {
+        const item = smallOptions.find(
+          (item) => item.value === detailCategoryCompare?.id,
+        );
+        item && handleSelectSmall(item);
+        setTotalDurationTaskCompare(detailCategoryCompare.totalDuration);
+        if (String(detailCategoryCompare?.id) == '未設定') {
+          handleSelectSmall({
+            label: '未設定',
+            value: '未設定',
+          });
+        }
+      }
+
+      const element = document.getElementById('task-list-statistic');
+      setIsShowModalCompare(false);
+
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+
+        const url = new URL(window.location.href);
+
+        url.searchParams.set('isCompare', 'true');
+        window.history.pushState({}, '', url);
       }
     };
 
@@ -638,6 +747,7 @@ const AllocationCategoryCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.ALL,
+                                      false,
                                     );
                                   }}
                                   handleClickChart={(
@@ -681,6 +791,7 @@ const AllocationCategoryCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.ALL,
+                                      true,
                                     );
                                   }}
                                   handleClickChart={(
@@ -840,6 +951,7 @@ const AllocationCategoryCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.LARGE,
+                                      false,
                                     );
                                   }}
                                   handleClickChart={(
@@ -883,6 +995,7 @@ const AllocationCategoryCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.LARGE,
+                                      true,
                                     );
                                   }}
                                   handleClickChart={(
@@ -1042,6 +1155,7 @@ const AllocationCategoryCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.MEDIUM,
+                                      false,
                                     );
                                   }}
                                   id={pair.main ? pair.main.id : 0}
@@ -1068,6 +1182,7 @@ const AllocationCategoryCompare = memo(
                                     handleClickTooltip(
                                       id,
                                       EventWorkCategory.MEDIUM,
+                                      true,
                                     );
                                   }}
                                   id={pair.compare ? pair.compare.id : 0}
@@ -1104,19 +1219,37 @@ const AllocationCategoryCompare = memo(
         {isShowModal && (
           <ListTaskDetailStatisticModal
             open={isShowModal}
-            selectedTags={selectedTags}
+            startDate={startDate}
+            endDate={endDate}
+            statisticCategoryList={statisticCategoryList}
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}
             selectedSmall={selectedSmall}
-            startDate={startDate}
-            endDate={endDate}
             detailCategory={detailCategory}
             selectedOrganization={selectedOrganization}
-            statisticCategoryList={statisticCategoryList}
             onClose={() => {
               setIsShowModal(false);
             }}
+            selectedTags={selectedTags}
             handleScroll={handleScroll}
+          />
+        )}
+        {isShowModalCompare && (
+          <ListTaskDetailStatisticModal
+            open={isShowModalCompare}
+            selectedTags={selectedTags}
+            startDate={startDateCompare}
+            statisticCategoryList={statisticCategoryList}
+            endDate={endDateCompare}
+            selectedLarge={selectedLarge}
+            selectedMedium={selectedMedium}
+            selectedSmall={selectedSmall}
+            detailCategory={detailCategoryCompare}
+            selectedOrganization={selectedOrganization}
+            onClose={() => {
+              setIsShowModalCompare(false);
+            }}
+            handleScroll={handleScrollCompare}
           />
         )}
       </>

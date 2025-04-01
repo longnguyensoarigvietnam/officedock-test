@@ -114,7 +114,7 @@ const PercentageBarCompareTeam = ({
                                     backgroundColor: mergeItem.categoryColor,
                                   }}
                                   className="w-3 h-3"></div>
-                                <span className="truncate font-bold text-base text-black">
+                                <span className="truncate max-w-[180px] font-bold text-base text-black">
                                   {mergeItem.categoryName}
                                 </span>
                               </div>
@@ -182,7 +182,7 @@ const PercentageBarCompareTeam = ({
                               backgroundColor: item.color,
                             }}
                             className="w-3 h-3"></div>
-                          <span className="truncate font-bold text-base text-black">
+                          <span className="truncate max-w-[180px] font-bold text-base text-black">
                             {item.label}
                           </span>
                         </div>
@@ -273,7 +273,7 @@ const PercentageBarCompareTeam = ({
                                     backgroundColor: mergeItem.categoryColor,
                                   }}
                                   className="w-3 h-3"></div>
-                                <span className="truncate font-bold text-base text-black">
+                                <span className="truncate max-w-[180px] font-bold text-base text-black">
                                   {mergeItem.categoryName}
                                 </span>
                               </div>
@@ -343,7 +343,7 @@ const PercentageBarCompareTeam = ({
                               backgroundColor: item.color,
                             }}
                             className="w-3 h-3"></div>
-                          <span className="truncate font-bold text-base text-black">
+                          <span className="truncate max-w-[180px] font-bold text-base text-black">
                             {item.label}
                           </span>
                         </div>

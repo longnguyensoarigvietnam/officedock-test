@@ -239,6 +239,7 @@ const ListTags = () => {
 
   // Get tag's detail
   const handleGetDataDetailTag = async (id: string) => {
+    setIsLoading(true);
     const { data: response } = await api.get(apiRouters.TAG_DETAIL(id));
     return response;
   };
@@ -414,21 +415,22 @@ const ListTags = () => {
   });
 
   useEffect(() => {
-    if (tagId && dataTagEdit == null && actionType) {
+    if (tagId && dataTagEdit == null && actionType && !openActionsTagModal) {
       handleConfirmGetDataDetailTag(tagId);
     }
     if (actionType === ActionsModal.CREATE) {
       setOpenActionsTagModal(true);
+    } else {
+      setOpenActionsTagModal(false);
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getDataDetailTag, tagId, actionType]);
   return (
     <Fragment>
       <div className="flex justify-between">
         <p className="text-black font-medium text-[26px]">タグ管理</p>
-        <div
-          className="flex gap-2 items-center hover:cursor-pointer"
-          >
+        <div className="flex gap-2 items-center hover:cursor-pointer">
           {!filterRequest.isHidden && (
             <ImageRound
               name="Hide"
@@ -512,42 +514,45 @@ const ListTags = () => {
             )}
           </Popover>
           <div className="flex gap-2">
-            {organizationLabels && organizationLabels?.length > 0 && organizationLabels.slice(0, 3).map((organizationLabel) => {
-              return (
-                <div
-                  key={organizationLabel.value}
-                  className="w-[130px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#F8FAFC]">
-                  <span className="w-[120px] truncate">
-                    {organizationLabel.label}
-                  </span>
-                  <ImageRound
-                    src={`/icons/close.svg`}
-                    name="close"
-                    className="w-fit h-fit cursor-pointer"
-                    onClick={() => {
-                      let updatedTagIds = [];
-                      const currentTagIds = getValues('organizationIds') || [];
-                      updatedTagIds = currentTagIds.filter(
-                        (tag) => tag.value != organizationLabel.value,
-                      );
-                      setValue('organizationIds', updatedTagIds);
-                      setFilterRequest((prev) => ({
-                        ...prev,
-                        organizationIds: encodeURIComponent(
-                          updatedTagIds
-                            ? updatedTagIds
-                                .map((org: OptionDropdownType) => org.value)
-                                .join(',')
-                            : '',
-                        ),
-                      }));
-                      setCurrentPage(1);
-                      setOrganizationLabels(updatedTagIds);
-                    }}
-                  />
-                </div>
-              );
-            })}
+            {organizationLabels &&
+              organizationLabels?.length > 0 &&
+              organizationLabels.slice(0, 3).map((organizationLabel) => {
+                return (
+                  <div
+                    key={organizationLabel.value}
+                    className="w-[130px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#F8FAFC]">
+                    <span className="w-[120px] truncate">
+                      {organizationLabel.label}
+                    </span>
+                    <ImageRound
+                      src={`/icons/close.svg`}
+                      name="close"
+                      className="w-fit h-fit cursor-pointer"
+                      onClick={() => {
+                        let updatedTagIds = [];
+                        const currentTagIds =
+                          getValues('organizationIds') || [];
+                        updatedTagIds = currentTagIds.filter(
+                          (tag) => tag.value != organizationLabel.value,
+                        );
+                        setValue('organizationIds', updatedTagIds);
+                        setFilterRequest((prev) => ({
+                          ...prev,
+                          organizationIds: encodeURIComponent(
+                            updatedTagIds
+                              ? updatedTagIds
+                                  .map((org: OptionDropdownType) => org.value)
+                                  .join(',')
+                              : '',
+                          ),
+                        }));
+                        setCurrentPage(1);
+                        setOrganizationLabels(updatedTagIds);
+                      }}
+                    />
+                  </div>
+                );
+              })}
             {organizationLabels && organizationLabels.length > 3 && (
               <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#F8FAFC] text-black text-xs font-medium">
                 +{organizationLabels.length - 3}
@@ -631,7 +636,7 @@ const ListTags = () => {
                           PermissionsSystem.TAG_UPDATE,
                         ) ? (
                           <div
-                            className='hidden'
+                            className="hidden"
                             onClick={() => {
                               handleConfirmToggleHideTag({
                                 id: element.id,

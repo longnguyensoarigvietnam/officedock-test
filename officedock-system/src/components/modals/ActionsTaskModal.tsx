@@ -1148,7 +1148,7 @@ const ActionsTaskModal = ({
         ref={modalRef}
         onSubmit={handleSubmit(onSubmitData)}
         className="px-8 pb-8 h-[calc(100%_-_150px)] overflow-y-auto">
-        <header className="flex sticky z-[500] top-[0px] pb-5 pt-[30px] items-center gap-2 justify-between bg-white">
+        <header className="flex sticky z-[503] top-[0px] pb-5 pt-[30px] items-center gap-2 justify-between bg-white">
           {/* Prevent default focus with fake input */}
           <input
             id="someOtherElement"
@@ -1451,10 +1451,7 @@ const ActionsTaskModal = ({
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
                       disabled={
-                        isCheckActionPermission ||
-                        (dataTask
-                          ? dataTask.status?.id === StatusValueTask.MY_ROUTINE
-                          : false)
+                        isCheckActionPermission
                       }
                       options={
                         action === ActionTask.CREATE
@@ -1527,9 +1524,7 @@ const ActionsTaskModal = ({
                         render={({ field: { value, onChange } }) => (
                           <DatePickerCustom
                             disabled={
-                              isCheckActionPermission ||
-                              watch('statusId')?.value ===
-                                StatusValueTask.MY_ROUTINE
+                              isCheckActionPermission
                             }
                             className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
                             selected={value ? new Date(value) : null}
@@ -1552,9 +1547,7 @@ const ActionsTaskModal = ({
                         isShowClockIcon={true}
                         type="text"
                         disabled={
-                          isCheckActionPermission ||
-                          watch('statusId')?.value ===
-                            StatusValueTask.MY_ROUTINE
+                          isCheckActionPermission
                         }
                         register={register('deadlineTime', {
                           required:
@@ -2123,7 +2116,7 @@ const ActionsTaskModal = ({
               <div className="w-full max-w-[515px] flex flex-col gap-3 items-start">
                 <div className="w-full flex justify-between">
                   <div className="flex gap-3">
-                    <div className="w-[140px]">
+                    <div className="w-[140px]" style={{ zIndex: 500 }}>
                       <Controller
                         control={control}
                         name={'repeatType'}

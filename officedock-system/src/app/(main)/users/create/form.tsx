@@ -432,45 +432,53 @@ const CreateUserForm = () => {
                 )}
               />
             </div>
-            <div className="grid gap-3 ">
+            <div className="grid gap-3 flex-1 min-w-0 ">
               <label className="text-sm ">組織 正</label>
-              <Controller
-                control={control}
-                name={`mainOrganization`}
-                render={({ field: { onChange } }) => (
-                  <Dropdown
-                    isLoading={isLoadingOrganization}
-                    options={unSelectedOrganizationOptions}
-                    placeholder="選択してください"
-                    onChange={(option: OptionDropdownType) => {
-                      onChange(option);
-                      handleSelectedMainOrganization(option);
-                    }}
-                  />
-                )}
-              />
+              <div className="flex-1 min-w-0">
+                <Controller
+                  control={control}
+                  name={`mainOrganization`}
+                  render={({ field: { onChange } }) => (
+                    <Dropdown
+                      isLoading={isLoadingOrganization}
+                      options={unSelectedOrganizationOptions}
+                      placeholder="選択してください"
+                      onChange={(option: OptionDropdownType) => {
+                        onChange(option);
+                        handleSelectedMainOrganization(option);
+                      }}
+                    />
+                  )}
+                />
+              </div>
             </div>
-            <div className="grid gap-3 ">
+            <div className="grid gap-3 w-full">
               <label className="text-sm ">組織 副</label>
               {fields.map((field, index) => (
-                <div className="flex gap-3" key={field.id}>
-                  <Controller
-                    control={control}
-                    name={`organizations.${index}`}
-                    render={({ field: { onChange } }) => (
-                      <Dropdown
-                        isLoading={isLoadingOrganization}
-                        options={unSelectedOrganizationOptions}
-                        placeholder="選択してください"
-                        onChange={(option: OptionDropdownType) => {
-                          onChange(option);
-                          handleSelectedOrganization(index, option);
-                        }}
-                      />
-                    )}
-                  />
+                <div
+                  className="flex gap-3 relative max-w-[calc(100%)]"
+                  key={field.id}>
+                  <div className="flex-1 min-w-0">
+                    <Controller
+                      control={control}
+                      name={`organizations.${index}`}
+                      render={({ field: { onChange } }) => (
+                        <div className="max-w-[485px]">
+                          <Dropdown
+                            isLoading={isLoadingOrganization}
+                            options={unSelectedOrganizationOptions}
+                            placeholder="選択してください"
+                            onChange={(option: OptionDropdownType) => {
+                              onChange(option);
+                              handleSelectedOrganization(index, option);
+                            }}
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
 
-                  <div className="mt-[2.5px]">
+                  <div className="mt-[2.5px] flex-shrink-0">
                     <Button
                       sz="sm"
                       variant="outline"
@@ -520,24 +528,26 @@ const CreateUserForm = () => {
               <div className="grid gap-3">
                 {fieldsRole.map((field, index) => (
                   <div className="flex gap-3" key={field.id}>
-                    <Controller
-                      control={control}
-                      name={`roles.${index}`}
-                      rules={{ required: ROLE_REQUIRED_MESSAGE }}
-                      render={({ field: { onChange } }) => (
-                        <Dropdown
-                          isLoading={isLoadingRole}
-                          options={unSelectedRoleOptions}
-                          placeholder="ロールを選択してください"
-                          onChange={(option: OptionDropdownType) => {
-                            setError('roles', { message: '' });
-                            onChange(option);
-                            handleSelectedRole(index, option);
-                          }}
-                          error={errors.roles?.root?.message || ''}
-                        />
-                      )}
-                    />
+                    <div className="max-w-[485px]">
+                      <Controller
+                        control={control}
+                        name={`roles.${index}`}
+                        rules={{ required: ROLE_REQUIRED_MESSAGE }}
+                        render={({ field: { onChange } }) => (
+                          <Dropdown
+                            isLoading={isLoadingRole}
+                            options={unSelectedRoleOptions}
+                            placeholder="ロールを選択してください"
+                            onChange={(option: OptionDropdownType) => {
+                              setError('roles', { message: '' });
+                              onChange(option);
+                              handleSelectedRole(index, option);
+                            }}
+                            error={errors.roles?.root?.message || ''}
+                          />
+                        )}
+                      />
+                    </div>
                     {fieldsRole.length > 1 && (
                       <div className="mt-[2.5px]">
                         <Button

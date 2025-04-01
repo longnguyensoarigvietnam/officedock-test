@@ -402,9 +402,12 @@ class TaskViewSet(
             else:
                 rule_params["dtstart"] = start_date.replace(
                     day=month_day, month=month
-                ) + timedelta(days=LIMIT_DAY)
-        rule_params["until"] = rule_params["dtstart"] + timedelta(
-            days=LIMIT_DAY
+                ) + timedelta(days=LIMIT_DAY + 1)
+
+        rule_params["until"] = (
+            rule_params["dtstart"] + timedelta(days=LIMIT_DAY)
+            if repeat_type != FrequencyMap.YEARLY.value
+            else rule_params["dtstart"]
         )  # Set default end_date is 1 year
         rule = rrule.rrule(**rule_params)
         schedules = []
@@ -412,7 +415,11 @@ class TaskViewSet(
             task.task_schedules.all().delete()
         if task.task_schedules.exists():
             list_task_schedule_edited = None
-            if old_recurring:
+            if (
+                old_recurring
+                and old_recurring.get("plan_start_date")
+                and old_recurring.get("plan_end_date")
+            ):
                 plan_start_time = datetime.strptime(
                     old_recurring["plan_start_date"], "%Y-%m-%dT%H:%M:%S"
                 ).timetz()
@@ -823,6 +830,7 @@ class TaskViewSet(
             )
         ):
             reset_sort_task(user)
+
         if is_exists_repeat:
             serializer_data["recurring"] = {
                 "repeat_type": repeat_type,
@@ -839,6 +847,18 @@ class TaskViewSet(
             }
         else:
             serializer_data["recurring"] = None
+        if (current_task_status.name != TaskStatus.MY_ROUTINE.value) and (
+            serializer_data.get("status").name == TaskStatus.MY_ROUTINE.value
+        ):
+            serializer_data["recurring"] = {
+                "repeat_type": FrequencyMap.ONCE.value,
+                "plan_start_date": None,
+                "plan_end_date": None,
+                "repeat_interval": None,
+                "week_day": None,
+                "month_day": None,
+                "month": None,
+            }
         # Update task
         task = serializer.save()
 
@@ -852,7 +872,11 @@ class TaskViewSet(
                 ChatMessageTypes.EDIT_TASK.value,
             )
 
-        if (is_exists_repeat and old_recurring) and (
+        if (
+            is_exists_repeat
+            and old_recurring
+            and task.status.name == TaskStatus.MY_ROUTINE.value
+        ) and (
             (
                 old_recurring["repeat_type"] == FrequencyMap.ONCE.value
                 and repeat_type != FrequencyMap.ONCE.value
@@ -873,7 +897,6 @@ class TaskViewSet(
             task.task_schedules.all().delete()
             task.recurring = {}
             task.save()
-
         # Handle task schedules creation
         if (task_schedules is not None) or (
             task_schedules is not None
@@ -1088,6 +1111,7 @@ class TaskViewSet(
         # Create task schedule base on repeat
         if (
             task.status.name == TaskStatus.MY_ROUTINE.value
+            and repeat_type
             and task.recurring
             and task.recurring != old_recurring
         ):
@@ -1284,6 +1308,18 @@ class TaskViewSet(
                 )
 
             if task_status:
+                if (task_status.name == TaskStatus.MY_ROUTINE.value) and (
+                    task.status.name != TaskStatus.MY_ROUTINE.value
+                ):
+                    task.recurring = {
+                        "repeat_type": FrequencyMap.ONCE.value,
+                        "plan_start_date": None,
+                        "plan_end_date": None,
+                        "repeat_interval": None,
+                        "week_day": None,
+                        "month_day": None,
+                        "month": None,
+                    }
                 task.status = task_status
                 task.save()
                 for user in task.people_in_charge.all():

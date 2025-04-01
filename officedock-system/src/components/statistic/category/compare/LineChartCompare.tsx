@@ -39,6 +39,7 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import { getRandomColor, lightenColor } from '@utils';
@@ -212,12 +213,6 @@ const LineChartCompare = ({
       return;
     }
 
-    // Hide tooltip for the last data point
-    if (dataIndex === dataset.data.length - 1) {
-      tooltipEl.style.opacity = '0';
-      return;
-    }
-
     if (tooltipModel.opacity === 0) {
       tooltipEl.style.opacity = '0';
       return;
@@ -228,6 +223,12 @@ const LineChartCompare = ({
 
     const dataPoint = tooltipModel.dataPoints[0]?.raw;
     if (!dataPoint) {
+      tooltipEl.style.opacity = '0';
+      return;
+    }
+
+    // Hide tooltip for the last data point
+    if (tooltipModel.dataPoints[0]?.raw.x === lineChartData.labels.at(-1)) {
       tooltipEl.style.opacity = '0';
       return;
     }
@@ -252,7 +253,10 @@ const LineChartCompare = ({
             height: 12px; 
             border-radius: 2px;
           "></div>
-          <p style="font-weight: 700; font-size: 16px;">${datasetLabel}</p>
+          <p style="font-weight: 700; font-size: 16px; max-width: 200px;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;">${datasetLabel}</p>
         </div>  
   
         <div style="
@@ -292,7 +296,7 @@ const LineChartCompare = ({
     `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 30}px`;
+    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 70}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
   };
@@ -438,14 +442,24 @@ const LineChartCompare = ({
       const finalLabelList: string[] = Array.from(
         new Set([
           ...statisticTaskDurationsList.flatMap((category) =>
-            category.durations.map((duration) => duration.startDate),
+            category.durations.flatMap((duration, index) =>
+              index === category.durations.length - 1 &&
+              String(category.durations.at(-1)?.endDate) !== String(category.durations.at(-1)?.startDate)
+                ? [duration.startDate, duration.endDate]
+                : duration.startDate
+            )
           ),
           ...statisticTaskDurationsCompareList.flatMap((category) =>
-            category.durations.map((duration) => duration.startDate),
+            category.durations.flatMap((duration, index) =>
+              index === category.durations.length - 1 &&
+              String(category.durations.at(-1)?.endDate) !== String(category.durations.at(-1)?.startDate)
+                ? [duration.startDate, duration.endDate]
+                : duration.startDate
+            )
           ),
-        ]),
+        ])
       ).sort((a, b) => a.localeCompare(b));
-
+      
       const generateDataWithAlignment = (durations: any[], type: string) => {
         return finalLabelList
           .map((label) => {
@@ -670,6 +684,27 @@ const LineChartCompare = ({
     totalDurationMediumCompare,
     totalDurationSmallCompare,
   ]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'categoryPercent', desc: true },
+  ]);
+
+  const handleSortingChange = (updater: any) => {
+    setSorting((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      return next.length === 0 ? [{ id: 'categoryPercent', desc: true }] : next;
+    });
+  };
+  const differenceSorting = (rowA: any, rowB: any) => {
+    const standardA = Number(rowA.original.standardInfo?.categoryPercent) || 0;
+    const compareA = Number(rowA.original.compareInfo?.categoryPercent) || 0;
+    const differenceA = standardA - compareA;
+
+    const standardB = Number(rowB.original.standardInfo?.categoryPercent) || 0;
+    const compareB = Number(rowB.original.compareInfo?.categoryPercent) || 0;
+    const differenceB = standardB - compareB;
+
+    return differenceA - differenceB;
+  };
 
   const columns: ColumnDef<MergedTableCategory>[] = [
     {
@@ -833,6 +868,7 @@ const LineChartCompare = ({
         );
       },
       enableSorting: true,
+      sortingFn: differenceSorting,
       cell: (info) => {
         const standardPercent =
           Number(info.row.original.standardInfo?.categoryPercent) || 0;
@@ -868,6 +904,9 @@ const LineChartCompare = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    state: { sorting },
+    sortingFns: { differenceSorting },
+    onSortingChange: handleSortingChange,
   });
 
   return (
@@ -1116,7 +1155,7 @@ const LineChartCompare = ({
                     <div
                       className="w-8 h-1"
                       style={{ backgroundColor: label.color }}></div>
-                    <p className="font-medium text-[#77858F] text-xs">
+                    <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
                       {label.name}
                     </p>
                   </div>
@@ -1133,7 +1172,7 @@ const LineChartCompare = ({
                     <div
                       className="w-8 h-1 border-t-2 border-dashed"
                       style={{ borderColor: label.color }}></div>
-                    <p className="font-medium text-[#77858F] text-xs">
+                    <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
                       {label.name}
                     </p>
                   </div>

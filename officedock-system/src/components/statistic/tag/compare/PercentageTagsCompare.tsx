@@ -289,7 +289,7 @@ const PercentageTagsCompare = ({
     );
     item && handleSelectLarge(item);
     const element = document.getElementById('task-list-statistic');
-    setIsShowModal(false);
+    setIsShowModalCompare(false);
 
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -342,6 +342,7 @@ const PercentageTagsCompare = ({
                         options={tagsOptions}
                         placeholder="集計対象のタグを選択"
                         className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                        labelOptionClass="break-words w-[190px]"
                         selectedOptions={selectedTags || []}
                         onChange={(selected) => {
                           let updatedTagIds = [];

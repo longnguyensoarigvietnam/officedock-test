@@ -50,6 +50,7 @@ const PieChart = ({
     }
     return acc;
   }, []);
+
   const chartData: ChartData<'pie', number[], string> = {
     labels: filteredData.map((item) => item.label),
     datasets: [
@@ -79,7 +80,7 @@ const PieChart = ({
           title: () => '',
           label: (tooltipItem) => {
             const value = tooltipItem.raw as number;
-            const actualValue = actualValues[tooltipItem.dataIndex];
+            const actualValue = filteredData[tooltipItem.dataIndex].actualValue;
 
             const maxLabelLength = 15;
             let label = tooltipItem.label;

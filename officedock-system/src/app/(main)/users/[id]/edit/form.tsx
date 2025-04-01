@@ -599,30 +599,32 @@ const EditUserForm = () => {
                 再設定
               </Button>
             </div>
-            <div className="grid gap-3 ">
+            <div className="grid gap-3 flex-1 min-w-0">
               <label className="text-sm ">組織 正</label>
               <Controller
                 control={control}
                 name={`mainOrganization`}
                 render={({ field: { value, onChange } }) => {
                   return (
-                    <Dropdown
-                      isLoading={isLoadingOrganization}
-                      options={unSelectedOrganizationOptions}
-                      placeholder="選択してください"
-                      selectedOption={originalOrganizationOptions.find(
-                        (element) =>
-                          element.value == value?.value &&
-                          value.type == OrganizationType.MAIN,
-                      )}
-                      onChange={(option: OptionDropdownType) => {
-                        onChange({ ...option, type: OrganizationType.MAIN });
-                        handleSelectedMainOrganization({
-                          ...option,
-                          type: OrganizationType.MAIN,
-                        });
-                      }}
-                    />
+                    <div className="flex-1 min-w-0">
+                      <Dropdown
+                        isLoading={isLoadingOrganization}
+                        options={unSelectedOrganizationOptions}
+                        placeholder="選択してください"
+                        selectedOption={originalOrganizationOptions.find(
+                          (element) =>
+                            element.value == value?.value &&
+                            value.type == OrganizationType.MAIN,
+                        )}
+                        onChange={(option: OptionDropdownType) => {
+                          onChange({ ...option, type: OrganizationType.MAIN });
+                          handleSelectedMainOrganization({
+                            ...option,
+                            type: OrganizationType.MAIN,
+                          });
+                        }}
+                      />
+                    </div>
                   );
                 }}
               />
@@ -639,27 +641,29 @@ const EditUserForm = () => {
                       name={`organizations.${index}`}
                       render={({ field: { value, onChange } }) => {
                         return (
-                          <Dropdown
-                            classActive="max-w-[100%]"
-                            isLoading={isLoadingOrganization}
-                            options={unSelectedOrganizationOptions}
-                            placeholder="選択してください"
-                            selectedOption={originalOrganizationOptions.find(
-                              (element) =>
-                                element.value == value?.value &&
-                                value.type == OrganizationType.SUB,
-                            )}
-                            onChange={(option: OptionDropdownType) => {
-                              onChange({
-                                ...option,
-                                type: OrganizationType.SUB,
-                              });
-                              handleSelectedOrganization(index, {
-                                ...option,
-                                type: OrganizationType.SUB,
-                              });
-                            }}
-                          />
+                          <div className="max-w-[485px]">
+                            <Dropdown
+                              classActive="max-w-[100%]"
+                              isLoading={isLoadingOrganization}
+                              options={unSelectedOrganizationOptions}
+                              placeholder="選択してください"
+                              selectedOption={originalOrganizationOptions.find(
+                                (element) =>
+                                  element.value == value?.value &&
+                                  value.type == OrganizationType.SUB,
+                              )}
+                              onChange={(option: OptionDropdownType) => {
+                                onChange({
+                                  ...option,
+                                  type: OrganizationType.SUB,
+                                });
+                                handleSelectedOrganization(index, {
+                                  ...option,
+                                  type: OrganizationType.SUB,
+                                });
+                              }}
+                            />
+                          </div>
                         );
                       }}
                     />
