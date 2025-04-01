@@ -96,6 +96,7 @@ class TaskCommonSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
     is_my_task = serializers.SerializerMethodField()
     is_schedule_in_today = serializers.SerializerMethodField()
+    has_actual_duration = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -106,8 +107,15 @@ class TaskCommonSerializer(serializers.ModelSerializer):
             "is_my_task",
             "tags",
             "is_schedule_in_today",
+            "has_actual_duration",
         ]
         read_only_fields = ["id"]
+
+    def get_has_actual_duration(self, instance):
+        """
+        Check task has actual duration
+        """
+        return instance.task_durations.exists()
 
     def get_tags(self, obj):
         """
@@ -378,6 +386,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "week_day",
             "month_day",
             "month",
+            "has_actual_duration",
         ]
 
         read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
@@ -547,7 +556,6 @@ class TaskBoardSerializer(TaskCommonSerializer):
     pin_at = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
     categories = serializers.SerializerMethodField(read_only=True)
-    has_actual_duration = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Task
@@ -625,12 +633,6 @@ class TaskBoardSerializer(TaskCommonSerializer):
         Return task type for duration
         """
         return CalendarTypes.TASK.value
-
-    def get_has_actual_duration(self, instance):
-        """
-        Check task has actual duration
-        """
-        return instance.task_durations.exists()
 
 
 class TaskCalendarSerializer(TaskCommonSerializer):
