@@ -1064,10 +1064,7 @@ const LineChartCompare = ({
                   />
                 </div>
               </div>
-              {selectedOrganization &&
-              selectedLarge &&
-              !selectedMedium &&
-              !selectedSmall ? (
+              {selectedLarge ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}
@@ -1099,10 +1096,7 @@ const LineChartCompare = ({
                   />
                 </div>
               </div>
-              {selectedOrganization &&
-              selectedLarge &&
-              selectedMedium &&
-              !selectedSmall ? (
+              {selectedMedium ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}
@@ -1134,10 +1128,7 @@ const LineChartCompare = ({
                   />
                 </div>
               </div>
-              {selectedOrganization &&
-              selectedLarge &&
-              selectedMedium &&
-              selectedSmall ? (
+              {selectedSmall ? (
                 <div className="w-[18px]">
                   <ImageRound
                     className={`w-fit h-fit`}

@@ -1221,5 +1221,5 @@ export const getMinuteDifferenceTime = (
   }
 
   const diffInMs = d2.getTime() - d1.getTime();
-  return Math.abs(diffInMs / (1000 * 60));
+  return Math.round(Math.abs(diffInMs / (1000 * 60)));
 };
