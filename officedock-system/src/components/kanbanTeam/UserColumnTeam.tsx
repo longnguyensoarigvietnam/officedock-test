@@ -14,7 +14,7 @@ import { ActionTask, ItemStartType } from '@constants/enums';
 type Props = {
   user: TransformedUser;
   onAdd: (id: string) => void;
-  pinItemToTop: (itemId: string | number) => void;
+  pinItemToTop: (itemId: string | number, userId: string) => void;
   onUpdateInline: (data: {
     status: string;
     task: number;
@@ -181,7 +181,9 @@ const UserColumnTeam = ({
                     action: ActionTask.COPY,
                   });
                 }}
-                pinItemToTop={pinItemToTop}
+                pinItemToTop={(id: string | number) => {
+                  pinItemToTop(id, user.id.replace('user_', ''));
+                }}
                 onUpdateInline={onUpdateInline}
                 updateTaskIsStart={updateTaskIsStart}
               />

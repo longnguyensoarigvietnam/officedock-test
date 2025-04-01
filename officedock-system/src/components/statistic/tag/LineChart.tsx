@@ -700,18 +700,17 @@ const LineChart = ({
                   />
                 </div>
               </div>
-              {selectedOrganization &&
-                selectedLarge &&
-                !selectedMedium &&
-                !selectedSmall ? (
-                  <div className="w-[18px]">
-                    <ImageRound
-                      className={`w-fit h-fit`}
-                      src="/icons/drawer-blue.svg"
-                      name="icon chevron right"
-                    />
-                  </div>
-                ) : <div className="w-[18px]"></div>}
+              {selectedLarge ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
 
               {/* Column Chart 2 */}
               <div className="w-[220px] flex flex-col items-center">
@@ -734,18 +733,17 @@ const LineChart = ({
                   />
                 </div>
               </div>
-              {selectedOrganization &&
-                selectedLarge &&
-                selectedMedium &&
-                !selectedSmall ? (
-                  <div className="w-[18px]">
-                    <ImageRound
-                      className={`w-fit h-fit`}
-                      src="/icons/drawer-blue.svg"
-                      name="icon chevron right"
-                    />
-                  </div>
-                ) : <div className="w-[18px]"></div>}
+              {selectedMedium ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
               {/* Column Chart 3 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
@@ -767,18 +765,17 @@ const LineChart = ({
                   />
                 </div>
               </div>
-              {selectedOrganization &&
-                selectedLarge &&
-                selectedMedium &&
-                selectedSmall ? (
-                  <div className="w-[18px]">
-                    <ImageRound
-                      className={`w-fit h-fit`}
-                      src="/icons/drawer-blue.svg"
-                      name="icon chevron right"
-                    />
-                  </div>
-                ) : <div className="w-[18px]"></div>}
+              {selectedSmall ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
               {/* Column Chart 4 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
