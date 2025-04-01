@@ -213,7 +213,7 @@ function StatisticCalendar() {
 
   // Save data time
   const handleSaveCalendar = () => {
-    if (dataEndDate !== endDate || dataStartDate !== startDate) {
+    if ((dataEndDate && endDate && dataEndDate?.getTime() !==  endDate?.getTime()) || (dataStartDate && startDate && dataStartDate?.getTime() !== startDate?.getTime())) {
       setIsLoadingLarge(true);
       setIsLoadingMedium(true);
       setIsLoadingOrganization(true);
@@ -234,14 +234,14 @@ function StatisticCalendar() {
 
   // Save data time compare
   const handleSaveCalendarCompare = () => {
-    if (dataEndDate !== endDate || dataStartDate !== startDate) {
+    if ((dataEndDate && endDate && dataEndDate?.getTime() !== endDate?.getTime()) || (dataStartDate && startDate && dataStartDate?.getTime() !== startDate?.getTime())) {
       setIsLoadingLarge(true);
       setIsLoadingMedium(true);
       setIsLoadingOrganization(true);
     }
     if (
-      dataEndDateCompare !== endDateCompare ||
-      dataStartDateCompare !== startDateCompare
+      dataEndDateCompare && endDateCompare && dataEndDateCompare?.getTime() !== endDateCompare?.getTime() ||
+      startDateCompare && startDateCompare && dataStartDateCompare?.getTime() !== startDateCompare?.getTime()
     ) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
