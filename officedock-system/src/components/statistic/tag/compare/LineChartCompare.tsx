@@ -762,7 +762,8 @@ const LineChartCompare = ({
                 時間
               </p>
               <p>
-                {info.row.original.standardInfo?.tagDuration.split(':')[1] || 0}分
+                {info.row.original.standardInfo?.tagDuration.split(':')[1] || 0}
+                分
               </p>
             </div>
             <div className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
@@ -771,7 +772,8 @@ const LineChartCompare = ({
                 時間
               </p>
               <p>
-                {info.row.original.compareInfo?.tagDuration.split(':')[1] || 0}分
+                {info.row.original.compareInfo?.tagDuration.split(':')[1] || 0}
+                分
               </p>
             </div>
             <div className="font-medium flex text-[14px] justify-center text-black">
@@ -887,6 +889,7 @@ const LineChartCompare = ({
                       options={tagsOptions}
                       placeholder="集計対象のタグを選択"
                       className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                      labelOptionClass="break-words w-[190px]"
                       selectedOptions={selectedTags || []}
                       onChange={(selected) => {
                         let updatedTagIds = [];

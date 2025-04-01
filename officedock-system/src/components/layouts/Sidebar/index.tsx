@@ -482,7 +482,7 @@ const Sidebar = ({ className }: Props) => {
                       />
                     </div>
                   ) : (
-                    <div className="px-4">
+                    <div className="px-4 mb-2">
                       {selectedOrganization?.imgComponent || {
                         label: defaultOrganization?.label || '',
                         value: defaultOrganization?.value || '',

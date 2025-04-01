@@ -1462,14 +1462,9 @@ const ActionsTaskModalTeam = ({
                           ? dataTask.status?.id === StatusValueTask.MY_ROUTINE
                           : false)
                       }
-                      options={
-                        action === ActionTask.CREATE
-                          ? dataOptionsStatus
-                          : dataOptionsStatus.filter(
-                              (item) =>
-                                item.value !== StatusValueTask.MY_ROUTINE,
-                            )
-                      }
+                      options={dataOptionsStatus.filter(
+                        (item) => item.value !== StatusValueTask.MY_ROUTINE,
+                      )}
                       selectedOption={dataOptionsStatus.find(
                         (element) => element.value === value?.value,
                       )}
