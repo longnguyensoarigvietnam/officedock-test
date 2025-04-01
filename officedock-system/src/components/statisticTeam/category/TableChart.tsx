@@ -151,7 +151,15 @@ const TableChart = ({
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
   const queryClient = useQueryClient();
-  const { isCheckCompare } = useContext(StatisticTeamStateContext);
+  const {
+    isCheckCompare,
+    setIsLoadingLarge,
+    setIsLoadingLargeCompare,
+    setIsLoadingMedium,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganization,
+    setIsLoadingOrganizationCompare,
+  } = useContext(StatisticTeamStateContext);
 
   const [statisticTaskList, setStatisticTaskList] = useState<
     ListTaskStatistic[]
@@ -177,6 +185,9 @@ const TableChart = ({
     handleEditCategoryInline,
     {
       onSuccess: async () => {
+        setIsLoadingLarge(true);
+        setIsLoadingMedium(true);
+        setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryListTeam',
@@ -185,6 +196,9 @@ const TableChart = ({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
         if (isCheckCompare) {
+          setIsLoadingLargeCompare(true);
+          setIsLoadingMediumCompare(true);
+          setIsLoadingOrganizationCompare(true);
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
@@ -222,6 +236,9 @@ const TableChart = ({
     handleEditEventCategoryInline,
     {
       onSuccess: async () => {
+        setIsLoadingLarge(true);
+        setIsLoadingMedium(true);
+        setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
@@ -229,6 +246,9 @@ const TableChart = ({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
         if (isCheckCompare) {
+          setIsLoadingLargeCompare(true);
+          setIsLoadingMediumCompare(true);
+          setIsLoadingOrganizationCompare(true);
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',

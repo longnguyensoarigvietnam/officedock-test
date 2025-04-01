@@ -147,7 +147,15 @@ const TableChart = ({
   listOptionsOrganization,
   setOrdering,
 }: TableChartProps) => {
-  const { isCheckCompare } = useContext(StatisticStateContext);
+  const {
+    isCheckCompare,
+    setIsLoadingLarge,
+    setIsLoadingLargeCompare,
+    setIsLoadingMedium,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganization,
+    setIsLoadingOrganizationCompare,
+  } = useContext(StatisticStateContext);
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
   const queryClient = useQueryClient();
@@ -176,6 +184,9 @@ const TableChart = ({
     handleEditCategoryInline,
     {
       onSuccess: async () => {
+        setIsLoadingLarge(true);
+        setIsLoadingMedium(true);
+        setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
@@ -184,6 +195,9 @@ const TableChart = ({
             query.queryKey[0] === 'getStatisticCategoryList',
         });
         if (isCheckCompare) {
+          setIsLoadingLargeCompare(true);
+          setIsLoadingMediumCompare(true);
+          setIsLoadingOrganizationCompare(true);
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',
@@ -221,6 +235,9 @@ const TableChart = ({
     handleEditEventCategoryInline,
     {
       onSuccess: async () => {
+        setIsLoadingLarge(true);
+        setIsLoadingMedium(true);
+        setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
@@ -228,7 +245,11 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryList',
         });
+
         if (isCheckCompare) {
+          setIsLoadingLargeCompare(true);
+          setIsLoadingMediumCompare(true);
+          setIsLoadingOrganizationCompare(true);
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',
