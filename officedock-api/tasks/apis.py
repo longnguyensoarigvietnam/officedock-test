@@ -847,8 +847,13 @@ class TaskViewSet(
             }
         else:
             serializer_data["recurring"] = None
-        if (current_task_status.name != TaskStatus.MY_ROUTINE.value) and (
-            serializer_data.get("status").name == TaskStatus.MY_ROUTINE.value
+        if (
+            (current_task_status.name != TaskStatus.MY_ROUTINE.value)
+            and serializer_data.get("status")
+            and (
+                serializer_data.get("status").name
+                == TaskStatus.MY_ROUTINE.value
+            )
         ):
             serializer_data["recurring"] = {
                 "repeat_type": FrequencyMap.ONCE.value,
