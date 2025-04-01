@@ -250,7 +250,13 @@ const TableChart = ({
   const columns: ColumnDef<ListTaskStatistic>[] = [
     {
       accessorKey: 'name',
-      header: 'タスク名',
+      header: () => {
+        return (
+          <p className="text-[#77858F] px-[12px] font-medium text-xs text-left">
+            タスク名
+          </p>
+        );
+      },
       size: 70,
       cell: (info) => {
         const value = info.getValue() as string;

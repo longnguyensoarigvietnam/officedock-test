@@ -21,6 +21,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import resourcePlugin from '@fullcalendar/resource';
 import scrollgridPlugin from '@fullcalendar/scrollgrid';
+import { useSession } from 'next-auth/react';
 import './styles/index.css';
 
 import Button from '@components/common/Button';
@@ -88,6 +89,7 @@ const ScheduleTeamBoard = () => {
   const organizationId = searchParams.get('organization');
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const screenHeight = window.innerHeight;
+  const { data: session } = useSession();
 
   const baseHeight = Math.round(43 * (screenHeight / 890));
   const baseSlider = Math.round(43 * (screenHeight / 890));
@@ -1101,6 +1103,11 @@ const ScheduleTeamBoard = () => {
           ]}
           initialView={CalendarViewOptions.VIEW_BY_DAY}
           resources={currentResources}
+          resourceOrder={(a: any, b: any) => {
+            if (a.id === String(session?.user.id)) return -1;
+            if (b.id === String(session?.user.id)) return 1;
+            return Number(a.id) - Number(b.id);
+          }}
           resourceLabelContent={(resource) => {
             const avatarColor = String(
               listMemberTeam.find(
