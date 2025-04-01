@@ -344,6 +344,13 @@ const AllocationTag = memo(
                       )}
                     </div>
                   </div>
+                  <div className="w-[18px]">
+                    <ImageRound
+                      className={`w-fit h-fit relative top-9 `}
+                      src="/icons/drawer-blue.svg"
+                      name="icon chevron right"
+                    />
+                  </div>
                   {/* Column Chart 2 */}
                   <div className="w-[220px]">
                     <div className="mt-4">
@@ -393,6 +400,13 @@ const AllocationTag = memo(
                       )}
                     </div>
                   </div>
+                  <div className="w-[18px]">
+                    <ImageRound
+                      className={`w-fit h-fit relative top-9 `}
+                      src="/icons/drawer-blue.svg"
+                      name="icon chevron right"
+                    />
+                  </div>
                   {/* Column Chart 3 */}
                   <div className="w-[220px]">
                     <div className="mt-4">
@@ -438,6 +452,13 @@ const AllocationTag = memo(
                         </div>
                       )}
                     </div>
+                  </div>
+                  <div className="w-[18px]">
+                    <ImageRound
+                      className={`w-fit h-fit relative top-9 `}
+                      src="/icons/drawer-blue.svg"
+                      name="icon chevron right"
+                    />
                   </div>
                   {/* Column Chart 4 */}
                   <div className="w-[220px]">

@@ -200,10 +200,10 @@ const UserColumnTeam = ({
               placement="top"
               offset={[0, 5]}>
               <div
+                className="w-3"
                 onClick={() => setIsExtendUser(true)}
                 style={{
                   padding: `${(247 / 247) * 0}px`,
-                  paddingLeft: `${(247 / 247) * 12}px`,
                 }}>
                 <ImageRound
                   src={`/icons/extend-column.svg`}

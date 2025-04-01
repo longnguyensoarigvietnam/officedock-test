@@ -4,11 +4,14 @@ from time import timezone
 from dateutil import rrule
 from django.db import transaction
 from django.db.models import (
+    Case,
+    When,
     OuterRef,
     Subquery,
     Q,
     Value,
     DateTimeField,
+    IntegerField,
     Max,
 )
 from django.db.models.functions import Coalesce
@@ -82,16 +85,17 @@ from .models import (
 from .serializers import (
     TaskBoardSerializer,
     TaskCalendarSerializer,
+    TaskCommonSerializer,
     TaskIndexForCreationSerializer,
+    TaskIndexPinAtSerializer,
+    TaskIndexSerializer,
     TaskScheduleForCreationSerializer,
+    TaskScheduleSerializer,
     TaskSerializer,
     TaskTeamdockSerializer,
-    TodoListSerializer,
-    TaskIndexSerializer,
-    TaskIndexPinAtSerializer,
-    TaskCommonSerializer,
-    TaskScheduleSerializer,
     TaskTemplateSerializer,
+    TeamTaskIndexSerializer,
+    TodoListSerializer,
 )
 from .filters import TaskBoardFilter, TaskCalendarFilter, TaskScheduleFilter
 
@@ -773,6 +777,7 @@ class TaskViewSet(
         people_in_charge_ids = serializer_data.pop("people_in_charge_ids", None)
         tag_ids = serializer_data.pop("tag_ids", None)
         task_status = serializer_data.get("status", None)
+        is_exists_task_schedules = "task_schedules" in serializer_data
         task_schedules = serializer_data.pop("task_schedules", None)
         todo_list = serializer_data.pop("todo_list", None)
         categories = serializer_data.pop("category_ids", None)
@@ -821,6 +826,11 @@ class TaskViewSet(
                 serializer_data["remind_at"] = calculate_new_time(
                     serializer_data["deadline"], remind_countdown, remind_type
                 )
+        elif serializer_data.get("deadline") is None:
+            serializer_data["reminds"] = {
+                "type": None,
+                "countdown": None,
+            }
 
         if (
             (current_task_status.name != TaskStatus.MY_ROUTINE.value)
@@ -902,6 +912,9 @@ class TaskViewSet(
             task.task_schedules.all().delete()
             task.recurring = {}
             task.save()
+        if is_exists_task_schedules and task_schedules is None:
+            task.task_schedules.all().delete()
+
         # Handle task schedules creation
         if (task_schedules is not None) or (
             task_schedules is not None
@@ -1400,7 +1413,13 @@ class TaskViewSet(
         if not team:
             reset_sort_task(user)
 
-        return self.response_ok(TaskIndexSerializer(task_index).data)
+        result = None
+        if team:
+            result = TeamTaskIndexSerializer(task_index).data
+        else:
+            result = TaskIndexSerializer(task_index).data
+
+        return self.response_ok(result)
 
 
 @extend_schema(tags=["System > Task"])
@@ -1830,14 +1849,13 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     API endpoint to show Tasks to the Teamdock.
     """
 
-    queryset = User.objects.order_by("created_at")
+    queryset = User.objects.all()
     serializer_class = TaskTeamdockSerializer
 
     def get_queryset(self):
         """Filter queryset"""
-        queryset = (
-            super().get_queryset().filter(company=self.request.user.company)
-        )
+        user_logged = self.request.user
+        queryset = super().get_queryset().filter(company=user_logged.company)
 
         # Filter by organization id
         if organization_id := self.request.query_params.get("organization_id"):
@@ -1847,6 +1865,15 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if user_ids := self.request.query_params.get("user_ids"):
             if ids := split_id_from_string(user_ids):
                 queryset = queryset.filter(id__in=ids)
+
+        # Sort logged in users at the top
+        queryset = queryset.annotate(
+            is_logged_in=Case(
+                When(id=user_logged.id, then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by("is_logged_in", "created_at")
 
         return queryset
 

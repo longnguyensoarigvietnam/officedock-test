@@ -1213,9 +1213,9 @@ const ActionsTaskModalTeam = ({
                 rules={{ required: ORGANIZATION_REQUIRED_MESSAGE }}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs  rounded-md !border-none !shadow-none !w-fit !pl-0"
+                    className="h-[34px] !py-1 text-xs max-w-[515px] rounded-md !border-none !shadow-none !w-fit !pl-0"
                     classNameTextData="!text-xs !w-fit"
-                    classNameOption="!text-xs !w-fit"
+                    classNameOption="!text-xs !w-fit max-w-[515px]"
                     classNameError="!text-xs !w-fit"
                     placeholder="選択してください"
                     disabled
@@ -1367,6 +1367,7 @@ const ActionsTaskModalTeam = ({
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
+                    labelOptionClass="break-words w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
                       let updatedTagIds = [];

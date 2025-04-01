@@ -777,6 +777,44 @@ class TaskIndexSerializer(serializers.ModelSerializer):
         ]
 
 
+class TeamTaskIndexSerializer(serializers.ModelSerializer):
+    """
+    Serializer for team task index
+    """
+
+    status = serializers.PrimaryKeyRelatedField(
+        queryset=TaskStatus.objects.all(), required=False, allow_null=True
+    )
+    is_begin_unpin = serializers.BooleanField(
+        required=False, default=False, write_only=True
+    )
+    team = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
+    people_in_charge = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
+
+    class Meta:
+        model = TeamTaskIndex
+        fields = [
+            "index",
+            "user",
+            "team",
+            "task",
+            "status",
+            "pin_at",
+            "is_begin_unpin",
+            "people_in_charge",
+        ]
+
+
 class TaskIndexForCreationSerializer(serializers.Serializer):
     """
     Serializer for task index

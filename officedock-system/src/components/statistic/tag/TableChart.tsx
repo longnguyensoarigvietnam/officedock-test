@@ -149,7 +149,15 @@ const TableChart = ({
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
   const queryClient = useQueryClient();
-  const { isCheckCompare } = useContext(StatisticTagStateContext);
+  const {
+    isCheckCompare,
+    setIsLoadingLarge,
+    setIsLoadingLargeCompare,
+    setIsLoadingMedium,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganization,
+    setIsLoadingOrganizationCompare,
+  } = useContext(StatisticTagStateContext);
 
   const [statisticTaskList, setStatisticTaskList] = useState<
     ListTaskStatistic[]
@@ -175,6 +183,9 @@ const TableChart = ({
     handleEditCategoryInline,
     {
       onSuccess: async () => {
+        setIsLoadingLarge(true);
+        setIsLoadingMedium(true);
+        setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
@@ -182,6 +193,9 @@ const TableChart = ({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
         if (isCheckCompare) {
+          setIsLoadingLargeCompare(true);
+          setIsLoadingMediumCompare(true);
+          setIsLoadingOrganizationCompare(true);
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',
@@ -219,6 +233,9 @@ const TableChart = ({
     handleEditEventCategoryInline,
     {
       onSuccess: async () => {
+        setIsLoadingLarge(true);
+        setIsLoadingMedium(true);
+        setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
@@ -226,6 +243,9 @@ const TableChart = ({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
         if (isCheckCompare) {
+          setIsLoadingLargeCompare(true);
+          setIsLoadingMediumCompare(true);
+          setIsLoadingOrganizationCompare(true);
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTaskListCompare',
@@ -247,7 +267,13 @@ const TableChart = ({
   const columns: ColumnDef<ListTaskStatistic>[] = [
     {
       accessorKey: 'name',
-      header: 'タスク名',
+      header: () => {
+        return (
+          <p className="text-[#77858F] px-[12px] font-medium text-xs text-left">
+            タスク名
+          </p>
+        );
+      },
       size: 70,
       cell: (info) => {
         const value = info.getValue() as string;

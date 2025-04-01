@@ -37,6 +37,7 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import { getRandomColor, lightenColor } from '@utils';
@@ -223,9 +224,6 @@ const LineChartCompare = ({
       return;
     }
 
-    // Extract dataset label safely
-    const datasetLabel = dataset.label ?? 'Unknown';
-
     const dataPoint = tooltipModel.dataPoints[0]?.raw;
     if (!dataPoint) {
       tooltipEl.style.opacity = '0';
@@ -238,67 +236,99 @@ const LineChartCompare = ({
       return;
     }
 
+    const matchingDataPoints = lineChartData.datasets
+      .flatMap((d) => d.data)
+      .filter(
+        (point: any) => point.x === dataPoint.x && point.y === dataPoint.y,
+      )
+      .reduce((acc: Record<string, any[]>, point: any) => {
+        if (!acc[point.label]) {
+          acc[point.label] = [];
+        }
+        acc[point.label].push(point); // Store both 'standard' and 'compare' types
+        return acc;
+      }, {});
+
+    const uniqueDataPoints = Object.values(matchingDataPoints).flat(); // Flatten the grouped values
+
+    const groupedData = uniqueDataPoints.reduce(
+      (acc: Record<string, any[]>, point: any) => {
+        if (!acc[point.label]) {
+          acc[point.label] = [];
+        }
+        acc[point.label].push(point);
+        return acc;
+      },
+      {},
+    );
+
+    const tooltipContent = Object.entries(groupedData)
+      .map(([label, points]) => {
+        const firstPoint = points[0]; // Get the first point to display color and label only once
+        return `
+            <div style="
+              display: flex; 
+              align-items: center; 
+              margin-bottom: 8px; 
+              border-bottom: 1px solid #D2DBE1;
+            ">
+              <div style="
+                background-color: ${firstPoint.color}; 
+                margin-right: 4px; 
+                width: 12px; 
+                height: 12px; 
+                border-radius: 2px;
+              "></div>
+              <p style="font-weight: 700; font-size: 16px; max-width: 200px;
+                white-space: nowrap; 
+                overflow: hidden; 
+                text-overflow: ellipsis;">${label}</p>
+            </div>  
+      
+            ${points
+              .map(
+                (point) => `
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <p style="
+                  background-color: ${point.type === 'standard' ? '#EBF1F7' : '#F9EAEA'};
+                  color: ${point.type === 'standard' ? '#0068B6' : '#C32E2E'};
+                  height: 18px; 
+                  width: 57px; 
+                  border-radius: 3px; 
+                  font-size: 12px; 
+                  font-weight: 500; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center;
+                ">
+                  ${point.type === 'standard' ? '基準期間' : '比較期間'}
+                </p>
+                <div style="color: #77858F; font-weight: 400; font-size: 12px;">
+                  ${convertToJapaneseDateRange(point.x, point.endDate)}
+                </div>
+              </div>
+              <p style="font-weight: 400; font-size: 15px; margin-bottom: 8px;">
+                ${convertFromNumberToJapaneseTime(point.y).formattedHours}時間
+                ${convertFromNumberToJapaneseTime(point.y).formattedMinutes}分
+              </p>
+            `,
+              )
+              .join('')}
+          `;
+      })
+      .join('');
+
     tooltipEl.innerHTML = `
-       <div style="
-         padding: 13px; 
-         background: white; 
-         border-radius: 8px; 
-         box-shadow: 0px 2px 8px 0px #0000001A;
-       ">
-         <div style="
-           display: flex; 
-           align-items: center; 
-           margin-bottom: 8px; 
-           border-bottom: 1px solid #D2DBE1;
-         ">
-           <div style="
-             background-color: ${dataset.borderColor}; 
-             margin-right: 4px; 
-             width: 12px; 
-             height: 12px; 
-             border-radius: 2px;
-           "></div>
-           <p style="font-weight: 700; font-size: 16px; max-width: 200px;
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis;">${datasetLabel}</p>
-         </div>  
-   
-         <div style="
-           display: flex; 
-           justify-content: space-between; 
-           align-items: center;
-         ">
-           <p style="
-             background-color: ${dataPoint.type === 'standard' ? '#EBF1F7' : '#F9EAEA'};
-             color: ${dataPoint.type === 'standard' ? '#0068B6' : '#C32E2E'};
-             height: 18px; 
-             width: 57px; 
-             border-radius: 3px; 
-             font-size: 12px; 
-             font-weight: 500; 
-             display: flex; 
-             align-items: center; 
-             justify-content: center;
-           ">
-             ${dataPoint.type === 'standard' ? '基準期間' : '比較期間'}
-           </p>
-   
-           <div style="
-             color: #77858F; 
-             font-weight: 400; 
-             font-size: 12px; 
-           ">
-             ${convertToJapaneseDateRange(dataPoint.x, dataPoint.endDate)}
-           </div>
-         </div>
-   
-         <p style="font-weight: 400; font-size: 15px;">
-           ${convertFromNumberToJapaneseTime(dataPoint.y).formattedHours}時間
-           ${convertFromNumberToJapaneseTime(dataPoint.y).formattedMinutes}分
-         </p>
-       </div>
-     `;
+        <div style="
+          padding: 13px; 
+          background: white; 
+          border-radius: 8px; 
+          box-shadow: 0px 2px 8px 0px #0000001A;
+          width: 240px
+        ">
+          ${tooltipContent}
+        </div>
+      `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
     tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 70}px`;
@@ -442,23 +472,30 @@ const LineChartCompare = ({
           ...statisticTagTaskDurationsList.flatMap((category) =>
             category.durations.flatMap((duration, index) =>
               index === category.durations.length - 1 &&
-              String(category.durations.at(-1)?.endDate) !== String(category.durations.at(-1)?.startDate)
+              String(category.durations.at(-1)?.endDate) !==
+                String(category.durations.at(-1)?.startDate)
                 ? [duration.startDate, duration.endDate]
-                : duration.startDate
-            )
+                : duration.startDate,
+            ),
           ),
           ...statisticTagTaskDurationsCompareList.flatMap((category) =>
             category.durations.flatMap((duration, index) =>
               index === category.durations.length - 1 &&
-              String(category.durations.at(-1)?.endDate) !== String(category.durations.at(-1)?.startDate)
+              String(category.durations.at(-1)?.endDate) !==
+                String(category.durations.at(-1)?.startDate)
                 ? [duration.startDate, duration.endDate]
-                : duration.startDate
-            )
+                : duration.startDate,
+            ),
           ),
-        ])
+        ]),
       ).sort((a, b) => a.localeCompare(b));
 
-      const generateDataWithAlignment = (durations: any[], type: string) => {
+      const generateDataWithAlignment = (
+        durations: any[],
+        type: string,
+        name: string,
+        color: string,
+      ) => {
         return finalLabelList
           .map((label) => {
             const foundDuration = durations.find(
@@ -470,6 +507,8 @@ const LineChartCompare = ({
                   y: convertTimeToDecimal(foundDuration.duration) ?? 0,
                   endDate: foundDuration.endDate,
                   type: type,
+                  label: name,
+                  color: color,
                 }
               : null;
           })
@@ -527,6 +566,9 @@ const LineChartCompare = ({
                 data: generateDataWithAlignment(
                   categoryDetail.durations,
                   'standard',
+                  categoryDetail.tagName,
+                  lightenColor('#2E9267' as string, percent) ||
+                    getRandomColor(),
                 ),
                 borderColor:
                   lightenColor('#2E9267' as string, percent) ||
@@ -594,6 +636,8 @@ const LineChartCompare = ({
               data: generateDataWithAlignment(
                 categoryDetail.durations,
                 'compare',
+                categoryDetail.tagName,
+                lightenColor('#2E9267' as string, percent) || getRandomColor(),
               ),
               borderColor:
                 lightenColor('#2E9267' as string, percent) || getRandomColor(),
@@ -673,6 +717,53 @@ const LineChartCompare = ({
     totalDurationCategoryCompare,
   ]);
 
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'tagPercent', desc: true },
+  ]);
+
+  const handleSortingChange = (updater: any) => {
+    setSorting((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      return next.length === 0 ? [{ id: 'tagPercent', desc: true }] : next;
+    });
+  };
+  const differenceSorting = (rowA: any, rowB: any) => {
+    const standardA = Number(rowA.original.standardInfo?.tagPercent) || 0;
+    const compareA = Number(rowA.original.compareInfo?.tagPercent) || 0;
+    const differenceA = standardA - compareA;
+
+    const standardB = Number(rowB.original.standardInfo?.tagPercent) || 0;
+    const compareB = Number(rowB.original.compareInfo?.tagPercent) || 0;
+    const differenceB = standardB - compareB;
+
+    return differenceA - differenceB;
+  };
+
+  const durationSorting = (rowA: any, rowB: any) => {
+    const parseDuration = (duration: string) => {
+      const [hours, minutes, seconds] = duration.split(':').map(Number);
+      return hours * 60 + minutes + seconds / 60; // Convert to total minutes
+    };
+
+    const standardA = parseDuration(
+      rowA.original.standardInfo?.tagDuration || '00:00:00',
+    );
+    const compareA = parseDuration(
+      rowA.original.compareInfo?.tagDuration || '00:00:00',
+    );
+    const differenceA = standardA - compareA;
+
+    const standardB = parseDuration(
+      rowB.original.standardInfo?.tagDuration || '00:00:00',
+    );
+    const compareB = parseDuration(
+      rowB.original.compareInfo?.tagDuration || '00:00:00',
+    );
+    const differenceB = standardB - compareB;
+
+    return differenceA - differenceB;
+  };
+
   const columns: ColumnDef<MergedTableCategory>[] = [
     {
       accessorKey: 'tagName',
@@ -750,7 +841,7 @@ const LineChartCompare = ({
         return (
           <div
             className="flex gap-1 items-center justify-center"
-            onClick={column.getToggleSortingHandler()}>
+            onClick={() => column.toggleSorting(isSorted === 'asc')}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
             <div>
               <Image
@@ -764,6 +855,7 @@ const LineChartCompare = ({
           </div>
         );
       },
+      sortingFn: durationSorting,
       enableSorting: true,
       cell: (info) => {
         return (
@@ -809,7 +901,7 @@ const LineChartCompare = ({
         return (
           <div
             className="flex gap-1 items-center justify-center"
-            onClick={column.getToggleSortingHandler()}>
+            onClick={() => column.toggleSorting(isSorted === 'asc')}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
             <div>
               <Image
@@ -824,6 +916,7 @@ const LineChartCompare = ({
         );
       },
       enableSorting: true,
+      sortingFn: differenceSorting,
       cell: (info) => {
         return (
           <div className="flex flex-col gap-2 w-full">
@@ -855,6 +948,9 @@ const LineChartCompare = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    state: { sorting },
+    sortingFns: { differenceSorting },
+    onSortingChange: handleSortingChange,
   });
 
   return (
@@ -947,7 +1043,7 @@ const LineChartCompare = ({
                 </div>
               </div>
             </div>
-            <div className="flex  justify-between px-[30px] text-sm font-medium">
+            <div className="flex justify-between items-end px-[30px] text-sm font-medium">
               {/* Column Chart 1 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
@@ -968,6 +1064,20 @@ const LineChartCompare = ({
                   />
                 </div>
               </div>
+              {selectedOrganization &&
+              selectedLarge &&
+              !selectedMedium &&
+              !selectedSmall ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
               {/* Column Chart 2 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
@@ -989,6 +1099,20 @@ const LineChartCompare = ({
                   />
                 </div>
               </div>
+              {selectedOrganization &&
+              selectedLarge &&
+              selectedMedium &&
+              !selectedSmall ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
               {/* Column Chart 3 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
@@ -1010,6 +1134,20 @@ const LineChartCompare = ({
                   />
                 </div>
               </div>
+              {selectedOrganization &&
+              selectedLarge &&
+              selectedMedium &&
+              selectedSmall ? (
+                <div className="w-[18px]">
+                  <ImageRound
+                    className={`w-fit h-fit`}
+                    src="/icons/drawer-blue.svg"
+                    name="icon chevron right"
+                  />
+                </div>
+              ) : (
+                <div className="w-[18px]"></div>
+              )}
               {/* Column Chart 4 */}
               <div className="w-[220px] flex flex-col items-center">
                 <div
