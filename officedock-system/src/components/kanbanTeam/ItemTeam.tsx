@@ -49,12 +49,13 @@ interface ItemProps {
   }) => void;
   handlePinItem: (id: string) => void;
   handleUnPinItem: (id: string) => void;
-
+  updateTaskIsStart: (taskId: number, isPause?: boolean) => void;
   disableDraggable?: boolean;
 }
 const ItemTeam = ({
   content,
   editTask,
+  updateTaskIsStart,
   handlePinItem,
   handleUnPinItem,
   handleUpdateItemInline,
@@ -63,15 +64,20 @@ const ItemTeam = ({
   const queryClient = useQueryClient();
 
   const {
+    taskSelectedToStart,
     setDataClickTask,
     setDataRunning,
     setIdTaskStarting,
     setTaskSelectedToStart,
-    setShowWarningStartTaskModal,
     setDataActualAddSchedule,
   } = useContext(TaskContext);
-  const { creationDataTaskData, columnWidth, selectedOptionZoom } =
-    useContext(TaskTeamStateContext);
+
+  const {
+    creationDataTaskData,
+    columnWidth,
+    selectedOptionZoom,
+    setShowWarningStartTaskModalTeam,
+  } = useContext(TaskTeamStateContext);
 
   const [dataOptionsStatus, setDataOptionsStatus] = useState<
     OptionDropdownType[]
@@ -216,7 +222,11 @@ const ItemTeam = ({
           type: ItemStartType.TASK,
           isMyTask: false,
         });
-
+        taskSelectedToStart &&
+          updateTaskIsStart(
+            taskSelectedToStart.id as number,
+            data.isStart ? false : true,
+          );
         if (!data.isStart) {
           queryClient.refetchQueries(['getDataTaskHeaderList']);
         }
@@ -260,7 +270,8 @@ const ItemTeam = ({
             id: task.id,
             type: task.type,
           });
-          setShowWarningStartTaskModal(true);
+
+          setShowWarningStartTaskModalTeam(true);
         }
       },
       onError: () => {},

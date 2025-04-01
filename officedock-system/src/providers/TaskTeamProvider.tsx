@@ -47,6 +47,8 @@ interface ContextValue {
   setDataTotalStatus: Dispatch<SetStateAction<UserTotalStatus[]>>;
   listDataKanbanTeam: TransformedUser[];
   setListDataKanbanTeam: Dispatch<SetStateAction<TransformedUser[]>>;
+  showWarningStartTaskModalTeam: boolean;
+  setShowWarningStartTaskModalTeam: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -71,6 +73,8 @@ const defaultValue: ContextValue = {
   setCreationDataTaskData: () => {},
   setOrderingRequest: () => {},
   setOrderingOptions: () => {},
+  showWarningStartTaskModalTeam: false,
+  setShowWarningStartTaskModalTeam: () => {},
 };
 
 export const TaskTeamStateContext = createContext<ContextValue>(defaultValue);
@@ -121,6 +125,9 @@ export const TaskTeamStateProvider = ({
     TransformedUser[]
   >([]);
 
+  const [showWarningStartTaskModalTeam, setShowWarningStartTaskModalTeam] =
+    useState(false);
+
   const contextValue: ContextValue = {
     orderingOptions,
     creationDataTaskData,
@@ -140,6 +147,8 @@ export const TaskTeamStateProvider = ({
     setDataTotalStatus,
     listDataKanbanTeam,
     setListDataKanbanTeam,
+    showWarningStartTaskModalTeam,
+    setShowWarningStartTaskModalTeam,
   };
 
   return (
