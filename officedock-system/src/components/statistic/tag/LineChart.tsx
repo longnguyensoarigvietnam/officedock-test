@@ -198,7 +198,7 @@ const LineChart = ({
     const datasetLabel = dataset.label ?? 'Unknown';
 
     tooltipEl.innerHTML = `
-        <div style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0px 2px 8px 0px #0000001A;">
+        <div style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0px 2px 8px 0px #0000001A; width: 220px">
           <div style="color: #77858F; font-weight: 400; font-size: 14px; margin-bottom: 8px">
             ${convertToJapaneseDateRange(dataPoint.x, dataPoint.endDate)}
           </div>
@@ -217,8 +217,8 @@ const LineChart = ({
       `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX + 10}px`;
-    tooltipEl.style.top = `${offsetTop + tooltipModel.caretY}px`;
+    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 50}px`;
+    tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
   };
 
