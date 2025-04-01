@@ -21,7 +21,6 @@ import interactionPlugin from '@fullcalendar/interaction';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import resourcePlugin from '@fullcalendar/resource';
 import scrollgridPlugin from '@fullcalendar/scrollgrid';
-import { debounce } from 'lodash';
 import './styles/index.css';
 
 import Button from '@components/common/Button';
@@ -38,6 +37,7 @@ import {
   CalendarViewOptions,
   EventWorkCategory,
   ItemScheduleTitleType,
+  ItemStartType,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 
@@ -228,14 +228,15 @@ const ScheduleTeamBoard = () => {
               className={`mb-1 ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} hover:cursor-pointer  px-[10px] py-1 ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-md`}>
               <div
                 className={` flex gap-2 items-center overflow-hidden !w-[calc(100%_-_1px)] py-0.5 text-[12px] font-normal px-1`}>
-                <p className="truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px]">
+                <p
+                  className={`truncate max-w-[calc(100%)] font-semibold mt-0.5 pt-0.5 h-[25px] ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-[#0068B6]'}`}>
                   {eventContent.event.title !== 'null'
                     ? eventContent.event.title
                     : ''}
                 </p>
                 <div className="flex gap-2">
                   <p>終日</p>
-                  <p>{`${formatShowDeadlineAllDayEvent(start)} ~ ${formatShowDeadlineAllDayEvent(end)}`}</p>
+                  <p>{`${formatShowDeadlineAllDayEvent(start)} ~ ${eventContent.event.extendedProps.isStart ? '計測中' : formatShowDeadlineAllDayEvent(end)}`}</p>
                 </div>
               </div>{' '}
             </div>
@@ -258,7 +259,7 @@ const ScheduleTeamBoard = () => {
                     ? largeColor
                     : '#A7B9C2',
             }}
-            className={`h-full ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-md  `}>
+            className={`h-full ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-tr-md rounded-br-md rounded-tl-sm rounded-bl-sm `}>
             <div className="overflow-hidden">
               <div className={`  font-medium px-1 pt-1 text-[14px]`}>
                 <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
@@ -275,7 +276,9 @@ const ScheduleTeamBoard = () => {
                       <p className="whitespace-nowrap">
                         {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
                         ~{' '}
-                        {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
+                        {eventContent.event.extendedProps.isStart
+                          ? '計測中'
+                          : `${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                       </p>
                       <p>{eventContent.event.extendedProps.address}</p>
                     </>
@@ -283,7 +286,13 @@ const ScheduleTeamBoard = () => {
                     <>
                       {isMoreThanThirtyMinutes(eventContent.timeText) && (
                         <div className=" text-[12px] font-normal px-1">
-                          <p>{eventContent.timeText}</p>
+                          <p className="">
+                            {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
+                            ~{' '}
+                            {eventContent.event.extendedProps.isStart
+                              ? '計測中'
+                              : `${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
+                          </p>
                           <p>{eventContent.event.extendedProps.address}</p>
                         </div>
                       )}
@@ -291,9 +300,10 @@ const ScheduleTeamBoard = () => {
                   )}
                 </div>
                 <p className="text-[12px] font-normal px-1">
-                  {selectedOptionShow === ItemScheduleTitleType.ACTUAL && (
-                    <p>{getMinuteDifference(eventContent.timeText)}分</p>
-                  )}
+                  {selectedOptionShow === ItemScheduleTitleType.ACTUAL &&
+                    !eventContent.event.extendedProps.isStart && (
+                      <p>{getMinuteDifference(eventContent.timeText)}分</p>
+                    )}
                 </p>
               </div>
             </div>
@@ -302,25 +312,6 @@ const ScheduleTeamBoard = () => {
       );
     }
   };
-
-  const debouncedFetchCalendarDataPlan = useRef(
-    debounce(async (startDate, endDate) => {
-      await getPlanEventCalendarByTeam({
-        organizationId: String(organizationId),
-        startDate,
-        endDate,
-      });
-    }, 1000),
-  ).current;
-  const debouncedFetchCalendarDataActual = useRef(
-    debounce(async (startDate, endDate) => {
-      await getActualEventCalendarByTeam({
-        organizationId: String(organizationId),
-        startDate,
-        endDate,
-      });
-    }, 1000),
-  ).current;
 
   const handlePrev = () => {
     if (calendarRef.current) {
@@ -339,19 +330,32 @@ const ScheduleTeamBoard = () => {
 
       if (isToday(startDate)) {
         if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
-          debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+          getPlanEventCalendarByTeam({
+            organizationId: String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
         } else {
-          debouncedFetchCalendarDataActual(
-            startDateISOString,
-            endDateISOString,
-          );
+          getActualEventCalendarByTeam({
+            organizationId: String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
         }
       } else if (isBefore(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.ACTUAL);
-        debouncedFetchCalendarDataActual(startDateISOString, endDateISOString);
+        getActualEventCalendarByTeam({
+          organizationId: String(organizationId),
+          startDate: startDateISOString,
+          endDate: endDateISOString,
+        });
       } else if (isAfter(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.PLANS);
-        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+        getPlanEventCalendarByTeam({
+          organizationId: String(organizationId),
+          startDate: startDateISOString,
+          endDate: endDateISOString,
+        });
       }
     }
   };
@@ -368,25 +372,37 @@ const ScheduleTeamBoard = () => {
       const endDateISOString = formatQueryEndDateForCalendar(
         calendarApi.view.activeEnd,
       );
-
       const startDate = new Date(startDateISOString);
       const today = new Date();
 
       if (isToday(startDate)) {
         if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
-          debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+          getPlanEventCalendarByTeam({
+            organizationId: String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
         } else {
-          debouncedFetchCalendarDataActual(
-            startDateISOString,
-            endDateISOString,
-          );
+          getActualEventCalendarByTeam({
+            organizationId: String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
         }
       } else if (isBefore(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.ACTUAL);
-        debouncedFetchCalendarDataActual(startDateISOString, endDateISOString);
+        getActualEventCalendarByTeam({
+          organizationId: String(organizationId),
+          startDate: startDateISOString,
+          endDate: endDateISOString,
+        });
       } else if (isAfter(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.PLANS);
-        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+        getPlanEventCalendarByTeam({
+          organizationId: String(organizationId),
+          startDate: startDateISOString,
+          endDate: endDateISOString,
+        });
       }
     }
   };
@@ -411,19 +427,32 @@ const ScheduleTeamBoard = () => {
 
       if (isToday(startDate)) {
         if (selectedOptionShow === ItemScheduleTitleType.PLANS) {
-          debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+          getPlanEventCalendarByTeam({
+            organizationId: String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
         } else {
-          debouncedFetchCalendarDataActual(
-            startDateISOString,
-            endDateISOString,
-          );
+          getActualEventCalendarByTeam({
+            organizationId: String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
         }
       } else if (isBefore(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.ACTUAL);
-        debouncedFetchCalendarDataActual(startDateISOString, endDateISOString);
+        getActualEventCalendarByTeam({
+          organizationId: String(organizationId),
+          startDate: startDateISOString,
+          endDate: endDateISOString,
+        });
       } else if (isAfter(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.PLANS);
-        debouncedFetchCalendarDataPlan(startDateISOString, endDateISOString);
+        getPlanEventCalendarByTeam({
+          organizationId: String(organizationId),
+          startDate: startDateISOString,
+          endDate: endDateISOString,
+        });
       }
     }
   };
@@ -737,6 +766,17 @@ const ScheduleTeamBoard = () => {
       slotElement.style.height = `${slotHeight}px`;
       slotElement.style.minHeight = `${slotHeight}px`;
     });
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      if (calendarApi) {
+        calendarApi.updateSize();
+        const newDataTimeList = events.map((event) => {
+          return { ...event };
+        });
+        // Set data schedule
+        setEvents(newDataTimeList);
+      }
+    }
   }, [slotHeight, searchParams]);
 
   const calculateSlotHeight = (value: number): number => {
@@ -751,7 +791,7 @@ const ScheduleTeamBoard = () => {
     if (value < 40) {
       return '01:00:00';
     } else if (value >= 94) {
-      return '00:15:00';
+      return '00:05:00';
     }
     return '00:15:00';
   };
@@ -857,7 +897,7 @@ const ScheduleTeamBoard = () => {
               {isDateLessThanToday(currentDate) ? (
                 <Button
                   variant="primary"
-                  className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                  className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
                   実績
                 </Button>
               ) : isTodaySchedule(currentDate) ? (
@@ -894,7 +934,7 @@ const ScheduleTeamBoard = () => {
                         }
                       }
                     }}
-                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[80px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px] `}>
                     予定
                   </Button>
                   <Button
@@ -929,7 +969,7 @@ const ScheduleTeamBoard = () => {
                         }
                       }
                     }}
-                    className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold rounded-[20px]   `}>
+                    className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
                     実績
                   </Button>
                 </>
@@ -937,7 +977,7 @@ const ScheduleTeamBoard = () => {
                 <>
                   <Button
                     variant="primary"
-                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[80px] !px-0 !py-0 text-xs font-bold rounded-[20px]`}>
+                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
                     予定
                   </Button>
                 </>

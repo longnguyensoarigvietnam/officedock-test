@@ -183,7 +183,22 @@
   .fc-scrollgrid-section.fc-scrollgrid-section-header.fc-scrollgrid-section-sticky {
   height: 0;
 }
-
+.calendar-team-custom
+  .fc
+  .fc-timeGridDay-view
+  .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  font-weight: 400;
+  color: rgb(148 163 184);
+  position: relative;
+  top: -9px;
+}
+.calendar-team-custom
+  .fc-resourceTimeGridDay-view
+  .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  position: relative;
+  top: -9px;
+  left: -5px;
+}
 /* Week */
 .calendar-team-custom.week.one-all-day-event
   .fc-daygrid-body.fc-daygrid-body-unbalanced.fc-daygrid-body-natural,
@@ -459,7 +474,7 @@
 }
 
 /* Custom */
-/* .calendar-team-custom.day.one-all-day-event
+.calendar-team-custom.day.one-all-day-event
   .fc-scrollgrid.fc-scrollgrid-liquid
   tbody
   tr:first-child
@@ -484,4 +499,4 @@
   .fc-scroller-harness {
   height: 90px !important;
   overflow: hidden;
-} */
+}

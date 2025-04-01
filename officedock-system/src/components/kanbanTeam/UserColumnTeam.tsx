@@ -21,6 +21,7 @@ type Props = {
     oldIdStatus: string;
     oldNameStatus: string;
   }) => void;
+  updateTaskIsStart: (taskId: number, isPause?: boolean) => void;
 };
 const statuses: (keyof TransformedStatuses)[] = [
   'NOT_STARTED',
@@ -34,6 +35,7 @@ const UserColumnTeam = ({
   onAdd,
   pinItemToTop,
   onUpdateInline,
+  updateTaskIsStart,
 }: Props) => {
   const { columnWidth, selectedOptionZoom, dataTotalStatus } =
     useContext(TaskTeamStateContext);
@@ -181,6 +183,7 @@ const UserColumnTeam = ({
                 }}
                 pinItemToTop={pinItemToTop}
                 onUpdateInline={onUpdateInline}
+                updateTaskIsStart={updateTaskIsStart}
               />
             ))}
           </div>

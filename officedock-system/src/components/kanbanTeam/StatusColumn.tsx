@@ -32,6 +32,7 @@ type Props = {
     oldIdStatus: string;
     oldNameStatus: string;
   }) => void;
+  updateTaskIsStart: (taskId: number, isPause?: boolean) => void;
 };
 
 const StatusColumn = ({
@@ -39,6 +40,7 @@ const StatusColumn = ({
   status,
   pinItemToTop,
   onUpdateInline,
+  updateTaskIsStart,
   handleSetParamEditTask,
   handleSetParamCopyTask,
 }: Props) => {
@@ -324,6 +326,7 @@ const StatusColumn = ({
                             handleUpdateItemInline={() => {}}
                             editTask={onUpdateInline}
                             handlePinItem={pinItemToTop}
+                            updateTaskIsStart={updateTaskIsStart}
                             handleUnPinItem={(id: string) => {
                               if (
                                 user.statuses[status] &&

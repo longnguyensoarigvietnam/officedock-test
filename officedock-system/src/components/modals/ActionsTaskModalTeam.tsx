@@ -1187,7 +1187,7 @@ const ActionsTaskModalTeam = ({
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     classNameError="!text-xs"
-                    disabled={isCheckActionPermission}
+                    disabled={dataTask?.hasActualDuration}
                     options={dataOptionsPeopleInCharge}
                     selectedOption={dataOptionsPeopleInCharge.find(
                       (element) => element.value === value?.value,
