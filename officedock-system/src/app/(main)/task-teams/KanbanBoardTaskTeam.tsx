@@ -6,8 +6,11 @@ import {
   Transition,
 } from '@headlessui/react';
 import React, { Fragment, useContext, useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
+import { useMutation, useQueryClient } from 'react-query';
+import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
@@ -15,10 +18,18 @@ import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import InputSearch from '@components/common/InputSearch';
 import ActionFilterTaskTeam from '@components/modals/ActionFilterTeamTask';
 import UserColumnTeam from '@components/kanbanTeam/UserColumnTeam';
+import Dropdown from '@components/common/Dropdown';
+import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
+import ActionsTaskModalTeam from '@components/modals/ActionsTaskModalTeam';
+import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
+import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useTaskBoardTeam from '@hooks/useTaskBoardTeam';
+import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 
 import { pageRouters } from '@constants/routers';
 import {
@@ -29,6 +40,19 @@ import {
   StatusTask,
   StatusValueTask,
 } from '@constants/enums';
+import { INITIAL_INDEX_VALUE, NO_OPTION_CATEGORY } from '@constants';
+import { apiRouters } from '@constants/routers';
+import {
+  ERROR_CREATE_MESSAGE,
+  ERROR_DELETE_MESSAGE,
+  ERROR_MESSAGE_OVERLAP_TASK,
+  ERROR_SAVE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_CREATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
+  SUCCESS_UPDATE_MESSAGE,
+} from '@constants/message';
+
 import {
   compareItems,
   getRandomColor,
@@ -46,39 +70,16 @@ import {
   UpdateTaskKanbanRequest,
 } from '@interfaces/task';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
-import Dropdown from '@components/common/Dropdown';
-import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
-import ActionsTaskModalTeam from '@components/modals/ActionsTaskModalTeam';
-import { useSession } from 'next-auth/react';
 import api from '@base/api';
-import { apiRouters } from '@constants/routers';
-import { useMutation, useQueryClient } from 'react-query';
 import {
   addTimeToDate,
   convertDateStringFull,
   getRandomDateTimeBetween,
 } from '@utils/date';
-import { INITIAL_INDEX_VALUE, NO_OPTION_CATEGORY } from '@constants';
-import {
-  ERROR_CREATE_MESSAGE,
-  ERROR_DELETE_MESSAGE,
-  ERROR_MESSAGE_OVERLAP_TASK,
-  ERROR_SAVE_MESSAGE,
-  ERROR_UPDATE_MESSAGE,
-  SUCCESS_CREATE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
-  SUCCESS_UPDATE_MESSAGE,
-} from '@constants/message';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { AxiosError } from 'axios';
-import { useErrorToast } from '@hooks/useErrorToast';
 import { ResponseError } from '@interfaces/response';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
-import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
-import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 import { TaskContext } from '@providers/TaskProvider';
-import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -358,18 +359,28 @@ const KanbanBoardTaskTeam = () => {
       setIsReadyToFetch(false);
       setDataOrderRing('');
     }
+    const existingTaskIndex = destTasks.findIndex(
+      (task) => task.id === movedTask.id,
+    );
+    if (existingTaskIndex !== -1) {
+      destTasks.splice(existingTaskIndex, 1);
+    }
 
     // Return if task is running
     if (sourceUserId !== destUserId && movedTask.hasActualDuration) {
       return;
     }
     // Update total
-    updateTaskStatusTotalWhenDrop({
-      newUserId: destUserId,
-      oldUserId: sourceUserId,
-      newStatusName: StatusTask[destStatus as keyof typeof StatusTask],
-      oldStatusName: StatusTask[sourceStatus as keyof typeof StatusTask],
-    });
+    if (destUserId === sourceUserId && destStatus === sourceStatus) {
+      // handle logic
+    } else {
+      updateTaskStatusTotalWhenDrop({
+        newUserId: destUserId,
+        oldUserId: sourceUserId,
+        newStatusName: StatusTask[destStatus as keyof typeof StatusTask],
+        oldStatusName: StatusTask[sourceStatus as keyof typeof StatusTask],
+      });
+    }
 
     // Item
     const belowItem = destTasks[destination.index];
@@ -1516,6 +1527,15 @@ const KanbanBoardTaskTeam = () => {
       })),
     );
   };
+  useEffect(() => {
+    if (statusTaskSelected && taskSelected.value) {
+      if (!statusTaskSelected.isStart) {
+        updateTaskIsStart(0, true);
+      } else {
+        updateTaskIsStart(taskSelected.value as number);
+      }
+    }
+  }, [statusTaskSelected, taskSelected]);
 
   return (
     <>
