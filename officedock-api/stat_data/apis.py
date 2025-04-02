@@ -48,7 +48,7 @@ from stat_data.utils import (
     process_tags,
     process_merge_card_per_tag,
     process_per_user,
-    split_weeks,
+    split_ranges,
     build_category_filters,
 )
 from tasks.constants import TaskCategoryTypes
@@ -890,7 +890,67 @@ class StatisticViewSet(BaseAPIViewSet):
             or small_category_id == NONE_CATEGORY
         ):
             return self.response_ok(data)
-        weeks = split_weeks(from_date, end_date)
+        ranges = split_ranges(from_date, end_date, statistic_by)
+
+        def _get_durations_by_time(
+            filter_tasks, filter_events, percent, duration
+        ):
+            """
+            Handle get duration by time
+            """
+            durations = []
+            for start, end in ranges:
+                start_date_min = datetime.combine(start, time.min)
+                start_date_max = datetime.combine(end, time.max)
+                total_duration = timedelta(0)
+                percent_per_total_duration = 0
+                if filter_tasks or filter_events:
+                    reset_tasks = Task.objects.filter(
+                        Q(id__in=filter_tasks.values_list("id", flat=True))
+                        & Q(task_durations__started_at__gte=start_date_min)
+                        & Q(task_durations__paused_at__lte=start_date_max)
+                    ).distinct()
+                    reset_events = Schedule.objects.filter(
+                        Q(id__in=filter_events.values_list("id", flat=True))
+                        & Q(task_durations__started_at__gte=start_date_min)
+                        & Q(task_durations__paused_at__lte=start_date_max)
+                    ).distinct()
+
+                    merged_duration = merge_task_and_event(
+                        reset_tasks,
+                        reset_events,
+                        start_date_min,
+                        start_date_max,
+                    )
+                    for task in merged_duration:
+                        total_duration += time_str_to_timedelta(
+                            task["total_duration"]
+                        )
+
+                    # Calculate the percentage of the total duration
+                    if duration.total_seconds() > 0:
+                        percent_per_total_duration = (
+                            total_duration.total_seconds()
+                            / duration.total_seconds()
+                            * 100
+                        )
+                    else:
+                        percent_per_total_duration = 0
+                    # Ensure percentage does not exceed remaining percent
+                    if round(percent_per_total_duration) <= percent:
+                        percent -= round(percent_per_total_duration)
+                    else:
+                        percent_per_total_duration = percent
+                durations.append(
+                    {
+                        "start_date": start_date_min.strftime(BASE_DATE_FORMAT),
+                        "end_date": start_date_max.strftime(BASE_DATE_FORMAT),
+                        "duration": format_duration(total_duration),
+                        "percent": min(round(percent_per_total_duration), 100),
+                    }
+                )
+            return durations
+
         if is_tag_page:
             total_duration, tag_list = process_merge_card_per_tag(
                 tag_ids,
@@ -901,273 +961,128 @@ class StatisticViewSet(BaseAPIViewSet):
                 is_get_total_duration=True,
             )
             for tag in tag_list:
-                percent = 100
                 tag.update({"durations": []})
                 filter_tasks = tasks.filter(tags__id=tag["tag_id"])
                 filter_events = events.filter(tags__id=tag["tag_id"])
-                for start, end in weeks:
-                    start_date_min = datetime.combine(start, time.min)
-                    start_date_max = datetime.combine(end, time.max)
-                    reset_tasks = filter_tasks.filter(
-                        Q(task_durations__started_at__gte=start_date_min)
-                        & Q(task_durations__paused_at__lte=start_date_max)
-                    ).distinct()
-                    reset_events = filter_events.filter(
-                        Q(task_durations__started_at__gte=start_date_min)
-                        & Q(task_durations__paused_at__lte=start_date_max)
-                    ).distinct()
-
-                    merged_duration = merge_task_and_event(
-                        reset_tasks,
-                        reset_events,
-                        start_date_min,
-                        start_date_max,
-                    )
-                    total_duration = timedelta(0)
-                    for task in merged_duration:
-                        total_duration += time_str_to_timedelta(
-                            task["total_duration"]
-                        )
-
-                    # Calculate the percentage of the total duration
-                    if tag["duration"].total_seconds() > 0:
-                        percent_per_total_duration = (
-                            total_duration.total_seconds()
-                            / tag["duration"].total_seconds()
-                            * 100
-                        )
-                    else:
-                        percent_per_total_duration = 0
-                    # Ensure percentage does not exceed remaining percent
-                    if round(percent_per_total_duration) <= percent:
-                        percent -= round(percent_per_total_duration)
-                    else:
-                        percent_per_total_duration = percent
-                    tag["durations"].append(
-                        {
-                            "start_date": start_date_min.strftime(
-                                BASE_DATE_FORMAT
-                            ),
-                            "end_date": start_date_max.strftime(
-                                BASE_DATE_FORMAT
-                            ),
-                            "duration": format_duration(total_duration),
-                            "percent": min(
-                                round(percent_per_total_duration), 100
-                            ),
-                        }
-                    )
+                durations = _get_durations_by_time(
+                    filter_tasks, filter_events, 100, tag["duration"]
+                )
+                tag["durations"].append(durations)
                 tag["duration"] = format_duration(tag["duration"])
                 data.append(tag)
         else:
+
+            def _filter_models(category_id):
+                """
+                Filter models by category
+                """
+                if category_id is None:
+                    if not large_category_id and not medium_category_id:
+                        filter_tasks = tasks.filter(
+                            Q(categories__large_statistic_category__isnull=True)
+                            | ~Q(
+                                categories__large_statistic_category__in=large_category_ids
+                            )
+                        )
+                        filter_events = events.filter(
+                            Q(categories__large_statistic_category__isnull=True)
+                            | ~Q(
+                                categories__large_statistic_category__in=large_category_ids
+                            )
+                        )
+                    elif large_category_id and not medium_category_id:
+                        filter_tasks = tasks.filter(
+                            Q(
+                                categories__medium_statistic_category__isnull=True
+                            )
+                            | ~Q(
+                                categories__medium_statistic_category__in=medium_category_ids
+                            )
+                        )
+                        filter_events = events.filter(
+                            Q(
+                                categories__medium_statistic_category__isnull=True
+                            )
+                            | ~Q(
+                                categories__medium_statistic_category__in=medium_category_ids
+                            )
+                        )
+                    elif large_category_id and medium_category_id:
+                        filter_tasks = tasks.filter(
+                            Q(categories__small_statistic_category__isnull=True)
+                            | ~Q(
+                                categories__small_statistic_category__in=small_category_ids
+                            )
+                        )
+                        filter_events = events.filter(
+                            Q(categories__small_statistic_category__isnull=True)
+                            | ~Q(
+                                categories__small_statistic_category__in=small_category_ids
+                            )
+                        )
+                else:
+                    large_id = (
+                        category["category_id"]
+                        if large_category_id is None
+                        else large_category_id
+                    )
+                    filter_tasks = tasks.filter(
+                        categories__large_statistic_category__id=large_id
+                    )
+                    filter_events = events.filter(
+                        categories__large_statistic_category__id=large_id
+                    )
+                    if large_category_id:
+                        medium_id = (
+                            category["category_id"]
+                            if medium_category_id is None
+                            else medium_category_id
+                        )
+                        filter_tasks = filter_tasks.filter(
+                            categories__medium_statistic_category__id=medium_id
+                        )
+                        filter_events = filter_events.filter(
+                            categories__medium_statistic_category__id=medium_id
+                        )
+                        if medium_category_id:
+                            small_id = (
+                                category["category_id"]
+                                if small_category_id is None
+                                else small_category_id
+                            )
+                            filter_tasks = filter_tasks.filter(
+                                categories__small_statistic_category__id=small_id
+                            )
+                            filter_events = filter_events.filter(
+                                categories__small_statistic_category__id=small_id
+                            )
+                return filter_tasks, filter_events
+
             category_list = aggregate_durations(
                 annotate_duration(tasks, start_of_day, end_of_day),
                 annotate_duration(events, start_of_day, end_of_day),
                 large_category_id=large_category_id,
                 medium_category_id=medium_category_id,
             )
-            # FIXME: Implement choose statistic by option Filter Time
-            # if statistic_by == FilterTime.DAY.value:
-            #     for category in category_list:
-            #         filter_tasks = tasks.filter(categories__large_statistic_category__id=category)
-            #         filter_events = events.filter(categories__large_statistic_category__id=category)
-            #         data[category] = {}
-            #         start_date = from_date
-            #         while start_date <= end_date:
-            #             start_date_min = datetime.combine(start_date, time.min)
-            #             start_date_max = datetime.combine(start_date, time.max)
-            #             total_tasks = filter_tasks.filter(
-            #                 Q(task_durations__started_at__gte=start_date_min) &
-            #                 Q(task_durations__paused_at__lte=start_date_max)
-            #             ).distinct().annotate(
-            #                 duration=ExpressionWrapper(
-            #                     Case(
-            #                         When(
-            #                             task_durations__paused_at__isnull=True,
-            #                             then=Value(start_date_max) if start_date_max < timezone.now() else timezone.now(),
-            #                         ),
-            #                         default=F("task_durations__paused_at"),
-            #                         output_field=DurationField(),
-            #                     ) - Coalesce(F("task_durations__started_at"), Value(start_date_min)),
-            #                     output_field=DurationField(),
-            #                 )
-            #             ).aggregate(total_duration=Sum("duration"))
-            #             total_events = filter_events.filter(
-            #                 Q(task_durations__started_at__gte=start_date_min) &
-            #                 Q(task_durations__paused_at__lte=start_date_max)
-            #             ).distinct().annotate(
-            #                 duration=ExpressionWrapper(
-            #                     Case(
-            #                         When(
-            #                             task_durations__paused_at__isnull=True,
-            #                             then=Value(start_date_max) if start_date_max < timezone.now() else timezone.now(),
-            #                         ),
-            #                         default=F("task_durations__paused_at"),
-            #                         output_field=DurationField(),
-            #                     ) - Coalesce(F("task_durations__started_at"), Value(start_date_min)),
-            #                     output_field=DurationField(),
-            #                 )
-            #             ).aggregate(total_duration=Sum("duration"))
-            #             if total_tasks["total_duration"] or total_events["total_duration"]:
-            #                 if total_tasks["total_duration"] and total_events["total_duration"]:
-            #                     total_duration = total_tasks["total_duration"] + total_events["total_duration"]
-            #                 elif total_tasks["total_duration"]:
-            #                     total_duration = total_tasks["total_duration"]
-            #                 elif total_events["total_duration"]:
-            #                     total_duration =total_events["total_duration"]
-            #
-            #                 data[category][start_date.strftime(BASE_DATE_FORMAT)] = {
-            #                     "duration": format_duration(total_duration),
-            #                 }
-            #
-            #             start_date += timedelta(days=1)  # Move to next day
-            if statistic_by == FilterTime.WEEK.value:
+            if not category_list:
+                category = {
+                    "categoryId": None,
+                    "categoryName": NONE_CATEGORY,
+                    "categoryColor": CategoryColors.GRAY.value,
+                    "duration": "00:00:00",
+                }
+                category["durations"] = _get_durations_by_time(
+                    None, None, 100, category["duration"]
+                )
+                data.append(category)
+            else:
                 for category in category_list:
-                    percent = 100
-                    if category["category_id"] is None:
-                        if not large_category_id and not medium_category_id:
-                            filter_tasks = tasks.filter(
-                                Q(
-                                    categories__large_statistic_category__isnull=True
-                                )
-                                | ~Q(
-                                    categories__large_statistic_category__in=large_category_ids
-                                )
-                            )
-                            filter_events = events.filter(
-                                Q(
-                                    categories__large_statistic_category__isnull=True
-                                )
-                                | ~Q(
-                                    categories__large_statistic_category__in=large_category_ids
-                                )
-                            )
-                        elif large_category_id and not medium_category_id:
-                            filter_tasks = tasks.filter(
-                                Q(
-                                    categories__medium_statistic_category__isnull=True
-                                )
-                                | ~Q(
-                                    categories__medium_statistic_category__in=medium_category_ids
-                                )
-                            )
-                            filter_events = events.filter(
-                                Q(
-                                    categories__medium_statistic_category__isnull=True
-                                )
-                                | ~Q(
-                                    categories__medium_statistic_category__in=medium_category_ids
-                                )
-                            )
-                        elif large_category_id and medium_category_id:
-                            filter_tasks = tasks.filter(
-                                Q(
-                                    categories__small_statistic_category__isnull=True
-                                )
-                                | ~Q(
-                                    categories__small_statistic_category__in=small_category_ids
-                                )
-                            )
-                            filter_events = events.filter(
-                                Q(
-                                    categories__small_statistic_category__isnull=True
-                                )
-                                | ~Q(
-                                    categories__small_statistic_category__in=small_category_ids
-                                )
-                            )
-                    else:
-                        large_id = (
-                            category["category_id"]
-                            if large_category_id is None
-                            else large_category_id
-                        )
-                        filter_tasks = tasks.filter(
-                            categories__large_statistic_category__id=large_id
-                        )
-                        filter_events = events.filter(
-                            categories__large_statistic_category__id=large_id
-                        )
-                        if large_category_id:
-                            medium_id = (
-                                category["category_id"]
-                                if medium_category_id is None
-                                else medium_category_id
-                            )
-                            filter_tasks = filter_tasks.filter(
-                                categories__medium_statistic_category__id=medium_id
-                            )
-                            filter_events = filter_events.filter(
-                                categories__medium_statistic_category__id=medium_id
-                            )
-                            if medium_category_id:
-                                small_id = (
-                                    category["category_id"]
-                                    if small_category_id is None
-                                    else small_category_id
-                                )
-                                filter_tasks = filter_tasks.filter(
-                                    categories__small_statistic_category__id=small_id
-                                )
-                                filter_events = filter_events.filter(
-                                    categories__small_statistic_category__id=small_id
-                                )
-
-                    category.update({"durations": []})
-                    for start, end in weeks:
-                        start_date_min = datetime.combine(start, time.min)
-                        start_date_max = datetime.combine(end, time.max)
-                        reset_tasks = Task.objects.filter(
-                            Q(id__in=filter_tasks.values_list("id", flat=True))
-                            & Q(task_durations__started_at__gte=start_date_min)
-                            & Q(task_durations__paused_at__lte=start_date_max)
-                        ).distinct()
-                        reset_events = Schedule.objects.filter(
-                            Q(id__in=filter_events.values_list("id", flat=True))
-                            & Q(task_durations__started_at__gte=start_date_min)
-                            & Q(task_durations__paused_at__lte=start_date_max)
-                        ).distinct()
-
-                        merged_duration = merge_task_and_event(
-                            reset_tasks,
-                            reset_events,
-                            start_date_min,
-                            start_date_max,
-                        )
-                        total_duration = timedelta(0)
-                        for task in merged_duration:
-                            total_duration += time_str_to_timedelta(
-                                task["total_duration"]
-                            )
-
-                        # Calculate the percentage of the total duration
-                        if category["duration"].total_seconds() > 0:
-                            percent_per_total_duration = (
-                                total_duration.total_seconds()
-                                / category["duration"].total_seconds()
-                                * 100
-                            )
-                        else:
-                            percent_per_total_duration = 0
-                        # Ensure percentage does not exceed remaining percent
-                        if round(percent_per_total_duration) <= percent:
-                            percent -= round(percent_per_total_duration)
-                        else:
-                            percent_per_total_duration = percent
-                        category["durations"].append(
-                            {
-                                "start_date": start_date_min.strftime(
-                                    BASE_DATE_FORMAT
-                                ),
-                                "end_date": start_date_max.strftime(
-                                    BASE_DATE_FORMAT
-                                ),
-                                "duration": format_duration(total_duration),
-                                "percent": min(
-                                    round(percent_per_total_duration), 100
-                                ),
-                            }
-                        )
+                    filter_tasks, filter_events = _filter_models(
+                        category_id=category["category_id"]
+                    )
+                    category["durations"] = _get_durations_by_time(
+                        filter_tasks, filter_events, 100, category["duration"]
+                    )
                     category["duration"] = format_duration(category["duration"])
                     data.append(category)
 
