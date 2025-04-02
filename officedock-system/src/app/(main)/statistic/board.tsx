@@ -404,6 +404,7 @@ const StatisticBoard = () => {
                 options={tagsOptions}
                 placeholder="集計対象のタグを選択"
                 className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                optionClassName="!top-6"
                 labelOptionClass="break-all"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {

@@ -1983,7 +1983,7 @@ const DailyReportDetailBoard = () => {
   const handleNextUser = () => {
     if (dataStatistic?.nextUser && organization) {
       router.push(
-        `${pageRouters.DAILY_REPORT_DETAIL.href(String(dataStatistic?.nextUser))}?organization=${organization}`,
+        `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(String(dataStatistic?.nextUser))}?organization=${organization}`,
         { scroll: false },
       );
     }
@@ -1991,7 +1991,7 @@ const DailyReportDetailBoard = () => {
   const handlePrevUser = () => {
     if (dataStatistic?.prevUser && organization) {
       router.push(
-        `${pageRouters.DAILY_REPORT_DETAIL.href(String(dataStatistic?.prevUser))}?organization=${organization}`,
+        `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(String(dataStatistic?.prevUser))}?organization=${organization}`,
         { scroll: false },
       );
     }
@@ -2067,7 +2067,7 @@ const DailyReportDetailBoard = () => {
               name="left"
             />
             <div className="flex gap-5 items-center">
-              <div className="flex flex-col gap-1 items-center w-10 text-xs  text-[#0068B6]">
+              <div className="flex flex-col gap-1 items-start w-10 text-xs  text-[#0068B6]">
                 {dataDetailUser?.isConfirmed ? (
                   <span>確認済</span>
                 ) : (
@@ -2110,7 +2110,7 @@ const DailyReportDetailBoard = () => {
               name="right"
             />
             <Link
-              href={pageRouters.DAILY_REPORT_LIST.href}
+              href={pageRouters.DAILY_REPORT_TEAM.href}
               className="bg-white relative top-[1px] flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
               <span>チームの日報一覧</span>
               <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">

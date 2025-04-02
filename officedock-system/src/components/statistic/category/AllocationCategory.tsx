@@ -270,6 +270,7 @@ const AllocationCategory = memo(
                     isShowIconFilter
                     options={tagsOptions}
                     labelOptionClass="break-all"
+                    optionClassName="!top-6"
                     placeholder="集計対象のタグを選択"
                     className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                     selectedOptions={selectedTags || []}

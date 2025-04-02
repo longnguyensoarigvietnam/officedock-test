@@ -2592,6 +2592,12 @@ const TimeSchedule = memo(
           );
 
           if (item.resourceId === ItemScheduleType.PLANS) {
+            if (
+              item.type === ItemStartType.SCHEDULE &&
+              item.isAllDay === true
+            ) {
+              return itemEndDate >= currentDateOnly;
+            }
             return startDateOnly >= currentDateOnly;
           }
           if (item.resourceId === ItemScheduleType.ACTUAL) {

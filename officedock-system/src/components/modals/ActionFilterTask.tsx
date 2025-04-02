@@ -270,7 +270,7 @@ const ActionFilterTask = ({
                           }
                           onChange={() => {}}
                           label={team.organization.name}
-                          classLabel="break-words  line-clamp-2"
+                          classLabel="break-words  line-clamp-2 max-w-[300px]"
                         />
                       </div>
                       <div className="absolute z-30  inset-y-0 right-0 flex items-center pr-2 pointer-events-none">

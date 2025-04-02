@@ -1971,7 +1971,7 @@ const DailyReportBoard = () => {
               {session &&
                 hasRole(session?.user.roles, UserRoles.SYSTEM_ADMIN) && (
                   <Link
-                    href={pageRouters.DAILY_REPORT_LIST.href}
+                    href={`${pageRouters.DAILY_REPORT_TEAM.href}?tabId=1`}
                     className="bg-white flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
                     <span>チームの日報一覧</span>
                     <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
