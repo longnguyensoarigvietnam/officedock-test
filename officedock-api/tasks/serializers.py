@@ -504,6 +504,12 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         representation["people_in_charge"] = CreationDataUserSerializer(
             sorted_users, many=True
         ).data
+        task_schedules = instance.task_schedules.filter(
+            plan_start_date__date__gte=now().date()
+        ).all()
+        representation["task_schedules"] = TaskScheduleSerializer(
+            task_schedules, many=True
+        ).data
         if instance.reminds:
             representation["remind_countdown"] = instance.reminds["countdown"]
             representation["remind_type"] = instance.reminds["type"]
