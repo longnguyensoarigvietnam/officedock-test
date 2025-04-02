@@ -297,6 +297,7 @@ class Setting(BaseModel):
     kanban_zoom = models.IntegerField(default=100)
     schedule_zoom = models.IntegerField(default=100)
     tab_visibility = models.JSONField(default=dict, blank=True, null=True)
+    task_settings = models.JSONField(blank=True, null=True)
 
     user = models.OneToOneField(
         "User", related_name="setting", on_delete=models.CASCADE

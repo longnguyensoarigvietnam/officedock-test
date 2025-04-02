@@ -198,6 +198,16 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "system_role"]
 
 
+class TaskFilterSerializer(serializers.Serializer):
+    """
+    Serializer for task filter setting
+    """
+
+    organization = serializers.IntegerField(required=False, allow_null=True)
+    category = serializers.IntegerField(required=False, allow_null=True)
+    tag = serializers.IntegerField(required=False, allow_null=True)
+
+
 class SettingSerializer(serializers.ModelSerializer):
     """
     Serializer for the Role model.
@@ -210,6 +220,17 @@ class SettingSerializer(serializers.ModelSerializer):
 
     schedule_zoom = serializers.IntegerField(
         min_value=0, max_value=100, default=100
+    )
+    date_filter_schedule = serializers.DateField(required=False)
+    task_filter = TaskFilterSerializer(many=True, required=False)
+    is_show_list_kanban = serializers.BooleanField(
+        default=False, required=False
+    )
+    is_show_week_schedule = serializers.BooleanField(
+        default=False, required=False
+    )
+    is_show_my_template = serializers.BooleanField(
+        default=False, required=False
     )
 
     class Meta:
@@ -225,7 +246,29 @@ class SettingSerializer(serializers.ModelSerializer):
             "kanban_zoom",
             "schedule_zoom",
             "tab_visibility",
+            "date_filter_schedule",
+            "task_filter",
+            "is_show_list_kanban",
+            "is_show_week_schedule",
+            "is_show_my_template",
         ]
+
+    def to_representation(self, instance):
+        """
+        Representation of setting
+        """
+        representation = super().to_representation(instance)
+        if instance.task_settings:
+            fields = [
+                "date_filter_schedule",
+                "task_filter",
+                "is_show_list_kanban",
+                "is_show_week_schedule",
+                "is_show_my_template",
+            ]
+            for field in fields:
+                representation[field] = instance.task_settings.get(field)
+        return representation
 
     def validate_tab_visibility(self, value):
         """Validate element in tab visibility"""
