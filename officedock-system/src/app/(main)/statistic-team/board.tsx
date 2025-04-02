@@ -416,6 +416,7 @@ const StatisticTeamBoard = () => {
               options={tagsOptions}
               placeholder="集計対象のタグを選択"
               labelOptionClass="break-all"
+              optionClassName="!top-6"
               className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
               selectedOptions={selectedTags || []}
               onChange={(selected) => {

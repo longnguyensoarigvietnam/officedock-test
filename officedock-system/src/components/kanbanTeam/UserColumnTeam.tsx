@@ -103,7 +103,7 @@ const UserColumnTeam = ({
               {user.id && (
                 <p
                   style={{
-                    maxWidth: `${(columnWidth / 247) * 20}px`,
+                    maxWidth: `${(columnWidth / 247) * 40}px`,
                   }}
                   className="truncate  text-sm font-medium text-[#77858F] ">
                   {getTotalByUserId(user.id)}

@@ -218,6 +218,18 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
     requiredPermission: PermissionsSystem.STATISTIC_VIEW,
   },
   {
+    ...pageRouters.DAILY_REPORT_TEAM,
+    name: pageRouters.DAILY_REPORT_TEAM.name,
+    iconUrl: (active: boolean) => {
+      return active
+        ? '/icons/daily-report-active.svg'
+        : '/icons/daily-report.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.STATISTIC_VIEW,
+  },
+  {
     ...pageRouters.MEMBER_MANAGEMENT,
     name: pageRouters.MEMBER_MANAGEMENT.name,
     iconUrl: (active: boolean) => {
