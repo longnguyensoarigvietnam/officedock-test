@@ -10,11 +10,11 @@ steps:
   - id: 'Build Docker Image'
     name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
-    secretEnv: ['_ADMIN_ARTIFACT_REGISTORY_PATH']
+    secretEnv: ['_ADMIN_ARTIFACT_REGISTRY_PATH']
     args:
       [
         '-c',
-        'docker build --platform linux/amd64 -t $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA -f Dockerfile.staging .',
+        'docker build --platform linux/amd64 -t $$_ADMIN_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA -f Dockerfile.staging .',
       ]
     dir: 'officedock-admin'
 
@@ -22,19 +22,19 @@ steps:
   - id: 'Push Docker Image'
     name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
-    secretEnv: ['_ADMIN_ARTIFACT_REGISTORY_PATH']
-    args: ['-c', 'docker push $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA']
+    secretEnv: ['_ADMIN_ARTIFACT_REGISTRY_PATH']
+    args: ['-c', 'docker push $$_ADMIN_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA']
 
   # Run built Docker Image on Cloud Run
   - id: 'Run Docker Image'
     name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     secretEnv:
-      ['_ADMIN_ARTIFACT_REGISTORY_PATH', '_ADMIN_REGION', '_ADMIN_SERVICE_NAME']
+      ['_ADMIN_ARTIFACT_REGISTRY_PATH', '_ADMIN_REGION', '_ADMIN_SERVICE_NAME']
     args: [
         '-c',
         "gcloud run deploy $$_ADMIN_SERVICE_NAME \
-        --image $$_ADMIN_ARTIFACT_REGISTORY_PATH:$COMMIT_SHA \
+        --image $$_ADMIN_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
         --region $$_ADMIN_REGION \
         --port 3000 \
         --allow-unauthenticated",
@@ -47,7 +47,7 @@ options:
 availableSecrets:
   secretManager:
     - versionName: projects/${PROJECT_NUMBER}/secrets/STG_ADMIN_ARTIFACT_REGISTRY_PATH/versions/latest
-      env: _ADMIN_ARTIFACT_REGISTORY_PATH
+      env: _ADMIN_ARTIFACT_REGISTRY_PATH
     - versionName: projects/${PROJECT_NUMBER}/secrets/STG_ADMIN_REGION/versions/latest
       env: _ADMIN_REGION
     - versionName: projects/${PROJECT_NUMBER}/secrets/STG_ADMIN_SERVICE_NAME/versions/latest
