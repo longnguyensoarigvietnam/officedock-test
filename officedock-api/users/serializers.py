@@ -314,6 +314,7 @@ class OrganizationForUserSerializer(OrganizationSerializer):
             "superior_id",
             "user_count",
             "is_main",
+            "icon",
         ]
 
     def get_is_main(self, obj):
@@ -325,22 +326,6 @@ class OrganizationForUserSerializer(OrganizationSerializer):
             user=user, organization=obj
         ).first()
         return users_org.is_main if users_org else False
-
-
-class OrganizationForUserLoginSerializer(OrganizationSerializer):
-    """
-    Serializer for the Organization without action.
-    """
-
-    class Meta:
-        model = Organization
-        fields = [
-            "id",
-            "name",
-            "superior",
-            "superior_id",
-            "user_count",
-        ]
 
 
 class UserSerializer(BaseUserSerializer):
@@ -466,7 +451,6 @@ class UserLoginSerializer(BaseUserSerializer):
 
     profile = ProfileSerializer()
     company = CompanySerializer(read_only=True)
-    organizations = serializers.SerializerMethodField(read_only=True)
     roles = RoleSerializer(read_only=True, many=True)
     setting = SettingSerializer(read_only=True)
     unread_terms = serializers.SerializerMethodField(read_only=True)
@@ -484,7 +468,6 @@ class UserLoginSerializer(BaseUserSerializer):
             "permissions",
             "profile",
             "company",
-            "organizations",
             "login_type",
             "setting",
             "unread_terms",
@@ -505,20 +488,6 @@ class UserLoginSerializer(BaseUserSerializer):
             permissions.update(perms)
 
         return list(permissions)
-
-    def get_organizations(self, obj):
-        """
-        Get sorted organizations
-        """
-        sorted_orgs = [
-            item.organization
-            for item in UsersOrganizations.objects.filter(user=obj).order_by(
-                "id"
-            )
-        ]
-        return OrganizationForUserLoginSerializer(
-            sorted_orgs, many=True, context={"user": obj}
-        ).data
 
     def get_unread_terms(self, instance):
         """

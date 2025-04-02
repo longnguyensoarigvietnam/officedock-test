@@ -238,7 +238,7 @@ def _verify_login(self, request, is_admin=True):
     return self.response_ok(
         {
             "access": str(token),
-            "user": UserSerializer(user).data,
+            "user": UserLoginSerializer(user).data,
         }
     )
 

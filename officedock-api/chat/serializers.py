@@ -484,7 +484,11 @@ class SendMessageSerializer(serializers.ModelSerializer):
             for file in files:
                 if file.size > FILE_UPLOAD_MAX_SIZE:
                     raise serializers.ValidationError(
-                        {"detail": ERROR_MESSAGES["max_file_size"]}
+                        {
+                            "detail": ERROR_MESSAGES["max_file_size"].format(
+                                max_size="5GB"
+                            )
+                        }
                     )
 
         return attrs

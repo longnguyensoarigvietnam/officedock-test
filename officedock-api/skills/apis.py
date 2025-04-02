@@ -17,7 +17,7 @@ from organizations.models import (
     OrganizationsSkills,
 )
 from organizations.serializers import (
-    SuperiorSerializer,
+    BaseOrganizationSerializer,
     StatisticCategorySerializer,
 )
 from skills.constants import SkillLevel
@@ -280,7 +280,9 @@ class SkillMapViewSet(
             response_data.append(
                 {
                     "id": skill_maps[0].id,
-                    "organization": SuperiorSerializer(organization).data,
+                    "organization": BaseOrganizationSerializer(
+                        organization
+                    ).data,
                     "staff": serialized_staff,
                     "skill_maps": SkillMapWithSkillSerializer(
                         skill_maps,
@@ -336,7 +338,7 @@ class SkillMapViewSet(
             organization_id=organization_id, staff_id=staff_id
         ).all()
 
-        data["organization"] = SuperiorSerializer(organization).data
+        data["organization"] = BaseOrganizationSerializer(organization).data
         data["staff"] = BaseUserSerializer(staff).data["profile"]
         data["staff"]["id"] = staff.id  # Get id of staff
         data["staff"]["roles"] = RoleSerializer(staff.roles, many=True).data
