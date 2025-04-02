@@ -14,7 +14,7 @@ from base.permissions import ActionPermission
 
 from common.filters import CustomOrderFilter
 from common.models import Category
-from common.utils import transform_statistic_categories
+from common.utils import transform_statistic_categories, generate_file_name
 from skills.models import StatisticCategory, SkillMap
 from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
@@ -115,6 +115,13 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Custom logic for creating a new Organization instance.
         """
+        serializer_data = serializer.validated_data
+        icon = serializer_data.get("icon")
+
+        if icon:
+            # Gen new file name
+            file_name = icon.name
+            icon.name = generate_file_name(file_name)
 
         # Get the company from the logged in user and assign it to the organization
         serializer.save(company=self.request.user.company)
@@ -134,6 +141,14 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 {"detail": ERROR_MESSAGES["organization_not_exists"]}
             )
 
+        if icon := validated_data.get("icon", None):
+            # Remove old icon
+            instance.icon.delete()
+
+            # Gen new file name
+            file_name = icon.name
+            icon.name = generate_file_name(file_name)
+
         serializer.save()
 
     def perform_destroy(self, instance):
@@ -150,6 +165,9 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     )
                 }
             )
+
+        # Remove icon
+        instance.icon.delete()
 
         return super().perform_destroy(instance)
 

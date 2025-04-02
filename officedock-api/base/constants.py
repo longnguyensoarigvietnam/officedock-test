@@ -20,7 +20,6 @@ class EnumChoices(Enum):
         return random.choice(choices)
 
 
-ALLOW_IMAGE_FORMATS = ["jpg", "jpeg", "png", "gif"]
 ACCESS_TOKEN_LIFETIME = 4 * 60  # It's mean 4 hours
 ACCESS_TOKEN_LIFETIME_REMEMBER = 30 * 24 * 60  # It's mean 30 days
 

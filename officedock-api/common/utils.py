@@ -422,13 +422,14 @@ class StripTags(Func):
     template = "%(function)s(%(expressions)s, {}, '', 'g')".format(STRIP_TAGS)
 
 
-def generate_file_name(format: str = "png") -> str:
+def generate_file_name(file_name: str = None) -> str:
     """
     Generate file name.
     """
+    ext = file_name.split(".")[-1] if "." in file_name else "png"
     current_time = datetime.now().strftime("%Y%m%d%H%M%S%f")
     random_number = random.randint(10000, 99999)
-    return f"{current_time}{random_number}.{format}"
+    return f"{current_time}{random_number}.{ext}"
 
 
 def check_task_overtime(task, task_duration, limit_time=None):

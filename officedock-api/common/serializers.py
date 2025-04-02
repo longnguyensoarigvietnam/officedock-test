@@ -5,7 +5,7 @@ from common.utils import transform_statistic_categories
 from users.models import User
 from organizations.models import Organization
 from organizations.serializers import (
-    SuperiorSerializer,
+    BaseOrganizationSerializer,
     StatisticCategoryStructionSerializer,
 )
 from tags.models import Tag
@@ -31,16 +31,16 @@ class CreationDataUserSerializer(serializers.ModelSerializer):
         return obj.profile.full_name
 
 
-class CreationDataOrganizationSerializer(serializers.ModelSerializer):
+class CreationDataOrganizationSerializer(BaseOrganizationSerializer):
     """
     Serializer for Creation data Organization
     """
 
-    superior = SuperiorSerializer(read_only=True)
+    superior = BaseOrganizationSerializer(read_only=True)
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "superior"]
+        fields = ["id", "name", "superior", "icon"]
 
 
 class CreationDataOrganizationWithUserSerializer(
@@ -54,7 +54,7 @@ class CreationDataOrganizationWithUserSerializer(
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "superior", "users"]
+        fields = ["id", "name", "superior", "users", "icon"]
 
 
 class OrganizationWithUserNotHaveSkillMapSerializer(
@@ -68,7 +68,7 @@ class OrganizationWithUserNotHaveSkillMapSerializer(
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "superior", "users"]
+        fields = ["id", "name", "superior", "users", "icon"]
 
     def get_users(self, obj):
         """Get user have not skill map"""
@@ -98,7 +98,7 @@ class CreationDataOrganizationWithTagSerializer(
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "superior", "tags"]
+        fields = ["id", "name", "superior", "tags", "icon"]
 
 
 class CreationDataTaskListSerializer(serializers.ModelSerializer):
@@ -189,6 +189,7 @@ class CreationDataOrganizationWithStructCategorySerializer(
         fields = [
             "id",
             "name",
+            "icon",
             "is_main",
             "statistic_categories",
             "tags",
