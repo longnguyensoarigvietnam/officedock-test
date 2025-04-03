@@ -10,10 +10,10 @@ from organizations.serializers import (
 )
 from tags.models import Tag
 from tasks.models import Task, TaskStatus
-from users.serializers import OrganizationForUserSerializer
+from users.serializers import OrganizationForUserSerializer, BaseUserSerializer
 
 
-class CreationDataUserSerializer(serializers.ModelSerializer):
+class CreationDataUserSerializer(BaseUserSerializer):
     """
     Serializer for creation data person in charge.
     """
@@ -22,7 +22,7 @@ class CreationDataUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "full_name"]
+        fields = ["id", "full_name", "avatar_color"]
 
     def get_full_name(self, obj):
         """
@@ -159,7 +159,7 @@ class CreationDataUserWithMainOrganizationSerializer(
 
     class Meta:
         model = User
-        fields = ["id", "full_name", "organizations"]
+        fields = ["id", "full_name", "avatar_color", "organizations"]
 
     def get_organizations(self, obj):
         """Return main organization of user"""

@@ -14,6 +14,7 @@ from django.db.models.functions import Now, Coalesce
 from django.utils import timezone
 
 from calendars.models import Schedule
+from common.serializers import CreationDataUserSerializer
 from common.utils import (
     format_duration,
     time_str_to_timedelta,
@@ -548,12 +549,10 @@ def process_users(
             else:
                 percent_per_total_duration = percent
             # Append category data
+            user_serializer = CreationDataUserSerializer(user).data
             user_data.append(
                 {
-                    "user": {
-                        "id": user.id,
-                        "full_name": user.profile.full_name,
-                    },
+                    "user": user_serializer,
                     "duration": format_duration(duration),
                     "percent": min(round(percent_per_total_duration), 100),
                 }

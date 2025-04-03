@@ -23,6 +23,7 @@ from base.messages import ERROR_MESSAGES
 from base.paginations import BasePagination
 from calendars.models import Schedule
 from common.constants import DATE_REGEX, BASE_DATE_FORMAT
+from common.serializers import CreationDataUserSerializer
 from common.utils import (
     format_duration,
     time_str_to_timedelta,
@@ -538,16 +539,14 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     confirm_report = user.reported_confirmations.filter(
                         date=date, confirm_by=request_user
                     ).first()
-                    user_list.append(
-                        {
-                            "id": user.id,
-                            "full_name": user.profile.full_name,
-                            "is_confirmed": confirm_report.is_confirmed
-                            if confirm_report
-                            else False,
-                            "total_duration": format_duration(total_duration),
-                        }
+                    user_serializer = CreationDataUserSerializer(user).data
+                    user_serializer["total_duration"] = format_duration(
+                        total_duration
                     )
+                    user_serializer["confirm_report"] = (
+                        confirm_report.is_confirmed if confirm_report else False
+                    )
+                    user_list.append(user_serializer)
 
                 data["list"].append(
                     {
