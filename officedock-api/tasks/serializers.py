@@ -648,7 +648,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
 
     type = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
-    task_schedules = TaskScheduleSerializer(many=True)
+    task_schedules = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -664,6 +664,22 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "categories",
             "status",
         ]
+
+    def get_task_schedules(self, instance):
+        """
+        Return task schedules by limit time
+        """
+        request = self.context.get("request")
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+        if start_date and end_date:
+            task_schedules = instance.task_schedules.filter(
+                plan_start_date__gte=start_date,
+                plan_end_date__lte=end_date,
+            ).all()
+        else:
+            task_schedules = instance.task_schedules.all()
+        return TaskScheduleSerializer(task_schedules, many=True).data
 
     def get_type(self, instance):
         """
