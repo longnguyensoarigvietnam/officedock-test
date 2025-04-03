@@ -191,7 +191,9 @@ export const TASK_STARTING = 'タスク実行中';
 
 export const BOOKMARK_ROUTER_NAME = 'bookmark';
 
-export const MAX_FILE_SIZE = 32 * 1024 * 1024;
+export const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024;
+
+export const BATCH_FILE_SIZE = 30; // Maximum number of concurrent API calls
 
 export const REACTION_LIST = [
   {
