@@ -8,7 +8,7 @@ from base.exceptions import LockedError
 from base.messages import ERROR_MESSAGES
 from utils.jwt import JWTService
 
-from .constants import GenderTypes, LoginTypes, RoleTypes
+from .constants import GenderTypes, LoginTypes, RoleTypes, AvatarColors
 from .managers import ActiveUsersOnlyManager
 
 
@@ -136,6 +136,7 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
     confirm_reports = models.ManyToManyField(
         "ConfirmReport", related_name="users"
     )
+    avatar_color = models.CharField(max_length=30, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         """
@@ -162,6 +163,8 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
             raise ValidationError(
                 {"two_factor_auth_email": ERROR_MESSAGES["field_required"]}
             )
+        if self.avatar_color is None:
+            self.avatar_color = AvatarColors.random()
 
         super().save(*args, **kwargs)
 

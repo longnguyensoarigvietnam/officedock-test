@@ -10,14 +10,14 @@ class SystemUserFilter(django_filters.FilterSet):
     email = django_filters.CharFilter(
         field_name="email", lookup_expr="icontains"
     )
-    role = django_filters.CharFilter(
-        field_name="roles__name", lookup_expr="icontains"
+    role_id = django_filters.CharFilter(
+        field_name="roles__id", lookup_expr="exact"
     )
     company_name = django_filters.CharFilter(
         field_name="company__name", lookup_expr="icontains"
     )
-    organization_name = django_filters.CharFilter(
-        field_name="organizations__name", lookup_expr="icontains"
+    organization_id = django_filters.CharFilter(
+        field_name="organizations__id", lookup_expr="exact"
     )
 
     class Meta:
@@ -25,9 +25,9 @@ class SystemUserFilter(django_filters.FilterSet):
         fields = [
             "full_name",
             "email",
-            "role",
+            "role_id",
             "company_name",
-            "organization_name",
+            "organization_id",
         ]
 
 

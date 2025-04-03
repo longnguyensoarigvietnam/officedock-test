@@ -17,9 +17,10 @@ from tasks.models import Task
 from chat.models import ChatFile
 from skills.serializers import SkillSerializer
 from common.utils import get_signed_url
+from users.serializers import BaseUserSerializer
 
 
-class CreationDataUserForChatSerializer(serializers.ModelSerializer):
+class CreationDataUserForChatSerializer(BaseUserSerializer):
     """
     Serializer for creation data user for chat.
     """
@@ -31,7 +32,7 @@ class CreationDataUserForChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "full_name", "organizations"]
+        fields = ["id", "full_name", "avatar_color", "organizations"]
 
     def get_full_name(self, obj):
         """

@@ -39,7 +39,11 @@ from tasks.constants import (
     TaskStatus as TaskStatusConstant,
     TaskTypes,
 )
-from users.serializers import ProfileSerializer, UsersForCreationSerializer
+from users.serializers import (
+    ProfileSerializer,
+    UsersForCreationSerializer,
+    BaseUserSerializer,
+)
 from users.models import User
 
 
@@ -878,7 +882,7 @@ class TaskTemplateSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
-class TaskTeamdockSerializer(serializers.ModelSerializer):
+class TaskTeamdockSerializer(BaseUserSerializer):
     """
     Serializer for task in teamdock
     """
@@ -890,6 +894,7 @@ class TaskTeamdockSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "id",
+            "avatar_color",
             "profile",
             "status",
         ]

@@ -57,6 +57,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
             "password",
             "profile",
             "login_type",
+            "avatar_color",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
@@ -359,6 +360,7 @@ class UserSerializer(BaseUserSerializer):
             "setting",
             "unread_terms",
             "current_event",
+            "avatar_color",
         ]
 
     def get_permissions(self, obj):
@@ -542,6 +544,7 @@ class UserListSerializer(UserSerializer):
             "organizations",
             "actions",
             "email",
+            "avatar_color",
         ]
 
     def get_actions(self, obj):
