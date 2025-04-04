@@ -265,6 +265,7 @@ const ListOrganizations = () => {
     selectedOrganizationToUpdate.name,
     selectedOrganizationToUpdate.action,
   ]);
+  const [isCreate, setIsCreate] = useState(false);
 
   return (
     <Fragment>
@@ -288,6 +289,7 @@ const ListOrganizations = () => {
                 const hasEmptyOrganization = dataOrganizations.some(
                   (org) => org.name.trim() === '',
                 );
+                setIsCreate(true);
 
                 if (!hasEmptyOrganization) {
                   const newUuid = uuidv4();
@@ -336,13 +338,14 @@ const ListOrganizations = () => {
                     <div className="flex justify-between items-center gap-3 ">
                       {selectedOrganizationToUpdate.uuid == element.uuid &&
                       selectedOrganizationToUpdate.status ? (
-                        <div
-                          ref={organizationNameInputRef}
-                          className='w-full'>
+                        <div ref={organizationNameInputRef} className="w-full">
                           <Input
                             placeholder="チーム名を入力"
                             className={`!border-[1px] !border-[#77858F] ${selectedOrganizationToUpdate.showError && '!border-error'} !w-full !text-sm !h-[34px]`}
                             defaultValue={element.name}
+                            onBlur={() => {
+                              setIsCreate(false);
+                            }}
                             onChange={(e) => {
                               setSelectedOrganizationToUpdate((prev) => {
                                 return {
@@ -354,7 +357,9 @@ const ListOrganizations = () => {
                           />
                         </div>
                       ) : (
-                        <p className="break-words text-[16px] font-medium text-[#000000]" style={{ width: 'inherit' }}>
+                        <p
+                          className="break-words text-[16px] font-medium text-[#000000]"
+                          style={{ width: 'inherit' }}>
                           {element.name}
                         </p>
                       )}
@@ -371,8 +376,10 @@ const ListOrganizations = () => {
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit-gray.svg'}
-                            className={`w-3.5 h-3.5 hover:cursor-pointer ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                            className={`w-3.5 h-3.5 hover:cursor-pointer ${isCreate && ' opacity-45'} ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
                             onClick={() => {
+                              if (isCreate) return;
+
                               setSelectedOrganizationToUpdate({
                                 uuid: element.uuid || '',
                                 name: element.name,
@@ -464,7 +471,7 @@ const ListOrganizations = () => {
               labelOptionClass="!text-sm font-medium !pl-1.5"
               onChange={(e) => {
                 setPageSize(Number(e.value));
-                setCurrentPage(1)
+                setCurrentPage(1);
               }}
             />
           </div>
