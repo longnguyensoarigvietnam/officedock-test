@@ -1,3 +1,4 @@
+import uuid
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from base.models import BaseModel
@@ -13,6 +14,7 @@ class Organization(BaseModel):
     Organization model.
     """
 
+    uuid = models.UUIDField(unique=True, default=uuid.uuid4)
     icon = models.ImageField(
         upload_to=ORGANIZATION_ICON_FOLDER_UPLOAD,
         validators=[

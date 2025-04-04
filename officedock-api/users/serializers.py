@@ -309,6 +309,7 @@ class OrganizationForUserSerializer(OrganizationSerializer):
         model = Organization
         fields = [
             "id",
+            "uuid",
             "name",
             "superior",
             "superior_id",

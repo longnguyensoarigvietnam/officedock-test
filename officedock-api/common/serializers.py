@@ -40,7 +40,7 @@ class CreationDataOrganizationSerializer(BaseOrganizationSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "superior", "icon"]
+        fields = ["id", "uuid", "name", "superior", "icon"]
 
 
 class CreationDataOrganizationWithUserSerializer(
@@ -54,7 +54,7 @@ class CreationDataOrganizationWithUserSerializer(
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "superior", "users", "icon"]
+        fields = ["id", "uuid", "name", "superior", "users", "icon"]
 
 
 class OrganizationWithUserNotHaveSkillMapSerializer(
@@ -68,7 +68,7 @@ class OrganizationWithUserNotHaveSkillMapSerializer(
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "superior", "users", "icon"]
+        fields = ["id", "uuid", "name", "superior", "users", "icon"]
 
     def get_users(self, obj):
         """Get user have not skill map"""
@@ -98,7 +98,7 @@ class CreationDataOrganizationWithTagSerializer(
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "superior", "tags", "icon"]
+        fields = ["id", "uuid", "name", "superior", "tags", "icon"]
 
 
 class CreationDataTaskListSerializer(serializers.ModelSerializer):
@@ -188,6 +188,7 @@ class CreationDataOrganizationWithStructCategorySerializer(
         model = Organization
         fields = [
             "id",
+            "uuid",
             "name",
             "icon",
             "is_main",
