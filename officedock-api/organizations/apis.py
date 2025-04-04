@@ -44,7 +44,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
     queryset = (
         Organization.objects.annotate(user_count=Count("users"))
-        .order_by("created_at")
+        .order_by("-created_at")
         .all()
     )
     serializer_class = OrganizationSerializer
@@ -61,6 +61,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     }
     filterset_class = OrganizationFilter
     screen_name = Screens.ORGANIZATION.value
+    lookup_field = "uuid"
 
     def get_permissions(self):
         """

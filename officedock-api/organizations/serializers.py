@@ -23,7 +23,7 @@ class BaseOrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "icon"]
+        fields = ["id", "uuid", "name", "icon"]
 
     def to_representation(self, instance):
         """Override file URL representation to ensure consistency"""
@@ -245,6 +245,7 @@ class OrganizationSerializer(BaseOrganizationSerializer):
         model = Organization
         fields = [
             "id",
+            "uuid",
             "name",
             "superior",
             "superior_id",
@@ -330,6 +331,7 @@ class OrganizationDetailSerializer(OrganizationSerializer):
         model = Organization
         fields = [
             "id",
+            "uuid",
             "name",
             "superior",
             "superior_id",
@@ -401,6 +403,7 @@ class OrganizationStatisticCategorySerializer(serializers.ModelSerializer):
         model = Organization
         fields = [
             "id",
+            "uuid",
             "organization_statistic_category_id",
             "large_statistic_category_uuid",
             "medium_statistic_category_uuid",
@@ -478,7 +481,7 @@ class OrganizationMemberSerializer(BaseOrganizationSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "users", "icon"]
+        fields = ["id", "uuid", "name", "users", "icon"]
 
     def get_users(self, obj):
         """Get users in organization"""
@@ -563,6 +566,7 @@ class OrganizationCategoryHierarchySerializer(BaseOrganizationSerializer):
         model = Organization
         fields = [
             "id",
+            "uuid",
             "name",
             "icon",
             "statistic_categories",
