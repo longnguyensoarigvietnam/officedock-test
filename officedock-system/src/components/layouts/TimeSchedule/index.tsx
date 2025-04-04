@@ -671,6 +671,7 @@ const TimeSchedule = memo(
         onSettled: () => {
           setIsLoading(false);
           setIsLoadingSchedule(false);
+          scrollToNowIndicator();
         },
       },
     );
@@ -2608,27 +2609,28 @@ const TimeSchedule = memo(
       }
       return taskTimeScheduleList;
     }, [isExtendCalendar, taskTimeScheduleList]);
+    const scrollToNowIndicator = () => {
+      setTimeout(() => {
+        const nowIndicator = document.querySelector(
+          '.fc-timegrid-now-indicator-arrow',
+        );
+
+        if (nowIndicator) {
+          nowIndicator.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+
+          window.scrollBy({ top: 800, behavior: 'smooth' });
+        }
+      }, 500);
+    };
 
     useEffect(() => {
-      const scrollToNowIndicator = () => {
-        setTimeout(() => {
-          const nowIndicator = document.querySelector(
-            '.fc-timegrid-now-indicator-arrow',
-          );
-
-          if (nowIndicator) {
-            nowIndicator.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-            });
-
-            window.scrollBy({ top: 800, behavior: 'smooth' });
-          }
-        }, 500);
-      };
-
-      scrollToNowIndicator();
-    }, [taskTimeScheduleList]);
+      if (!isLoadingSchedule) {
+        scrollToNowIndicator();
+      }
+    }, []);
 
     const [calculatedWidth, setCalculatedWidth] = useState(1070);
     const [isCurrentWeek, setIsCurrentWeek] = useState(false);
