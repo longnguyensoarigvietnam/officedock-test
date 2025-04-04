@@ -46,6 +46,7 @@ type Props = {
   imgClassname?: string;
   onChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
+  disableItems?: string[]
 };
 
 const Dropdown = ({
@@ -75,6 +76,7 @@ const Dropdown = ({
   styleClassOption,
   isShowIconDrop = true,
   imgClassname,
+  disableItems = [],
   onAdd,
   onChange,
 }: Props) => {
@@ -255,7 +257,8 @@ const Dropdown = ({
                             `relative ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} cursor-default border-b-[1px] border-[#EBF1F7] select-none ${!openByDefault && 'pl-3 pr-5'} py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass} overflow-x-hidden`
                           }
                           value={option}
-                          onClick={() => handleOptionClick(option)}>
+                          onClick={() => handleOptionClick(option)}
+                          disabled={disableItems.includes(String(option.value))}>
                           {() => (
                             <>
                               <div
@@ -278,7 +281,7 @@ const Dropdown = ({
                                   />
                                 )}
                                 <p
-                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'} ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'} w-[100%] break-words`}>
+                                  className={` ${!openByDefault ? 'ml-1' : 'text-center w-full'} ${!isStatusDropdown && selected?.value == option.value ? 'text-blue-500' : ''} ${labelOptionClass} ${isStatusDropdown && '!text-left ml-2 !w-[50px]'} w-[100%] break-words ${disableItems.includes(String(option.value)) && 'text-gray-300 hover:cursor-not-allowed'}`}>
                                   {option.label}
                                 </p>
                                 {isStatusDropdown && (

@@ -1,25 +1,13 @@
-import { OptionDropdownType } from './common';
 import { Skill } from './skills';
 import { Profile } from './user';
-
-export interface CreateOrganizationRequest {
-  name: string;
-  superiorId: number | string | null;
-}
-
-export interface CreateOrganizationFormData {
-  name: string;
-  superiorId?: OptionDropdownType;
-}
-
 export interface Organizations {
-  id: number;
+  id?: number;
   name: string;
-  userCount: number;
-  superior: Omit<Organizations, 'isMain'>;
+  userCount?: number;
+  superior?: Omit<Organizations, 'isMain' | "superior">;
   users?: Omit<Profile, 'birthday' | 'gender'>[];
-  statisticCategories: statisticCategories[];
-  skills: {
+  statisticCategories?: statisticCategories[];
+  skills?: {
     defineSkill: string;
     id: number;
     level: number | null;
@@ -30,12 +18,11 @@ export interface Organizations {
     delete: boolean;
   };
   isMain?: boolean;
+  uuid?: string;
+  createdAt?: Date | string,
+  updatedAt?: Date | string
 }
 
-export interface OrganizationFilterFormData {
-  name?: string;
-  superiorName?: string;
-}
 export interface statisticCategories {
   id: number;
   largeStatisticCategory: {

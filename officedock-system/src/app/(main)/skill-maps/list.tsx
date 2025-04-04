@@ -103,7 +103,7 @@ const ListSkillsMap = () => {
       const organizations = organizationOptions.map((organization) => {
         return {
           label: organization.name,
-          value: organization.id,
+          value: Number(organization.id),
         };
       });
       setInitialOrganizationListOptions(organizations);

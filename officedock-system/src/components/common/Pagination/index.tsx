@@ -183,7 +183,7 @@ const Pagination = ({
           )}
           {hasLeftEllipsis && (
             <span
-              className={`items-center ${sizeClasses} ${styleTag} bg-[#F1F2F4]`}>
+              className={`items-center ${sizeClasses} ${styleTag}`}>
               ...
             </span>
           )}
@@ -201,7 +201,7 @@ const Pagination = ({
           ))}
           {hasRightEllipsis && (
             <span
-              className={`items-center ${sizeClasses} ${styleTag} bg-[#F1F2F4]`}>
+              className={`items-center ${sizeClasses} ${styleTag}`}>
               ...
             </span>
           )}

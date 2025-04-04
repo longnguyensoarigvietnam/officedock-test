@@ -4,6 +4,7 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
+import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 import {
   StatisticCategoryInfo,
@@ -12,12 +13,13 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 
 import { formatShowStatisticTask, formatTimeToJapanese } from '@utils/date';
+import { getRandomColor, lightenColor } from '@utils';
+
 import { EventWorkCategory } from '@constants/enums';
 
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+
 import ProgressBarStatistic from '../ProgressBarStatistic';
-import { getRandomColor, lightenColor } from '@utils';
-import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 type Props = {
   startDate: Date;
@@ -391,10 +393,8 @@ const AllocationTagCompare = memo(
                             return (
                               <div
                                 key={item.value}
-                                className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                                <span className="w-[32px] truncate">
-                                  {item.label}
-                                </span>
+                                className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                                <span className=" truncate">{item.label}</span>
                                 <ImageRound
                                   onClick={() => {
                                     removeTag(item);

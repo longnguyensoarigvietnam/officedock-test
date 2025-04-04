@@ -18,7 +18,7 @@ interface FilterProps {
   smallCategoryId?: number;
   organizationIds?: string;
   tagIds?: OptionDropdownType[];
-  statisticBy?: OptionDropdownType;
+  statisticBy?: string;
 }
 
 const useStatisticTagTaskDurations = ({
@@ -54,7 +54,7 @@ const useStatisticTagTaskDurations = ({
       filter?.smallCategoryId
         ? `&small_category_id=${filter.smallCategoryId}`
         : ''
-    }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy.value}` : '&statistic_by=WEEK'}
+    }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy}` : '&statistic_by=WEEK'}
     ${filter?.tagIds ? `&tag_ids=${filter.tagIds.map((item) => item.value).join(',')}` : ''}`;
 
     const { data } = await api.get<StatisticsTagTaskDuration[]>(apiUrl);

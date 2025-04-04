@@ -67,7 +67,7 @@ const ActionsTagModal = ({
         (value.organizations = dataTag.organizations ? dataTag.organizations.map((org) => {
           return {
             label: org.name,
-            value: org.id,
+            value: Number(org.id),
           };
         }) : []);
     }
