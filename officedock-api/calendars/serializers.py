@@ -264,7 +264,6 @@ class PeopleInChargeSerializer(serializers.ModelSerializer):
         return obj.user.id
 
 
-# TODO: Maybe refactor format later
 class TaskScheduleForCalendarSerializer(serializers.ModelSerializer):
     """
     Serializer for Task calendar

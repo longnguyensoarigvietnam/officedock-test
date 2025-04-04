@@ -47,11 +47,3 @@ class ScheduleCategoryTypes(EnumChoices):
     LARGE = "LARGE"
     MEDIUM = "MEDIUM"
     SMALL = "SMALL"
-
-
-# Define category default
-SCHEDULE_CATEGORIES = {
-    ScheduleCategoryTypes.LARGE.value: ["会議関係"],
-    ScheduleCategoryTypes.MEDIUM.value: ["定期会議", "臨時会議"],
-    ScheduleCategoryTypes.SMALL.value: ["小カテゴリ1", "小カテゴリ2", "小カテゴリ3"],
-}
