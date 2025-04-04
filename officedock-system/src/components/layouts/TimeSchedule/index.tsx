@@ -2609,6 +2609,27 @@ const TimeSchedule = memo(
       return taskTimeScheduleList;
     }, [isExtendCalendar, taskTimeScheduleList]);
 
+    useEffect(() => {
+      const scrollToNowIndicator = () => {
+        setTimeout(() => {
+          const nowIndicator = document.querySelector(
+            '.fc-timegrid-now-indicator-arrow',
+          );
+
+          if (nowIndicator) {
+            nowIndicator.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+
+            window.scrollBy({ top: 800, behavior: 'smooth' });
+          }
+        }, 500);
+      };
+
+      scrollToNowIndicator();
+    }, [taskTimeScheduleList]);
+
     const [calculatedWidth, setCalculatedWidth] = useState(1070);
     const [isCurrentWeek, setIsCurrentWeek] = useState(false);
     const handleDatesSet = (info: any) => {
