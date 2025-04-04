@@ -5,7 +5,10 @@ from django.db.models import Count, Q
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, NotFound
-from rest_framework.status import HTTP_204_NO_CONTENT
+from rest_framework.status import (
+    HTTP_204_NO_CONTENT,
+    HTTP_405_METHOD_NOT_ALLOWED,
+)
 
 from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
@@ -18,10 +21,13 @@ from common.utils import transform_statistic_categories, generate_file_name
 from skills.models import StatisticCategory, SkillMap
 from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
+from organizations.utils import get_high_level_organizations
 from .filters import OrganizationFilter, OrganizationSkillFilter
 from .serializers import (
     OrganizationCategoryHierarchyForCreateSerializer,
     OrganizationCategoryHierarchySerializer,
+    OrganizationHierarchyForCreateSerializer,
+    OrganizationHierarchySerializer,
     OrganizationMemberSerializer,
     OrganizationSerializer,
     OrganizationDetailSerializer,
@@ -126,6 +132,44 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Get the company from the logged in user and assign it to the organization
         serializer.save(company=self.request.user.company)
+
+    @action(
+        methods=["GET", "POST"],
+        detail=False,
+        url_path="hierarchy",
+        serializer_class=OrganizationHierarchyForCreateSerializer,
+    )
+    def hierarchy(self, request):
+        """
+        Handle hierarchy organization
+        """
+        if request.method == "GET":
+            orgs = (
+                self.get_queryset()
+                .order_by("id")
+                .values_list("id", "superior_id")
+            )
+
+            return self.response_ok(
+                OrganizationHierarchySerializer(
+                    get_high_level_organizations(orgs),
+                    many=True,
+                    context={"request": request},
+                ).data
+            )
+
+        elif request.method == "POST":
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer_data = serializer.validated_data
+            serializer_data.pop("organizations", None)
+            serializer_data.pop("delete_ids", None)
+
+            # TODO: Implement logic create organization hierarchy
+
+            return self.response_ok()
+
+        return self.response(status_code=HTTP_405_METHOD_NOT_ALLOWED)
 
     def perform_update(self, serializer):
         """
