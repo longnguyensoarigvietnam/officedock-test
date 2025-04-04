@@ -86,6 +86,7 @@ _ERROR_MESSAGES = {
         "max_file_size": _("File size must not exceed {max_size}."),
         "select_day": _("Must select at least one day."),
         "select_month": _("Must select at least one month."),
+        "chunk_file_not_exists": _("This chunk file does not exist."),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -150,6 +151,7 @@ _ERROR_MESSAGES = {
         "max_file_size": _("{max_size}以下のファイルをアップロードしてください。"),
         "select_day": _("いずれか1日を選択してください。"),
         "select_month": _("いずれか1月を選択してください。"),
+        "chunk_file_not_exists": _("このチャンクファイルが存在していません。"),
     },
 }
 

@@ -51,6 +51,7 @@ from chat.serializers import (
     ChatRoomSerializer,
     ChatRoomsParticipantsSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
+    ChunkFileSerializer,
     SendMessageSerializer,
     ReactionSerializer,
 )
@@ -87,6 +88,21 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 *args, **kwargs, context={"request": self.request}
             )
         return super().get_serializer(*args, **kwargs)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="chunk-files",
+        serializer_class=ChunkFileSerializer,
+    )
+    def chunk_files_upload(self, request):
+        """
+        Handle chunk file upload
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return self.response_ok()
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -754,19 +770,17 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer_data = serializer.validated_data
-            files = serializer_data.pop("files", None)
             file_uuids = serializer_data.pop("file_uuids", [])
             message = serializer.save(
                 sender=user, chat_room=chat_room, company=user.company
             )
 
-            if files:
+            if file_uuids:
                 # Create chat files
                 ChatFile.create_files(
                     company=chat_room.company,
                     room=chat_room,
                     message=message,
-                    files=files,
                     uuids=file_uuids,
                 )
 
@@ -978,7 +992,6 @@ class ChatMessageViewSet(
 
         instance = serializer.instance
         serializer_data = serializer.validated_data
-        files = serializer_data.pop("files", None)
         file_uuids = serializer_data.pop("file_uuids", [])
 
         if (
@@ -1007,13 +1020,12 @@ class ChatMessageViewSet(
         instance = serializer.save()
 
         chat_room = instance.chat_room
-        if files:
+        if uuids_to_create:
             # Create chat files
             ChatFile.create_files(
                 company=instance.company,
                 room=chat_room,
                 message=instance,
-                files=files,
                 uuids=uuids_to_create,
             )
 

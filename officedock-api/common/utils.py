@@ -422,11 +422,11 @@ class StripTags(Func):
     template = "%(function)s(%(expressions)s, {}, '', 'g')".format(STRIP_TAGS)
 
 
-def generate_file_name(file_name: str = None) -> str:
+def generate_file_name(file_name=None) -> str:
     """
     Generate file name.
     """
-    ext = file_name.split(".")[-1] if "." in file_name else "png"
+    ext = file_name.split(".")[-1] if file_name and "." in file_name else "png"
     current_time = datetime.now().strftime("%Y%m%d%H%M%S%f")
     random_number = random.randint(10000, 99999)
     return f"{current_time}{random_number}.{ext}"

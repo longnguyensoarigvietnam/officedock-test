@@ -2,16 +2,19 @@ import io
 import uuid
 from PIL import Image
 from django.core.files.base import ContentFile
-from django.db import models
+from django.core.files.storage import default_storage
+from django.db import models, transaction
 from django.utils import timezone
 
 from base.models import BaseModel
 from chat.constants import (
     CHAT_FILES_FOLDER_UPLOAD,
+    CHUNK_FILES_FOLDER_UPLOAD,
     ChatMessageTypes,
     ChatRoomTypes,
 )
 from common.utils import generate_file_name, generate_unique_code
+from base.messages import ERROR_MESSAGES
 
 
 class ChatRoom(BaseModel):
@@ -234,35 +237,73 @@ class ChatFile(BaseModel):
     file_size = models.FloatField()
 
     @classmethod
-    def create_files(cls, company, room, message, files, uuids=[]):
-        """Custom create method to handle file upload logic"""
-        chat_files = []
-        for index, file in enumerate(files):
-            file_name = file.name
-            file_type = file.content_type
-            file.name = generate_file_name(file_name)  # Set custom file name
-            file_size = file.size / (1024 * 1024)
-            compressed_file = None
-            if file_type and file_type.startswith("image"):
-                compressed_file = cls.compress_image_static(
-                    file
-                )  # Compressed file if image
+    def create_files(cls, company, room, message, uuids=[]):
+        """
+        Custom create method to handle file upload logic
+        """
+        for uuid in uuids:
+            # Fetch all chunks
+            chunk_files = ChunkFile.objects.filter(file_uuid=uuid).order_by(
+                "chunk_index"
+            )
 
-            chat_files.append(
-                cls(
-                    uuid=uuids[index] if index < len(uuids) else uuid.uuid4(),
+            if not chunk_files.exists():
+                raise ValueError(
+                    {"detail": ERROR_MESSAGES["chunk_file_not_exists"]}
+                )
+
+            # Get file metadata from the first chunk
+            first_chunk = chunk_files.first()
+            file_size = float(first_chunk.file_size) / (
+                1024 * 1024
+            )  # Convert to MB
+            file_name = first_chunk.file_name
+            file_type = first_chunk.file_type
+
+            # Merge chunks into a single file
+            with io.BytesIO() as merged_file:
+                for chunk in chunk_files:
+                    with chunk.chunk_file.open("rb") as chunk_data:
+                        merged_file.write(chunk_data.read())
+
+                # Reset stream position before uploading
+                merged_file.seek(0)
+
+                # Define GCS storage path
+                gcs_path = f"{CHAT_FILES_FOLDER_UPLOAD}/{room.code}/{generate_file_name(file_name)}"
+
+                # Upload the merged file to GCS
+                default_storage.save(
+                    gcs_path, ContentFile(merged_file.getvalue())
+                )
+
+                # Compress image if applicable
+                compressed_file = (
+                    cls.compress_image_static(merged_file)
+                    if file_type.startswith("image")
+                    else None
+                )
+
+            # Create ChatFile record in a transaction
+            with transaction.atomic():
+                ChatFile.objects.create(
+                    uuid=uuid,
                     company=company,
                     chat_room=room,
                     chat_message=message,
                     file_name=file_name,
-                    original_file=file,
+                    original_file=gcs_path,
                     compressed_file=compressed_file,
                     file_type=file_type,
                     file_size=file_size,
                 )
-            )
 
-        return cls.objects.bulk_create(chat_files)
+                # Delete chunk files after merging
+                for chunk in chunk_files:
+                    chunk.chunk_file.delete()
+                chunk_files.delete()
+
+        return cls
 
     @staticmethod
     def compress_image_static(
@@ -301,3 +342,17 @@ class ChatFile(BaseModel):
         )
 
         return optimized_image
+
+
+class ChunkFile(BaseModel):
+    """
+    Chunk file model
+    """
+
+    file_uuid = models.UUIDField()
+    file_name = models.CharField(max_length=255)
+    file_type = models.CharField(max_length=255)
+    file_size = models.FloatField()
+    chunk_index = models.IntegerField()
+    total_chunks = models.IntegerField()
+    chunk_file = models.FileField(upload_to=CHUNK_FILES_FOLDER_UPLOAD)
