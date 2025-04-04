@@ -13,6 +13,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Now, Coalesce
 from django.utils import timezone
+from django.utils.translation import trim_whitespace
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
 from rest_framework.decorators import action
@@ -889,7 +890,9 @@ class StatisticViewSet(BaseAPIViewSet):
             or small_category_id == NONE_CATEGORY
         ):
             return self.response_ok(data)
-        ranges = split_ranges(from_date, end_date, statistic_by)
+        ranges = split_ranges(
+            from_date, end_date, trim_whitespace(statistic_by)
+        )
 
         def _get_durations_by_time(
             filter_tasks, filter_events, percent, duration
@@ -904,16 +907,20 @@ class StatisticViewSet(BaseAPIViewSet):
                 total_duration = timedelta(0)
                 percent_per_total_duration = 0
                 if filter_tasks or filter_events:
-                    reset_tasks = Task.objects.filter(
-                        Q(id__in=filter_tasks.values_list("id", flat=True))
-                        & Q(task_durations__started_at__gte=start_date_min)
-                        & Q(task_durations__paused_at__lte=start_date_max)
-                    ).distinct()
-                    reset_events = Schedule.objects.filter(
-                        Q(id__in=filter_events.values_list("id", flat=True))
-                        & Q(task_durations__started_at__gte=start_date_min)
-                        & Q(task_durations__paused_at__lte=start_date_max)
-                    ).distinct()
+                    if not is_tag_page:
+                        reset_tasks = Task.objects.filter(
+                            Q(id__in=filter_tasks.values_list("id", flat=True))
+                            & Q(task_durations__started_at__gte=start_date_min)
+                            & Q(task_durations__paused_at__lte=start_date_max)
+                        ).distinct()
+                        reset_events = Schedule.objects.filter(
+                            Q(id__in=filter_events.values_list("id", flat=True))
+                            & Q(task_durations__started_at__gte=start_date_min)
+                            & Q(task_durations__paused_at__lte=start_date_max)
+                        ).distinct()
+                    else:
+                        reset_tasks = filter_tasks
+                        reset_events = filter_events
 
                     merged_duration = merge_task_and_event(
                         reset_tasks,
@@ -959,16 +966,25 @@ class StatisticViewSet(BaseAPIViewSet):
                 end_of_day,
                 is_get_total_duration=True,
             )
-            for tag in tag_list:
-                tag.update({"durations": []})
-                filter_tasks = tasks.filter(tags__id=tag["tag_id"])
-                filter_events = events.filter(tags__id=tag["tag_id"])
-                durations = _get_durations_by_time(
-                    filter_tasks, filter_events, 100, tag["duration"]
+            if not tag_list:
+                tag = {
+                    "tag_id": None,
+                    "tag_name": NONE_CATEGORY,
+                    "duration": "00:00:00",
+                }
+                tag["durations"] = _get_durations_by_time(
+                    None, None, 100, tag["duration"]
                 )
-                tag["durations"].append(durations)
-                tag["duration"] = format_duration(tag["duration"])
                 data.append(tag)
+            else:
+                for tag in tag_list:
+                    filter_tasks = tasks.filter(tags__id=tag["tag_id"])
+                    filter_events = events.filter(tags__id=tag["tag_id"])
+                    tag["durations"] = _get_durations_by_time(
+                        filter_tasks, filter_events, 100, tag["duration"]
+                    )
+                    tag["duration"] = format_duration(tag["duration"])
+                    data.append(tag)
         else:
 
             def _filter_models(category_id):
@@ -1065,9 +1081,9 @@ class StatisticViewSet(BaseAPIViewSet):
             )
             if not category_list:
                 category = {
-                    "categoryId": None,
-                    "categoryName": NONE_CATEGORY,
-                    "categoryColor": CategoryColors.GRAY.value,
+                    "category_id": None,
+                    "category_name": NONE_CATEGORY,
+                    "category_color": CategoryColors.GRAY.value,
                     "duration": "00:00:00",
                 }
                 category["durations"] = _get_durations_by_time(

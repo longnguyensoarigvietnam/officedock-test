@@ -11,7 +11,6 @@ from base.apis import BaseAPIViewSet
 from base.permissions import IsCronJob
 from calendars.constants import (
     ScheduleTypes,
-    SCHEDULE_CATEGORIES,
     CalendarTypes,
 )
 from calendars.models import Schedule
@@ -27,7 +26,6 @@ from users.serializers import RoleSerializer
 from users.models import Role, RoleDetail, User
 from tasks.models import TaskStatus, Task, TaskDuration
 from tasks.constants import (
-    TASK_WORK_TYPES,
     TaskTypes,
     TaskCategoryTypes,
 )
@@ -464,23 +462,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         tags = request.user.company.tags.order_by("created_at").all()
 
         return self.response_ok(BaseTagSerializer(tags, many=True).data)
-
-    @action(methods=["GET"], detail=False, url_path="category-filters")
-    def category_for_filter(self, request):
-        """
-        Get tags by company
-        """
-        # TODO: Maybe remove this function if implement category for task or event
-        merged_categories = []
-        for type, categories in SCHEDULE_CATEGORIES.items():
-            for category in categories:
-                merged_categories.append({"type": type, "category": category})
-
-        for type, categories in TASK_WORK_TYPES.items():
-            for category in categories:
-                merged_categories.append({"type": type, "category": category})
-
-        return self.response_ok(merged_categories)
 
     @extend_schema(
         parameters=[

@@ -336,23 +336,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         user = request.user
 
-        # Get or create chat room type task
-        # FIXME: Remove later
-        # task_room = ChatRoom.objects.filter(
-        #     type=ChatRoomTypes.TASK.value,
-        #     participants=user,
-        #     company=user.company,
-        #     name=ChatRoomNames.TASK_CARD.value,
-        # ).first()
-        #
-        # # Get or create chat room type skill
-        # skill_room = ChatRoom.objects.filter(
-        #     type=ChatRoomTypes.SKILL.value,
-        #     participants=user,
-        #     company=user.company,
-        #     name=ChatRoomNames.SKILL_UP.value,
-        # ).first()
-
         # Use select_related to load related ForeignKey relationships
         chat_rooms_participants = (
             user.chat_rooms_participants.select_related("chat_room")
@@ -364,13 +347,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 chat_room__type=ChatRoomTypes.PRIVATE.value, participant_count=1
             )
         )
-        # FIXME: Remove later
-        # task_card_room = ChatRoomsParticipants.objects.filter(
-        #     chat_room=task_room, user=user
-        # ).first()
-        # skill_card_room = ChatRoomsParticipants.objects.filter(
-        #     chat_room=skill_room, user=user
-        # ).first()
 
         # Subquery to get the latest message
         latest_message_subquery = Subquery(
@@ -401,13 +377,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         )
         # Handle filter when pagination
         if last_message_at := request.query_params.get("last_message_at"):
-            # FIXME: Remove later
-            # chat_rooms = chat_rooms.exclude(
-            #     chat_room__type__in=[
-            #         ChatRoomTypes.TASK.value,
-            #         ChatRoomTypes.SKILL.value,
-            #     ]
-            # )
             if pin_at := request.query_params.get("pin_at"):
                 chat_rooms = chat_rooms.filter(
                     Q(pin_at__lt=pin_at)
@@ -467,38 +436,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             updated_chat_rooms = chat_rooms.filter(unread_messages__gt=0)
         else:
             updated_chat_rooms = chat_rooms
-            # FIXME: Remove later
-            # if (
-            #     task_card_room
-            #     and request.query_params.get("last_message_at") is None
-            #     and request.query_params.get("name") is None
-            # ):
-            #     chat_rooms_list = list(
-            #         chat_rooms.exclude(
-            #             chat_room__type__in=[
-            #                 ChatRoomTypes.TASK.value,
-            #                 ChatRoomTypes.SKILL.value,
-            #             ]
-            #         )
-            #     )
-            #     last_pinned_index = None
-            #
-            #     for i, room in enumerate(chat_rooms_list):
-            #         if room.pin_at is not None:
-            #             last_pinned_index = i
-            #
-            #     if last_pinned_index is None:
-            #         updated_chat_rooms = [
-            #             task_card_room,
-            #             skill_card_room,
-            #         ] + chat_rooms_list
-            #     else:
-            #         updated_chat_rooms = (
-            #             chat_rooms_list[: last_pinned_index + 1]
-            #             + [task_card_room, skill_card_room]
-            #             + chat_rooms_list[last_pinned_index + 1 :]
-            #         )
-
         # Return the response with the serialized data
         return self.response_pagination(
             request, updated_chat_rooms, ChatRoomsParticipantsSerializer

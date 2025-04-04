@@ -54,14 +54,6 @@ class DatetimeUnitTypes(EnumChoices):
     WEEK = "WEEK"
 
 
-# Define category default
-TASK_WORK_TYPES = {
-    TaskCategoryTypes.LARGE.value: ["大カテゴリ1", "大カテゴリ2", "大カテゴリ3"],
-    TaskCategoryTypes.MEDIUM.value: ["中カテゴリ1", "中カテゴリ2", "中カテゴリ3"],
-    TaskCategoryTypes.SMALL.value: ["小カテゴリ1", "小カテゴリ2", "小カテゴリ3"],
-}
-
-
 class FrequencyMap(EnumChoices):
     ONCE = "ONCE"
     DAILY = "DAILY"

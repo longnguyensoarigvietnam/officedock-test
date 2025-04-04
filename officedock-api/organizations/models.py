@@ -119,7 +119,6 @@ class OrganizationsStatisticCategories(BaseModel):
         Set default company
         """
         self.company = self.organization.company
-        # FIXME: Remove this line later
         if self.color is None:
             self.color = CategoryColors.random()
 
