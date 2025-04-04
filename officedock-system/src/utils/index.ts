@@ -646,7 +646,7 @@ export const getChatFileURL = (url: string) => {
     if (url.includes('https://') || url.includes('http://')) {
       return url;
     }
-    return url;
+    return process.env.NEXT_PUBLIC_API_URL + url;
   }
   return '';
 };
@@ -766,4 +766,11 @@ export const findStatusTeamByUser = (
 ): StatusSummary | undefined => {
   const user = users.find((user) => user.id === userId);
   return user?.statuses.find((s) => s.name === StatusTask[status]);
+};
+
+// Get chunk size
+export const getChunkSize = (size: number) => {
+  if (size < 20 * 1024 * 1024) return 1024 * 1024; // 1MB chunks
+  if (size < 1024 * 1024 * 1024) return 10 * 1024 * 1024; // 10MB chunks
+  return 25 * 1024 * 1024; // 25MB chunks
 };

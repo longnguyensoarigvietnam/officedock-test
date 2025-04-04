@@ -512,7 +512,7 @@ export const MessageDetail = ({
                                               {file.fileType.includes(
                                                 'image',
                                               ) && (
-                                                <div>
+                                                <div> 
                                                   <Image
                                                     src={getChatFileURL(
                                                       file?.compressedFile ||

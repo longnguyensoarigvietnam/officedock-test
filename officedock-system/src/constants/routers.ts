@@ -391,6 +391,7 @@ export const apiRouters = {
   CHAT_HIDE: (code: string) => `/chat/${code}/hide/`,
   SOCKET_ACTION: (token: string) => `/system/ws/chat/?token=${token}`,
   CHAT_SETTING: '/users/chat-setting/',
+  CHAT_UPLOAD_CHUNK: '/chat/chunk-files/',
 
   // BOOKMARK
   BOOKMARK_LIST: '/messages/',
