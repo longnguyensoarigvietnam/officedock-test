@@ -319,6 +319,47 @@ class OrganizationSerializer(BaseOrganizationSerializer):
         return self._is_subordinate(superior.superior, organization)
 
 
+class OrganizationHierarchyForCreateSerializer(serializers.Serializer):
+    """
+    Serializer for the Organization  hierarchy create multi.
+    """
+
+    organizations = OrganizationSerializer(many=True, required=False)
+    delete_ids = serializers.ListField(
+        child=serializers.IntegerField(), allow_null=True, required=False
+    )
+
+
+class OrganizationHierarchySerializer(serializers.ModelSerializer):
+    """
+    Serializer for Tag struct model
+    """
+
+    children = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = ["id", "name", "icon", "children"]
+
+    def get_children(self, obj):
+        """
+        Handle get children of tag
+        """
+        user = self.context.get("request").user
+
+        # Fetch the child tags of the current tag
+        children = Organization.objects.filter(
+            company=user.company, superior=obj
+        ).order_by("id")
+
+        # Serialize each child tag
+        return OrganizationHierarchySerializer(
+            children,
+            many=True,
+            context=self.context,
+        ).data
+
+
 class OrganizationDetailSerializer(OrganizationSerializer):
     """
     Serializer for the Organization.
