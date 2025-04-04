@@ -1,6 +1,14 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Line } from 'react-chartjs-2';
+import moment from 'moment';
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,12 +20,15 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
+
 import ImageRound from '@components/common/ImageRound';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import Dropdown from '@components/common/Dropdown';
+
 import { StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
-import Dropdown from '@components/common/Dropdown';
-import { CalendarViewOptions } from '@constants/enums';
+
+import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 import {
   convertFromNumberToJapaneseTime,
   convertTimeToDecimal,
@@ -25,16 +36,11 @@ import {
   convertToJapaneseMonthDate,
   formatDateToYMD,
 } from '@utils/date';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
 import { getRandomColor, lightenColor } from '@utils';
+
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
+
 import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
 
 ChartJS.register(
@@ -89,8 +95,8 @@ const LineChart = ({
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [viewBy, setViewBy] = useState<OptionDropdownType>({
-    value: CalendarViewOptions.VIEW_BY_WEEK,
-    label: '週',
+    value: StatisticViewOptions.WEEK,
+    label: StatisticViewLabels.WEEK,
   });
   const [lineChartData, setLineChartData] = useState<{
     labels: string[];
@@ -127,20 +133,20 @@ const LineChart = ({
 
   const viewOptions = [
     {
-      value: CalendarViewOptions.VIEW_BY_DAY,
-      label: '日',
+      value: StatisticViewOptions.DAY,
+      label: StatisticViewLabels.DAY,
     },
     {
-      value: CalendarViewOptions.VIEW_BY_WEEK,
-      label: '週',
+      value: StatisticViewOptions.WEEK,
+      label: StatisticViewLabels.WEEK,
     },
     {
-      value: CalendarViewOptions.VIEW_BY_MONTH,
-      label: '月',
+      value: StatisticViewOptions.MONTH,
+      label: StatisticViewLabels.MONTH,
     },
     {
-      value: CalendarViewOptions.VIEW_BY_YEAR,
-      label: '年',
+      value: StatisticViewOptions.YEAR,
+      label: StatisticViewLabels.YEAR,
     },
   ];
 
@@ -203,7 +209,7 @@ const LineChart = ({
             ${convertToJapaneseDateRange(dataPoint.x, dataPoint.endDate)}
           </div>
           <div style="display: flex; align-items: center; margin-bottom: 8px">
-            <div style="background-color: ${dataset.borderColor}; margin-right: 4px; width: 12px; height: 12px; border-radius: 2px"></div>
+            <div style="background-color: ${dataset.borderColor}; margin-right: 4px; width: 12px; height: 12px; border-radius: 2px; min-width: 12px;"></div>
             <p style="font-weight: 700; font-size: 16px; max-width: 200px;
     white-space: nowrap; 
     overflow: hidden; 
@@ -281,6 +287,8 @@ const LineChart = ({
       },
       y: {
         position: 'right',
+        min: 0,
+        suggestedMin: 0,
         ticks: {
           color: '#77858F',
           font: {
@@ -303,6 +311,9 @@ const LineChart = ({
       mediumCategoryId: Number(selectedMedium?.value),
       smallCategoryId: Number(selectedSmall?.value),
       tagIds: selectedTags,
+      statisticBy: viewBy.value
+        ? String(viewBy.value)
+        : StatisticViewOptions.WEEK,
     },
   });
 
@@ -336,18 +347,29 @@ const LineChart = ({
           }
 
           let percent = 0;
-          if (!selectedLarge?.value) {
+          if (
+            !selectedLarge?.value &&
+            statisticTagsList?.largeCategories &&
+            statisticTagsList?.largeCategories.length > 0
+          ) {
             percent =
               statisticTagsList?.largeCategories.find(
                 (category) => category.tagName == categoryDetail.tagName,
               )?.percent || 0;
-          } else if (!selectedMedium?.value) {
+          } else if (
+            !selectedMedium?.value &&
+            statisticTagsList?.mediumCategories &&
+            statisticTagsList?.mediumCategories.length > 0
+          ) {
             percent = statisticTagsList?.mediumCategories
               ? statisticTagsList?.mediumCategories.find(
                   (category) => category.tagName == categoryDetail.tagName,
                 )?.percent || 0
               : 0;
-          } else {
+          } else if (
+            statisticTagsList?.smallCategories &&
+            statisticTagsList?.smallCategories.length > 0
+          ) {
             percent = statisticTagsList?.smallCategories
               ? statisticTagsList?.smallCategories.find(
                   (category) => category.tagName == categoryDetail.tagName,
@@ -376,7 +398,9 @@ const LineChart = ({
             data: categoryDetail.durations.flatMap((duration, index) => [
               {
                 x: duration.startDate,
-                y: convertTimeToDecimal(duration.duration) ?? 0,
+                y: duration.duration
+                  ? convertTimeToDecimal(duration.duration)
+                  : 0,
                 endDate: duration.endDate,
               },
               ...(index === categoryDetail.durations.length - 1 &&
@@ -384,7 +408,9 @@ const LineChart = ({
                 ? [
                     {
                       x: duration.endDate,
-                      y: convertTimeToDecimal(duration.duration) ?? 0,
+                      y: duration.duration
+                        ? convertTimeToDecimal(duration.duration)
+                        : 0,
                       endDate: duration.endDate,
                     },
                   ]
@@ -399,7 +425,7 @@ const LineChart = ({
             pointBorderColor: 'transparent',
             pointHoverRadius: 6,
             pointHoverBackgroundColor:
-              lightenColor('#2E9267', 50) || getRandomColor(),
+              lightenColor('#2E9267', percent) || getRandomColor(),
             pointHoverBorderColor: 'transparent',
             pointHoverBorderWidth: 2,
           });
@@ -589,6 +615,37 @@ const LineChart = ({
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const getDisabledViews = () => {
+    const diffDays = moment(endDate).diff(moment(startDate), 'days');
+    const startMonthDays = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth() + 1,
+      0,
+    ).getDate();
+
+    const disabledViews = [];
+
+    if (diffDays < 7) disabledViews.push(StatisticViewOptions.WEEK);
+    if (diffDays < startMonthDays)
+      disabledViews.push(StatisticViewOptions.MONTH);
+    if (diffDays < 365) disabledViews.push(StatisticViewOptions.YEAR);
+
+    return disabledViews;
+  };
+
+  // TODO: Waiting for QA's answer about day, month, and year views for the line chart, so temporarily displaying the week view by default.
+  // useEffect(() => {
+  //   if (startDate && endDate) {
+  //     const disableViews = getDisabledViews() as string[];
+  //     if (disableViews.includes(String(viewBy.value))) {
+  //       setViewBy({
+  //         value: StatisticViewOptions.DAY,
+  //         label: StatisticViewLabels.DAY,
+  //       });
+  //     }
+  //   }
+  // }, [startDate, endDate, viewBy]);
+
   return (
     <div
       style={{
@@ -659,10 +716,8 @@ const LineChart = ({
                         return (
                           <div
                             key={item.value}
-                            className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                            <span className="w-[32px] truncate">
-                              {item.label}
-                            </span>
+                            className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                            <span className=" truncate">{item.label}</span>
                             <ImageRound
                               onClick={() => {
                                 removeTag(item);
@@ -799,7 +854,7 @@ const LineChart = ({
               </div>
             </div>
           </div>
-          <div className="mt-5">
+          <div className="mt-5 px-[30px]">
             <div className="flex justify-between w-full mb-4">
               <div className="flex gap-2 items-end font-medium">
                 <p>合計時間</p>
@@ -826,17 +881,18 @@ const LineChart = ({
                   classNameTextData="!text-xs"
                   classActive="!text-sm"
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
-                  labelOptionClass="!text-sm font-medium !pl-0.5 !border-b-[1px] !border-[#EBF1F7]"
+                  labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
                     setViewBy({
                       label: e.label,
                       value: e.value,
                     });
                   }}
-                  disabled={true}
+                  disableItems={getDisabledViews()}
                 />
               </div>
             </div>
+          </div>
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
@@ -846,6 +902,7 @@ const LineChart = ({
                 style={{ position: 'absolute', opacity: 0 }}
               />
             </div>
+          <div className="px-[30px]">
             <div className="flex gap-8 items-center justify-end mb-3 break-words">
               {standardLabelsInfo.map((label, index) => {
                 return (
@@ -860,7 +917,7 @@ const LineChart = ({
                 );
               })}
             </div>
-            <table className="w-full border border-gray-300 mt-3 rounded-md">
+            <table className="w-full border border-gray-300 mt-5 rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr

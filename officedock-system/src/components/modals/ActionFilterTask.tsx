@@ -259,14 +259,14 @@ const ActionFilterTask = ({
                     key={team.organization.id}
                     className="border-b last:border-none">
                     <div
-                      className={`flex items-center relative  justify-between p-2 border-b border-transparent cursor-pointer  ${selectedTeams[team.organization.id] ? 'bg-[#F6F9FA] border-b border-[#EBF1F4]  rounded' : ''}`}
+                      className={`flex items-center relative  justify-between p-2 border-b border-transparent cursor-pointer  ${selectedTeams[Number(team.organization.id)] ? 'bg-[#F6F9FA] border-b border-[#EBF1F4]  rounded' : ''}`}
                       onClick={() =>
-                        toggleTeam(team.organization.id, team.organization.name)
+                        toggleTeam(Number(team.organization.id), team.organization.name)
                       }>
                       <div onClick={() => {}} className="w-full">
                         <Checkbox
                           isChecked={
-                            !!selectedTeams[team.organization.id]?.selected
+                            !!selectedTeams[Number(team.organization.id)]?.selected
                           }
                           onChange={() => {}}
                           label={team.organization.name}
@@ -280,12 +280,12 @@ const ActionFilterTask = ({
                           alt="Arrow down"
                           width={16}
                           height={16}
-                          className={`${selectedTeams[team.organization.id] && selectedTeams[team.organization.id].selected ? 'rotate-180' : 'rotate-0'}`}
+                          className={`${selectedTeams[Number(team.organization.id)] && selectedTeams[Number(team.organization.id)].selected ? 'rotate-180' : 'rotate-0'}`}
                         />
                       </div>
                     </div>
-                    {selectedTeams[team.organization.id] &&
-                      selectedTeams[team.organization.id].selected && (
+                    {selectedTeams[Number(team.organization.id)] &&
+                      selectedTeams[Number(team.organization.id)].selected && (
                         <div
                           style={{
                             display:
@@ -300,12 +300,12 @@ const ActionFilterTask = ({
                                 <Checkbox
                                   isChecked={
                                     !!selectedCategories[
-                                      team.organization.id
+                                      Number(team.organization.id)
                                     ]?.[category.id as number]?.selected
                                   }
                                   onChange={() =>
                                     toggleCategory(
-                                      team.organization.id,
+                                      Number(team.organization.id),
                                       category as { id: number; name: string },
                                     )
                                   }

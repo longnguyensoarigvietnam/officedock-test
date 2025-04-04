@@ -139,7 +139,7 @@ const EditUserForm = () => {
       setOriginalOrganizationOptions(
         creationOrganization.map((org) => ({
           label: org.name,
-          value: org.id,
+          value: Number(org.id),
         })),
       );
 
@@ -156,7 +156,7 @@ const EditUserForm = () => {
             ? [
                 {
                   label: mainOrganization.name,
-                  value: mainOrganization.id,
+                  value: Number(mainOrganization.id),
                   type: OrganizationType.MAIN,
                 },
               ]
@@ -164,7 +164,7 @@ const EditUserForm = () => {
           ...subOrganizations.map((org) => {
             return {
               label: org.name,
-              value: org.id,
+              value: Number(org.id),
               type: OrganizationType.SUB,
             };
           }),
@@ -262,7 +262,7 @@ const EditUserForm = () => {
         .filter((organization) => !organization.isMain)
         .map((element) => ({
           label: element.name,
-          value: element.id,
+          value: Number(element.id),
           type: OrganizationType.SUB,
         }));
       value.mainOrganization = dataUserDetail.organizations.find(

@@ -78,7 +78,6 @@ const ListCategory = () => {
 
   const [dataCategories, setDataCategories] = useState<Category[]>([]);
 
-  // TODO: Update logic sort for multi column
   const [searchCategoryName, setSearchCategoryName] = useState('');
   const debouncedFilterByCategoryName = useDebounceText(
     searchCategoryName,

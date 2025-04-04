@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Line } from 'react-chartjs-2';
+import moment from 'moment';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,17 +13,33 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from '@tanstack/react-table';
+
 import ImageRound from '@components/common/ImageRound';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import Dropdown from '@components/common/Dropdown';
+
 import { StatisticStateContext } from '@providers/StatisticProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import {
   StatisticsCategories,
   StatisticsTaskDuration,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
-import Dropdown from '@components/common/Dropdown';
-import { CalendarViewOptions } from '@constants/enums';
+
+import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+
+import useStatisticTaskDurationsCompare from '@hooks/useStatisticTaskDurationsCompare';
 import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
+
 import {
   convertFromNumberToJapaneseTime,
   convertTimeToDecimal,
@@ -34,17 +51,7 @@ import {
   getJapaneseDayName,
   subtractDurations,
 } from '@utils/date';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-} from '@tanstack/react-table';
 import { getRandomColor, lightenColor } from '@utils';
-import useStatisticTaskDurationsCompare from '@hooks/useStatisticTaskDurationsCompare';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 ChartJS.register(
   CategoryScale,
@@ -125,8 +132,8 @@ const LineChartCompare = ({
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [viewBy, setViewBy] = useState<OptionDropdownType>({
-    value: CalendarViewOptions.VIEW_BY_WEEK,
-    label: '週',
+    value: StatisticViewOptions.WEEK,
+    label: StatisticViewLabels.WEEK,
   });
   const [lineChartData, setLineChartData] = useState<{
     labels: string[];
@@ -164,20 +171,20 @@ const LineChartCompare = ({
 
   const viewOptions = [
     {
-      value: CalendarViewOptions.VIEW_BY_DAY,
-      label: '日',
+      value: StatisticViewOptions.DAY,
+      label: StatisticViewLabels.DAY,
     },
     {
-      value: CalendarViewOptions.VIEW_BY_WEEK,
-      label: '週',
+      value: StatisticViewOptions.WEEK,
+      label: StatisticViewLabels.WEEK,
     },
     {
-      value: CalendarViewOptions.VIEW_BY_MONTH,
-      label: '月',
+      value: StatisticViewOptions.MONTH,
+      label: StatisticViewLabels.MONTH,
     },
     {
-      value: CalendarViewOptions.VIEW_BY_YEAR,
-      label: '年',
+      value: StatisticViewOptions.YEAR,
+      label: StatisticViewLabels.YEAR,
     },
   ];
 
@@ -272,6 +279,7 @@ const LineChartCompare = ({
               width: 12px; 
               height: 12px; 
               border-radius: 2px;
+              min-width: 12px;
             "></div>
             <p style="font-weight: 700; font-size: 16px; max-width: 200px;
               white-space: nowrap; 
@@ -384,6 +392,8 @@ const LineChartCompare = ({
       },
       y: {
         position: 'right',
+        min: 0,
+        suggestedMin: 0,
         ticks: {
           color: '#77858F',
           font: {
@@ -405,6 +415,9 @@ const LineChartCompare = ({
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
       tagIds: selectedTags,
+      statisticBy: viewBy.value
+        ? String(viewBy.value)
+        : StatisticViewOptions.WEEK,
     },
   });
 
@@ -417,6 +430,9 @@ const LineChartCompare = ({
         largeCategoryId: Number(selectedLarge?.value),
         mediumCategoryId: Number(selectedMedium?.value),
         tagIds: selectedTags,
+        statisticBy: viewBy.value
+          ? String(viewBy.value)
+          : StatisticViewOptions.WEEK,
       },
     });
 
@@ -505,7 +521,9 @@ const LineChartCompare = ({
             return foundDuration
               ? {
                   x: foundDuration.startDate,
-                  y: convertTimeToDecimal(foundDuration.duration) ?? 0,
+                  y: foundDuration.duration
+                    ? convertTimeToDecimal(foundDuration.duration)
+                    : 0,
                   endDate: foundDuration.endDate,
                   type: type,
                   label: name,
@@ -534,20 +552,31 @@ const LineChartCompare = ({
             ];
 
             let percent = 0;
-            if (!selectedLarge?.value) {
+            if (
+              !selectedLarge?.value &&
+              statisticCategoryList?.largeCategories &&
+              statisticCategoryList?.largeCategories.length > 0
+            ) {
               percent =
                 statisticCategoryList?.largeCategories.find(
                   (category) =>
                     category.categoryName == categoryDetail.categoryName,
                 )?.percent || 0;
-            } else if (!selectedMedium?.value) {
+            } else if (
+              !selectedMedium?.value &&
+              statisticCategoryList?.mediumCategories &&
+              statisticCategoryList?.mediumCategories.length > 0
+            ) {
               percent = statisticCategoryList?.mediumCategories
                 ? statisticCategoryList?.mediumCategories.find(
                     (category) =>
                       category.categoryName == categoryDetail.categoryName,
                   )?.percent || 0
                 : 0;
-            } else {
+            } else if (
+              statisticCategoryList?.smallCategories &&
+              statisticCategoryList?.smallCategories.length > 0
+            ) {
               percent = statisticCategoryList?.smallCategories
                 ? statisticCategoryList?.smallCategories.find(
                     (category) =>
@@ -620,20 +649,31 @@ const LineChartCompare = ({
               },
             ];
             let percent = 0;
-            if (!selectedLarge?.value) {
+            if (
+              !selectedLarge?.value &&
+              statisticCategoryCompareList?.largeCategories &&
+              statisticCategoryCompareList?.largeCategories.length > 0
+            ) {
               percent =
                 statisticCategoryCompareList?.largeCategories.find(
                   (category) =>
                     category.categoryName == categoryDetail.categoryName,
                 )?.percent || 0;
-            } else if (!selectedMedium?.value) {
+            } else if (
+              !selectedMedium?.value &&
+              statisticCategoryCompareList?.mediumCategories &&
+              statisticCategoryCompareList?.mediumCategories.length > 0
+            ) {
               percent = statisticCategoryCompareList?.mediumCategories
                 ? statisticCategoryCompareList?.mediumCategories.find(
                     (category) =>
                       category.categoryName == categoryDetail.categoryName,
                   )?.percent || 0
                 : 0;
-            } else {
+            } else if (
+              statisticCategoryCompareList?.smallCategories &&
+              statisticCategoryCompareList?.smallCategories.length > 0
+            ) {
               percent = statisticCategoryCompareList?.smallCategories
                 ? statisticCategoryCompareList?.smallCategories.find(
                     (category) =>
@@ -982,6 +1022,61 @@ const LineChartCompare = ({
     onSortingChange: handleSortingChange,
   });
 
+  const getDisabledViews = () => {
+    const standardDiffDays =
+      moment(endDate)
+        .endOf('day')
+        .diff(moment(startDate).startOf('day'), 'days') + 1;
+    const compareDiffDays =
+      moment(endDateCompare)
+        .endOf('day')
+        .diff(moment(startDateCompare).startOf('day'), 'days') + 1;
+
+    const standardDisabledViews = [];
+    const compareDisabledViews = [];
+    const startMonthDays = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth() + 1,
+      0,
+    ).getDate();
+    const startCompareMonthDays = new Date(
+      startDateCompare.getFullYear(),
+      startDateCompare.getMonth() + 1,
+      0,
+    ).getDate();
+
+    if (standardDiffDays < 7)
+      standardDisabledViews.push(StatisticViewOptions.WEEK);
+    if (standardDiffDays < startMonthDays)
+      standardDisabledViews.push(StatisticViewOptions.MONTH);
+    if (standardDiffDays < 365)
+      standardDisabledViews.push(StatisticViewOptions.YEAR);
+
+    if (compareDiffDays < 7)
+      compareDisabledViews.push(StatisticViewOptions.WEEK);
+    if (compareDiffDays < startCompareMonthDays)
+      compareDisabledViews.push(StatisticViewOptions.MONTH);
+    if (compareDiffDays < 365)
+      compareDisabledViews.push(StatisticViewOptions.YEAR);
+
+    return Array.from(
+      new Set([...standardDisabledViews, ...compareDisabledViews]),
+    );
+  };
+
+  // TODO: Waiting for QA's answer about day, month, and year views for the line chart, so temporarily displaying the week view by default.
+  // useEffect(() => {
+  //   if (startDate && endDate && startDateCompare && endDateCompare) {
+  //     const disableViews = getDisabledViews() as string[];
+  //     if (disableViews.includes(String(viewBy.value))) {
+  //       setViewBy({
+  //         value: StatisticViewOptions.DAY,
+  //         label: StatisticViewLabels.DAY,
+  //       });
+  //     }
+  //   }
+  // }, [startDate, endDate, startDateCompare, endDateCompare, viewBy]);
+
   return (
     <div
       style={{
@@ -1034,15 +1129,13 @@ const LineChartCompare = ({
               )}
             </div>
             <div className="relative right-[224px] top-0">
-              <div className="flex gap-2 ">
+              <div className="flex gap-2 flex-wrap ">
                 {selectedTags.map((item) => {
                   return (
                     <div
                       key={item.value}
-                      className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="min-w-[32px]  truncate">
-                        {item.label}
-                      </span>
+                      className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className=" truncate">{item.label}</span>
                       <ImageRound
                         onClick={() => {
                           removeTag(item);
@@ -1139,7 +1232,7 @@ const LineChartCompare = ({
               </div>
             </div>
           </div>
-          <div className="mt-5">
+          <div className="mt-5 px-[30px]">
             <div className="flex justify-between w-full mb-4">
               <div>
                 {startDate && endDate && (
@@ -1199,17 +1292,18 @@ const LineChartCompare = ({
                   classNameTextData="!text-xs"
                   classActive="!text-sm"
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
-                  labelOptionClass="!text-sm font-medium !pl-0.5 !border-b-[1px] !border-[#EBF1F7]"
+                  labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
                     setViewBy({
                       label: e.label,
                       value: e.value,
                     });
                   }}
-                  disabled={true}
+                  disableItems={getDisabledViews()}
                 />
               </div>
             </div>
+          </div>
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
@@ -1219,6 +1313,7 @@ const LineChartCompare = ({
                 style={{ position: 'absolute', opacity: 0 }}
               />
             </div>
+          <div className='px-[30px]'>
             <div className="flex gap-8 items-center justify-end mb-3">
               <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
                 基準
@@ -1253,7 +1348,7 @@ const LineChartCompare = ({
                 );
               })}
             </div>
-            <table className="w-full border border-gray-300 mt-3 rounded-md">
+            <table className="w-full border border-gray-300 mt-5 rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr

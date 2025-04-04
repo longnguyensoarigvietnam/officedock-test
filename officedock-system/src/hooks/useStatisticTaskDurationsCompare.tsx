@@ -18,7 +18,7 @@ interface FilterProps {
   smallCategoryId?: number;
   organizationIds?: string;
   tagIds?: OptionDropdownType[];
-  statisticBy?: OptionDropdownType;
+  statisticBy?: string;
   isTagPage?: boolean;
 }
 
@@ -55,7 +55,7 @@ const useStatisticTaskDurationsCompare = ({
       filter?.smallCategoryId
         ? `&small_category_id=${filter.smallCategoryId}`
         : ''
-    }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy.value}` : '&statistic_by=WEEK'}${
+    }${filter?.statisticBy ? `&statistic_by=${filter.statisticBy}` : '&statistic_by=WEEK'}${
       filter?.isTagPage
         ? `&is_tag_page=${filter.isTagPage ? 'true' : 'false'}`
         : ''

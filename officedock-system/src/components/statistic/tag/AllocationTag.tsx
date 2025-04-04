@@ -2,18 +2,21 @@ import React, { memo, useContext, useEffect, useState } from 'react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
+import { SkeletonElement } from '@components/common/SkeletonLoading';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
 
 import { StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+
 import { formatTimeToJapanese } from '@utils/date';
+import { getRandomColor, lightenColor } from '@utils';
+
 import { EventWorkCategory } from '@constants/enums';
 
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
-import ProgressBarStatistic from './ProgressBarStatistic';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
-import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
-import { getRandomColor, lightenColor } from '@utils';
-import { SkeletonElement } from '@components/common/SkeletonLoading';
+
+import ProgressBarStatistic from './ProgressBarStatistic';
 
 type Props = {
   startDate: Date;
@@ -277,10 +280,8 @@ const AllocationTag = memo(
                             return (
                               <div
                                 key={item.value}
-                                className="w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                                <span className="w-[32px] truncate">
-                                  {item.label}
-                                </span>
+                                className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                                <span className=" truncate">{item.label}</span>
                                 <ImageRound
                                   onClick={() => {
                                     removeTag(item);

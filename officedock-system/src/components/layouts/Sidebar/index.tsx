@@ -154,7 +154,7 @@ const Sidebar = ({ className }: Props) => {
         authenticatedUser.organizations.map((org) => {
           const randomColor = getRandomColor();
           return {
-            value: org.id,
+            value: Number(org.id),
             label: org.name,
             imgComponent: <GroupIconWithDynamicColor color={randomColor} />,
           };

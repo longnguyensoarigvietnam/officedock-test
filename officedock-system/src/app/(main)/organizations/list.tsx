@@ -1,11 +1,9 @@
 'use client';
-import { Fragment, useContext, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { Fragment, useContext, useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
-import { Transition } from '@headlessui/react';
-import { SubmitHandler, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Button from '@components/common/Button';
@@ -13,61 +11,77 @@ import ImageRound from '@components/common/ImageRound';
 import Input from '@components/common/Input';
 import Pagination from '@components/common/Pagination';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import Dropdown from '@components/common/Dropdown';
+import InputSearch from '@components/common/InputSearch';
 
-import api from '@base/api';
-import { NO_DATA_AVAILABLE } from '@constants';
-import { apiRouters, pageRouters } from '@constants/routers';
+import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
+import { apiRouters } from '@constants/routers';
 import {
+  ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
+  SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
-import { PermissionsSystem } from '@constants/enums';
+import { ActionsModal, PermissionsSystem } from '@constants/enums';
 
-import {
-  OrganizationFilterFormData,
-  Organizations,
-} from '@interfaces/organization';
-import useOrganizationList from '@hooks/useOrganizationList';
+import { Organizations } from '@interfaces/organization';
+
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { OrganizationStateContext } from '@providers/OrganizationProvider';
+
 import { hasPermissionInArray } from '@utils';
+
+import useOrganizationList from '@hooks/useOrganizationList';
 import { useErrorToast } from '@hooks/useErrorToast';
+import useDebounceText from '@hooks/useDebounceText';
+
+import api from '@base/api';
 
 const ListOrganizations = () => {
   const { data: session } = useSession();
 
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
-  const { setDataOrganizationDetail } = useContext(OrganizationStateContext);
+  const [selectedOrganizationToUpdate, setSelectedOrganizationToUpdate] =
+    useState<{
+      name: string;
+      uuid: string;
+      status: boolean;
+      action: string;
+      showError: boolean;
+    }>({
+      name: '',
+      uuid: '',
+      status: false,
+      action: '',
+      showError: false,
+    });
+  const [selectedOrganizationToDelete, setSelectedOrganizationToDelete] =
+    useState<Organizations | null>(null);
+  const organizationNameInputRef = useRef<HTMLInputElement | null>(null);
 
   const { showToast } = useToast();
-  const [showFilter, setShowFilter] = useState(true);
 
   const [dataOrganizations, setDataOrganizations] = useState<Organizations[]>(
     [],
   );
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [filterRequest, setFilterRequest] = useState({
-    name: '',
-    superiorName: '',
-  });
-  const [orderingRequest, _setOrderingRequest] = useState('');
 
-  const { organizationList, refetchOrganizationList } = useOrganizationList(
-    { page: currentPage },
-    { name: filterRequest.name, superiorName: filterRequest.superiorName },
-    orderingRequest,
+  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  const [searchOrganizationName, setSearchOrganizationName] = useState('');
+  const debouncedFilterByOrganizationName = useDebounceText(
+    searchOrganizationName,
+    1000,
   );
 
-  // Set ID organization for delete
-  const [idOrganizationChoose, setIdOrganizationChoose] = useState<number>();
-  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
-
-  const { register, handleSubmit } = useForm<OrganizationFilterFormData>({
-    mode: 'onSubmit',
-  });
+  const { organizationList, refetchOrganizationList } = useOrganizationList(
+    { page: currentPage, pageSize },
+    { name: debouncedFilterByOrganizationName },
+  );
 
   useEffect(() => {
     if (organizationList) {
@@ -76,31 +90,99 @@ const ListOrganizations = () => {
     }
   }, [organizationList]);
 
-  const onSubmit: SubmitHandler<OrganizationFilterFormData> = (data) => {
-    setFilterRequest({
-      name: encodeURIComponent(`${data.name}`) || '',
-      superiorName: encodeURIComponent(`${data.superiorName}`) || '',
+  // Edit organization name
+  const handleEditOrganization = async (data: {
+    uuid: string | number;
+    name: string;
+  }) => {
+    return await api.patch(apiRouters.ORGANIZATION_DETAIL(String(data.uuid)), {
+      name: data.name,
     });
-    setCurrentPage(1);
   };
 
+  const { mutate: editOrganization } = useMutation(
+    'postEditOrganization',
+    handleEditOrganization,
+    {
+      onSuccess: () => {
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
+        setSelectedOrganizationToUpdate({
+          uuid: '',
+          name: '',
+          status: false,
+          action: '',
+          showError: false,
+        });
+        refetchOrganizationList();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+        setSelectedOrganizationToUpdate((prev) => {
+          return {
+            ...prev,
+            showError: true,
+          };
+        });
+      },
+    },
+  );
+
+  // Create organization
+  const handleCreateOrganization = async (data: {
+    uuid: string;
+    name: string;
+  }) => {
+    return await api.post(apiRouters.ORGANIZATION_LIST, data);
+  };
+
+  const { mutate: createOrganization } = useMutation(
+    'postCreateOrganization',
+    handleCreateOrganization,
+    {
+      onSuccess: () => {
+        showToast({
+          description: SUCCESS_CREATE_MESSAGE,
+        });
+        setSelectedOrganizationToUpdate({
+          uuid: '',
+          name: '',
+          status: false,
+          action: '',
+          showError: false,
+        });
+        refetchOrganizationList();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+        setSelectedOrganizationToUpdate((prev) => {
+          return {
+            ...prev,
+            showError: true,
+          };
+        });
+      },
+    },
+  );
+
   // Delete organization
-  const handleOpenDeleteOrganizationModal = (id: number) => {
+  const handleOpenDeleteOrganizationModal = (organization: Organizations) => {
     setOpenConfirmDeleteModal(true);
-    setIdOrganizationChoose(id);
+    setSelectedOrganizationToDelete(organization);
   };
 
   const handleConfirmDeleteOrganization = () => {
-    if (idOrganizationChoose) {
+    if (selectedOrganizationToDelete) {
       setIsLoading(true);
-      deleteOrganization(idOrganizationChoose);
+      deleteOrganization(String(selectedOrganizationToDelete.uuid));
       return;
     }
   };
 
-  const postDeleteOrganization = async (id: number) => {
+  const postDeleteOrganization = async (uuid: string) => {
     const { data: response } = await api.delete(
-      apiRouters.ORGANIZATION_DETAIL(`${id}`),
+      apiRouters.ORGANIZATION_DETAIL(`${uuid}`),
     );
     return response;
   };
@@ -123,141 +205,186 @@ const ListOrganizations = () => {
       setOpenConfirmDeleteModal(false);
       setIsLoading(false);
     },
+    onSettled: () => {
+      setSelectedOrganizationToDelete(null);
+    },
   });
+
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (
+        organizationNameInputRef.current &&
+        !organizationNameInputRef.current.contains(event.target)
+      ) {
+        if (selectedOrganizationToUpdate.action == ActionsModal.EDIT) {
+          const oldCategoryName =
+            dataOrganizations.find(
+              (category) => category.uuid == selectedOrganizationToUpdate.uuid,
+            )?.name || '';
+          if (
+            oldCategoryName.trim() != selectedOrganizationToUpdate.name.trim()
+          ) {
+            editOrganization({
+              uuid: selectedOrganizationToUpdate.uuid,
+              name: selectedOrganizationToUpdate.name,
+            });
+          } else {
+            setSelectedOrganizationToUpdate({
+              uuid: '',
+              name: '',
+              status: false,
+              action: '',
+              showError: false,
+            });
+          }
+        } else {
+          if (selectedOrganizationToUpdate.name.trim()) {
+            createOrganization({
+              uuid: String(selectedOrganizationToUpdate.uuid),
+              name: selectedOrganizationToUpdate.name,
+            });
+          } else {
+            setSelectedOrganizationToUpdate((prev) => {
+              return {
+                ...prev,
+                showError: true,
+              };
+            });
+          }
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedOrganizationToUpdate.uuid,
+    selectedOrganizationToUpdate.name,
+    selectedOrganizationToUpdate.action,
+  ]);
+
   return (
     <Fragment>
-      <div className="flex flex-col border rounded-lg">
-        <div className="flex justify-between px-3 py-4 rounded-t-lg border-b bg-gray-100">
-          <span className="text-gray-700 text-base font-medium">検索</span>
-          <ImageRound
-            name="Filter extend icon"
-            src={'/icons/arrow-down.svg'}
-            className={`w-4 h-4 hover:cursor-pointer ${!showFilter && 'rotate-180'}`}
-            onClick={() => setShowFilter(!showFilter)}
-          />
-        </div>
-        <Transition
-          show={showFilter}
-          enter="transition-transform duration-300 ease-out"
-          enterFrom="transform -translate-y-[10%]"
-          enterTo="transform translate-y-0"
-          leave="transition-transform duration-150 ease-in"
-          leaveFrom="transform translate-y-0"
-          leaveTo="transform -translate-y-[10%]">
-          <form
-            className={`flex flex-col gap-4 p-4 bg-white`}
-            onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex gap-4">
-              <div className="w-full flex flex-col gap-2">
-                <div className="w-full flex items-end gap-4">
-                  <div className="w-1/2">
-                    <Input
-                      label="組織名"
-                      placeholder="入力してください"
-                      register={register('name')}
-                    />
-                  </div>
-                  <div className="w-1/2">
-                    <Input
-                      label="上位組織"
-                      placeholder="入力してください"
-                      labelClassName="[&>span]:text-gray-500"
-                      register={register('superiorName')}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end ">
-              <Button
-                variant="secondary"
-                type="submit"
-                className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
-                絞り込み
-              </Button>
-            </div>
-          </form>
-        </Transition>
-      </div>
-      <div className="flex justify-end">
+      <div className="flex justify-between">
+        <InputSearch
+          placeholder="チームを検索"
+          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
+          iconClassName="w-[14px] h-[14px]"
+          onChange={(e) => {
+            setSearchOrganizationName(e.target.value);
+          }}
+        />
         {session?.user.permissions &&
           hasPermissionInArray(
             session?.user.permissions,
             PermissionsSystem.ORGANIZATION_ADD,
           ) && (
-            <Link href={pageRouters.CREATE_ORGANIZATION.href}>
-              <Button className="w-44">新規登録</Button>
-            </Link>
+            <Button
+              className="w-[100px] !p-0"
+              onClick={() => {
+                const hasEmptyOrganization = dataOrganizations.some(
+                  (org) => org.name.trim() === '',
+                );
+
+                if (!hasEmptyOrganization) {
+                  const newUuid = uuidv4();
+                  setDataOrganizations((prev) => [
+                    {
+                      uuid: newUuid,
+                      name: '',
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    },
+                    ...prev,
+                  ]);
+                  setSelectedOrganizationToUpdate({
+                    uuid: newUuid,
+                    name: '',
+                    status: true,
+                    action: ActionsModal.CREATE,
+                    showError: false,
+                  });
+                }
+              }}>
+              <ImageRound
+                src="/icons/add-with-background.svg"
+                name="Add icon"
+                className="!w-4 !h-4 mr-2 text-gray-400 cursor-pointer"
+              />
+              新規追加
+            </Button>
           )}
       </div>
-      <div className="w-full">
-        <Table className="bg-white !rounded-lg relative">
-          <TableHeader>
-            <th className="w-20">
-              <div className="flex w-full items-center justify-center gap-1 hover:cursor-pointer">
-                <span>ID</span>
-              </div>
+      <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]">
+        <Table className="bg-white !rounded-lg relative table-fixed">
+          <TableHeader className="!bg-[#F8FAFC]">
+            <th className="text-left w-[calc(100%_-_50px)]">
+              <span className="text-[#77858F] text-[12px] font-medium">
+                チーム名
+              </span>
             </th>
-            <th className="w-[346px] max-w-[346px] text-left">
-              <span>組織名</span>
-            </th>
-            <th className="w-[346px] max-w-[346px] text-left">
-              <span>上位組織</span>
-            </th>
-            <th className="w-36 max-w-[144px]">
-              <span>ユーザー数</span>
-            </th>
-            <th className="w-36">操作</th>
+            <th className="text-left w-[50px] min-w-[50px]"></th>
           </TableHeader>
           <TableBody>
             {dataOrganizations && dataOrganizations.length ? (
               dataOrganizations.map((element, index) => (
-                <tr key={index}>
-                  <td className="w-20">{element.id}</td>
-                  <td className="w-[346px] max-w-[346px] text-left truncate">
-                    {element.name}
+                <tr key={index} className="text-black">
+                  <td className="text-left w-full break-words max-w-[calc(100%_-_50px)] !box-border">
+                    <div className="flex justify-between items-center gap-3 ">
+                      {selectedOrganizationToUpdate.uuid == element.uuid &&
+                      selectedOrganizationToUpdate.status ? (
+                        <div
+                          ref={organizationNameInputRef}
+                          className='w-full'>
+                          <Input
+                            placeholder="チーム名を入力"
+                            className={`!border-[1px] !border-[#77858F] ${selectedOrganizationToUpdate.showError && '!border-error'} !w-full !text-sm !h-[34px]`}
+                            defaultValue={element.name}
+                            onChange={(e) => {
+                              setSelectedOrganizationToUpdate((prev) => {
+                                return {
+                                  ...prev,
+                                  name: e.target.value,
+                                };
+                              });
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <p className="break-words text-[16px] font-medium text-[#000000]" style={{ width: 'inherit' }}>
+                          {element.name}
+                        </p>
+                      )}
+                    </div>
                   </td>
-                  <td className="w-[346px] max-w-[346px] text-left truncate">
-                    {element?.superior?.name}
-                  </td>
-                  <td className="w-36 max-w-[144px] truncate">
-                    {element.userCount}
-                  </td>
-                  <td className="w-36">
-                    <div className="flex w-full gap-2 justify-center">
-                      <Link
-                        onClick={() => {
-                          setDataOrganizationDetail(element);
-                        }}
-                        href={pageRouters.DETAIL_ORGANIZATION.href(
-                          `${element.id}`,
-                        )}>
-                        <ImageRound
-                          name="Detail"
-                          src={'/icons/detail.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
-                        />
-                      </Link>
+                  <td>
+                    <div className="flex w-[50px] break-words gap-3 justify-center">
                       {session?.user.permissions &&
                       hasPermissionInArray(
                         session?.user.permissions,
                         PermissionsSystem.ORGANIZATION_UPDATE,
                       ) ? (
-                        <Link
-                          onClick={() => {
-                            setDataOrganizationDetail(element);
-                          }}
-                          href={pageRouters.EDIT_ORGANIZATION.href(
-                            `${element.id}`,
-                          )}>
+                        <div>
                           <ImageRound
                             name="Edit"
-                            src={'/icons/edit.svg'}
-                            className="w-6 h-6 hover:cursor-pointer"
+                            src={'/icons/edit-gray.svg'}
+                            className={`w-3.5 h-3.5 hover:cursor-pointer ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                            onClick={() => {
+                              setSelectedOrganizationToUpdate({
+                                uuid: element.uuid || '',
+                                name: element.name,
+                                status: true,
+                                action: ActionsModal.EDIT,
+                                showError: false,
+                              });
+                            }}
                           />
-                        </Link>
+                        </div>
                       ) : (
-                        <div className="w-6"></div>
+                        <div className="w-3.5"></div>
                       )}
                       {session?.user.permissions &&
                       hasPermissionInArray(
@@ -266,14 +393,37 @@ const ListOrganizations = () => {
                       ) ? (
                         <ImageRound
                           name="Delete"
-                          src={'/icons/delete.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
-                          onClick={() =>
-                            handleOpenDeleteOrganizationModal(element.id)
-                          }
+                          src={'/icons/delete-gray.svg'}
+                          className="w-[13px] h-[15px] hover:cursor-pointer"
+                          onClick={() => {
+                            if (
+                              selectedOrganizationToUpdate.uuid ==
+                                element.uuid &&
+                              selectedOrganizationToUpdate.status &&
+                              selectedOrganizationToUpdate.action ==
+                                ActionsModal.CREATE
+                            ) {
+                              setDataOrganizations((prev) => {
+                                let updatedCategories = [...prev];
+                                updatedCategories = updatedCategories.filter(
+                                  (category) => category.uuid != element.uuid,
+                                );
+                                return updatedCategories;
+                              });
+                              setSelectedOrganizationToUpdate({
+                                uuid: '',
+                                name: '',
+                                status: false,
+                                action: '',
+                                showError: false,
+                              });
+                            } else {
+                              handleOpenDeleteOrganizationModal(element);
+                            }
+                          }}
                         />
                       ) : (
-                        <div className="w-6"></div>
+                        <div className="w-[13px]"></div>
                       )}
                     </div>
                   </td>
@@ -290,18 +440,41 @@ const ListOrganizations = () => {
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-center">
-        {dataOrganizations && dataOrganizations.length ? (
-          <Pagination
-            onChange={(pageNumber) => setCurrentPage(pageNumber)}
-            currentPage={currentPage}
-            totalPages={totalPages}
-          />
-        ) : null}
+      <div className="flex justify-center items-center w-full">
+        <div className="flex justify-center flex-1">
+          {dataOrganizations && dataOrganizations.length ? (
+            <Pagination
+              onChange={(pageNumber) => setCurrentPage(pageNumber)}
+              currentPage={currentPage}
+              totalPages={totalPages}
+            />
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-[66px]">
+            <Dropdown
+              options={PAGE_SIZE_OPTIONS}
+              selectedOption={PAGE_SIZE_OPTIONS.find(
+                (element) => element.value == pageSize,
+              )}
+              className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
+              classNameTextData="!text-xs"
+              classActive="!text-sm"
+              classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
+              labelOptionClass="!text-sm font-medium !pl-1.5"
+              onChange={(e) => {
+                setPageSize(Number(e.value));
+              }}
+            />
+          </div>
+          <p className="text-sm">件ずつ表示</p>
+        </div>
       </div>
       <ConfirmDeleteModal
         open={openConfirmDeleteModal}
-        type="組織"
+        name={selectedOrganizationToDelete?.name || ''}
+        type="チーム"
+        message="紐づいている階層からも削除されます。"
         onConfirm={handleConfirmDeleteOrganization}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />

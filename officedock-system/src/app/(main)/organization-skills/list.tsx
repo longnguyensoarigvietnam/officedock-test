@@ -92,7 +92,7 @@ const ListOrganizationSkills = () => {
       setDataOptionsOrganization(
         organizationOptions.map((org) => ({
           label: org.name,
-          value: org.id,
+          value: Number(org.id),
         })),
       );
     }

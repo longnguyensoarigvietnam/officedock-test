@@ -106,7 +106,7 @@ const CreateUserForm = () => {
       setOriginalOrganizationOptions(
         creationOrganization.map((org) => ({
           label: org.name,
-          value: org.id,
+          value: Number(org.id),
         })),
       );
     }
