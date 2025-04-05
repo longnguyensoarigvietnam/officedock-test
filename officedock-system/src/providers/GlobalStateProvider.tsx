@@ -7,6 +7,9 @@ import {
   useState,
   Dispatch,
   SetStateAction,
+  useRef,
+  MutableRefObject,
+  createRef,
 } from 'react';
 
 interface ContextValue {
@@ -15,11 +18,19 @@ interface ContextValue {
   expanded: boolean;
   dashboardMembersWithAvatars: CalendarDashboardMember[];
   selectedOrganization: OptionDropdownType | undefined;
+  isChatFilesUploading: boolean;
+  abortChatSendingMessageControllerRef: MutableRefObject<AbortController | null>
   setIsExtendCalendar: Dispatch<SetStateAction<boolean>>;
   setTotalNotifications: Dispatch<SetStateAction<number>>;
   setExpanded: Dispatch<SetStateAction<boolean>>;
-  setDashboardMembersWithAvatars: Dispatch<SetStateAction<CalendarDashboardMember[]>>;
-  setSelectedOrganization: Dispatch<SetStateAction<OptionDropdownType | undefined>>
+  setDashboardMembersWithAvatars: Dispatch<
+    SetStateAction<CalendarDashboardMember[]>
+  >;
+  setSelectedOrganization: Dispatch<
+    SetStateAction<OptionDropdownType | undefined>
+  >;
+  setIsChatFilesUploading: Dispatch<SetStateAction<boolean>>;
+  cancelUploadChatFiles: () => void
 }
 
 const defaultValue: ContextValue = {
@@ -29,26 +40,37 @@ const defaultValue: ContextValue = {
   dashboardMembersWithAvatars: [],
   selectedOrganization: {
     label: '',
-    value: ''
+    value: '',
   },
+  isChatFilesUploading: false,
+  abortChatSendingMessageControllerRef: createRef<AbortController>(),
   setIsExtendCalendar: () => {},
   setTotalNotifications: () => {},
   setExpanded: () => {},
   setDashboardMembersWithAvatars: () => {},
-  setSelectedOrganization: () => {}
+  setSelectedOrganization: () => {},
+  setIsChatFilesUploading: () => {},
+  cancelUploadChatFiles: () => {}
 };
 
 export const GlobalStateContext = createContext<ContextValue>(defaultValue);
 
 export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const [isExtendCalendar, setIsExtendCalendar] = useState(false);
-  const [dashboardMembersWithAvatars, setDashboardMembersWithAvatars] = useState<
-    CalendarDashboardMember[]
-  >([]);
+  const [dashboardMembersWithAvatars, setDashboardMembersWithAvatars] =
+    useState<CalendarDashboardMember[]>([]);
   const [expanded, setExpanded] = useState(true);
   const [totalNotifications, setTotalNotifications] = useState(0);
   const [selectedOrganization, setSelectedOrganization] =
-      useState<OptionDropdownType>();
+    useState<OptionDropdownType>();
+  const [isChatFilesUploading, setIsChatFilesUploading] = useState(false);
+  const abortChatSendingMessageControllerRef = useRef<AbortController | null>(null);
+
+  const cancelUploadChatFiles = () => {
+    abortChatSendingMessageControllerRef.current?.abort();
+    abortChatSendingMessageControllerRef.current = null;
+    setIsChatFilesUploading(false);
+  };
 
   const contextValue: ContextValue = {
     isExtendCalendar,
@@ -56,11 +78,15 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     expanded,
     dashboardMembersWithAvatars,
     selectedOrganization,
+    isChatFilesUploading,
+    abortChatSendingMessageControllerRef,
     setSelectedOrganization,
     setDashboardMembersWithAvatars,
     setExpanded,
     setIsExtendCalendar,
     setTotalNotifications,
+    setIsChatFilesUploading,
+    cancelUploadChatFiles
   };
 
   return (

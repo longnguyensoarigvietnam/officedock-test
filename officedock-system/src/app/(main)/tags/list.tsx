@@ -713,6 +713,7 @@ const ListTags = () => {
               labelOptionClass="!text-sm font-medium !pl-1.5"
               onChange={(e) => {
                 setPageSize(Number(e.value));
+                setCurrentPage(1);
               }}
             />
           </div>

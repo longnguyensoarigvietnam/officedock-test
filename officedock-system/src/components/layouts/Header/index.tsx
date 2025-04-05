@@ -2,7 +2,6 @@
 import { Fragment, useContext, useEffect, useState } from 'react';
 import lodash from 'lodash';
 import { signOut, useSession } from 'next-auth/react';
-import Link from 'next/link';
 import {
   Popover,
   PopoverButton,
@@ -40,6 +39,7 @@ import WarningDeadlineTaskModal from '@components/modals/WarningDeadlineTaskModa
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
+import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
 
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
@@ -143,7 +143,16 @@ const Header = ({ className }: HeaderProps) => {
 
   const { setIsLoading } = useContext(LoadingContext);
   const { dashboardMemberList = [] } = useDashboardMemberList();
-  const { setDashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const {
+    setDashboardMembersWithAvatars,
+    isChatFilesUploading,
+    cancelUploadChatFiles,
+  } = useContext(GlobalStateContext);
+  const [pendingPageChange, setPendingPageChange] = useState<string | null>(
+    null,
+  );
+  const [showWarningChatUploadingModal, setShowWarningChatUploadingModal] =
+    useState(false);
   const { creationDataTaskData } = useCreationDataTask({});
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [openWarningCloseModal, setOpenWarningCloseModal] =
@@ -229,8 +238,12 @@ const Header = ({ className }: HeaderProps) => {
   );
 
   useEffect(() => {
-    if (actionType && (typeDetail === ItemStartType.TASK ||
-            typeDetail === ItemStartType.FIXED_TASK) && !isTaskPage) {
+    if (
+      actionType &&
+      (typeDetail === ItemStartType.TASK ||
+        typeDetail === ItemStartType.FIXED_TASK) &&
+      !isTaskPage
+    ) {
       if (taskDetailId) {
         getDataDetailTask(parseInt(taskDetailId));
       } else {
@@ -698,6 +711,15 @@ const Header = ({ className }: HeaderProps) => {
     });
   };
 
+  const handleNavigateToNewPage = (href: string) => {
+    if (href) {
+      router.push(href);
+    } else {
+      queryClient.isFetching() == 0 && signOut();
+    }
+    setPendingPageChange(null);
+  };
+
   return (
     <>
       <header
@@ -743,19 +765,34 @@ const Header = ({ className }: HeaderProps) => {
                         <div className="relative flex flex-col gap-1 text-white text-[14px] font-medium">
                           {SETTING_MENU.map((item) =>
                             item.href ? (
-                              <Link
+                              <div
                                 key={item.name}
-                                href={item.href}
                                 className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}
-                                onClick={close}>
+                                onClick={() => {
+                                  if (isChatFilesUploading) {
+                                    setPendingPageChange(item.href as string);
+                                    setShowWarningChatUploadingModal(true);
+                                    close();
+                                    return;
+                                  }
+                                  handleNavigateToNewPage(item.href as string);
+                                  close();
+                                }}>
                                 <p>{item.name}</p>
-                              </Link>
+                              </div>
                             ) : (
                               <div
                                 key={item.name}
-                                onClick={() =>
-                                  queryClient.isFetching() == 0 && signOut()
-                                }
+                                onClick={() => {
+                                  if (isChatFilesUploading) {
+                                    setPendingPageChange('');
+                                    setShowWarningChatUploadingModal(true);
+                                    close();
+                                    return;
+                                  }
+                                  handleNavigateToNewPage('');
+                                  close();
+                                }}
                                 className="flex items-center justify-between px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer">
                                 <p>{item.name}</p>
                               </div>
@@ -800,31 +837,25 @@ const Header = ({ className }: HeaderProps) => {
                           <div className="relative flex flex-col gap-1 text-white text-[14px] font-medium">
                             {companyItems
                               .filter((item) => item.companyMenu == true)
-                              .map((item) =>
-                                item.href ? (
-                                  <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}
-                                    onClick={close}>
-                                    <p>{item.name}</p>
-                                  </Link>
-                                ) : (
-                                  <div
-                                    key={item.name}
-                                    onClick={async () => {
-                                      queryClient.cancelQueries();
-                                      await signOut({
-                                        redirect: false,
-                                      });
-                                      window.location.href =
-                                        pageRouters.LOGIN.href;
-                                    }}
-                                    className="flex items-center justify-between px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer">
-                                    <p>{item.name}</p>
-                                  </div>
-                                ),
-                              )}
+                              .map((item) => (
+                                <div
+                                  key={item.name}
+                                  className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}
+                                  onClick={() => {
+                                    if (isChatFilesUploading) {
+                                      setPendingPageChange(item.href as string);
+                                      setShowWarningChatUploadingModal(true);
+                                      close();
+                                      return;
+                                    }
+                                    handleNavigateToNewPage(
+                                      item.href as string,
+                                    );
+                                    close();
+                                  }}>
+                                  <p>{item.name}</p>
+                                </div>
+                              ))}
                           </div>
                         </div>
                       </PopoverPanel>
@@ -1004,6 +1035,19 @@ const Header = ({ className }: HeaderProps) => {
             });
           }}
           onClose={handleConfirmRemind}
+        />
+      )}
+      {showWarningChatUploadingModal && pendingPageChange != null && (
+        <ChatWarningUploadingFilesModal
+          open={showWarningChatUploadingModal}
+          onClose={() => {
+            setShowWarningChatUploadingModal(false);
+          }}
+          onConfirm={() => {
+            setShowWarningChatUploadingModal(false);
+            cancelUploadChatFiles();
+            handleNavigateToNewPage(pendingPageChange);
+          }}
         />
       )}
     </>

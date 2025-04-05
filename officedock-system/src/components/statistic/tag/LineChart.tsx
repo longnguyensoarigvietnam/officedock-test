@@ -889,6 +889,7 @@ const LineChart = ({
                     });
                   }}
                   disableItems={getDisabledViews()}
+                  disabled={true}
                 />
               </div>
             </div>

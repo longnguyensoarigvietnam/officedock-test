@@ -334,7 +334,7 @@ const ListOrganizations = () => {
             {dataOrganizations && dataOrganizations.length ? (
               dataOrganizations.map((element, index) => (
                 <tr key={index} className="text-black">
-                  <td className="text-left w-full break-words max-w-[calc(100%_-_50px)] !box-border">
+                  <td className="text-left w-[calc(100%_-_50px)] max-w-[calc(100%_-_50px)]">
                     <div className="flex justify-between items-center gap-3 ">
                       {selectedOrganizationToUpdate.uuid == element.uuid &&
                       selectedOrganizationToUpdate.status ? (
@@ -358,8 +358,7 @@ const ListOrganizations = () => {
                         </div>
                       ) : (
                         <p
-                          className="break-words text-[16px] font-medium text-[#000000]"
-                          style={{ width: 'inherit' }}>
+                          className="break-all max-w-[100%] text-[16px] font-medium text-[#000000]">
                           {element.name}
                         </p>
                       )}

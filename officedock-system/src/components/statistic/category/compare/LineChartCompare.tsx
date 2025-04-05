@@ -1300,6 +1300,7 @@ const LineChartCompare = ({
                     });
                   }}
                   disableItems={getDisabledViews()}
+                  disabled={true}
                 />
               </div>
             </div>
