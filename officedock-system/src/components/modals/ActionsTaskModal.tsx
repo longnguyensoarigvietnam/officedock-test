@@ -1102,7 +1102,6 @@ const ActionsTaskModal = ({
         }}>
         <div className="flex text-sm items-center gap-4 text-white">
           <p className="">
-            登録日{' '}
             {action === ActionTask.EDIT && dataTask?.createdAt
               ? formatShowDateJapanese(dataTask.createdAt)
               : formatShowDateJapanese(new Date())}
@@ -1115,6 +1114,7 @@ const ActionsTaskModal = ({
               : formatTime(0)}
           </p>
         </div>
+
         <div className="flex gap-5 items-center ">
           <ImageRound
             className="scale-[0.5] rotate-90 mt-1 text-xs mr-[-10px] hover:cursor-pointer"
@@ -1351,7 +1351,7 @@ const ActionsTaskModal = ({
                     className="!h-[34px]"
                     labelClass="!min-h-0"
                     valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"
-                    optionClassName="!border-[1px] !border-[#77858F]"
+                    optionClassName="!border-[1px] !border-[#77858F] z-[999]"
                     disabled={isCheckActionPermission}
                     options={dataOptionsTagIds}
                     customLabel={
@@ -1450,9 +1450,7 @@ const ActionsTaskModal = ({
                       classNameTextData="!text-xs"
                       classNameOption="!text-xs"
                       classNameError="!text-xs"
-                      disabled={
-                        isCheckActionPermission
-                      }
+                      disabled={isCheckActionPermission}
                       options={
                         action === ActionTask.CREATE
                           ? dataOptionsStatus
@@ -1523,9 +1521,7 @@ const ActionsTaskModal = ({
                         name="deadlineDate"
                         render={({ field: { value, onChange } }) => (
                           <DatePickerCustom
-                            disabled={
-                              isCheckActionPermission
-                            }
+                            disabled={isCheckActionPermission}
                             className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
                             selected={value ? new Date(value) : null}
                             onChange={(e) => {
@@ -1546,9 +1542,7 @@ const ActionsTaskModal = ({
                       <Input
                         isShowClockIcon={true}
                         type="text"
-                        disabled={
-                          isCheckActionPermission
-                        }
+                        disabled={isCheckActionPermission}
                         register={register('deadlineTime', {
                           required:
                             watch('deadlineDate') !== null ? true : false,
@@ -2141,12 +2135,14 @@ const ActionsTaskModal = ({
                                 setValue('weekDay', undefined);
                                 setValue('monthDay', undefined);
                                 setValue('month', undefined);
-                                setValue('plans', [{
-                                  planStartDate: null,
-                                  planEndTime: '',
-                                  planEndDate: null,
-                                  planStartTime: '',
-                                }])
+                                setValue('plans', [
+                                  {
+                                    planStartDate: null,
+                                    planEndTime: '',
+                                    planEndDate: null,
+                                    planStartTime: '',
+                                  },
+                                ]);
                               }}
                             />
                           );
@@ -2947,10 +2943,7 @@ const ActionsTaskModal = ({
                               setTime('');
                             },
                             validate: (value) => {
-                              if (
-                                !watch('repeatType')
-                              )
-                                return true;
+                              if (!watch('repeatType')) return true;
                               return (
                                 convertToMinutes(String(value)) >
                                   convertToMinutes(
