@@ -2,19 +2,21 @@ import React, { memo, useContext, useEffect, useState } from 'react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
+import { SkeletonElement } from '@components/common/SkeletonLoading';
+import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
+import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { StatisticsCategories } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+
 import { formatTimeToJapanese } from '@utils/date';
+import { getRandomColor, lightenColor } from '@utils';
+
 import { EventWorkCategory } from '@constants/enums';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
 
 import ProgressBarStatistic from './ProgressBarStatistic';
-import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
-import { getRandomColor, lightenColor } from '@utils';
-import { SkeletonElement } from '@components/common/SkeletonLoading';
 
 type Props = {
   startDate: Date;
@@ -270,6 +272,7 @@ const AllocationCategory = memo(
                     isShowIconFilter
                     options={tagsOptions}
                     labelOptionClass="break-all"
+                    optionClassName="!top-6"
                     placeholder="集計対象のタグを選択"
                     className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                     selectedOptions={selectedTags || []}
@@ -296,15 +299,13 @@ const AllocationCategory = memo(
                   )}
                 </div>
                 <div className="relative right-[224px] top-0">
-                  <div className="flex gap-2 ">
+                  <div className="flex gap-2 flex-wrap ">
                     {selectedTags.map((item) => {
                       return (
                         <div
                           key={item.value}
-                          className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                          <span className="min-w-[32px]  truncate">
-                            {item.label}
-                          </span>
+                          className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                          <span className=" truncate">{item.label}</span>
                           <ImageRound
                             onClick={() => {
                               removeTag(item);

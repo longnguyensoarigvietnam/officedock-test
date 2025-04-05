@@ -57,6 +57,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
             "password",
             "profile",
             "login_type",
+            "avatar_color",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
@@ -198,6 +199,16 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "system_role"]
 
 
+class TaskFilterSerializer(serializers.Serializer):
+    """
+    Serializer for task filter setting
+    """
+
+    organization = serializers.IntegerField(required=False, allow_null=True)
+    category = serializers.IntegerField(required=False, allow_null=True)
+    tag = serializers.IntegerField(required=False, allow_null=True)
+
+
 class SettingSerializer(serializers.ModelSerializer):
     """
     Serializer for the Role model.
@@ -210,6 +221,17 @@ class SettingSerializer(serializers.ModelSerializer):
 
     schedule_zoom = serializers.IntegerField(
         min_value=0, max_value=100, default=100
+    )
+    date_filter_schedule = serializers.DateField(required=False)
+    task_filter = TaskFilterSerializer(many=True, required=False)
+    is_show_list_kanban = serializers.BooleanField(
+        default=False, required=False
+    )
+    is_show_week_schedule = serializers.BooleanField(
+        default=False, required=False
+    )
+    is_show_my_template = serializers.BooleanField(
+        default=False, required=False
     )
 
     class Meta:
@@ -225,7 +247,29 @@ class SettingSerializer(serializers.ModelSerializer):
             "kanban_zoom",
             "schedule_zoom",
             "tab_visibility",
+            "date_filter_schedule",
+            "task_filter",
+            "is_show_list_kanban",
+            "is_show_week_schedule",
+            "is_show_my_template",
         ]
+
+    def to_representation(self, instance):
+        """
+        Representation of setting
+        """
+        representation = super().to_representation(instance)
+        if instance.task_settings:
+            fields = [
+                "date_filter_schedule",
+                "task_filter",
+                "is_show_list_kanban",
+                "is_show_week_schedule",
+                "is_show_my_template",
+            ]
+            for field in fields:
+                representation[field] = instance.task_settings.get(field)
+        return representation
 
     def validate_tab_visibility(self, value):
         """Validate element in tab visibility"""
@@ -266,11 +310,13 @@ class OrganizationForUserSerializer(OrganizationSerializer):
         model = Organization
         fields = [
             "id",
+            "uuid",
             "name",
             "superior",
             "superior_id",
             "user_count",
             "is_main",
+            "icon",
         ]
 
     def get_is_main(self, obj):
@@ -282,22 +328,6 @@ class OrganizationForUserSerializer(OrganizationSerializer):
             user=user, organization=obj
         ).first()
         return users_org.is_main if users_org else False
-
-
-class OrganizationForUserLoginSerializer(OrganizationSerializer):
-    """
-    Serializer for the Organization without action.
-    """
-
-    class Meta:
-        model = Organization
-        fields = [
-            "id",
-            "name",
-            "superior",
-            "superior_id",
-            "user_count",
-        ]
 
 
 class UserSerializer(BaseUserSerializer):
@@ -331,6 +361,7 @@ class UserSerializer(BaseUserSerializer):
             "setting",
             "unread_terms",
             "current_event",
+            "avatar_color",
         ]
 
     def get_permissions(self, obj):
@@ -423,7 +454,6 @@ class UserLoginSerializer(BaseUserSerializer):
 
     profile = ProfileSerializer()
     company = CompanySerializer(read_only=True)
-    organizations = serializers.SerializerMethodField(read_only=True)
     roles = RoleSerializer(read_only=True, many=True)
     setting = SettingSerializer(read_only=True)
     unread_terms = serializers.SerializerMethodField(read_only=True)
@@ -441,7 +471,6 @@ class UserLoginSerializer(BaseUserSerializer):
             "permissions",
             "profile",
             "company",
-            "organizations",
             "login_type",
             "setting",
             "unread_terms",
@@ -462,20 +491,6 @@ class UserLoginSerializer(BaseUserSerializer):
             permissions.update(perms)
 
         return list(permissions)
-
-    def get_organizations(self, obj):
-        """
-        Get sorted organizations
-        """
-        sorted_orgs = [
-            item.organization
-            for item in UsersOrganizations.objects.filter(user=obj).order_by(
-                "id"
-            )
-        ]
-        return OrganizationForUserLoginSerializer(
-            sorted_orgs, many=True, context={"user": obj}
-        ).data
 
     def get_unread_terms(self, instance):
         """
@@ -530,6 +545,7 @@ class UserListSerializer(UserSerializer):
             "organizations",
             "actions",
             "email",
+            "avatar_color",
         ]
 
     def get_actions(self, obj):

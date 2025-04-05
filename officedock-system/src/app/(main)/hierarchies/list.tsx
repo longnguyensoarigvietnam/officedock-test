@@ -77,7 +77,7 @@ const ListHierarchy = () => {
     if (creationOrganization) {
       const organizationList = creationOrganization.map((org) => {
         return {
-          value: org.id,
+          value: Number(org.id),
           label: org.name,
         };
       });

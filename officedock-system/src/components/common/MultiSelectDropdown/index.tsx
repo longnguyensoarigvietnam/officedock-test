@@ -1,6 +1,5 @@
 'use client';
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
 import Image from 'next/image';
 
 import ErrorMessage from '../ErrorMessage';
@@ -24,6 +23,7 @@ type Props = {
   labelClass?: string;
   valueClassName?: string;
   optionClassName?: string;
+  optionsCheckBoxClassName?: string;
   labelOptionClass?: string;
   customLabel?: string;
   placeholder?: string;
@@ -40,6 +40,7 @@ const MultiSelectDropdown = ({
   placeholder,
   disabled = false,
   isShowIconFilter = false,
+  optionsCheckBoxClassName,
   customLabel,
   className,
   labelClass,
@@ -53,13 +54,10 @@ const MultiSelectDropdown = ({
     selectedOptions || [],
   );
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-    isShow: false,
-  });
+
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownOptionsRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (selectedOptions && selectedOptions.length > 0) {
       setSelected(selectedOptions);
@@ -70,39 +68,30 @@ const MultiSelectDropdown = ({
   const handleOptionClick = (option: OptionDropdownType) => {
     onChange && onChange(option);
   };
-  const calculatePosition = () => {
-    if (dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom,
-        left: rect.left,
-        width: rect.width,
-        isShow: true,
-      });
-    }
-  };
+
   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownOptionsRef.current &&
+        !dropdownOptionsRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
     if (isOpen) {
-      calculatePosition();
-    } else {
-      setPosition({
-        top: 0,
-        left: 0,
-        width: 0,
-        isShow: false,
-      });
+      document.addEventListener('mousedown', handleClickOutside);
     }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [isOpen]);
+
   const renderOptions = () => (
     <div
-      className={`absolute mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}
-      style={{
-        top: position.top,
-        left: position.left,
-        width: position.width,
-        position: 'fixed',
-        display: position.isShow ? 'block' : 'none',
-      }}>
+      ref={dropdownOptionsRef}
+      className={`absolute top-8 left-0 mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}>
       {isLoading ? (
         <Spinner className="!h-fit py-3" />
       ) : options?.length ? (
@@ -111,7 +100,7 @@ const MultiSelectDropdown = ({
             <div
               key={option.value}
               className={`relative hover:cursor-pointer flex items-start justify-between  select-none hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}>
-              <div className="max-w-[80%]">
+              <div className={`max-w-[80%] ${optionsCheckBoxClassName}`}>
                 <Checkbox
                   label={option.label}
                   onChange={() => {
@@ -199,16 +188,7 @@ const MultiSelectDropdown = ({
           </div>
         </div>
       )}
-
-      {isOpen &&
-        ReactDOM.createPortal(
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />,
-          document.body,
-        )}
-      {isOpen && ReactDOM.createPortal(renderOptions(), document.body)}
+      {isOpen && renderOptions()}
       {error && (
         <ErrorMessage error={error} className="mt-2 text-sm text-red-600" />
       )}

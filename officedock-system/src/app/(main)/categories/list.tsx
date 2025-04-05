@@ -78,7 +78,6 @@ const ListCategory = () => {
 
   const [dataCategories, setDataCategories] = useState<Category[]>([]);
 
-  // TODO: Update logic sort for multi column
   const [searchCategoryName, setSearchCategoryName] = useState('');
   const debouncedFilterByCategoryName = useDebounceText(
     searchCategoryName,
@@ -272,12 +271,14 @@ const ListCategory = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     selectedCategoryToUpdate.uuid,
     selectedCategoryToUpdate.name,
     selectedCategoryToUpdate.action,
   ]);
+
+  const [isCreate, setIsCreate] = useState(false);
 
   return (
     <Fragment>
@@ -301,6 +302,7 @@ const ListCategory = () => {
                 const hasEmptyCategory = dataCategories.some(
                   (category) => category.name.trim() === '',
                 );
+                setIsCreate(true);
 
                 if (!hasEmptyCategory) {
                   const newUuid = uuidv4();
@@ -393,8 +395,9 @@ const ListCategory = () => {
                             <ImageRound
                               name="Edit"
                               src={'/icons/edit-gray.svg'}
-                              className={`w-3.5 h-3.5 hover:cursor-pointer ${!(selectedCategoryToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                              className={`w-3.5 h-3.5 hover:cursor-pointer ${isCreate && 'opacity-45'} ${!(selectedCategoryToUpdate.uuid == element.uuid) && 'opacity-45'}`}
                               onClick={() => {
+                                if (isCreate) return;
                                 setSelectedCategoryToUpdate({
                                   uuid: element.uuid || '',
                                   name: element.name,

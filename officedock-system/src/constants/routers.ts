@@ -152,13 +152,13 @@ export const pageRouters = {
     name: '日報',
     href: '/daily-report',
   },
-  DAILY_REPORT_LIST: {
+  DAILY_REPORT_TEAM: {
     name: '日報一覧',
-    href: '/daily-report/list',
+    href: '/daily-report-team',
   },
-  DAILY_REPORT_DETAIL: {
+  DAILY_REPORT_TEAM_DETAIL: {
     name: '日報',
-    href: (id: string) => `/daily-report/${id}`,
+    href: (id: string) => `/daily-report-team/${id}`,
   },
   // CATEGORY
   CATEGORY_MANAGEMENT: {
@@ -391,6 +391,7 @@ export const apiRouters = {
   CHAT_HIDE: (code: string) => `/chat/${code}/hide/`,
   SOCKET_ACTION: (token: string) => `/system/ws/chat/?token=${token}`,
   CHAT_SETTING: '/users/chat-setting/',
+  CHAT_UPLOAD_CHUNK: '/chat/chunk-files/',
 
   // BOOKMARK
   BOOKMARK_LIST: '/messages/',

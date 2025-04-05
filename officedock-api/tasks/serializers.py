@@ -39,7 +39,11 @@ from tasks.constants import (
     TaskStatus as TaskStatusConstant,
     TaskTypes,
 )
-from users.serializers import ProfileSerializer, UsersForCreationSerializer
+from users.serializers import (
+    ProfileSerializer,
+    UsersForCreationSerializer,
+    BaseUserSerializer,
+)
 from users.models import User
 
 
@@ -504,6 +508,12 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         representation["people_in_charge"] = CreationDataUserSerializer(
             sorted_users, many=True
         ).data
+        task_schedules = instance.task_schedules.filter(
+            plan_start_date__date__gte=now().date()
+        ).all()
+        representation["task_schedules"] = TaskScheduleSerializer(
+            task_schedules, many=True
+        ).data
         if instance.reminds:
             representation["remind_countdown"] = instance.reminds["countdown"]
             representation["remind_type"] = instance.reminds["type"]
@@ -642,7 +652,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
 
     type = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
-    task_schedules = TaskScheduleSerializer(many=True)
+    task_schedules = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -658,6 +668,22 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "categories",
             "status",
         ]
+
+    def get_task_schedules(self, instance):
+        """
+        Return task schedules by limit time
+        """
+        request = self.context.get("request")
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+        if start_date and end_date:
+            task_schedules = instance.task_schedules.filter(
+                plan_start_date__gte=start_date,
+                plan_end_date__lte=end_date,
+            ).all()
+        else:
+            task_schedules = instance.task_schedules.all()
+        return TaskScheduleSerializer(task_schedules, many=True).data
 
     def get_type(self, instance):
         """
@@ -856,7 +882,7 @@ class TaskTemplateSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
-class TaskTeamdockSerializer(serializers.ModelSerializer):
+class TaskTeamdockSerializer(BaseUserSerializer):
     """
     Serializer for task in teamdock
     """
@@ -868,6 +894,7 @@ class TaskTeamdockSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "id",
+            "avatar_color",
             "profile",
             "status",
         ]

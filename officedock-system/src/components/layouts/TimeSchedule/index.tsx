@@ -671,6 +671,7 @@ const TimeSchedule = memo(
         onSettled: () => {
           setIsLoading(false);
           setIsLoadingSchedule(false);
+          scrollToNowIndicator();
         },
       },
     );
@@ -2592,6 +2593,12 @@ const TimeSchedule = memo(
           );
 
           if (item.resourceId === ItemScheduleType.PLANS) {
+            if (
+              item.type === ItemStartType.SCHEDULE &&
+              item.isAllDay === true
+            ) {
+              return itemEndDate >= currentDateOnly;
+            }
             return startDateOnly >= currentDateOnly;
           }
           if (item.resourceId === ItemScheduleType.ACTUAL) {
@@ -2602,6 +2609,28 @@ const TimeSchedule = memo(
       }
       return taskTimeScheduleList;
     }, [isExtendCalendar, taskTimeScheduleList]);
+    const scrollToNowIndicator = () => {
+      setTimeout(() => {
+        const nowIndicator = document.querySelector(
+          '.fc-timegrid-now-indicator-arrow',
+        );
+
+        if (nowIndicator) {
+          nowIndicator.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+
+          window.scrollBy({ top: 800, behavior: 'smooth' });
+        }
+      }, 500);
+    };
+
+    useEffect(() => {
+      if (!isLoadingSchedule) {
+        scrollToNowIndicator();
+      }
+    }, []);
 
     const [calculatedWidth, setCalculatedWidth] = useState(1070);
     const [isCurrentWeek, setIsCurrentWeek] = useState(false);

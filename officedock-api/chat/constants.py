@@ -73,10 +73,6 @@ class TypeChatGroup(EnumChoices):
     TypeChatGroup constants.
     """
 
-    # FIXME: Remove NOTIFY and CHAT later when if not split chatroom and notify group
-    NOTIFY = "NOTIFY"
-    CHAT = "CHAT"
-
     GROUP = "GROUP"
     PRIVATE = "PRIVATE"
     UNREAD = "UNREAD"
@@ -90,4 +86,5 @@ ROOM_TYPES = [
 ]
 
 CHAT_FILES_FOLDER_UPLOAD = "chats"
+CHUNK_FILES_FOLDER_UPLOAD = "chunks"
 FILE_UPLOAD_MAX_SIZE = 5 * 1024 * 1024 * 1024  # 5GB

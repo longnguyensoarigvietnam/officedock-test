@@ -14,13 +14,14 @@ from django.db.models.functions import Now, Coalesce
 from django.utils import timezone
 
 from calendars.models import Schedule
+from common.serializers import CreationDataUserSerializer
 from common.utils import (
     format_duration,
     time_str_to_timedelta,
 )
 from organizations.constants import CategoryColors
 from organizations.models import OrganizationsStatisticCategories
-from stat_data.constants import NONE_CATEGORY
+from stat_data.constants import NONE_CATEGORY, FilterTime
 from stat_data.serializers import (
     StatisticTaskSerializer,
     StatisticEventSerializer,
@@ -548,12 +549,10 @@ def process_users(
             else:
                 percent_per_total_duration = percent
             # Append category data
+            user_serializer = CreationDataUserSerializer(user).data
             user_data.append(
                 {
-                    "user": {
-                        "id": user.id,
-                        "full_name": user.profile.full_name,
-                    },
+                    "user": user_serializer,
                     "duration": format_duration(duration),
                     "percent": min(round(percent_per_total_duration), 100),
                 }
@@ -766,28 +765,52 @@ def process_merge_card_per_tag(
     return total_duration, tag_list
 
 
-def split_weeks(from_date, end_date):
+def split_ranges(from_date, end_date, option):
     """
     Split week by range time
     """
-    weeks = []
+    ranges = []
     current_start = from_date
+    if option == FilterTime.DAY.value:
+        while current_start <= end_date:
+            ranges.append((current_start, current_start))
+            current_start += timedelta(days=1)
+    elif option == FilterTime.WEEK.value:
+        # If the start date is not Monday, get the first Sunday
+        if current_start.weekday() != 0:  # 0 = Monday, 6 = Sunday
+            first_sunday = current_start + timedelta(
+                days=(6 - current_start.weekday())
+            )
+            ranges.append((current_start, min(first_sunday, end_date)))
+            current_start = first_sunday + timedelta(
+                days=1
+            )  # Move to next Monday
 
-    # If the start date is not Monday, get the first Sunday
-    if current_start.weekday() != 0:  # 0 = Monday, 6 = Sunday
-        first_sunday = current_start + timedelta(
-            days=(6 - current_start.weekday())
-        )
-        weeks.append((current_start, min(first_sunday, end_date)))
-        current_start = first_sunday + timedelta(days=1)  # Move to next Monday
+        # Generate full Monday-Sunday weeks
+        while current_start <= end_date:
+            week_end = current_start + timedelta(days=6)
+            ranges.append((current_start, min(week_end, end_date)))
+            current_start = week_end + timedelta(days=1)  # Move to next Monday
 
-    # Generate full Monday-Sunday weeks
-    while current_start <= end_date:
-        week_end = current_start + timedelta(days=6)
-        weeks.append((current_start, min(week_end, end_date)))
-        current_start = week_end + timedelta(days=1)  # Move to next Monday
+    elif option == FilterTime.MONTH.value:
+        while current_start <= end_date:
+            next_month = (
+                current_start.replace(day=28) + timedelta(days=4)
+            ).replace(day=1)
+            month_end = next_month - timedelta(days=1)
+            ranges.append((current_start, min(month_end, end_date)))
+            current_start = next_month
 
-    return weeks
+    elif option == FilterTime.YEAR.value:
+        while current_start <= end_date:
+            next_year = current_start.replace(
+                year=current_start.year + 1, month=1, day=1
+            )
+            year_end = next_year - timedelta(days=1)
+            ranges.append((current_start, min(year_end, end_date)))
+            current_start = next_year
+
+    return ranges
 
 
 def build_category_filters(

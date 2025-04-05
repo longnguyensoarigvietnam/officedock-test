@@ -14,12 +14,13 @@ from submit_levels.models import SubmitLevelHistory
 from tags.serializers import BaseTagSerializer
 from users.models import User
 from tasks.models import Task
-from chat.models import ChatFile
+from chat.models import ChatFile, ChunkFile
 from skills.serializers import SkillSerializer
 from common.utils import get_signed_url
+from users.serializers import BaseUserSerializer
 
 
-class CreationDataUserForChatSerializer(serializers.ModelSerializer):
+class CreationDataUserForChatSerializer(BaseUserSerializer):
     """
     Serializer for creation data user for chat.
     """
@@ -31,7 +32,7 @@ class CreationDataUserForChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "full_name", "organizations"]
+        fields = ["id", "full_name", "avatar_color", "organizations"]
 
     def get_full_name(self, obj):
         """
@@ -430,7 +431,6 @@ class SendMessageSerializer(serializers.ModelSerializer):
     file_uuids = serializers.ListField(
         required=False, child=serializers.UUIDField()
     )
-    files = serializers.ListField(required=False, child=serializers.FileField())
     mentions = CreationDataUserWithMainOrganizationSerializer(
         many=True, read_only=True
     )
@@ -467,7 +467,6 @@ class SendMessageSerializer(serializers.ModelSerializer):
             "quote",
             "reply_uuid",
             "file_uuids",
-            "files",
         ]
 
     def validate(self, attrs):
@@ -478,14 +477,6 @@ class SendMessageSerializer(serializers.ModelSerializer):
                 attrs["reply"] = message
             else:
                 raise NotFound({"detail": ERROR_MESSAGES["message_not_exists"]})
-
-        files = attrs.get("files", None)
-        if files:
-            for file in files:
-                if file.size > FILE_UPLOAD_MAX_SIZE:
-                    raise serializers.ValidationError(
-                        {"detail": ERROR_MESSAGES["max_file_size"]}
-                    )
 
         return attrs
 
@@ -595,3 +586,36 @@ class ChatRoomMemoSerializer(serializers.Serializer):
     """Serializer for chat room memo"""
 
     memo = serializers.CharField(required=False, allow_null=True)
+
+
+class ChunkFileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for chunk file upload
+    """
+
+    class Meta:
+        model = ChunkFile
+        fields = [
+            "file_uuid",
+            "file_name",
+            "file_type",
+            "file_size",
+            "chunk_index",
+            "total_chunks",
+            "chunk_file",
+        ]
+
+    def validate(self, attrs):
+        """Validate send file size"""
+        file_size = attrs.get("file_size", None)
+        if file_size:
+            if file_size > FILE_UPLOAD_MAX_SIZE:
+                raise serializers.ValidationError(
+                    {
+                        "detail": ERROR_MESSAGES["max_file_size"].format(
+                            max_size="5GB"
+                        )
+                    }
+                )
+
+        return attrs

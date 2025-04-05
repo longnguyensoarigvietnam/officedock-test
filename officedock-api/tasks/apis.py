@@ -1450,6 +1450,15 @@ class TaskCalendarViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     pagination_class = None
     screen_name = Screens.MY_TASK.value
 
+    def get_serializer_context(self):
+        """
+        Get serializer context
+        """
+        context = super().get_serializer_context()
+        context["request"] = self.request
+
+        return context
+
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user

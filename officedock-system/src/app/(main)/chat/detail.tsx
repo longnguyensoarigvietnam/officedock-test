@@ -52,6 +52,7 @@ import { CustomReaction } from '@components/chat/CustomIcon';
 
 import { apiRouters } from '@constants/routers';
 import {
+  BATCH_FILE_SIZE,
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
   MAX_FILE_SIZE,
@@ -91,6 +92,7 @@ import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { addTimeToDate, getCurrentTimeInJapan } from '@utils/date';
 import {
   getChatFileURL,
+  getChunkSize,
   hasPermissionInArray,
   trimUnnecessaryLineBreaks,
 } from '@utils';
@@ -952,6 +954,65 @@ const ChatDetail = ({
   ]);
 
   // Create message
+  const uploadFileInChunks = async (
+    file: File,
+    fileUuid: string,
+    messageUuid: string,
+    totalChunksOfAllFiles: number,
+    uploadedChunksRef: { current: number }
+  ) => {
+    const chunkSize = getChunkSize(file.size);
+    const totalChunks = Math.ceil(file.size / chunkSize);
+  
+    for (let batchStart = 0; batchStart < totalChunks; batchStart += BATCH_FILE_SIZE) {
+      const batchEnd = Math.min(batchStart + BATCH_FILE_SIZE, totalChunks);
+      
+      const uploadPromises = Array.from({ length: batchEnd - batchStart }, async (_, i) => {
+        const chunkIndex = batchStart + i;
+        const start = chunkIndex * chunkSize;
+        const end = Math.min(start + chunkSize, file.size);
+        const chunk = file.slice(start, end);
+  
+        const formData = new FormData();
+        formData.append("fileUuid", fileUuid);
+        formData.append("fileName", file.name);
+        formData.append("fileType", file.type);
+        formData.append("fileSize", file.size.toString());
+        formData.append("chunkIndex", chunkIndex.toString());
+        formData.append("totalChunks", totalChunks.toString());
+        formData.append("chunkFile", chunk);
+  
+        try {
+          await api.post(apiRouters.CHAT_UPLOAD_CHUNK, formData);
+          uploadedChunksRef.current += 1;
+  
+          const percentCompleted = Math.round(
+            (uploadedChunksRef.current / totalChunksOfAllFiles) * 100
+          );
+  
+          setUploadFileStatus((prev) => ({
+            ...prev,
+            [messageUuid]: { progress: Math.min(percentCompleted, 99) },
+          }));
+        } catch (error) {
+          setUploadFileStatus((prev) => ({
+            ...prev,
+            [messageUuid]: { progress: 0 },
+          }));
+        }
+      });
+  
+      // Wait for the current batch to finish before proceeding
+      try {
+        await Promise.all(uploadPromises);
+      } catch {
+        return false;
+      }
+    }
+  
+    return true;
+  };
+  
   const postSendMsg = async ({
     data,
     uuid,
@@ -967,6 +1028,23 @@ const ChatDetail = ({
     fileUuids: string[];
     taskIds: number[];
   }) => {
+    const totalChunks = files.reduce((acc, file) => {
+      const chunkSize = getChunkSize(file.size);
+      return acc + Math.ceil(file.size / chunkSize);
+    }, 0);
+
+    const uploadedChunksRef = { current: 0 };
+
+    try {
+      await Promise.all(
+        files.map((file, i) =>
+          uploadFileInChunks(file, fileUuids[i], uuid, totalChunks, uploadedChunksRef)
+        )
+      );
+    } catch {
+      return;
+    }
+
     const formData = new FormData();
     formData.append('message', data);
     formData.append('uuid', uuid);
@@ -974,29 +1052,10 @@ const ChatDetail = ({
     mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
     taskIds.forEach((id) => formData.append('taskIds', id.toString()));
     fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
-    if (files && files.length > 0) {
-      files.forEach((file, index) => {
-        formData.append(`files[${index}]`, file);
-      });
-    }
     const { data: response } = await api.post(
       apiRouters.CHAT_MESSAGES(`${chatRoomCode}`),
       formData,
       {
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            let percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total,
-            );
-            if (percentCompleted >= 99) {
-              percentCompleted = 99;
-            }
-            setUploadFileStatus((prev) => ({
-              ...prev,
-              [uuid]: { progress: percentCompleted },
-            }));
-          }
-        },
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -1004,6 +1063,7 @@ const ChatDetail = ({
     );
     return response;
   };
+  
   const { mutate: handleSendMsgChat } = useMutation(postSendMsg, {
     onSuccess: async (_data, variables) => {
       setUploadFileStatus((prev) => ({
@@ -1139,6 +1199,23 @@ const ChatDetail = ({
     files: File[];
     fileUuids: string[];
   }) => {
+    const totalChunks = data.files.reduce((acc, file) => {
+      const chunkSize = getChunkSize(file.size);
+      return acc + Math.ceil(file.size / chunkSize);
+    }, 0);
+
+    const uploadedChunksRef = { current: 0 };
+
+    try {
+      await Promise.all(
+        data.files.map((file, i) =>
+          uploadFileInChunks(file, data.fileUuids[i], data.uuid, totalChunks, uploadedChunksRef)
+        )
+      );
+    } catch {
+      return;
+    }
+
     const formData = new FormData();
     formData.append('message', cleanMessageHTML(data.message));
     formData.append('uuid', data.uuid);
@@ -1146,30 +1223,11 @@ const ChatDetail = ({
       formData.append('mentionIds', id.toString()),
     );
     data.fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
-    if (data.files && data.files.length > 0) {
-      data.files.forEach((file) => {
-        formData.append('files', file);
-      });
-    }
 
     const { data: response } = await api.patch(
       apiRouters.CHAT_MESSAGES_DETAIL(data.uuid),
       formData,
       {
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            let percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total,
-            );
-            if (percentCompleted >= 99) {
-              percentCompleted = 99;
-            }
-            setUploadFileStatus((prev) => ({
-              ...prev,
-              [data.uuid]: { progress: percentCompleted },
-            }));
-          }
-        },
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -1177,6 +1235,7 @@ const ChatDetail = ({
     );
     return response;
   };
+  
   const { mutate: handleUpdateMsgChat } = useMutation(postUpdateMsg, {
     onSuccess: async (_data, variables) => {
       setUploadFileStatus((prev) => ({
@@ -1224,7 +1283,7 @@ const ChatDetail = ({
         uuid: uuid,
         mentionIds,
         files: uploadFiles.map((file) => file.file),
-        fileUuids: preserveFiles.map((file) => file.uuid),
+        fileUuids: [...uploadFiles.map((file) => file.uuid), ...preserveFiles.map((file) => file.uuid)],
       });
     }
   };
@@ -2713,7 +2772,7 @@ const ChatDetail = ({
                 </div>
               </div>
               <div className="mt-5">
-                <div className='border-[1px] border-[#77858f] rounded-[6px] h-[150px] w-full p-[14px]'></div>
+                <div className="border-[1px] border-[#77858f] rounded-[6px] h-[150px] w-full p-[14px]"></div>
               </div>
             </div>
           )}

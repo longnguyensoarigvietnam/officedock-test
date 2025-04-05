@@ -1,6 +1,12 @@
+import uuid
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from base.models import BaseModel
 from organizations.constants import CategoryColors
+from common.constants import (
+    ALLOW_IMAGE_FORMATS,
+    ORGANIZATION_ICON_FOLDER_UPLOAD,
+)
 
 
 class Organization(BaseModel):
@@ -8,6 +14,15 @@ class Organization(BaseModel):
     Organization model.
     """
 
+    uuid = models.UUIDField(unique=True, default=uuid.uuid4)
+    icon = models.ImageField(
+        upload_to=ORGANIZATION_ICON_FOLDER_UPLOAD,
+        validators=[
+            FileExtensionValidator(allowed_extensions=ALLOW_IMAGE_FORMATS),
+        ],
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=255)
     company = models.ForeignKey(
         "companies.Company",
@@ -104,7 +119,6 @@ class OrganizationsStatisticCategories(BaseModel):
         Set default company
         """
         self.company = self.organization.company
-        # FIXME: Remove this line later
         if self.color is None:
             self.color = CategoryColors.random()
 

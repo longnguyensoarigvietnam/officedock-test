@@ -51,6 +51,7 @@ from chat.serializers import (
     ChatRoomSerializer,
     ChatRoomsParticipantsSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
+    ChunkFileSerializer,
     SendMessageSerializer,
     ReactionSerializer,
 )
@@ -87,6 +88,21 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 *args, **kwargs, context={"request": self.request}
             )
         return super().get_serializer(*args, **kwargs)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="chunk-files",
+        serializer_class=ChunkFileSerializer,
+    )
+    def chunk_files_upload(self, request):
+        """
+        Handle chunk file upload
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return self.response_ok()
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -320,23 +336,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         user = request.user
 
-        # Get or create chat room type task
-        # FIXME: Remove later
-        # task_room = ChatRoom.objects.filter(
-        #     type=ChatRoomTypes.TASK.value,
-        #     participants=user,
-        #     company=user.company,
-        #     name=ChatRoomNames.TASK_CARD.value,
-        # ).first()
-        #
-        # # Get or create chat room type skill
-        # skill_room = ChatRoom.objects.filter(
-        #     type=ChatRoomTypes.SKILL.value,
-        #     participants=user,
-        #     company=user.company,
-        #     name=ChatRoomNames.SKILL_UP.value,
-        # ).first()
-
         # Use select_related to load related ForeignKey relationships
         chat_rooms_participants = (
             user.chat_rooms_participants.select_related("chat_room")
@@ -348,13 +347,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 chat_room__type=ChatRoomTypes.PRIVATE.value, participant_count=1
             )
         )
-        # FIXME: Remove later
-        # task_card_room = ChatRoomsParticipants.objects.filter(
-        #     chat_room=task_room, user=user
-        # ).first()
-        # skill_card_room = ChatRoomsParticipants.objects.filter(
-        #     chat_room=skill_room, user=user
-        # ).first()
 
         # Subquery to get the latest message
         latest_message_subquery = Subquery(
@@ -385,13 +377,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         )
         # Handle filter when pagination
         if last_message_at := request.query_params.get("last_message_at"):
-            # FIXME: Remove later
-            # chat_rooms = chat_rooms.exclude(
-            #     chat_room__type__in=[
-            #         ChatRoomTypes.TASK.value,
-            #         ChatRoomTypes.SKILL.value,
-            #     ]
-            # )
             if pin_at := request.query_params.get("pin_at"):
                 chat_rooms = chat_rooms.filter(
                     Q(pin_at__lt=pin_at)
@@ -451,38 +436,6 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             updated_chat_rooms = chat_rooms.filter(unread_messages__gt=0)
         else:
             updated_chat_rooms = chat_rooms
-            # FIXME: Remove later
-            # if (
-            #     task_card_room
-            #     and request.query_params.get("last_message_at") is None
-            #     and request.query_params.get("name") is None
-            # ):
-            #     chat_rooms_list = list(
-            #         chat_rooms.exclude(
-            #             chat_room__type__in=[
-            #                 ChatRoomTypes.TASK.value,
-            #                 ChatRoomTypes.SKILL.value,
-            #             ]
-            #         )
-            #     )
-            #     last_pinned_index = None
-            #
-            #     for i, room in enumerate(chat_rooms_list):
-            #         if room.pin_at is not None:
-            #             last_pinned_index = i
-            #
-            #     if last_pinned_index is None:
-            #         updated_chat_rooms = [
-            #             task_card_room,
-            #             skill_card_room,
-            #         ] + chat_rooms_list
-            #     else:
-            #         updated_chat_rooms = (
-            #             chat_rooms_list[: last_pinned_index + 1]
-            #             + [task_card_room, skill_card_room]
-            #             + chat_rooms_list[last_pinned_index + 1 :]
-            #         )
-
         # Return the response with the serialized data
         return self.response_pagination(
             request, updated_chat_rooms, ChatRoomsParticipantsSerializer
@@ -754,19 +707,17 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer_data = serializer.validated_data
-            files = serializer_data.pop("files", None)
             file_uuids = serializer_data.pop("file_uuids", [])
             message = serializer.save(
                 sender=user, chat_room=chat_room, company=user.company
             )
 
-            if files:
+            if file_uuids:
                 # Create chat files
                 ChatFile.create_files(
                     company=chat_room.company,
                     room=chat_room,
                     message=message,
-                    files=files,
                     uuids=file_uuids,
                 )
 
@@ -978,7 +929,6 @@ class ChatMessageViewSet(
 
         instance = serializer.instance
         serializer_data = serializer.validated_data
-        files = serializer_data.pop("files", None)
         file_uuids = serializer_data.pop("file_uuids", [])
 
         if (
@@ -1007,13 +957,12 @@ class ChatMessageViewSet(
         instance = serializer.save()
 
         chat_room = instance.chat_room
-        if files:
+        if uuids_to_create:
             # Create chat files
             ChatFile.create_files(
                 company=instance.company,
                 room=chat_room,
                 message=instance,
-                files=files,
                 uuids=uuids_to_create,
             )
 

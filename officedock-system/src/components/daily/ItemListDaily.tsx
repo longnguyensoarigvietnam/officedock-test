@@ -84,7 +84,7 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
         <Button
           onClick={() => {
             router.push(
-              `${pageRouters.DAILY_REPORT_DETAIL.href(
+              `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(
                 String(userData.id),
               )}?organization=${organization.id}`,
             );

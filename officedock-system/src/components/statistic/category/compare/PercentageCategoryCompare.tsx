@@ -438,6 +438,7 @@ const PercentageCategoryCompare = ({
                   options={tagsOptions}
                   placeholder="集計対象のタグを選択"
                   labelOptionClass="break-all"
+                  optionClassName="!top-6"
                   className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                   selectedOptions={selectedTags || []}
                   onChange={(selected) => {
@@ -463,15 +464,13 @@ const PercentageCategoryCompare = ({
                 )}
               </div>
               <div className="relative right-[224px] top-0">
-                <div className="flex gap-2 ">
+                <div className="flex gap-2 flex-wrap ">
                   {selectedTags.map((item) => {
                     return (
                       <div
                         key={item.value}
-                        className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                        <span className="min-w-[32px]  truncate">
-                          {item.label}
-                        </span>
+                        className="max-w-[400px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                        <span className=" truncate">{item.label}</span>
                         <ImageRound
                           onClick={() => {
                             removeTag(item);

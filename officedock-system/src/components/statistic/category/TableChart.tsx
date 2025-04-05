@@ -367,7 +367,13 @@ const TableChart = ({
     },
     {
       accessorKey: 'categories',
-      header: 'カテゴリー',
+      header: () => {
+        return (
+          <p className="text-[#77858F] font-medium text-xs text-left">
+            カテゴリー
+          </p>
+        );
+      },
       size: 140,
       cell: (info) => {
         const rowData = info.row.original as ListTaskStatistic;

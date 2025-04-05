@@ -3,11 +3,12 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES
-from common.utils import compare_categories
+from common.utils import compare_categories, get_signed_url
 from roles.constants import Actions, Screens
 from roles.utils import has_permission
 from skills.models import StatisticCategory, Skill, SkillMap
 from users.models import User
+from common.constants import ORGANIZATION_ICON_UPLOAD_MAX_SIZE
 from .models import (
     Organization,
     OrganizationsStatisticCategories,
@@ -22,7 +23,16 @@ class BaseOrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "name"]
+        fields = ["id", "uuid", "name", "icon"]
+
+    def to_representation(self, instance):
+        """Override file URL representation to ensure consistency"""
+        representation = super().to_representation(instance)
+
+        if instance.icon:
+            representation["icon"] = get_signed_url(instance.icon)
+
+        return representation
 
 
 class BaseStatisticCategorySerializer(serializers.ModelSerializer):
@@ -93,16 +103,6 @@ class StatisticCategorySerializer(BaseStatisticCategorySerializer):
             .distinct()
         )
         return BaseOrganizationSerializer(orgs, many=True).data
-
-
-class SuperiorSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Superior.
-    """
-
-    class Meta:
-        model = Organization
-        fields = ["id", "name"]
 
 
 class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
@@ -225,12 +225,12 @@ class OrganizationSkillSerializer(serializers.ModelSerializer):
         ).exists()
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
+class OrganizationSerializer(BaseOrganizationSerializer):
     """
     Serializer for the Organization.
     """
 
-    superior = SuperiorSerializer(read_only=True)
+    superior = BaseOrganizationSerializer(read_only=True)
     superior_id = serializers.PrimaryKeyRelatedField(
         source="superior",
         queryset=Organization.objects.all(),
@@ -245,11 +245,13 @@ class OrganizationSerializer(serializers.ModelSerializer):
         model = Organization
         fields = [
             "id",
+            "uuid",
             "name",
             "superior",
             "superior_id",
             "user_count",
             "actions",
+            "icon",
         ]
 
     def get_actions(self, obj):
@@ -284,6 +286,16 @@ class OrganizationSerializer(serializers.ModelSerializer):
         """
         Validate that the superior organization.
         """
+        if icon := attrs.get("icon"):
+            if icon.size > ORGANIZATION_ICON_UPLOAD_MAX_SIZE:
+                raise serializers.ValidationError(
+                    {
+                        "detail": ERROR_MESSAGES["max_file_size"].format(
+                            max_size="20MB"
+                        )
+                    }
+                )
+
         superior = attrs.get("superior")
         if (
             superior
@@ -307,6 +319,47 @@ class OrganizationSerializer(serializers.ModelSerializer):
         return self._is_subordinate(superior.superior, organization)
 
 
+class OrganizationHierarchyForCreateSerializer(serializers.Serializer):
+    """
+    Serializer for the Organization  hierarchy create multi.
+    """
+
+    organizations = OrganizationSerializer(many=True, required=False)
+    delete_ids = serializers.ListField(
+        child=serializers.IntegerField(), allow_null=True, required=False
+    )
+
+
+class OrganizationHierarchySerializer(serializers.ModelSerializer):
+    """
+    Serializer for Tag struct model
+    """
+
+    children = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = ["id", "name", "icon", "children"]
+
+    def get_children(self, obj):
+        """
+        Handle get children of tag
+        """
+        user = self.context.get("request").user
+
+        # Fetch the child tags of the current tag
+        children = Organization.objects.filter(
+            company=user.company, superior=obj
+        ).order_by("id")
+
+        # Serialize each child tag
+        return OrganizationHierarchySerializer(
+            children,
+            many=True,
+            context=self.context,
+        ).data
+
+
 class OrganizationDetailSerializer(OrganizationSerializer):
     """
     Serializer for the Organization.
@@ -319,6 +372,7 @@ class OrganizationDetailSerializer(OrganizationSerializer):
         model = Organization
         fields = [
             "id",
+            "uuid",
             "name",
             "superior",
             "superior_id",
@@ -326,6 +380,7 @@ class OrganizationDetailSerializer(OrganizationSerializer):
             "statistic_categories",
             "skills",
             "actions",
+            "icon",
         ]
 
     def get_statistic_categories(self, obj):
@@ -389,6 +444,7 @@ class OrganizationStatisticCategorySerializer(serializers.ModelSerializer):
         model = Organization
         fields = [
             "id",
+            "uuid",
             "organization_statistic_category_id",
             "large_statistic_category_uuid",
             "medium_statistic_category_uuid",
@@ -457,7 +513,7 @@ class MemberSerializer(serializers.ModelSerializer):
         return obj.profile.full_name
 
 
-class OrganizationMemberSerializer(serializers.ModelSerializer):
+class OrganizationMemberSerializer(BaseOrganizationSerializer):
     """
     Serializer for mermber organization
     """
@@ -466,11 +522,7 @@ class OrganizationMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = [
-            "id",
-            "name",
-            "users",
-        ]
+        fields = ["id", "uuid", "name", "users", "icon"]
 
     def get_users(self, obj):
         """Get users in organization"""
@@ -544,7 +596,7 @@ Begin handle organization category hierarchy
 """
 
 
-class OrganizationCategoryHierarchySerializer(serializers.ModelSerializer):
+class OrganizationCategoryHierarchySerializer(BaseOrganizationSerializer):
     """
     Serializer for the Organization category hierarchy.
     """
@@ -555,7 +607,9 @@ class OrganizationCategoryHierarchySerializer(serializers.ModelSerializer):
         model = Organization
         fields = [
             "id",
+            "uuid",
             "name",
+            "icon",
             "statistic_categories",
         ]
 
