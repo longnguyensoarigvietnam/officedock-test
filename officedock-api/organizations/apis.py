@@ -133,6 +133,11 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Get the company from the logged in user and assign it to the organization
         serializer.save(company=self.request.user.company)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("has_children", type=bool, required=False),
+        ],
+    )
     @action(
         methods=["GET", "POST"],
         detail=False,
@@ -144,15 +149,20 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Handle hierarchy organization
         """
         if request.method == "GET":
+            has_children = (
+                request.query_params.get("has_children", "").lower() == "true"
+            )
             orgs = (
                 self.get_queryset()
                 .order_by("-id")
                 .values_list("id", "superior_id")
             )
-
+            org_has_children, org_no_children = get_high_level_organizations(
+                orgs
+            )
             return self.response_ok(
                 OrganizationHierarchySerializer(
-                    get_high_level_organizations(orgs),
+                    org_has_children if has_children else org_no_children,
                     many=True,
                     context={"request": request},
                 ).data

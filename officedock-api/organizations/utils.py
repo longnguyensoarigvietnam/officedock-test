@@ -6,19 +6,16 @@ def get_high_level_organizations(orgs):
     Retrieve high-level organization based on hierarchy structure.
     """
 
-    # List to store IDs of high-level organization
-    high_level_ids = []
-
-    # List to store the final sorted Organization objects
-    org_sorted = []
-
-    # List to track already processed IDs to avoid duplicates
-    existed_ids = []
-
     # Identify child IDs from the hierarchy (orgs that are children of another org)
-    child_ids = [id for id, superior_id in orgs if superior_id is not None]
+    child_ids = []
+    superior_ids = []
+    for id, superior_id in orgs:
+        if superior_id is not None:
+            child_ids.append(id)
+            superior_ids.append(superior_id)
 
     # Identify high-level org IDs (orgs without parents or whose parent is not in child IDs)
+    high_level_ids = []
     for id, superior_id in orgs:
         if superior_id is None:  # org with no parent (top-level org)
             high_level_ids.append(id)
@@ -32,10 +29,16 @@ def get_high_level_organizations(orgs):
     }
 
     # Sort Organization objects based on the order of IDs in high_level_ids
+    org_has_hierarchies = []
+    org_not_hierarchies = []
+    existed_ids = []
     for id in high_level_ids:
-        if id not in existed_ids:  # Ensure no duplicates in the sorted list
-            org_sorted.append(org_map.get(id))
+        if id not in existed_ids:
+            if id not in superior_ids:
+                org_not_hierarchies.append(org_map.get(id))
+            else:
+                org_has_hierarchies.append(org_map.get(id))
             existed_ids.append(id)
 
     # Return the sorted list of high-level Organization objects
-    return org_sorted
+    return org_has_hierarchies, org_not_hierarchies
