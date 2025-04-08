@@ -28,6 +28,7 @@ import ActionsAddMembersModal from '@components/modals/ActionsAddMembersModal';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
 
 import useDebounceText from '@hooks/useDebounceText';
 
@@ -44,6 +45,7 @@ import { encodeFormatDateISO } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import { ChatContext } from '@providers/ChatProvider';
 import { useWebSocket } from '@providers/WebSocketProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import {
   ChatDashboardMember,
   ChatRoomItem,
@@ -66,7 +68,7 @@ interface dataProps {
   >;
   setFilteredChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setHasMore: React.Dispatch<React.SetStateAction<boolean>>;
-  setHasMoreDetailOnScrollDown: Dispatch<SetStateAction<boolean>>
+  setHasMoreDetailOnScrollDown: Dispatch<SetStateAction<boolean>>;
   setSearchChatMsg: React.Dispatch<React.SetStateAction<string>>;
   handleSetChatRoomParam: (code: string) => void;
   handleRemoveChatRoomParam: () => void;
@@ -114,12 +116,16 @@ const ListChatUsers = ({
   const [lastPinAtSearch, setLastPinAtSearch] = useState<string | null>();
   const [lastMsgItemRoomSearch, setLastMsItemRoomSearch] = useState<string>('');
 
+  const [showWarningChatUploadingModal, setShowWarningChatUploadingModal] =
+    useState(false);
+  const [pendingRoomChange, setPendingRoomChange] = useState<ChatRoomItem | null>(null)
   const {
     setChatList,
     chatRoomNameEditing,
     setIsReload,
     setChatRoomNotifications,
   } = useContext(ChatContext);
+  const { isChatFilesUploading, cancelUploadChatFiles } = useContext(GlobalStateContext);
   const socket = useWebSocket();
 
   // Handle get list and more data room chat
@@ -839,6 +845,25 @@ const ListChatUsers = ({
     router.push(`/chat?${params.toString()}`, { scroll: false });
   };
 
+  const handleRoomChange = (roomDetail: ChatRoomItem) => {
+    if(isChatFilesUploading){
+      setPendingRoomChange(roomDetail)
+      setShowWarningChatUploadingModal(true)
+      return;
+    }
+    doRoomChange(roomDetail)
+  };
+
+  const doRoomChange = (roomDetail: ChatRoomItem) => {
+    setLastItemId(null);
+    handleSetChatRoomParam(roomDetail.code);
+    handleResetChatRoomUnreadMessages(roomDetail);
+    setSearchChatMsg('');
+    setIsReload(false);
+    setHasMoreDetailOnScrollDown(false);
+    setPendingRoomChange(null)
+  };
+
   return (
     <aside className="w-[350px] max-w-[350px] min-w-[350px] border-r-[2px] pr-3 pt-5">
       <div className="flex items-center justify-between mb-5">
@@ -966,14 +991,7 @@ const ListChatUsers = ({
                 <div
                   key={item?.code}
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
-                  onClick={() => {
-                    setLastItemId(null);
-                    handleSetChatRoomParam(item.code)
-                    handleResetChatRoomUnreadMessages(item);
-                    setSearchChatMsg('');
-                    setIsReload(false);
-                    setHasMoreDetailOnScrollDown(false)
-                  }}>
+                  onClick={() => handleRoomChange(item)}>
                   <Tippy
                     content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
                     arrow={false}
@@ -1047,7 +1065,7 @@ const ListChatUsers = ({
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => {
                     setLastItemId(null);
-                    handleSetChatRoomParam(item.code)
+                    handleSetChatRoomParam(item.code);
                     handleResetChatRoomUnreadMessages(item);
                     setSearchChatMsg('');
                     setIsReload(false);
@@ -1117,6 +1135,20 @@ const ListChatUsers = ({
           dashboardMembers={dashboardMembers}
           onClose={() => setIsModalOpen(false)}
           createChatMutation={createChatMutation}
+        />
+      )}
+
+      {showWarningChatUploadingModal && pendingRoomChange && (
+        <ChatWarningUploadingFilesModal
+          open={showWarningChatUploadingModal}
+          onClose={() => {
+            setShowWarningChatUploadingModal(false)
+          }}
+          onConfirm={() => {
+            setShowWarningChatUploadingModal(false)
+            cancelUploadChatFiles()
+            doRoomChange(pendingRoomChange)
+          }}
         />
       )}
     </aside>
