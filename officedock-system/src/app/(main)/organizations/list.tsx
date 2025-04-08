@@ -320,7 +320,7 @@ const ListOrganizations = () => {
             </Button>
           )}
       </div>
-      <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]">
+      <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]" style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
         <Table className="bg-white !rounded-lg relative table-fixed">
           <TableHeader className="!bg-[#F8FAFC]">
             <th className="text-left w-[calc(100%_-_50px)]">

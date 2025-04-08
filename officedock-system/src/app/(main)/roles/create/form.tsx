@@ -18,11 +18,16 @@ import {
 } from '@constants/message';
 
 import { getPermissionOptionDropdown } from '@utils';
+
 import { RoleFormData } from '@interfaces/role';
+
 import { useToast } from '@providers/ToastProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
-import api from '@base/api';
+
 import { useErrorToast } from '@hooks/useErrorToast';
+
+import api from '@base/api';
 
 interface rowDataType {
   screenValue: string;
@@ -41,6 +46,7 @@ const CreateRoleForm = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const [isSubmit, setIsSubmit] = useState(false);
   const showErrorToast = useErrorToast();
+  const { expanded } = useContext(GlobalStateContext);
 
   useEffect(() => {
     const initialRows: rowDataType[] = [];
@@ -147,54 +153,87 @@ const CreateRoleForm = () => {
 
   return (
     <div>
-      <form>
-        <div className="w-96 mb-10">
-          <Input
-            required
-            label="ロール名"
-            placeholder="入力してください"
-            onChange={(e) => {
-              setRoleName(e.target.value);
-              if (e.target.value != '') {
-                setError('');
-              }
-            }}
-            error={error ? true : false}
-          />
+      <div className="flex justify-between items-center w-full mb-5">
+        <p className="text-black font-medium text-[26px]">権限管理</p>
+        <div className="flex justify-end gap-3 items-center">
+          <Button
+            variant="outline"
+            className="w-[100px] !p-0 !h-[34px]"
+            onClick={() => router.push(pageRouters.ROLES_MANAGEMENT.href)}>
+            キャンセル
+          </Button>
+          <Button
+            variant="primary"
+            className="w-[100px] !p-0 !h-[34px]"
+            onClick={handleConfirmCreateRole}>
+            保存
+          </Button>
+        </div>
+      </div>
+      <form
+        className="bg-[#F8FAFC] rounded-[14px] p-5"
+        style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
+        <div className="mb-5">
+          <div className="flex gap-2 items-center">
+            <p className="text-[#77858F] font-medium text-xs w-[40px]">
+              権限名
+            </p>
+            <Input
+              required
+              label=""
+              placeholder="入力してください"
+              className="!w-[220px] rounded-[6px] text-sm !h-[34px] !border-[1px] !border-[#77858F]"
+              onChange={(e) => {
+                setRoleName(e.target.value);
+                if (e.target.value != '') {
+                  setError('');
+                }
+              }}
+              error={error ? true : false}
+            />
+          </div>
+
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </div>
+
         <div
-          className={`max-h-[calc(100vh_-_450px)] w-[calc(100vw_-_260px)] max-w-[1603px] ring-1 ring-gray-200 overflow-x-auto pb-4 rounded-tl-2xl rounded-tr-2xl bg-white`}>
-          <div className="grid mb-3 grid-cols-[300px_350px_350px_350px_350px] bg-[#F3F4F6] w-full sticky top-0 z-10 rounded-tl-2xl rounded-tr-2xl ring-1 ring-gray-200  [&>div]:bg-[#F3F4F6] ">
-            <div className="w-[300px] sticky left-0 z-[9] h-12 flex items-center justify-center"></div>
-            <div className="w-[350px] h-12 flex items-center justify-center text-center">
+          className={`max-h-[calc(100vh_-_320px)] ${expanded ? 'w-[calc(100vw_-_300px)] max-w-[1603px]' : 'w-[calc(100vw_-_162px)] max-w-[1677px]'} ring-1 ring-gray-200 overflow-x-auto rounded-lg bg-white`}>
+          <div className="grid grid-cols-[300px_350px_350px_350px_350px] bg-[#F8FAFC] w-full sticky top-0 z-10 rounded-tl-lg rounded-tr-lg ring-gray-200 [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1] [&>div]:bg-[#F8FAFC] ">
+            <div className="w-[300px] sticky left-0 z-[9] h-12 flex items-center justify-start pl-4 text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
+              対応機能
+            </div>
+            <div className="w-[350px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
               閲覧
             </div>
-            <div className="w-[350px] h-12 flex items-center justify-center text-center">
+            <div className="w-[350px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
               追加
             </div>
-            <div className="w-[350px] h-12 flex items-center justify-center text-center">
+            <div className="w-[350px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
               更新
             </div>
-            <div className="w-[380px] h-12 flex items-center justify-center text-center">
+            <div className="w-[350px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs">
               削除
             </div>
           </div>
           {rows.map((row, index) => {
             return (
-              <div key={index} className="flex w-full bg-white relative">
-                <div className="flex items-center sticky left-0 z-[9] bg-white justify-start px-3 ">
-                  <div className="min-w-[280px]">{row.screenLabel}</div>
+              <div
+                key={index}
+                className="flex w-full bg-white relative [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1]">
+                <div className="min-w-[300px] flex items-center sticky left-0 z-[9] bg-white justify-start px-3 border-r-[1px] border-[#D2DBE1] text-[16px] font-medium">
+                  <div className="w-full">{row.screenLabel}</div>
                 </div>
-                <div className="min-w-[350px] px-3 z-[8] my-2">
+                <div className="min-w-[350px] px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
                   <TableDropdown
-                    className="rounded-sm w-full !h-12"
+                    className="w-full !h-10"
+                    valueClassName="rounded-[6px] !border-[#77858F]"
                     labelOptionClass="ml-0"
                     options={getPermissionOptionDropdown(
                       row.screenValue as ScreenName,
                       ScreenAction.VIEW,
                       PERMISSION_OPTIONS,
                     )}
+                    minDropdownHeight={140}
                     disabled={
                       getPermissionOptionDropdown(
                         row.screenValue as ScreenName,
@@ -217,14 +256,16 @@ const CreateRoleForm = () => {
                     }}
                   />
                 </div>
-                <div className="min-w-[350px] px-3 my-2">
+                <div className="min-w-[350px] px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
                   <TableDropdown
-                    className="rounded-sm w-full !h-12"
+                    className="w-full !h-10"
+                    valueClassName="rounded-[6px] !border-[#77858F]"
                     options={getPermissionOptionDropdown(
                       row.screenValue as ScreenName,
                       ScreenAction.ADD,
                       PERMISSION_OPTIONS,
                     )}
+                    minDropdownHeight={140}
                     disabled={
                       getPermissionOptionDropdown(
                         row.screenValue as ScreenName,
@@ -248,14 +289,16 @@ const CreateRoleForm = () => {
                     }}
                   />
                 </div>
-                <div className="min-w-[350px] px-3 my-2">
+                <div className="min-w-[350px] px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
                   <TableDropdown
-                    className="rounded-sm w-full !h-12"
+                    className="w-full !h-10"
+                    valueClassName="rounded-[6px] !border-[#77858F]"
                     options={getPermissionOptionDropdown(
                       row.screenValue as ScreenName,
                       ScreenAction.UPDATE,
                       PERMISSION_OPTIONS,
                     )}
+                    minDropdownHeight={140}
                     disabled={
                       getPermissionOptionDropdown(
                         row.screenValue as ScreenName,
@@ -279,14 +322,16 @@ const CreateRoleForm = () => {
                     }}
                   />
                 </div>
-                <div className="min-w-[350px] px-3 my-2">
+                <div className="min-w-[350px] px-3 z-[8] py-2">
                   <TableDropdown
-                    className="rounded-sm w-full !h-12"
+                    className="w-full !h-10"
+                    valueClassName="rounded-[6px] !border-[#77858F]"
                     options={getPermissionOptionDropdown(
                       row.screenValue as ScreenName,
                       ScreenAction.DELETE,
                       PERMISSION_OPTIONS,
                     )}
+                    minDropdownHeight={140}
                     disabled={
                       getPermissionOptionDropdown(
                         row.screenValue as ScreenName,
@@ -313,21 +358,6 @@ const CreateRoleForm = () => {
               </div>
             );
           })}
-        </div>
-        <div className="w-full flex items-center gap-2 mt-8 flex-col">
-          <Button
-            className="w-[426px]"
-            type="submit"
-            onClick={handleConfirmCreateRole}>
-            作成
-          </Button>
-          <Button
-            className="w-[426px]"
-            variant="secondary"
-            type="button"
-            onClick={() => router.push(pageRouters.ROLES_MANAGEMENT.href)}>
-            戻る
-          </Button>
         </div>
       </form>
     </div>
