@@ -87,6 +87,9 @@ _ERROR_MESSAGES = {
         "select_day": _("Must select at least one day."),
         "select_month": _("Must select at least one month."),
         "chunk_file_not_exists": _("This chunk file does not exist."),
+        "organization_uuid_not_exists": _(
+            "Organization with UUID {parent_uuid} does not exist."
+        ),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -152,6 +155,7 @@ _ERROR_MESSAGES = {
         "select_day": _("いずれか1日を選択してください。"),
         "select_month": _("いずれか1月を選択してください。"),
         "chunk_file_not_exists": _("このチャンクファイルが存在していません。"),
+        "organization_uuid_not_exists": _("{parent_uuid}の組織が存在していません。"),
     },
 }
 

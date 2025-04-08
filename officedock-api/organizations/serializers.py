@@ -319,15 +319,61 @@ class OrganizationSerializer(BaseOrganizationSerializer):
         return self._is_subordinate(superior.superior, organization)
 
 
+class BaseOrganizationHierarchySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Organization.
+    """
+
+    parent_uuid = serializers.UUIDField(
+        write_only=True, allow_null=True, required=False
+    )
+    uuid = serializers.UUIDField(
+        write_only=True, allow_null=True, required=False
+    )
+
+    class Meta:
+        model = Organization
+        fields = ["id", "uuid", "name", "icon", "parent_uuid"]
+
+
 class OrganizationHierarchyForCreateSerializer(serializers.Serializer):
     """
     Serializer for the Organization  hierarchy create multi.
     """
 
-    organizations = OrganizationSerializer(many=True, required=False)
-    delete_ids = serializers.ListField(
-        child=serializers.IntegerField(), allow_null=True, required=False
+    organizations = BaseOrganizationHierarchySerializer(
+        many=True, required=False
     )
+    delete_uuids = serializers.ListField(
+        child=serializers.UUIDField(), allow_null=True, required=False
+    )
+
+    def validate(self, data):
+        """
+        Validate that parent_uuid exists in db or is in the incoming list
+        """
+        organizations = data.get("organizations", [])
+        incoming_uuids = {
+            item.get("uuid") for item in organizations if item.get("uuid")
+        }
+
+        for org in organizations:
+            parent_uuid = org.get("parent_uuid")
+            if parent_uuid:
+                exists_in_db = Organization.objects.filter(
+                    uuid=parent_uuid
+                ).exists()
+                will_be_created = parent_uuid in incoming_uuids
+                if not exists_in_db and not will_be_created:
+                    raise serializers.ValidationError(
+                        {
+                            "detail": ERROR_MESSAGES[
+                                "organization_uuid_not_exists"
+                            ].format(parent_uuid=parent_uuid)
+                        }
+                    )
+
+        return data
 
 
 class OrganizationHierarchySerializer(serializers.ModelSerializer):
@@ -339,7 +385,7 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "icon", "children"]
+        fields = ["id", "uuid", "name", "icon", "children"]
 
     def get_children(self, obj):
         """
