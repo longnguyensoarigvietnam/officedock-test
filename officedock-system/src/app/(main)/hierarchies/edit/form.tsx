@@ -857,8 +857,8 @@ const TableComponent = ({
   };
 
   return (
-    <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]">
-      <p className="text-[#77858F] text-[16px] font-medium my-2">
+    <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]" style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
+      <p className="text-[#77858F] text-[16px] font-medium my-2 max-w-[100%] break-all">
         {organizationName}
       </p>
       <Table className="w-full h-full bg-white !rounded-[6px]">
@@ -1077,6 +1077,7 @@ const TableComponent = ({
                                   option.value !== '',
                               ),
                             ]}
+                            minDropdownHeight={240}
                             className="h-full !rounded-[5px] w-full flex-grow"
                             valueClassName="!border-[#77858F]"
                             labelClass="w-[160px]"
@@ -1424,6 +1425,7 @@ const TableComponent = ({
                                       option.value !== '',
                                   ),
                                 ]}
+                                minDropdownHeight={240}
                                 className="h-full !rounded-[5px] w-full flex-grow"
                                 valueClassName="!border-[#77858F]"
                                 labelClass="w-[160px]"
@@ -1817,6 +1819,7 @@ const TableComponent = ({
                                     option.value !== '',
                                 ),
                               ]}
+                              minDropdownHeight={240}
                               className="h-full !rounded-[5px]"
                               valueClassName="!border-[#77858F]"
                               labelClass="w-[160px]"

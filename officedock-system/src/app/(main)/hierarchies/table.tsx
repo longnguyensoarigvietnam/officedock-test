@@ -207,8 +207,8 @@ const HierarchyTable = ({
   );
 
   return (
-    <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]">
-      <p className="text-[#77858F] text-[16px] font-medium mb-4">
+    <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]" style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
+      <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {organizationName}
       </p>
       <Table className="w-full h-full bg-white !rounded-[6px]">

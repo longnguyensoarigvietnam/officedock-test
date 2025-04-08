@@ -29,6 +29,7 @@ type Props = {
   addInput?: boolean;
   onChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
+  minDropdownHeight?: number
 };
 const TableDropdown = ({
   label,
@@ -48,6 +49,7 @@ const TableDropdown = ({
   addInput = false,
   onChange,
   onAdd,
+  minDropdownHeight = 0
 }: Props) => {
   const [selected, setSelected] = useState<OptionDropdownType | undefined>(
     selectedOption || undefined,
@@ -196,7 +198,7 @@ const TableDropdown = ({
             if (dropdownRef.current) {
               const rect = dropdownRef.current.getBoundingClientRect();
               const viewportHeight = window.innerHeight;
-              setIsAbove(rect.bottom + 240 > viewportHeight);
+              setIsAbove(rect.bottom + minDropdownHeight > viewportHeight);
             }
             setIsOpen(true);
           }

@@ -261,6 +261,11 @@ const LineChart = ({
         hoverRadius: 5,
       },
     },
+    datasets: {
+      line: {
+        clip: false,
+      },
+    },
     scales: {
       x: {
         ticks: {
@@ -288,7 +293,6 @@ const LineChart = ({
       y: {
         position: 'right',
         min: 0,
-        suggestedMin: 0,
         ticks: {
           color: '#77858F',
           font: {
@@ -894,15 +898,15 @@ const LineChart = ({
               </div>
             </div>
           </div>
+          <div
+            style={{ position: 'relative' }}
+            className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
+            <Line data={lineChartData} options={options} />
             <div
-              style={{ position: 'relative' }}
-              className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
-              <Line data={lineChartData} options={options} />
-              <div
-                ref={tooltipRef}
-                style={{ position: 'absolute', opacity: 0 }}
-              />
-            </div>
+              ref={tooltipRef}
+              style={{ position: 'absolute', opacity: 0 }}
+            />
+          </div>
           <div className="px-[30px]">
             <div className="flex gap-8 items-center justify-end mb-3 break-words">
               {standardLabelsInfo.map((label, index) => {

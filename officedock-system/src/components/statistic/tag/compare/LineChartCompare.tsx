@@ -376,6 +376,11 @@ const LineChartCompare = ({
         hoverRadius: 5,
       },
     },
+    datasets: {
+      line: {
+        clip: false,
+      },
+    },
     scales: {
       x: {
         ticks: {
@@ -398,7 +403,6 @@ const LineChartCompare = ({
       y: {
         position: 'right',
         min: 0,
-        suggestedMin: 0,
         ticks: {
           color: '#77858F',
           font: {
