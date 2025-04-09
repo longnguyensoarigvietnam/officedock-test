@@ -203,7 +203,7 @@ const ListSkills = () => {
                   </td>
 
                   <td className="w-20">
-                    <div className="flex w-full gap-2 justify-center">
+                    <div className="flex w-full gap-2 justify-center items-center">
                       <Link
                         onClick={() => {
                           setDataSkillDetail(element);
@@ -212,7 +212,7 @@ const ListSkills = () => {
                         <ImageRound
                           name="Detail"
                           src={'/icons/detail.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
+                          className="w-5 h-5 hover:cursor-pointer"
                         />
                       </Link>
                       {session?.user.permissions &&
@@ -228,7 +228,7 @@ const ListSkills = () => {
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit.svg'}
-                            className={`w-6 h-6 hover:cursor-pointer`}
+                            className={`w-3.5 h-3.5 hover:cursor-pointer`}
                           />
                         </Link>
                       ) : (
@@ -242,7 +242,7 @@ const ListSkills = () => {
                         <ImageRound
                           name="Delete"
                           src={'/icons/delete.svg'}
-                          className={`w-6 h-6 hover:cursor-pointer`}
+                          className={`w-[13px] h-[15px] hover:cursor-pointer`}
                           onClick={() => handleOpenDeleteSkillModal(element.id)}
                         />
                       ) : (
