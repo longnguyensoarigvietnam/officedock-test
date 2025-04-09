@@ -94,6 +94,10 @@ export const SCREEN_LIST = [
     value: 'chat',
   },
   {
+    name: 'ユーザー画面',
+    value: 'user',
+  },
+  {
     name: '組織画面',
     value: 'organization',
   },
@@ -102,20 +106,12 @@ export const SCREEN_LIST = [
     value: 'category',
   },
   {
-    name: 'スキル画面',
-    value: 'skill',
-  },
-  {
-    name: '集計タグ画面',
-    value: 'tag',
-  },
-  {
-    name: 'ユーザー画面',
-    value: 'user',
-  },
-  {
     name: '集計カテゴリ階層画面',
     value: 'categoryHierarchy',
+  },
+  {
+    name: 'スキル画面',
+    value: 'skill',
   },
   {
     name: 'スキルマップ画面',
@@ -124,6 +120,10 @@ export const SCREEN_LIST = [
   {
     name: '組織_スキル画面',
     value: 'organizationSkill',
+  },
+  {
+    name: '集計タグ画面',
+    value: 'tag',
   },
   {
     name: '集計画面',
@@ -193,7 +193,7 @@ export const BOOKMARK_ROUTER_NAME = 'bookmark';
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024;
 
-export const BATCH_FILE_SIZE = 30; // Maximum number of concurrent API calls
+export const BATCH_FILE_SIZE = 15; // Maximum number of concurrent API calls
 
 export const REACTION_LIST = [
   {
@@ -303,36 +303,33 @@ export const TASK_REPETITIVE_OPTIONS = [
 ];
 
 export const WEEKDAY_OPTIONS = [
-  { label: '月', value: 0 }, 
-  { label: '火', value: 1 }, 
-  { label: '水', value: 2 }, 
-  { label: '木', value: 3 }, 
-  { label: '金', value: 4 }, 
-  { label: '土', value: 5 }, 
-  { label: '日', value: 6 }, 
+  { label: '月', value: 0 },
+  { label: '火', value: 1 },
+  { label: '水', value: 2 },
+  { label: '木', value: 3 },
+  { label: '金', value: 4 },
+  { label: '土', value: 5 },
+  { label: '日', value: 6 },
 ];
 
-export const DAY_OPTIONS: { label: string, value: number }[] = Array.from(
+export const DAY_OPTIONS: { label: string; value: number }[] = Array.from(
   { length: 31 },
   (_, i) => ({
-    label: `${i + 1}`, 
+    label: `${i + 1}`,
     value: i + 1,
-  })
+  }),
 );
 
-export const MONTH_OPTIONS: { label: string, value: number }[] = Array.from(
+export const MONTH_OPTIONS: { label: string; value: number }[] = Array.from(
   { length: 12 },
   (_, i) => ({
-    label: `${i + 1}`, 
+    label: `${i + 1}`,
     value: i + 1,
-  })
+  }),
 );
 
-export const REPEAT_INTERVAL_OPTIONS: { label: string, value: number }[] = Array.from(
-  { length: 10 },
-  (_, i) => ({
-    label: `${i + 1}`, 
+export const REPEAT_INTERVAL_OPTIONS: { label: string; value: number }[] =
+  Array.from({ length: 10 }, (_, i) => ({
+    label: `${i + 1}`,
     value: i + 1,
-  })
-);
-
+  }));

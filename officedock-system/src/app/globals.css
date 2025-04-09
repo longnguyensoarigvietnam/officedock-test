@@ -244,3 +244,14 @@ html *::-webkit-scrollbar-track {
   height: 0;
   font-size: 14px !important;
 }
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  .custom-password-mask[type="password"] {
+    -webkit-text-stroke-width: 0.5em;
+    letter-spacing: 0.5em;
+    padding-left: 14px;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-indent: 4px;
+  }
+}

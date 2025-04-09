@@ -22,7 +22,12 @@ import {
   SYSTEM_PERMISSIONS_MENU,
   SYSTEM_PERMISSIONS_MENU_TEAM,
 } from '@constants/menu';
-import { PermissionsSystem, SocketActions, TabType } from '@constants/enums';
+import {
+  PendingNavigationType,
+  PermissionsSystem,
+  SocketActions,
+  TabType,
+} from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
 import { MenuItem } from '@interfaces/menu';
@@ -36,6 +41,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { WebSocketMessageData } from '@interfaces/chat';
 import { showBackgroundColorByTime } from '@utils';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
+import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
 
 type Props = {
   className?: string;
@@ -84,11 +90,20 @@ const Sidebar = ({ className }: Props) => {
     totalNotifications,
     expanded,
     selectedOrganization,
+    isChatFilesUploading,
     setSelectedOrganization,
     setExpanded,
     setTotalNotifications,
+    cancelUploadChatFiles,
   } = useContext(GlobalStateContext);
   const { dashboardUnreadMessages } = useDashboardUnreadMessages();
+  const [showWarningChatUploadingModal, setShowWarningChatUploadingModal] =
+    useState(false);
+  const [pendingPageChange, setPendingPageChange] = useState<string | null>(
+    null,
+  );
+  const [pendingNavigationType, setPendingNavigationType] =
+    useState<PendingNavigationType | null>(null);
 
   const MENU_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
     if (menu.requiredPermission === PermissionsSystem.VIEW_ALL) {
@@ -239,6 +254,97 @@ const Sidebar = ({ className }: Props) => {
     }
   }
 
+  const handleNavigateToMyDockPage = (href: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('organization');
+    params.delete('tabId');
+    if (href === pageRouters.TASKS_MANAGEMENT.href) {
+      setTagSelected('');
+      setMemberSelected('');
+      router.push(`${href}?view=day`);
+    } else {
+      params.delete('view');
+      if (
+        pathname === pageRouters.CHAT_MANAGEMENT.href &&
+        href === pageRouters.CHAT_MANAGEMENT.href
+      ) {
+        return;
+      }
+      {
+        router.push(`${href}?${params.toString()}`);
+      }
+    }
+    setPendingPageChange(null);
+    setPendingNavigationType(null);
+  };
+
+  const handleNavigateToTeamDockPage = (href: string) => {
+    if (href === pageRouters.TASKS_MANAGEMENT.href) {
+      setTagSelected('');
+      setMemberSelected('');
+      router.push(`${href}?view=day`);
+    } else {
+      if (
+        pathname === pageRouters.CHAT_MANAGEMENT.href &&
+        href === pageRouters.CHAT_MANAGEMENT.href
+      ) {
+        return;
+      }
+      {
+        const organizationId = searchParams.get('organization');
+        const params = new URLSearchParams(searchParams.toString());
+        let defaultOrganization = {
+          label: '',
+          value: '',
+        };
+        const mainOrganization = authenticatedUser?.organizations.find(
+          (organization) => organization.isMain,
+        );
+        if (mainOrganization) {
+          defaultOrganization = {
+            label: mainOrganization.name,
+            value: String(mainOrganization.id),
+          };
+        } else {
+          if (
+            authenticatedUser?.organizations.length &&
+            authenticatedUser?.organizations.length > 0
+          ) {
+            defaultOrganization = {
+              label: authenticatedUser?.organizations[0].name,
+              value: String(authenticatedUser?.organizations[0].id),
+            };
+          }
+        }
+        if (!organizationId) {
+          if (selectedOrganization) {
+            params.set('organization', selectedOrganization.value as string);
+          } else {
+            if (defaultOrganization.label && defaultOrganization.value) {
+              setSelectedOrganization({
+                label: defaultOrganization.label,
+                value: defaultOrganization.value,
+              });
+
+              params.set('organization', defaultOrganization.value as string);
+            }
+          }
+        }
+        params.set('tabId', '1');
+
+        router.push(`${href}?${params.toString()}`);
+      }
+    }
+    setPendingPageChange(null);
+    setPendingNavigationType(null);
+  };
+
+  const handleNavigateToMemberPage = (href: string) => {
+    router.push(href);
+    setPendingPageChange(null);
+    setPendingNavigationType(null);
+  };
+
   return (
     <aside
       className={`overflow-x-hidden ${hour} overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px]' : 'w-20 min-w-[70px]'} flex flex-col ${className}`}
@@ -280,34 +386,15 @@ const Sidebar = ({ className }: Props) => {
                               className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                               onClick={() => {
                                 if (isHasTerm) return;
-                                const params = new URLSearchParams(
-                                  searchParams.toString(),
-                                );
-                                params.delete('organization');
-                                params.delete('tabId');
-                                if (
-                                  item.href ===
-                                  pageRouters.TASKS_MANAGEMENT.href
-                                ) {
-                                  setTagSelected('');
-                                  setMemberSelected('');
-                                  router.push(`${item.href}?view=day`);
-                                } else {
-                                  params.delete('view');
-                                  if (
-                                    pathname ===
-                                      pageRouters.CHAT_MANAGEMENT.href &&
-                                    item.href ===
-                                      pageRouters.CHAT_MANAGEMENT.href
-                                  ) {
-                                    return;
-                                  }
-                                  {
-                                    router.push(
-                                      `${item.href}?${params.toString()}`,
-                                    );
-                                  }
+                                if (isChatFilesUploading) {
+                                  setPendingPageChange(item.href);
+                                  setPendingNavigationType(
+                                    PendingNavigationType.MY_DOCK,
+                                  );
+                                  setShowWarningChatUploadingModal(true);
+                                  return;
                                 }
+                                handleNavigateToMyDockPage(item.href);
                               }}>
                               {item.iconUrl && (
                                 <ImageRound
@@ -409,8 +496,15 @@ const Sidebar = ({ className }: Props) => {
                           className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                           onClick={() => {
                             if (isHasTerm) return;
-
-                            router.push(memberOption.href);
+                            if (isChatFilesUploading) {
+                              setPendingPageChange(memberOption.href);
+                              setPendingNavigationType(
+                                PendingNavigationType.MEMBER,
+                              );
+                              setShowWarningChatUploadingModal(true);
+                              return;
+                            }
+                            handleNavigateToMemberPage(memberOption.href);
                           }}>
                           {memberOption.iconUrl && (
                             <ImageRound
@@ -483,13 +577,10 @@ const Sidebar = ({ className }: Props) => {
                     </div>
                   ) : (
                     <div className="px-4 mb-2">
-                      {selectedOrganization?.imgComponent || {
-                        label: defaultOrganization?.label || '',
-                        value: defaultOrganization?.value || '',
-                        imgComponent: organizationList.find(
+                      {selectedOrganization?.imgComponent ||
+                        organizationList.find(
                           (org) => org.value == defaultOrganization?.value,
-                        )?.imgComponent,
-                      }}
+                        )?.imgComponent}
                     </div>
                   )}
 
@@ -514,89 +605,15 @@ const Sidebar = ({ className }: Props) => {
                               className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                               onClick={() => {
                                 if (isHasTerm) return;
-                                if (
-                                  item.href ===
-                                  pageRouters.TASKS_MANAGEMENT.href
-                                ) {
-                                  setTagSelected('');
-                                  setMemberSelected('');
-                                  router.push(`${item.href}?view=day`);
-                                } else {
-                                  if (
-                                    pathname ===
-                                      pageRouters.CHAT_MANAGEMENT.href &&
-                                    item.href ===
-                                      pageRouters.CHAT_MANAGEMENT.href
-                                  ) {
-                                    return;
-                                  }
-                                  {
-                                    const organizationId =
-                                      searchParams.get('organization');
-                                    const params = new URLSearchParams(
-                                      searchParams.toString(),
-                                    );
-                                    let defaultOrganization = {
-                                      label: '',
-                                      value: '',
-                                    };
-                                    const mainOrganization =
-                                      authenticatedUser?.organizations.find(
-                                        (organization) => organization.isMain,
-                                      );
-                                    if (mainOrganization) {
-                                      defaultOrganization = {
-                                        label: mainOrganization.name,
-                                        value: String(mainOrganization.id),
-                                      };
-                                    } else {
-                                      if (
-                                        authenticatedUser?.organizations
-                                          .length &&
-                                        authenticatedUser?.organizations
-                                          .length > 0
-                                      ) {
-                                        defaultOrganization = {
-                                          label:
-                                            authenticatedUser?.organizations[0]
-                                              .name,
-                                          value: String(
-                                            authenticatedUser?.organizations[0]
-                                              .id,
-                                          ),
-                                        };
-                                      }
-                                    }
-                                    if (!organizationId) {
-                                      if (selectedOrganization) {
-                                        params.set(
-                                          'organization',
-                                          selectedOrganization.value as string,
-                                        );
-                                      } else {
-                                        if (
-                                          defaultOrganization.label &&
-                                          defaultOrganization.value
-                                        ) {
-                                          setSelectedOrganization({
-                                            label: defaultOrganization.label,
-                                            value: defaultOrganization.value,
-                                          });
-
-                                          params.set(
-                                            'organization',
-                                            defaultOrganization.value as string,
-                                          );
-                                        }
-                                      }
-                                    }
-                                    params.set('tabId', '1');
-
-                                    router.push(
-                                      `${item.href}?${params.toString()}`,
-                                    );
-                                  }
+                                if (isChatFilesUploading) {
+                                  setPendingPageChange(item.href);
+                                  setPendingNavigationType(
+                                    PendingNavigationType.TEAM_DOCK,
+                                  );
+                                  setShowWarningChatUploadingModal(true);
+                                  return;
                                 }
+                                handleNavigateToTeamDockPage(item.href);
                               }}>
                               {item.iconUrl && (
                                 <ImageRound
@@ -677,7 +694,7 @@ const Sidebar = ({ className }: Props) => {
           </nav>
           {memberOption && (
             <div
-              className={`absolute ${expanded ? 'bottom-[40px]' : 'bottom-[40px]'}  left-0 w-full`}>
+              className={`absolute ${expanded ? 'bottom-[60px]' : 'bottom-[60px]'}  left-0 w-full`}>
               <ul
                 role="list"
                 className="flex max-h-20 flex-col gap-y-6 list-none">
@@ -698,8 +715,15 @@ const Sidebar = ({ className }: Props) => {
                           className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                           onClick={() => {
                             if (isHasTerm) return;
-
-                            router.push(memberOption.href);
+                            if (isChatFilesUploading) {
+                              setPendingPageChange(memberOption.href);
+                              setPendingNavigationType(
+                                PendingNavigationType.MEMBER,
+                              );
+                              setShowWarningChatUploadingModal(true);
+                              return;
+                            }
+                            handleNavigateToMemberPage(memberOption.href);
                           }}>
                           {memberOption.iconUrl && (
                             <ImageRound
@@ -748,6 +772,28 @@ const Sidebar = ({ className }: Props) => {
           </div>
         </Tippy>
       </Tabs>
+
+      {showWarningChatUploadingModal && pendingPageChange && (
+        <ChatWarningUploadingFilesModal
+          open={showWarningChatUploadingModal}
+          onClose={() => {
+            setShowWarningChatUploadingModal(false);
+          }}
+          onConfirm={() => {
+            setShowWarningChatUploadingModal(false);
+            cancelUploadChatFiles();
+            if (pendingNavigationType == PendingNavigationType.MY_DOCK) {
+              handleNavigateToMyDockPage(pendingPageChange);
+            } else if (
+              pendingNavigationType == PendingNavigationType.TEAM_DOCK
+            ) {
+              handleNavigateToTeamDockPage(pendingPageChange);
+            } else if (pendingNavigationType == PendingNavigationType.MEMBER) {
+              handleNavigateToMemberPage(pendingPageChange);
+            }
+          }}
+        />
+      )}
     </aside>
   );
 };

@@ -541,6 +541,7 @@ const EditOrganizationSkillForm = () => {
                                   valueClassName="!w-[220px] !h-[46px] !rounded-lg !shadow-none"
                                   optionClassName="!w-[220px]"
                                   placeholder="選択してください"
+                                  minDropdownHeight={240}
                                   options={
                                     initialSkillOptions?.filter(
                                       (option) =>
@@ -650,6 +651,7 @@ const EditOrganizationSkillForm = () => {
                                 optionClassName="!w-[150px]"
                                 placeholder="選択してください"
                                 options={durationOptions || []}
+                                minDropdownHeight={240}
                                 selectedOption={
                                   durationOptions?.find(
                                     (element) =>
@@ -752,6 +754,7 @@ const EditOrganizationSkillForm = () => {
                                 optionClassName="!w-[150px]"
                                 placeholder="選択してください"
                                 options={durationOptions || []}
+                                minDropdownHeight={240}
                                 selectedOption={
                                   durationOptions?.find(
                                     (element) =>
@@ -854,6 +857,7 @@ const EditOrganizationSkillForm = () => {
                                 optionClassName="!w-[150px]"
                                 placeholder="選択してください"
                                 options={durationOptions || []}
+                                minDropdownHeight={240}
                                 selectedOption={
                                   durationOptions?.find(
                                     (element) =>

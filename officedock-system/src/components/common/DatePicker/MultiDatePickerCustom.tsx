@@ -118,13 +118,37 @@ const MultiDatePickerCustom = ({
 
     if (isTypeTime === TimeOptionsType.MORE) {
       if (start && isEndButtonClicked) {
-        setEndDate(end);
-        onChange && onChange(start, end);
+        let adjustedEnd = end;
+
+        if (end) {
+          const diffInTime = end.getTime() - start.getTime();
+          const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+          if (diffInDays > 366) {
+            adjustedEnd = new Date(start);
+            adjustedEnd.setDate(adjustedEnd.getDate() + 366);
+          }
+        }
+
+        setEndDate(adjustedEnd);
+        onChange && onChange(start, adjustedEnd);
         resetEndClick && resetEndClick();
       } else {
+        let adjustedEnd = end;
+
+        if (start && end) {
+          const diffInTime = end.getTime() - start.getTime();
+          const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+          if (diffInDays > 366) {
+            adjustedEnd = new Date(start);
+            adjustedEnd.setDate(adjustedEnd.getDate() + 366);
+          }
+        }
+
         setStartDate(start);
-        setEndDate(end);
-        onChange && onChange(start, end);
+        setEndDate(adjustedEnd);
+        onChange && onChange(start, adjustedEnd);
       }
     } else if (start && isEndButtonClicked) {
       const days = getDaysFromTimeOption(isTypeTime, start, true);

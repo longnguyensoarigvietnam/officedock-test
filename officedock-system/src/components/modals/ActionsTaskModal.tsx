@@ -1224,9 +1224,9 @@ const ActionsTaskModal = ({
                         setDataOptionsCategoryLarge([]);
                         setDataOptionsCategorySmall([]);
                         setDataOptionsCategoryMedium([]);
+                        setValue('tagIds', []);
                       }
                       setIsFormTouched(true);
-                      setValue('tagIds', []);
                       onChange(e);
                     }}
                   />
@@ -1360,6 +1360,7 @@ const ActionsTaskModal = ({
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
+                    noDataClass="w-[461px]"
                     labelOptionClass="break-words w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
@@ -1387,8 +1388,8 @@ const ActionsTaskModal = ({
                           return (
                             <div
                               key={tag.value}
-                              className="rounded-xl bg-[#EBF2F7] px-2.5 py-1.5 flex gap-2">
-                              <p>{tag.label}</p>
+                              className="rounded-xl max-w-[515px] bg-[#EBF2F7] px-2.5 py-1.5 flex gap-2">
+                              <p className="w-full break-all">{tag.label}</p>
                               <button
                                 type="button"
                                 className="text-gray-700 hover:text-gray-900"

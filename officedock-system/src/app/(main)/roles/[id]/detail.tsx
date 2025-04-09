@@ -2,8 +2,9 @@
 import React, { useContext, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
+import Link from 'next/link';
 
-import ViewInfo from '@components/common/ViewInfo';
+import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 
 import { SCREEN_LIST } from '@constants';
@@ -16,12 +17,10 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { RoleStateContext } from '@providers/RoleProvider';
 
 import useRoleDetail from '@hooks/useRoleDetail';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const DetailRoleTable = () => {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { expanded } = useContext(GlobalStateContext);
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
   const { dataRoleDetail, setDataRoleDetail } = useContext(RoleStateContext);
@@ -56,61 +55,78 @@ const DetailRoleTable = () => {
 
   return (
     <div>
-      <div className="mb-10">
-        <ViewInfo label="ロール名" className={`break-words ${expanded ? '!w-[calc(100%_-_200px)]' : '!w-[calc(100%_-_60px)]'}`}>{dataRoleDetail?.name} </ViewInfo>
-      </div>
-      <div className="flex flex-col h-[calc(100%_-_95px)] justify-between">
-        <div
-          className={`max-h-[calc(100vh_-_380px)] ring-1 ring-gray-200 overflow-x-auto rounded-tl-2xl rounded-tr-2xl bg-white`}>
-          <div className=" bg-[#F3F4F6] flex w-full sticky top-0 z-10 rounded-tl-2xl rounded-tr-2xl ring-1 ring-gray-200 [&>div]:bg-[#F3F4F6]">
-            <div className="w-1/5 h-12 flex items-center justify-center"></div>
-            <div className="w-1/5 h-12 flex items-center justify-center text-center">
-              閲覧
-            </div>
-            <div className="w-1/5 h-12 flex items-center justify-center text-center">
-              追加
-            </div>
-            <div className="w-1/5 h-12 flex items-center justify-center text-center">
-              更新
-            </div>
-            <div className="w-1/5 h-12 flex items-center justify-center text-center">
-              削除
-            </div>
-          </div>
-          {dataRoleDetail?.permissions.map((permission, index) => {
-            return (
-              <div
-                key={index}
-                className="flex w-full bg-white relative border-b-[1px]">
-                <div className="w-1/5 flex items-center justify-start pl-2 border-r-[1px]">
-                  {SCREEN_LIST.find(
-                    (screen) => screen.value == permission.screenName,
-                  )?.name || ''}
-                </div>
-                <div className="w-1/5 px-3 flex items-center justify-center py-2 border-r-[1px]">
-                  {permission.actions.view || '-'}
-                </div>
-                <div className="w-1/5 px-3 flex items-center justify-center py-2 border-r-[1px]">
-                  {permission.actions.add || '-'}
-                </div>
-                <div className="w-1/5 px-3 flex items-center justify-center py-2 border-r-[1px]">
-                  {permission.actions.update || '-'}
-                </div>
-                <div className="w-1/5 px-3 flex items-center justify-center py-2">
-                  {permission.actions.delete || '-'}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div className="w-full flex items-center flex-col my-8">
-          <Button
-            className="w-[426px]"
-            variant="secondary"
-            type="button"
+      <div className="flex items-center justify-between w-full mb-5">
+        <div className="flex items-center gap-5 w-full">
+          <p className="text-black font-medium text-[26px]">権限管理</p>
+          <div
+            className="flex gap-2 items-center hover:cursor-pointer"
             onClick={() => router.push(pageRouters.ROLES_MANAGEMENT.href)}>
-            戻る
+            <ImageRound
+              name="Back"
+              src={'/icons/back-to-list.svg'}
+              className="w-[15px] h-[15px] hover:cursor-pointer"
+            />
+            <p className="text-sm font-medium text-[#77858F]">権限一覧に戻る</p>
+          </div>
+        </div>
+        <Link href={pageRouters.EDIT_ROLE.href(`${params.id}`)}>
+          <Button variant="primary" className="w-[100px] !p-0 !h-[34px]">
+            編集
           </Button>
+        </Link>
+      </div>
+      <div
+        className="bg-[#F8FAFC] rounded-[14px] p-5"
+        style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
+        <p className="text-[#77858F] font-medium text-[16px] mb-5 break-all max-w-[100%]">
+          {dataRoleDetail?.name}
+        </p>
+        <div className="flex flex-col h-[calc(100%_-_95px)] justify-between">
+          <div
+            className={`max-h-[calc(100vh_-_350px)] ring-1 ring-gray-200 overflow-x-auto rounded-lg bg-white`}>
+            <div className=" bg-[#F8FAFC] flex w-full sticky top-0 z-10 rounded-tl-lg rounded-tr-lg ring-1 ring-gray-200 [&>div]:bg-[#F8FAFC]">
+              <div className="w-1/3 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
+                対応機能
+              </div>
+              <div className="w-1/3 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
+                閲覧
+              </div>
+              <div className="h-12  pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs hidden">
+                追加
+              </div>
+              <div className="w-1/3 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
+                編集
+              </div>
+              <div className="h-12  pl-4 text-center text-[#77858F] font-medium text-xs hidden">
+                削除
+              </div>
+            </div>
+            {dataRoleDetail?.permissions.map((permission, index) => {
+              return (
+                <div
+                  key={index}
+                  className="flex w-full bg-white relative border-b-[1px]">
+                  <div className="w-1/3 flex items-center justify-start pl-4 py-3 border-r-[1px] text-[16px] font-medium">
+                    {SCREEN_LIST.find(
+                      (screen) => screen.value == permission.screenName,
+                    )?.name || ''}
+                  </div>
+                  <div className="w-1/3 px-3 flex items-center justify-start py-3 border-r-[1px] text-sm font-medium">
+                    {permission.actions.view || '-'}
+                  </div>
+                  <div className="px-3 py-3 border-r-[1px] text-sm font-medium hidden">
+                    {permission.actions.add || '-'}
+                  </div>
+                  <div className="w-1/3 px-3 flex items-center justify-start py-3 border-r-[1px] text-sm font-medium">
+                    {permission.actions.update || '-'}
+                  </div>
+                  <div className="px-3 py-3 text-sm font-medium hidden">
+                    {permission.actions.delete || '-'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

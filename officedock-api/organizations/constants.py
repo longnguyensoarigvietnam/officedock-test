@@ -27,3 +27,12 @@ class CategoryColors(EnumChoices):
     LIGHT_BLUE = "#45AFD9"
     LIGHT_PURPLE = "#899FEB"
     GRAY = "#83919E"
+
+
+class OrganizationTypes(EnumChoices):
+    """
+    Organization type constants.
+    """
+
+    NORMAL = "NORMAL"
+    PROJECT = "PROJECT"

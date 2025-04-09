@@ -218,7 +218,7 @@ const LineChart = ({
     `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 50}px`;
+    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 60}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
   };
@@ -256,6 +256,11 @@ const LineChart = ({
         hoverRadius: 5,
       },
     },
+    datasets: {
+      line: {
+        clip: false,
+      },
+    },
     scales: {
       x: {
         ticks: {
@@ -283,7 +288,6 @@ const LineChart = ({
       y: {
         position: 'right',
         min: 0,
-        suggestedMin: 0,
         ticks: {
           color: '#77858F',
           font: {

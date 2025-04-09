@@ -303,6 +303,7 @@ const CreateSkillMapForm = () => {
                                       String(element.value) ===
                                       String(row.skillId),
                                   )}
+                                  minDropdownHeight={240}
                                   placeholder="スキル"
                                   options={
                                     dataOptionsSkill?.filter(

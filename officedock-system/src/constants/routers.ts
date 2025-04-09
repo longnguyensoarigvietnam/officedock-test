@@ -78,6 +78,14 @@ export const pageRouters = {
     name: '組織詳細',
     href: (id: string) => `/organizations/${id}`,
   },
+  ORGANIZATION_HIERARCHY: {
+    name: 'チーム管理',
+    href: '/organizations/hierarchies',
+  },
+  ORGANIZATION_HIERARCHY_EDIT: {
+    name: 'チーム管理',
+    href: '/organizations/hierarchies/edit',
+  },
   // TAG
   TAGS_MANAGEMENT: {
     name: '集計タグ管理',
@@ -319,6 +327,7 @@ export const apiRouters = {
   ORGANIZATION_SKILLS: '/organization-skills',
   ORGANIZATION_SKILL_DELETE: (id: string) => `/organization-skills/${id}/`,
   ORGANIZATION_SKILL_DETAIL: (id: string) => `/organizations/${id}/skills/`,
+  ORGANIZATION_HIERARCHY: '/organizations/hierarchy/',
 
   // CREATE DATA
   ORGANIZATION_CREATION: '/creation-data/organization/',
@@ -335,7 +344,7 @@ export const apiRouters = {
 
   // USER
   USER_LIST: '/users/',
-  USER_DETAIL: (id: string) => `/users/${id}/`,
+  USER_DETAIL: (id: string | number) => `/users/${id}/`,
   TAG_LIST: '/tags/',
   HIDDEN_TAG_LIST: '/tags/list-hidden',
   TAG_DETAIL: (id: string) => `/tags/${id}/`,

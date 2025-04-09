@@ -7,6 +7,7 @@ from common.constants import (
     ALLOW_IMAGE_FORMATS,
     ORGANIZATION_ICON_FOLDER_UPLOAD,
 )
+from organizations.constants import OrganizationTypes
 
 
 class Organization(BaseModel):
@@ -24,6 +25,11 @@ class Organization(BaseModel):
         blank=True,
     )
     name = models.CharField(max_length=255)
+    type = models.CharField(
+        max_length=50,
+        choices=OrganizationTypes.choices(),
+        default=OrganizationTypes.NORMAL.value,
+    )
     company = models.ForeignKey(
         "companies.Company",
         related_name="organizations",

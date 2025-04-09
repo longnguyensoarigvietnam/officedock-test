@@ -54,7 +54,7 @@ interface BoardKanbanProps {
     TaskRequest,
     unknown
   >;
-  handleActionEditTask: (id: number, type?: string) => void
+  handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   pinItemToTop: (itemId: string | number) => void;
@@ -102,8 +102,6 @@ const BoardKanban = ({
     );
 
   const handleExtendColumn = async (tabVisibility: Record<string, boolean>) => {
-    return null;
-    // TODO: Update save extend
     const { data: response } = await api.post(apiRouters.USER_SETTING, {
       tabVisibility,
     });

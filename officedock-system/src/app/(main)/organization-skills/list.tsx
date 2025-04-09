@@ -261,7 +261,7 @@ const ListOrganizationSkills = () => {
                     {element.skill}
                   </td>
                   <td className="w-20">
-                    <div className="flex w-full gap-2 justify-center">
+                    <div className="flex w-full gap-2 justify-center items-center">
                       <Link
                         href={pageRouters.DETAIL_ORGANIZATION_SKILL.href(
                           `${element.organization.id}`,
@@ -272,7 +272,7 @@ const ListOrganizationSkills = () => {
                         <ImageRound
                           name="Detail"
                           src={'/icons/detail.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
+                          className="w-5 h-5 hover:cursor-pointer"
                         />
                       </Link>
                       {element.actions?.update ? (
@@ -286,7 +286,7 @@ const ListOrganizationSkills = () => {
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit.svg'}
-                            className={`w-6 h-6 hover:cursor-pointer`}
+                            className={`w-3.5 h-3.5 hover:cursor-pointer`}
                           />
                         </Link>
                       ) : (
@@ -296,7 +296,7 @@ const ListOrganizationSkills = () => {
                         <ImageRound
                           name="Delete"
                           src={'/icons/delete.svg'}
-                          className={`w-6 h-6 hover:cursor-pointer`}
+                          className={`w-[13px] h-[15px] hover:cursor-pointer`}
                           onClick={() =>
                             handleOpenDeleteOrganizationSkillModal(element.id)
                           }

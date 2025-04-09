@@ -198,7 +198,11 @@ const ChatDetail = ({
     setChatRoomNotifications,
   } = useContext(ChatContext);
   const { setIsLoading } = useContext(LoadingContext);
-  const { setTotalNotifications } = useContext(GlobalStateContext);
+  const {
+    abortChatSendingMessageControllerRef,
+    setIsChatFilesUploading,
+    setTotalNotifications,
+  } = useContext(GlobalStateContext);
   const { showToast } = useToast();
 
   const [msgIdDeleted, setMsgIdDeleted] = useState<string>();
@@ -959,49 +963,56 @@ const ChatDetail = ({
     fileUuid: string,
     messageUuid: string,
     totalChunksOfAllFiles: number,
-    uploadedChunksRef: { current: number }
+    uploadedChunksRef: { current: number },
   ) => {
     const chunkSize = getChunkSize(file.size);
     const totalChunks = Math.ceil(file.size / chunkSize);
-  
-    for (let batchStart = 0; batchStart < totalChunks; batchStart += BATCH_FILE_SIZE) {
+
+    for (
+      let batchStart = 0;
+      batchStart < totalChunks;
+      batchStart += BATCH_FILE_SIZE
+    ) {
       const batchEnd = Math.min(batchStart + BATCH_FILE_SIZE, totalChunks);
-      
-      const uploadPromises = Array.from({ length: batchEnd - batchStart }, async (_, i) => {
-        const chunkIndex = batchStart + i;
-        const start = chunkIndex * chunkSize;
-        const end = Math.min(start + chunkSize, file.size);
-        const chunk = file.slice(start, end);
-  
-        const formData = new FormData();
-        formData.append("fileUuid", fileUuid);
-        formData.append("fileName", file.name);
-        formData.append("fileType", file.type);
-        formData.append("fileSize", file.size.toString());
-        formData.append("chunkIndex", chunkIndex.toString());
-        formData.append("totalChunks", totalChunks.toString());
-        formData.append("chunkFile", chunk);
-  
-        try {
-          await api.post(apiRouters.CHAT_UPLOAD_CHUNK, formData);
-          uploadedChunksRef.current += 1;
-  
-          const percentCompleted = Math.round(
-            (uploadedChunksRef.current / totalChunksOfAllFiles) * 100
-          );
-  
-          setUploadFileStatus((prev) => ({
-            ...prev,
-            [messageUuid]: { progress: Math.min(percentCompleted, 99) },
-          }));
-        } catch (error) {
-          setUploadFileStatus((prev) => ({
-            ...prev,
-            [messageUuid]: { progress: 0 },
-          }));
-        }
-      });
-  
+
+      const uploadPromises = Array.from(
+        { length: batchEnd - batchStart },
+        async (_, i) => {
+          const chunkIndex = batchStart + i;
+          const start = chunkIndex * chunkSize;
+          const end = Math.min(start + chunkSize, file.size);
+          const chunk = file.slice(start, end);
+
+          const formData = new FormData();
+          formData.append('fileUuid', fileUuid);
+          formData.append('fileName', file.name);
+          formData.append('fileType', file.type);
+          formData.append('fileSize', file.size.toString());
+          formData.append('chunkIndex', chunkIndex.toString());
+          formData.append('totalChunks', totalChunks.toString());
+          formData.append('chunkFile', chunk);
+
+          try {
+            await api.post(apiRouters.CHAT_UPLOAD_CHUNK, formData);
+            uploadedChunksRef.current += 1;
+
+            const percentCompleted = Math.round(
+              (uploadedChunksRef.current / totalChunksOfAllFiles) * 100,
+            );
+
+            setUploadFileStatus((prev) => ({
+              ...prev,
+              [messageUuid]: { progress: Math.min(percentCompleted, 99) },
+            }));
+          } catch (error) {
+            setUploadFileStatus((prev) => ({
+              ...prev,
+              [messageUuid]: { progress: 0 },
+            }));
+          }
+        },
+      );
+
       // Wait for the current batch to finish before proceeding
       try {
         await Promise.all(uploadPromises);
@@ -1009,10 +1020,10 @@ const ChatDetail = ({
         return false;
       }
     }
-  
+
     return true;
   };
-  
+
   const postSendMsg = async ({
     data,
     uuid,
@@ -1034,12 +1045,20 @@ const ChatDetail = ({
     }, 0);
 
     const uploadedChunksRef = { current: 0 };
+    const abortController = new AbortController();
+    abortChatSendingMessageControllerRef.current = abortController;
 
     try {
       await Promise.all(
         files.map((file, i) =>
-          uploadFileInChunks(file, fileUuids[i], uuid, totalChunks, uploadedChunksRef)
-        )
+          uploadFileInChunks(
+            file,
+            fileUuids[i],
+            uuid,
+            totalChunks,
+            uploadedChunksRef,
+          ),
+        ),
       );
     } catch {
       return;
@@ -1052,18 +1071,23 @@ const ChatDetail = ({
     mentionIds.forEach((id) => formData.append('mentionIds', id.toString()));
     taskIds.forEach((id) => formData.append('taskIds', id.toString()));
     fileUuids.forEach((id) => formData.append('fileUuids', id.toString()));
-    const { data: response } = await api.post(
-      apiRouters.CHAT_MESSAGES(`${chatRoomCode}`),
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+    try {
+      const { data: response } = await api.post(
+        apiRouters.CHAT_MESSAGES(`${chatRoomCode}`),
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          signal: abortController.signal,
         },
-      },
-    );
-    return response;
+      );
+      return response;
+    } finally {
+      abortChatSendingMessageControllerRef.current = null;
+    }
   };
-  
+
   const { mutate: handleSendMsgChat } = useMutation(postSendMsg, {
     onSuccess: async (_data, variables) => {
       setUploadFileStatus((prev) => ({
@@ -1078,7 +1102,9 @@ const ChatDetail = ({
       }));
       showErrorToast(error, ERROR_SAVE_MESSAGE);
     },
-    onSettled: () => {},
+    onSettled: () => {
+      setIsChatFilesUploading(false);
+    },
   });
 
   const handleConfirmSendMessage = () => {
@@ -1153,6 +1179,9 @@ const ChatDetail = ({
     editor.commands.clearContent();
     setMentionMembers([]);
     setQuoteTaskList([]);
+    if(uploadFiles.length > 0){
+      setIsChatFilesUploading(true);
+    }
     handleSendMsgChat({
       data: newMsg,
       uuid: uuidMsg,
@@ -1209,8 +1238,14 @@ const ChatDetail = ({
     try {
       await Promise.all(
         data.files.map((file, i) =>
-          uploadFileInChunks(file, data.fileUuids[i], data.uuid, totalChunks, uploadedChunksRef)
-        )
+          uploadFileInChunks(
+            file,
+            data.fileUuids[i],
+            data.uuid,
+            totalChunks,
+            uploadedChunksRef,
+          ),
+        ),
       );
     } catch {
       return;
@@ -1235,7 +1270,7 @@ const ChatDetail = ({
     );
     return response;
   };
-  
+
   const { mutate: handleUpdateMsgChat } = useMutation(postUpdateMsg, {
     onSuccess: async (_data, variables) => {
       setUploadFileStatus((prev) => ({
@@ -1251,6 +1286,7 @@ const ChatDetail = ({
     },
     onSettled: () => {
       setMessage('');
+      setIsChatFilesUploading(false);
     },
   });
 
@@ -1278,12 +1314,18 @@ const ChatDetail = ({
         ...prev,
         [uuid]: { progress: 0 },
       }));
+      if([...uploadFiles, ...preserveFiles].length > 0){
+        setIsChatFilesUploading(true);
+      }
       handleUpdateMsgChat({
         message: trimUnnecessaryLineBreaks(`${message}`) as string,
         uuid: uuid,
         mentionIds,
         files: uploadFiles.map((file) => file.file),
-        fileUuids: [...uploadFiles.map((file) => file.uuid), ...preserveFiles.map((file) => file.uuid)],
+        fileUuids: [
+          ...uploadFiles.map((file) => file.uuid),
+          ...preserveFiles.map((file) => file.uuid),
+        ],
       });
     }
   };

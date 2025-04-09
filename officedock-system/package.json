@@ -41,9 +41,9 @@
     "chartjs-plugin-datalabels": "^2.2.0",
     "cross-env": "^7.0.3",
     "date-fns": "^3.6.0",
-    "express": "^4.21.2",
     "echarts": "^5.6.0",
     "echarts-for-react": "^3.0.2",
+    "express": "^4.21.2",
     "html2canvas": "^1.4.1",
     "http-proxy": "^1.18.1",
     "japanese-holidays": "^1.0.10",
@@ -69,9 +69,10 @@
     "react-rnd": "^10.4.11",
     "react-select": "^5.8.0",
     "react-textarea-autosize": "^8.5.3",
-    "sharp": "^0.33.5",
     "recharts": "^2.15.1",
+    "sharp": "^0.33.5",
     "tinycolor2": "^1.6.0",
+    "tree-model": "^1.0.7",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

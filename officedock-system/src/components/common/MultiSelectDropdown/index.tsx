@@ -29,6 +29,7 @@ type Props = {
   placeholder?: string;
   searchOption?: boolean;
   selectedOptions?: OptionDropdownType[];
+  noDataClass?: string;
   onChange?: (value: OptionDropdownType) => void;
 };
 const MultiSelectDropdown = ({
@@ -48,6 +49,7 @@ const MultiSelectDropdown = ({
   valueClassName,
   optionClassName,
   selectedOptions,
+  noDataClass,
   onChange,
 }: Props) => {
   const [selected, setSelected] = useState<OptionDropdownType[] | undefined>(
@@ -127,7 +129,7 @@ const MultiSelectDropdown = ({
           </>
         ))
       ) : (
-        <div className="block py-2 px-3 text-sm text-gray-500">
+        <div className={`block py-2 px-3 text-sm text-center text-gray-500 ${noDataClass}`}>
           {NO_DATA_AVAILABLE}
         </div>
       )}

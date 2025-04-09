@@ -69,7 +69,7 @@ export enum ItemStartType {
   TASK = 'TASK',
   SCHEDULE_ACTUAL = 'SCHEDULE-ACTUAL',
   TEMPLATE = 'TEMPLATE',
-  FIXED_TASK = 'FIXED_TASK'
+  FIXED_TASK = 'FIXED_TASK',
 }
 export enum ItemScheduleType {
   PLANS = '1',
@@ -412,19 +412,19 @@ export enum TimeOptionsType {
   YEAR = '1年',
   MORE = 'カスタム',
 }
-export enum TaskRepetitiveType{
+export enum TaskRepetitiveType {
   ONCE = '繰り返さない',
   DAILY = '毎日',
   WEEKLY = '毎週',
   MONTHLY = '毎月',
-  YEARLY = '毎年'
+  YEARLY = '毎年',
 }
 export enum TaskRepetitiveValue {
   ONCE = 'ONCE',
   DAILY = 'DAILY',
   WEEKLY = 'WEEKLY',
   MONTHLY = 'MONTHLY',
-  YEARLY = 'YEARLY'
+  YEARLY = 'YEARLY',
 }
 export enum ScheduleType {
   PLAN = 'PLAN',
@@ -441,4 +441,9 @@ export enum StatisticViewLabels {
   MONTH = '月',
   WEEK = '週',
   DAY = '日',
+}
+export enum PendingNavigationType {
+  MY_DOCK = 'MY_DOCK',
+  TEAM_DOCK = 'TEAM_DOCK',
+  MEMBER = 'MEMBER',
 }

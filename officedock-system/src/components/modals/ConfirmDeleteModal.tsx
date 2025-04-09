@@ -2,12 +2,14 @@ import { memo } from 'react';
 
 import Modal from '../common/Modal';
 import Button from '../common/Button';
+import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 export type ConfirmDeleteModalProps = {
   open: boolean;
   name?: string;
   type: string;
   message?: string;
+  userColor?: string;
   onConfirm: () => void;
   onClose: () => void;
 };
@@ -17,6 +19,7 @@ const ConfirmDeleteModal = memo(
     open,
     name,
     type,
+    userColor,
     message,
     onConfirm,
     onClose,
@@ -24,19 +27,36 @@ const ConfirmDeleteModal = memo(
     return (
       <Modal
         open={open}
-        className="font-primary bg-white w-[515px] !rounded-xl py-4"
+        className="font-primary bg-white w-[500px] !rounded-lg py-[30px]"
         isOutSideAction={false}
         onClose={onClose}>
-        <p className="text-black font-medium break-all text-[16px] mb-5 text-center">
-          {name}
-        </p>
+        {name && (
+          <div className="flex items-center justify-center gap-[5px] mb-7">
+            {userColor && (
+              <div className="w-[34px] h-[34px]">
+                <AvatarIconWithDynamicColor
+                  color={userColor}
+                  size={34}
+                  customClassName="relative top-[0px]"
+                />
+              </div>
+            )}
+            <p className="text-black font-medium break-all line-clamp-3 text-[15px] text-center">
+              {name}
+            </p>
+          </div>
+        )}
         <div className="text-center mb-10">
-          <p className="text-sm text-black leading-6 text-neutral-02 mb-1">{`この${type}を本当に削除しますか？`}</p>
-          <p className="text-[#77858F] font-normal text-[13px]">{message}</p>
+          <p className="text-sm text-black leading-6 text-neutral-02">{`この${type}を本当に削除しますか？`}</p>
+          <p className="text-[#77858F] font-normal text-[13px] mt-[10px]">
+            {message}
+          </p>
         </div>
-
-        <div className="flex justify-center gap-3 mb-3 items-center">
-          <Button variant="outline" onClick={onClose} className="w-[110px]">
+        <div className="flex justify-center gap-3  items-center">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="w-[100px] h-[36px] text-[13px] !px-0">
             キャンセル
           </Button>
           <Button
@@ -44,7 +64,7 @@ const ConfirmDeleteModal = memo(
             onClick={() => {
               onConfirm();
             }}
-            className={`w-[110px]`}>
+            className={`w-[100px] h-[36px]`}>
             OK
           </Button>
         </div>

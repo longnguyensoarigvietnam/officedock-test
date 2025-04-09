@@ -22,6 +22,7 @@ from skills.models import StatisticCategory, SkillMap
 from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
 from organizations.utils import get_high_level_organizations
+from organizations.constants import OrganizationTypes
 from .filters import OrganizationFilter, OrganizationSkillFilter
 from .serializers import (
     OrganizationCategoryHierarchyForCreateSerializer,
@@ -133,6 +134,11 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Get the company from the logged in user and assign it to the organization
         serializer.save(company=self.request.user.company)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("has_children", type=bool, required=False),
+        ],
+    )
     @action(
         methods=["GET", "POST"],
         detail=False,
@@ -144,28 +150,115 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Handle hierarchy organization
         """
         if request.method == "GET":
-            orgs = (
-                self.get_queryset()
-                .order_by("id")
-                .values_list("id", "superior_id")
+            has_children = (
+                request.query_params.get("has_children", "").lower() == "true"
+            )
+            order_file = "updated_at" if has_children else "-id"
+            queryset = self.get_queryset().order_by(order_file)
+            orgs = queryset.filter(
+                type=OrganizationTypes.NORMAL.value
+            ).values_list("id", "superior_id")
+            org_has_children, org_no_children = get_high_level_organizations(
+                orgs
             )
 
+            if not has_children:
+                return self.response_ok(
+                    {
+                        "organization_not_hierarchies": OrganizationHierarchySerializer(
+                            org_no_children,
+                            many=True,
+                            context={"request": request},
+                        ).data,
+                    }
+                )
+
+            project_organizations = queryset.filter(
+                type=OrganizationTypes.PROJECT.value
+            ).all()
+
             return self.response_ok(
-                OrganizationHierarchySerializer(
-                    get_high_level_organizations(orgs),
-                    many=True,
-                    context={"request": request},
-                ).data
+                {
+                    "organization_hierarchies": OrganizationHierarchySerializer(
+                        org_has_children,
+                        many=True,
+                        context={"request": request},
+                    ).data,
+                    "project_organizations": OrganizationHierarchySerializer(
+                        project_organizations,
+                        many=True,
+                        context={"request": request},
+                    ).data,
+                }
             )
 
         elif request.method == "POST":
+
+            def _create_or_update(uuid):
+                """
+                Handle create or update organization
+                """
+                if uuid in created_map:
+                    return created_map[uuid]  # Already processed
+
+                org_data = org_map.get(uuid)
+                if not org_data:
+                    return Organization.objects.filter(
+                        uuid=uuid
+                    ).first()  # already exists
+
+                parent_uuid = org_data.pop("parent_uuid", None)
+                parent = None
+
+                if parent_uuid:
+                    parent = _create_or_update(
+                        parent_uuid
+                    )  # Recursive: create parent first
+
+                # Update if exists
+                org_instance = Organization.objects.filter(uuid=uuid).first()
+                if org_instance:
+                    for key, value in org_data.items():
+                        setattr(org_instance, key, value)
+                    org_instance.superior = parent
+                    org_instance.save()
+                else:
+                    org_instance = Organization.objects.create(
+                        **org_data,
+                        superior=parent,
+                        company=request.user.company,
+                    )
+
+                created_map[uuid] = org_instance
+                return org_instance
+
+            # Handle logic create organization hierarchy
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer_data = serializer.validated_data
-            serializer_data.pop("organizations", None)
-            serializer_data.pop("delete_ids", None)
+            validated_data = serializer.validated_data
 
-            # TODO: Implement logic create organization hierarchy
+            organizations = validated_data.get("organizations", [])
+            delete_uuids = validated_data.get("delete_uuids", [])
+
+            # Build a map of uuid to data
+            org_map = {
+                org["uuid"]: org for org in organizations if "uuid" in org
+            }
+            created_map = {}  # Track created/updated objects by uuid
+
+            for uuid in org_map:
+                _create_or_update(uuid)
+
+            # Handle delete
+            if delete_uuids:
+                if not isinstance(delete_uuids, list):
+                    delete_uuids = [delete_uuids]
+
+                orgs = Organization.objects.filter(uuid__in=delete_uuids).all()
+                for org in orgs:
+                    if org.icon:
+                        org.icon.delete()
+                orgs.delete()
 
             return self.response_ok()
 
@@ -211,8 +304,21 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 }
             )
 
+        # Handle remove hierarchy in children
+        descendant_ids = []
+
+        def _get_children(instance):
+            children = instance.organizations.all()
+            for child in children:
+                descendant_ids.append(child.id)
+                _get_children(child)
+
+        _get_children(instance)
+        Organization.objects.filter(id__in=descendant_ids).update(superior=None)
+
         # Remove icon
-        instance.icon.delete()
+        if instance.icon:
+            instance.icon.delete()
 
         return super().perform_destroy(instance)
 

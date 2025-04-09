@@ -333,7 +333,7 @@ const LineChartCompare = ({
     `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 70}px`;
+    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 120}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
   };
@@ -371,6 +371,11 @@ const LineChartCompare = ({
         hoverRadius: 5,
       },
     },
+    datasets: {
+      line: {
+        clip: false,
+      },
+    },
     scales: {
       x: {
         ticks: {
@@ -393,7 +398,6 @@ const LineChartCompare = ({
       y: {
         position: 'right',
         min: 0,
-        suggestedMin: 0,
         ticks: {
           color: '#77858F',
           font: {
@@ -1300,20 +1304,21 @@ const LineChartCompare = ({
                     });
                   }}
                   disableItems={getDisabledViews()}
+                  disabled={true}
                 />
               </div>
             </div>
           </div>
+          <div
+            style={{ position: 'relative' }}
+            className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
+            <Line data={lineChartData} options={options} />
             <div
-              style={{ position: 'relative' }}
-              className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
-              <Line data={lineChartData} options={options} />
-              <div
-                ref={tooltipRef}
-                style={{ position: 'absolute', opacity: 0 }}
-              />
-            </div>
-          <div className='px-[30px]'>
+              ref={tooltipRef}
+              style={{ position: 'absolute', opacity: 0 }}
+            />
+          </div>
+          <div className="px-[30px]">
             <div className="flex gap-8 items-center justify-end mb-3">
               <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
                 基準

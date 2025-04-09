@@ -338,7 +338,7 @@ const LineChartCompare = ({
       `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 70}px`;
+    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 120}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
   };
@@ -376,6 +376,11 @@ const LineChartCompare = ({
         hoverRadius: 5,
       },
     },
+    datasets: {
+      line: {
+        clip: false,
+      },
+    },
     scales: {
       x: {
         ticks: {
@@ -398,7 +403,6 @@ const LineChartCompare = ({
       y: {
         position: 'right',
         min: 0,
-        suggestedMin: 0,
         ticks: {
           color: '#77858F',
           font: {
@@ -1322,6 +1326,7 @@ const LineChartCompare = ({
                     });
                   }}
                   disableItems={getDisabledViews()}
+                  disabled={true}
                 />
               </div>
             </div>

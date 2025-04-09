@@ -320,7 +320,9 @@ const ListOrganizations = () => {
             </Button>
           )}
       </div>
-      <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]">
+      <div
+        className="w-full p-5 bg-[#F8FAFC] rounded-[14px]"
+        style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
         <Table className="bg-white !rounded-lg relative table-fixed">
           <TableHeader className="!bg-[#F8FAFC]">
             <th className="text-left w-[calc(100%_-_50px)]">
@@ -334,7 +336,7 @@ const ListOrganizations = () => {
             {dataOrganizations && dataOrganizations.length ? (
               dataOrganizations.map((element, index) => (
                 <tr key={index} className="text-black">
-                  <td className="text-left w-full break-words max-w-[calc(100%_-_50px)] !box-border">
+                  <td className="text-left w-[calc(100%_-_50px)] max-w-[calc(100%_-_50px)]">
                     <div className="flex justify-between items-center gap-3 ">
                       {selectedOrganizationToUpdate.uuid == element.uuid &&
                       selectedOrganizationToUpdate.status ? (
@@ -343,8 +345,10 @@ const ListOrganizations = () => {
                             placeholder="チーム名を入力"
                             className={`!border-[1px] !border-[#77858F] ${selectedOrganizationToUpdate.showError && '!border-error'} !w-full !text-sm !h-[34px]`}
                             defaultValue={element.name}
-                            onBlur={() => {
-                              setIsCreate(false);
+                            onBlur={(e) => {
+                              if (e.target.value.length > 0) {
+                                setIsCreate(false);
+                              }
                             }}
                             onChange={(e) => {
                               setSelectedOrganizationToUpdate((prev) => {
@@ -357,9 +361,7 @@ const ListOrganizations = () => {
                           />
                         </div>
                       ) : (
-                        <p
-                          className="break-words text-[16px] font-medium text-[#000000]"
-                          style={{ width: 'inherit' }}>
+                        <p className="break-all max-w-[100%] text-[16px] font-medium text-[#000000]">
                           {element.name}
                         </p>
                       )}
@@ -372,7 +374,7 @@ const ListOrganizations = () => {
                         session?.user.permissions,
                         PermissionsSystem.ORGANIZATION_UPDATE,
                       ) ? (
-                        <div>
+                        <button disabled={isCreate}>
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit-gray.svg'}
@@ -389,7 +391,7 @@ const ListOrganizations = () => {
                               });
                             }}
                           />
-                        </div>
+                        </button>
                       ) : (
                         <div className="w-3.5"></div>
                       )}
@@ -403,6 +405,7 @@ const ListOrganizations = () => {
                           src={'/icons/delete-gray.svg'}
                           className="w-[13px] h-[15px] hover:cursor-pointer"
                           onClick={() => {
+                            setIsCreate(false);
                             if (
                               selectedOrganizationToUpdate.uuid ==
                                 element.uuid &&
@@ -446,38 +449,39 @@ const ListOrganizations = () => {
             )}
           </TableBody>
         </Table>
-      </div>
-      <div className="flex justify-center items-center w-full">
-        <div className="flex justify-center flex-1">
-          {dataOrganizations && dataOrganizations.length ? (
-            <Pagination
-              onChange={(pageNumber) => setCurrentPage(pageNumber)}
-              currentPage={currentPage}
-              totalPages={totalPages}
-            />
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-[66px]">
-            <Dropdown
-              options={PAGE_SIZE_OPTIONS}
-              selectedOption={PAGE_SIZE_OPTIONS.find(
-                (element) => element.value == pageSize,
-              )}
-              className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
-              classNameTextData="!text-xs"
-              classActive="!text-sm"
-              classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
-              labelOptionClass="!text-sm font-medium !pl-1.5"
-              onChange={(e) => {
-                setPageSize(Number(e.value));
-                setCurrentPage(1);
-              }}
-            />
+        <div className="flex justify-center items-center w-full mt-3">
+          <div className="flex justify-center flex-1">
+            {dataOrganizations && dataOrganizations.length ? (
+              <Pagination
+                onChange={(pageNumber) => setCurrentPage(pageNumber)}
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
+            ) : null}
           </div>
-          <p className="text-sm">件ずつ表示</p>
+          <div className="flex items-center gap-2">
+            <div className="w-[66px]">
+              <Dropdown
+                options={PAGE_SIZE_OPTIONS}
+                selectedOption={PAGE_SIZE_OPTIONS.find(
+                  (element) => element.value == pageSize,
+                )}
+                className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
+                classNameTextData="!text-xs"
+                classActive="!text-sm"
+                classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
+                labelOptionClass="!text-sm font-medium !pl-1.5"
+                onChange={(e) => {
+                  setPageSize(Number(e.value));
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+            <p className="text-sm">件ずつ表示</p>
+          </div>
         </div>
       </div>
+
       <ConfirmDeleteModal
         open={openConfirmDeleteModal}
         name={selectedOrganizationToDelete?.name || ''}

@@ -8,7 +8,9 @@ const DetailRolePage = () => {
   return (
     <MainLayout
       title={pageRouters.DETAIL_ROLE.name}
-      permission={PermissionsSystem.ROLE_VIEW}>
+      permission={PermissionsSystem.ROLE_VIEW}
+      className="pl-8 pt-8 !bg-[#EBF1F7]"
+      showFooter={false}>
       <div className="flex flex-col gap-6 h-full">
         <DetailRoleTable />
       </div>

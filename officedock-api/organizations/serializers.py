@@ -9,6 +9,7 @@ from roles.utils import has_permission
 from skills.models import StatisticCategory, Skill, SkillMap
 from users.models import User
 from common.constants import ORGANIZATION_ICON_UPLOAD_MAX_SIZE
+from organizations.constants import OrganizationTypes
 from .models import (
     Organization,
     OrganizationsStatisticCategories,
@@ -319,15 +320,71 @@ class OrganizationSerializer(BaseOrganizationSerializer):
         return self._is_subordinate(superior.superior, organization)
 
 
+class BaseOrganizationHierarchySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Organization.
+    """
+
+    parent_uuid = serializers.UUIDField(
+        write_only=True, allow_null=True, required=False
+    )
+    uuid = serializers.UUIDField(
+        write_only=True, allow_null=True, required=False
+    )
+
+    class Meta:
+        model = Organization
+        fields = ["id", "uuid", "type", "name", "icon", "parent_uuid"]
+
+
 class OrganizationHierarchyForCreateSerializer(serializers.Serializer):
     """
     Serializer for the Organization  hierarchy create multi.
     """
 
-    organizations = OrganizationSerializer(many=True, required=False)
-    delete_ids = serializers.ListField(
-        child=serializers.IntegerField(), allow_null=True, required=False
+    organizations = BaseOrganizationHierarchySerializer(
+        many=True, required=False
     )
+    delete_uuids = serializers.ListField(
+        child=serializers.UUIDField(), allow_null=True, required=False
+    )
+
+    def validate(self, data):
+        """
+        Validate that parent_uuid exists in db or is in the incoming list
+        """
+        organizations = data.get("organizations", [])
+        incoming_uuids = {
+            item.get("uuid") for item in organizations if item.get("uuid")
+        }
+
+        for org in organizations:
+            parent_uuid = org.get("parent_uuid")
+            if parent_uuid:
+                exists_in_db = Organization.objects.filter(
+                    uuid=parent_uuid
+                ).exists()
+                will_be_created = parent_uuid in incoming_uuids
+                if not exists_in_db and not will_be_created:
+                    raise serializers.ValidationError(
+                        {
+                            "detail": ERROR_MESSAGES[
+                                "organization_uuid_not_exists"
+                            ].format(parent_uuid=parent_uuid)
+                        }
+                    )
+
+                type = org.get("type")
+                if type and type == OrganizationTypes.PROJECT.value:
+                    raise serializers.ValidationError(
+                        {
+                            "detail": ERROR_MESSAGES[
+                                "organization_team_not_hierarchy"
+                            ]
+                        }
+                    )
+
+        return data
 
 
 class OrganizationHierarchySerializer(serializers.ModelSerializer):
@@ -335,11 +392,20 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
     Serializer for Tag struct model
     """
 
+    parent_uuid = serializers.SerializerMethodField()
     children = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "icon", "children"]
+        fields = [
+            "id",
+            "uuid",
+            "parent_uuid",
+            "type",
+            "name",
+            "icon",
+            "children",
+        ]
 
     def get_children(self, obj):
         """
@@ -358,6 +424,12 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
             many=True,
             context=self.context,
         ).data
+
+    def get_parent_uuid(self, obj):
+        """
+        Handle get parent uuid
+        """
+        return obj.superior.uuid if obj.superior else None
 
 
 class OrganizationDetailSerializer(OrganizationSerializer):

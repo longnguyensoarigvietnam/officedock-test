@@ -25,8 +25,8 @@ export type ActionsTagModalProps = {
   open: boolean;
   dataTag?: Tags | null;
   action?: string | null;
-  dataOrganizationList: OptionDropdownType[]
-  onDelete?: (values: TagFormData) => void;
+  dataOrganizationList: OptionDropdownType[];
+  onDelete?: (values: Tags) => void;
   onClose: () => void;
   onCreate?: (values: TagFormData) => void;
   onEdit?: (values: TagFormData) => void;
@@ -42,7 +42,6 @@ const ActionsTagModal = ({
   onDelete,
   onCreate,
 }: ActionsTagModalProps) => {
-  
   const { data: session } = useSession();
 
   const {
@@ -64,12 +63,14 @@ const ActionsTagModal = ({
     };
     if (dataTag) {
       (value.name = `${dataTag.name}`),
-        (value.organizations = dataTag.organizations ? dataTag.organizations.map((org) => {
-          return {
-            label: org.name,
-            value: Number(org.id),
-          };
-        }) : []);
+        (value.organizations = dataTag.organizations
+          ? dataTag.organizations.map((org) => {
+              return {
+                label: org.name,
+                value: Number(org.id),
+              };
+            })
+          : []);
     }
     return value;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,9 +89,8 @@ const ActionsTagModal = ({
     }
   };
 
-  const handleDeleteEvent = () => {
-    const data = getValues();
-    onDelete && onDelete(data as TagFormData);
+  const handleDeleteTag = () => {
+    onDelete && onDelete(dataTag as Tags);
   };
 
   const handleCloseModal = () => {
@@ -113,7 +113,7 @@ const ActionsTagModal = ({
   return (
     <Drawer
       open={open}
-      className="font-primary bg-white w-[700px] !px-0 !rounded-tl-xl"
+      className="font-primary bg-white !h-screen w-[700px] !px-0 !rounded-tl-xl"
       onClose={handleCloseModal}>
       <header
         className="px-8 rounded-tl-xl h-[50px] flex items-center justify-between"
@@ -139,7 +139,7 @@ const ActionsTagModal = ({
                 className="mt-1 w-[14px] h-[17px] hover:cursor-pointer"
                 src="/icons/delete-event.svg"
                 name="Delete icon"
-                onClick={handleDeleteEvent}
+                onClick={handleDeleteTag}
               />
             )}
 
@@ -154,23 +154,96 @@ const ActionsTagModal = ({
           />
         </div>
       </header>
-      <form
-        onSubmit={handleSubmit(onSubmitData)}
-        className="px-8 pb-8 max-h-[calc(100vh_-_150px)] overflow-y-auto">
-        <header className="flex sticky z-[100] top-[0px] py-5 items-center gap-2 justify-between bg-white">
-          <div className="w-full">
-            <Input
-              autoCompleteInput
-              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
-              register={register('name', {
-                required: watch('name') !== null ? true : false,
-              })}
-              placeholder="新規タグ"
-              error={errors.name?.message}
-              disabled={isDisabled}
-            />
+      <div className="flex flex-col h-full">
+        <form
+          onSubmit={handleSubmit(onSubmitData)}
+          className="px-8 pb-8 h-full overflow-y-auto">
+          <header className="flex sticky z-[100] top-[0px] py-5 items-center gap-2 justify-between bg-white">
+            <div className="w-full">
+              <Input
+                autoCompleteInput
+                className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
+                register={register('name', {
+                  required: watch('name') !== null ? true : false,
+                })}
+                placeholder="新規タグ"
+                error={errors.name?.message}
+                disabled={isDisabled}
+              />
+            </div>
+            <div className="flex gap-2 items-center">
+              {session?.user.permissions &&
+                ((action === ActionsEvent.EDIT &&
+                  hasPermissionInArray(
+                    session?.user.permissions,
+                    PermissionsSystem.TAG_UPDATE,
+                  )) ||
+                  (action === ActionsEvent.CREATE &&
+                    hasPermissionInArray(
+                      session?.user.permissions,
+                      PermissionsSystem.TAG_ADD,
+                    ))) && (
+                  <Button
+                    type="submit"
+                    className="w-[82px] h-[36px] !text-[12px] !px-2">
+                    保存
+                  </Button>
+                )}
+              <Button
+                variant="outline"
+                type="button"
+                onClick={onClose}
+                className="w-[82px] !rounded-md  h-[34px] !text-[12px] !px-2">
+                キャンセル
+              </Button>
+            </div>
+          </header>
+          <div className="text-xs font-normal flex flex-col gap-4">
+            <div className="flex gap-3 items-center">
+              <p className="!w-fit font-medium text-[14px] whitespace-nowrap">
+                表示するチーム
+              </p>
+              <div className="w-full">
+                <MultiSelectDropdown
+                  className="!h-[34px]"
+                  disabled={isDisabled}
+                  valueClassName="!border-[1px] !border-[#77858F]"
+                  options={dataOrganizationList}
+                  optionClassName="!border-[1px] !border-[#77858F]"
+                  labelClass="max-w-[460px]"
+                  labelOptionClass="w-[460px]"
+                  customLabel={
+                    (watch('organizations') ?? [])
+                      .filter((org: OptionDropdownType) => org.value)
+                      .map((org: OptionDropdownType) => org.label)
+                      .join('/ ') || UNREGISTERED
+                  }
+                  selectedOptions={watch('organizations') ?? []}
+                  onChange={(selected) => {
+                    let updatedOrganizations = [];
+                    const currentOrganizations =
+                      getValues('organizations') || [];
+                    const foundItemIndex = currentOrganizations.findIndex(
+                      (org: OptionDropdownType) => org.value == selected.value,
+                    );
+                    if (foundItemIndex == -1) {
+                      updatedOrganizations = [
+                        ...currentOrganizations,
+                        selected,
+                      ];
+                    } else {
+                      updatedOrganizations = currentOrganizations.filter(
+                        (org: OptionDropdownType) =>
+                          org.value != selected.value,
+                      );
+                    }
+                    setValue('organizations', updatedOrganizations);
+                  }}
+                />
+              </div>
+            </div>
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex justify-center mt-8">
             {session?.user.permissions &&
               ((action === ActionsEvent.EDIT &&
                 hasPermissionInArray(
@@ -184,77 +257,13 @@ const ActionsTagModal = ({
                   ))) && (
                 <Button
                   type="submit"
-                  className="w-[82px] h-[36px] !text-[12px] !px-2">
+                  className="w-[200px] h-[46px] !text-[15px]">
                   保存
                 </Button>
               )}
-            <Button
-              variant="outline"
-              type="button"
-              onClick={onClose}
-              className="w-[82px] !rounded-md  h-[34px] !text-[12px] !px-2">
-              キャンセル
-            </Button>
           </div>
-        </header>
-        <div className="text-xs font-normal flex flex-col gap-4">
-          <div className="flex gap-3 items-center">
-            <p className="!w-fit font-medium text-[14px] whitespace-nowrap">
-              表示するチーム
-            </p>
-            <div className="w-full">
-              <MultiSelectDropdown
-                className="!h-[34px]"
-                disabled={isDisabled}
-                valueClassName="!border-[1px] !border-[#77858F]"
-                options={dataOrganizationList}
-                optionClassName="!border-[1px] !border-[#77858F]"
-                labelClass="max-w-[460px]"
-                labelOptionClass='w-[460px]'
-                customLabel={
-                  (watch('organizations') ?? [])
-                    .filter((org: OptionDropdownType) => org.value)
-                    .map((org: OptionDropdownType) => org.label)
-                    .join('/ ') || UNREGISTERED
-                }
-                selectedOptions={watch('organizations') ?? []}
-                onChange={(selected) => {
-                  let updatedOrganizations = [];
-                  const currentOrganizations = getValues('organizations') || [];
-                  const foundItemIndex = currentOrganizations.findIndex(
-                    (org: OptionDropdownType) => org.value == selected.value,
-                  );
-                  if (foundItemIndex == -1) {
-                    updatedOrganizations = [...currentOrganizations, selected];
-                  } else {
-                    updatedOrganizations = currentOrganizations.filter(
-                      (org: OptionDropdownType) => org.value != selected.value,
-                    );
-                  }
-                  setValue('organizations', updatedOrganizations);
-                }}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-center mt-8">
-          {session?.user.permissions &&
-            ((action === ActionsEvent.EDIT &&
-              hasPermissionInArray(
-                session?.user.permissions,
-                PermissionsSystem.TAG_UPDATE,
-              )) ||
-              (action === ActionsEvent.CREATE &&
-                hasPermissionInArray(
-                  session?.user.permissions,
-                  PermissionsSystem.TAG_ADD,
-                ))) && (
-              <Button type="submit" className="w-[200px] h-[46px] !text-[15px]">
-                保存
-              </Button>
-            )}
-        </div>
-      </form>
+        </form>
+      </div>
     </Drawer>
   );
 };
