@@ -381,11 +381,12 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
     Serializer for Tag struct model
     """
 
+    parent_uuid = serializers.SerializerMethodField()
     children = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "name", "icon", "children"]
+        fields = ["id", "uuid", "parent_uuid", "name", "icon", "children"]
 
     def get_children(self, obj):
         """
@@ -404,6 +405,12 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
             many=True,
             context=self.context,
         ).data
+
+    def get_parent_uuid(self, obj):
+        """
+        Handle get parent uuid
+        """
+        return obj.superior.uuid if obj.superior else None
 
 
 class OrganizationDetailSerializer(OrganizationSerializer):
