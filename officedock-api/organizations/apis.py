@@ -22,6 +22,7 @@ from skills.models import StatisticCategory, SkillMap
 from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
 from organizations.utils import get_high_level_organizations
+from organizations.constants import OrganizationTypes
 from .filters import OrganizationFilter, OrganizationSkillFilter
 from .serializers import (
     OrganizationCategoryHierarchyForCreateSerializer,
@@ -152,20 +153,43 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             has_children = (
                 request.query_params.get("has_children", "").lower() == "true"
             )
-            orgs = (
-                self.get_queryset()
-                .order_by("updated_at")
-                .values_list("id", "superior_id")
-            )
+            order_file = "updated_at" if has_children else "-id"
+            queryset = self.get_queryset().order_by(order_file)
+            orgs = queryset.filter(
+                type=OrganizationTypes.NORMAL.value
+            ).values_list("id", "superior_id")
             org_has_children, org_no_children = get_high_level_organizations(
                 orgs
             )
+
+            if not has_children:
+                return self.response_ok(
+                    {
+                        "organization_not_hierarchies": OrganizationHierarchySerializer(
+                            org_no_children,
+                            many=True,
+                            context={"request": request},
+                        ).data,
+                    }
+                )
+
+            project_organizations = queryset.filter(
+                type=OrganizationTypes.PROJECT.value
+            ).all()
+
             return self.response_ok(
-                OrganizationHierarchySerializer(
-                    org_has_children if has_children else org_no_children,
-                    many=True,
-                    context={"request": request},
-                ).data
+                {
+                    "organization_hierarchies": OrganizationHierarchySerializer(
+                        org_has_children,
+                        many=True,
+                        context={"request": request},
+                    ).data,
+                    "project_organizations": OrganizationHierarchySerializer(
+                        project_organizations,
+                        many=True,
+                        context={"request": request},
+                    ).data,
+                }
             )
 
         elif request.method == "POST":

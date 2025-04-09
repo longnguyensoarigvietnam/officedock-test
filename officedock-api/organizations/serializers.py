@@ -9,6 +9,7 @@ from roles.utils import has_permission
 from skills.models import StatisticCategory, Skill, SkillMap
 from users.models import User
 from common.constants import ORGANIZATION_ICON_UPLOAD_MAX_SIZE
+from organizations.constants import OrganizationTypes
 from .models import (
     Organization,
     OrganizationsStatisticCategories,
@@ -333,7 +334,7 @@ class BaseOrganizationHierarchySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "name", "icon", "parent_uuid"]
+        fields = ["id", "uuid", "type", "name", "icon", "parent_uuid"]
 
 
 class OrganizationHierarchyForCreateSerializer(serializers.Serializer):
@@ -373,6 +374,16 @@ class OrganizationHierarchyForCreateSerializer(serializers.Serializer):
                         }
                     )
 
+                type = org.get("type")
+                if type and type == OrganizationTypes.PROJECT.value:
+                    raise serializers.ValidationError(
+                        {
+                            "detail": ERROR_MESSAGES[
+                                "organization_team_not_hierarchy"
+                            ]
+                        }
+                    )
+
         return data
 
 
@@ -386,7 +397,15 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "parent_uuid", "name", "icon", "children"]
+        fields = [
+            "id",
+            "uuid",
+            "parent_uuid",
+            "type",
+            "name",
+            "icon",
+            "children",
+        ]
 
     def get_children(self, obj):
         """
