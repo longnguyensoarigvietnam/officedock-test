@@ -304,8 +304,21 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 }
             )
 
+        # Handle remove hierarchy in children
+        descendant_ids = []
+
+        def _get_children(instance):
+            children = instance.organizations.all()
+            for child in children:
+                descendant_ids.append(child.id)
+                _get_children(child)
+
+        _get_children(instance)
+        Organization.objects.filter(id__in=descendant_ids).update(superior=None)
+
         # Remove icon
-        instance.icon.delete()
+        if instance.icon:
+            instance.icon.delete()
 
         return super().perform_destroy(instance)
 
