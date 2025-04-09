@@ -35,13 +35,16 @@ export default function EditNode() {
   const [optionsTreeNode, setOptionsTreeNode] = useState<OptionDropdownType[]>(
     [],
   );
+  const [listProject, setListProject] = useState<ConfigNode[]>([]);
   const [defaultRoot, setDefaultRoot] = useState<ConfigNode[]>([]);
 
   useDetailHierarchiesOrganization({
     onSuccess: (data) => {
-      setDefaultRoot(data);
+      const dataTree = data.organizationHierarchies || [];
+
+      setDefaultRoot(dataTree);
       const tree = new TreeModel();
-      const clonedData = JSON.parse(JSON.stringify(data));
+      const clonedData = JSON.parse(JSON.stringify(dataTree));
       const rootConfig: ConfigNode = {
         uuid: 'root',
         name: 'root',
@@ -50,6 +53,8 @@ export default function EditNode() {
 
       const parsedTree = tree.parse(rootConfig);
       setRoot(parsedTree);
+      const dataProject = data.projectOrganizations || [];
+      setListProject(dataProject);
     },
   });
 
@@ -57,13 +62,36 @@ export default function EditNode() {
     useDetailHierarchiesOrganization({
       has_children: false,
       onSuccess: (data) => {
-        const list = data.map((item) => ({
-          label: item.name || '',
-          value: item.uuid,
-        }));
+        const list =
+          data.organizationNotHierarchies?.map((item) => ({
+            label: item.name || '',
+            value: item.uuid,
+          })) || [];
         setOptionsTreeNode(list);
       },
     });
+
+  // Handle add default
+  const handleAddNodeDefault = () => {
+    const dataTree: ConfigNode[] = [
+      {
+        uuid: uuidv4(),
+        value: 'treeNode',
+        name: 'チーム',
+        children: [],
+      },
+    ];
+    const tree = new TreeModel();
+    const clonedData = JSON.parse(JSON.stringify(dataTree));
+    const rootConfig: ConfigNode = {
+      uuid: 'root',
+      name: 'root',
+      children: clonedData,
+    };
+
+    const parsedTree = tree.parse(rootConfig);
+    setRoot(parsedTree);
+  };
 
   // Handle add child to node
   const addChildToNode = (targetUuId: string) => {
@@ -234,6 +262,7 @@ export default function EditNode() {
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
+        router.push(pageRouters.ORGANIZATION_HIERARCHY.href);
       },
       onError: () => {
         showToast({
@@ -251,14 +280,24 @@ export default function EditNode() {
     const dataOrganization = flattenTreeFromParsedRoot(root).filter(
       (item) => item.uuid,
     );
-    const dataOptions = optionsTreeNode.map((option) => ({
-      name: option.label,
-      uuid: option.value as string,
+    const dataProject = listProject
+      .map((pro) => ({ ...pro, type: 'PROJECT' }))
+      .filter((item) => item.value !== 'treeNode');
+    const dataOption = optionsTreeNode.map((item) => ({
+      name: item.label,
+      uuid: item.value as string,
+      type: 'NORMAL',
     }));
-    editHierarchyOrganization([...dataOptions, ...dataOrganization]);
+
+    editHierarchyOrganization([
+      ...dataProject,
+      ...dataOption,
+      ...dataOrganization,
+    ]);
   };
 
   const handleResetNode = () => {
+    router.push(pageRouters.ORGANIZATION_HIERARCHY.href);
     const tree = new TreeModel();
     const clonedData = JSON.parse(JSON.stringify(defaultRoot));
 
@@ -271,12 +310,39 @@ export default function EditNode() {
     const parsedTree = tree.parse(rootConfig);
     setRoot(parsedTree);
     if (dataOptionDefault) {
-      const list = dataOptionDefault.map((item) => ({
-        label: item.name || '',
-        value: item.uuid,
-      }));
+      const list =
+        dataOptionDefault.organizationHierarchies?.map((item) => ({
+          label: item.name || '',
+          value: item.uuid,
+        })) || [];
       setOptionsTreeNode(list);
     }
+  };
+
+  // Project hierarchy add team
+  const handleAddProjectTeam = () => {
+    const newItem: ConfigNode = {
+      uuid: uuidv4(),
+      name: 'チーム',
+      value: 'treeNode',
+      children: [],
+    };
+    setListProject([...listProject, newItem]);
+  };
+  // Project hierarchy update item
+  const updateItemProject = ({
+    uuid,
+    name,
+    value,
+  }: {
+    uuid: string;
+    name: string | null;
+    value: string;
+  }) => {
+    const newList = listProject.map((item) =>
+      item.uuid === uuid ? { ...item, name, value, uuid: value } : item,
+    );
+    setListProject(newList);
   };
 
   const isLastChild = (targetUuid: string): boolean => {
@@ -415,7 +481,7 @@ export default function EditNode() {
           <Button
             type="button"
             onClick={handleSaveChangeNode}
-            className="w-[100px] h-[34px] !text-[14px] !px-2 relative top-[4px]">
+            className="w-[100px] h-[34px] !text-[14px] !px-2 ">
             保存
           </Button>
         </div>
@@ -425,7 +491,25 @@ export default function EditNode() {
           チーム階層
         </p>
         <div className="hr-teams pb-5 w-fit ">
-          {root && <TeamItem items={root.model.children} itemNode={Parent} />}
+          {root && root.model.children.length === 0 ? (
+            <div
+              onClick={handleAddNodeDefault}
+              className="w-6 h-6 rounded-full ">
+              <Button
+                sz="sm"
+                variant="outline"
+                className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                type="button">
+                <ImageRound
+                  src="/icons/plus.svg"
+                  name="Add organization"
+                  className="h-3 w-3"
+                />
+              </Button>
+            </div>
+          ) : (
+            root && <TeamItem items={root.model.children} itemNode={Parent} />
+          )}
         </div>
       </div>
       <div className="bg-white p-[30px] w-full min-h-[190px] rounded-[14px] mb-10">
@@ -433,17 +517,76 @@ export default function EditNode() {
           プロジェクトチーム
         </p>
         <div className="flex flex-wrap gap-4 w-full">
-          {optionsTreeNode.map((item, index) => (
-            <div key={index} className="w-[204px]">
-              <Dropdown
-                options={optionsTreeNode}
-                className="h-[34px] !py-0  !rounded-md border !border-[#77858F]"
-                classNameOption="!z-[30]"
-                placeholder="チーム"
-                placeholderClass="!text-black text-sm font-normal"
-              />
+          {listProject.length > 0 ? (
+            listProject.map((item, index) => (
+              <div key={index} className="w-[204px] relative">
+                <Dropdown
+                  options={optionsTreeNode}
+                  className="h-[34px] !py-0  !rounded-md border !border-[#77858F]"
+                  classNameOption="!z-[30] top-[-228px]"
+                  placeholder="チーム"
+                  selectedOption={{
+                    label: item.name || '',
+                    value: item.uuid,
+                  }}
+                  placeholderClass="!text-black text-sm font-normal"
+                  onChange={(e) => {
+                    handleSelectChange({
+                      newSelected: {
+                        label: item.name || '',
+                        value:
+                          item.value && item.value === 'treeNode'
+                            ? item.value
+                            : item.uuid,
+                      },
+                      oldSelected: e,
+                    });
+                    updateItemProject({
+                      uuid: item.uuid,
+                      name: e.label,
+                      value: e.value as string,
+                    });
+                  }}
+                />
+                {index === listProject.length - 1 && (
+                  <div
+                    onClick={() => {
+                      if (item.value === 'treeNode') return;
+                      handleAddProjectTeam();
+                    }}
+                    className="absolute  z-[30] right-[-40px] top-[5px]  w-6 h-6 rounded-full ">
+                    <Button
+                      sz="sm"
+                      disabled={item.value === 'treeNode'}
+                      variant="outline"
+                      className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                      type="button">
+                      <ImageRound
+                        src="/icons/plus.svg"
+                        name="Add organization"
+                        className="h-3 w-3"
+                      />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="w-6 h-6 rounded-full ">
+              <Button
+                sz="sm"
+                onClick={handleAddProjectTeam}
+                variant="outline"
+                className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                type="button">
+                <ImageRound
+                  src="/icons/plus.svg"
+                  name="Add organization"
+                  className="h-3 w-3"
+                />
+              </Button>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </>

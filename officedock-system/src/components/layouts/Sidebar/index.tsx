@@ -22,7 +22,12 @@ import {
   SYSTEM_PERMISSIONS_MENU,
   SYSTEM_PERMISSIONS_MENU_TEAM,
 } from '@constants/menu';
-import { PendingNavigationType, PermissionsSystem, SocketActions, TabType } from '@constants/enums';
+import {
+  PendingNavigationType,
+  PermissionsSystem,
+  SocketActions,
+  TabType,
+} from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
 import { MenuItem } from '@interfaces/menu';
@@ -97,7 +102,8 @@ const Sidebar = ({ className }: Props) => {
   const [pendingPageChange, setPendingPageChange] = useState<string | null>(
     null,
   );
-  const [pendingNavigationType, setPendingNavigationType] = useState<PendingNavigationType | null>(null);
+  const [pendingNavigationType, setPendingNavigationType] =
+    useState<PendingNavigationType | null>(null);
 
   const MENU_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
     if (menu.requiredPermission === PermissionsSystem.VIEW_ALL) {
@@ -269,7 +275,7 @@ const Sidebar = ({ className }: Props) => {
       }
     }
     setPendingPageChange(null);
-    setPendingNavigationType(null)
+    setPendingNavigationType(null);
   };
 
   const handleNavigateToTeamDockPage = (href: string) => {
@@ -330,14 +336,14 @@ const Sidebar = ({ className }: Props) => {
       }
     }
     setPendingPageChange(null);
-    setPendingNavigationType(null)
+    setPendingNavigationType(null);
   };
 
   const handleNavigateToMemberPage = (href: string) => {
     router.push(href);
     setPendingPageChange(null);
-    setPendingNavigationType(null)
-  }
+    setPendingNavigationType(null);
+  };
 
   return (
     <aside
@@ -382,7 +388,9 @@ const Sidebar = ({ className }: Props) => {
                                 if (isHasTerm) return;
                                 if (isChatFilesUploading) {
                                   setPendingPageChange(item.href);
-                                  setPendingNavigationType(PendingNavigationType.MY_DOCK)
+                                  setPendingNavigationType(
+                                    PendingNavigationType.MY_DOCK,
+                                  );
                                   setShowWarningChatUploadingModal(true);
                                   return;
                                 }
@@ -490,11 +498,13 @@ const Sidebar = ({ className }: Props) => {
                             if (isHasTerm) return;
                             if (isChatFilesUploading) {
                               setPendingPageChange(memberOption.href);
-                              setPendingNavigationType(PendingNavigationType.MEMBER)
+                              setPendingNavigationType(
+                                PendingNavigationType.MEMBER,
+                              );
                               setShowWarningChatUploadingModal(true);
                               return;
                             }
-                            handleNavigateToMemberPage(memberOption.href)
+                            handleNavigateToMemberPage(memberOption.href);
                           }}>
                           {memberOption.iconUrl && (
                             <ImageRound
@@ -600,7 +610,9 @@ const Sidebar = ({ className }: Props) => {
                                 if (isHasTerm) return;
                                 if (isChatFilesUploading) {
                                   setPendingPageChange(item.href);
-                                  setPendingNavigationType(PendingNavigationType.TEAM_DOCK)
+                                  setPendingNavigationType(
+                                    PendingNavigationType.TEAM_DOCK,
+                                  );
                                   setShowWarningChatUploadingModal(true);
                                   return;
                                 }
@@ -685,7 +697,7 @@ const Sidebar = ({ className }: Props) => {
           </nav>
           {memberOption && (
             <div
-              className={`absolute ${expanded ? 'bottom-[40px]' : 'bottom-[40px]'}  left-0 w-full`}>
+              className={`absolute ${expanded ? 'bottom-[60px]' : 'bottom-[40px]'}  left-0 w-full`}>
               <ul
                 role="list"
                 className="flex max-h-20 flex-col gap-y-6 list-none">
@@ -708,11 +720,13 @@ const Sidebar = ({ className }: Props) => {
                             if (isHasTerm) return;
                             if (isChatFilesUploading) {
                               setPendingPageChange(memberOption.href);
-                              setPendingNavigationType(PendingNavigationType.MEMBER)
+                              setPendingNavigationType(
+                                PendingNavigationType.MEMBER,
+                              );
                               setShowWarningChatUploadingModal(true);
                               return;
                             }
-                            handleNavigateToMemberPage(memberOption.href)
+                            handleNavigateToMemberPage(memberOption.href);
                           }}>
                           {memberOption.iconUrl && (
                             <ImageRound
@@ -771,12 +785,14 @@ const Sidebar = ({ className }: Props) => {
           onConfirm={() => {
             setShowWarningChatUploadingModal(false);
             cancelUploadChatFiles();
-            if(pendingNavigationType == PendingNavigationType.MY_DOCK){
-              handleNavigateToMyDockPage(pendingPageChange)
-            } else if(pendingNavigationType == PendingNavigationType.TEAM_DOCK){
-              handleNavigateToTeamDockPage(pendingPageChange)
-            } else if(pendingNavigationType == PendingNavigationType.MEMBER){
-              handleNavigateToMemberPage(pendingPageChange)
+            if (pendingNavigationType == PendingNavigationType.MY_DOCK) {
+              handleNavigateToMyDockPage(pendingPageChange);
+            } else if (
+              pendingNavigationType == PendingNavigationType.TEAM_DOCK
+            ) {
+              handleNavigateToTeamDockPage(pendingPageChange);
+            } else if (pendingNavigationType == PendingNavigationType.MEMBER) {
+              handleNavigateToMemberPage(pendingPageChange);
             }
           }}
         />
