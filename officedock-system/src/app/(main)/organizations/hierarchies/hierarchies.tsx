@@ -14,21 +14,19 @@ export default function HierarchyOrganization() {
 
   useDetailHierarchiesOrganization({
     onSuccess: (data) => {
+      const dataTree = data.organizationHierarchies || [];
       const tree = new TreeModel();
       const rootConfig: ConfigNode = {
         uuid: 'root',
         name: 'root',
-        children: data,
+        children: dataTree,
       };
 
       const parsedTree = tree.parse(rootConfig);
       setRoot(parsedTree);
-    },
-  });
-  useDetailHierarchiesOrganization({
-    has_children: false,
-    onSuccess: (data) => {
-      setListItemRoot(data);
+
+      const dataProject = data.projectOrganizations || [];
+      setListItemRoot(dataProject);
     },
   });
 
@@ -65,8 +63,8 @@ export default function HierarchyOrganization() {
           {listItemRoot.map((item, index) => (
             <div
               key={index}
-              className="w-[204px] bg-[#0068B6] h-[34px] rounded-md text-white text-base font-medium flex items-center px-[10px] break-all">
-              {item.name}
+              className="w-[204px] bg-[#0068B6] h-[34px] rounded-md text-white text-base font-medium flex items-center px-[10px] truncate">
+              <p className="w-full truncate">{item.name}</p>
             </div>
           ))}
         </div>

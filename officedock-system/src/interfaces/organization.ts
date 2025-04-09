@@ -50,10 +50,16 @@ export type ConfigNode = {
   icon?: string;
   parentUuid?: string;
   children: ConfigNode[];
+  type?: string;
 };
 export type NodeDataRequest = {
   uuid: string;
   parentUuid?: string;
   name: string | null;
   icon?: string;
+};
+export type NodeResponsive = {
+  organizationHierarchies?: ConfigNode[];
+  projectOrganizations?: ConfigNode[];
+  organizationNotHierarchies?: ConfigNode[];
 };

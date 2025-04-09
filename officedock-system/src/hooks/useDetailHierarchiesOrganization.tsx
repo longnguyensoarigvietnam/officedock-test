@@ -7,12 +7,12 @@ import { AxiosError } from 'axios';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 import { LoadingContext } from '@providers/LoadingProvider';
-import { ConfigNode } from '@interfaces/organization';
+import { NodeResponsive } from '@interfaces/organization';
 
 interface UseDetailHierarchiesOrganizationHooksProps {
   condition?: boolean[];
   has_children?: boolean;
-  onSuccess?: (success: ConfigNode[]) => void;
+  onSuccess?: (success: NodeResponsive) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
@@ -33,7 +33,7 @@ const useDetailHierarchiesOrganization = ({
     setIsLoading(true);
     const apiUrl = `${apiRouters.ORGANIZATION_HIERARCHY}?has_children=${has_children}`;
 
-    const { data } = await api.get<ConfigNode[]>(apiUrl);
+    const { data } = await api.get<NodeResponsive>(apiUrl);
     return data;
   };
 
@@ -49,7 +49,7 @@ const useDetailHierarchiesOrganization = ({
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: ConfigNode[]) => {
+    onSuccess: (response: NodeResponsive) => {
       onSuccess && onSuccess(response);
     },
     onError: (error: AxiosError) => {

@@ -345,8 +345,10 @@ const ListOrganizations = () => {
                             placeholder="チーム名を入力"
                             className={`!border-[1px] !border-[#77858F] ${selectedOrganizationToUpdate.showError && '!border-error'} !w-full !text-sm !h-[34px]`}
                             defaultValue={element.name}
-                            onBlur={() => {
-                              setIsCreate(false);
+                            onBlur={(e) => {
+                              if (e.target.value.length > 0) {
+                                setIsCreate(false);
+                              }
                             }}
                             onChange={(e) => {
                               setSelectedOrganizationToUpdate((prev) => {
@@ -372,7 +374,7 @@ const ListOrganizations = () => {
                         session?.user.permissions,
                         PermissionsSystem.ORGANIZATION_UPDATE,
                       ) ? (
-                        <div>
+                        <button disabled={isCreate}>
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit-gray.svg'}
@@ -389,7 +391,7 @@ const ListOrganizations = () => {
                               });
                             }}
                           />
-                        </div>
+                        </button>
                       ) : (
                         <div className="w-3.5"></div>
                       )}
@@ -403,6 +405,7 @@ const ListOrganizations = () => {
                           src={'/icons/delete-gray.svg'}
                           className="w-[13px] h-[15px] hover:cursor-pointer"
                           onClick={() => {
+                            setIsCreate(false);
                             if (
                               selectedOrganizationToUpdate.uuid ==
                                 element.uuid &&
