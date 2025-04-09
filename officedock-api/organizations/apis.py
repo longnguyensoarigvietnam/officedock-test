@@ -154,7 +154,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
             orgs = (
                 self.get_queryset()
-                .order_by("-id")
+                .order_by("updated_at")
                 .values_list("id", "superior_id")
             )
             org_has_children, org_no_children = get_high_level_organizations(
