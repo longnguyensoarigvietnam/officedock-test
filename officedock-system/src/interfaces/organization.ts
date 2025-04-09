@@ -4,7 +4,7 @@ export interface Organizations {
   id?: number;
   name: string;
   userCount?: number;
-  superior?: Omit<Organizations, 'isMain' | "superior">;
+  superior?: Omit<Organizations, 'isMain' | 'superior'>;
   users?: Omit<Profile, 'birthday' | 'gender'>[];
   statisticCategories?: statisticCategories[];
   skills?: {
@@ -19,8 +19,8 @@ export interface Organizations {
   };
   isMain?: boolean;
   uuid?: string;
-  createdAt?: Date | string,
-  updatedAt?: Date | string
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface statisticCategories {
@@ -43,3 +43,17 @@ export interface statisticCategories {
   index: number;
   skills: Skill[];
 }
+export type ConfigNode = {
+  uuid: string;
+  value?: string;
+  name: string | null;
+  icon?: string;
+  parentUuid?: string;
+  children: ConfigNode[];
+};
+export type NodeDataRequest = {
+  uuid: string;
+  parentUuid?: string;
+  name: string | null;
+  icon?: string;
+};
