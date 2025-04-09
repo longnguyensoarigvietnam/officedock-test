@@ -143,7 +143,7 @@ const EditRoleForm = () => {
     return data;
   };
 
-  const { mutate: editRole } = useMutation('postEditRole', handleEditRole, {
+  const { mutate: editRole, isLoading: editRoleLoading } = useMutation('postEditRole', handleEditRole, {
     onSuccess: async () => {
       showToast({
         variant: 'success',
@@ -155,11 +155,14 @@ const EditRoleForm = () => {
       showErrorToast(error, ERROR_UPDATE_MESSAGE);
     },
     onSettled: () => {
-      setIsLoading(false);
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1000)
     },
   });
 
   const handleConfirmEditRole = (e: any) => {
+    if(editRoleLoading) return;
     e.preventDefault();
     if (roleName?.trim() == '') {
       setError(ROLE_NAME_REQUIRED_MESSAGE);
@@ -237,21 +240,21 @@ const EditRoleForm = () => {
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </div>
         <div
-          className={`max-h-[calc(100vh_-_320px)] ${expanded ? 'w-[calc(100vw_-_300px)] max-w-[1603px]' : 'w-[calc(100vw_-_162px)] max-w-[1677px]'} ring-1 ring-gray-200 overflow-x-auto rounded-lg bg-white`}>
-          <div className="grid grid-cols-[300px_350px_350px_350px_350px] bg-[#F8FAFC]  w-full sticky top-0 z-10 rounded-tl-lg rounded-tr-lg [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1] [&>div]:bg-[#F8FAFC] ">
-            <div className="w-[300px] sticky left-0 z-[9] h-12 flex items-center justify-start pl-3 text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
+          className={`max-h-[calc(100vh_-_320px)] ${expanded ? 'w-[calc(100vw_-_300px)] max-w-[1583px]' : 'w-[calc(100vw_-_170px)] max-w-[1577px]'} ring-1 ring-gray-200 overflow-x-auto rounded-lg bg-white`}>
+          <div className="grid grid-cols-[540px_500px_0px_500px_0px] bg-[#F8FAFC]  w-full sticky top-0 z-10 rounded-tl-lg rounded-tr-lg [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1] [&>div]:bg-[#F8FAFC] ">
+            <div className="w-[540px] sticky left-0 z-[9] h-12 flex items-center justify-start pl-3 text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
               対応機能
             </div>
-            <div className="w-[350px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
+            <div className="w-[500px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
               閲覧
             </div>
-            <div className="w-[350px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
+            <div className="w-[0px] h-12 pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1] hidden">
               追加
             </div>
-            <div className="w-[350px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
-              更新
+            <div className="w-[500px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
+            編集
             </div>
-            <div className="w-[350px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs">
+            <div className="w-[0px] h-12 pl-4 text-center text-[#77858F] font-medium text-xs hidden">
               削除
             </div>
           </div>
@@ -260,10 +263,10 @@ const EditRoleForm = () => {
               <div
                 key={index}
                 className="flex w-full bg-white relative [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1]">
-                <div className="min-w-[300px] flex items-center sticky left-0 z-[9] bg-white justify-start px-3 border-r-[1px] border-[#D2DBE1] text-[16px] font-medium ">
+                <div className="min-w-[540px] flex items-center sticky left-0 z-[9] bg-white justify-start px-3 border-r-[1px] border-[#D2DBE1] text-[16px] font-medium ">
                   <div className="w-full">{row.screenLabel}</div>
                 </div>
-                <div className="min-w-[350px] px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
+                <div className="min-w-[500px] px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
                   <TableDropdown
                     className="w-full !h-10"
                     valueClassName="rounded-[6px] !border-[#77858F]"
@@ -296,7 +299,7 @@ const EditRoleForm = () => {
                     }}
                   />
                 </div>
-                <div className="min-w-[350px] px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
+                <div className="min-w-[350px] hidden px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
                   <TableDropdown
                     className="w-full !h-10"
                     valueClassName="rounded-[6px] !border-[#77858F]"
@@ -329,7 +332,7 @@ const EditRoleForm = () => {
                     }}
                   />
                 </div>
-                <div className="min-w-[350px] px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
+                <div className="min-w-[500px] px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
                   <TableDropdown
                     className="w-full !h-10"
                     valueClassName="rounded-[6px] !border-[#77858F]"
@@ -362,7 +365,7 @@ const EditRoleForm = () => {
                     }}
                   />
                 </div>
-                <div className="min-w-[350px] px-3 z-[8] py-2">
+                <div className="min-w-[350px] hidden px-3 z-[8] py-2">
                   <TableDropdown
                     className="w-full !h-10"
                     valueClassName="rounded-[6px] !border-[#77858F]"

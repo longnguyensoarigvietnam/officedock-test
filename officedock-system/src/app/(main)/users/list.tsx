@@ -110,12 +110,16 @@ const ListUsers = () => {
 
   useCreationOrganization({
     onSuccess: (data) => {
-      setOrganizationUserOptions(
-        data.map((item) => ({
+      setOrganizationUserOptions([
+        {
+          label: '選択',
+          value: '',
+        },
+        ...data.map((item) => ({
           label: item.name,
           value: Number(item.id),
         })),
-      );
+      ]);
     },
   });
 
@@ -586,7 +590,7 @@ const ListUsers = () => {
         className="w-full relative p-[30px] mt-[30px] bg-[#F8FAFC] rounded-[14px]">
         <Table
           classCustom="!px-0 !py-0"
-          className="bg-[#F8FAFC] text-xs font-medium !text-[#77858F] !rounded-lg relative !py-0 !px-0">
+          className="bg-white text-xs font-medium !text-[#77858F] !rounded-lg relative !py-0 !px-0">
           <TableHeader classCustom=" [&>th]:text-xs [&>th]:border-r [&>th]:border-b [&>th]:border-[#D2DBE1] [&>th:last-child]:border-r-0">
             <th className="w-[220px] !text-[#77858F] text-left">
               <span>名前</span>
@@ -682,7 +686,7 @@ const ListUsers = () => {
             )}
           </TableBody>
         </Table>
-        <div className="flex justify-center items-center w-full">
+        <div className="flex justify-center items-center w-full mt-3">
           <div className="flex justify-center flex-1">
             {dataUsers && dataUsers.length ? (
               <Pagination

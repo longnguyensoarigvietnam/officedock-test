@@ -240,7 +240,7 @@ const ListRoles = () => {
             )}
           </TableBody>
         </Table>
-        <div className="flex justify-center items-center w-full">
+        <div className="flex justify-center items-center w-full mt-3">
           <div className="flex justify-center flex-1">
             {dataRoles && dataRoles.length ? (
               <Pagination

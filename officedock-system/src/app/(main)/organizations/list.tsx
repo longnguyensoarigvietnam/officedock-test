@@ -449,7 +449,7 @@ const ListOrganizations = () => {
             )}
           </TableBody>
         </Table>
-        <div className="flex justify-center items-center w-full">
+        <div className="flex justify-center items-center w-full mt-3">
           <div className="flex justify-center flex-1">
             {dataOrganizations && dataOrganizations.length ? (
               <Pagination
