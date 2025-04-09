@@ -1,0 +1,86 @@
+body * {
+  box-sizing: border-box;
+}
+
+.tree-custom-item {
+  transition: border-color 0.3s;
+  width: 220px;
+  height: 100%;
+}
+
+.hr-teams {
+  display: flex;
+  flex-direction: column;
+  min-width: 1000px;
+  gap: 20px;
+}
+
+.hr-teams .item {
+  display: flex;
+}
+
+.hr-teams .item__parent {
+  position: relative;
+  min-width: 150px;
+}
+
+.hr-teams .item__parent__line {
+  position: absolute;
+  width: 1px;
+  background-color: #ccc;
+  right: calc(100% + 20px);
+  z-index: 10;
+  transition: background-color 0.3s;
+}
+
+.hr-teams .item__parent__element {
+  min-width: 200px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.hr-teams .item__parent__element.has-children::after,
+.hr-teams .item__parent__element.has-parent::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 1px;
+  background-color: #ccc;
+  position: absolute;
+  z-index: 20;
+  transition: background-color 0.3s;
+}
+
+.hr-teams .item__parent__element.has-children::after {
+  left: 100%;
+}
+
+.hr-teams .item__parent__element.has-parent::before {
+  right: 100%;
+}
+
+.hr-teams
+  .item__parent.active
+  .item__parent__element.has-children.no-active-children::after {
+  background-color: #ccc;
+}
+
+.hr-teams .item__children {
+  margin-left: 40px;
+  position: relative;
+  flex: 1;
+}
+
+body[class^='currentapp_'] .hr-teams .item__parent__line.active,
+body[class^='currentapp_']
+  .hr-teams
+  .item__parent.active
+  .item__parent__element,
+body[class^='currentapp_'] .hr-teams .item__parent.active .tree-custom-item {
+  border-color: inherit;
+}
+
+body[class^='currentapp_'] .hr-teams .item__children.dragged-over {
+  background-color: rgba(0, 0, 0, 0.1);
+}
