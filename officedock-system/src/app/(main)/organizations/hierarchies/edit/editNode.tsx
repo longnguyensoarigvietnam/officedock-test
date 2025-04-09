@@ -523,7 +523,7 @@ export default function EditNode() {
                 <Dropdown
                   options={optionsTreeNode}
                   className="h-[34px] !py-0  !rounded-md border !border-[#77858F]"
-                  classNameOption="!z-[30] top-[-228px]"
+                  classNameOption={`!z-[30]  ${optionsTreeNode.length > 0 ? 'top-[-228px]' : 'top-[-70px]'}`}
                   placeholder="チーム"
                   selectedOption={{
                     label: item.name || '',

@@ -570,15 +570,15 @@ const ActionsUserModal = ({
                 <div className="w-full max-w-[110px] mt-[6px]">
                   メインチーム
                 </div>
-                <div className="w-full max-w-[518px]">
-                  <div className="flex gap-2 max-w-[518px]">
-                    <div className="max-w-[461px] w-full">
+                <div className="w-full">
+                  <div className="flex gap-2">
+                    <div className="w-full">
                       <Controller
                         control={control}
                         name={`mainOrganization`}
                         render={({ field: { value, onChange } }) => {
                           return (
-                            <div className="flex-1 min-w-0">
+                            <div className="max-w-[450px]">
                               <Dropdown
                                 options={unSelectedOrganizationOptions}
                                 selectedOption={originalOrganizationOptions.find(
@@ -597,9 +597,9 @@ const ActionsUserModal = ({
                                   });
                                 }}
                                 placeholderClass="!text-black text-sm font-normal"
-                                className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
+                                className="!h-[34px] w-[441px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                                 labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                                classNameOption="!text-sm"
+                                classNameOption="!text-sm w-[441px]"
                               />
                             </div>
                           );
@@ -623,9 +623,9 @@ const ActionsUserModal = ({
               {/* Sub teams */}
               <div className="flex gap-[10px] items-start">
                 <div className="w-full max-w-[110px] mt-2 text-[14px] font-medium">
-                  実施予定日時
+                サブチーム
                 </div>
-                <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
+                <div className="w-full flex flex-col gap-1 items-start ">
                   {fields.map((field, index) => (
                     <div className="flex gap-3 relative w-full" key={field.id}>
                       <div className="flex-1 min-w-0">
@@ -634,7 +634,7 @@ const ActionsUserModal = ({
                           name={`organizations.${index}`}
                           render={({ field: { value, onChange } }) => {
                             return (
-                              <div className="max-w-[485px]">
+                              <div className="max-w-[450px]">
                                 <Dropdown
                                   classActive="max-w-[100%]"
                                   options={unSelectedOrganizationOptions}
@@ -654,9 +654,9 @@ const ActionsUserModal = ({
                                     });
                                   }}
                                   placeholderClass="!text-black text-sm font-normal"
-                                  className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
+                                  className="!h-[34px] !w-[441px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                                   labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                                  classNameOption="!text-sm"
+                                  classNameOption="!text-sm !max-w-[441px]"
                                 />
                               </div>
                             );
@@ -713,7 +713,7 @@ const ActionsUserModal = ({
                 <div className="w-full max-w-[110px] mt-2 text-[14px] font-medium">
                   権限 <span className="text-error font-bold">{`*`}</span>
                 </div>
-                <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
+                <div className="flex flex-col gap-1 items-start w-full">
                   {fieldsRole.map((field, index) => (
                     <div className="flex gap-3 w-full" key={field.id}>
                       <Controller
