@@ -577,13 +577,10 @@ const Sidebar = ({ className }: Props) => {
                     </div>
                   ) : (
                     <div className="px-4 mb-2">
-                      {selectedOrganization?.imgComponent || {
-                        label: defaultOrganization?.label || '',
-                        value: defaultOrganization?.value || '',
-                        imgComponent: organizationList.find(
+                      {selectedOrganization?.imgComponent ||
+                        organizationList.find(
                           (org) => org.value == defaultOrganization?.value,
-                        )?.imgComponent,
-                      }}
+                        )?.imgComponent}
                     </div>
                   )}
 
@@ -697,7 +694,7 @@ const Sidebar = ({ className }: Props) => {
           </nav>
           {memberOption && (
             <div
-              className={`absolute ${expanded ? 'bottom-[60px]' : 'bottom-[40px]'}  left-0 w-full`}>
+              className={`absolute ${expanded ? 'bottom-[60px]' : 'bottom-[60px]'}  left-0 w-full`}>
               <ul
                 role="list"
                 className="flex max-h-20 flex-col gap-y-6 list-none">

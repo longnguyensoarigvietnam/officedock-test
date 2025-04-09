@@ -345,7 +345,7 @@ const ListSkillsMap = () => {
                   </td>
 
                   <td className="w-20">
-                    <div className="flex w-full gap-2 justify-center">
+                    <div className="flex w-full gap-2 justify-center items-center">
                       <Link
                         href={pageRouters.DETAIL_SKILL_MAPS.href(
                           `${element.id}`,
@@ -358,7 +358,7 @@ const ListSkillsMap = () => {
                         <ImageRound
                           name="Detail"
                           src={'/icons/detail.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
+                          className="w-5 h-5 hover:cursor-pointer"
                         />
                       </Link>
 
@@ -375,7 +375,7 @@ const ListSkillsMap = () => {
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit.svg'}
-                            className="w-6 h-6 hover:cursor-pointer"
+                            className="w-3.5 h-3.5 hover:cursor-pointer"
                           />
                         </Link>
                       ) : (
@@ -385,7 +385,7 @@ const ListSkillsMap = () => {
                         <ImageRound
                           name="Delete"
                           src={'/icons/delete.svg'}
-                          className={`w-6 h-6 hover:cursor-pointer`}
+                          className={`w-[13px] h-[15px] hover:cursor-pointer`}
                           onClick={() =>
                             handleOpenDeleteSkillsMapModal(
                               element.organization.id,

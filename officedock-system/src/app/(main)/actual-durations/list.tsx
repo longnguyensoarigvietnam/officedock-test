@@ -694,7 +694,7 @@ const ListActualDurations = () => {
                         <ImageRound
                           name="Detail"
                           src={'/icons/detail.svg'}
-                          className="w-6 h-6 hover:cursor-pointer"
+                          className="w-5 h-5 hover:cursor-pointer"
                         />
                       </Link>
                       {element.pausedAt ? (
@@ -706,7 +706,7 @@ const ListActualDurations = () => {
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit.svg'}
-                            className={`w-6 h-6 hover:cursor-pointer`}
+                            className={`w-3.5 h-3.5 hover:cursor-pointer`}
                           />
                         </Link>
                       ) : (
@@ -716,7 +716,7 @@ const ListActualDurations = () => {
                         <ImageRound
                           name="Delete"
                           src={'/icons/delete.svg'}
-                          className={`w-6 h-6 hover:cursor-pointer`}
+                          className={`w-[13px] h-[15px] hover:cursor-pointer`}
                           onClick={() =>
                             handleOpenDeleteActualDurationModal(element)
                           }
