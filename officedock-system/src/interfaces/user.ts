@@ -25,7 +25,6 @@ export interface UserAuth {
   accessToken?: string;
   refreshToken?: string;
   sessionId?: string;
-  organizations?: Organizations[];
   unreadTerms?: TermsStep[] | [];
 }
 
@@ -40,6 +39,7 @@ export interface User {
   loginType: string;
   username: string;
   email: string;
+  avatarColor: string;
   currentEvent?: {
     id: number;
     title: string;
@@ -68,6 +68,7 @@ export interface User {
     update: boolean;
     delete: boolean;
   };
+  createdAt?: Date | string;
 }
 
 export interface Profile {

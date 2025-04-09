@@ -8,7 +8,7 @@ import { apiRouters } from '@constants/routers';
 import { User } from '@interfaces/user';
 
 interface UseUserDetailHooksProps {
-  userId: string;
+  userId?: string | number;
   onSuccess?: (success: User) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -25,6 +25,7 @@ const useUserDetail = ({
 
   // Handle call API get User detail
   const getUserDetail = async () => {
+    if (!userId) return;
     const apiUrl = apiRouters.USER_DETAIL(userId);
 
     const { data } = await api.get<User>(apiUrl);
@@ -40,7 +41,7 @@ const useUserDetail = ({
     queryKey: ['getUserDetail', userId],
     queryFn: getUserDetail,
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && !!userId,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (response: User) => {

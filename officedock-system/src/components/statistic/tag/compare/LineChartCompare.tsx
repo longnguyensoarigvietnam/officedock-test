@@ -338,7 +338,7 @@ const LineChartCompare = ({
       `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 70}px`;
+    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 120}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
   };

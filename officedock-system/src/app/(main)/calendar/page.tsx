@@ -1,8 +1,9 @@
+import { Suspense } from 'react';
 import MainLayout from '@components/layouts/MainLayout';
 
 import { pageRouters } from '@constants/routers';
-import EventCalendar from './calendar';
 import { PermissionsSystem } from '@constants/enums';
+import EventCalendar from './calendar';
 
 const CalendarPage = () => {
   return (
@@ -12,7 +13,9 @@ const CalendarPage = () => {
       showFooter={false}
       permission={PermissionsSystem.CALENDAR_VIEW}>
       <div className="flex flex-col h-full">
-        <EventCalendar />
+        <Suspense>
+          <EventCalendar />
+        </Suspense>
       </div>
     </MainLayout>
   );

@@ -335,7 +335,7 @@ export const apiRouters = {
 
   // USER
   USER_LIST: '/users/',
-  USER_DETAIL: (id: string) => `/users/${id}/`,
+  USER_DETAIL: (id: string | number) => `/users/${id}/`,
   TAG_LIST: '/tags/',
   HIDDEN_TAG_LIST: '/tags/list-hidden',
   TAG_DETAIL: (id: string) => `/tags/${id}/`,

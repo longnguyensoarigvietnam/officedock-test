@@ -223,7 +223,7 @@ const LineChart = ({
       `;
 
     const { offsetLeft, offsetTop } = context.chart.canvas;
-    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 50}px`;
+    tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 60}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
   };

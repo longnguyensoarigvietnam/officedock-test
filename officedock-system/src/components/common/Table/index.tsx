@@ -40,7 +40,7 @@ export const Table = ({ children, className, classCustom }: TableProps) => {
       <div
         className={`overflow-x-auto min-w-full py-2 px-1 align-middle ${classCustom} `}>
         <div
-          className={`overflow-hidden ring-1 ring-gray-200 rounded-2xl ${className}`}>
+          className={`overflow-hidden border border-gray-300 rounded-2xl ${className}`}>
           <table className="min-w-full table-auto divide-y divide-gray-200 ">
             {children}
           </table>

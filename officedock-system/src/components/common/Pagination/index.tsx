@@ -214,7 +214,7 @@ const Pagination = ({
                     className={`${sizeClasses} ${styleTag} z-2 items-center ${
                       page === currentNumber
                         ? `bg-${variant} text-white font-normal`
-                        : 'bg-[#F1F2F4] text-[#6B7280]'
+                        : 'text-[#6B7280]'
                     }`}
                     onClick={() => onPageChange(page)}>
                     {page}
@@ -236,6 +236,7 @@ const Pagination = ({
             </a>
           )}
         </nav>
+
         {showTotal && (
           <p className="text-sm  text-[#6B7280]">ステータス : {totalPages}</p>
         )}

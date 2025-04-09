@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import MainLayout from '@components/layouts/MainLayout';
 import ListTags from './list';
 
@@ -12,7 +13,9 @@ const TagPage = () => {
       className="pl-8 pt-8 !overflow-x-auto !bg-[#EBF1F7]"
       showFooter={false}>
       <div className="flex flex-col gap-6">
-        <ListTags />
+        <Suspense>
+          <ListTags />
+        </Suspense>
       </div>
     </MainLayout>
   );

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import MainLayout from '@components/layouts/MainLayout';
 import ListOrganizations from './list';
 
@@ -15,7 +16,9 @@ const OrganizationPage = () => {
         <p className="text-black font-medium text-[26px]">チーム管理</p>
       </div>
       <div className="flex flex-col gap-6">
-        <ListOrganizations />
+        <Suspense>
+          <ListOrganizations />
+        </Suspense>
       </div>
     </MainLayout>
   );

@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import MainLayout from '@components/layouts/MainLayout';
 import ListUsers from './list';
 
@@ -8,9 +10,12 @@ const UsersPage = () => {
   return (
     <MainLayout
       title={pageRouters.USERS_MANAGEMENT.name}
-      permission={PermissionsSystem.USER_VIEW}>
-      <div className="flex flex-col gap-6">
-        <ListUsers />
+      permission={PermissionsSystem.USER_VIEW}
+      showFooter={false}>
+      <div className="flex flex-col gap-0 px-6 py-4">
+        <Suspense>
+          <ListUsers />
+        </Suspense>
       </div>
     </MainLayout>
   );
