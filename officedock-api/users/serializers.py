@@ -362,6 +362,7 @@ class UserSerializer(BaseUserSerializer):
             "unread_terms",
             "current_event",
             "avatar_color",
+            "created_at",
         ]
 
     def get_permissions(self, obj):

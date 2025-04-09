@@ -293,7 +293,7 @@ class TaskViewSet(
                             task=task,
                             is_update=False,
                         )
-                else:
+                elif organization:
                     # Create new index for task created with user
                     TaskIndex.objects.create(task=task, user=user)
 
@@ -1087,20 +1087,20 @@ class TaskViewSet(
         # Remove index when change organization
         if current_org != organization:
             TeamTaskIndex.objects.filter(team=current_org, task=task).delete()
-
-        for user in change_people_in_charge:
-            # Update last index team task if add new user
-            TeamTaskIndex.update_max_index_for_user(
-                team=organization, user=user, task=task, is_update=False
-            )
-            team_task_index = TeamTaskIndex.objects.filter(
-                team=organization, user=user, task=task
-            ).first()
-            # reset_sort_task(user) # TODO: Handle sort team task
-            # Reset pin at to now
-            if team_task_index and team_task_index.pin_at:
-                team_task_index.pin_at = timezone.now()
-                team_task_index.save()
+        if organization:
+            for user in change_people_in_charge:
+                # Update last index team task if add new user
+                TeamTaskIndex.update_max_index_for_user(
+                    team=organization, user=user, task=task, is_update=False
+                )
+                team_task_index = TeamTaskIndex.objects.filter(
+                    team=organization, user=user, task=task
+                ).first()
+                # reset_sort_task(user) # TODO: Handle sort team task
+                # Reset pin at to now
+                if team_task_index and team_task_index.pin_at:
+                    team_task_index.pin_at = timezone.now()
+                    team_task_index.save()
 
         # Update tags in task
         if tag_ids is not None:
