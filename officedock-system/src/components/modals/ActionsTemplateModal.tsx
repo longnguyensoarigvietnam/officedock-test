@@ -35,6 +35,9 @@ import {
   PermissionsSystem,
   TemplateAction,
 } from '@constants/enums';
+
+import { CategoryStructure } from '@interfaces/skills';
+import { Template, TemplateFormData } from '@interfaces/template';
 import { OptionDropdownType } from '@interfaces/common';
 import {
   CreationDataTask,
@@ -48,9 +51,8 @@ import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
-import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
-import { CategoryStructure } from '@interfaces/skills';
-import { Template, TemplateFormData } from '@interfaces/template';
+
+import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
 export type ActionTemplateModalProps = {
   open: boolean;
@@ -151,12 +153,14 @@ const ActionsTemplateModal = ({
     name: 'organization.value',
   });
 
-  const { refetchOrganizationStatisticCategories } =
-    useOrganizationStatisticCategories({
-      organizationId: Number(organizationValue),
-      condition: [Boolean(organizationValue)],
-      onSuccess: (data) => {
-        const organizationCategories = data.map((category) => {
+  const { refetchCreationDataStatistic } = useCreationDataStatisticTeam({
+    organization_id: organizationValue ? String(organizationValue) : '',
+    isTeam: true,
+    onSuccess: (data) => {
+      if (!data) return;
+
+      const organizationCategories = data.organization.statisticCategories.map(
+        (category) => {
           const largeCategory = category.LARGE || {
             id: NO_OPTION_CATEGORY,
             name: NO_OPTION_CATEGORY,
@@ -185,34 +189,41 @@ const ActionsTemplateModal = ({
             LARGE: largeCategory,
             MEDIUM: mediumCategories,
           };
-        });
+        },
+      );
 
-        setDataOrganizationCategories(organizationCategories);
-        setDataOptionsCategoryLarge(() => {
-          const largeCategories: OptionDropdownType[] = [
-            {
-              label: NO_OPTION_CATEGORY,
-              value: NO_OPTION_CATEGORY,
-            },
-          ];
-          data.map((category) => {
-            if (category.LARGE) {
-              largeCategories.push({
-                label: category.LARGE.name,
-                value: category.LARGE.id,
-              });
-            }
-          });
-          return largeCategories;
+      setDataOrganizationCategories(organizationCategories);
+      setDataOptionsCategoryLarge(() => {
+        const largeCategories: OptionDropdownType[] = [
+          {
+            label: NO_OPTION_CATEGORY,
+            value: NO_OPTION_CATEGORY,
+          },
+        ];
+        data.organization.statisticCategories.map((category) => {
+          if (category.LARGE) {
+            largeCategories.push({
+              label: category.LARGE.name,
+              value: category.LARGE.id,
+            });
+          }
         });
-      },
-    });
+        return largeCategories;
+      });
+      setDataOptionsTagIds(
+        data.tags.map((org) => ({
+          label: String(org.name),
+          value: String(org.id),
+        })),
+      );
+    },
+  });
 
   useEffect(() => {
     if (organizationValue) {
-      refetchOrganizationStatisticCategories();
+      refetchCreationDataStatistic();
     }
-  }, [organizationValue, refetchOrganizationStatisticCategories]);
+  }, [organizationValue, refetchCreationDataStatistic]);
 
   const defaultValues = useMemo<TemplateFormData>(() => {
     const value: TemplateFormData = {
@@ -422,14 +433,26 @@ const ActionsTemplateModal = ({
           value: org.id as number,
         })),
       );
+    }
+  }, [creationDataTaskData]);
+
+  const selectedOrganization = watch('organization');
+
+  useEffect(() => {
+    if (selectedOrganization && creationDataTaskData) {
+      const organizationTags =
+        creationDataTaskData.organizations.find(
+          (org) => org.id === selectedOrganization.value,
+        )?.tags || [];
+
       setDataOptionsTagIds(
-        creationDataTaskData.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
+        organizationTags.map((tag) => ({
+          label: tag.name,
+          value: tag.id,
         })),
       );
     }
-  }, [creationDataTaskData]);
+  }, [selectedOrganization, creationDataTaskData, setValue]);
 
   useEffect(() => {
     if (open === false) {
@@ -732,6 +755,7 @@ const ActionsTemplateModal = ({
                         setDataOptionsCategoryLarge([]);
                         setDataOptionsCategorySmall([]);
                         setDataOptionsCategoryMedium([]);
+                        setValue('tagIds', []);
                       }
                       onChange(e);
                     }}
@@ -855,6 +879,7 @@ const ActionsTemplateModal = ({
                     }
                     labelOptionClass="break-words w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
+                    noDataClass="w-[461px]"
                     onChange={(selected) => {
                       let updatedTagIds = [];
                       const currentTagIds = getValues('tagIds') || [];

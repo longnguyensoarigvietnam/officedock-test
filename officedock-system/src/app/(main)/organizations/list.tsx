@@ -320,7 +320,9 @@ const ListOrganizations = () => {
             </Button>
           )}
       </div>
-      <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]" style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
+      <div
+        className="w-full p-5 bg-[#F8FAFC] rounded-[14px]"
+        style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
         <Table className="bg-white !rounded-lg relative table-fixed">
           <TableHeader className="!bg-[#F8FAFC]">
             <th className="text-left w-[calc(100%_-_50px)]">
@@ -357,8 +359,7 @@ const ListOrganizations = () => {
                           />
                         </div>
                       ) : (
-                        <p
-                          className="break-all max-w-[100%] text-[16px] font-medium text-[#000000]">
+                        <p className="break-all max-w-[100%] text-[16px] font-medium text-[#000000]">
                           {element.name}
                         </p>
                       )}
@@ -445,38 +446,39 @@ const ListOrganizations = () => {
             )}
           </TableBody>
         </Table>
-      </div>
-      <div className="flex justify-center items-center w-full">
-        <div className="flex justify-center flex-1">
-          {dataOrganizations && dataOrganizations.length ? (
-            <Pagination
-              onChange={(pageNumber) => setCurrentPage(pageNumber)}
-              currentPage={currentPage}
-              totalPages={totalPages}
-            />
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-[66px]">
-            <Dropdown
-              options={PAGE_SIZE_OPTIONS}
-              selectedOption={PAGE_SIZE_OPTIONS.find(
-                (element) => element.value == pageSize,
-              )}
-              className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
-              classNameTextData="!text-xs"
-              classActive="!text-sm"
-              classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
-              labelOptionClass="!text-sm font-medium !pl-1.5"
-              onChange={(e) => {
-                setPageSize(Number(e.value));
-                setCurrentPage(1);
-              }}
-            />
+        <div className="flex justify-center items-center w-full">
+          <div className="flex justify-center flex-1">
+            {dataOrganizations && dataOrganizations.length ? (
+              <Pagination
+                onChange={(pageNumber) => setCurrentPage(pageNumber)}
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
+            ) : null}
           </div>
-          <p className="text-sm">件ずつ表示</p>
+          <div className="flex items-center gap-2">
+            <div className="w-[66px]">
+              <Dropdown
+                options={PAGE_SIZE_OPTIONS}
+                selectedOption={PAGE_SIZE_OPTIONS.find(
+                  (element) => element.value == pageSize,
+                )}
+                className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
+                classNameTextData="!text-xs"
+                classActive="!text-sm"
+                classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
+                labelOptionClass="!text-sm font-medium !pl-1.5"
+                onChange={(e) => {
+                  setPageSize(Number(e.value));
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+            <p className="text-sm">件ずつ表示</p>
+          </div>
         </div>
       </div>
+
       <ConfirmDeleteModal
         open={openConfirmDeleteModal}
         name={selectedOrganizationToDelete?.name || ''}

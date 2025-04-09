@@ -11,7 +11,7 @@ import { ResponseError } from '@interfaces/response';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { apiRouters, pageRouters } from '@constants/routers';
-import { PAGINATION_PAGE_SIZE_DEFAULT } from '@constants';
+import { PAGINATION_PAGE_SIZE_SMALL } from '@constants';
 import { ServerStatusCode } from '@constants/enums';
 
 import api from '@base/api';
@@ -19,7 +19,7 @@ import api from '@base/api';
 interface FilterProps {
   companyName?: string;
   fullName?: string;
-  organizationName?: string;
+  organizationId?: string;
   role?: string;
 }
 
@@ -45,7 +45,7 @@ const useUserList = (
 
     // TODO: Confirm with BE about how many and how to use param
     const apiUrl = pagination?.page
-      ? `${apiRouters.USER_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${ordering ? `&ordering=${ordering}` : ''}${filter?.fullName ? `&full_name=${filter.fullName}` : ''}${filter?.companyName ? `&company_name=${filter.companyName}` : ''}${filter?.organizationName ? `&organization_name=${filter.organizationName}` : ''}${filter?.role ? `&role=${filter.role}` : ''}`
+      ? `${apiRouters.USER_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_SMALL}${ordering ? `&ordering=${ordering}` : ''}${filter?.fullName ? `&full_name=${filter.fullName}` : ''}${filter?.companyName ? `&company_name=${filter.companyName}` : ''}${filter?.organizationId ? `&organization_id=${filter.organizationId}` : ''}${filter?.role ? `&role_id=${filter.role}` : ''}`
       : `${apiRouters.USER_LIST}`;
 
     const { data } = await api.get<BasePagination<User[]>>(apiUrl);
