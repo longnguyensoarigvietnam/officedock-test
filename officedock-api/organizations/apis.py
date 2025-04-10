@@ -48,7 +48,7 @@ from .models import (
 @extend_schema(tags=["System > Organization"])
 class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     """
-    API endpoint for Organization.
+    API endpoint for Organization by UUID.
     """
 
     queryset = (
@@ -324,17 +324,6 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return super().perform_destroy(instance)
 
-    def _check_category_exists(self, category_uuid):
-        """Check category exists"""
-        category = StatisticCategory.objects.filter(uuid=category_uuid).first()
-
-        if not category:
-            raise NotFound(
-                {"detail": ERROR_MESSAGES["statistic_category_not_exists"]}
-            )
-
-        return category
-
     @extend_schema(parameters=[OpenApiParameter("search", type=str)])
     @action(
         methods=["GET"],
@@ -360,6 +349,39 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             ).data
         )
 
+
+@extend_schema(tags=["System > Organization"])
+class OrganizationByIDViewSet(BaseAPIViewSet):
+    """
+    API endpoint for Organization by ID.
+    """
+
+    queryset = Organization.objects.order_by("-created_at")
+    serializer_class = OrganizationSerializer
+    permission_classes = [ActionPermission]
+    screen_name = Screens.ORGANIZATION.value
+
+    def get_queryset(self):
+        """
+        Filtering users by company.
+        """
+
+        user = self.request.user
+        company = user.company
+
+        return super().get_queryset().filter(company=company)
+
+    def _check_category_exists(self, category_uuid):
+        """Check category exists"""
+        category = StatisticCategory.objects.filter(uuid=category_uuid).first()
+
+        if not category:
+            raise NotFound(
+                {"detail": ERROR_MESSAGES["statistic_category_not_exists"]}
+            )
+
+        return category
+
     @action(
         methods=["GET", "POST", "DELETE"],
         detail=True,
@@ -368,7 +390,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         screen_name=Screens.CATEGORY_HIERARCHY.value,
     )
     @transaction.atomic
-    def statistic_categories(self, request, uuid=None):
+    def statistic_categories(self, request, pk=None):
         """
         Handle create hierarchical category statistics to each organization
         """
@@ -593,7 +615,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         screen_name=Screens.ORGANIZATION_SKILL.value,
     )
     @transaction.atomic
-    def skills(self, request, uuid=None):
+    def skills(self, request, pk=None):
         """
         Handle skills to each organization by method
         """
