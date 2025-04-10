@@ -34,9 +34,12 @@ const StatisticTeamBoard = () => {
     listOptionsOrganization,
     selectedLarge,
     selectedMedium,
+    selectedSmall,
     selectedOrganization,
     selectedTags,
     tagsOptions,
+    setTotalDurationTask,
+    setTotalDurationTaskCompare,
     setSelectedTags,
     setTagsOptions,
     setSelectedLarge,
@@ -73,6 +76,7 @@ const StatisticTeamBoard = () => {
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
       tagIds: selectedTags,
     },
     onSuccess: (data) => {
@@ -93,6 +97,32 @@ const StatisticTeamBoard = () => {
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
+      if (data.largeTotalDuration) {
+        if (data.mediumTotalDuration) {
+          if (data.smallTotalDuration) {
+            if (selectedSmall && selectedSmall.value && data.smallCategories) {
+              const itemMap = data.smallCategories.find(
+                (item) =>
+                  String(item.categoryId) === String(selectedSmall.value),
+              );
+              if (itemMap) {
+                setTotalDurationTask(itemMap.duration);
+              } else {
+                setTotalDurationTask('00:00:00');
+              }
+            } else {
+              setTotalDurationTask(data.smallTotalDuration);
+            }
+          } else {
+            if (selectedSmall && selectedSmall.value) return;
+
+            setTotalDurationTask(data.mediumTotalDuration);
+          }
+        } else {
+          if (selectedLarge && selectedLarge.value) return;
+          setTotalDurationTask(data.largeTotalDuration);
+        }
+      }
     },
   });
 
@@ -104,6 +134,7 @@ const StatisticTeamBoard = () => {
         organizationIds: String(selectedOrganization?.value || ''),
         largeCategoryId: Number(selectedLarge?.value),
         mediumCategoryId: Number(selectedMedium?.value),
+        smallCategoryId: Number(selectedSmall?.value),
         isCompare: isCheckCompare,
         tagIds: selectedTags,
       },
@@ -113,6 +144,36 @@ const StatisticTeamBoard = () => {
           sumDurations(data.mediumCategories ?? []),
         );
         setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
+        if (data.largeTotalDuration) {
+          if (data.mediumTotalDuration) {
+            if (data.smallTotalDuration) {
+              if (
+                selectedSmall &&
+                selectedSmall.value &&
+                data.smallCategories
+              ) {
+                const itemMap = data.smallCategories.find(
+                  (item) =>
+                    String(item.categoryId) === String(selectedSmall.value),
+                );
+                if (itemMap) {
+                  setTotalDurationTaskCompare(itemMap.duration);
+                } else {
+                  setTotalDurationTaskCompare('00:00:00');
+                }
+              } else {
+                setTotalDurationTaskCompare(data.smallTotalDuration);
+              }
+            } else {
+              if (selectedSmall && selectedSmall.value) return;
+
+              setTotalDurationTaskCompare(data.mediumTotalDuration);
+            }
+          } else {
+            if (selectedLarge && selectedLarge.value) return;
+            setTotalDurationTaskCompare(data.largeTotalDuration);
+          }
+        }
       },
     });
 

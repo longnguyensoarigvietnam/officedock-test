@@ -4,7 +4,7 @@ import DatePickerUI from 'react-datepicker';
 import type { ReactDatePickerProps } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ja } from 'date-fns/locale';
-import { addMonths, format, isSaturday, isSunday } from 'date-fns';
+import { addDays, format, isSaturday, isSunday } from 'date-fns';
 import { isHoliday } from 'japanese-holidays';
 
 import ImageRound from '../ImageRound';
@@ -12,7 +12,7 @@ import ErrorMessage from '../ErrorMessage';
 import { DATE_FORMAT } from '@constants';
 import { ComponentSize, TimeOptionsType } from '@constants/enums';
 import './styles/multiPickerCustom.css';
-import { getDaysFromTimeOption } from '@utils/date';
+import { compareAndSetDate, getDaysFromTimeOption } from '@utils/date';
 
 export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   isCalendarCompare?: boolean;
@@ -119,7 +119,6 @@ const MultiDatePickerCustom = ({
     if (isTypeTime === TimeOptionsType.MORE) {
       if (start && isEndButtonClicked) {
         let adjustedEnd = end;
-
         if (end) {
           const diffInTime = end.getTime() - start.getTime();
           const diffInDays = diffInTime / (1000 * 3600 * 24);
@@ -128,27 +127,46 @@ const MultiDatePickerCustom = ({
             adjustedEnd = new Date(start);
             adjustedEnd.setDate(adjustedEnd.getDate() + 366);
           }
-        }
-
-        setEndDate(adjustedEnd);
-        onChange && onChange(start, adjustedEnd);
-        resetEndClick && resetEndClick();
-      } else {
-        let adjustedEnd = end;
-
-        if (start && end) {
-          const diffInTime = end.getTime() - start.getTime();
-          const diffInDays = diffInTime / (1000 * 3600 * 24);
-
-          if (diffInDays > 366) {
-            adjustedEnd = new Date(start);
-            adjustedEnd.setDate(adjustedEnd.getDate() + 366);
+          setEndDate(adjustedEnd);
+          onChange && onChange(start, adjustedEnd);
+          resetEndClick && resetEndClick();
+        } else {
+          if (initialStartDate && start) {
+            const endNew = compareAndSetDate(initialStartDate, start);
+            setEndDate(endNew);
+            onChange && onChange(initialStartDate as Date, endNew);
+            resetEndClick && resetEndClick();
+          } else {
+            setEndDate(start);
+            onChange && onChange(initialStartDate as Date, start);
+            resetEndClick && resetEndClick();
           }
         }
+      } else {
+        if (start && isStartButtonClicked && end) {
+          setStartDate(end);
+          setEndDate(null);
+          onChange && onChange(end, null);
+          resetStartClick && resetStartClick();
+        } else {
+          let adjustedEnd = end;
 
-        setStartDate(start);
-        setEndDate(adjustedEnd);
-        onChange && onChange(start, adjustedEnd);
+          if (start && end) {
+            const diffInTime = end.getTime() - start.getTime();
+            const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+            if (diffInDays > 366) {
+              adjustedEnd = new Date(start);
+              adjustedEnd.setDate(adjustedEnd.getDate() + 366);
+            }
+          }
+
+          setStartDate(start);
+          setEndDate(adjustedEnd);
+          onChange && onChange(start, adjustedEnd);
+          resetStartClick && resetStartClick();
+          resetEndClick && resetEndClick();
+        }
       }
     } else if (start && isEndButtonClicked) {
       const days = getDaysFromTimeOption(isTypeTime, start, true);
@@ -218,11 +236,17 @@ const MultiDatePickerCustom = ({
               }
             }
           }}
-          maxDate={addMonths(new Date(), 5)}
+          maxDate={
+            isStartButtonClicked
+              ? null
+              : initialStartDate
+                ? addDays(initialStartDate, 366)
+                : null
+          }
           startDate={startDate}
           endDate={endDate}
           selectsRange
-          minDate={isStartButtonClicked ? null : startDate}
+          minDate={null}
           locale={customLocale}
           dateFormat={dateFormat}
           className={`w-full px-3.5 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}

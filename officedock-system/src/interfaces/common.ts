@@ -9,6 +9,7 @@ export interface OptionDropdownType {
   largeColor?: string;
   teamId?: number;
   imgComponent?: any;
+  isMyRoutine?: boolean;
 }
 
 export interface BasePagination<T> {

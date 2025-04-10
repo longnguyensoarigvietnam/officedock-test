@@ -75,6 +75,7 @@ const StatisticBoard = () => {
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
       tagIds: selectedTags,
     },
     onSuccess: (data) => {
@@ -98,7 +99,19 @@ const StatisticBoard = () => {
       if (data.largeTotalDuration) {
         if (data.mediumTotalDuration) {
           if (data.smallTotalDuration) {
-            setTotalDurationTask(data.smallTotalDuration);
+            if (selectedSmall && selectedSmall.value && data.smallCategories) {
+              const itemMap = data.smallCategories.find(
+                (item) =>
+                  String(item.categoryId) === String(selectedSmall.value),
+              );
+              if (itemMap) {
+                setTotalDurationTask(itemMap.duration);
+              } else {
+                setTotalDurationTask('00:00:00');
+              }
+            } else {
+              setTotalDurationTask(data.smallTotalDuration);
+            }
           } else {
             if (selectedSmall && selectedSmall.value) return;
 
@@ -119,6 +132,7 @@ const StatisticBoard = () => {
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
       isCompare: isCheckCompare,
       tagIds: selectedTags,
     },
@@ -129,7 +143,19 @@ const StatisticBoard = () => {
       if (data.largeTotalDuration) {
         if (data.mediumTotalDuration) {
           if (data.smallTotalDuration) {
-            setTotalDurationTaskCompare(data.smallTotalDuration);
+            if (selectedSmall && selectedSmall.value && data.smallCategories) {
+              const itemMap = data.smallCategories.find(
+                (item) =>
+                  String(item.categoryId) === String(selectedSmall.value),
+              );
+              if (itemMap) {
+                setTotalDurationTaskCompare(itemMap.duration);
+              } else {
+                setTotalDurationTaskCompare('00:00:00');
+              }
+            } else {
+              setTotalDurationTaskCompare(data.smallTotalDuration);
+            }
           } else {
             if (selectedSmall && selectedSmall.value) return;
 

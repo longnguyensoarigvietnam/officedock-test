@@ -86,7 +86,7 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
             router.push(
               `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(
                 String(userData.id),
-              )}?organization=${organization.id}`,
+              )}?organization=${organization.id}&tabId=1`,
             );
           }}
           className="!px-0 !py-0 h-9 w-[98px] items-center justify-center ml-[6px]">

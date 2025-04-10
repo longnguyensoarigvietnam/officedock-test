@@ -187,6 +187,7 @@ const TaskPageDataHeader = () => {
           value: item.type === ItemStartType.TASK ? item.id : `${item.id}event`,
           type: item.type,
           totalData: item.totalDuration,
+          isMyRoutine: item.isMyRoutine,
         };
       });
 
@@ -421,9 +422,11 @@ const TaskPageDataHeader = () => {
   const handleSetParam = ({
     id,
     action,
+    type = ItemStartType.TASK,
   }: {
     id: string | null;
     action: string;
+    type: string;
   }) => {
     if (id) {
       params.set('task', id);
@@ -432,7 +435,7 @@ const TaskPageDataHeader = () => {
     params.delete('action');
     params.delete('type');
     params.set('action', action);
-    params.set('type', ItemStartType.TASK);
+    params.set('type', type);
     router.push(`?${params.toString()}`);
   };
   const handleSetEventParam = ({
@@ -676,12 +679,10 @@ const TaskPageDataHeader = () => {
                 variant="secondary"
                 className="whitespace-nowrap mt-1 min-w-[22px]  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"
                 onClick={() => {
-                  if (
-                    parseInt(String(taskSelected.value)) &&
-                    optionsTaskMe.find(
-                      (element) => element.value === taskSelected.value,
-                    )
-                  ) {
+                  const itemFind = optionsTaskMe.find(
+                    (element) => element.value === taskSelected.value,
+                  );
+                  if (parseInt(String(taskSelected.value)) && itemFind) {
                     if (taskSelected.type === ItemStartType.SCHEDULE) {
                       handleSetEventParam({
                         id: `${taskSelected.value}`.replace('event', ''),
@@ -691,6 +692,9 @@ const TaskPageDataHeader = () => {
                       handleSetParam({
                         id: `${taskSelected.value}`,
                         action: ActionTask.EDIT,
+                        type: itemFind.isMyRoutine
+                          ? ItemStartType.FIXED_TASK
+                          : ItemStartType.TASK,
                       });
                     }
                   }

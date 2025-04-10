@@ -201,6 +201,10 @@ const TimeSchedule = memo(
     const {
       memberSelected,
       dataActualAddSchedule,
+      displayHederDateStart,
+      displayHederDateEnd,
+      setDisplayHeaderDayStart,
+      setDisplayHeaderDayEnd,
       setDataEventEdit,
       setIdEventDelete,
       setWidthCalendar,
@@ -211,12 +215,6 @@ const TimeSchedule = memo(
 
     const { setIsLoading } = useContext(LoadingContext);
     const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
-    const [displayHederDateStart, setDisplayHeaderDayStart] = useState<Date>(
-      new Date(),
-    );
-    const [displayHederDateEnd, setDisplayHeaderDayEnd] = useState<Date>(
-      new Date(),
-    );
 
     const { isExtendCalendar, setIsExtendCalendar } =
       useContext(GlobalStateContext);
@@ -507,7 +505,7 @@ const TimeSchedule = memo(
     }) => {
       setIsLoadingSchedule(true);
 
-      const apiUrl = `${apiRouters.TASK_CALENDAR_LIST}?${userId ? `&user_id=${userId}` : ''}${startDate && `&start_date=${startDate}`}${endDate && `&end_date=${endDate}`}`;
+      const apiUrl = `${apiRouters.TASK_CALENDAR_LIST}?${userId ? `&user_id=${userId}` : ''}${startDate && `&start_date=${startDate}`}${startDate && `&task_schedule_from_date=${startDate}`}${endDate && `&end_date=${endDate}`}${endDate && `&task_schedule_end_date=${endDate}`}`;
       const { data } = await api.get<Task[]>(apiUrl);
       return data;
     };

@@ -367,7 +367,7 @@ const KanbanBoardTaskTeam = () => {
     }
 
     // Return if task is running
-    if (sourceUserId !== destUserId && movedTask.hasActualDuration) {
+    if (sourceUserId !== destUserId && movedTask.isStart) {
       return;
     }
     // Update total
@@ -1530,7 +1530,6 @@ const KanbanBoardTaskTeam = () => {
             tasks.map((task: Task) => ({
               ...task,
               isStart: isPause ? false : task.id === taskId,
-              hasActualDuration: true,
             })),
           ]),
         ) as TransformedStatuses,
