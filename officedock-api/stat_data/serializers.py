@@ -43,7 +43,7 @@ class DurationSerializer(serializers.ModelSerializer):
         return format_duration(paused_at - obj.started_at)
 
 
-def _get_list_durations(obj, start_of_day, end_of_day):
+def _get_list_durations(obj, start_of_day, end_of_day, user=None):
     """
     Handle get list durations
     """
@@ -52,11 +52,14 @@ def _get_list_durations(obj, start_of_day, end_of_day):
     if start_of_today == start_of_day:
         return obj.task_durations.filter(
             Q(started_at__gte=start_of_day)
+            & Q(user=user)
             & Q(Q(paused_at__lte=end_of_day) | Q(paused_at__isnull=True))
         ).all()
     else:
         return obj.task_durations.filter(
-            Q(started_at__gte=start_of_day) & Q(paused_at__lte=end_of_day)
+            Q(started_at__gte=start_of_day)
+            & Q(paused_at__lte=end_of_day)
+            & Q(user=user)
         ).all()
 
 
@@ -103,7 +106,8 @@ class DailyTaskSerializer(TaskCommonSerializer):
         """
         start_of_day = self.context.get("start_of_day")
         end_of_day = self.context.get("end_of_day")
-        durations = _get_list_durations(obj, start_of_day, end_of_day)
+        user = self.context.get("user")
+        durations = _get_list_durations(obj, start_of_day, end_of_day, user)
 
         return DurationSerializer(
             durations,
@@ -118,7 +122,8 @@ class DailyTaskSerializer(TaskCommonSerializer):
         start_of_day = self.context.get("start_of_day")
         end_of_day = self.context.get("end_of_day")
         tag_ids = self.context.get("tag_ids")
-        durations = _get_list_durations(obj, start_of_day, end_of_day)
+        user = self.context.get("user")
+        durations = _get_list_durations(obj, start_of_day, end_of_day, user)
 
         total_duration = timedelta()
         # Calculate time between started and paused
@@ -203,7 +208,8 @@ class DailyEventSerializer(serializers.ModelSerializer):
         """
         start_of_day = self.context.get("start_of_day")
         end_of_day = self.context.get("end_of_day")
-        durations = _get_list_durations(obj, start_of_day, end_of_day)
+        user = self.context.get("user")
+        durations = _get_list_durations(obj, start_of_day, end_of_day, user)
 
         return DurationSerializer(
             durations,
@@ -218,7 +224,8 @@ class DailyEventSerializer(serializers.ModelSerializer):
         start_of_day = self.context.get("start_of_day")
         end_of_day = self.context.get("end_of_day")
         tag_ids = self.context.get("tag_ids")
-        durations = _get_list_durations(obj, start_of_day, end_of_day)
+        user = self.context.get("user")
+        durations = _get_list_durations(obj, start_of_day, end_of_day, user)
 
         total_duration = timedelta()
         # Calculate time between started and paused
@@ -264,10 +271,11 @@ class StatisticTaskSerializer(DailyTaskSerializer):
         end_of_day = self.context.get("end_of_day")
         total_duration = self.context.get("total_duration")
         tag_ids = self.context.get("tag_ids")
+        user = self.context.get("user")
         if not total_duration:
             return None
 
-        durations = _get_list_durations(obj, start_of_day, end_of_day)
+        durations = _get_list_durations(obj, start_of_day, end_of_day, user)
 
         duration = timedelta()
         # Calculate time between started and paused
@@ -321,9 +329,10 @@ class StatisticEventSerializer(DailyEventSerializer):
         end_of_day = self.context.get("end_of_day")
         total_duration = self.context.get("total_duration")
         tag_ids = self.context.get("tag_ids")
+        user = self.context.get("user")
         if not total_duration:
             return None
-        durations = _get_list_durations(obj, start_of_day, end_of_day)
+        durations = _get_list_durations(obj, start_of_day, end_of_day, user)
 
         duration = timedelta()
         # Calculate time between started and paused
@@ -366,4 +375,4 @@ class BaseStatisticEventSerializer(StatisticEventSerializer):
 
     class Meta:
         model = Schedule
-        fields = ["id", "title", "total_duration", "percent", "type"]
+        fields = ["id", "title", "type"]

@@ -477,15 +477,28 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         if last_task_duration is None or (
             last_task_duration and last_task_duration.paused_at is not None
         ):
-            TaskDuration.objects.create(
-                schedule=object_model
-                if object_type == CalendarTypes.SCHEDULE.value
-                else None,
-                task=object_model
-                if object_type == CalendarTypes.TASK.value
-                else None,
-                started_at=timezone.now(),
-            )
+            task_durations = []
+            if object_type == CalendarTypes.SCHEDULE.value:
+                for user in object_model.participants.all():
+                    task_durations.append(
+                        TaskDuration(
+                            schedule=object_model,
+                            started_at=timezone.now(),
+                            user=user,
+                            company=user.company,
+                        )
+                    )
+            elif object_type == CalendarTypes.TASK.value:
+                for user in object_model.people_in_charge.all():
+                    task_durations.append(
+                        TaskDuration(
+                            task=object_model,
+                            started_at=timezone.now(),
+                            user=user,
+                            company=user.company,
+                        )
+                    )
+            TaskDuration.objects.bulk_create(task_durations)
             object_model.is_start = True
         else:
             TaskDuration.objects.filter(
@@ -687,10 +700,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             )
 
         if user_id:
-            queryset = queryset.filter(
-                Q(task__people_in_charge__id=user_id)
-                | Q(schedule__participants__id=user_id)
-            )
+            queryset = queryset.filter(user__id=user_id)
         else:
             queryset = queryset.none()
 
@@ -841,6 +851,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             started_at=started_at,
             paused_at=paused_at,
             company=user.company,
+            user=user,
             uuid=uuid,
         )
         if started_at.date() != paused_at.date():

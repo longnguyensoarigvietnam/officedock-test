@@ -4,14 +4,7 @@ from itertools import chain
 
 from django.db.models import (
     Q,
-    ExpressionWrapper,
-    Case,
-    When,
-    DurationField,
-    F,
-    Sum,
 )
-from django.db.models.functions import Now, Coalesce
 from django.utils import timezone
 from django.utils.translation import trim_whitespace
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -44,14 +37,15 @@ from stat_data.utils import (
     annotate_duration,
     aggregate_durations,
     process_categories,
-    get_duration_of_category,
-    merge_task_and_event,
     get_list_models,
     process_tags,
     process_merge_card_per_tag,
     process_per_user,
     split_ranges,
     build_category_filters,
+    get_list_durations_by_users,
+    get_total_durations,
+    get_duration_of_none_category,
 )
 from tasks.constants import TaskCategoryTypes
 from tasks.models import Task, TaskDuration
@@ -161,75 +155,37 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         start_of_today = datetime.combine(timezone.now().date(), time.min)
         end_of_day = datetime.combine(date, time.max)
 
-        tasks = (
-            Task.objects.filter(
-                Q(
-                    Q(people_in_charge_tasks__user__in=[user])
-                    & Q(task_durations__paused_at__isnull=True)
-                )
-            )
-            .all()
-            .distinct()
+        durations = TaskDuration.objects.filter(
+            Q(Q(user=user) & Q(paused_at__isnull=True))
         )
 
-        events = (
-            Schedule.objects.filter(
-                Q(
-                    Q(participants__in=[user])
-                    & Q(task_durations__paused_at__isnull=True)
-                )
-            )
-            .all()
-            .distinct()
-        )
-        for task in tasks:
-            durations = task.task_durations.filter(paused_at__isnull=True).all()
-            for duration in durations:
-                self._separate_duration(duration, timezone.now())
-        for event in events:
-            durations = event.task_durations.filter(
-                paused_at__isnull=True
-            ).all()
-            for duration in durations:
-                self._separate_duration(duration, timezone.now())
+        for duration in durations:
+            self._separate_duration(duration, timezone.now())
+
         if start_of_today == start_of_day:
-            tasks = Task.objects.filter(
+            durations = TaskDuration.objects.filter(
                 Q(
-                    Q(people_in_charge_tasks__user__in=[user])
-                    & Q(task_durations__started_at__gte=start_of_day)
+                    Q(started_at__gte=start_of_day)
+                    & Q(user=user)
                     & Q(
-                        Q(task_durations__paused_at__isnull=True)
-                        | Q(task_durations__paused_at__lte=end_of_day)
-                    )
-                )
-            )
-            events = Schedule.objects.filter(
-                Q(
-                    Q(participants__in=[user])
-                    & Q(task_durations__started_at__gte=start_of_day)
-                    & Q(
-                        Q(task_durations__paused_at__isnull=True)
-                        | Q(task_durations__paused_at__lte=end_of_day)
+                        Q(paused_at__isnull=True) | Q(paused_at__lte=end_of_day)
                     )
                 )
             )
         else:
-            tasks = Task.objects.filter(
+            durations = TaskDuration.objects.filter(
                 Q(
-                    Q(people_in_charge_tasks__user__in=[user])
-                    & Q(task_durations__started_at__gte=start_of_day)
-                    & Q(task_durations__paused_at__lte=end_of_day)
+                    Q(started_at__gte=start_of_day)
+                    & Q(user=user)
+                    & Q(paused_at__lte=end_of_day)
                 )
             )
-            events = Schedule.objects.filter(
-                Q(
-                    Q(participants__in=[user])
-                    & Q(task_durations__started_at__gte=start_of_day)
-                    & Q(task_durations__paused_at__lte=end_of_day)
-                )
-            )
-        tasks = tasks.all().distinct()
-        events = events.all().distinct()
+        tasks = Task.objects.filter(
+            id__in=durations.values_list("task", flat=True)
+        )
+        events = Schedule.objects.filter(
+            id__in=durations.values_list("schedule", flat=True)
+        )
         merged_duration = (
             DailyTaskSerializer(
                 tasks,
@@ -237,6 +193,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 context={
                     "start_of_day": start_of_day,
                     "end_of_day": end_of_day,
+                    "user": user,
                 },
             ).data
             + DailyEventSerializer(
@@ -245,6 +202,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 context={
                     "start_of_day": start_of_day,
                     "end_of_day": end_of_day,
+                    "user": user,
                 },
             ).data
         )
@@ -268,31 +226,13 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     item.organization.id
                 ] = transform_statistic_categories(categories)
 
-        def annotate_duration(queryset, start_of_day, end_of_day):
-            return queryset.annotate(
-                duration=ExpressionWrapper(
-                    Case(
-                        When(
-                            task_durations__paused_at__isnull=True,
-                            then=end_of_day
-                            if end_of_day < timezone.now()
-                            else Now(),
-                        ),
-                        default=F("task_durations__paused_at"),
-                        output_field=DurationField(),
-                    )
-                    - Coalesce(F("task_durations__started_at"), start_of_day),
-                    output_field=DurationField(),
-                )
-            )
-
-        tasks = annotate_duration(tasks, start_of_day, end_of_day)
-        events = annotate_duration(events, start_of_day, end_of_day)
-
         total_duration = timedelta()
 
-        for task in data["tasks"]:
-            total_duration += time_str_to_timedelta(task["total_duration"])
+        for duration in durations:
+            paused_at = (
+                duration.paused_at if duration.paused_at else timezone.now()
+            )
+            total_duration += paused_at - duration.started_at
 
         def get_category_durations(queryset):
             """
@@ -300,46 +240,26 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             - One with a large statistic category
             - One without a large statistic category
             """
-            with_large = (
-                queryset.filter(
-                    Q(categories__large_statistic_category__isnull=False)
-                )
-                .values(
-                    "categories__large_statistic_category__name",
-                    "organization__id",
-                )
-                .annotate(duration=Sum("duration"))
+            with_large = queryset.filter(
+                Q(categories__large_statistic_category__isnull=False)
+            ).values(
+                "categories__large_statistic_category__name",
+                "categories__large_statistic_category__id",
+                "organization__id",
             )
 
-            without_large = (
-                queryset.filter(
-                    Q(categories__large_statistic_category__isnull=True)
-                )
-                .annotate(duration=Sum("duration"))
-                .values("duration")
-            )
-
-            return with_large, without_large
-
-        (
-            task_with_category_large_durations,
-            task_without_large_durations,
-        ) = get_category_durations(tasks)
-        (
-            event_with_category_large_durations,
-            event_without_large_durations,
-        ) = get_category_durations(events)
+            return with_large
 
         data["total_duration"] = format_duration(total_duration)
         data["categories"] = []
         category_dict = {}
 
-        combine_cards = list(task_with_category_large_durations) + list(
-            event_with_category_large_durations
+        combine_cards = list(get_category_durations(tasks)) + list(
+            get_category_durations(events)
         )
-
         for card in combine_cards:
             category_name = card["categories__large_statistic_category__name"]
+            category_id = card["categories__large_statistic_category__id"]
             organization_id = card["organization__id"]
             category_color = (
                 OrganizationsStatisticCategories.objects.filter(
@@ -349,34 +269,39 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 .values_list("color", flat=True)
                 .first()
             )
-            duration = card["duration"]
+            filter_durations = durations.filter(
+                Q(task__categories__large_statistic_category__id=category_id)
+                | Q(
+                    schedule__categories__large_statistic_category__id=category_id
+                )
+            )
+            duration = annotate_duration(
+                filter_durations, start_of_day, end_of_day
+            )["total_duration"]
 
-            if category_name in category_dict:
-                category_dict[category_name]["duration"] += duration
+            if category_id in category_dict:
+                category_dict[category_id]["duration"] += duration
             else:
-                category_dict[category_name] = {
+                category_dict[category_id] = {
+                    "category_id": category_id,
                     "category_name": category_name,
                     "category_color": category_color,
                     "duration": duration,
                 }
-
-        if task_without_large_durations:
+        filter_durations = durations.filter(
+            Q(task__categories__large_statistic_category__isnull=True)
+            & Q(schedule__categories__large_statistic_category__isnull=True)
+        )
+        if filter_durations.exists():
             category_dict["empty_category"] = {
+                "category_id": None,
                 "category_name": None,
                 "category_color": CategoryColors.GRAY.value,
-                "duration": timedelta(0),
+                "duration": annotate_duration(
+                    filter_durations, start_of_day, end_of_day
+                )["total_duration"],
             }
-            for task in task_without_large_durations:
-                category_dict["empty_category"]["duration"] += task["duration"]
-        if event_without_large_durations:
-            if category_dict.get("empty_category") is None:
-                category_dict["empty_category"] = {
-                    "category_name": None,
-                    "category_color": CategoryColors.GRAY.value,
-                    "duration": timedelta(0),
-                }
-            for event in event_without_large_durations:
-                category_dict["empty_category"]["duration"] += event["duration"]
+
         category_list = list(category_dict.values())
 
         percent = 100
@@ -384,6 +309,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             category_duration = format_duration(cat["duration"]) or timedelta(0)
             category_name = cat["category_name"]
             category_color = cat["category_color"]
+            category_id = cat["category_id"]
             percent_per_total_duration = (
                 (
                     time_str_to_timedelta(category_duration).total_seconds()
@@ -401,6 +327,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
             data["categories"].append(
                 {
+                    "category_id": category_id,
                     "category_name": category_name,
                     "category_color": category_color,
                     "duration": category_duration,
@@ -479,64 +406,29 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     organization_ids.append(int(id))
                 except ValueError:
                     continue
-        data = {"list": []}
+        data = []
         if organization_ids:
             for organization_id in organization_ids:
                 organization = Organization.objects.get(id=organization_id)
                 users = organization.users.all().order_by("created_at")
                 user_list = []
                 for user in users:
-                    tasks = (
-                        Task.objects.filter(
-                            Q(
-                                Q(people_in_charge_tasks__user=user)
-                                & Q(
-                                    task_durations__started_at__gte=start_of_day
-                                )
-                                & Q(task_durations__paused_at__lte=end_of_day)
-                            )
-                        )
-                        .all()
-                        .distinct()
-                    )
-                    events = (
-                        Schedule.objects.filter(
-                            Q(
-                                Q(participants=user)
-                                & Q(
-                                    task_durations__started_at__gte=start_of_day
-                                )
-                                & Q(task_durations__paused_at__lte=end_of_day)
-                            )
-                        )
-                        .all()
-                        .distinct()
-                    )
-
-                    merged_duration = (
-                        DailyTaskSerializer(
-                            tasks,
-                            many=True,
-                            context={
-                                "start_of_day": start_of_day,
-                                "end_of_day": end_of_day,
-                            },
-                        ).data
-                        + DailyEventSerializer(
-                            events,
-                            many=True,
-                            context={
-                                "start_of_day": start_of_day,
-                                "end_of_day": end_of_day,
-                            },
-                        ).data
-                    )
                     total_duration = timedelta()
-
-                    for task in merged_duration:
-                        total_duration += time_str_to_timedelta(
-                            task["total_duration"]
+                    durations = TaskDuration.objects.filter(
+                        Q(
+                            Q(started_at__gte=start_of_day)
+                            & Q(user=user)
+                            & Q(paused_at__lte=end_of_day)
                         )
+                    )
+                    for duration in durations:
+                        paused_at = (
+                            duration.paused_at
+                            if duration.paused_at
+                            else timezone.now()
+                        )
+                        total_duration += paused_at - duration.started_at
+
                     confirm_report = user.reported_confirmations.filter(
                         date=date, confirm_by=request_user
                     ).first()
@@ -549,7 +441,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     )
                     user_list.append(user_serializer)
 
-                data["list"].append(
+                data.append(
                     {
                         "organization": {
                             "id": organization.id,
@@ -559,7 +451,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     }
                 )
 
-        return self.response_ok(data["list"])
+        return self.response_ok(data)
 
 
 @extend_schema(tags=["System > Statistics"])
@@ -676,13 +568,15 @@ class StatisticViewSet(BaseAPIViewSet):
                     tag_ids.append(int(id))
                 except ValueError:
                     continue
-        tasks, events = get_list_models(
+        durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
-            organizations=organization_ids,
-            users=[user],
+            [user],
+            organization_ids,
             tags=tag_ids,
         )
+        tasks, events = get_list_models(durations)
+
         filters = build_category_filters(
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
@@ -705,6 +599,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 "end_of_day": end_of_day,
                 "total_duration": total_duration,
                 "tag_ids": tag_ids if is_tag_page else None,
+                "user": user,
             },
         ).data
         list_event = StatisticEventSerializer(
@@ -715,6 +610,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 "end_of_day": end_of_day,
                 "total_duration": total_duration,
                 "tag_ids": tag_ids if is_tag_page else None,
+                "user": user,
             },
         ).data
         merged_duration = list(chain(list_task, list_event))
@@ -864,13 +760,14 @@ class StatisticViewSet(BaseAPIViewSet):
                     tag_ids.append(int(id))
                 except ValueError:
                     continue
-        tasks, events = get_list_models(
+        durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
-            organizations=organization_ids,
-            users=[user],
+            [user],
+            organization_ids,
             tags=tag_ids,
         )
+        tasks, events = get_list_models(durations)
         filters = build_category_filters(
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
@@ -894,45 +791,24 @@ class StatisticViewSet(BaseAPIViewSet):
             from_date, end_date, trim_whitespace(statistic_by)
         )
 
-        def _get_durations_by_time(
-            filter_tasks, filter_events, percent, duration
-        ):
+        def _get_durations_by_time(filter_durations, percent, duration):
             """
             Handle get duration by time
             """
             durations = []
             for start, end in ranges:
                 start_date_min = datetime.combine(start, time.min)
-                start_date_max = datetime.combine(end, time.max)
+                end_date_max = datetime.combine(end, time.max)
                 total_duration = timedelta(0)
                 percent_per_total_duration = 0
-                if filter_tasks or filter_events:
-                    if not is_tag_page:
-                        reset_tasks = Task.objects.filter(
-                            Q(id__in=filter_tasks.values_list("id", flat=True))
-                            & Q(task_durations__started_at__gte=start_date_min)
-                            & Q(task_durations__paused_at__lte=start_date_max)
-                        ).distinct()
-                        reset_events = Schedule.objects.filter(
-                            Q(id__in=filter_events.values_list("id", flat=True))
-                            & Q(task_durations__started_at__gte=start_date_min)
-                            & Q(task_durations__paused_at__lte=start_date_max)
-                        ).distinct()
-                    else:
-                        reset_tasks = filter_tasks
-                        reset_events = filter_events
-
-                    merged_duration = merge_task_and_event(
-                        reset_tasks,
-                        reset_events,
-                        start_date_min,
-                        start_date_max,
+                if filter_durations:
+                    filter_duration_by_range = filter_durations.filter(
+                        started_at__gte=start_date_min,
+                        paused_at__lte=end_date_max,
                     )
-                    for task in merged_duration:
-                        total_duration += time_str_to_timedelta(
-                            task["total_duration"]
-                        )
-
+                    total_duration = get_total_durations(
+                        filter_duration_by_range
+                    )
                     # Calculate the percentage of the total duration
                     if duration.total_seconds() > 0:
                         percent_per_total_duration = (
@@ -950,7 +826,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 durations.append(
                     {
                         "start_date": start_date_min.strftime(BASE_DATE_FORMAT),
-                        "end_date": start_date_max.strftime(BASE_DATE_FORMAT),
+                        "end_date": end_date_max.strftime(BASE_DATE_FORMAT),
                         "duration": format_duration(total_duration),
                         "percent": min(round(percent_per_total_duration), 100),
                     }
@@ -960,11 +836,7 @@ class StatisticViewSet(BaseAPIViewSet):
         if is_tag_page:
             total_duration, tag_list = process_merge_card_per_tag(
                 tag_ids,
-                tasks,
-                events,
-                start_of_day,
-                end_of_day,
-                is_get_total_duration=True,
+                durations=durations,
             )
             if not tag_list:
                 tag = {
@@ -973,109 +845,36 @@ class StatisticViewSet(BaseAPIViewSet):
                     "duration": "00:00:00",
                 }
                 tag["durations"] = _get_durations_by_time(
-                    None, None, 100, tag["duration"]
+                    None, 100, tag["duration"]
                 )
                 data.append(tag)
             else:
                 for tag in tag_list:
-                    filter_tasks = tasks.filter(tags__id=tag["tag_id"])
-                    filter_events = events.filter(tags__id=tag["tag_id"])
+                    if large_category_id:
+                        filter_durations = get_list_durations_by_users(
+                            durations=durations,
+                            large_id=large_category_id,
+                            medium_id=medium_category_id,
+                            small_id=small_category_id,
+                            tags=[tag["tag_id"]],
+                        )
+                    else:
+                        filter_durations = get_list_durations_by_users(
+                            durations=durations, tags=[tag["tag_id"]]
+                        )
+                    tag["duration"] = get_total_durations(filter_durations)
                     tag["durations"] = _get_durations_by_time(
-                        filter_tasks, filter_events, 100, tag["duration"]
+                        filter_durations, 100, tag["duration"]
                     )
                     tag["duration"] = format_duration(tag["duration"])
                     data.append(tag)
         else:
-
-            def _filter_models(category_id):
-                """
-                Filter models by category
-                """
-                if category_id is None:
-                    if not large_category_id and not medium_category_id:
-                        filter_tasks = tasks.filter(
-                            Q(categories__large_statistic_category__isnull=True)
-                            | ~Q(
-                                categories__large_statistic_category__in=large_category_ids
-                            )
-                        )
-                        filter_events = events.filter(
-                            Q(categories__large_statistic_category__isnull=True)
-                            | ~Q(
-                                categories__large_statistic_category__in=large_category_ids
-                            )
-                        )
-                    elif large_category_id and not medium_category_id:
-                        filter_tasks = tasks.filter(
-                            Q(
-                                categories__medium_statistic_category__isnull=True
-                            )
-                            | ~Q(
-                                categories__medium_statistic_category__in=medium_category_ids
-                            )
-                        )
-                        filter_events = events.filter(
-                            Q(
-                                categories__medium_statistic_category__isnull=True
-                            )
-                            | ~Q(
-                                categories__medium_statistic_category__in=medium_category_ids
-                            )
-                        )
-                    elif large_category_id and medium_category_id:
-                        filter_tasks = tasks.filter(
-                            Q(categories__small_statistic_category__isnull=True)
-                            | ~Q(
-                                categories__small_statistic_category__in=small_category_ids
-                            )
-                        )
-                        filter_events = events.filter(
-                            Q(categories__small_statistic_category__isnull=True)
-                            | ~Q(
-                                categories__small_statistic_category__in=small_category_ids
-                            )
-                        )
-                else:
-                    large_id = (
-                        category["category_id"]
-                        if large_category_id is None
-                        else large_category_id
-                    )
-                    filter_tasks = tasks.filter(
-                        categories__large_statistic_category__id=large_id
-                    )
-                    filter_events = events.filter(
-                        categories__large_statistic_category__id=large_id
-                    )
-                    if large_category_id:
-                        medium_id = (
-                            category["category_id"]
-                            if medium_category_id is None
-                            else medium_category_id
-                        )
-                        filter_tasks = filter_tasks.filter(
-                            categories__medium_statistic_category__id=medium_id
-                        )
-                        filter_events = filter_events.filter(
-                            categories__medium_statistic_category__id=medium_id
-                        )
-                        if medium_category_id:
-                            small_id = (
-                                category["category_id"]
-                                if small_category_id is None
-                                else small_category_id
-                            )
-                            filter_tasks = filter_tasks.filter(
-                                categories__small_statistic_category__id=small_id
-                            )
-                            filter_events = filter_events.filter(
-                                categories__small_statistic_category__id=small_id
-                            )
-                return filter_tasks, filter_events
-
             category_list = aggregate_durations(
-                annotate_duration(tasks, start_of_day, end_of_day),
-                annotate_duration(events, start_of_day, end_of_day),
+                tasks,
+                events,
+                durations=durations,
+                start_of_day=start_of_day,
+                end_of_day=end_of_day,
                 large_category_id=large_category_id,
                 medium_category_id=medium_category_id,
             )
@@ -1087,16 +886,40 @@ class StatisticViewSet(BaseAPIViewSet):
                     "duration": "00:00:00",
                 }
                 category["durations"] = _get_durations_by_time(
-                    None, None, 100, category["duration"]
+                    None, 100, category["duration"]
                 )
                 data.append(category)
             else:
                 for category in category_list:
-                    filter_tasks, filter_events = _filter_models(
-                        category_id=category["category_id"]
-                    )
+                    category_id = category["category_id"]
+                    filter_durations = None
+                    if not large_category_id and not medium_category_id:
+                        filter_durations = get_list_durations_by_users(
+                            durations=durations,
+                            large_id=category_id,
+                        )
+                    if large_category_id:
+                        filter_durations = get_list_durations_by_users(
+                            durations=durations,
+                            large_id=large_category_id,
+                            medium_id=category_id,
+                        )
+                        if medium_category_id:
+                            filter_durations = get_list_durations_by_users(
+                                durations=durations,
+                                large_id=large_category_id,
+                                medium_id=medium_category_id,
+                                small_id=category_id,
+                            )
+                    if category_id is None:
+                        filter_durations = get_duration_of_none_category(
+                            filter_durations,
+                            large_category_id,
+                            medium_category_id,
+                        )
+
                     category["durations"] = _get_durations_by_time(
-                        filter_tasks, filter_events, 100, category["duration"]
+                        filter_durations, 100, category["duration"]
                     )
                     category["duration"] = format_duration(category["duration"])
                     data.append(category)
@@ -1161,19 +984,22 @@ class StatisticViewSet(BaseAPIViewSet):
                     continue
         data = {}
         if organization_ids:
-            tasks, events = get_list_models(
-                start_of_day, end_of_day, organization_ids, [user], tag_ids
+            durations = get_list_durations_by_users(
+                start_of_day,
+                end_of_day,
+                [user],
+                organization_ids,
+                tags=tag_ids,
             )
-            total_duration = timedelta()
-            merged_duration = merge_task_and_event(
-                tasks, events, start_of_day, end_of_day
-            )
-            for task in merged_duration:
-                total_duration += time_str_to_timedelta(task["total_duration"])
+            tasks, events = get_list_models(durations)
+            total_duration = get_total_durations(durations)
 
             category_list = aggregate_durations(
-                annotate_duration(tasks, start_of_day, end_of_day),
-                annotate_duration(events, start_of_day, end_of_day),
+                tasks,
+                events,
+                durations=durations,
+                start_of_day=start_of_day,
+                end_of_day=end_of_day,
             )
 
             # Process large categories
@@ -1191,20 +1017,22 @@ class StatisticViewSet(BaseAPIViewSet):
                 )
                 # Process medium categories if large_category_id is provided
                 if large_category_id:
-                    duration = get_duration_of_category(
-                        data["large_categories"], large_category_id
+                    durations = get_list_durations_by_users(
+                        durations=durations,
+                        large_id=large_category_id,
                     )
-                    tasks = tasks.filter(
-                        categories__large_statistic_category__id=large_category_id
-                    )
-                    events = events.filter(
-                        categories__large_statistic_category__id=large_category_id
-                    )
+                    duration = get_total_durations(durations)
+
+                    tasks, events = get_list_models(durations)
                     category_list = aggregate_durations(
-                        annotate_duration(tasks, start_of_day, end_of_day),
-                        annotate_duration(events, start_of_day, end_of_day),
-                        large_category_id,
+                        tasks,
+                        events,
+                        durations=durations,
+                        start_of_day=start_of_day,
+                        end_of_day=end_of_day,
+                        large_category_id=large_category_id,
                     )
+
                     data["medium_total_duration"] = format_duration(duration)
                     data["medium_categories"] = process_categories(
                         category_list,
@@ -1218,18 +1046,20 @@ class StatisticViewSet(BaseAPIViewSet):
                     )
                     # Process small categories if medium_category_id is provided
                     if medium_category_id:
-                        duration = get_duration_of_category(
-                            data["medium_categories"], medium_category_id
+                        durations = get_list_durations_by_users(
+                            durations=durations,
+                            large_id=large_category_id,
+                            medium_id=medium_category_id,
                         )
-                        tasks = tasks.filter(
-                            categories__medium_statistic_category__id=medium_category_id
-                        )
-                        events = events.filter(
-                            categories__medium_statistic_category__id=medium_category_id
-                        )
+                        duration = get_total_durations(durations)
+
+                        tasks, events = get_list_models(durations)
                         category_list = aggregate_durations(
-                            annotate_duration(tasks, start_of_day, end_of_day),
-                            annotate_duration(events, start_of_day, end_of_day),
+                            tasks,
+                            events,
+                            durations=durations,
+                            start_of_day=start_of_day,
+                            end_of_day=end_of_day,
                             large_category_id=large_category_id,
                             medium_category_id=medium_category_id,
                         )
@@ -1309,19 +1139,17 @@ class StatisticViewSet(BaseAPIViewSet):
 
         data = {}
         if tag_ids:
-            tasks, events = get_list_models(
+            durations = get_list_durations_by_users(
                 start_of_day,
                 end_of_day,
-                organizations=organization_ids,
-                users=[user],
+                [user],
+                organization_ids,
+                tags=tag_ids,
             )
+            tasks, events = get_list_models(durations)
             total_duration, tag_list = process_merge_card_per_tag(
                 tag_ids,
-                tasks,
-                events,
-                start_of_day,
-                end_of_day,
-                is_get_total_duration=True,
+                durations=durations,
             )
             if tag_list:
                 data["large_total_duration"] = format_duration(total_duration)
@@ -1336,23 +1164,18 @@ class StatisticViewSet(BaseAPIViewSet):
                 )
 
                 if large_category_id:
-                    tasks = tasks.filter(
-                        categories__large_statistic_category__id=large_category_id
-                    )
-                    events = events.filter(
-                        categories__large_statistic_category__id=large_category_id
+                    durations = get_list_durations_by_users(
+                        durations=durations,
+                        large_id=large_category_id,
                     )
                     total_duration, tag_list = process_merge_card_per_tag(
                         tag_ids,
-                        tasks,
-                        events,
-                        start_of_day,
-                        end_of_day,
-                        is_get_total_duration=True,
+                        durations=durations,
                     )
                     data["medium_total_duration"] = format_duration(
                         total_duration
                     )
+                    tasks, events = get_list_models(durations)
                     data["medium_categories"] = process_tags(
                         tag_list,
                         total_duration,
@@ -1363,23 +1186,19 @@ class StatisticViewSet(BaseAPIViewSet):
                         is_with_tasks=True,
                     )
                     if medium_category_id:
-                        tasks = tasks.filter(
-                            categories__medium_statistic_category__id=medium_category_id
-                        )
-                        events = events.filter(
-                            categories__medium_statistic_category__id=medium_category_id
+                        durations = get_list_durations_by_users(
+                            durations=durations,
+                            large_id=large_category_id,
+                            medium_id=medium_category_id,
                         )
                         total_duration, tag_list = process_merge_card_per_tag(
                             tag_ids,
-                            tasks,
-                            events,
-                            start_of_day,
-                            end_of_day,
-                            is_get_total_duration=True,
+                            durations=durations,
                         )
                         data["small_total_duration"] = format_duration(
                             total_duration
                         )
+                        tasks, events = get_list_models(durations)
                         data["small_categories"] = process_tags(
                             tag_list,
                             total_duration,
@@ -1390,23 +1209,23 @@ class StatisticViewSet(BaseAPIViewSet):
                             is_with_tasks=True,
                         )
                         if small_category_id:
-                            tasks = tasks.filter(
-                                categories__small_statistic_category__id=small_category_id
-                            )
-                            events = events.filter(
-                                categories__small_statistic_category__id=small_category_id
+                            durations = get_list_durations_by_users(
+                                durations=durations,
+                                large_id=large_category_id,
+                                medium_id=medium_category_id,
+                                small_id=small_category_id,
                             )
                             (
                                 total_duration,
                                 tag_list,
                             ) = process_merge_card_per_tag(
                                 tag_ids,
-                                tasks,
-                                events,
-                                start_of_day,
-                                end_of_day,
-                                is_get_total_duration=True,
+                                durations=durations,
                             )
+                            data["small_total_duration"] = format_duration(
+                                total_duration
+                            )
+                            tasks, events = get_list_models(durations)
                             data["category_total_duration"] = format_duration(
                                 total_duration
                             )
@@ -1478,22 +1297,22 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 except ValueError:
                     continue
         if instance:
-            tasks, events = get_list_models(
+            durations = get_list_durations_by_users(
                 start_of_day,
                 end_of_day,
+                users,
                 organizations=[instance],
                 tags=tag_ids,
             )
-
+            tasks, events = get_list_models(durations)
             total_duration, category_list = process_per_user(
                 users,
                 tasks,
                 events,
                 start_of_day,
                 end_of_day,
-                is_get_total_duration=True,
+                durations=durations,
             )
-
             # Process large categories
             if category_list:
                 data["large_total_duration"] = format_duration(total_duration)
@@ -1506,12 +1325,16 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     end_of_day,
                     TaskCategoryTypes.LARGE.value,
                     users=users,
+                    durations=durations,
                 )
                 # Process medium categories if large_category_id is provided
                 if large_category_id:
-                    duration = get_duration_of_category(
-                        data["large_categories"], large_category_id
+                    durations = get_list_durations_by_users(
+                        durations=durations,
+                        large_id=large_category_id,
                     )
+                    tasks, events = get_list_models(durations)
+
                     total_duration, category_list = process_per_user(
                         users,
                         tasks,
@@ -1519,30 +1342,30 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         start_of_day,
                         end_of_day,
                         large_category_id,
-                        is_get_total_duration=False,
+                        durations=durations,
                     )
-                    tasks = tasks.filter(
-                        categories__large_statistic_category__id=large_category_id
+                    data["medium_total_duration"] = format_duration(
+                        total_duration
                     )
-                    events = events.filter(
-                        categories__large_statistic_category__id=large_category_id
-                    )
-                    data["medium_total_duration"] = format_duration(duration)
                     data["medium_categories"] = process_categories(
                         category_list,
-                        duration,
+                        total_duration,
                         tasks,
                         events,
                         start_of_day,
                         end_of_day,
                         TaskCategoryTypes.MEDIUM.value,
                         users=users,
+                        durations=durations,
                     )
                 # Process small categories if medium_category_id is provided
                 if medium_category_id:
-                    duration = get_duration_of_category(
-                        data["medium_categories"], medium_category_id
+                    durations = get_list_durations_by_users(
+                        durations=durations,
+                        large_id=large_category_id,
+                        medium_id=medium_category_id,
                     )
+                    tasks, events = get_list_models(durations)
                     total_duration, category_list = process_per_user(
                         users,
                         tasks,
@@ -1551,26 +1374,21 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         end_of_day,
                         large_category_id,
                         medium_category_id,
-                        is_get_total_duration=False,
+                        durations=durations,
                     )
-                    tasks = tasks.filter(
-                        categories__large_statistic_category__id=large_category_id,
-                        categories__medium_statistic_category__id=medium_category_id,
+                    data["small_total_duration"] = format_duration(
+                        total_duration
                     )
-                    events = events.filter(
-                        categories__large_statistic_category__id=large_category_id,
-                        categories__medium_statistic_category__id=medium_category_id,
-                    )
-                    data["small_total_duration"] = format_duration(duration)
                     data["small_categories"] = process_categories(
                         category_list,
-                        duration,
+                        total_duration,
                         tasks,
                         events,
                         start_of_day,
                         end_of_day,
                         TaskCategoryTypes.SMALL.value,
                         users=users,
+                        durations=durations,
                     )
 
         return self.response_ok(data)
@@ -1627,22 +1445,23 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     continue
         data = {}
         if tag_ids:
-            tasks, events = get_list_models(
+            durations = get_list_durations_by_users(
                 start_of_day,
                 end_of_day,
-                organizations=[instance.id],
-                users=users,
+                users,
+                [instance],
                 tags=tag_ids,
             )
+            tasks, events = get_list_models(durations)
             total_duration, tag_list = process_per_user(
                 users,
                 tasks,
                 events,
                 start_of_day,
                 end_of_day,
-                is_get_total_duration=True,
                 is_tag=True,
                 tag_ids=tag_ids,
+                durations=durations,
             )
             if tag_list:
                 data["large_total_duration"] = format_duration(total_duration)
@@ -1654,24 +1473,24 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     start_of_day,
                     end_of_day,
                     users=users,
+                    durations=durations,
                 )
 
                 if large_category_id:
-                    tasks = tasks.filter(
-                        categories__large_statistic_category__id=large_category_id
+                    durations = get_list_durations_by_users(
+                        durations=durations,
+                        large_id=large_category_id,
                     )
-                    events = events.filter(
-                        categories__large_statistic_category__id=large_category_id
-                    )
+                    tasks, events = get_list_models(durations)
                     total_duration, tag_list = process_per_user(
                         users,
                         tasks,
                         events,
                         start_of_day,
                         end_of_day,
-                        is_get_total_duration=True,
                         is_tag=True,
                         tag_ids=tag_ids,
+                        durations=durations,
                     )
                     data["medium_total_duration"] = format_duration(
                         total_duration
@@ -1684,23 +1503,24 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         start_of_day,
                         end_of_day,
                         users=users,
+                        durations=durations,
                     )
                     if medium_category_id:
-                        tasks = tasks.filter(
-                            categories__medium_statistic_category__id=medium_category_id
+                        durations = get_list_durations_by_users(
+                            durations=durations,
+                            large_id=large_category_id,
+                            medium_id=medium_category_id,
                         )
-                        events = events.filter(
-                            categories__medium_statistic_category__id=medium_category_id
-                        )
+                        tasks, events = get_list_models(durations)
                         total_duration, tag_list = process_per_user(
                             users,
                             tasks,
                             events,
                             start_of_day,
                             end_of_day,
-                            is_get_total_duration=True,
                             is_tag=True,
                             tag_ids=tag_ids,
+                            durations=durations,
                         )
                         data["small_total_duration"] = format_duration(
                             total_duration
@@ -1713,23 +1533,25 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                             start_of_day,
                             end_of_day,
                             users=users,
+                            durations=durations,
                         )
                         if small_category_id:
-                            tasks = tasks.filter(
-                                categories__small_statistic_category__id=small_category_id
+                            durations = get_list_durations_by_users(
+                                durations=durations,
+                                large_id=large_category_id,
+                                medium_id=medium_category_id,
+                                small_id=small_category_id,
                             )
-                            events = events.filter(
-                                categories__small_statistic_category__id=small_category_id
-                            )
+                            tasks, events = get_list_models(durations)
                             total_duration, tag_list = process_per_user(
                                 users,
                                 tasks,
                                 events,
                                 start_of_day,
                                 end_of_day,
-                                is_get_total_duration=True,
                                 is_tag=True,
                                 tag_ids=tag_ids,
+                                durations=durations,
                             )
                             data["category_total_duration"] = format_duration(
                                 total_duration
@@ -1741,6 +1563,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                                 events,
                                 start_of_day,
                                 end_of_day,
+                                durations=durations,
                                 users=users,
                             )
 
