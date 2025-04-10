@@ -154,6 +154,8 @@ const TableChart = ({
     setIsLoadingLarge,
     setIsLoadingLargeCompare,
     setIsLoadingMedium,
+    setIsLoadingSmall,
+    setIsLoadingSmallCompare,
     setIsLoadingMediumCompare,
     setIsLoadingOrganization,
     setIsLoadingOrganizationCompare,
@@ -185,16 +187,19 @@ const TableChart = ({
       onSuccess: async () => {
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
+        setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
         queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticTagsListTeam',
         });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
+          setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
           queryClient.invalidateQueries({
             predicate: (query) =>
@@ -202,7 +207,7 @@ const TableChart = ({
           });
           queryClient.invalidateQueries({
             predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTagsListCompare',
+              query.queryKey[0] === 'getStatisticTagsListTeamCompare',
           });
         }
       },
@@ -235,16 +240,19 @@ const TableChart = ({
       onSuccess: async () => {
         setIsLoadingLarge(true);
         setIsLoadingMedium(true);
+        setIsLoadingSmall(true);
         setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
         queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticTagsListTeam',
         });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
+          setIsLoadingSmallCompare(true);
           setIsLoadingOrganizationCompare(true);
           queryClient.invalidateQueries({
             predicate: (query) =>
@@ -252,7 +260,7 @@ const TableChart = ({
           });
           queryClient.invalidateQueries({
             predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTagsListCompare',
+              query.queryKey[0] === 'getStatisticTagsListTeamCompare',
           });
         }
       },

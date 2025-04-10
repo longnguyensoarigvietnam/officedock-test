@@ -1210,14 +1210,14 @@ export const subtractDurations = (
   return `${sign}${hh}時間${mm}分`;
 };
 export const getMinuteDifferenceTime = (
-  date1: Date | string,
-  date2: Date | string,
+  dateStart: Date | string,
+  dateEnd: Date | string,
 ): number => {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
+  const d1 = new Date(dateStart);
+  const d2 = new Date(dateEnd);
 
   if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
-    throw new Error('Invalid date format');
+    // handle Error
   }
 
   const diffInMs = d2.getTime() - d1.getTime();

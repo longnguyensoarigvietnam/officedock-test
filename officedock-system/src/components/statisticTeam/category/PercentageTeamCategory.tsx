@@ -429,7 +429,7 @@ const PercentageCategoryTeam = ({
                         <PieChart
                           isClickTooltip
                           isTeam
-                          mergedItems={dataChartLarge.mergedItems}
+                          mergedItems={dataChartMedium.mergedItems}
                           colors={dataChartMedium.colors}
                           data={dataChartMedium?.data}
                           labels={dataChartMedium?.labels}
@@ -486,7 +486,7 @@ const PercentageCategoryTeam = ({
                         <PieChart
                           isTeam
                           isLast
-                          mergedItems={dataChartLarge.mergedItems}
+                          mergedItems={dataChartSmall.mergedItems}
                           colors={dataChartSmall.colors}
                           data={dataChartSmall?.data}
                           labels={dataChartSmall?.labels}

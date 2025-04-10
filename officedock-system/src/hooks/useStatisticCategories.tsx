@@ -17,6 +17,7 @@ interface FilterProps {
   fromDate: string | Date;
   largeCategoryId?: number;
   mediumCategoryId?: number;
+  smallCategoryId?: number;
   organizationIds?: string;
   tagIds?: OptionDropdownType[];
 }
@@ -48,6 +49,10 @@ const useStatisticCategories = ({
     }${
       filter?.mediumCategoryId
         ? `&medium_category_id=${filter.mediumCategoryId}`
+        : ''
+    }${
+      filter?.smallCategoryId
+        ? `&small_category_id=${filter.smallCategoryId}`
         : ''
     }${
       filter?.organizationIds

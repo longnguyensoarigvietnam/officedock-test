@@ -15,6 +15,7 @@ interface dataListTaskHeaderResponse {
   totalDuration: string;
   startedAt: string;
   pausedAt: string;
+  isMyRoutine: boolean;
 }
 interface propsDataType {
   start_date: string;

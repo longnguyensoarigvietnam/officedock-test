@@ -77,7 +77,7 @@ export default function EditNode() {
       {
         uuid: uuidv4(),
         value: 'treeNode',
-        name: 'チーム',
+        name: '選択してください',
         children: [],
       },
     ];
@@ -105,7 +105,7 @@ export default function EditNode() {
     if (targetNode) {
       const newItem: ConfigNode = {
         uuid: uuidv4(),
-        name: 'チーム',
+        name: '選択してください',
         value: 'treeNode',
         parentUuid: targetUuId,
         children: [],
@@ -142,7 +142,7 @@ export default function EditNode() {
 
       const newItem: ConfigNode = {
         uuid: uuidv4(),
-        name: 'チーム',
+        name: '選択してください',
         value: 'treeNode',
         parentUuid: parent.model.uuid === 'root' ? null : parent.model.uuid,
         children: [],
@@ -323,7 +323,7 @@ export default function EditNode() {
   const handleAddProjectTeam = () => {
     const newItem: ConfigNode = {
       uuid: uuidv4(),
-      name: 'チーム',
+      name: '選択してください',
       value: 'treeNode',
       children: [],
     };
@@ -524,7 +524,7 @@ export default function EditNode() {
                   options={optionsTreeNode}
                   className="h-[34px] !py-0  !rounded-md border !border-[#77858F]"
                   classNameOption={`!z-[30]  bottom-[40px]`}
-                  placeholder="チーム"
+                  placeholder="選択してください"
                   selectedOption={{
                     label: item.name || '',
                     value: item.uuid,
