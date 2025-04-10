@@ -69,11 +69,13 @@ const DetailRoleTable = () => {
             <p className="text-sm font-medium text-[#77858F]">権限一覧に戻る</p>
           </div>
         </div>
-        <Link href={pageRouters.EDIT_ROLE.href(`${params.id}`)}>
-          <Button variant="primary" className="w-[100px] !p-0 !h-[34px]">
-            編集
-          </Button>
-        </Link>
+        {!dataRoleDetail?.systemRole && (
+          <Link href={pageRouters.EDIT_ROLE.href(`${params.id}`)}>
+            <Button variant="primary" className="w-[100px] !p-0 !h-[34px]">
+              編集
+            </Button>
+          </Link>
+        )}
       </div>
       <div
         className="bg-[#F8FAFC] rounded-[14px] p-5"

@@ -9,6 +9,7 @@ import {
 
 import { OptionDropdownType } from '@interfaces/common';
 import { getAdjustedStartDateDefault } from '@utils/date';
+import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 
 interface ContextValue {
   selectedOrganization: OptionDropdownType | null;
@@ -82,6 +83,10 @@ interface ContextValue {
   setIsLoadingLargeCompare: Dispatch<SetStateAction<boolean>>;
   setIsLoadingMediumCompare: Dispatch<SetStateAction<boolean>>;
   setIsLoadingOrganizationCompare: Dispatch<SetStateAction<boolean>>;
+
+  // View by
+  lineChartViewBy: OptionDropdownType | null;
+  setLineChartViewBy: Dispatch<SetStateAction<OptionDropdownType | null>>;
 }
 
 const defaultValue: ContextValue = {
@@ -158,6 +163,9 @@ const defaultValue: ContextValue = {
   setIsLoadingLargeCompare: () => {},
   setIsLoadingMediumCompare: () => {},
   setIsLoadingOrganizationCompare: () => {},
+
+  lineChartViewBy: null,
+  setLineChartViewBy: () => {},
 };
 
 export const StatisticStateContext = createContext<ContextValue>(defaultValue);
@@ -242,6 +250,13 @@ export const StatisticStateProvider = ({
     getAdjustedStartDateDefault(),
   );
 
+  // View by
+  const [lineChartViewBy, setLineChartViewBy] =
+    useState<OptionDropdownType | null>({
+      value: StatisticViewOptions.WEEK,
+      label: StatisticViewLabels.WEEK,
+    });
+
   const contextValue: ContextValue = {
     smallOptions,
     mediumOptions,
@@ -315,6 +330,9 @@ export const StatisticStateProvider = ({
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setIsLoadingOrganizationCompare,
+
+    lineChartViewBy,
+    setLineChartViewBy,
   };
 
   return (

@@ -7,7 +7,7 @@ import {
 } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
-import { TimeOptionsType } from '@constants/enums';
+import { StatisticViewOptions, TimeOptionsType } from '@constants/enums';
 
 export const getFormattedDateTime = (dateInput?: string | Date): string => {
   const date: Date = dateInput ? new Date(dateInput) : new Date();
@@ -1222,4 +1222,29 @@ export const getMinuteDifferenceTime = (
 
   const diffInMs = d2.getTime() - d1.getTime();
   return Math.round(Math.abs(diffInMs / (1000 * 60)));
+};
+
+export const convertToStatisticJapaneseLabels = (
+  dateStr: string,
+  viewBy: string,
+  isEdge: boolean,
+) => {
+  const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土']; // Japanese days of the week
+  const date = new Date(dateStr);
+
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Ensure two digits
+  const day = String(date.getDate()).padStart(2, '0');
+  const dayOfWeek = daysOfWeek[date.getDay()]; // Get Japanese weekday
+
+  switch (viewBy) {
+    case StatisticViewOptions.DAY:
+    case StatisticViewOptions.WEEK:
+      return isEdge
+        ? `${month}月${day}日(${dayOfWeek})`
+        : `${day}日(${dayOfWeek})`;
+    case StatisticViewOptions.MONTH:
+      return `${month}月`;
+    default:
+      return '';
+  }
 };

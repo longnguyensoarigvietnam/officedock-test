@@ -10,6 +10,7 @@ import {
   PermissionType,
   ScreenAction,
   ScreenName,
+  StatisticViewOptions,
   StatusTask,
 } from '@constants/enums';
 import { formatTime24h } from './date';
@@ -23,6 +24,7 @@ import {
 import { MAX_HEX_COLOR_VALUE } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
+import moment from 'moment';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -773,4 +775,61 @@ export const getChunkSize = (size: number) => {
   if (size < 20 * 1024 * 1024) return 1024 * 1024; // 1MB chunks
   if (size < 1024 * 1024 * 1024) return 10 * 1024 * 1024; // 10MB chunks
   return 25 * 1024 * 1024; // 25MB chunks
+};
+
+// Get enable views by diff days
+const getEnableViewsByDiffDays = (diffDays: number): StatisticViewOptions[] => {
+  switch (true) {
+    case diffDays >= 1 && diffDays <= 7:
+      return [StatisticViewOptions.DAY];
+    case diffDays <= 29:
+      return [StatisticViewOptions.DAY, StatisticViewOptions.WEEK];
+    case diffDays <= 59:
+      return [StatisticViewOptions.WEEK];
+    case diffDays <= 120:
+      return [StatisticViewOptions.WEEK, StatisticViewOptions.MONTH];
+    case diffDays <= 365:
+      return [StatisticViewOptions.MONTH];
+    default:
+      return [];
+  }
+};
+
+// Get line chart enable views
+export const getLineChartEnableViews = (start: Date, end: Date) => {
+  const diffDays = moment(end).diff(moment(start), 'days') + 1;
+
+  return getEnableViewsByDiffDays(diffDays)
+};
+
+// Get compare line chart enable views
+export const getCompareLineChartEnableViews = (
+  start: Date,
+  end: Date,
+  compareStart: Date,
+  compareEnd: Date
+): StatisticViewOptions[] => {
+  const standardDiffDays = moment(end).diff(moment(start), 'days') + 1;
+  const compareDiffDays = moment(compareEnd).diff(moment(compareStart), 'days') + 1;
+
+  const standardViews = getEnableViewsByDiffDays(standardDiffDays);
+  const compareViews = getEnableViewsByDiffDays(compareDiffDays);
+
+  const mutualViews = standardViews.filter(view => compareViews.includes(view));
+
+  if (mutualViews.length > 0) return mutualViews;
+  const viewPriority = [
+    StatisticViewOptions.DAY,
+    StatisticViewOptions.WEEK,
+    StatisticViewOptions.MONTH,
+  ];
+
+  // Return the lower view by priority
+  for (const view of viewPriority) {
+    if (standardViews.includes(view) || compareViews.includes(view)) {
+      return [view];
+    }
+  }
+
+  return [];
 };

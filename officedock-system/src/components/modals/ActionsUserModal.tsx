@@ -623,12 +623,12 @@ const ActionsUserModal = ({
               {/* Sub teams */}
               <div className="flex gap-[10px] items-start">
                 <div className="w-full max-w-[110px] mt-2 text-[14px] font-medium">
-                サブチーム
+                  サブチーム
                 </div>
                 <div className="w-full flex flex-col gap-1 items-start ">
                   {fields.map((field, index) => (
-                    <div className="flex gap-3 relative w-full" key={field.id}>
-                      <div className="flex-1 min-w-0">
+                    <div className="flex gap-2 relative w-full" key={field.id}>
+                      <div className="w-full">
                         <Controller
                           control={control}
                           name={`organizations.${index}`}
@@ -636,7 +636,6 @@ const ActionsUserModal = ({
                             return (
                               <div className="max-w-[450px]">
                                 <Dropdown
-                                  classActive="max-w-[100%]"
                                   options={unSelectedOrganizationOptions}
                                   selectedOption={originalOrganizationOptions.find(
                                     (element) =>
@@ -654,9 +653,9 @@ const ActionsUserModal = ({
                                     });
                                   }}
                                   placeholderClass="!text-black text-sm font-normal"
-                                  className="!h-[34px] !w-[441px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
+                                  className="!h-[34px] w-[441px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                                   labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                                  classNameOption="!text-sm !max-w-[441px]"
+                                  classNameOption="!text-sm w-[441px]"
                                 />
                               </div>
                             );
@@ -664,7 +663,7 @@ const ActionsUserModal = ({
                         />
                       </div>
 
-                      <div className="mt-[2.5px]  flex-shrink-0">
+                      <div className="mt-[2.5px] w-12">
                         <Button
                           sz="sm"
                           variant="outline"

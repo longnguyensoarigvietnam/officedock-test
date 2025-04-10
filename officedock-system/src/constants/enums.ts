@@ -431,13 +431,11 @@ export enum ScheduleType {
   ACTUAL = 'ACTUAL',
 }
 export enum StatisticViewOptions {
-  YEAR = 'YEAR',
   MONTH = 'MONTH',
   WEEK = 'WEEK',
   DAY = 'DAY',
 }
 export enum StatisticViewLabels {
-  YEAR = '年',
   MONTH = '月',
   WEEK = '週',
   DAY = '日',
