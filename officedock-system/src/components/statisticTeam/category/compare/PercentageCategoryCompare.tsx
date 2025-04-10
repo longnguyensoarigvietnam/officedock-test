@@ -122,12 +122,21 @@ const PercentageTeamCategoryCompare = ({
               return {
                 label: user.user.fullName,
                 percent: item.percent,
+                avatarColor: user.user.avatarColor,
               };
             }
             return undefined;
           }),
         )
-        .filter((item): item is { label: string; percent: number } => !!item),
+        .filter(
+          (
+            item,
+          ): item is {
+            label: string;
+            percent: number;
+            avatarColor: string;
+          } => !!item,
+        ),
     };
 
     const mappedMainItems = mainItems.map((item) => ({
@@ -146,12 +155,19 @@ const PercentageTeamCategoryCompare = ({
               return {
                 label: user.user.fullName,
                 percent: item.percent,
+                avatarColor: user.user.avatarColor,
               };
             }
             return undefined;
           })
           .filter(
-            (user): user is { label: string; percent: number } => !!user,
+            (
+              user,
+            ): user is {
+              label: string;
+              percent: number;
+              avatarColor: string;
+            } => !!user,
           ) || [],
       mergedItems: [],
     }));

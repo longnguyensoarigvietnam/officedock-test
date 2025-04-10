@@ -69,7 +69,6 @@ import {
   isMoreThanThirtyMinutes,
   isTodaySchedule,
 } from '@utils/date';
-import { getRandomColor } from '@utils';
 import RangeSlider from '@components/common/RangeSlider';
 import { isAfter, isBefore, isToday } from 'date-fns';
 
@@ -151,7 +150,7 @@ const ScheduleTeamBoard = () => {
         data.members.map((member) => ({
           id: member.id,
           fullName: member.fullName,
-          color: getRandomColor(),
+          color: member.avatarColor,
         })),
       );
       setCurrentResources(

@@ -11,7 +11,6 @@ import { pageRouters } from '@constants/routers';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
-import { getRandomColor } from '@utils';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
@@ -140,7 +139,7 @@ const StatisticTeamTagBoard = () => {
         data.members.map((member) => ({
           id: member.id,
           fullName: member.fullName,
-          color: getRandomColor(),
+          color: member.avatarColor,
         })),
       );
       const optionsTagList = data.tags.map((item) => ({

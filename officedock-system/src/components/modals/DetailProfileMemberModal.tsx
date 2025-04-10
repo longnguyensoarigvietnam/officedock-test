@@ -23,6 +23,7 @@ import api from '@base/api';
 
 export type DetailProfileMemberProps = {
   userId: string;
+  avatarColor: string;
   open: boolean;
   type: string;
   organizationId: string;
@@ -44,7 +45,12 @@ const ViewDetail = ({ label, value }: { label: string; value: string }) => {
 };
 
 const DetailProfileMemberModal = memo(
-  ({ userId, organizationId, onClose }: DetailProfileMemberProps) => {
+  ({
+    userId,
+    avatarColor,
+    organizationId,
+    onClose,
+  }: DetailProfileMemberProps) => {
     const router = useRouter();
     const { data: session } = useSession();
     const [isCalling, setIsCalling] = useState(true);
@@ -120,7 +126,7 @@ const DetailProfileMemberModal = memo(
             </div>
             <div className="flex items-start gap-[10px]">
               {AvatarIconWithDynamicColor({
-                color: '#0068B6',
+                color: avatarColor || '#0068B6',
                 size: 36,
               })}
               <p className="text-black font-medium text-[18px] line-clamp-3 break-all pt-1">

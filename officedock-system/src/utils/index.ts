@@ -716,6 +716,7 @@ export function lightenColor(color: string | null, percent: number): string {
 export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
   return result.map((user) => ({
     id: `user_${user.id}`,
+    avatarColor: user.avatarColor,
     name: user.profile.fullName,
     statuses: {
       NOT_STARTED:
@@ -799,7 +800,7 @@ const getEnableViewsByDiffDays = (diffDays: number): StatisticViewOptions[] => {
 export const getLineChartEnableViews = (start: Date, end: Date) => {
   const diffDays = moment(end).diff(moment(start), 'days') + 1;
 
-  return getEnableViewsByDiffDays(diffDays)
+  return getEnableViewsByDiffDays(diffDays);
 };
 
 // Get compare line chart enable views
@@ -807,15 +808,18 @@ export const getCompareLineChartEnableViews = (
   start: Date,
   end: Date,
   compareStart: Date,
-  compareEnd: Date
+  compareEnd: Date,
 ): StatisticViewOptions[] => {
   const standardDiffDays = moment(end).diff(moment(start), 'days') + 1;
-  const compareDiffDays = moment(compareEnd).diff(moment(compareStart), 'days') + 1;
+  const compareDiffDays =
+    moment(compareEnd).diff(moment(compareStart), 'days') + 1;
 
   const standardViews = getEnableViewsByDiffDays(standardDiffDays);
   const compareViews = getEnableViewsByDiffDays(compareDiffDays);
 
-  const mutualViews = standardViews.filter(view => compareViews.includes(view));
+  const mutualViews = standardViews.filter((view) =>
+    compareViews.includes(view),
+  );
 
   if (mutualViews.length > 0) return mutualViews;
   const viewPriority = [

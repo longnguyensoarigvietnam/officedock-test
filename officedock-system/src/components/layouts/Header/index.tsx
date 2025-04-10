@@ -66,7 +66,6 @@ import { WebSocketMessageData } from '@interfaces/chat';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
-import { getRandomColor } from '@utils';
 type HeaderProps = {
   className?: string;
 };
@@ -181,7 +180,7 @@ const Header = ({ className }: HeaderProps) => {
         return {
           id: member.id,
           fullName: member.fullName,
-          avatarColor: getRandomColor(),
+          avatarColor: member.avatarColor,
           mainOrganization: member.organizations?.name || '',
         };
       });

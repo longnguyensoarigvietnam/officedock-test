@@ -18,7 +18,6 @@ import TaskListTeamStatistic from '@components/statisticTeam/category/TaskList';
 import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
-import { getRandomColor } from '@utils';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 const StatisticTeamBoard = () => {
@@ -205,7 +204,7 @@ const StatisticTeamBoard = () => {
         data.members.map((member) => ({
           id: member.id,
           fullName: member.fullName,
-          color: getRandomColor(),
+          color: member.avatarColor,
         })),
       );
     },

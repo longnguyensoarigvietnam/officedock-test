@@ -170,6 +170,7 @@ const PercentageTeamTags = ({
         item.users?.slice(0, 6).map((user) => ({
           label: user.user.fullName,
           percent: user.percent,
+          avatarColor: user.user.avatarColor,
         })) || [],
     );
     // Get list id
