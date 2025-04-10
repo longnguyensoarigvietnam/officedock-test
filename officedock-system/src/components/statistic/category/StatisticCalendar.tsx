@@ -13,6 +13,10 @@ import {
   handleSetStartDateBefore,
 } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
+import {
+  getCompareLineChartEnableViews,
+  getLineChartEnableViews,
+} from '@utils';
 
 function StatisticCalendar() {
   const {
@@ -32,6 +36,7 @@ function StatisticCalendar() {
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setIsLoadingOrganizationCompare,
+    setLineChartViewBy,
   } = useContext(StatisticStateContext);
   const modalRef = useRef<HTMLDivElement | null>(null);
   const buttonPrev = useRef<HTMLDivElement | null>(null);
@@ -213,7 +218,14 @@ function StatisticCalendar() {
 
   // Save data time
   const handleSaveCalendar = () => {
-    if ((dataEndDate && endDate && dataEndDate?.getTime() !==  endDate?.getTime()) || (dataStartDate && startDate && dataStartDate?.getTime() !== startDate?.getTime())) {
+    if (
+      (dataEndDate &&
+        endDate &&
+        dataEndDate?.getTime() !== endDate?.getTime()) ||
+      (dataStartDate &&
+        startDate &&
+        dataStartDate?.getTime() !== startDate?.getTime())
+    ) {
       setIsLoadingLarge(true);
       setIsLoadingMedium(true);
       setIsLoadingOrganization(true);
@@ -221,6 +233,21 @@ function StatisticCalendar() {
     setStartDate(dataStartDate);
     setEndDate(dataEndDate);
     setIsCheckCompare(isDataCheckCompare);
+    const enableViews = getLineChartEnableViews(
+      dataStartDate,
+      dataEndDate as Date,
+    ) as string[];
+    if (enableViews.length > 0) {
+      setLineChartViewBy({
+        value: enableViews[0],
+        label: enableViews[0],
+      });
+    } else {
+      setLineChartViewBy({
+        value: '',
+        label: '',
+      });
+    }
   };
 
   // Change data time calendar compare
@@ -234,14 +261,25 @@ function StatisticCalendar() {
 
   // Save data time compare
   const handleSaveCalendarCompare = () => {
-    if ((dataEndDate && endDate && dataEndDate?.getTime() !== endDate?.getTime()) || (dataStartDate && startDate && dataStartDate?.getTime() !== startDate?.getTime())) {
+    if (
+      (dataEndDate &&
+        endDate &&
+        dataEndDate?.getTime() !== endDate?.getTime()) ||
+      (dataStartDate &&
+        startDate &&
+        dataStartDate?.getTime() !== startDate?.getTime())
+    ) {
       setIsLoadingLarge(true);
       setIsLoadingMedium(true);
       setIsLoadingOrganization(true);
     }
     if (
-      dataEndDateCompare && endDateCompare && dataEndDateCompare?.getTime() !== endDateCompare?.getTime() ||
-      startDateCompare && startDateCompare && dataStartDateCompare?.getTime() !== startDateCompare?.getTime()
+      (dataEndDateCompare &&
+        endDateCompare &&
+        dataEndDateCompare?.getTime() !== endDateCompare?.getTime()) ||
+      (startDateCompare &&
+        startDateCompare &&
+        dataStartDateCompare?.getTime() !== startDateCompare?.getTime())
     ) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
@@ -254,6 +292,23 @@ function StatisticCalendar() {
     setEndDateCompare(dataEndDateCompare);
     setIsCheckCompare(isDataCheckCompare);
     setIsOpenModal(false);
+    const enableViews = getCompareLineChartEnableViews(
+      dataStartDate,
+      dataEndDate as Date,
+      dataStartDateCompare,
+      dataEndDateCompare as Date,
+    ) as string[];
+    if (enableViews.length > 0) {
+      setLineChartViewBy({
+        value: enableViews[0],
+        label: enableViews[0],
+      });
+    } else {
+      setLineChartViewBy({
+        value: '',
+        label: '',
+      });
+    }
   };
   const handleReset = () => {
     setIsOpenModal(false);

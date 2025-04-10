@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Line } from 'react-chartjs-2';
-import moment from 'moment';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -44,14 +43,18 @@ import {
   convertFromNumberToJapaneseTime,
   convertTimeToDecimal,
   convertToJapaneseDateRange,
-  convertToJapaneseMonthDate,
+  convertToStatisticJapaneseLabels,
   formatDateToYMD,
   formatShowStatisticTask,
   getCategoryFormattedDate,
   getJapaneseDayName,
   subtractDurations,
 } from '@utils/date';
-import { getRandomColor, lightenColor } from '@utils';
+import {
+  getCompareLineChartEnableViews,
+  getRandomColor,
+  lightenColor,
+} from '@utils';
 
 ChartJS.register(
   CategoryScale,
@@ -127,14 +130,12 @@ const LineChartCompare = ({
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
+    lineChartViewBy,
     setSelectedTags,
+    setLineChartViewBy,
   } = useContext(StatisticStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [viewBy, setViewBy] = useState<OptionDropdownType>({
-    value: StatisticViewOptions.WEEK,
-    label: StatisticViewLabels.WEEK,
-  });
   const [lineChartData, setLineChartData] = useState<{
     labels: string[];
     datasets: {
@@ -181,10 +182,6 @@ const LineChartCompare = ({
     {
       value: StatisticViewOptions.MONTH,
       label: StatisticViewLabels.MONTH,
-    },
-    {
-      value: StatisticViewOptions.YEAR,
-      label: StatisticViewLabels.YEAR,
     },
   ];
 
@@ -391,7 +388,7 @@ const LineChartCompare = ({
 
             if (!labels || index >= labels.length) return '';
 
-            return convertToJapaneseMonthDate(labels[index], true);
+            return convertToStatisticJapaneseLabels(labels[index], lineChartViewBy?.value as string, false)
           },
         },
       },
@@ -419,9 +416,7 @@ const LineChartCompare = ({
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
       tagIds: selectedTags,
-      statisticBy: viewBy.value
-        ? String(viewBy.value)
-        : StatisticViewOptions.WEEK,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
     },
   });
 
@@ -434,9 +429,7 @@ const LineChartCompare = ({
         largeCategoryId: Number(selectedLarge?.value),
         mediumCategoryId: Number(selectedMedium?.value),
         tagIds: selectedTags,
-        statisticBy: viewBy.value
-          ? String(viewBy.value)
-          : StatisticViewOptions.WEEK,
+        statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
       },
     });
 
@@ -490,24 +483,24 @@ const LineChartCompare = ({
 
       const finalLabelList: string[] = Array.from(
         new Set([
-          ...statisticTaskDurationsList.flatMap((category) =>
-            category.durations.flatMap((duration, index) =>
-              index === category.durations.length - 1 &&
-              String(category.durations.at(-1)?.endDate) !==
-                String(category.durations.at(-1)?.startDate)
-                ? [duration.startDate, duration.endDate]
-                : duration.startDate,
-            ),
+        ...statisticTaskDurationsList.flatMap((category) =>
+          category.durations.flatMap((duration, index) =>
+            index === category.durations.length - 1 &&
+            String(category.durations.at(-1)?.endDate) !==
+              String(category.durations.at(-1)?.startDate)
+              ? [duration.startDate, duration.endDate]
+              : duration.startDate,
           ),
-          ...statisticTaskDurationsCompareList.flatMap((category) =>
-            category.durations.flatMap((duration, index) =>
-              index === category.durations.length - 1 &&
-              String(category.durations.at(-1)?.endDate) !==
-                String(category.durations.at(-1)?.startDate)
-                ? [duration.startDate, duration.endDate]
-                : duration.startDate,
-            ),
+        ),
+        ...statisticTaskDurationsCompareList.flatMap((category) =>
+          category.durations.flatMap((duration, index) =>
+            index === category.durations.length - 1 &&
+            String(category.durations.at(-1)?.endDate) !==
+              String(category.durations.at(-1)?.startDate)
+              ? [duration.startDate, duration.endDate]
+              : duration.startDate,
           ),
+        ),
         ]),
       ).sort((a, b) => a.localeCompare(b));
 
@@ -1026,60 +1019,22 @@ const LineChartCompare = ({
     onSortingChange: handleSortingChange,
   });
 
-  const getDisabledViews = () => {
-    const standardDiffDays =
-      moment(endDate)
-        .endOf('day')
-        .diff(moment(startDate).startOf('day'), 'days') + 1;
-    const compareDiffDays =
-      moment(endDateCompare)
-        .endOf('day')
-        .diff(moment(startDateCompare).startOf('day'), 'days') + 1;
+  const getDisableViews = () => {
+    const allViews = [
+      StatisticViewOptions.DAY,
+      StatisticViewOptions.WEEK,
+      StatisticViewOptions.MONTH,
+    ];
 
-    const standardDisabledViews = [];
-    const compareDisabledViews = [];
-    const startMonthDays = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth() + 1,
-      0,
-    ).getDate();
-    const startCompareMonthDays = new Date(
-      startDateCompare.getFullYear(),
-      startDateCompare.getMonth() + 1,
-      0,
-    ).getDate();
-
-    if (standardDiffDays < 7)
-      standardDisabledViews.push(StatisticViewOptions.WEEK);
-    if (standardDiffDays < startMonthDays)
-      standardDisabledViews.push(StatisticViewOptions.MONTH);
-    if (standardDiffDays < 365)
-      standardDisabledViews.push(StatisticViewOptions.YEAR);
-
-    if (compareDiffDays < 7)
-      compareDisabledViews.push(StatisticViewOptions.WEEK);
-    if (compareDiffDays < startCompareMonthDays)
-      compareDisabledViews.push(StatisticViewOptions.MONTH);
-    if (compareDiffDays < 365)
-      compareDisabledViews.push(StatisticViewOptions.YEAR);
-
-    return Array.from(
-      new Set([...standardDisabledViews, ...compareDisabledViews]),
+    const enabledViews = getCompareLineChartEnableViews(
+      startDate,
+      endDate as Date,
+      startDateCompare,
+      endDateCompare as Date,
     );
-  };
 
-  // TODO: Waiting for QA's answer about day, month, and year views for the line chart, so temporarily displaying the week view by default.
-  // useEffect(() => {
-  //   if (startDate && endDate && startDateCompare && endDateCompare) {
-  //     const disableViews = getDisabledViews() as string[];
-  //     if (disableViews.includes(String(viewBy.value))) {
-  //       setViewBy({
-  //         value: StatisticViewOptions.DAY,
-  //         label: StatisticViewLabels.DAY,
-  //       });
-  //     }
-  //   }
-  // }, [startDate, endDate, startDateCompare, endDateCompare, viewBy]);
+    return allViews.filter((view) => !enabledViews.includes(view));
+  };
 
   return (
     <div
@@ -1290,7 +1245,7 @@ const LineChartCompare = ({
                 <Dropdown
                   options={viewOptions}
                   selectedOption={viewOptions.find(
-                    (element) => element.value === viewBy?.value,
+                    (element) => element.value === lineChartViewBy?.value,
                   )}
                   className="h-[34px] !w-[54px] !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
                   classNameTextData="!text-xs"
@@ -1298,13 +1253,12 @@ const LineChartCompare = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
-                    setViewBy({
+                    setLineChartViewBy({
                       label: e.label,
                       value: e.value,
                     });
                   }}
-                  disableItems={getDisabledViews()}
-                  disabled={true}
+                  disableItems={getDisableViews()}
                 />
               </div>
             </div>

@@ -19,7 +19,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import moment from 'moment';
 
 import ImageRound from '@components/common/ImageRound';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
@@ -38,10 +37,10 @@ import {
   convertFromNumberToJapaneseTime,
   convertTimeToDecimal,
   convertToJapaneseDateRange,
-  convertToJapaneseMonthDate,
+  convertToStatisticJapaneseLabels,
   formatDateToYMD,
 } from '@utils/date';
-import { getRandomColor, lightenColor } from '@utils';
+import { getLineChartEnableViews, getRandomColor, lightenColor } from '@utils';
 
 ChartJS.register(
   CategoryScale,
@@ -85,14 +84,12 @@ const LineChart = ({
     selectedOrganization,
     selectedTags,
     tagsOptions,
+    lineChartViewBy,
     setSelectedTags,
+    setLineChartViewBy
   } = useContext(StatisticStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [viewBy, setViewBy] = useState<OptionDropdownType>({
-    value: StatisticViewOptions.WEEK,
-    label: StatisticViewLabels.WEEK,
-  });
   const [lineChartData, setLineChartData] = useState<{
     labels: string[];
     datasets: {
@@ -138,10 +135,6 @@ const LineChart = ({
     {
       value: StatisticViewOptions.MONTH,
       label: StatisticViewLabels.MONTH,
-    },
-    {
-      value: StatisticViewOptions.YEAR,
-      label: StatisticViewLabels.YEAR,
     },
   ];
 
@@ -279,9 +272,7 @@ const LineChart = ({
             const isEdge = index === 0 || index === labels.length - 1;
 
             // Add extra spaces to reduce gap for first & last labels
-            return isEdge
-              ? `\xa0\xa0${convertToJapaneseMonthDate(labels[index], true)}\xa0\xa0`
-              : convertToJapaneseMonthDate(labels[index], false);
+            return convertToStatisticJapaneseLabels(labels[index], lineChartViewBy?.value as string, isEdge)
           },
         },
       },
@@ -309,9 +300,9 @@ const LineChart = ({
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
       tagIds: selectedTags,
-      statisticBy: viewBy.value
-        ? String(viewBy.value)
-        : StatisticViewOptions.WEEK,
+      statisticBy: lineChartViewBy
+        ? String(lineChartViewBy.value)
+        : '',
     },
   });
 
@@ -626,36 +617,17 @@ const LineChart = ({
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const getDisabledViews = () => {
-    const diffDays = moment(endDate).diff(moment(startDate), 'days');
-    const startMonthDays = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth() + 1,
-      0,
-    ).getDate();
+  const getDisableViews = () => {
+    const allViews = [
+      StatisticViewOptions.DAY,
+      StatisticViewOptions.WEEK,
+      StatisticViewOptions.MONTH,
+    ];
 
-    const disabledViews = [];
+    const enabledViews = getLineChartEnableViews(startDate, endDate as Date);
 
-    if (diffDays < 7) disabledViews.push(StatisticViewOptions.WEEK);
-    if (diffDays < startMonthDays)
-      disabledViews.push(StatisticViewOptions.MONTH);
-    if (diffDays < 365) disabledViews.push(StatisticViewOptions.YEAR);
-
-    return disabledViews;
+    return allViews.filter((view) => !enabledViews.includes(view));
   };
-
-  // TODO: Waiting for QA's answer about day, month, and year views for the line chart, so temporarily displaying the week view by default.
-  // useEffect(() => {
-  //   if (startDate && endDate) {
-  //     const disableViews = getDisabledViews() as string[];
-  //     if (disableViews.includes(String(viewBy.value))) {
-  //       setViewBy({
-  //         value: StatisticViewOptions.DAY,
-  //         label: StatisticViewLabels.DAY,
-  //       });
-  //     }
-  //   }
-  // }, [startDate, endDate, viewBy]);
 
   return (
     <div
@@ -833,7 +805,7 @@ const LineChart = ({
                 <Dropdown
                   options={viewOptions}
                   selectedOption={viewOptions.find(
-                    (element) => element.value === viewBy?.value,
+                    (element) => element.value === lineChartViewBy?.value,
                   )}
                   className="h-[34px] !w-[54px] !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
                   classNameTextData="!text-xs"
@@ -841,13 +813,12 @@ const LineChart = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
-                    setViewBy({
+                    setLineChartViewBy({
                       label: e.label,
                       value: e.value,
                     });
                   }}
-                  disableItems={getDisabledViews()}
-                  disabled={true}
+                  disableItems={getDisableViews()}
                 />
               </div>
             </div>
