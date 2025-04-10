@@ -492,7 +492,7 @@ const ListUsers = () => {
           <div className=" flex items-center  gap-5">
             <p className="text-black text-[26px]">ユーザー管理</p>
             <span>アステッキホールディングス株式会社</span>
-            <span>全メンバー{userList?.count}人 / 50</span>
+            <span>全メンバー30人 / 50</span>
           </div>
           <div className="flex gap-[10px] items-center">
             <p>現在のプラン</p>
@@ -733,7 +733,7 @@ const ListUsers = () => {
           open={openActionsUserModal}
           action={actionTypeParam}
           dataUserDetail={userEditDetail}
-          originalOrganizationOptions={organizationUserOptions}
+          originalOrganizationOptions={organizationUserOptions.filter((role) => role.value)}
           roleUserOptions={roleUserOptions.filter((role) => role.value)}
           emailErrorMessage={emailErrorMessage}
           usernameErrorMessage={usernameErrorMessage}

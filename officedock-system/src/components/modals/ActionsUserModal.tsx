@@ -89,6 +89,7 @@ const ActionsUserModal = ({
     watch,
     clearErrors,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<CreateUserFormData>({
     mode: 'onSubmit',
@@ -578,7 +579,7 @@ const ActionsUserModal = ({
                         name={`mainOrganization`}
                         render={({ field: { value, onChange } }) => {
                           return (
-                            <div className="max-w-[450px]">
+                            <div className="max-w-[441px] w-[441px]">
                               <Dropdown
                                 options={unSelectedOrganizationOptions}
                                 selectedOption={originalOrganizationOptions.find(
@@ -613,7 +614,9 @@ const ActionsUserModal = ({
                         className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
                         type="button"
                         name="Remove TagId"
-                        onClick={() => {}}>
+                        onClick={() => {
+                          setValue('mainOrganization', undefined)
+                        }}>
                         削除
                       </Button>
                     </div>
@@ -634,7 +637,7 @@ const ActionsUserModal = ({
                           name={`organizations.${index}`}
                           render={({ field: { value, onChange } }) => {
                             return (
-                              <div className="max-w-[450px]">
+                              <div className="max-w-[441px] w-[441px]">
                                 <Dropdown
                                   options={unSelectedOrganizationOptions}
                                   selectedOption={originalOrganizationOptions.find(
