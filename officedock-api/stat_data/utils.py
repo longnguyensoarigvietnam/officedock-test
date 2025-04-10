@@ -23,89 +23,86 @@ from organizations.constants import CategoryColors
 from organizations.models import OrganizationsStatisticCategories
 from stat_data.constants import NONE_CATEGORY, FilterTime
 from stat_data.serializers import (
-    StatisticTaskSerializer,
-    StatisticEventSerializer,
     BaseStatisticTaskSerializer,
     BaseStatisticEventSerializer,
 )
+from tags.models import Tag
 from tasks.constants import TaskCategoryTypes
-from tasks.models import Task
+from tasks.models import Task, TaskDuration
 
 
-def get_list_models(
-    start_of_day,
-    end_of_day,
-    organizations=None,
+def get_list_durations_by_users(
+    start_of_day=None,
+    end_of_day=None,
     users=None,
+    organizations=None,
     tags=None,
-    large_categories=None,
+    large_id=None,
+    medium_id=None,
+    small_id=None,
+    durations=None,
 ):
+    """
+    Return list duration by users
+    """
+    filter_tasks = Q()
+    filter_events = Q()
+    if large_id:
+        filter_tasks &= Q(
+            task__categories__large_statistic_category__id=large_id
+        )
+        filter_events &= Q(
+            schedule__categories__large_statistic_category__id=large_id
+        )
+        if medium_id:
+            filter_tasks &= Q(
+                task__categories__medium_statistic_category__id=medium_id
+            )
+            filter_events &= Q(
+                schedule__categories__medium_statistic_category__id=medium_id
+            )
+            if small_id:
+                filter_tasks &= Q(
+                    task__categories__small_statistic_category__id=small_id
+                )
+                filter_events &= Q(
+                    schedule__categories__small_statistic_category__id=small_id
+                )
+    if tags:
+        filter_tasks &= Q(task__tags__in=tags)
+        filter_events &= Q(schedule__tags__in=tags)
+    if organizations:
+        filter_tasks &= Q(task__organization__in=organizations)
+        filter_events &= Q(schedule__organization__in=organizations)
+    if users:
+        filter_tasks &= Q(user__in=users)
+        filter_events &= Q(user__in=users)
+    if durations:
+        task_durations = durations.filter(filter_tasks)
+        event_durations = durations.filter(filter_events)
+    else:
+        base_filter = Q(
+            started_at__gte=start_of_day,
+            paused_at__lte=end_of_day,
+        )
+        durations = TaskDuration.objects.filter(base_filter)
+        task_durations = durations.filter(filter_tasks)
+        event_durations = durations.filter(filter_events)
+
+    return (task_durations | event_durations).distinct()
+
+
+def get_list_models(durations=None):
     """
     Return list models by organizations, users and tags
     """
 
-    # Filters
-    filter_tasks = Q()
-    filter_events = Q()
-
-    if organizations:
-        filter_tasks &= Q(organization__in=organizations)
-        filter_events &= Q(organization__in=organizations)
-    if users:
-        filter_tasks &= Q(people_in_charge_tasks__user__in=users)
-        filter_events &= Q(participants__in=users)
-    if large_categories:
-        filter_tasks &= Q(
-            categories__large_statistic_category__id__in=large_categories
-        ) | Q(categories__large_statistic_category__isnull=True)
-        filter_events &= Q(
-            categories__large_statistic_category__id__in=large_categories
-        ) | Q(categories__large_statistic_category__isnull=True)
-    if tags:
-        filter_tasks &= Q(tags__in=tags)
-        filter_events &= Q(tags__in=tags)
-
-    # Optimized Query with Select Related and Prefetch Related
-    tasks = (
-        Task.objects.filter(filter_tasks)
-        .select_related("organization")  # Eager load ForeignKey
-        .prefetch_related(
-            "tags", "people_in_charge_tasks"
-        )  # Optimize ManyToMany
-    )
-
-    events = (
-        Schedule.objects.filter(filter_events)
-        .select_related("organization")
-        .prefetch_related("tags", "participants")
-    )
-
-    tasks = Task.objects.filter(
-        Q(id__in=tasks.values_list("id", flat=True))
-        & Q(task_durations__started_at__gte=start_of_day)
-        & Q(task_durations__paused_at__lte=end_of_day)
-    ).distinct()
+    tasks = Task.objects.filter(id__in=durations.values_list("task", flat=True))
     events = Schedule.objects.filter(
-        Q(id__in=events.values_list("id", flat=True))
-        & Q(task_durations__started_at__gte=start_of_day)
-        & Q(task_durations__paused_at__lte=end_of_day)
-    ).distinct()
+        id__in=durations.values_list("schedule", flat=True)
+    )
 
     return tasks, events
-
-
-def get_list_users(queryset, is_task_model=False):
-    """
-    Handle group model by user.
-    """
-    if is_task_model:
-        list_users = queryset.all().values("people_in_charge__id")
-        users = [user["people_in_charge__id"] for user in list_users]
-    else:
-        list_users = queryset.all().values("participants__id")
-        users = [user["participants__id"] for user in list_users]
-
-    return users
 
 
 def get_category_durations(
@@ -134,49 +131,17 @@ def get_category_durations(
             "categories__medium_statistic_category__name",
             "organization__id",
         )
-    if medium_category_id:
-        with_large = with_large.filter(
-            Q(categories__medium_statistic_category__id=medium_category_id)
-            & Q(categories__small_statistic_category__isnull=False)
-        ).values(
-            "categories__small_statistic_category__id",
-            "categories__small_statistic_category__name",
-            "organization__id",
-        )
-    with_large = with_large.annotate(duration=Sum("duration"))
-
-    without_large = queryset.filter(
-        Q(categories__large_statistic_category__isnull=True)
-    )
-    if large_category_id:
-        without_large = queryset.filter(
-            Q(categories__large_statistic_category__id=large_category_id)
-            & Q(categories__medium_statistic_category__isnull=True)
-        )
         if medium_category_id:
-            without_large = queryset.filter(
-                Q(categories__large_statistic_category__id=large_category_id)
-                & Q(
-                    categories__medium_statistic_category__id=medium_category_id
-                )
-                & Q(categories__small_statistic_category__isnull=True)
+            with_large = with_large.filter(
+                Q(categories__medium_statistic_category__id=medium_category_id)
+                & Q(categories__small_statistic_category__isnull=False)
+            ).values(
+                "categories__small_statistic_category__id",
+                "categories__small_statistic_category__name",
+                "organization__id",
             )
-    without_large = without_large.annotate(duration=Sum("duration")).values(
-        "duration"
-    )
 
-    return with_large, without_large
-
-
-def get_tag_durations(queryset):
-    """
-    Splits the queryset with a tag
-    """
-    queryset = queryset.values(
-        "tags__name",
-        "tags__id",
-    ).annotate(duration=Sum("duration"))
-    return queryset
+    return with_large.distinct()
 
 
 def annotate_duration(queryset, start_of_day, end_of_day):
@@ -187,35 +152,34 @@ def annotate_duration(queryset, start_of_day, end_of_day):
         duration=ExpressionWrapper(
             Case(
                 When(
-                    task_durations__paused_at__isnull=True,
+                    paused_at__isnull=True,
                     then=end_of_day if end_of_day < timezone.now() else Now(),
                 ),
-                default=F("task_durations__paused_at"),
+                default=F("paused_at"),
                 output_field=DurationField(),
             )
-            - Coalesce(F("task_durations__started_at"), start_of_day),
+            - Coalesce(F("started_at"), start_of_day),
             output_field=DurationField(),
         )
-    )
+    ).aggregate(total_duration=Sum("duration"))
 
 
 def aggregate_durations(
-    tasks, events, large_category_id=None, medium_category_id=None
+    tasks,
+    events,
+    large_category_id=None,
+    medium_category_id=None,
+    durations=None,
+    start_of_day=None,
+    end_of_day=None,
 ):
     """Aggregates durations from tasks or events into a single dictionary."""
-    (
-        task_with_category_large_durations,
-        task_without_large_durations,
-    ) = get_category_durations(tasks, large_category_id, medium_category_id)
-    (
-        event_with_category_large_durations,
-        event_without_large_durations,
-    ) = get_category_durations(events, large_category_id, medium_category_id)
     category_dict = {}
-    combine_cards = list(task_with_category_large_durations) + list(
-        event_with_category_large_durations
+    combine_cards = list(
+        get_category_durations(tasks, large_category_id, medium_category_id)
+    ) + list(
+        get_category_durations(events, large_category_id, medium_category_id)
     )
-
     category_fields = [
         (
             "categories__large_statistic_category__name",
@@ -243,6 +207,7 @@ def aggregate_durations(
                 organization_id=organization_id,
             )
         )
+        filter_durations = None
         if not large_category_id and not medium_category_id:
             category_color = (
                 organization_statistic_cats.filter(
@@ -251,135 +216,99 @@ def aggregate_durations(
                 .values_list("color", flat=True)
                 .first()
             )
-        duration = card["duration"]
+            filter_durations = get_list_durations_by_users(
+                durations=durations,
+                large_id=category_id,
+            )
+        if large_category_id:
+            filter_durations = get_list_durations_by_users(
+                durations=durations,
+                large_id=large_category_id,
+                medium_id=category_id,
+            )
+            if medium_category_id:
+                filter_durations = get_list_durations_by_users(
+                    durations=durations,
+                    large_id=large_category_id,
+                    medium_id=medium_category_id,
+                    small_id=category_id,
+                )
+        duration = annotate_duration(
+            filter_durations, start_of_day, end_of_day
+        )["total_duration"]
         if not large_category_id and not medium_category_id:
             key = category_name if category_color else "empty_category"
         else:
             key = category_name
 
-        if key in category_dict:
-            category_dict[key]["duration"] += duration
+        if (
+            key not in category_dict
+            and not large_category_id
+            and not medium_category_id
+        ):
+            category_dict[key] = {
+                "category_id": category_id if category_color else None,
+                "category_name": category_name
+                if category_color
+                else NONE_CATEGORY,
+                "category_color": category_color
+                if category_color
+                else CategoryColors.GRAY.value,
+                "duration": duration,
+            }
         else:
-            if not large_category_id and not medium_category_id:
+            check_medium_category_exists = (
+                large_category_id
+                and not medium_category_id
+                and not organization_statistic_cats.filter(
+                    large_statistic_category__id=large_category_id,
+                    medium_statistic_category__id=category_id,
+                ).exists()
+            )
+            check_small_category_exists = (
+                large_category_id
+                and medium_category_id
+                and not organization_statistic_cats.filter(
+                    large_statistic_category__id=large_category_id,
+                    medium_statistic_category__id=medium_category_id,
+                    small_statistic_category__id=category_id,
+                ).exists()
+            )
+            if (
+                check_medium_category_exists
+                or check_small_category_exists
+                or (
+                    large_category_id and medium_category_id and not category_id
+                )
+            ):
+                category_dict["empty_category"] = {
+                    "category_id": None,
+                    "category_name": NONE_CATEGORY,
+                    "category_color": CategoryColors.GRAY.value,
+                    "duration": duration,
+                }
+            else:
                 category_dict[key] = {
-                    "category_id": category_id if category_color else None,
-                    "category_name": category_name
-                    if category_color
-                    else NONE_CATEGORY,
-                    "category_color": category_color
-                    if category_color
-                    else CategoryColors.GRAY.value,
-                    "duration": duration,
-                }
-            else:
-                check_medium_category_exists = (
-                    large_category_id
-                    and not medium_category_id
-                    and not organization_statistic_cats.filter(
-                        large_statistic_category__id=large_category_id,
-                        medium_statistic_category__id=category_id,
-                    ).exists()
-                )
-                check_small_category_exists = (
-                    large_category_id
-                    and medium_category_id
-                    and not organization_statistic_cats.filter(
-                        large_statistic_category__id=large_category_id,
-                        medium_statistic_category__id=medium_category_id,
-                        small_statistic_category__id=category_id,
-                    ).exists()
-                )
-                if (
-                    check_medium_category_exists
-                    or check_small_category_exists
-                    or (
-                        large_category_id
-                        and medium_category_id
-                        and not category_id
-                    )
-                ):
-                    category_dict["empty_category"] = {
-                        "category_id": None,
-                        "category_name": NONE_CATEGORY,
-                        "category_color": CategoryColors.GRAY.value,
-                        "duration": duration,
-                    }
-                else:
-                    category_dict[key] = {
-                        "category_id": category_id,
-                        "category_name": category_name,
-                        "category_color": category_color,
-                        "duration": duration,
-                    }
-
-    if task_without_large_durations:
-        if category_dict.get("empty_category") is None:
-            category_dict["empty_category"] = {
-                "category_id": None,
-                "category_name": NONE_CATEGORY,
-                "category_color": CategoryColors.GRAY.value,
-                "duration": timedelta(0),
-            }
-        for task in task_without_large_durations:
-            category_dict["empty_category"]["duration"] += task["duration"]
-    if event_without_large_durations:
-        if category_dict.get("empty_category") is None:
-            category_dict["empty_category"] = {
-                "category_id": None,
-                "category_name": NONE_CATEGORY,
-                "category_color": CategoryColors.GRAY.value,
-                "duration": timedelta(0),
-            }
-        for event in event_without_large_durations:
-            category_dict["empty_category"]["duration"] += event["duration"]
-    return list(category_dict.values())
-
-
-def aggregate_durations_by_tag(tasks, events, tag_ids=None):
-    """Aggregates durations from tasks or events by tag name into a single dictionary."""
-
-    task_with_tag = get_tag_durations(tasks)
-    event_with_tag = get_tag_durations(events)
-
-    tag_dict = {}
-    combine_cards = list(task_with_tag) + list(event_with_tag)
-    for card in combine_cards:
-        tag_id = card["tags__id"]
-        tag_name = card["tags__name"]
-        duration = card["duration"]
-        if tag_id and tag_id in tag_ids:
-            if tag_id in tag_dict:
-                tag_dict[tag_id]["duration"] += duration
-            else:
-                tag_dict[tag_id] = {
-                    "tag_id": tag_id,
-                    "tag_name": tag_name,
+                    "category_id": category_id,
+                    "category_name": category_name,
+                    "category_color": category_color,
                     "duration": duration,
                 }
 
-    return list(tag_dict.values())
-
-
-def merge_task_and_event(tasks, events, start_of_day, end_of_day):
-    """Merge task and event"""
-    return (
-        StatisticTaskSerializer(
-            tasks,
-            many=True,
-            context={
-                "start_of_day": start_of_day,
-                "end_of_day": end_of_day,
-            },
-        ).data
-        + StatisticEventSerializer(
-            events,
-            many=True,
-            context={
-                "start_of_day": start_of_day,
-                "end_of_day": end_of_day,
-            },
-        ).data
+    filter_durations = get_duration_of_none_category(
+        durations, large_category_id, medium_category_id
     )
+    if filter_durations.exists():
+        category_dict["empty_category"] = {
+            "category_id": None,
+            "category_name": NONE_CATEGORY,
+            "category_color": CategoryColors.GRAY.value,
+            "duration": annotate_duration(
+                filter_durations, start_of_day, end_of_day
+            )["total_duration"],
+        }
+
+    return list(category_dict.values())
 
 
 def process_categories(
@@ -392,6 +321,7 @@ def process_categories(
     category_type=None,
     is_with_tasks=False,
     users=None,
+    durations=None,
 ):
     """Processes category durations, calculates percentages, and returns structured data."""
     percent = 100
@@ -410,6 +340,11 @@ def process_categories(
         TaskCategoryTypes.LARGE.value: "categories__large_statistic_category__isnull",
         TaskCategoryTypes.MEDIUM.value: "categories__medium_statistic_category__isnull",
         TaskCategoryTypes.SMALL.value: "categories__small_statistic_category__isnull",
+    }
+    filter_duration_by_type_category = {
+        TaskCategoryTypes.LARGE.value: "large_id",
+        TaskCategoryTypes.MEDIUM.value: "medium_id",
+        TaskCategoryTypes.SMALL.value: "small_id",
     }
     category_ids = [item["category_id"] for item in category_list]
     for cat in category_list:
@@ -460,12 +395,20 @@ def process_categories(
                     ).data
                 )
             elif users:
+                filter_key = filter_duration_by_type_category[category_type]
+                if category_id:
+                    filter_durations = get_list_durations_by_users(
+                        durations=durations,
+                        **{filter_key: category_id},
+                    )
+                else:
+                    filter_durations = get_duration_of_none_category(
+                        durations,
+                        **{filter_key: category_id},
+                    )
                 data["users"] = process_users(
                     time_str_to_timedelta(category_duration),
-                    task_filter,
-                    event_filter,
-                    start_of_day,
-                    end_of_day,
+                    filter_durations,
                     users,
                 )
 
@@ -501,38 +444,20 @@ def process_categories(
     return categories_data
 
 
-def get_duration_of_category(categories, category_id):
-    """Handle get duration of category"""
-    duration = timedelta()
-    for cat in categories:
-        if cat["category_id"] == int(category_id):
-            duration = time_str_to_timedelta(cat["duration"])
-            break
-    return duration
-
-
 def process_users(
     total_duration,
-    tasks=None,
-    events=None,
-    start_of_day=None,
-    end_of_day=None,
+    durations=None,
     users=None,
 ):
     """Processes users durations, calculates percentages, and returns structured data."""
     user_data = []
     percent = 100
     for user in users:
-        user_tasks = tasks.filter(people_in_charge=user)
-        user_events = events.filter(participants=user)
-        if user_tasks or user_events:
-            duration = timedelta()
-            combine_tasks = merge_task_and_event(
-                user_tasks, user_events, start_of_day, end_of_day
-            )
-            for task in combine_tasks:
-                duration += time_str_to_timedelta(task["total_duration"])
-
+        filter_durations = get_list_durations_by_users(
+            durations=durations, users=[user]
+        )
+        if filter_durations:
+            duration = get_total_durations(filter_durations)
             # Calculate the percentage of the total duration
             if total_duration.total_seconds() > 0:
                 percent_per_total_duration = (
@@ -570,6 +495,7 @@ def process_tags(
     end_of_day=None,
     is_with_tasks=False,
     users=None,
+    durations=None,
 ):
     """Processes category durations, calculates percentages, and returns structured data."""
     percent = 100
@@ -577,6 +503,8 @@ def process_tags(
 
     for tag in tag_list:
         tag_duration = format_duration(tag["duration"]) or timedelta(0)
+        if percent == 0:
+            continue
         data = {
             "tag_id": tag["tag_id"],
             "tag_name": tag["tag_name"],
@@ -588,7 +516,9 @@ def process_tags(
             if tag["tag_id"]:
                 task_filter = tasks.filter(tags__id=tag["tag_id"]).all()
                 event_filter = events.filter(tags__id=tag["tag_id"]).all()
-
+                filter_durations = get_list_durations_by_users(
+                    durations=durations, tags=[tag["tag_id"]]
+                )
                 if is_with_tasks:
                     data["tasks"] = (
                         BaseStatisticTaskSerializer(
@@ -611,10 +541,7 @@ def process_tags(
                 elif users:
                     data["users"] = process_users(
                         time_str_to_timedelta(tag_duration),
-                        task_filter,
-                        event_filter,
-                        start_of_day,
-                        end_of_day,
+                        filter_durations,
                         users,
                     )
 
@@ -650,46 +577,69 @@ def process_per_user(
     end_of_day,
     large_category_id=None,
     medium_category_id=None,
-    is_get_total_duration=False,
     is_tag=False,
     tag_ids=None,
+    durations=None,
 ):
     """
     Handle process category per user.
     """
     total_duration = timedelta()
     aggregate_total = []
+    tags = Tag.objects.filter(id__in=tag_ids).all()
     for user in users:
-        filter_tasks = tasks.filter(people_in_charge_tasks__user=user)
-        filter_events = events.filter(participants=user)
+        filter_durations = get_list_durations_by_users(
+            durations=durations, users=[user]
+        )
+        if not filter_durations:
+            continue
+        if is_tag:
+            tag_totals = []
+            for tag in tags:
+                args = {
+                    "durations": filter_durations,
+                    "tags": [tag],
+                }
 
-        if filter_tasks or filter_events:
-            if is_tag:
-                aggregate_total.append(
-                    aggregate_durations_by_tag(
-                        annotate_duration(
-                            filter_tasks, start_of_day, end_of_day
-                        ),
-                        annotate_duration(
-                            filter_events, start_of_day, end_of_day
-                        ),
-                        tag_ids=tag_ids,
-                    )
+                if large_category_id:
+                    args["large_id"] = large_category_id
+                    args["medium_id"] = medium_category_id
+
+                filter_duration_by_tag = get_list_durations_by_users(**args)
+
+                duration = get_total_durations(filter_duration_by_tag)
+                total_duration += duration
+
+                tag_totals.append(
+                    {
+                        "tag_id": tag.id,
+                        "tag_name": tag.name,
+                        "duration": duration,
+                    }
                 )
-            else:
-                # Get list large category per user
-                aggregate_total.append(
-                    aggregate_durations(
-                        annotate_duration(
-                            filter_tasks, start_of_day, end_of_day
-                        ),
-                        annotate_duration(
-                            filter_events, start_of_day, end_of_day
-                        ),
-                        large_category_id,
-                        medium_category_id,
-                    )
+            aggregate_total.append(tag_totals)
+        else:
+            if large_category_id:
+                filter_durations = get_list_durations_by_users(
+                    durations=filter_durations,
+                    large_id=large_category_id,
+                    medium_id=medium_category_id,
                 )
+
+            duration = get_total_durations(filter_durations)
+            total_duration += duration
+            # Get list large category per user
+            aggregate_total.append(
+                aggregate_durations(
+                    tasks,
+                    events,
+                    durations=filter_durations,
+                    start_of_day=start_of_day,
+                    end_of_day=end_of_day,
+                    large_category_id=large_category_id,
+                    medium_category_id=medium_category_id,
+                )
+            )
     if is_tag:
         key_id = "tag_id"
         name_key = "tag_name"
@@ -703,66 +653,46 @@ def process_per_user(
     result_dict = defaultdict(
         lambda: {name_key: None, "duration": timedelta(), **extra_keys}
     )
-
     for sublist in aggregate_total:
         for item in sublist:
             item_id = item[key_id]
             result_dict[item_id][name_key] = item[name_key]
-            result_dict[item_id]["duration"] += item["duration"]
-            if is_get_total_duration:
-                total_duration += item["duration"]
+            result_dict[item_id]["duration"] += (
+                item["duration"] if item.get("duration") else timedelta()
+            )
             if not is_tag and "category_color" in item:
                 result_dict[item_id]["category_color"] = item["category_color"]
 
     result_list = [{key_id: k, **v} for k, v in result_dict.items()]
-
     return total_duration, result_list
 
 
 def process_merge_card_per_tag(
     tag_ids,
-    tasks,
-    events,
-    start_of_day,
-    end_of_day,
-    is_get_total_duration=False,
+    durations=None,
 ):
     """
     Handle process category per user.
     """
     total_duration = timedelta()
-    category_totals = []
-    for tag_id in tag_ids:
-        filter_tasks = tasks.filter(tags__id=tag_id)
-        filter_events = events.filter(tags__id=tag_id)
-        if filter_tasks or filter_events:
-            if is_get_total_duration:
-                merged_duration = merge_task_and_event(
-                    filter_tasks, filter_events, start_of_day, end_of_day
-                )
-                # Calculate total duration
-                for task in merged_duration:
-                    total_duration += time_str_to_timedelta(
-                        task["total_duration"]
-                    )
+    tag_totals = []
+    tags = Tag.objects.filter(id__in=tag_ids).all()
+    for tag in tags:
+        durations = get_list_durations_by_users(
+            durations=durations, tags=[tag.id]
+        )
+        duration = get_total_durations(durations)
+        total_duration += duration
 
-            category_totals.append(
-                aggregate_durations_by_tag(
-                    annotate_duration(filter_tasks, start_of_day, end_of_day),
-                    annotate_duration(filter_events, start_of_day, end_of_day),
-                    tag_ids=tag_ids,
-                )
-            )
-    # Handle sum duration and merge category has same id
-    tag_list = defaultdict(lambda: {"tag_name": None, "duration": timedelta()})
-    for sublist in category_totals:
-        for item in sublist:
-            tag_id = item["tag_id"]
-            tag_list[tag_id]["tag_name"] = item["tag_name"]
-            tag_list[tag_id]["duration"] += item["duration"]
-    tag_list = [{"tag_id": k, **v} for k, v in tag_list.items()]
+        tag_totals.append(
+            {
+                "tag_id": tag.id,
+                "tag_name": tag.name,
+                "duration": duration,
+            }
+        )
 
-    return total_duration, tag_list
+    return total_duration, tag_totals
 
 
 def split_ranges(from_date, end_date, option):
@@ -859,3 +789,45 @@ def build_category_filters(
         filters &= Q(created_at__lt=created_at)
 
     return filters
+
+
+def get_total_durations(durations):
+    """
+    Handle get total durations
+    """
+    total_duration = timedelta()
+    for duration in durations:
+        paused_at = duration.paused_at if duration.paused_at else timezone.now()
+        total_duration += paused_at - duration.started_at
+    return total_duration
+
+
+def get_duration_of_none_category(durations, large_id=None, medium_id=None):
+    """
+    Handle get total durations of none category
+    """
+    filter_durations = durations.filter(
+        Q(task__categories__large_statistic_category__isnull=True)
+        & Q(schedule__categories__large_statistic_category__isnull=True)
+    )
+
+    if large_id:
+        filter_durations = get_list_durations_by_users(
+            durations=durations,
+            large_id=large_id,
+        ).filter(
+            Q(task__categories__medium_statistic_category__isnull=True)
+            & Q(schedule__categories__medium_statistic_category__isnull=True)
+        )
+
+        if medium_id:
+            filter_durations = get_list_durations_by_users(
+                durations=durations,
+                large_id=large_id,
+                medium_id=medium_id,
+            ).filter(
+                Q(task__categories__small_statistic_category__isnull=True)
+                & Q(schedule__categories__small_statistic_category__isnull=True)
+            )
+
+    return filter_durations

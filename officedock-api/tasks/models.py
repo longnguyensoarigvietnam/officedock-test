@@ -407,6 +407,13 @@ class TaskDuration(BaseModel):
         null=True,
         blank=True,
     )
+    user = models.ForeignKey(
+        "users.User",
+        related_name="task_durations",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     schedule = models.ForeignKey(
         "calendars.Schedule",
         on_delete=models.CASCADE,
