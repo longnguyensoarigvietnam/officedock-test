@@ -23,8 +23,10 @@ from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
 from organizations.utils import get_high_level_organizations
 from organizations.constants import OrganizationTypes
+from tasks.models import TaskDuration
 from .filters import OrganizationFilter, OrganizationSkillFilter
 from .serializers import (
+    CheckActualDurationSerializer,
     OrganizationCategoryHierarchyForCreateSerializer,
     OrganizationCategoryHierarchySerializer,
     OrganizationHierarchyForCreateSerializer,
@@ -366,7 +368,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         screen_name=Screens.CATEGORY_HIERARCHY.value,
     )
     @transaction.atomic
-    def statistic_categories(self, request, pk=None):
+    def statistic_categories(self, request, uuid=None):
         """
         Handle create hierarchical category statistics to each organization
         """
@@ -591,7 +593,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         screen_name=Screens.ORGANIZATION_SKILL.value,
     )
     @transaction.atomic
-    def skills(self, request, pk=None):
+    def skills(self, request, uuid=None):
         """
         Handle skills to each organization by method
         """
@@ -745,6 +747,114 @@ class OrganizationCategoryHierarchyViewSet(
         context["request"] = self.request
         return context
 
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="check-actual-duration",
+        serializer_class=CheckActualDurationSerializer,
+    )
+    def check_has_actual_duration(self, request):
+        """
+        Check if any TaskDuration exists for given categories and organization.
+        """
+        company = request.user.company
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        organizations_statistic_categories = validated_data.get(
+            "organizations_statistic_categories", []
+        )
+
+        # Check data delete is delete_all_large or delete_all_medium
+        org_sta_cates = OrganizationsStatisticCategories.objects.filter(
+            company=company
+        ).exclude(
+            id__in=[item.id for item in organizations_statistic_categories]
+        )
+
+        delete_all_large = False
+        delete_all_medium = False
+
+        for item in organizations_statistic_categories:
+            org = item.organization
+            large_stat = item.large_statistic_category
+            medium_stat = item.medium_statistic_category
+
+            has_other_large = org_sta_cates.filter(
+                organization=org, large_statistic_category=large_stat
+            ).exists()
+
+            if not has_other_large:
+                delete_all_large = True
+                delete_all_medium = True
+                break
+
+            if not delete_all_medium:
+                has_other_medium = org_sta_cates.filter(
+                    organization=org,
+                    large_statistic_category=large_stat,
+                    medium_statistic_category=medium_stat,
+                ).exists()
+                if not has_other_medium:
+                    delete_all_medium = True
+
+        # Detect data delete has actual duration
+        exists_actual_duration = False
+        filter_q = Q()
+
+        for item in organizations_statistic_categories:
+            org = item.organization
+            large_stat = item.large_statistic_category or None
+            medium_stat = item.medium_statistic_category or None
+            small_stat = item.small_statistic_category or None
+
+            # Build base Q filter
+            category_q = Q(
+                task__categories__large_statistic_category=large_stat,
+                task__categories__medium_statistic_category=medium_stat,
+                task__categories__small_statistic_category=small_stat,
+            ) | Q(
+                schedule__categories__large_statistic_category=large_stat,
+                schedule__categories__medium_statistic_category=medium_stat,
+                schedule__categories__small_statistic_category=small_stat,
+            )
+
+            # Handle delete_all_large and delete_all_medium
+            if delete_all_large and large_stat:
+                delete_all_medium = True
+                filter_q |= Q(
+                    task__categories__large_statistic_category=large_stat,
+                    task__categories__medium_statistic_category=None,
+                    task__categories__small_statistic_category=None,
+                ) | Q(
+                    schedule__categories__large_statistic_category=large_stat,
+                    schedule__categories__medium_statistic_category=None,
+                    schedule__categories__small_statistic_category=None,
+                )
+
+            if delete_all_medium and large_stat and medium_stat:
+                filter_q |= Q(
+                    task__categories__large_statistic_category=large_stat,
+                    task__categories__medium_statistic_category=medium_stat,
+                    task__categories__small_statistic_category=None,
+                ) | Q(
+                    schedule__categories__large_statistic_category=large_stat,
+                    schedule__categories__medium_statistic_category=medium_stat,
+                    schedule__categories__small_statistic_category=None,
+                )
+
+            combined_q = (
+                Q(company=company)
+                & (Q(task__organization=org) | Q(schedule__organization=org))
+                & (category_q | filter_q)
+            )
+
+            if TaskDuration.objects.filter(combined_q).exists():
+                exists_actual_duration = True
+                break
+
+        return self.response_ok({"has_actual_duration": exists_actual_duration})
+
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         company = request.user.company
@@ -779,6 +889,52 @@ class OrganizationCategoryHierarchyViewSet(
                 skills = item.pop("skills", [])
 
                 if organization_statistic_category:
+
+                    # Update statistic category to task/event
+                    categories = Category.objects.filter(
+                        Q(company=company)
+                        & Q(
+                            Q(task__organization=organization)
+                            | Q(schedule__organization=organization)
+                        )
+                    ).all()
+
+                    # Case selected large/medium/small statistic category
+                    categories.filter(
+                        large_statistic_category=organization_statistic_category.large_statistic_category
+                        or None,
+                        medium_statistic_category=organization_statistic_category.medium_statistic_category
+                        or None,
+                        small_statistic_category=organization_statistic_category.small_statistic_category
+                        or None,
+                    ).update(
+                        large_statistic_category=large_statistic_category,
+                        medium_statistic_category=medium_statistic_category,
+                        small_statistic_category=small_statistic_category,
+                    )
+
+                    # Case selected large/medium statistic category
+                    categories.filter(
+                        large_statistic_category=organization_statistic_category.large_statistic_category
+                        or None,
+                        medium_statistic_category=organization_statistic_category.medium_statistic_category
+                        or None,
+                        small_statistic_category=None,
+                    ).update(
+                        large_statistic_category=large_statistic_category,
+                        medium_statistic_category=medium_statistic_category,
+                    )
+
+                    # Case selected large statistic category
+                    categories.filter(
+                        large_statistic_category=organization_statistic_category.large_statistic_category
+                        or None,
+                        medium_statistic_category=None,
+                        small_statistic_category=None,
+                    ).update(
+                        large_statistic_category=large_statistic_category,
+                    )
+
                     # Handle to create new organization_statistic_category
                     organization_statistic_category.large_statistic_category = (
                         large_statistic_category
