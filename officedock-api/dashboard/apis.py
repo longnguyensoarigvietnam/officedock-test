@@ -36,6 +36,7 @@ from dashboard.serializers import (
     ActualDurationDetailSerializer,
 )
 from dashboard.utils import separate_duration
+from tasks.constants import TaskStatus
 from tasks.models import TaskDuration, PeopleInChargeTasks, Task, TaskSchedule
 from tasks.utils import split_date_range
 
@@ -115,6 +116,10 @@ class DashboardViewSet(BaseAPIViewSet):
                 if item["id"] == model.id and item["type"] == model_type
             ):
                 continue
+            is_my_routine = False
+            if isinstance(model, Task):
+                if model.status_name == TaskStatus.MY_ROUTINE.value:
+                    is_my_routine = True
 
             is_running = model.task_durations.filter(
                 paused_at__isnull=True
@@ -130,6 +135,7 @@ class DashboardViewSet(BaseAPIViewSet):
                     "title": model.title,
                     "type": model_type,
                     "is_running": is_running,
+                    "is_my_routine": is_my_routine,
                     "started_at": durations.last().started_at
                     if durations.exists()
                     else None,

@@ -15,6 +15,7 @@ from roles.serializers import (
     RolePermissionSerializer,
 )
 from roles.utils import create_role_with_permissions
+from users.constants import RoleTypes
 from users.models import Role
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
@@ -178,8 +179,19 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         if instance.users.exists():
-            raise ValidationError(
-                {"detail": ERROR_MESSAGES["cannot_delete_role_linked"]}
-            )
-
+            normal_role = Role.objects.filter(
+                name=RoleTypes.GENERAL.value
+            ).first()
+            for user in instance.users.all():
+                if user.roles.count() == 1:
+                    user.roles.add(
+                        normal_role, through_defaults={"company": user.company}
+                    )
+                send_web_socket_event(
+                    {
+                        "is_change_role": True,
+                        "action": WebSocketEventType.CHANGE_ROLE.value,
+                    },
+                    user=user,
+                )
         return super().perform_destroy(instance)
