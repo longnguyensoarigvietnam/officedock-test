@@ -54,20 +54,20 @@ def get_list_durations_by_users(
         filter_events &= Q(
             schedule__categories__large_statistic_category__id=large_id
         )
-        if medium_id:
-            filter_tasks &= Q(
-                task__categories__medium_statistic_category__id=medium_id
-            )
-            filter_events &= Q(
-                schedule__categories__medium_statistic_category__id=medium_id
-            )
-            if small_id:
-                filter_tasks &= Q(
-                    task__categories__small_statistic_category__id=small_id
-                )
-                filter_events &= Q(
-                    schedule__categories__small_statistic_category__id=small_id
-                )
+    if medium_id:
+        filter_tasks &= Q(
+            task__categories__medium_statistic_category__id=medium_id
+        )
+        filter_events &= Q(
+            schedule__categories__medium_statistic_category__id=medium_id
+        )
+    if small_id:
+        filter_tasks &= Q(
+            task__categories__small_statistic_category__id=small_id
+        )
+        filter_events &= Q(
+            schedule__categories__small_statistic_category__id=small_id
+        )
     if tags:
         filter_tasks &= Q(task__tags__in=tags)
         filter_events &= Q(schedule__tags__in=tags)
@@ -346,6 +346,8 @@ def process_categories(
         TaskCategoryTypes.MEDIUM.value: "medium_id",
         TaskCategoryTypes.SMALL.value: "small_id",
     }
+    if not durations.exists():
+        return []
     category_ids = [item["category_id"] for item in category_list]
     for cat in category_list:
         data = {
@@ -402,10 +404,36 @@ def process_categories(
                         **{filter_key: category_id},
                     )
                 else:
-                    filter_durations = get_duration_of_none_category(
-                        durations,
-                        **{filter_key: category_id},
-                    )
+                    filter_duration = Q()
+                    if category_type == TaskCategoryTypes.LARGE.value:
+                        filter_duration &= Q(
+                            Q(
+                                task__categories__large_statistic_category__isnull=True
+                            )
+                            & Q(
+                                schedule__categories__large_statistic_category__isnull=True
+                            )
+                        )
+                    elif category_type == TaskCategoryTypes.MEDIUM.value:
+                        filter_duration &= Q(
+                            Q(
+                                task__categories__medium_statistic_category__isnull=True
+                            )
+                            & Q(
+                                schedule__categories__medium_statistic_category__isnull=True
+                            )
+                        )
+                    elif category_type == TaskCategoryTypes.SMALL.value:
+                        filter_duration &= Q(
+                            Q(
+                                task__categories__small_statistic_category__isnull=True
+                            )
+                            & Q(
+                                schedule__categories__small_statistic_category__isnull=True
+                            )
+                        )
+                    filter_durations = durations.filter(filter_duration)
+
                 data["users"] = process_users(
                     time_str_to_timedelta(category_duration),
                     filter_durations,
@@ -453,6 +481,8 @@ def process_users(
     user_data = []
     percent = 100
     for user in users:
+        if not durations.exists():
+            continue
         filter_durations = get_list_durations_by_users(
             durations=durations, users=[user]
         )
@@ -586,14 +616,18 @@ def process_per_user(
     """
     total_duration = timedelta()
     aggregate_total = []
-    tags = Tag.objects.filter(id__in=tag_ids).all()
+    tags = []
+    if not durations.exists():
+        return None, None
+    if tag_ids:
+        tags = Tag.objects.filter(id__in=tag_ids).all()
     for user in users:
         filter_durations = get_list_durations_by_users(
             durations=durations, users=[user]
         )
         if not filter_durations:
             continue
-        if is_tag:
+        if is_tag and tags:
             tag_totals = []
             for tag in tags:
                 args = {
@@ -606,7 +640,8 @@ def process_per_user(
                     args["medium_id"] = medium_category_id
 
                 filter_duration_by_tag = get_list_durations_by_users(**args)
-
+                if not filter_duration_by_tag.exists():
+                    continue
                 duration = get_total_durations(filter_duration_by_tag)
                 total_duration += duration
 
@@ -678,10 +713,10 @@ def process_merge_card_per_tag(
     tag_totals = []
     tags = Tag.objects.filter(id__in=tag_ids).all()
     for tag in tags:
-        durations = get_list_durations_by_users(
+        filter_durations = get_list_durations_by_users(
             durations=durations, tags=[tag.id]
         )
-        duration = get_total_durations(durations)
+        duration = get_total_durations(filter_durations)
         total_duration += duration
 
         tag_totals.append(

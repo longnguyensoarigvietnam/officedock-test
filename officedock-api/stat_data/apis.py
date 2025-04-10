@@ -248,7 +248,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 "organization__id",
             )
 
-            return with_large
+            return with_large.distinct()
 
         data["total_duration"] = format_duration(total_duration)
         data["categories"] = []
@@ -785,6 +785,7 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_id == NONE_CATEGORY
             or medium_category_id == NONE_CATEGORY
             or small_category_id == NONE_CATEGORY
+            or not durations.exists()
         ):
             return self.response_ok(data)
         ranges = split_ranges(
@@ -991,6 +992,8 @@ class StatisticViewSet(BaseAPIViewSet):
                 organization_ids,
                 tags=tag_ids,
             )
+            if not durations.exists():
+                return self.response_ok(data)
             tasks, events = get_list_models(durations)
             total_duration = get_total_durations(durations)
 
@@ -1146,6 +1149,8 @@ class StatisticViewSet(BaseAPIViewSet):
                 organization_ids,
                 tags=tag_ids,
             )
+            if not durations.exists():
+                return self.response_ok(data)
             tasks, events = get_list_models(durations)
             total_duration, tag_list = process_merge_card_per_tag(
                 tag_ids,
@@ -1161,6 +1166,7 @@ class StatisticViewSet(BaseAPIViewSet):
                     start_of_day,
                     end_of_day,
                     is_with_tasks=True,
+                    durations=durations,
                 )
 
                 if large_category_id:
@@ -1184,6 +1190,7 @@ class StatisticViewSet(BaseAPIViewSet):
                         start_of_day,
                         end_of_day,
                         is_with_tasks=True,
+                        durations=durations,
                     )
                     if medium_category_id:
                         durations = get_list_durations_by_users(
@@ -1207,6 +1214,7 @@ class StatisticViewSet(BaseAPIViewSet):
                             start_of_day,
                             end_of_day,
                             is_with_tasks=True,
+                            durations=durations,
                         )
                         if small_category_id:
                             durations = get_list_durations_by_users(
@@ -1237,6 +1245,7 @@ class StatisticViewSet(BaseAPIViewSet):
                                 start_of_day,
                                 end_of_day,
                                 is_with_tasks=True,
+                                durations=durations,
                             )
 
         return self.response_ok(data)
@@ -1304,6 +1313,8 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 organizations=[instance],
                 tags=tag_ids,
             )
+            if not durations.exists():
+                return self.response_ok(data)
             tasks, events = get_list_models(durations)
             total_duration, category_list = process_per_user(
                 users,
@@ -1334,7 +1345,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         large_id=large_category_id,
                     )
                     tasks, events = get_list_models(durations)
-
                     total_duration, category_list = process_per_user(
                         users,
                         tasks,
@@ -1452,6 +1462,8 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 [instance],
                 tags=tag_ids,
             )
+            if not durations.exists():
+                return self.response_ok(data)
             tasks, events = get_list_models(durations)
             total_duration, tag_list = process_per_user(
                 users,

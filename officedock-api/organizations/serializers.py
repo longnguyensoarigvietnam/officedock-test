@@ -7,7 +7,6 @@ from common.utils import compare_categories, get_signed_url
 from roles.constants import Actions, Screens
 from roles.utils import has_permission
 from skills.models import StatisticCategory, Skill, SkillMap
-from users.models import User
 from common.constants import ORGANIZATION_ICON_UPLOAD_MAX_SIZE
 from organizations.constants import OrganizationTypes
 from .models import (
@@ -567,24 +566,6 @@ class ListOrganizationStatisticSerializer(serializers.Serializer):
     )
 
 
-class MemberSerializer(serializers.ModelSerializer):
-    """
-    Serializer for user member
-    """
-
-    full_name = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ["id", "full_name"]
-
-    def get_full_name(self, obj):
-        """
-        Return full name of user.
-        """
-        return obj.profile.full_name
-
-
 class OrganizationMemberSerializer(BaseOrganizationSerializer):
     """
     Serializer for mermber organization
@@ -598,12 +579,14 @@ class OrganizationMemberSerializer(BaseOrganizationSerializer):
 
     def get_users(self, obj):
         """Get users in organization"""
+        from common.serializers import CreationDataUserSerializer
+
         users = obj.users.all()
 
         if search := self.context.get("search"):
             users = users.filter(profile__full_name__icontains=search)
 
-        return MemberSerializer(users, many=True).data
+        return CreationDataUserSerializer(users, many=True).data
 
 
 class ListOrganizationSkillSerializer(serializers.Serializer):
