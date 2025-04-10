@@ -388,7 +388,6 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "week_day",
             "month_day",
             "month",
-            "has_actual_duration",
             "task_schedule_from_date",
             "task_schedule_end_date",
         ]
