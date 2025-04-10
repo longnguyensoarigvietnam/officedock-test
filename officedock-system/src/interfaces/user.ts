@@ -75,6 +75,7 @@ export interface Profile {
   id: number;
   fullName: string;
   birthday: string;
+  avatarColor: string;
   gender: string;
   organizations?: {
     id: number;
@@ -130,5 +131,6 @@ export interface UserOrganization {
   users: {
     id: number;
     fullName: string;
+    avatarColor: string;
   }[];
 }

@@ -30,6 +30,7 @@ export interface DataChartType {
   actualValue: string[];
   optionData: {
     label: string;
+    avatarColor?: string;
     percent?: number;
   }[][];
   listId: number[];
@@ -46,6 +47,7 @@ export interface DataPercentCompareType {
   optionData: {
     label: string;
     percent?: number;
+    avatarColor?: string;
   }[];
   mergedItems: StatisticCategoryInfo[];
 }

@@ -123,9 +123,9 @@ const MultiDatePickerCustom = ({
           const diffInTime = end.getTime() - start.getTime();
           const diffInDays = diffInTime / (1000 * 3600 * 24);
 
-          if (diffInDays > 366) {
+          if (diffInDays > 365) {
             adjustedEnd = new Date(start);
-            adjustedEnd.setDate(adjustedEnd.getDate() + 366);
+            adjustedEnd.setDate(adjustedEnd.getDate() + 365);
           }
           setEndDate(adjustedEnd);
           onChange && onChange(start, adjustedEnd);
@@ -155,9 +155,9 @@ const MultiDatePickerCustom = ({
             const diffInTime = end.getTime() - start.getTime();
             const diffInDays = diffInTime / (1000 * 3600 * 24);
 
-            if (diffInDays > 366) {
+            if (diffInDays > 365) {
               adjustedEnd = new Date(start);
-              adjustedEnd.setDate(adjustedEnd.getDate() + 366);
+              adjustedEnd.setDate(adjustedEnd.getDate() + 365);
             }
           }
 
@@ -240,7 +240,7 @@ const MultiDatePickerCustom = ({
             isStartButtonClicked
               ? null
               : initialStartDate
-                ? addDays(initialStartDate, 366)
+                ? addDays(initialStartDate, 365)
                 : null
           }
           startDate={startDate}

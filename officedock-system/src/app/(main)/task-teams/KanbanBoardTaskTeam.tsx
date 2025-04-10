@@ -55,7 +55,6 @@ import {
 
 import {
   compareItems,
-  getRandomColor,
   transformDataTeamTask,
   transformDataTotalStatus,
 } from '@utils';
@@ -163,7 +162,7 @@ const KanbanBoardTaskTeam = () => {
         data.members.map((member) => ({
           id: member.id,
           fullName: member.fullName,
-          color: getRandomColor(),
+          color: member.avatarColor,
         })),
       );
     },

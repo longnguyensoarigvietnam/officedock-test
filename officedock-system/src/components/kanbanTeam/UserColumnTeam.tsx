@@ -6,7 +6,6 @@ import ImageRound from '@components/common/ImageRound';
 import StatusColumn from './StatusColumn';
 
 import { TransformedStatuses, TransformedUser } from '@interfaces/task';
-import { getRandomColor } from '@utils';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ActionTask, ItemStartType } from '@constants/enums';
@@ -40,7 +39,6 @@ const UserColumnTeam = ({
   const { columnWidth, selectedOptionZoom, dataTotalStatus } =
     useContext(TaskTeamStateContext);
   const [isExtendUser, setIsExtendUser] = useState(true);
-  const userColor = getRandomColor();
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const router = useRouter();
@@ -87,7 +85,7 @@ const UserColumnTeam = ({
               }}
               className="flex items-center gap-[10px] font-medium text-[15px] ">
               <AvatarIconWithDynamicColor
-                color={userColor}
+                color={user.avatarColor}
                 size={(247 / 247) * 33}
               />
               <p
@@ -193,7 +191,7 @@ const UserColumnTeam = ({
       ) : (
         <div className="w-[80px]">
           <div className="flex gap-[6px] items-center justify-center">
-            <AvatarIconWithDynamicColor color={userColor} size={33} />
+            <AvatarIconWithDynamicColor color={user.avatarColor} size={33} />
 
             <Tippy
               content="タブを拡大"

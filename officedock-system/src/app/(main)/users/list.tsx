@@ -614,7 +614,7 @@ const ListUsers = () => {
                 <tr key={index} className="text-sm text-black font-medium">
                   <td className="w-[220px]">
                     <div className=" flex items-start gap-2">
-                      <div className="flex items-center flex-grow gap-[6px]">
+                      <div className="flex items-start flex-grow gap-[6px]">
                         <div className="w-[30px] h-[30px]">
                           <AvatarIconWithDynamicColor
                             color={element.avatarColor}
@@ -622,7 +622,7 @@ const ListUsers = () => {
                             customClassName="relative top-[3px]"
                           />
                         </div>
-                        <p className="text-[16px] text-black break-all text-left w-0 min-w-0 flex-grow">
+                        <p className="text-[16px] text-black break-all text-left w-0 min-w-0 flex-grow relative top-[5px]">
                           {element.profile.fullName}
                         </p>
                       </div>

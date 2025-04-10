@@ -18,7 +18,7 @@ import {
 } from '@interfaces/chat';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
-import { generateUniqueId, getRandomColor } from '@utils';
+import { generateUniqueId } from '@utils';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { ChatContext } from '@providers/ChatProvider';
 
@@ -66,7 +66,7 @@ const BoardChat = () => {
         return {
           id: member.id,
           fullName: member.fullName,
-          avatarColor: getRandomColor(),
+          avatarColor: member.avatarColor,
         };
       });
       setDashboardMembers(membersWithAvatars);

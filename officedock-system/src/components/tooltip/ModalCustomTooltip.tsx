@@ -4,7 +4,6 @@ import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
 
 import { StatisticCategoryInfo } from '@interfaces/statistic';
-import { getRandomColor } from '@utils';
 import { convertToJapaneseTime } from '@utils/date';
 
 type Props = {
@@ -20,6 +19,7 @@ type Props = {
   optionsData: {
     label: string;
     percent?: number;
+    avatarColor?: string;
     mergedItems?: StatisticCategoryInfo[];
   }[][];
   data: number[];
@@ -76,7 +76,6 @@ const ModalCustomTooltip = ({
                       item &&
                       item.users &&
                       item.users.map((user) => {
-                        const colorRandom = getRandomColor();
                         return (
                           <li
                             key={user.user.id}
@@ -84,7 +83,7 @@ const ModalCustomTooltip = ({
                             <div className="flex items-center">
                               <div>
                                 <AvatarIconWithDynamicColor
-                                  color={colorRandom}
+                                  color={user.user.avatarColor}
                                   size={30}
                                 />
                               </div>
@@ -147,7 +146,6 @@ const ModalCustomTooltip = ({
               {isTeam
                 ? option &&
                   option.map((opt) => {
-                    const colorRandom = getRandomColor();
                     return (
                       <li
                         key={opt.label}
@@ -155,7 +153,7 @@ const ModalCustomTooltip = ({
                         <div className="flex items-center">
                           <div>
                             <AvatarIconWithDynamicColor
-                              color={colorRandom}
+                              color={opt.avatarColor || ''}
                               size={30}
                             />
                           </div>

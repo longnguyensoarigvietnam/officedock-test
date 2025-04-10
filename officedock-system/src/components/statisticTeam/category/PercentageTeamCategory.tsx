@@ -155,6 +155,7 @@ const PercentageCategoryTeam = ({
       (item) =>
         item.users?.slice(0, 6).map((user) => ({
           label: user.user.fullName,
+          avatarColor: user.user.avatarColor,
           percent: user.percent,
         })) || [],
     );

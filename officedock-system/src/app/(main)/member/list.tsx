@@ -23,7 +23,11 @@ const ListMember = () => {
   });
 
   const [isShowModalDetail, setIsShowModalDetail] = useState(false);
-  const [userId, setUserId] = useState<string>('');
+  const [userClick, setUserClick] = useState<{
+    id: string;
+    fullName?: string;
+    avatarColor: string;
+  }>();
   const [organizationId, setOrganizationId] = useState<string>('');
 
   return (
@@ -71,8 +75,15 @@ const ListMember = () => {
               <GroupMember
                 key={item.id}
                 item={item}
-                onClickMember={(id: string, organizationId: string) => {
-                  setUserId(id);
+                onClickMember={(
+                  id: string,
+                  avatarColor: string,
+                  organizationId: string,
+                ) => {
+                  setUserClick({
+                    id: id,
+                    avatarColor: avatarColor,
+                  });
                   setIsShowModalDetail(true);
                   setOrganizationId(organizationId);
                 }}
@@ -83,7 +94,8 @@ const ListMember = () => {
       {isShowModalDetail && (
         <DetailProfileMemberModal
           open={isShowModalDetail}
-          userId={userId}
+          userId={userClick?.id || ''}
+          avatarColor={userClick?.avatarColor || ''}
           organizationId={organizationId}
           type={''}
           onConfirm={function (): void {

@@ -382,6 +382,7 @@ interface ProfileTeam {
 
 export interface ResultTeam {
   id: number;
+  avatarColor: string;
   profile: ProfileTeam;
   status: StatusTeam[];
 }
@@ -404,6 +405,7 @@ export interface TransformedStatuses {
 export interface TransformedUser {
   id: string;
   name: string;
+  avatarColor: string;
   statuses: TransformedStatuses;
 }
 

@@ -30,6 +30,7 @@ interface PieChartProps {
   optionsData?: {
     label: string;
     percent?: number;
+    avatarColor?: string;
     mergedItems?: StatisticCategoryInfo[];
   }[][];
   listIdData?: number[];
