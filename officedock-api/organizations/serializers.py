@@ -769,6 +769,21 @@ class OrganizationCategoryHierarchyForCreateSerializer(serializers.Serializer):
     )
 
 
+class CheckActualDurationSerializer(serializers.Serializer):
+    """
+    Serializer for check actual duration.
+    """
+
+    ids = serializers.PrimaryKeyRelatedField(
+        source="organizations_statistic_categories",
+        queryset=OrganizationsStatisticCategories.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
+
 """
 End handle organization category hierarchy
 """
