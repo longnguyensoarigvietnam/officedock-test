@@ -1243,8 +1243,21 @@ export const convertToStatisticJapaneseLabels = (
         ? `${month}月${day}日(${dayOfWeek})`
         : `${day}日(${dayOfWeek})`;
     case StatisticViewOptions.MONTH:
-      return `${month}月`;
+      return isEdge
+      ? `${day}日${month}月`
+      : `${month}月`;
     default:
       return '';
   }
+};
+
+export const compareAndSetDate = (start: Date, end: Date): Date => {
+  const ONE_DAY = 1000 * 60 * 60 * 24;
+  const diffInDays = (end.getTime() - start.getTime()) / ONE_DAY;
+  if (diffInDays > 366) {
+    const newDateB = new Date(start);
+    newDateB.setDate(newDateB.getDate() + 366);
+    return newDateB;
+  }
+  return end;
 };
