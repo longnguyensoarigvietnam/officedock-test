@@ -911,37 +911,37 @@ const LineChartCompare = ({
       sortingFn: durationSorting,
       cell: (info) => {
         return (
-          <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-col pl-2 gap-2 w-full">
             <div className="h-[22px]"></div>
-            <div className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
+            <div className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
                 {info.row.original.standardInfo?.categoryDuration.split(
                   ':',
-                )[0] || 0}
+                )[0] || '00'}
                 時間
               </p>
               <p>
                 {info.row.original.standardInfo?.categoryDuration.split(
                   ':',
-                )[1] || 0}
+                )[1] || '00'}
                 分
               </p>
             </div>
-            <div className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
+            <div className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
                 {info.row.original.compareInfo?.categoryDuration.split(
                   ':',
-                )[0] || 0}
+                )[0] || '00'}
                 時間
               </p>
               <p>
                 {info.row.original.compareInfo?.categoryDuration.split(
                   ':',
-                )[1] || 0}
+                )[1] || '00'}
                 分
               </p>
             </div>
-            <div className="font-medium flex text-[14px] justify-center text-black">
+            <div className="font-medium flex text-[14px] justify-end text-black">
               <p>
                 {subtractDurations(
                   info.row.original.standardInfo?.categoryDuration ||
@@ -988,15 +988,15 @@ const LineChartCompare = ({
         const difference = standardPercent - comparePercent;
 
         return (
-          <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-col pl-2 gap-2 w-full">
             <div className="h-[22px]"></div>
-            <p className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
+            <p className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               {standardPercent}%
             </p>
-            <p className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
+            <p className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               {comparePercent}%
             </p>
-            <p className="font-medium flex text-[14px] justify-center text-black">
+            <p className="font-medium flex text-[14px] justify-end text-black">
               {difference}%
             </p>
           </div>

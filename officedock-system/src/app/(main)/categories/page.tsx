@@ -14,7 +14,7 @@ const CategoryPage = () => {
     <MainLayout
       title={pageRouters.CATEGORY_MANAGEMENT.name}
       permission={PermissionsSystem.CATEGORY_VIEW}
-      className="pl-8 pt-8 !overflow-x-auto !bg-[#EBF1F7]"
+      className="px-8 pt-8 !overflow-x-auto !bg-[#EBF1F7]"
       showFooter={false}>
       <div className="flex gap-4 items-center mb-5">
         <p className="text-black font-medium text-[26px]">業務カテゴリー設定</p>

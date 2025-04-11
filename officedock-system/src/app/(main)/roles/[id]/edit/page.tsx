@@ -10,7 +10,7 @@ const EditRolesPage = () => {
     <MainLayout
       title={pageRouters.EDIT_ROLE.name}
       permission={PermissionsSystem.ROLE_UPDATE}
-      className="pl-8 pt-8 !bg-[#EBF1F7]"
+      className="px-8 pt-8 !bg-[#EBF1F7]"
       showFooter={false}>
       <div className="flex flex-col gap-6 h-full">
         <EditRoleForm />
