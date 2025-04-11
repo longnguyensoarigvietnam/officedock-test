@@ -3,12 +3,13 @@ import React, { useContext, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 
 import { SCREEN_LIST } from '@constants';
-import { ServerStatusCode } from '@constants/enums';
+import { PermissionsSystem, ServerStatusCode } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
@@ -17,9 +18,11 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { RoleStateContext } from '@providers/RoleProvider';
 
 import useRoleDetail from '@hooks/useRoleDetail';
+import { hasPermissionInArray } from '@utils';
 
 const DetailRoleTable = () => {
   const params = useParams<{ id: string }>();
+  const { data: session } = useSession();
   const router = useRouter();
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
@@ -69,13 +72,18 @@ const DetailRoleTable = () => {
             <p className="text-sm font-medium text-[#77858F]">権限一覧に戻る</p>
           </div>
         </div>
-        {!dataRoleDetail?.systemRole && (
-          <Link href={pageRouters.EDIT_ROLE.href(`${params.id}`)}>
-            <Button variant="primary" className="w-[100px] !p-0 !h-[34px]">
-              編集
-            </Button>
-          </Link>
-        )}
+        {!dataRoleDetail?.systemRole &&
+          session?.user.permissions &&
+          hasPermissionInArray(
+            session.user.permissions,
+            PermissionsSystem.ROLE_UPDATE,
+          ) && (
+            <Link href={pageRouters.EDIT_ROLE.href(`${params.id}`)}>
+              <Button variant="primary" className="w-[100px] !p-0 !h-[34px]">
+                編集
+              </Button>
+            </Link>
+          )}
       </div>
       <div
         className="bg-[#F8FAFC] rounded-[14px] p-5"

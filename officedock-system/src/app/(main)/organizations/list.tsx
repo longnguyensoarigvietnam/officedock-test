@@ -265,7 +265,6 @@ const ListOrganizations = () => {
     selectedOrganizationToUpdate.name,
     selectedOrganizationToUpdate.action,
   ]);
-  const [isCreate, setIsCreate] = useState(false);
 
   return (
     <Fragment>
@@ -289,7 +288,6 @@ const ListOrganizations = () => {
                 const hasEmptyOrganization = dataOrganizations.some(
                   (org) => org.name.trim() === '',
                 );
-                setIsCreate(true);
 
                 if (!hasEmptyOrganization) {
                   const newUuid = uuidv4();
@@ -345,11 +343,6 @@ const ListOrganizations = () => {
                             placeholder="チーム名を入力"
                             className={`!border-[1px] !border-[#77858F] ${selectedOrganizationToUpdate.showError && '!border-error'} !w-full !text-sm !h-[34px]`}
                             defaultValue={element.name}
-                            onBlur={(e) => {
-                              if (e.target.value.length > 0) {
-                                setIsCreate(false);
-                              }
-                            }}
                             onChange={(e) => {
                               setSelectedOrganizationToUpdate((prev) => {
                                 return {
@@ -374,14 +367,33 @@ const ListOrganizations = () => {
                         session?.user.permissions,
                         PermissionsSystem.ORGANIZATION_UPDATE,
                       ) ? (
-                        <button disabled={isCreate}>
+                        <button>
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit-gray.svg'}
-                            className={`w-3.5 h-3.5 hover:cursor-pointer ${isCreate && ' opacity-45'} ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                            className={`w-3.5 h-3.5 hover:cursor-pointer ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
                             onClick={() => {
-                              if (isCreate) return;
-
+                              if (
+                                selectedOrganizationToUpdate.action ==
+                                  ActionsModal.CREATE &&
+                                selectedOrganizationToUpdate.uuid ==
+                                  element.uuid
+                              )
+                                return;
+                              if (
+                                selectedOrganizationToUpdate.uuid !=
+                                element.uuid
+                              ) {
+                                setDataOrganizations((prev) => {
+                                  let updatedCategories = [...prev];
+                                  updatedCategories = updatedCategories.filter(
+                                    (category) =>
+                                      category.uuid !=
+                                      selectedOrganizationToUpdate.uuid,
+                                  );
+                                  return updatedCategories;
+                                });
+                              }
                               setSelectedOrganizationToUpdate({
                                 uuid: element.uuid || '',
                                 name: element.name,
@@ -405,7 +417,6 @@ const ListOrganizations = () => {
                           src={'/icons/delete-gray.svg'}
                           className="w-[13px] h-[15px] hover:cursor-pointer"
                           onClick={() => {
-                            setIsCreate(false);
                             if (
                               selectedOrganizationToUpdate.uuid ==
                                 element.uuid &&

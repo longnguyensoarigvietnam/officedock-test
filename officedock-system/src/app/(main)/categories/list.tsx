@@ -278,8 +278,6 @@ const ListCategory = () => {
     selectedCategoryToUpdate.action,
   ]);
 
-  const [isCreate, setIsCreate] = useState(false);
-
   return (
     <Fragment>
       <div className="flex justify-between">
@@ -302,8 +300,6 @@ const ListCategory = () => {
                 const hasEmptyCategory = dataCategories.some(
                   (category) => category.name.trim() === '',
                 );
-                setIsCreate(true);
-
                 if (!hasEmptyCategory) {
                   const newUuid = uuidv4();
                   setDataCategories((prev) => [
@@ -397,9 +393,28 @@ const ListCategory = () => {
                             <ImageRound
                               name="Edit"
                               src={'/icons/edit-gray.svg'}
-                              className={`w-3.5 h-3.5 hover:cursor-pointer ${isCreate && 'opacity-45'} ${!(selectedCategoryToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                              className={`w-3.5 h-3.5 hover:cursor-pointer ${(!(selectedCategoryToUpdate.uuid == element.uuid) || selectedCategoryToUpdate.action == ActionsModal.CREATE) && 'opacity-45'}`}
                               onClick={() => {
-                                if (isCreate) return;
+                                if (
+                                  selectedCategoryToUpdate.action ==
+                                    ActionsModal.CREATE &&
+                                  selectedCategoryToUpdate.uuid == element.uuid
+                                )
+                                  return;
+                                if (
+                                  selectedCategoryToUpdate.uuid != element.uuid
+                                ) {
+                                  setDataCategories((prev) => {
+                                    let updatedCategories = [...prev];
+                                    updatedCategories =
+                                      updatedCategories.filter(
+                                        (category) =>
+                                          category.uuid !=
+                                          selectedCategoryToUpdate.uuid,
+                                      );
+                                    return updatedCategories;
+                                  });
+                                }
                                 setSelectedCategoryToUpdate({
                                   uuid: element.uuid || '',
                                   name: element.name,
