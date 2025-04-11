@@ -1700,7 +1700,7 @@ const TableComponent = ({
                             )}
                             onPendingChange={(e) => {
                               const oldLargeOption = row.original.large;
-                              if (!isUUID(row.original.large.label)) {
+                              if ((row.original.large.label && !isUUID(row.original.large.label) && !isUUID(row.original.id as string))) {
                                 setWarningChangeCategoryModalOpen(true);
                                 setPendingSelection({
                                   oldLargeOption,
@@ -1721,7 +1721,7 @@ const TableComponent = ({
                       <ImageRound
                         name="Delete"
                         src={'/icons/delete-gray.svg'}
-                        className="w-[15px] h-[17px] hover:cursor-pointer"
+                        className="w-[15px] h-[17px] ml-[-7px] hover:cursor-pointer"
                         onClick={async () => {
                           const oldLargeValue = row.original.large.value;
                           const matchingHierarchies =
@@ -1814,7 +1814,7 @@ const TableComponent = ({
                                 onPendingChange={(e) => {
                                   const oldMediumOption = row.original.medium;
                                   const oldLargeOption = row.original.large;
-                                  if (!isUUID(row.original.medium.label)) {
+                                  if (row.original.medium.label && !isUUID(row.original.medium.label) && !isUUID(row.original.id as string)) {
                                     setWarningChangeCategoryModalOpen(true);
                                     setPendingSelection({
                                       oldLargeOption,
@@ -1953,7 +1953,7 @@ const TableComponent = ({
                                 const oldRowId = row.original.id;
                                 const oldRowSkill = row.original.skills;
                                 const oldRowColor = row.original.color;
-                                if (!isUUID(row.original.small.label)) {
+                                if (row.original.small.label && !isUUID(row.original.small.label)  && !isUUID(row.original.id as string)) {
                                   setWarningChangeCategoryModalOpen(true);
                                   setPendingSelection({
                                     oldLargeOption,

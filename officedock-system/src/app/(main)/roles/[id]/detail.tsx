@@ -99,7 +99,7 @@ const DetailRoleTable = () => {
                 対応機能
               </div>
               <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
-                閲覧
+              権限
               </div>
             </div>
             {dataRoleDetail?.permissions.map((permission, index) => {
