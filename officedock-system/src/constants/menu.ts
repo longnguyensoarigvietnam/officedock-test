@@ -163,7 +163,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     },
     current: false,
     companyMenu: false,
-    requiredPermission: PermissionsSystem.STATISTIC_VIEW,
+    requiredPermission: PermissionsSystem.DAILY_REPORT_VIEW,
   },
   {
     ...pageRouters.SKILL_MAP,
@@ -183,7 +183,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     },
     current: false,
     companyMenu: true,
-    requiredPermission: PermissionsSystem.VIEW_ALL,
+    requiredPermission: PermissionsSystem.ACTUAL_DURATION_VIEW,
   },
   {
     ...pageRouters.MEMBER_MANAGEMENT,
@@ -193,7 +193,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     },
     current: false,
     companyMenu: false,
-    requiredPermission: PermissionsSystem.USER_VIEW,
+    requiredPermission: PermissionsSystem.LIST_MEMBER_VIEW,
   },
 ];
 export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
@@ -205,7 +205,7 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
     },
     current: false,
     companyMenu: false,
-    requiredPermission: PermissionsSystem.MY_TASK_VIEW,
+    requiredPermission: PermissionsSystem.TEAMDOCK_VIEW,
   },
   {
     ...pageRouters.STATISTIC_TEAM_MANAGEMENT,
@@ -215,7 +215,7 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
     },
     current: false,
     companyMenu: false,
-    requiredPermission: PermissionsSystem.STATISTIC_VIEW,
+    requiredPermission: PermissionsSystem.TEAMDOCK_VIEW,
   },
   {
     ...pageRouters.DAILY_REPORT_TEAM,
@@ -227,7 +227,7 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
     },
     current: false,
     companyMenu: false,
-    requiredPermission: PermissionsSystem.STATISTIC_VIEW,
+    requiredPermission: PermissionsSystem.TEAM_DAILY_REPORT_VIEW,
   },
   {
     ...pageRouters.MEMBER_MANAGEMENT,
@@ -237,6 +237,6 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
     },
     current: false,
     companyMenu: false,
-    requiredPermission: PermissionsSystem.USER_VIEW,
+    requiredPermission: PermissionsSystem.LIST_MEMBER_VIEW,
   },
 ];

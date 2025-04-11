@@ -189,7 +189,7 @@ const PercentageTags = ({
     if (statisticTagsList) {
       if (statisticTagsList.largeCategories) {
         const largeChartData = processChartData(
-          statisticTagsList.largeCategories,
+          statisticTagsList.largeCategories.filter((item) => item.percent > 0),
         );
         setDataChartLarge(largeChartData);
       } else {
@@ -206,7 +206,7 @@ const PercentageTags = ({
       }
       if (statisticTagsList.mediumCategories) {
         const mediumChartData = processChartData(
-          statisticTagsList.mediumCategories,
+          statisticTagsList.mediumCategories.filter((item) => item.percent > 0),
           '#2E9267',
         );
         setDataChartMedium(mediumChartData);
@@ -224,7 +224,7 @@ const PercentageTags = ({
       }
       if (statisticTagsList.smallCategories) {
         const smallChartData = processChartData(
-          statisticTagsList.smallCategories,
+          statisticTagsList.smallCategories.filter((item) => item.percent > 0),
           '#2E9267',
         );
         setDataChartSmall(smallChartData);
@@ -242,7 +242,7 @@ const PercentageTags = ({
       }
       if (statisticTagsList.category) {
         const categoryChartData = processChartData(
-          statisticTagsList.category,
+          statisticTagsList.category.filter((item) => item.percent > 0),
           '#2E9267',
         );
         setDataChartCategory(categoryChartData);

@@ -53,7 +53,6 @@ import {
   ScreenName,
   SocketActions,
   StatusValueTask,
-  UserRoles,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -99,7 +98,6 @@ import {
 import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
-  hasRole,
   transformDataTaskDailyToTable,
 } from '@utils';
 import { useWebSocket } from '@providers/WebSocketProvider';
@@ -644,13 +642,20 @@ const DailyReportBoard = () => {
     (session?.user.permissions &&
       hasPermissionInArray(
         session?.user.permissions,
-        PermissionsSystem.STATISTIC_UPDATE,
+        PermissionsSystem.DAILY_REPORT_UPDATE,
       )) ||
     (session?.user.permissions &&
       hasPermissionInArray(
         session?.user.permissions,
-        PermissionsSystem.STATISTIC_ADD,
+        PermissionsSystem.DAILY_REPORT_ADD,
       ));
+  const isPermissionDailyTeam =
+    session?.user.permissions &&
+    hasPermissionInArray(
+      session?.user.permissions,
+      PermissionsSystem.TEAM_DAILY_REPORT_VIEW,
+    );
+
   const handleExpandChange = (row: Row<dataTaskDailyTable>) => {
     const newExpandedState: any = {
       ...expandedState,
@@ -1968,21 +1973,20 @@ const DailyReportBoard = () => {
                 }}>
                 今日
               </Button>
-              {session &&
-                hasRole(session?.user.roles, UserRoles.SYSTEM_ADMIN) && (
-                  <Link
-                    href={`${pageRouters.DAILY_REPORT_TEAM.href}?tabId=1`}
-                    className="bg-white flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
-                    <span>チームの日報一覧</span>
-                    <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
-                      <ImageRound
-                        className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
-                        src="/icons/right-statistic.svg"
-                        name="right"
-                      />
-                    </div>
-                  </Link>
-                )}
+              {isPermissionDailyTeam && (
+                <Link
+                  href={`${pageRouters.DAILY_REPORT_TEAM.href}?tabId=1`}
+                  className="bg-white flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
+                  <span>チームの日報一覧</span>
+                  <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
+                    <ImageRound
+                      className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
+                      src="/icons/right-statistic.svg"
+                      name="right"
+                    />
+                  </div>
+                </Link>
+              )}
             </div>
           </div>
 

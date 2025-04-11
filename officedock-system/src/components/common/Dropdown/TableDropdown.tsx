@@ -1,6 +1,5 @@
 'use client';
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
 import Image from 'next/image';
 
 import ErrorMessage from '../ErrorMessage';
@@ -66,6 +65,8 @@ const TableDropdown = ({
   });
   const [isAbove, setIsAbove] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (selectedOption) {
       setSelected(selectedOption);
@@ -109,11 +110,36 @@ const TableDropdown = ({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleClosePopover = (event: MouseEvent | Event) => {
+      if (
+        optionsRef.current &&
+        !(optionsRef.current as Node).contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleScroll = () => {
+      setIsOpen(false);
+    };
+
+    document.addEventListener('click', handleClosePopover, true);
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => {
+      document.removeEventListener('click', handleClosePopover, true);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const filteredOptions = options.filter((option) =>
     option.label?.toLowerCase().includes(searchInput.toLowerCase()),
   );
   const renderOptions = () => (
     <div
+      ref={optionsRef}
       className={`absolute mt-1 z-50 max-h-60 overflow-auto rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}
       style={{
         top: position.top,
@@ -237,15 +263,8 @@ const TableDropdown = ({
           </div>
         </div>
       </div>
-      {isOpen &&
-        ReactDOM.createPortal(
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />,
-          document.body,
-        )}
-      {isOpen && ReactDOM.createPortal(renderOptions(), document.body)}
+      {isOpen && renderOptions()}
+
       {error && (
         <ErrorMessage error={error} className="mt-2 text-sm text-red-600" />
       )}
