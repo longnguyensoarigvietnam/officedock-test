@@ -10,7 +10,6 @@ import Button from '@components/common/Button';
 
 import {
   PermissionType,
-  ScreenAction,
   ScreenName,
   ServerStatusCode,
 } from '@constants/enums';
@@ -29,7 +28,6 @@ import { RoleDetail, RoleFormData } from '@interfaces/role';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { RoleStateContext } from '@providers/RoleProvider';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import useRoleDetail from '@hooks/useRoleDetail';
@@ -40,22 +38,20 @@ import api from '@base/api';
 interface rowDataType {
   screenValue: string;
   screenLabel: string;
-  view: PermissionType | string;
-  add: PermissionType | string;
-  update: PermissionType | string;
-  delete: PermissionType | string;
+  actions: PermissionType | string;
 }
 const EditRoleForm = () => {
   const [roleName, setRoleName] = useState<string>('');
+  const [isSubmit, setIsSubmit] = useState(false);
+  const [error, setError] = useState('');
+  const [rows, setRows] = useState<rowDataType[]>([]);
+
   const router = useRouter();
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
   const params = useParams<{ id: string }>();
-  const [rows, setRows] = useState<rowDataType[]>([]);
-  const [error, setError] = useState('');
   const { dataRoleDetail, setDataRoleDetail } = useContext(RoleStateContext);
   const showErrorToast = useErrorToast();
-  const { expanded } = useContext(GlobalStateContext);
 
   const { roleDetail } = useRoleDetail({
     roleId: Number(params.id),
@@ -87,6 +83,7 @@ const EditRoleForm = () => {
       setDataRoleDetail(roleDetail);
     }
   }, [setDataRoleDetail, roleDetail]);
+
   useEffect(() => {
     if (!dataRoleDetail) {
       setIsLoading(true);
@@ -104,10 +101,7 @@ const EditRoleForm = () => {
             SCREEN_LIST.find((screen) => screen.value == permission.screenName)
               ?.name || '',
           screenValue: permission.screenName,
-          add: `${permission.actions.add}`,
-          update: `${permission.actions.update}`,
-          view: `${permission.actions.view}`,
-          delete: `${permission.actions.delete}`,
+          actions: `${permission.actions}`,
         });
       });
       setRows(initialRows);
@@ -117,7 +111,6 @@ const EditRoleForm = () => {
 
   const handleEditFieldInline = (
     screenName: string,
-    action: ScreenAction,
     value: any,
   ) => {
     setRows((prevRows) => {
@@ -127,7 +120,7 @@ const EditRoleForm = () => {
       );
 
       if (rowIndex !== -1) {
-        newRows[rowIndex][action] = value;
+        newRows[rowIndex].actions = value;
       }
 
       return newRows;
@@ -143,7 +136,7 @@ const EditRoleForm = () => {
     return data;
   };
 
-  const { mutate: editRole, isLoading: editRoleLoading } = useMutation('postEditRole', handleEditRole, {
+  const { mutateAsync: editRole } = useMutation('postEditRole', handleEditRole, {
     onSuccess: async () => {
       showToast({
         variant: 'success',
@@ -153,17 +146,16 @@ const EditRoleForm = () => {
     },
     onError: (error: AxiosError<any>) => {
       showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      setIsSubmit(false);
     },
     onSettled: () => {
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 1000)
+      setIsLoading(false);
     },
   });
 
-  const handleConfirmEditRole = (e: any) => {
-    if(editRoleLoading) return;
+  const handleConfirmEditRole = async (e: any) => {
     e.preventDefault();
+    if (isSubmit) return;
     if (roleName?.trim() == '') {
       setError(ROLE_NAME_REQUIRED_MESSAGE);
       return;
@@ -175,20 +167,18 @@ const EditRoleForm = () => {
           (row) => row.screenValue === screen.value,
         );
         acc[screen.value] = {
-          view: matchingRow?.view || '',
-          add: matchingRow?.add || '',
-          update: matchingRow?.update || '',
-          delete: matchingRow?.delete || '',
+          actions: matchingRow?.actions as string,
         };
         return acc;
       },
       {} as Record<
         string,
-        { view: string; add: string; update: string; delete: string }
+        { actions: string;}
       >,
     );
 
-    editRole({
+    setIsSubmit(true);
+    await editRole({
       name: roleName,
       permissions,
     });
@@ -240,22 +230,13 @@ const EditRoleForm = () => {
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </div>
         <div
-          className={`max-h-[calc(100vh_-_320px)] ${expanded ? 'w-[calc(100vw_-_300px)] max-w-[1583px]' : 'w-[calc(100vw_-_170px)] max-w-[1577px]'} ring-1 ring-gray-200 overflow-x-auto rounded-lg bg-white`}>
-          <div className="grid grid-cols-[540px_500px_0px_500px_0px] bg-[#F8FAFC]  w-full sticky top-0 z-10 rounded-tl-lg rounded-tr-lg [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1] [&>div]:bg-[#F8FAFC] ">
-            <div className="w-[540px] sticky left-0 z-[9] h-12 flex items-center justify-start pl-3 text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
+          className={`max-h-[calc(100vh_-_320px)] ring-1 ring-gray-200 overflow-x-auto rounded-lg bg-white`}>
+          <div className="flex bg-[#F8FAFC] w-full sticky top-0 z-10 rounded-tl-lg rounded-tr-lg [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1] [&>div]:bg-[#F8FAFC] ">
+            <div className="w-1/2 h-12 flex items-center justify-start pl-3 text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
               対応機能
             </div>
-            <div className="w-[500px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
+            <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
               閲覧
-            </div>
-            <div className="w-[0px] h-12 pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1] hidden">
-              追加
-            </div>
-            <div className="w-[500px] h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
-            編集
-            </div>
-            <div className="w-[0px] h-12 pl-4 text-center text-[#77858F] font-medium text-xs hidden">
-              削除
             </div>
           </div>
           {rows.map((row, index) => {
@@ -263,136 +244,33 @@ const EditRoleForm = () => {
               <div
                 key={index}
                 className="flex w-full bg-white relative [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1]">
-                <div className="min-w-[540px] flex items-center sticky left-0 z-[9] bg-white justify-start px-3 border-r-[1px] border-[#D2DBE1] text-[16px] font-medium ">
+                <div className="w-1/2 flex items-center sticky left-0 z-[9] bg-white justify-start px-3 border-r-[1px] border-[#D2DBE1] text-[16px] font-medium ">
                   <div className="w-full">{row.screenLabel}</div>
                 </div>
-                <div className="min-w-[500px] px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
+                <div className="w-1/2 px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
                   <TableDropdown
                     className="w-full !h-10"
                     valueClassName="rounded-[6px] !border-[#77858F]"
                     labelOptionClass="ml-0"
                     options={getPermissionOptionDropdown(
                       row.screenValue as ScreenName,
-                      ScreenAction.VIEW,
                       PERMISSION_OPTIONS,
                     )}
-                    minDropdownHeight={140}
+                    minDropdownHeight={200}
                     disabled={
                       getPermissionOptionDropdown(
                         row.screenValue as ScreenName,
-                        ScreenAction.VIEW,
                         PERMISSION_OPTIONS,
                       ).length == 0
                     }
                     selectedOption={getPermissionOptionDropdown(
                       row.screenValue as ScreenName,
-                      ScreenAction.VIEW,
                       PERMISSION_OPTIONS,
-                    ).find((option) => option.label == row.view)}
+                    ).find((option) => option.label == row.actions)}
                     onChange={(selectedOption: any) => {
                       const value = selectedOption.value;
                       handleEditFieldInline(
                         row.screenLabel,
-                        ScreenAction.VIEW,
-                        value,
-                      );
-                    }}
-                  />
-                </div>
-                <div className="min-w-[350px] hidden px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
-                  <TableDropdown
-                    className="w-full !h-10"
-                    valueClassName="rounded-[6px] !border-[#77858F]"
-                    options={getPermissionOptionDropdown(
-                      row.screenValue as ScreenName,
-                      ScreenAction.ADD,
-                      PERMISSION_OPTIONS,
-                    )}
-                    minDropdownHeight={140}
-                    disabled={
-                      getPermissionOptionDropdown(
-                        row.screenValue as ScreenName,
-                        ScreenAction.ADD,
-                        PERMISSION_OPTIONS,
-                      ).length == 0
-                    }
-                    selectedOption={getPermissionOptionDropdown(
-                      row.screenValue as ScreenName,
-                      ScreenAction.ADD,
-                      PERMISSION_OPTIONS,
-                    ).find((option) => option.label == row.add)}
-                    labelOptionClass="ml-0"
-                    onChange={(selectedOption: any) => {
-                      const value = selectedOption.value;
-                      handleEditFieldInline(
-                        row.screenLabel,
-                        ScreenAction.ADD,
-                        value,
-                      );
-                    }}
-                  />
-                </div>
-                <div className="min-w-[500px] px-3 z-[8] py-2 border-r-[1px] border-[#D2DBE1]">
-                  <TableDropdown
-                    className="w-full !h-10"
-                    valueClassName="rounded-[6px] !border-[#77858F]"
-                    options={getPermissionOptionDropdown(
-                      row.screenValue as ScreenName,
-                      ScreenAction.UPDATE,
-                      PERMISSION_OPTIONS,
-                    )}
-                    minDropdownHeight={140}
-                    disabled={
-                      getPermissionOptionDropdown(
-                        row.screenValue as ScreenName,
-                        ScreenAction.UPDATE,
-                        PERMISSION_OPTIONS,
-                      ).length == 0
-                    }
-                    selectedOption={getPermissionOptionDropdown(
-                      row.screenValue as ScreenName,
-                      ScreenAction.UPDATE,
-                      PERMISSION_OPTIONS,
-                    ).find((option) => option.label == row.update)}
-                    labelOptionClass="ml-0"
-                    onChange={(selectedOption: any) => {
-                      const value = selectedOption.value;
-                      handleEditFieldInline(
-                        row.screenLabel,
-                        ScreenAction.UPDATE,
-                        value,
-                      );
-                    }}
-                  />
-                </div>
-                <div className="min-w-[350px] hidden px-3 z-[8] py-2">
-                  <TableDropdown
-                    className="w-full !h-10"
-                    valueClassName="rounded-[6px] !border-[#77858F]"
-                    options={getPermissionOptionDropdown(
-                      row.screenValue as ScreenName,
-                      ScreenAction.DELETE,
-                      PERMISSION_OPTIONS,
-                    )}
-                    minDropdownHeight={140}
-                    disabled={
-                      getPermissionOptionDropdown(
-                        row.screenValue as ScreenName,
-                        ScreenAction.DELETE,
-                        PERMISSION_OPTIONS,
-                      ).length == 0
-                    }
-                    selectedOption={getPermissionOptionDropdown(
-                      row.screenValue as ScreenName,
-                      ScreenAction.DELETE,
-                      PERMISSION_OPTIONS,
-                    ).find((option) => option.label == row.delete)}
-                    labelOptionClass="ml-0"
-                    onChange={(selectedOption: any) => {
-                      const value = selectedOption.value;
-                      handleEditFieldInline(
-                        row.screenLabel,
-                        ScreenAction.DELETE,
                         value,
                       );
                     }}

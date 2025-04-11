@@ -4,16 +4,11 @@ export interface Role {
   systemRole: boolean;
 }
 
-interface Permission {
-  view: string;
-  add?: string;
-  update?: string;
-  delete?: string;
-}
-
 export interface RoleFormData {
   name: string;
-  permissions: Record<string, Permission>;
+  permissions: Record<string, {
+    actions: string
+  }>;
 }
 
 export interface RoleDetail {
@@ -22,6 +17,6 @@ export interface RoleDetail {
   systemRole?: boolean;
   permissions: {
     screenName: string;
-    actions: Permission;
+    actions: string;
   }[];
 }

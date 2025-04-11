@@ -8,7 +8,6 @@ import {
   EventWorkCategory,
   PermissionsSystem,
   PermissionType,
-  ScreenAction,
   ScreenName,
   StatisticViewOptions,
   StatusTask,
@@ -438,121 +437,58 @@ export const adjustPositionForViewportSchedule = (position: {
 
 export const getPermissionOptionDropdown = (
   screen: ScreenName,
-  action: string,
   permissionList: OptionDropdownType[],
 ): OptionDropdownType[] => {
-  const isYesOrNo = (permission: OptionDropdownType) =>
-    [PermissionType.ALLOWED, PermissionType.NOT_ALLOWED].includes(
-      permission.label as PermissionType,
+  const includePermissions = (includedLabels: PermissionType[]) =>
+    permissionList.filter((permission) =>
+      includedLabels.includes(permission.label as PermissionType),
     );
 
-  const excludePermissions = (excludedLabels: PermissionType[]) =>
-    permissionList.filter(
-      (permission) =>
-        !excludedLabels.includes(permission.label as PermissionType),
-    );
-
-  const includePermissions = (includedLabel: PermissionType) =>
-    permissionList.filter((permission) => permission.label === includedLabel);
-
-  const commonExclusions = [
-    PermissionType.ALLOWED_WITHOUT_OWN_DATA,
-    PermissionType.ONLY_DATA_ORGANIZATION_WITHOUT_OWN_DATA,
-  ];
-
-  switch (action) {
-    case ScreenAction.VIEW: {
-      if (
-        [
-          ScreenName.USER,
-          ScreenName.SKILL_MAP,
-          ScreenName.SUBMIT_LEVEL,
-        ].includes(screen)
-      ) {
-        return excludePermissions(commonExclusions);
-      }
-      if ([ScreenName.STATISTIC].includes(screen)) {
-        return excludePermissions([
-          ...commonExclusions,
-          PermissionType.ALLOWED,
-          PermissionType.ONLY_DATA_ORGANIZATION,
-        ]);
-      }
-      return permissionList.filter(isYesOrNo);
-    }
-
-    case ScreenAction.ADD: {
-      if (
-        [
-          ScreenName.CATEGORY_HIERARCHY,
-          ScreenName.SKILL_MAP,
-          ScreenName.ORGANIZATION_SKILL,
-        ].includes(screen)
-      ) {
-        return excludePermissions([
-          ...commonExclusions,
-          PermissionType.ONLY_DATA_OWN,
-        ]);
-      }
-      if (screen === ScreenName.STATISTIC) {
-        return includePermissions(PermissionType.ONLY_DATA_OWN);
-      }
-      if (screen === ScreenName.SUBMIT_LEVEL) {
-        return [];
-      }
-      return permissionList.filter(isYesOrNo);
-    }
-
-    case ScreenAction.UPDATE: {
-      if (
-        [
-          ScreenName.CATEGORY_HIERARCHY,
-          ScreenName.SKILL_MAP,
-          ScreenName.ORGANIZATION_SKILL,
-          ScreenName.USER,
-        ].includes(screen)
-      ) {
-        return excludePermissions([
-          ...commonExclusions,
-          PermissionType.ONLY_DATA_OWN,
-        ]);
-      }
-      if (screen === ScreenName.STATISTIC) {
-        return includePermissions(PermissionType.ONLY_DATA_OWN);
-      }
-      if (screen === ScreenName.SUBMIT_LEVEL) {
-        return excludePermissions([
-          PermissionType.ALLOWED,
-          PermissionType.ONLY_DATA_OWN,
-          PermissionType.ONLY_DATA_ORGANIZATION,
-        ]);
-      }
-      return permissionList.filter(isYesOrNo);
-    }
-
-    case ScreenAction.DELETE: {
-      if (
-        [
-          ScreenName.USER,
-          ScreenName.CATEGORY_HIERARCHY,
-          ScreenName.SKILL_MAP,
-          ScreenName.ORGANIZATION_SKILL,
-        ].includes(screen)
-      ) {
-        return excludePermissions([
-          ...commonExclusions,
-          PermissionType.ONLY_DATA_OWN,
-        ]);
-      }
-      if ([ScreenName.STATISTIC, ScreenName.SUBMIT_LEVEL].includes(screen)) {
-        return [];
-      }
-      return permissionList.filter(isYesOrNo);
-    }
-
-    default:
-      return [];
+  if (
+    [
+      ScreenName.USER,
+      ScreenName.CATEGORY,
+      ScreenName.ORGANIZATION,
+      ScreenName.TAG,
+    ].includes(screen)
+  ) {
+    return includePermissions([
+      PermissionType.VIEW_ONLY,
+      PermissionType.EDITABLE,
+      PermissionType.NOT_ALLOWED,
+    ]);
   }
+  if (
+    [
+      ScreenName.ROLE,
+    ].includes(screen)
+  ) {
+    return includePermissions([
+      PermissionType.EDITABLE,
+      PermissionType.NOT_ALLOWED,
+    ]);
+  }
+  if (
+    [
+      ScreenName.STATISTIC,
+    ].includes(screen)
+  ) {
+    return includePermissions([
+      PermissionType.VIEW_ONLY,
+      PermissionType.TEAM_AND_SUB_VIEW,
+    ]);
+  }
+  if (
+    [
+      ScreenName.TEAM_TASK,
+    ].includes(screen)
+  ) {
+    return includePermissions([
+      PermissionType.EDITABLE,
+      PermissionType.TEAM_AND_SUB_EDIT,
+    ]);
+  }
+  return permissionList;
 };
 
 export const showBackgroundColorByTime = (hour: number) => {

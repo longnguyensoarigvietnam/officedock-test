@@ -54,6 +54,7 @@ import ActionsUserModal from '@components/modals/ActionsUserModal';
 import useUserDetail from '@hooks/useUserDetail';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ResponseError } from '@interfaces/response';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 const ListUsers = () => {
   const { data: session } = useSession();
@@ -63,6 +64,7 @@ const ListUsers = () => {
 
   const { showToast } = useToast();
   const router = useRouter();
+  const { authenticatedUser } = useAuthenticatedUser();
 
   // State
   const [dataUsers, setDataUsers] = useState<User[]>([]);
@@ -491,7 +493,7 @@ const ListUsers = () => {
         <div className="font-medium text-sm text-[#77858F] flex items-center justify-between">
           <div className=" flex items-center  gap-5">
             <p className="text-black text-[26px]">ユーザー管理</p>
-            <span>アステッキホールディングス株式会社</span>
+            <span>{authenticatedUser?.company.name || ''}</span>
             <span>全メンバー30人 / 50</span>
           </div>
           <div className="flex gap-[10px] items-center">
@@ -733,7 +735,9 @@ const ListUsers = () => {
           open={openActionsUserModal}
           action={actionTypeParam}
           dataUserDetail={userEditDetail}
-          originalOrganizationOptions={organizationUserOptions.filter((role) => role.value)}
+          originalOrganizationOptions={organizationUserOptions.filter(
+            (role) => role.value,
+          )}
           roleUserOptions={roleUserOptions.filter((role) => role.value)}
           emailErrorMessage={emailErrorMessage}
           usernameErrorMessage={usernameErrorMessage}

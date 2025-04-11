@@ -22,7 +22,7 @@ const MainRootLayout = async ({ children }: { children: React.ReactNode }) => {
   }
   return (
     <main
-      className="w-full flex"
+      className="w-full flex min-w-[1440px]"
       style={{
         background: 'linear-gradient(to right, #0068B6, #0088C3)',
       }}>

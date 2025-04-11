@@ -710,7 +710,7 @@ const ListActualDurations = () => {
                           />
                         </Link>
                       ) : (
-                        <div className="w-6 h-6"></div>
+                        <div className="w-3.5 h-3.5"></div>
                       )}
                       {element.pausedAt ? (
                         <ImageRound
@@ -722,7 +722,7 @@ const ListActualDurations = () => {
                           }
                         />
                       ) : (
-                        <div className="w-6 h-6"></div>
+                        <div className="w-[13px] h-[13px]"></div>
                       )}
                     </div>
                   </div>
