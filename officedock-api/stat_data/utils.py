@@ -235,9 +235,13 @@ def aggregate_durations(
                     medium_id=medium_category_id,
                     small_id=category_id,
                 )
-        duration = annotate_duration(
-            filter_durations, start_of_day, end_of_day
-        )["total_duration"]
+        duration = (
+            annotate_duration(filter_durations, start_of_day, end_of_day)[
+                "total_duration"
+            ]
+            if filter_durations
+            else timedelta(0)
+        )
         if not large_category_id and not medium_category_id:
             key = category_name if category_color else "empty_category"
         else:
@@ -276,19 +280,28 @@ def aggregate_durations(
                     small_statistic_category__id=category_id,
                 ).exists()
             )
+            check_not_have_color = (
+                not large_category_id
+                and not medium_category_id
+                and not category_color
+            )
             if (
                 check_medium_category_exists
                 or check_small_category_exists
                 or (
                     large_category_id and medium_category_id and not category_id
                 )
+                or check_not_have_color
             ):
-                category_dict["empty_category"] = {
-                    "category_id": None,
-                    "category_name": NONE_CATEGORY,
-                    "category_color": CategoryColors.GRAY.value,
-                    "duration": duration,
-                }
+                if category_dict.get("empty_category") is None:
+                    category_dict["empty_category"] = {
+                        "category_id": None,
+                        "category_name": NONE_CATEGORY,
+                        "category_color": CategoryColors.GRAY.value,
+                        "duration": duration,
+                    }
+                else:
+                    category_dict["empty_category"]["duration"] += duration
             else:
                 category_dict[key] = {
                     "category_id": category_id,
@@ -353,9 +366,12 @@ def process_categories(
         TaskCategoryTypes.MEDIUM.value: "medium_id",
         TaskCategoryTypes.SMALL.value: "small_id",
     }
-    if durations and not durations.exists():
+    if durations and not durations.exists() or category_list is None:
         return []
-    category_ids = [item["category_id"] for item in category_list]
+    category_ids = []
+    for item in category_list:
+        if item.get("category_id") is not None:
+            category_ids.append(item["category_id"])
     for cat in category_list:
         data = {
             "category_id": None,
@@ -537,7 +553,8 @@ def process_tags(
     """Processes category durations, calculates percentages, and returns structured data."""
     percent = 100
     tags_data = []
-
+    if durations and not durations.exists() or tag_list is None:
+        return []
     for tag in tag_list:
         tag_duration = format_duration(tag["duration"]) or timedelta(0)
         if percent == 0:
