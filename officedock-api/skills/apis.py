@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from django.db import transaction
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, mixins
@@ -36,6 +37,7 @@ from users.serializers import BaseUserSerializer, RoleSerializer
 from roles.constants import Actions, Screens
 from base.filters import FilterByPermission
 from roles.utils import has_permission
+from tasks.models import TaskDuration
 
 
 @extend_schema(tags=["System > Statistic Category"])
@@ -119,17 +121,20 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     @transaction.atomic
     def perform_destroy(self, instance):
         """Handle destroy statistic category"""
-        check_exists = (
-            instance.organizations_large_statistic_categories.exists()
-            or instance.organizations_medium_statistic_categories.exists()
-            or instance.organizations_small_statistic_categories.exists()
-        )
-        if check_exists:
+        has_actual_durations = TaskDuration.objects.filter(
+            Q(task__categories__large_statistic_category=instance)
+            | Q(task__categories__medium_statistic_category=instance)
+            | Q(task__categories__small_statistic_category=instance)
+            | Q(schedule__categories__large_statistic_category=instance)
+            | Q(schedule__categories__medium_statistic_category=instance)
+            | Q(schedule__categories__small_statistic_category=instance)
+        ).exists()
+        if has_actual_durations:
             raise ValidationError(
                 {
-                    "detail": ERROR_MESSAGES["cannot_delete_type"].format(
-                        type=KEYWORDS["category"]
-                    )
+                    "detail": ERROR_MESSAGES[
+                        "cannot_delete_category_has_actual_duration"
+                    ]
                 }
             )
 
