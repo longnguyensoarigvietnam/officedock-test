@@ -330,10 +330,19 @@ class BaseOrganizationHierarchySerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(
         write_only=True, allow_null=True, required=False
     )
+    is_hierarchy = serializers.BooleanField(write_only=True, default=False)
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "type", "name", "icon", "parent_uuid"]
+        fields = [
+            "id",
+            "uuid",
+            "type",
+            "name",
+            "icon",
+            "parent_uuid",
+            "is_hierarchy",
+        ]
 
 
 class OrganizationHierarchyForCreateSerializer(serializers.Serializer):
@@ -415,7 +424,7 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
         # Fetch the child tags of the current tag
         children = Organization.objects.filter(
             company=user.company, superior=obj
-        ).order_by("updated_at")
+        ).order_by("hierarchize_at", "updated_at")
 
         # Serialize each child tag
         return OrganizationHierarchySerializer(
