@@ -415,7 +415,7 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
         # Fetch the child tags of the current tag
         children = Organization.objects.filter(
             company=user.company, superior=obj
-        ).order_by("id")
+        ).order_by("updated_at")
 
         # Serialize each child tag
         return OrganizationHierarchySerializer(
