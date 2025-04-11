@@ -1,19 +1,13 @@
 'use client';
 import React from 'react';
-import { useSession } from 'next-auth/react';
 
 import MainLayout from '@components/layouts/MainLayout';
 import { pageRouters } from '@constants/routers';
 
-import { PermissionsSystem, UserRoles } from '@constants/enums';
-import { hasRole } from '@utils';
+import { PermissionsSystem } from '@constants/enums';
 import ListData from './list';
 
 const ListDailyReportPage = () => {
-  const { data: session } = useSession();
-
-  if (session && !hasRole(session?.user.roles, UserRoles.SYSTEM_ADMIN)) return;
-
   return (
     <MainLayout
       title={pageRouters.DAILY_REPORT_TEAM.name}

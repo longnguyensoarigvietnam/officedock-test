@@ -20,7 +20,6 @@ export interface UserAuth {
   password: string;
   authenticationType: AuthenticationTypes;
   profile: Profile;
-  roles: UserRoleType[];
   permissions: PermissionsSystem[];
   accessToken?: string;
   refreshToken?: string;

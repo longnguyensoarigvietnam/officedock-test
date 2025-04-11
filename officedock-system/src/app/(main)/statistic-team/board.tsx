@@ -470,7 +470,7 @@ const StatisticTeamBoard = () => {
           </div>
         </div>
         <div className="flex items-center gap-2 mb-[14px] mt-6">
-          <div className="w-[240px]  relative">
+          <div className="w-[240px] flex-shrink-0 relative">
             <MultiSelectDropdown
               isShowIconFilter
               options={tagsOptions}
@@ -501,8 +501,8 @@ const StatisticTeamBoard = () => {
               </span>
             )}
           </div>
-          <div className="relative right-[224px] top-[-8px]">
-            <div className="flex gap-2 ">
+          <div className="relative flex-grow flex-shrink-0 right-[224px] top-[-8px]">
+            <div className="flex gap-2 flex-wrap w-[80%] flex-shrink-0 ">
               {selectedTags.map((item) => {
                 return (
                   <div

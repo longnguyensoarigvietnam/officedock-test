@@ -181,12 +181,12 @@ const TaskListStatistic = ({
               name="period icon"
               src={`/icons/task-active.svg`}
             />
-            <span className="text-[18px] text-black font-semibold relative top-[2px]">
+            <span className="text-[18px] w-[90px] flex-shrink-0 text-black font-semibold relative top-[2px]">
               タスク一覧
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-[240px]  relative">
+            <div className="w-[240px] flex-shrink-0  relative">
               <MultiSelectDropdown
                 isShowIconFilter
                 options={tagsOptions}
@@ -217,8 +217,8 @@ const TaskListStatistic = ({
                 </span>
               )}
             </div>
-            <div className="relative right-[224px] top-0">
-              <div className="flex gap-2 flex-wrap ">
+            <div className="relative flex-grow right-[224px] top-0">
+              <div className="flex w-full flex-shrink-0 gap-2 flex-wrap ">
                 {selectedTags.map((item) => {
                   return (
                     <div

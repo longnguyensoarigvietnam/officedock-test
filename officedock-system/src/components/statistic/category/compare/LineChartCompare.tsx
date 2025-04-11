@@ -389,7 +389,11 @@ const LineChartCompare = ({
 
             if (!labels || index >= labels.length) return '';
 
-            return convertToStatisticJapaneseLabels(labels[index], lineChartViewBy?.value as string, false)
+            return convertToStatisticJapaneseLabels(
+              labels[index],
+              lineChartViewBy?.value as string,
+              false,
+            );
           },
         },
       },
@@ -484,24 +488,24 @@ const LineChartCompare = ({
 
       const finalLabelList: string[] = Array.from(
         new Set([
-        ...statisticTaskDurationsList.flatMap((category) =>
-          category.durations.flatMap((duration, index) =>
-            index === category.durations.length - 1 &&
-            String(category.durations.at(-1)?.endDate) !==
-              String(category.durations.at(-1)?.startDate)
-              ? [duration.startDate, duration.endDate]
-              : duration.startDate,
+          ...statisticTaskDurationsList.flatMap((category) =>
+            category.durations.flatMap((duration, index) =>
+              index === category.durations.length - 1 &&
+              String(category.durations.at(-1)?.endDate) !==
+                String(category.durations.at(-1)?.startDate)
+                ? [duration.startDate, duration.endDate]
+                : duration.startDate,
+            ),
           ),
-        ),
-        ...statisticTaskDurationsCompareList.flatMap((category) =>
-          category.durations.flatMap((duration, index) =>
-            index === category.durations.length - 1 &&
-            String(category.durations.at(-1)?.endDate) !==
-              String(category.durations.at(-1)?.startDate)
-              ? [duration.startDate, duration.endDate]
-              : duration.startDate,
+          ...statisticTaskDurationsCompareList.flatMap((category) =>
+            category.durations.flatMap((duration, index) =>
+              index === category.durations.length - 1 &&
+              String(category.durations.at(-1)?.endDate) !==
+                String(category.durations.at(-1)?.startDate)
+                ? [duration.startDate, duration.endDate]
+                : duration.startDate,
+            ),
           ),
-        ),
         ]),
       ).sort((a, b) => a.localeCompare(b));
 
@@ -1052,12 +1056,12 @@ const LineChartCompare = ({
               name="statistic line chart icon"
               src={`/icons/statistic-line-chart.svg`}
             />
-            <span className="text-black font-semibold text-[18px] relative top-[2px]">
+            <span className="text-black w-[210px] flex-shrink-0 font-semibold text-[18px] relative top-[2px]">
               期間における時間の推移
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-[240px]  relative">
+            <div className="w-[240px] flex-shrink-0  relative">
               <MultiSelectDropdown
                 isShowIconFilter
                 options={tagsOptions}
@@ -1088,8 +1092,8 @@ const LineChartCompare = ({
                 </span>
               )}
             </div>
-            <div className="relative right-[224px] top-0">
-              <div className="flex gap-2 flex-wrap ">
+            <div className="relative flex-grow right-[224px] top-0">
+              <div className="flex gap-2 w-full flex-shrink-0 flex-wrap ">
                 {selectedTags.map((item) => {
                   return (
                     <div

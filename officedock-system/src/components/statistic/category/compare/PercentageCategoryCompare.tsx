@@ -427,12 +427,12 @@ const PercentageCategoryCompare = ({
                 name="statistic-active icon"
                 src={`/icons/statistic-active.svg`}
               />
-              <span className="text-black font-semibold text-[18px] relative top-[2px]">
+              <span className="text-black w-[154px] flex-shrink-0 font-semibold text-[18px] relative top-[2px]">
                 カテゴリーの割合
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-[240px]  relative">
+              <div className="w-[240px] flex-shrink-0  relative">
                 <MultiSelectDropdown
                   isShowIconFilter
                   options={tagsOptions}
@@ -458,13 +458,13 @@ const PercentageCategoryCompare = ({
                   }}
                 />
                 {selectedTags.length === 0 && (
-                  <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
+                  <span className="text-xs absolute  text-[#77858F] top-[2px] right-[135px]">
                     タグの絞り込み
                   </span>
                 )}
               </div>
-              <div className="relative right-[224px] top-0">
-                <div className="flex gap-2 flex-wrap ">
+              <div className="relative flex-grow right-[224px] top-0">
+                <div className="flex gap-2 w-full flex-shrink-0 flex-wrap ">
                   {selectedTags.map((item) => {
                     return (
                       <div

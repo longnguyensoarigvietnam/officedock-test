@@ -456,15 +456,13 @@ const KanbanBoardTaskTeam = () => {
         if (belowItem && belowItem.pinAt) {
           prevItemIndex = INITIAL_INDEX_VALUE;
         }
-        const nextItemIndex = aboveItem
-          ? aboveItem.index
-          : -INITIAL_INDEX_VALUE;
+        const nextItemIndex = aboveItem ? aboveItem.index : INITIAL_INDEX_VALUE;
+
         newIndex =
           prevItemIndex === INITIAL_INDEX_VALUE ||
           nextItemIndex === INITIAL_INDEX_VALUE
             ? prevItemIndex + nextItemIndex
             : (prevItemIndex + nextItemIndex) / 2;
-
         destTasks.splice(destination.index, 0, {
           ...movedTask,
           isMyTask:
@@ -1829,7 +1827,13 @@ const KanbanBoardTaskTeam = () => {
           dataTask={dataTaskEdit}
           organizationId={organizationId}
           action={actionType || ActionTask.CREATE}
-          peopleDefaultId={peopleDefaultId || `${session?.user.id}`}
+          peopleDefaultId={
+            actionType === ActionTask.CREATE
+              ? peopleDefaultId || `${session?.user.id}`
+              : dataTaskEdit?.peopleInCharge.length
+                ? String(dataTaskEdit?.peopleInCharge[0].id)
+                : ''
+          }
           setDataErrorTask={setDataErrorTask}
           errorPerson={dataErrorTask}
           listMemberTeam={listMemberTeam}
