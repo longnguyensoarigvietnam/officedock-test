@@ -182,7 +182,7 @@ const CreateRoleForm = () => {
               対応機能
             </div>
             <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
-              閲覧
+              権限
             </div>
           </div>
           {rows.map((row, index) => {
