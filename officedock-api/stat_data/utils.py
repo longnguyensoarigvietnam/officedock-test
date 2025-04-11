@@ -85,6 +85,8 @@ def get_list_durations_by_users(
             started_at__gte=start_of_day,
             paused_at__lte=end_of_day,
         )
+        if not start_of_day and not end_of_day:
+            return TaskDuration.objects.none()
         durations = TaskDuration.objects.filter(base_filter)
         task_durations = durations.filter(filter_tasks)
         event_durations = durations.filter(filter_events)
@@ -709,13 +711,17 @@ def process_merge_card_per_tag(
     """
     Handle process category per user.
     """
-    total_duration = timedelta()
+    total_duration = timedelta(0)
     tag_totals = []
     tags = Tag.objects.filter(id__in=tag_ids).all()
+    if durations is None or not durations.exists():
+        return total_duration, []
     for tag in tags:
         filter_durations = get_list_durations_by_users(
             durations=durations, tags=[tag.id]
         )
+        if not filter_durations:
+            continue
         duration = get_total_durations(filter_durations)
         total_duration += duration
 
@@ -821,6 +827,7 @@ def build_category_filters(
 
     # Created At Filter
     if created_at:
+        print("here")
         filters &= Q(created_at__lt=created_at)
 
     return filters

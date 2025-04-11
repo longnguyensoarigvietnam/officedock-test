@@ -646,7 +646,7 @@ class StatisticViewSet(BaseAPIViewSet):
         else:
             merged_duration = sorted(
                 merged_duration,
-                key=lambda x: (x.get("total_duration", "")),
+                key=lambda x: (x.get("created_at", "")),
                 reverse=True,
             )
 
