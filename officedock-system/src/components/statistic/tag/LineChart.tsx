@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Line } from 'react-chartjs-2';
-import moment from 'moment';
 import {
   ColumnDef,
   flexRender,
@@ -33,15 +32,16 @@ import {
   convertFromNumberToJapaneseTime,
   convertTimeToDecimal,
   convertToJapaneseDateRange,
-  convertToJapaneseMonthDate,
+  convertToStatisticJapaneseLabels,
   formatDateToYMD,
 } from '@utils/date';
-import { getRandomColor, lightenColor } from '@utils';
+import { getLineChartEnableViews, getRandomColor, lightenColor } from '@utils';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
+import { Table, TableBody } from '@components/common/Table';
 
 ChartJS.register(
   CategoryScale,
@@ -90,14 +90,12 @@ const LineChart = ({
     selectedSmall,
     selectedTags,
     tagsOptions,
+    lineChartViewBy,
     setSelectedTags,
+    setLineChartViewBy,
   } = useContext(StatisticTagStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [viewBy, setViewBy] = useState<OptionDropdownType>({
-    value: StatisticViewOptions.WEEK,
-    label: StatisticViewLabels.WEEK,
-  });
   const [lineChartData, setLineChartData] = useState<{
     labels: string[];
     datasets: {
@@ -143,10 +141,6 @@ const LineChart = ({
     {
       value: StatisticViewOptions.MONTH,
       label: StatisticViewLabels.MONTH,
-    },
-    {
-      value: StatisticViewOptions.YEAR,
-      label: StatisticViewLabels.YEAR,
     },
   ];
 
@@ -282,11 +276,32 @@ const LineChart = ({
             if (!labels || index >= labels.length) return '';
 
             const isEdge = index === 0 || index === labels.length - 1;
+            const labelDate = new Date(labels[index]);
+            const currentMonth = labelDate.getMonth();
 
             // Add extra spaces to reduce gap for first & last labels
-            return isEdge
-              ? `\xa0\xa0${convertToJapaneseMonthDate(labels[index], true)}\xa0\xa0`
-              : convertToJapaneseMonthDate(labels[index], false);
+            if (lineChartViewBy?.value != StatisticViewOptions.MONTH)
+              return convertToStatisticJapaneseLabels(
+                labels[index],
+                lineChartViewBy?.value as string,
+                isEdge,
+              );
+            // Logic for MONTH view
+            let sameMonthAsNeighbor = false;
+
+            if (index === 0 && labels.length > 1) {
+              const nextMonth = new Date(labels[1]).getMonth();
+              sameMonthAsNeighbor = currentMonth === nextMonth;
+            } else if (index === labels.length - 1 && labels.length > 1) {
+              const prevMonth = new Date(labels[labels.length - 2]).getMonth();
+              sameMonthAsNeighbor = currentMonth === prevMonth;
+            }
+
+            return convertToStatisticJapaneseLabels(
+              labels[index],
+              lineChartViewBy?.value as string,
+              isEdge && sameMonthAsNeighbor,
+            );
           },
         },
       },
@@ -315,9 +330,7 @@ const LineChart = ({
       mediumCategoryId: Number(selectedMedium?.value),
       smallCategoryId: Number(selectedSmall?.value),
       tagIds: selectedTags,
-      statisticBy: viewBy.value
-        ? String(viewBy.value)
-        : StatisticViewOptions.WEEK,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
     },
   });
 
@@ -542,7 +555,7 @@ const LineChart = ({
     },
     {
       accessorKey: 'tagDuration',
-      size: 30,
+      size: 40,
       header: ({ column }) => {
         const isSorted = column.getIsSorted();
         return (
@@ -619,36 +632,17 @@ const LineChart = ({
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const getDisabledViews = () => {
-    const diffDays = moment(endDate).diff(moment(startDate), 'days');
-    const startMonthDays = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth() + 1,
-      0,
-    ).getDate();
+  const getDisableViews = () => {
+    const allViews = [
+      StatisticViewOptions.DAY,
+      StatisticViewOptions.WEEK,
+      StatisticViewOptions.MONTH,
+    ];
 
-    const disabledViews = [];
+    const enabledViews = getLineChartEnableViews(startDate, endDate as Date);
 
-    if (diffDays < 7) disabledViews.push(StatisticViewOptions.WEEK);
-    if (diffDays < startMonthDays)
-      disabledViews.push(StatisticViewOptions.MONTH);
-    if (diffDays < 365) disabledViews.push(StatisticViewOptions.YEAR);
-
-    return disabledViews;
+    return allViews.filter((view) => !enabledViews.includes(view));
   };
-
-  // TODO: Waiting for QA's answer about day, month, and year views for the line chart, so temporarily displaying the week view by default.
-  // useEffect(() => {
-  //   if (startDate && endDate) {
-  //     const disableViews = getDisabledViews() as string[];
-  //     if (disableViews.includes(String(viewBy.value))) {
-  //       setViewBy({
-  //         value: StatisticViewOptions.DAY,
-  //         label: StatisticViewLabels.DAY,
-  //       });
-  //     }
-  //   }
-  // }, [startDate, endDate, viewBy]);
 
   return (
     <div
@@ -879,7 +873,7 @@ const LineChart = ({
                 <Dropdown
                   options={viewOptions}
                   selectedOption={viewOptions.find(
-                    (element) => element.value === viewBy?.value,
+                    (element) => element.value === lineChartViewBy?.value,
                   )}
                   className="h-[34px] !w-[54px] !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
                   classNameTextData="!text-xs"
@@ -887,13 +881,12 @@ const LineChart = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
-                    setViewBy({
+                    setLineChartViewBy({
                       label: e.label,
                       value: e.value,
                     });
                   }}
-                  disableItems={getDisabledViews()}
-                  disabled={true}
+                  disableItems={getDisableViews()}
                 />
               </div>
             </div>
@@ -908,7 +901,7 @@ const LineChart = ({
             />
           </div>
           <div className="px-[30px]">
-            <div className="flex gap-8 items-center justify-end mb-3 break-words">
+            <div className="flex gap-8 items-center justify-end mb-3 flex-wrap">
               {standardLabelsInfo.map((label, index) => {
                 return (
                   <div key={index} className="flex gap-1 items-center">
@@ -922,16 +915,16 @@ const LineChart = ({
                 );
               })}
             </div>
-            <table className="w-full border border-gray-300 mt-5 rounded-md">
+            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr
                     key={headerGroup.id}
                     className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header) => (
+                    {headerGroup.headers.map((header, index) => (
                       <th
                         key={header.id}
-                        className="px-2 py-2.5 cursor-pointer border"
+                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
                         style={{
                           width: header.getSize(),
                           minWidth: header.getSize(),
@@ -947,10 +940,10 @@ const LineChart = ({
                   </tr>
                 ))}
               </thead>
-              <tbody>
+              <TableBody>
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border">
-                    {row.getVisibleCells().map((cell) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell, index) => (
                       <td
                         key={cell.id}
                         style={{
@@ -958,7 +951,7 @@ const LineChart = ({
                           minWidth: cell.column.getSize(),
                           maxWidth: cell.column.getSize(),
                         }}
-                        className="px-2 py-3 border">
+                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -967,8 +960,8 @@ const LineChart = ({
                     ))}
                   </tr>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </>
       )}

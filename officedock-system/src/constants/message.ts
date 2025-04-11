@@ -20,7 +20,7 @@ export const SKILL_NAME_REQUIRED_MESSAGE = 'スキル名を入力してくださ
 export const ROLE_NAME_REQUIRED_MESSAGE = '権限名を入力してください。';
 
 export const NAME_REQUIRED_MESSAGE = '名前は必須です。';
-export const ROLE_REQUIRED_MESSAGE = 'ロールは必須です。';
+export const ROLE_REQUIRED_MESSAGE = '権限を選択してください。';
 export const SUPERIOR_REQUIRED_MESSAGE = '上位組織は必須です。';
 
 export const ORGANIZATION_NAME_REQUIRED_MESSAGE = '組織名は必須です。';

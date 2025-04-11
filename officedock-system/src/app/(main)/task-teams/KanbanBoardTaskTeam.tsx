@@ -55,7 +55,6 @@ import {
 
 import {
   compareItems,
-  getRandomColor,
   transformDataTeamTask,
   transformDataTotalStatus,
 } from '@utils';
@@ -163,7 +162,7 @@ const KanbanBoardTaskTeam = () => {
         data.members.map((member) => ({
           id: member.id,
           fullName: member.fullName,
-          color: getRandomColor(),
+          color: member.avatarColor,
         })),
       );
     },
@@ -367,7 +366,7 @@ const KanbanBoardTaskTeam = () => {
     }
 
     // Return if task is running
-    if (sourceUserId !== destUserId && movedTask.hasActualDuration) {
+    if (sourceUserId !== destUserId && movedTask.isStart) {
       return;
     }
     // Update total
@@ -457,15 +456,13 @@ const KanbanBoardTaskTeam = () => {
         if (belowItem && belowItem.pinAt) {
           prevItemIndex = INITIAL_INDEX_VALUE;
         }
-        const nextItemIndex = aboveItem
-          ? aboveItem.index
-          : -INITIAL_INDEX_VALUE;
+        const nextItemIndex = aboveItem ? aboveItem.index : INITIAL_INDEX_VALUE;
+
         newIndex =
           prevItemIndex === INITIAL_INDEX_VALUE ||
           nextItemIndex === INITIAL_INDEX_VALUE
             ? prevItemIndex + nextItemIndex
             : (prevItemIndex + nextItemIndex) / 2;
-
         destTasks.splice(destination.index, 0, {
           ...movedTask,
           isMyTask:
@@ -517,7 +514,6 @@ const KanbanBoardTaskTeam = () => {
   useEffect(() => {
     if (actionType && typeDetail === ItemStartType.TASK) {
       if (taskDetailId) {
-        setIsShowModalEditTeam(true);
         getDataDetailTask(parseInt(taskDetailId));
       } else {
         setIsShowModalEditTeam(true);
@@ -1530,7 +1526,6 @@ const KanbanBoardTaskTeam = () => {
             tasks.map((task: Task) => ({
               ...task,
               isStart: isPause ? false : task.id === taskId,
-              hasActualDuration: true,
             })),
           ]),
         ) as TransformedStatuses,
@@ -1561,7 +1556,7 @@ const KanbanBoardTaskTeam = () => {
                 name="Multi users"
               />
             </div>
-            <span className="text-[26px] font-medium relative top-[-2px] max-w-[350px] truncate">
+            <span className="text-[26px] font-medium relative top-[-2px] line-clamp-3 max-w-[350px] ">
               {selectedOrganization?.label}
             </span>
             <div className="flex justify-center items-center gap-2 ">
@@ -1574,7 +1569,7 @@ const KanbanBoardTaskTeam = () => {
               <Button
                 onClick={() => {
                   router.push(
-                    `${pageRouters.TASKS_TEAM_MANAGEMENT.href}/schedules?organization=${selectedOrganization?.value}&tabId=1`,
+                    `${pageRouters.SCHEDULE_TEAM_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
                   );
                 }}
                 variant={'outline'}
@@ -1832,7 +1827,13 @@ const KanbanBoardTaskTeam = () => {
           dataTask={dataTaskEdit}
           organizationId={organizationId}
           action={actionType || ActionTask.CREATE}
-          peopleDefaultId={peopleDefaultId || `${session?.user.id}`}
+          peopleDefaultId={
+            actionType === ActionTask.CREATE
+              ? peopleDefaultId || `${session?.user.id}`
+              : dataTaskEdit?.peopleInCharge.length
+                ? String(dataTaskEdit?.peopleInCharge[0].id)
+                : ''
+          }
           setDataErrorTask={setDataErrorTask}
           errorPerson={dataErrorTask}
           listMemberTeam={listMemberTeam}

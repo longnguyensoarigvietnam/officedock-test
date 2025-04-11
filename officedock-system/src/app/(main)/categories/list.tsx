@@ -44,9 +44,16 @@ import { useToast } from '@providers/ToastProvider';
 
 import { Category } from '@interfaces/category';
 import api from '@base/api';
+import WarningChangeHierarchyCategoryModal from '@components/modals/WarningChangeHierarchyCategoryModal';
 
 const ListCategory = () => {
   const { setIsLoading } = useContext(LoadingContext);
+  const [warningChangeCategoryModalOpen, setWarningChangeCategoryModalOpen] =
+    useState<boolean>(false);
+  const [pendingSelection, setPendingSelection] = useState<{
+    uuid: string;
+    name: string;
+  } | null>(null);
 
   const { data: session } = useSession();
 
@@ -72,7 +79,6 @@ const ListCategory = () => {
   });
   const categoryNameInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
 
@@ -83,14 +89,25 @@ const ListCategory = () => {
     searchCategoryName,
     1000,
   );
+  const [debouncedParams, setDebouncedParams] = useState({
+    search: '',
+    page: 1,
+  });
+  useEffect(() => {
+    setDebouncedParams((prev) => ({
+      ...prev,
+      search: debouncedFilterByCategoryName,
+      page: 1,
+    }));
+  }, [debouncedFilterByCategoryName]);
 
   const { categoryList, refetchCategoryList } = useCategoryList(
     {
-      page: currentPage,
+      page: debouncedParams.page,
       pageSize,
     },
     {
-      name: debouncedFilterByCategoryName,
+      name: debouncedParams.search,
     },
   );
 
@@ -100,12 +117,6 @@ const ListCategory = () => {
       setTotalPages(categoryList.numPages);
     }
   }, [categoryList]);
-
-  useEffect(() => {
-    if (debouncedFilterByCategoryName) {
-      setCurrentPage(1);
-    }
-  }, [debouncedFilterByCategoryName]);
 
   // Edit category name
   const handleEditCategory = async (data: {
@@ -206,9 +217,12 @@ const ListCategory = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      if (dataCategories.length === 1 && currentPage > 1) {
+      if (dataCategories.length === 1 && debouncedParams.page > 1) {
         // If change current page, useTagList auto recall, just don't need using refetchTagList
-        setCurrentPage(currentPage - 1);
+        setDebouncedParams((prev) => ({
+          ...prev,
+          page: debouncedParams.page - 1,
+        }));
       } else {
         refetchCategoryList();
       }
@@ -236,7 +250,8 @@ const ListCategory = () => {
               (category) => category.uuid == selectedCategoryToUpdate.uuid,
             )?.name || '';
           if (oldCategoryName.trim() != selectedCategoryToUpdate.name.trim()) {
-            editCategory({
+            setWarningChangeCategoryModalOpen(true);
+            setPendingSelection({
               uuid: selectedCategoryToUpdate.uuid,
               name: selectedCategoryToUpdate.name,
             });
@@ -278,8 +293,6 @@ const ListCategory = () => {
     selectedCategoryToUpdate.action,
   ]);
 
-  const [isCreate, setIsCreate] = useState(false);
-
   return (
     <Fragment>
       <div className="flex justify-between">
@@ -302,8 +315,6 @@ const ListCategory = () => {
                 const hasEmptyCategory = dataCategories.some(
                   (category) => category.name.trim() === '',
                 );
-                setIsCreate(true);
-
                 if (!hasEmptyCategory) {
                   const newUuid = uuidv4();
                   setDataCategories((prev) => [
@@ -389,6 +400,11 @@ const ListCategory = () => {
                       )}
                       <div className="flex gap-3 w-[10%] justify-end">
                         {session?.user.permissions &&
+                        !(
+                          selectedCategoryToUpdate.action ==
+                            ActionsModal.CREATE &&
+                          selectedCategoryToUpdate.uuid == element.uuid
+                        ) &&
                         hasPermissionInArray(
                           session?.user.permissions,
                           PermissionsSystem.CATEGORY_UPDATE,
@@ -397,9 +413,28 @@ const ListCategory = () => {
                             <ImageRound
                               name="Edit"
                               src={'/icons/edit-gray.svg'}
-                              className={`w-3.5 h-3.5 hover:cursor-pointer ${isCreate && 'opacity-45'} ${!(selectedCategoryToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                              className={`w-3.5 h-3.5 hover:cursor-pointer ${(!(selectedCategoryToUpdate.uuid == element.uuid) || selectedCategoryToUpdate.action == ActionsModal.CREATE) && 'opacity-45'}`}
                               onClick={() => {
-                                if (isCreate) return;
+                                if (
+                                  selectedCategoryToUpdate.action ==
+                                    ActionsModal.CREATE &&
+                                  selectedCategoryToUpdate.uuid == element.uuid
+                                )
+                                  return;
+                                if (
+                                  selectedCategoryToUpdate.uuid != element.uuid
+                                ) {
+                                  setDataCategories((prev) => {
+                                    let updatedCategories = [...prev];
+                                    updatedCategories =
+                                      updatedCategories.filter(
+                                        (category) =>
+                                          category.uuid !=
+                                          selectedCategoryToUpdate.uuid,
+                                      );
+                                    return updatedCategories;
+                                  });
+                                }
                                 setSelectedCategoryToUpdate({
                                   uuid: element.uuid || '',
                                   name: element.name,
@@ -414,6 +449,11 @@ const ListCategory = () => {
                           <div className="w-3.5"></div>
                         )}
                         {session?.user.permissions &&
+                        !(
+                          selectedCategoryToUpdate.action ==
+                            ActionsModal.CREATE &&
+                          selectedCategoryToUpdate.uuid == element.uuid
+                        ) &&
                         hasPermissionInArray(
                           session?.user.permissions,
                           PermissionsSystem.CATEGORY_DELETE,
@@ -423,6 +463,20 @@ const ListCategory = () => {
                             src={'/icons/delete-gray.svg'}
                             className="w-[13px] h-[15px] hover:cursor-pointer"
                             onClick={() => {
+                              if (
+                                selectedCategoryToUpdate.uuid != element.uuid
+                              ) {
+                                setDataCategories((prev) => {
+                                  let updatedCategories = [...prev];
+                                  updatedCategories =
+                                    updatedCategories.filter(
+                                      (category) =>
+                                        category.uuid !=
+                                        selectedCategoryToUpdate.uuid,
+                                    );
+                                  return updatedCategories;
+                                });
+                              }
                               if (
                                 selectedCategoryToUpdate.uuid == element.uuid &&
                                 selectedCategoryToUpdate.status &&
@@ -491,8 +545,13 @@ const ListCategory = () => {
           <div className="flex justify-center flex-1">
             {dataCategories && dataCategories.length ? (
               <Pagination
-                onChange={(pageNumber) => setCurrentPage(pageNumber)}
-                currentPage={currentPage}
+                onChange={(pageNumber) =>
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: pageNumber,
+                  }))
+                }
+                currentPage={debouncedParams.page}
                 totalPages={totalPages}
               />
             ) : null}
@@ -511,7 +570,10 @@ const ListCategory = () => {
                 labelOptionClass="!text-sm font-medium !pl-1.5"
                 onChange={(e) => {
                   setPageSize(Number(e.value));
-                  setCurrentPage(1);
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                  }));
                 }}
               />
             </div>
@@ -527,6 +589,34 @@ const ListCategory = () => {
         onConfirm={handleConfirmDeleteCategory}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />
+      {warningChangeCategoryModalOpen && (
+        <WarningChangeHierarchyCategoryModal
+          open={warningChangeCategoryModalOpen}
+          onConfirm={() => {
+            if (!pendingSelection) return;
+
+            const { uuid, name } = pendingSelection;
+            editCategory({
+              uuid,
+              name,
+            });
+
+            setWarningChangeCategoryModalOpen(false);
+            setPendingSelection(null);
+          }}
+          onClose={() => {
+            setSelectedCategoryToUpdate({
+              uuid: '',
+              name: '',
+              status: false,
+              action: '',
+              showError: false,
+            });
+            setWarningChangeCategoryModalOpen(false);
+            setPendingSelection(null);
+          }}
+        />
+      )}
     </Fragment>
   );
 };

@@ -63,6 +63,8 @@ const TaskListStatisticTags = ({
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
+    totalDurationCategory,
+    totalDurationCategoryCompare,
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
@@ -95,6 +97,9 @@ const TaskListStatisticTags = ({
     if (selectedOrganization?.value) {
       if (selectedLarge?.value) {
         if (selectedMedium?.value) {
+          if (selectedSmall?.value) {
+            return totalDurationCategory;
+          }
           return totalDurationSmall;
         }
         return totalDurationMedium;
@@ -108,6 +113,9 @@ const TaskListStatisticTags = ({
     if (selectedOrganization?.value) {
       if (selectedLarge?.value) {
         if (selectedMedium?.value) {
+          if (selectedSmall?.value) {
+            return totalDurationCategoryCompare;
+          }
           return totalDurationSmallCompare;
         }
         return totalDurationMediumCompare;
@@ -449,6 +457,7 @@ const TaskListStatisticTags = ({
                       ? taskList
                       : []
                 }
+                pageSize={pageSize}
                 totalDuration={
                   isCheckCompare && isShowCompare
                     ? getTotalDurationCompare()

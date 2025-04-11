@@ -38,6 +38,7 @@ class Schedule(BaseModel):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
+        related_name="schedules",
     )
     is_start = models.BooleanField(default=False)
     creator_id = models.IntegerField(null=True, blank=True)

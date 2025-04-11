@@ -67,7 +67,6 @@ const ListOrganizations = () => {
   const [dataOrganizations, setDataOrganizations] = useState<Organizations[]>(
     [],
   );
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
 
@@ -77,10 +76,21 @@ const ListOrganizations = () => {
     searchOrganizationName,
     1000,
   );
+  const [debouncedParams, setDebouncedParams] = useState({
+    search: '',
+    page: 1,
+  });
+  useEffect(() => {
+    setDebouncedParams((prev) => ({
+      ...prev,
+      search: debouncedFilterByOrganizationName,
+      page: 1,
+    }));
+  }, [debouncedFilterByOrganizationName]);
 
   const { organizationList, refetchOrganizationList } = useOrganizationList(
-    { page: currentPage, pageSize },
-    { name: debouncedFilterByOrganizationName },
+    { page: debouncedParams.page, pageSize },
+    { name: debouncedParams.search },
   );
 
   useEffect(() => {
@@ -192,9 +202,12 @@ const ListOrganizations = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      if (organizationList?.results.length === 1 && currentPage > 1) {
+      if (organizationList?.results.length === 1 && debouncedParams.page > 1) {
         // If change current page, useOrganizationList auto recall, just don't need using refetchOrganizationList
-        setCurrentPage(currentPage - 1);
+        setDebouncedParams((prev) => ({
+          ...prev,
+          page: debouncedParams.page - 1,
+        }));
       } else {
         refetchOrganizationList();
       }
@@ -265,7 +278,6 @@ const ListOrganizations = () => {
     selectedOrganizationToUpdate.name,
     selectedOrganizationToUpdate.action,
   ]);
-  const [isCreate, setIsCreate] = useState(false);
 
   return (
     <Fragment>
@@ -289,7 +301,6 @@ const ListOrganizations = () => {
                 const hasEmptyOrganization = dataOrganizations.some(
                   (org) => org.name.trim() === '',
                 );
-                setIsCreate(true);
 
                 if (!hasEmptyOrganization) {
                   const newUuid = uuidv4();
@@ -345,11 +356,6 @@ const ListOrganizations = () => {
                             placeholder="チーム名を入力"
                             className={`!border-[1px] !border-[#77858F] ${selectedOrganizationToUpdate.showError && '!border-error'} !w-full !text-sm !h-[34px]`}
                             defaultValue={element.name}
-                            onBlur={(e) => {
-                              if (e.target.value.length > 0) {
-                                setIsCreate(false);
-                              }
-                            }}
                             onChange={(e) => {
                               setSelectedOrganizationToUpdate((prev) => {
                                 return {
@@ -370,18 +376,42 @@ const ListOrganizations = () => {
                   <td>
                     <div className="flex w-[50px] break-words gap-3 justify-center">
                       {session?.user.permissions &&
+                      !(
+                        selectedOrganizationToUpdate.action ==
+                          ActionsModal.CREATE &&
+                        selectedOrganizationToUpdate.uuid == element.uuid
+                      ) &&
                       hasPermissionInArray(
                         session?.user.permissions,
                         PermissionsSystem.ORGANIZATION_UPDATE,
                       ) ? (
-                        <button disabled={isCreate}>
+                        <button>
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit-gray.svg'}
-                            className={`w-3.5 h-3.5 hover:cursor-pointer ${isCreate && ' opacity-45'} ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                            className={`w-3.5 h-3.5 hover:cursor-pointer ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
                             onClick={() => {
-                              if (isCreate) return;
-
+                              if (
+                                selectedOrganizationToUpdate.action ==
+                                  ActionsModal.CREATE &&
+                                selectedOrganizationToUpdate.uuid ==
+                                  element.uuid
+                              )
+                                return;
+                              if (
+                                selectedOrganizationToUpdate.uuid !=
+                                element.uuid
+                              ) {
+                                setDataOrganizations((prev) => {
+                                  let updatedCategories = [...prev];
+                                  updatedCategories = updatedCategories.filter(
+                                    (category) =>
+                                      category.uuid !=
+                                      selectedOrganizationToUpdate.uuid,
+                                  );
+                                  return updatedCategories;
+                                });
+                              }
                               setSelectedOrganizationToUpdate({
                                 uuid: element.uuid || '',
                                 name: element.name,
@@ -396,6 +426,11 @@ const ListOrganizations = () => {
                         <div className="w-3.5"></div>
                       )}
                       {session?.user.permissions &&
+                      !(
+                        selectedOrganizationToUpdate.action ==
+                          ActionsModal.CREATE &&
+                        selectedOrganizationToUpdate.uuid == element.uuid
+                      ) &&
                       hasPermissionInArray(
                         session?.user.permissions,
                         PermissionsSystem.ORGANIZATION_DELETE,
@@ -405,7 +440,19 @@ const ListOrganizations = () => {
                           src={'/icons/delete-gray.svg'}
                           className="w-[13px] h-[15px] hover:cursor-pointer"
                           onClick={() => {
-                            setIsCreate(false);
+                            if (
+                              selectedOrganizationToUpdate.uuid != element.uuid
+                            ) {
+                              setDataOrganizations((prev) => {
+                                let updatedCategories = [...prev];
+                                updatedCategories = updatedCategories.filter(
+                                  (category) =>
+                                    category.uuid !=
+                                    selectedOrganizationToUpdate.uuid,
+                                );
+                                return updatedCategories;
+                              });
+                            }
                             if (
                               selectedOrganizationToUpdate.uuid ==
                                 element.uuid &&
@@ -453,8 +500,13 @@ const ListOrganizations = () => {
           <div className="flex justify-center flex-1">
             {dataOrganizations && dataOrganizations.length ? (
               <Pagination
-                onChange={(pageNumber) => setCurrentPage(pageNumber)}
-                currentPage={currentPage}
+                onChange={(pageNumber) =>
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: pageNumber,
+                  }))
+                }
+                currentPage={debouncedParams.page}
                 totalPages={totalPages}
               />
             ) : null}
@@ -473,7 +525,10 @@ const ListOrganizations = () => {
                 labelOptionClass="!text-sm font-medium !pl-1.5"
                 onChange={(e) => {
                   setPageSize(Number(e.value));
-                  setCurrentPage(1);
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                  }));
                 }}
               />
             </div>

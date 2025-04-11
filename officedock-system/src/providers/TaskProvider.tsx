@@ -125,6 +125,10 @@ interface ContextValue {
   handleZoomOutKanban: () => void;
   calculateFontSizeTitle: () => number;
   calculateFontSizeContent: () => number;
+  displayHederDateStart: Date;
+  displayHederDateEnd: Date;
+  setDisplayHeaderDayStart: Dispatch<SetStateAction<Date>>;
+  setDisplayHeaderDayEnd: Dispatch<SetStateAction<Date>>;
 }
 
 const defaultValue: ContextValue = {
@@ -233,6 +237,10 @@ const defaultValue: ContextValue = {
   },
   setSelectedOptionZoom: () => {},
   setOrderingOptions: () => {},
+  displayHederDateStart: new Date(),
+  displayHederDateEnd: new Date(),
+  setDisplayHeaderDayStart: () => {},
+  setDisplayHeaderDayEnd: () => {},
 };
 
 export const TaskContext = createContext<ContextValue>(defaultValue);
@@ -330,6 +338,13 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       label: '100%',
       value: 100,
     });
+
+  const [displayHederDateStart, setDisplayHeaderDayStart] = useState<Date>(
+    new Date(),
+  );
+  const [displayHederDateEnd, setDisplayHeaderDayEnd] = useState<Date>(
+    new Date(),
+  );
 
   const [dataActualAddSchedule, setDataActualAddSchedule] =
     useState<TaskActualCalculationType>();
@@ -432,6 +447,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     calculateFontSizeContent,
     setSelectedOptionZoom,
     setOrderingOptions,
+    displayHederDateStart,
+    displayHederDateEnd,
+    setDisplayHeaderDayStart,
+    setDisplayHeaderDayEnd,
   };
 
   return (

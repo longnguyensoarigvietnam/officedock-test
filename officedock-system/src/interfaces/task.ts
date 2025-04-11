@@ -52,6 +52,8 @@ export interface TaskRequest {
   planStartDate?: string | null;
   planEndDate?: string | null;
   isTeamTask?: boolean;
+  task_schedule_from_date?: string;
+  task_schedule_end_date?: string;
 }
 export interface TaskFormData {
   id?: string;
@@ -293,7 +295,7 @@ export interface TaskTimeSchedule {
   address?: string;
   participants?: EventParticipant[];
   isAllDay?: boolean;
-  statusId?: number
+  statusId?: number;
 }
 export interface TaskErrorPerson {
   id: string;
@@ -380,6 +382,7 @@ interface ProfileTeam {
 
 export interface ResultTeam {
   id: number;
+  avatarColor: string;
   profile: ProfileTeam;
   status: StatusTeam[];
 }
@@ -402,6 +405,7 @@ export interface TransformedStatuses {
 export interface TransformedUser {
   id: string;
   name: string;
+  avatarColor: string;
   statuses: TransformedStatuses;
 }
 

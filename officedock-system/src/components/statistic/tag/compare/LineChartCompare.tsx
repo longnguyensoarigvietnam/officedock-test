@@ -20,9 +20,9 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import moment from 'moment';
 
 import ImageRound from '@components/common/ImageRound';
+import { Table, TableBody } from '@components/common/Table';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Dropdown from '@components/common/Dropdown';
 import {
@@ -37,14 +37,18 @@ import {
   convertFromNumberToJapaneseTime,
   convertTimeToDecimal,
   convertToJapaneseDateRange,
-  convertToJapaneseMonthDate,
+  convertToStatisticJapaneseLabels,
   formatDateToYMD,
   formatShowStatisticTask,
   getCategoryFormattedDate,
   getJapaneseDayName,
   subtractDurations,
 } from '@utils/date';
-import { getRandomColor, lightenColor } from '@utils';
+import {
+  getCompareLineChartEnableViews,
+  getRandomColor,
+  lightenColor,
+} from '@utils';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
@@ -132,14 +136,12 @@ const LineChartCompare = ({
     totalDurationMediumCompare,
     totalDurationSmallCompare,
     totalDurationCategoryCompare,
+    lineChartViewBy,
     setSelectedTags,
+    setLineChartViewBy,
   } = useContext(StatisticTagStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [viewBy, setViewBy] = useState<OptionDropdownType>({
-    value: StatisticViewOptions.WEEK,
-    label: StatisticViewLabels.WEEK,
-  });
   const [lineChartData, setLineChartData] = useState<{
     labels: string[];
     datasets: {
@@ -186,10 +188,6 @@ const LineChartCompare = ({
     {
       value: StatisticViewOptions.MONTH,
       label: StatisticViewLabels.MONTH,
-    },
-    {
-      value: StatisticViewOptions.YEAR,
-      label: StatisticViewLabels.YEAR,
     },
   ];
 
@@ -396,7 +394,7 @@ const LineChartCompare = ({
 
             if (!labels || index >= labels.length) return '';
 
-            return convertToJapaneseMonthDate(labels[index], true);
+            return convertToStatisticJapaneseLabels(labels[index], lineChartViewBy?.value as string, false)
           },
         },
       },
@@ -425,9 +423,7 @@ const LineChartCompare = ({
       mediumCategoryId: Number(selectedMedium?.value),
       smallCategoryId: Number(selectedSmall?.value),
       tagIds: selectedTags,
-      statisticBy: viewBy.value
-        ? String(viewBy.value)
-        : StatisticViewOptions.WEEK,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
     },
   });
 
@@ -441,9 +437,7 @@ const LineChartCompare = ({
         mediumCategoryId: Number(selectedMedium?.value),
         smallCategoryId: Number(selectedSmall?.value),
         tagIds: selectedTags,
-        statisticBy: viewBy.value
-          ? String(viewBy.value)
-          : StatisticViewOptions.WEEK,
+        statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
       },
     });
 
@@ -834,14 +828,14 @@ const LineChartCompare = ({
           <div className="flex gap-2 px-3 items-start">
             <div
               style={{ backgroundColor: info.row.original.tagColor }}
-              className={`w-[18px] h-4 min-w-[18px] rounded-[3px] flex items-center justify-center mt-1`}>
+              className={`w-4 h-4 min-w-[16px] rounded-[3px] flex items-center justify-center mt-1`}>
               <ImageRound
                 name="Check task"
                 src={'/icons/check-task.svg'}
                 className="w-[10px] h-2"
               />
             </div>
-            <div className="flex flex-col gap-2 w-[calc(100%_-20px)]">
+            <div className="flex flex-col items-start gap-2 w-[calc(100%_-20px)]">
               <p className="font-medium text-[16px] truncate text-black !max-w-[calc(100%_-_40px)]">
                 {' '}
                 {value}{' '}
@@ -902,29 +896,29 @@ const LineChartCompare = ({
       enableSorting: true,
       cell: (info) => {
         return (
-          <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-col pl-2 gap-2 w-full">
             <div className="h-[22px]"></div>
-            <div className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
+            <div className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
-                {info.row.original.standardInfo?.tagDuration.split(':')[0] || 0}
+                {info.row.original.standardInfo?.tagDuration.split(':')[0] || '00'}
                 時間
               </p>
               <p>
-                {info.row.original.standardInfo?.tagDuration.split(':')[1] || 0}
+                {info.row.original.standardInfo?.tagDuration.split(':')[1] || '00'}
                 分
               </p>
             </div>
-            <div className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
+            <div className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               <p>
-                {info.row.original.compareInfo?.tagDuration.split(':')[0] || 0}
+                {info.row.original.compareInfo?.tagDuration.split(':')[0] || '00'}
                 時間
               </p>
               <p>
-                {info.row.original.compareInfo?.tagDuration.split(':')[1] || 0}
+                {info.row.original.compareInfo?.tagDuration.split(':')[1] || '00'}
                 分
               </p>
             </div>
-            <div className="font-medium flex text-[14px] justify-center text-black">
+            <div className="font-medium flex text-[14px] justify-end text-black">
               <p>
                 {subtractDurations(
                   info.row.original.standardInfo?.tagDuration || '00:00:00',
@@ -962,15 +956,15 @@ const LineChartCompare = ({
       sortingFn: differenceSorting,
       cell: (info) => {
         return (
-          <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-col pl-2 gap-2 w-full">
             <div className="h-[22px]"></div>
-            <p className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
+            <p className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               {info.row.original.standardInfo?.tagPercent || 0}%
             </p>
-            <p className="font-medium flex text-[14px] justify-center text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
+            <p className="font-medium flex text-[14px] justify-end text-black w-full border-b-[1px] border-[#D2DBE1] pb-1">
               {info.row.original.compareInfo?.tagPercent || 0}%
             </p>
-            <p className="font-medium flex text-[14px] justify-center text-black">
+            <p className="font-medium flex text-[14px] justify-end text-black">
               {(Number(info.row.original.standardInfo?.tagPercent) || 0) -
                 (Number(info.row.original.compareInfo?.tagPercent) || 0)}
               %
@@ -996,60 +990,22 @@ const LineChartCompare = ({
     onSortingChange: handleSortingChange,
   });
 
-  const getDisabledViews = () => {
-    const standardDiffDays =
-      moment(endDate)
-        .endOf('day')
-        .diff(moment(startDate).startOf('day'), 'days') + 1;
-    const compareDiffDays =
-      moment(endDateCompare)
-        .endOf('day')
-        .diff(moment(startDateCompare).startOf('day'), 'days') + 1;
+  const getDisableViews = () => {
+    const allViews = [
+      StatisticViewOptions.DAY,
+      StatisticViewOptions.WEEK,
+      StatisticViewOptions.MONTH,
+    ];
 
-    const standardDisabledViews = [];
-    const compareDisabledViews = [];
-    const startMonthDays = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth() + 1,
-      0,
-    ).getDate();
-    const startCompareMonthDays = new Date(
-      startDateCompare.getFullYear(),
-      startDateCompare.getMonth() + 1,
-      0,
-    ).getDate();
-
-    if (standardDiffDays < 7)
-      standardDisabledViews.push(StatisticViewOptions.WEEK);
-    if (standardDiffDays < startMonthDays)
-      standardDisabledViews.push(StatisticViewOptions.MONTH);
-    if (standardDiffDays < 365)
-      standardDisabledViews.push(StatisticViewOptions.YEAR);
-
-    if (compareDiffDays < 7)
-      compareDisabledViews.push(StatisticViewOptions.WEEK);
-    if (compareDiffDays < startCompareMonthDays)
-      compareDisabledViews.push(StatisticViewOptions.MONTH);
-    if (compareDiffDays < 365)
-      compareDisabledViews.push(StatisticViewOptions.YEAR);
-
-    return Array.from(
-      new Set([...standardDisabledViews, ...compareDisabledViews]),
+    const enabledViews = getCompareLineChartEnableViews(
+      startDate,
+      endDate as Date,
+      startDateCompare,
+      endDateCompare as Date,
     );
-  };
 
-  // TODO: Waiting for QA's answer about day, month, and year views for the line chart, so temporarily displaying the week view by default.
-  // useEffect(() => {
-  //   if (startDate && endDate && startDateCompare && endDateCompare) {
-  //     const disableViews = getDisabledViews() as string[];
-  //     if (disableViews.includes(String(viewBy.value))) {
-  //       setViewBy({
-  //         value: StatisticViewOptions.DAY,
-  //         label: StatisticViewLabels.DAY,
-  //       });
-  //     }
-  //   }
-  // }, [startDate, endDate, startDateCompare, endDateCompare, viewBy]);
+    return allViews.filter((view) => !enabledViews.includes(view));
+  };
 
   return (
     <div
@@ -1312,7 +1268,7 @@ const LineChartCompare = ({
                 <Dropdown
                   options={viewOptions}
                   selectedOption={viewOptions.find(
-                    (element) => element.value === viewBy?.value,
+                    (element) => element.value === lineChartViewBy?.value,
                   )}
                   className="h-[34px] !w-[54px] !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
                   classNameTextData="!text-xs"
@@ -1320,13 +1276,12 @@ const LineChartCompare = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
-                    setViewBy({
+                    setLineChartViewBy({
                       label: e.label,
                       value: e.value,
                     });
                   }}
-                  disableItems={getDisabledViews()}
-                  disabled={true}
+                  disableItems={getDisableViews()}
                 />
               </div>
             </div>
@@ -1341,7 +1296,7 @@ const LineChartCompare = ({
             />
           </div>
           <div className="px-[30px]">
-            <div className="flex gap-8 items-center justify-end mb-3">
+            <div className="flex gap-8 items-center justify-end mb-3 flex-wrap">
               <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
                 基準
               </p>
@@ -1358,7 +1313,7 @@ const LineChartCompare = ({
                 );
               })}
             </div>
-            <div className="flex gap-8 items-center justify-end">
+            <div className="flex gap-8 items-center justify-end flex-wrap">
               <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
                 比較
               </p>
@@ -1375,16 +1330,16 @@ const LineChartCompare = ({
                 );
               })}
             </div>
-            <table className="w-full border border-gray-300 mt-5 rounded-md">
+            <Table className="w-full border border-gray-300 mt-5 !rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr
                     key={headerGroup.id}
                     className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header) => (
+                    {headerGroup.headers.map((header, index) => (
                       <th
                         key={header.id}
-                        className="px-2 py-2.5 cursor-pointer border"
+                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
                         style={{
                           width: header.getSize(),
                           minWidth: header.getSize(),
@@ -1400,10 +1355,10 @@ const LineChartCompare = ({
                   </tr>
                 ))}
               </thead>
-              <tbody>
+              <TableBody>
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border">
-                    {row.getVisibleCells().map((cell) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell, index) => (
                       <td
                         key={cell.id}
                         style={{
@@ -1411,7 +1366,7 @@ const LineChartCompare = ({
                           minWidth: cell.column.getSize(),
                           maxWidth: cell.column.getSize(),
                         }}
-                        className="px-2 py-3 border">
+                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -1420,8 +1375,8 @@ const LineChartCompare = ({
                     ))}
                   </tr>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </>
       )}

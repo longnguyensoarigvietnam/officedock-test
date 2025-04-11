@@ -329,9 +329,13 @@ const DetailPlanItemModal = ({
               <span>終了</span>
               <span className="text-base font-normal text-black">
                 {popoverInfo.isRunning &&
-                popoverInfo.resource !== ItemScheduleType.PLANS
-                  ? '計測中'
-                  : formatTime24h(popoverInfo.end)}
+                popoverInfo.resource !== ItemScheduleType.PLANS ? (
+                  <span className="text-[#77858F] text-xs relative top-[-1px]">
+                    計測中
+                  </span>
+                ) : (
+                  formatTime24h(popoverInfo.end)
+                )}
               </span>
             </div>
           </div>

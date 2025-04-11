@@ -29,7 +29,7 @@ const WarningDeadlineTaskModal = memo(
         onClose={() => {}}
         title="">
         <div className="text-base font-medium text-white items-baseline">
-          <p className="leading-6 text-neutral-02 text-center">
+          <p className="leading-6 text-neutral-02 text-center break-all">
             {title} 締切 {remindCountdown}
             {remindType} です
           </p>

@@ -14,7 +14,6 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
@@ -189,11 +188,11 @@ const TableChart = ({
         setIsLoadingMedium(true);
         setIsLoadingOrganization(true);
         queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === 'getStatisticCategoryListTeam',
+          predicate: (query) => query.queryKey[0] === 'getStatisticTaskList',
         });
         queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticCategoryListTeam',
         });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
@@ -201,11 +200,11 @@ const TableChart = ({
           setIsLoadingOrganizationCompare(true);
           queryClient.invalidateQueries({
             predicate: (query) =>
-              query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
+              query.queryKey[0] === 'getStatisticTaskListCompare',
           });
           queryClient.invalidateQueries({
             predicate: (query) =>
-              query.queryKey[0] === 'getStatisticTagsListCompare',
+              query.queryKey[0] === 'getStatisticCategoryListTeamCompare',
           });
         }
       },
@@ -701,7 +700,6 @@ const TableChart = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (

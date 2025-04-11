@@ -54,6 +54,7 @@ import ActionsUserModal from '@components/modals/ActionsUserModal';
 import useUserDetail from '@hooks/useUserDetail';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ResponseError } from '@interfaces/response';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 const ListUsers = () => {
   const { data: session } = useSession();
@@ -63,6 +64,7 @@ const ListUsers = () => {
 
   const { showToast } = useToast();
   const router = useRouter();
+  const { authenticatedUser } = useAuthenticatedUser();
 
   // State
   const [dataUsers, setDataUsers] = useState<User[]>([]);
@@ -76,14 +78,7 @@ const ListUsers = () => {
   const [organizationUserOptions, setOrganizationUserOptions] = useState<
     OptionDropdownType[]
   >([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-
-  const [filterRequest, setFilterRequest] = useState({
-    companyName: '',
-    organizationId: '',
-    role: '',
-  });
 
   const [userEditId, setUserEditId] = useState<number | null>(null);
   const [userEditDetail, setUserEditDetail] = useState<User | null>(null);
@@ -108,6 +103,22 @@ const ListUsers = () => {
   const { creationRoleUserData } = useCreationRoleUser({});
   const debouncedSearch = useDebounceText(search, 1000);
 
+  const [debouncedParams, setDebouncedParams] = useState({
+    search: '',
+    companyName: '',
+    organizationId: '',
+    role: '',
+    page: 1,
+  });
+
+  useEffect(() => {
+    setDebouncedParams((prev) => ({
+      ...prev,
+      search: debouncedSearch,
+      page: 1,
+    }));
+  }, [debouncedSearch]);
+
   useCreationOrganization({
     onSuccess: (data) => {
       setOrganizationUserOptions([
@@ -125,14 +136,14 @@ const ListUsers = () => {
 
   const { userList, refetchUserList } = useUserList(
     {
-      page: currentPage,
+      page: debouncedParams.page,
       pageSize,
     },
     {
-      fullName: debouncedSearch,
-      companyName: filterRequest.companyName,
-      organizationId: filterRequest.organizationId,
-      role: filterRequest.role,
+      fullName: debouncedParams.search,
+      companyName: debouncedParams.companyName,
+      organizationId: debouncedParams.organizationId,
+      role: debouncedParams.role,
     },
   );
 
@@ -184,9 +195,12 @@ const ListUsers = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      if (userList?.results.length === 1 && currentPage > 1) {
+      if (userList?.results.length === 1 && debouncedParams.page > 1) {
         // If change current page, useUserList auto recall, just don't need using refetchUserList
-        setCurrentPage(currentPage - 1);
+        setDebouncedParams((prev) => ({
+          ...prev,
+          page: debouncedParams.page - 1,
+        }));
       } else {
         refetchUserList();
       }
@@ -491,8 +505,8 @@ const ListUsers = () => {
         <div className="font-medium text-sm text-[#77858F] flex items-center justify-between">
           <div className=" flex items-center  gap-5">
             <p className="text-black text-[26px]">ユーザー管理</p>
-            <span>アステッキホールディングス株式会社</span>
-            <span>全メンバー{userList?.count}人 / 50</span>
+            <span>{authenticatedUser?.company.name || ''}</span>
+            <span>全メンバー30人 / 50</span>
           </div>
           <div className="flex gap-[10px] items-center">
             <p>現在のプラン</p>
@@ -532,10 +546,11 @@ const ListUsers = () => {
                   labelTextClass="!text-[#77858F] !text-xs !font-medium"
                   classNameOption="!text-sm"
                   onChange={(data) => {
-                    setFilterRequest({
-                      ...filterRequest,
+                    setDebouncedParams((prev) => ({
+                      ...prev,
+                      page: 1,
                       organizationId: data.value as string,
-                    });
+                    }));
                   }}
                 />
               </div>
@@ -551,10 +566,11 @@ const ListUsers = () => {
                 classNameOption="!text-sm"
                 selectedOption={undefined}
                 onChange={(data) => {
-                  setFilterRequest({
-                    ...filterRequest,
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: 1,
                     role: data.value as string,
-                  });
+                  }));
                 }}
               />
             </div>
@@ -614,7 +630,7 @@ const ListUsers = () => {
                 <tr key={index} className="text-sm text-black font-medium">
                   <td className="w-[220px]">
                     <div className=" flex items-start gap-2">
-                      <div className="flex items-center flex-grow gap-[6px]">
+                      <div className="flex items-start flex-grow gap-[6px]">
                         <div className="w-[30px] h-[30px]">
                           <AvatarIconWithDynamicColor
                             color={element.avatarColor}
@@ -622,7 +638,7 @@ const ListUsers = () => {
                             customClassName="relative top-[3px]"
                           />
                         </div>
-                        <p className="text-[16px] text-black break-all text-left w-0 min-w-0 flex-grow">
+                        <p className="text-[16px] text-black break-all text-left w-0 min-w-0 flex-grow relative top-[5px]">
                           {element.profile.fullName}
                         </p>
                       </div>
@@ -690,8 +706,13 @@ const ListUsers = () => {
           <div className="flex justify-center flex-1">
             {dataUsers && dataUsers.length ? (
               <Pagination
-                onChange={(pageNumber) => setCurrentPage(pageNumber)}
-                currentPage={currentPage}
+                onChange={(pageNumber) => {
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: pageNumber,
+                  }));
+                }}
+                currentPage={debouncedParams.page}
                 totalPages={totalPages}
               />
             ) : null}
@@ -710,7 +731,10 @@ const ListUsers = () => {
                 labelOptionClass="!text-sm font-medium !pl-1.5"
                 onChange={(e) => {
                   setPageSize(Number(e.value));
-                  setCurrentPage(1);
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                  }));
                 }}
               />
             </div>
@@ -733,7 +757,9 @@ const ListUsers = () => {
           open={openActionsUserModal}
           action={actionTypeParam}
           dataUserDetail={userEditDetail}
-          originalOrganizationOptions={organizationUserOptions}
+          originalOrganizationOptions={organizationUserOptions.filter(
+            (role) => role.value,
+          )}
           roleUserOptions={roleUserOptions.filter((role) => role.value)}
           emailErrorMessage={emailErrorMessage}
           usernameErrorMessage={usernameErrorMessage}

@@ -36,7 +36,6 @@ const ListRoles = () => {
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
   const [dataRoles, setDataRoles] = useState<RoleDetail[]>([]);
 
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [selectedRoleToDelete, setSelectedRoleToDelete] =
@@ -45,17 +44,31 @@ const ListRoles = () => {
   const [searchRoleName, setSearchRoleName] = useState('');
   const debouncedFilterByRoleName = useDebounceText(searchRoleName, 1000);
 
+  const [debouncedParams, setDebouncedParams] = useState({
+    search: '',
+    page: 1,
+  });
+
   const { setIsLoading } = useContext(LoadingContext);
   const { setDataRoleDetail } = useContext(RoleStateContext);
   const { data: session } = useSession();
   const { showToast } = useToast();
+
+  useEffect(() => {
+    setDebouncedParams((prev) => ({
+      ...prev,
+      search: debouncedFilterByRoleName,
+      page: 1,
+    }));
+  }, [debouncedFilterByRoleName]);
+
   const { roleList, refetchRoleList } = useRoleList(
     {
-      page: currentPage,
+      page: debouncedParams.page,
       pageSize,
     },
     {
-      name: debouncedFilterByRoleName,
+      name: debouncedParams.search,
     },
   );
   const showErrorToast = useErrorToast();
@@ -66,12 +79,6 @@ const ListRoles = () => {
       setTotalPages(roleList.numPages);
     }
   }, [roleList]);
-
-  useEffect(() => {
-    if (debouncedFilterByRoleName) {
-      setCurrentPage(1);
-    }
-  }, [debouncedFilterByRoleName]);
 
   // Delete role
   const handleOpenDeleteRoleModal = (role: RoleDetail) => {
@@ -96,9 +103,12 @@ const ListRoles = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      if (roleList?.results.length === 1 && currentPage > 1) {
+      if (roleList?.results.length === 1 && debouncedParams.page > 1) {
         // If change current page, useRoleList auto recall, just don't need using refetchRoleList
-        setCurrentPage(currentPage - 1);
+        setDebouncedParams((prev) => ({
+          ...prev,
+          page: debouncedParams.page - 1,
+        }));
       } else {
         refetchRoleList();
       }
@@ -222,7 +232,6 @@ const ListRoles = () => {
                             name="Detail"
                             src={'/icons/detail-gray.svg'}
                             className="w-[13px] h-[15px] hover:cursor-pointer"
-                            onClick={() => handleOpenDeleteRoleModal(element)}
                           />
                         </div>
                       </Link>
@@ -244,8 +253,13 @@ const ListRoles = () => {
           <div className="flex justify-center flex-1">
             {dataRoles && dataRoles.length ? (
               <Pagination
-                onChange={(pageNumber) => setCurrentPage(pageNumber)}
-                currentPage={currentPage}
+                onChange={(pageNumber) =>
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: pageNumber,
+                  }))
+                }
+                currentPage={debouncedParams.page}
                 totalPages={totalPages}
               />
             ) : null}
@@ -264,7 +278,10 @@ const ListRoles = () => {
                 labelOptionClass="!text-sm font-medium !pl-1.5"
                 onChange={(e) => {
                   setPageSize(Number(e.value));
-                  setCurrentPage(1);
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                  }));
                 }}
               />
             </div>

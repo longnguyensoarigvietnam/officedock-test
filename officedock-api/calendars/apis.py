@@ -37,6 +37,7 @@ from tasks.models import TaskSchedule, TaskDuration
 from base.permissions import ActionPermission
 from roles.constants import Screens
 from common.serializers import CreationDataUserSerializer
+from tasks.constants import TaskStatus
 
 
 @extend_schema(tags=["System > Schedule"])
@@ -609,8 +610,10 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
 
         # Query data tasks and schedules
         schedules = Schedule.objects.filter(organization_id=organization_id)
-        task_schedules = TaskSchedule.objects.select_related("task").filter(
-            task__organization_id=organization_id
+        task_schedules = (
+            TaskSchedule.objects.select_related("task")
+            .filter(task__organization_id=organization_id)
+            .exclude(task__status__name=TaskStatus.MY_ROUTINE.value)
         )
 
         # Handle filter search
@@ -736,10 +739,14 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         end_date = request.query_params.get("end_date")
         search = request.query_params.get("search")
 
-        durations = TaskDuration.objects.filter(
-            Q(task__organization_id=organization_id)
-            | Q(schedule__organization_id=organization_id)
-        ).all()
+        durations = (
+            TaskDuration.objects.filter(
+                Q(task__organization_id=organization_id)
+                | Q(schedule__organization_id=organization_id)
+            )
+            .exclude(task__status__name=TaskStatus.MY_ROUTINE.value)
+            .all()
+        )
 
         # Handle filter search
         if search:

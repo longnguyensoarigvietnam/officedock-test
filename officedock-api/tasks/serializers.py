@@ -100,7 +100,6 @@ class TaskCommonSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
     is_my_task = serializers.SerializerMethodField()
     is_schedule_in_today = serializers.SerializerMethodField()
-    has_actual_duration = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -111,15 +110,8 @@ class TaskCommonSerializer(serializers.ModelSerializer):
             "is_my_task",
             "tags",
             "is_schedule_in_today",
-            "has_actual_duration",
         ]
         read_only_fields = ["id"]
-
-    def get_has_actual_duration(self, instance):
-        """
-        Check task has actual duration
-        """
-        return instance.task_durations.exists()
 
     def get_tags(self, obj):
         """
@@ -346,6 +338,12 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
     month = serializers.IntegerField(
         min_value=1, max_value=12, required=False, allow_null=True
     )
+    task_schedule_from_date = serializers.DateTimeField(
+        allow_null=True, required=False
+    )
+    task_schedule_end_date = serializers.DateTimeField(
+        allow_null=True, required=False
+    )
 
     class Meta:
         model = Task
@@ -390,7 +388,8 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "week_day",
             "month_day",
             "month",
-            "has_actual_duration",
+            "task_schedule_from_date",
+            "task_schedule_end_date",
         ]
 
         read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
@@ -498,6 +497,8 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         """
         Custom sorting by index for list people in charge
         """
+        task_schedule_from_date = self.context.get("task_schedule_from_date")
+        task_schedule_end_date = self.context.get("task_schedule_end_date")
         representation = super().to_representation(instance)
         sorted_users = [
             item.user
@@ -508,9 +509,16 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         representation["people_in_charge"] = CreationDataUserSerializer(
             sorted_users, many=True
         ).data
-        task_schedules = instance.task_schedules.filter(
-            plan_start_date__date__gte=now().date()
-        ).all()
+
+        task_schedules = instance.task_schedules
+        if task_schedule_from_date and task_schedule_end_date:
+            task_schedules = task_schedules.filter(
+                Q(
+                    Q(plan_start_date__date__gte=task_schedule_from_date)
+                    & Q(plan_end_date__date__lte=task_schedule_end_date)
+                )
+            ).all()
+
         representation["task_schedules"] = TaskScheduleSerializer(
             task_schedules, many=True
         ).data
@@ -582,7 +590,6 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "pin_at",
             "type",
             "categories",
-            "has_actual_duration",
         ]
 
     def to_representation(self, instance):

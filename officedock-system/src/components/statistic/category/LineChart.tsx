@@ -19,7 +19,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import moment from 'moment';
 
 import ImageRound from '@components/common/ImageRound';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
@@ -38,10 +37,11 @@ import {
   convertFromNumberToJapaneseTime,
   convertTimeToDecimal,
   convertToJapaneseDateRange,
-  convertToJapaneseMonthDate,
+  convertToStatisticJapaneseLabels,
   formatDateToYMD,
 } from '@utils/date';
-import { getRandomColor, lightenColor } from '@utils';
+import { getLineChartEnableViews, getRandomColor, lightenColor } from '@utils';
+import { Table, TableBody } from '@components/common/Table';
 
 ChartJS.register(
   CategoryScale,
@@ -85,14 +85,12 @@ const LineChart = ({
     selectedOrganization,
     selectedTags,
     tagsOptions,
+    lineChartViewBy,
     setSelectedTags,
+    setLineChartViewBy,
   } = useContext(StatisticStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
-  const [viewBy, setViewBy] = useState<OptionDropdownType>({
-    value: StatisticViewOptions.WEEK,
-    label: StatisticViewLabels.WEEK,
-  });
   const [lineChartData, setLineChartData] = useState<{
     labels: string[];
     datasets: {
@@ -138,10 +136,6 @@ const LineChart = ({
     {
       value: StatisticViewOptions.MONTH,
       label: StatisticViewLabels.MONTH,
-    },
-    {
-      value: StatisticViewOptions.YEAR,
-      label: StatisticViewLabels.YEAR,
     },
   ];
 
@@ -277,11 +271,32 @@ const LineChart = ({
             if (!labels || index >= labels.length) return '';
 
             const isEdge = index === 0 || index === labels.length - 1;
+            const labelDate = new Date(labels[index]);
+            const currentMonth = labelDate.getMonth();
 
             // Add extra spaces to reduce gap for first & last labels
-            return isEdge
-              ? `\xa0\xa0${convertToJapaneseMonthDate(labels[index], true)}\xa0\xa0`
-              : convertToJapaneseMonthDate(labels[index], false);
+            if (lineChartViewBy?.value != StatisticViewOptions.MONTH)
+              return convertToStatisticJapaneseLabels(
+                labels[index],
+                lineChartViewBy?.value as string,
+                isEdge,
+              );
+            // Logic for MONTH view
+            let sameMonthAsNeighbor = false;
+
+            if (index === 0 && labels.length > 1) {
+              const nextMonth = new Date(labels[1]).getMonth();
+              sameMonthAsNeighbor = currentMonth === nextMonth;
+            } else if (index === labels.length - 1 && labels.length > 1) {
+              const prevMonth = new Date(labels[labels.length - 2]).getMonth();
+              sameMonthAsNeighbor = currentMonth === prevMonth;
+            }
+
+            return convertToStatisticJapaneseLabels(
+              labels[index],
+              lineChartViewBy?.value as string,
+              isEdge && sameMonthAsNeighbor,
+            );
           },
         },
       },
@@ -309,9 +324,7 @@ const LineChart = ({
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
       tagIds: selectedTags,
-      statisticBy: viewBy.value
-        ? String(viewBy.value)
-        : StatisticViewOptions.WEEK,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
     },
   });
 
@@ -546,7 +559,7 @@ const LineChart = ({
     },
     {
       accessorKey: 'categoryDuration',
-      size: 30,
+      size: 40,
       header: ({ column }) => {
         const isSorted = column.getIsSorted();
         return (
@@ -626,36 +639,17 @@ const LineChart = ({
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const getDisabledViews = () => {
-    const diffDays = moment(endDate).diff(moment(startDate), 'days');
-    const startMonthDays = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth() + 1,
-      0,
-    ).getDate();
+  const getDisableViews = () => {
+    const allViews = [
+      StatisticViewOptions.DAY,
+      StatisticViewOptions.WEEK,
+      StatisticViewOptions.MONTH,
+    ];
 
-    const disabledViews = [];
+    const enabledViews = getLineChartEnableViews(startDate, endDate as Date);
 
-    if (diffDays < 7) disabledViews.push(StatisticViewOptions.WEEK);
-    if (diffDays < startMonthDays)
-      disabledViews.push(StatisticViewOptions.MONTH);
-    if (diffDays < 365) disabledViews.push(StatisticViewOptions.YEAR);
-
-    return disabledViews;
+    return allViews.filter((view) => !enabledViews.includes(view));
   };
-
-  // TODO: Waiting for QA's answer about day, month, and year views for the line chart, so temporarily displaying the week view by default.
-  // useEffect(() => {
-  //   if (startDate && endDate) {
-  //     const disableViews = getDisabledViews() as string[];
-  //     if (disableViews.includes(String(viewBy.value))) {
-  //       setViewBy({
-  //         value: StatisticViewOptions.DAY,
-  //         label: StatisticViewLabels.DAY,
-  //       });
-  //     }
-  //   }
-  // }, [startDate, endDate, viewBy]);
 
   return (
     <div
@@ -672,19 +666,19 @@ const LineChart = ({
               name="statistic line chart icon"
               src={`/icons/statistic-line-chart.svg`}
             />
-            <span className="text-black font-semibold text-[18px] relative top-[2px]">
+            <span className="text-black w-[210px] flex-shrink-0  font-semibold text-[18px] relative top-[2px]">
               期間における時間の推移
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-[240px] relative">
+            <div className="w-[240px] flex-shrink-0 relative">
               <MultiSelectDropdown
                 isShowIconFilter
                 options={tagsOptions}
                 optionClassName="!top-6"
                 labelOptionClass="break-words w-[190px]"
                 placeholder="集計対象のタグを選択"
-                className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {
                   let updatedTagIds = [];
@@ -708,8 +702,8 @@ const LineChart = ({
                 </span>
               )}
             </div>
-            <div className="relative right-[224px] top-0">
-              <div className="flex gap-2 flex-wrap ">
+            <div className="relative flex-grow right-[224px] top-0">
+              <div className="flex gap-2 w-full flex-shrink-0 flex-wrap ">
                 {selectedTags.map((item) => {
                   return (
                     <div
@@ -833,7 +827,7 @@ const LineChart = ({
                 <Dropdown
                   options={viewOptions}
                   selectedOption={viewOptions.find(
-                    (element) => element.value === viewBy?.value,
+                    (element) => element.value === lineChartViewBy?.value,
                   )}
                   className="h-[34px] !w-[54px] !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
                   classNameTextData="!text-xs"
@@ -841,13 +835,12 @@ const LineChart = ({
                   classNameOption="!text-sm !w-[54px] !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
                   labelOptionClass="!text-sm font-medium"
                   onChange={(e) => {
-                    setViewBy({
+                    setLineChartViewBy({
                       label: e.label,
                       value: e.value,
                     });
                   }}
-                  disableItems={getDisabledViews()}
-                  disabled={true}
+                  disableItems={getDisableViews()}
                 />
               </div>
             </div>
@@ -862,7 +855,7 @@ const LineChart = ({
             />
           </div>
           <div className="px-[30px]">
-            <div className="flex gap-8 items-center justify-end mb-3 break-words">
+            <div className="flex gap-8 items-center justify-end mb-3 flex-wrap">
               {standardLabelsInfo.map((label, index) => {
                 return (
                   <div key={index} className="flex gap-1 items-center">
@@ -876,16 +869,16 @@ const LineChart = ({
                 );
               })}
             </div>
-            <table className="w-full border border-gray-300 mt-5 rounded-md">
+            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr
                     key={headerGroup.id}
                     className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header) => (
+                    {headerGroup.headers.map((header, index) => (
                       <th
                         key={header.id}
-                        className="px-2 py-2.5 cursor-pointer border"
+                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
                         style={{
                           width: header.getSize(),
                           minWidth: header.getSize(),
@@ -901,10 +894,10 @@ const LineChart = ({
                   </tr>
                 ))}
               </thead>
-              <tbody>
+              <TableBody>
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border">
-                    {row.getVisibleCells().map((cell) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell, index) => (
                       <td
                         key={cell.id}
                         style={{
@@ -912,7 +905,7 @@ const LineChart = ({
                           minWidth: cell.column.getSize(),
                           maxWidth: cell.column.getSize(),
                         }}
-                        className="px-2 py-3 border">
+                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -921,8 +914,8 @@ const LineChart = ({
                     ))}
                   </tr>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       )}

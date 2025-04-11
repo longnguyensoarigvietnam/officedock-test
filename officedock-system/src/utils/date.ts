@@ -7,7 +7,7 @@ import {
 } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
-import { TimeOptionsType } from '@constants/enums';
+import { StatisticViewOptions, TimeOptionsType } from '@constants/enums';
 
 export const getFormattedDateTime = (dateInput?: string | Date): string => {
   const date: Date = dateInput ? new Date(dateInput) : new Date();
@@ -1210,16 +1210,52 @@ export const subtractDurations = (
   return `${sign}${hh}時間${mm}分`;
 };
 export const getMinuteDifferenceTime = (
-  date1: Date | string,
-  date2: Date | string,
+  dateStart: Date | string,
+  dateEnd: Date | string,
 ): number => {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
+  const d1 = new Date(dateStart);
+  const d2 = new Date(dateEnd);
 
   if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
-    throw new Error('Invalid date format');
+    // handle Error
   }
 
   const diffInMs = d2.getTime() - d1.getTime();
   return Math.round(Math.abs(diffInMs / (1000 * 60)));
+};
+
+export const convertToStatisticJapaneseLabels = (
+  dateStr: string,
+  viewBy: string,
+  isEdge: boolean,
+) => {
+  const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土']; // Japanese days of the week
+  const date = new Date(dateStr);
+
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Ensure two digits
+  const day = String(date.getDate()).padStart(2, '0');
+  const dayOfWeek = daysOfWeek[date.getDay()]; // Get Japanese weekday
+
+  switch (viewBy) {
+    case StatisticViewOptions.DAY:
+    case StatisticViewOptions.WEEK:
+      return isEdge
+        ? `${month}月${day}日(${dayOfWeek})`
+        : `${day}日(${dayOfWeek})`;
+    case StatisticViewOptions.MONTH:
+      return isEdge ? `${day}日${month}月` : `${month}月`;
+    default:
+      return '';
+  }
+};
+
+export const compareAndSetDate = (start: Date, end: Date): Date => {
+  const ONE_DAY = 1000 * 60 * 60 * 24;
+  const diffInDays = (end.getTime() - start.getTime()) / ONE_DAY;
+  if (diffInDays > 365) {
+    const newDateB = new Date(start);
+    newDateB.setDate(newDateB.getDate() + 365);
+    return newDateB;
+  }
+  return end;
 };

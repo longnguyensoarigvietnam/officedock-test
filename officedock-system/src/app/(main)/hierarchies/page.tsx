@@ -10,7 +10,7 @@ const HierarchyPage = () => {
     <MainLayout
       title={pageRouters.HIERARCHY_MANAGEMENT.name}
       permission={PermissionsSystem.CATEGORY_HIERARCHY_VIEW}
-      className="px-0 !pt-0 !overflow-x-auto !bg-[#EBF1F7]"
+      className="px-8 !pt-0 !overflow-x-auto !bg-[#EBF1F7]"
       showFooter={false}>
       <ListHierarchy />
     </MainLayout>

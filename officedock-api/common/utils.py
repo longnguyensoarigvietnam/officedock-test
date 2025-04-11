@@ -169,6 +169,8 @@ def get_total_unread_messages(user):
 
 def format_duration(duration: timedelta) -> str:
     """Helper function to format timedelta as HH:MM:SS."""
+    if duration is None:
+        return None
     total_seconds = int(duration.total_seconds())
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)

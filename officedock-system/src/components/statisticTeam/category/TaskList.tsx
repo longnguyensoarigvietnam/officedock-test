@@ -61,12 +61,8 @@ const TaskListTeamStatistic = ({
     selectedMedium,
     selectedOrganization,
     selectedSmall,
-    totalDurationLarge,
-    totalDurationMedium,
-    totalDurationSmall,
-    totalDurationLargeCompare,
-    totalDurationMediumCompare,
-    totalDurationSmallCompare,
+    totalDurationTask,
+    totalDurationTaskCompare,
     tagsOptions,
     selectedTags,
     isSkeletonCategoryTeamTask,
@@ -94,29 +90,17 @@ const TaskListTeamStatistic = ({
   const [selectedMember, setSelectedMember] = useState<number | null>(null);
 
   const getTotalDuration = () => {
-    if (selectedOrganization?.value) {
-      if (selectedLarge?.value) {
-        if (selectedMedium?.value) {
-          return totalDurationSmall;
-        }
-        return totalDurationMedium;
-      }
-      return totalDurationLarge;
+    if (totalDurationTask) {
+      return totalDurationTask;
     }
-    return '00:00:00';
+    return '';
   };
   // Get total compare
   const getTotalDurationCompare = () => {
-    if (selectedOrganization?.value) {
-      if (selectedLarge?.value) {
-        if (selectedMedium?.value) {
-          return totalDurationSmallCompare;
-        }
-        return totalDurationMediumCompare;
-      }
-      return totalDurationLargeCompare;
+    if (totalDurationTaskCompare) {
+      return totalDurationTaskCompare;
     }
-    return '00:00:00';
+    return '';
   };
 
   useStatisticTask({
@@ -211,12 +195,12 @@ const TaskListTeamStatistic = ({
               name="period icon"
               src={`/icons/task-active.svg`}
             />
-            <span className="text-[18px] text-black font-semibold relative top-[2px]">
+            <span className="text-[18px] w-[90px] flex-shrink-0 text-black font-semibold relative top-[2px]">
               タスク一覧
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-[240px]  relative">
+            <div className="w-[240px] flex-shrink-0  relative">
               <MultiSelectDropdown
                 isShowIconFilter
                 options={tagsOptions}
@@ -247,16 +231,14 @@ const TaskListTeamStatistic = ({
                 </span>
               )}
             </div>
-            <div className="relative right-[224px] top-0">
-              <div className="flex gap-2 ">
+            <div className="relative flex-grow right-[224px] top-0">
+              <div className="flex gap-2 flex-wrap w-full flex-shrink-0">
                 {selectedTags.map((item) => {
                   return (
                     <div
                       key={item.value}
-                      className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="min-w-[32px]  truncate">
-                        {item.label}
-                      </span>
+                      className="  max-w-[400px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className=" truncate">{item.label}</span>
                       <ImageRound
                         onClick={() => {
                           removeTag(item);

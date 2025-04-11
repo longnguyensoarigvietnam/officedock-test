@@ -8,6 +8,8 @@ from base.messages import ERROR_MESSAGES
 from calendars.constants import CalendarTypes, ScheduleTypes
 from calendars.models import Schedule
 from common.utils import get_common_categories
+from roles.constants import Actions, Screens
+from roles.utils import has_permission
 from tags.models import Tag
 from tags.serializers import BaseTagSerializer
 from tasks.models import Task, TaskDuration
@@ -357,6 +359,7 @@ class ActualDurationListSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
     staffs = serializers.SerializerMethodField()
+    actions = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = TaskDuration
@@ -373,6 +376,7 @@ class ActualDurationListSerializer(serializers.ModelSerializer):
             "task_id",
             "schedule_id",
             "created_at",
+            "actions",
         ]
         read_only_fields = ["id"]
 
@@ -383,6 +387,19 @@ class ActualDurationListSerializer(serializers.ModelSerializer):
             if obj.task
             else CalendarTypes.SCHEDULE.value
         )
+
+    def get_actions(self, obj):
+        """
+        Get unique role permissions for the given object.
+        """
+        user = self.context.get("request").user
+        org = obj.task.organization if obj.task else obj.schedule.organization
+        actions = {
+            Actions.UPDATE.value: f"{Screens.ACTUAL_DURATION.value}_{Actions.UPDATE.value}",
+            Actions.DELETE.value: f"{Screens.ACTUAL_DURATION.value}_{Actions.DELETE.value}",
+        }
+
+        return has_permission(actions, user, [org.id] if org else [])
 
     def get_title(self, obj):
         """Get title of task or event"""

@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import transaction
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -23,8 +24,11 @@ from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
 from organizations.utils import get_high_level_organizations
 from organizations.constants import OrganizationTypes
+from tasks.models import TaskDuration
+from users.serializers import OrganizationForUserSerializer
 from .filters import OrganizationFilter, OrganizationSkillFilter
 from .serializers import (
+    CheckActualDurationSerializer,
     OrganizationCategoryHierarchyForCreateSerializer,
     OrganizationCategoryHierarchySerializer,
     OrganizationHierarchyForCreateSerializer,
@@ -46,7 +50,7 @@ from .models import (
 @extend_schema(tags=["System > Organization"])
 class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     """
-    API endpoint for Organization.
+    API endpoint for Organization by UUID.
     """
 
     queryset = (
@@ -59,6 +63,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     filter_backends = [
         DjangoFilterBackend,
         CustomOrderFilter,
+        FilterByPermission,
     ]
     ordering_fields = {
         "id": "id",
@@ -144,6 +149,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         detail=False,
         url_path="hierarchy",
         serializer_class=OrganizationHierarchyForCreateSerializer,
+        screen_name=Screens.ORGANIZATION_HIERARCHY.value,
     )
     def hierarchy(self, request):
         """
@@ -153,8 +159,8 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             has_children = (
                 request.query_params.get("has_children", "").lower() == "true"
             )
-            order_file = "updated_at" if has_children else "-id"
-            queryset = self.get_queryset().order_by(order_file)
+            order_file = "hierarchize_at" if has_children else "-id"
+            queryset = self.get_queryset().order_by(order_file, "updated_at")
             orgs = queryset.filter(
                 type=OrganizationTypes.NORMAL.value
             ).values_list("id", "superior_id")
@@ -217,6 +223,14 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
                 # Update if exists
                 org_instance = Organization.objects.filter(uuid=uuid).first()
+
+                # Check hierarchy assigned at
+                is_hierarchy = org_data.pop("is_hierarchy", False)
+                if is_hierarchy:
+                    org_data["hierarchize_at"] = datetime.now()
+                else:
+                    org_data["hierarchize_at"] = None
+
                 if org_instance:
                     for key, value in org_data.items():
                         setattr(org_instance, key, value)
@@ -295,7 +309,11 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
 
         # Checking if there are any users associated with the organization
-        if instance.users.count() > 0 or instance.tasks.count() > 0:
+        if (
+            instance.users.count() > 0
+            or instance.tasks.count() > 0
+            or instance.schedules.count() > 0
+        ):
             raise ValidationError(
                 {
                     "detail": ERROR_MESSAGES["cannot_delete_type"].format(
@@ -314,7 +332,9 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 _get_children(child)
 
         _get_children(instance)
-        Organization.objects.filter(id__in=descendant_ids).update(superior=None)
+        Organization.objects.filter(id__in=descendant_ids).update(
+            superior=None, hierarchize_at=None
+        )
 
         # Remove icon
         if instance.icon:
@@ -322,29 +342,19 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return super().perform_destroy(instance)
 
-    def _check_category_exists(self, category_uuid):
-        """Check category exists"""
-        category = StatisticCategory.objects.filter(uuid=category_uuid).first()
-
-        if not category:
-            raise NotFound(
-                {"detail": ERROR_MESSAGES["statistic_category_not_exists"]}
-            )
-
-        return category
-
     @extend_schema(parameters=[OpenApiParameter("search", type=str)])
     @action(
         methods=["GET"],
         detail=False,
         url_path="members",
         serializer_class=OrganizationMemberSerializer,
+        screen_name=Screens.LIST_MEMBER.value,
     )
     def members(self, request):
         """
         Get list of member in organization
         """
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
         search = request.query_params.get("search")
 
         if search:
@@ -357,6 +367,39 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 queryset, many=True, context={"search": search}
             ).data
         )
+
+
+@extend_schema(tags=["System > Organization"])
+class OrganizationByIDViewSet(BaseAPIViewSet):
+    """
+    API endpoint for Organization by ID.
+    """
+
+    queryset = Organization.objects.order_by("-created_at")
+    serializer_class = OrganizationSerializer
+    permission_classes = [ActionPermission]
+    screen_name = Screens.ORGANIZATION.value
+
+    def get_queryset(self):
+        """
+        Filtering users by company.
+        """
+
+        user = self.request.user
+        company = user.company
+
+        return super().get_queryset().filter(company=company)
+
+    def _check_category_exists(self, category_uuid):
+        """Check category exists"""
+        category = StatisticCategory.objects.filter(uuid=category_uuid).first()
+
+        if not category:
+            raise NotFound(
+                {"detail": ERROR_MESSAGES["statistic_category_not_exists"]}
+            )
+
+        return category
 
     @action(
         methods=["GET", "POST", "DELETE"],
@@ -717,6 +760,10 @@ class OrganizationCategoryHierarchyViewSet(
     queryset = Organization.objects.all()
     serializer_class = OrganizationCategoryHierarchySerializer
     permission_classes = [ActionPermission]
+    filter_backends = [
+        FilterByPermission,
+        DjangoFilterBackend,
+    ]
     pagination_class = None
     screen_name = Screens.CATEGORY_HIERARCHY.value
 
@@ -744,6 +791,114 @@ class OrganizationCategoryHierarchyViewSet(
         context = super().get_serializer_context()
         context["request"] = self.request
         return context
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="check-actual-duration",
+        serializer_class=CheckActualDurationSerializer,
+    )
+    def check_has_actual_duration(self, request):
+        """
+        Check if any TaskDuration exists for given categories and organization.
+        """
+        company = request.user.company
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        organizations_statistic_categories = validated_data.get(
+            "organizations_statistic_categories", []
+        )
+
+        # Check data delete is delete_all_large or delete_all_medium
+        org_sta_cates = OrganizationsStatisticCategories.objects.filter(
+            company=company
+        ).exclude(
+            id__in=[item.id for item in organizations_statistic_categories]
+        )
+
+        delete_all_large = False
+        delete_all_medium = False
+
+        for item in organizations_statistic_categories:
+            org = item.organization
+            large_stat = item.large_statistic_category
+            medium_stat = item.medium_statistic_category
+
+            has_other_large = org_sta_cates.filter(
+                organization=org, large_statistic_category=large_stat
+            ).exists()
+
+            if not has_other_large:
+                delete_all_large = True
+                delete_all_medium = True
+                break
+
+            if not delete_all_medium:
+                has_other_medium = org_sta_cates.filter(
+                    organization=org,
+                    large_statistic_category=large_stat,
+                    medium_statistic_category=medium_stat,
+                ).exists()
+                if not has_other_medium:
+                    delete_all_medium = True
+
+        # Detect data delete has actual duration
+        exists_actual_duration = False
+        filter_q = Q()
+
+        for item in organizations_statistic_categories:
+            org = item.organization
+            large_stat = item.large_statistic_category or None
+            medium_stat = item.medium_statistic_category or None
+            small_stat = item.small_statistic_category or None
+
+            # Build base Q filter
+            category_q = Q(
+                task__categories__large_statistic_category=large_stat,
+                task__categories__medium_statistic_category=medium_stat,
+                task__categories__small_statistic_category=small_stat,
+            ) | Q(
+                schedule__categories__large_statistic_category=large_stat,
+                schedule__categories__medium_statistic_category=medium_stat,
+                schedule__categories__small_statistic_category=small_stat,
+            )
+
+            # Handle delete_all_large and delete_all_medium
+            if delete_all_large and large_stat:
+                delete_all_medium = True
+                filter_q |= Q(
+                    task__categories__large_statistic_category=large_stat,
+                    task__categories__medium_statistic_category=None,
+                    task__categories__small_statistic_category=None,
+                ) | Q(
+                    schedule__categories__large_statistic_category=large_stat,
+                    schedule__categories__medium_statistic_category=None,
+                    schedule__categories__small_statistic_category=None,
+                )
+
+            if delete_all_medium and large_stat and medium_stat:
+                filter_q |= Q(
+                    task__categories__large_statistic_category=large_stat,
+                    task__categories__medium_statistic_category=medium_stat,
+                    task__categories__small_statistic_category=None,
+                ) | Q(
+                    schedule__categories__large_statistic_category=large_stat,
+                    schedule__categories__medium_statistic_category=medium_stat,
+                    schedule__categories__small_statistic_category=None,
+                )
+
+            combined_q = (
+                Q(company=company)
+                & (Q(task__organization=org) | Q(schedule__organization=org))
+                & (category_q | filter_q)
+            )
+
+            if TaskDuration.objects.filter(combined_q).exists():
+                exists_actual_duration = True
+                break
+
+        return self.response_ok({"has_actual_duration": exists_actual_duration})
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -779,6 +934,52 @@ class OrganizationCategoryHierarchyViewSet(
                 skills = item.pop("skills", [])
 
                 if organization_statistic_category:
+
+                    # Update statistic category to task/event
+                    categories = Category.objects.filter(
+                        Q(company=company)
+                        & Q(
+                            Q(task__organization=organization)
+                            | Q(schedule__organization=organization)
+                        )
+                    ).all()
+
+                    # Case selected large/medium/small statistic category
+                    categories.filter(
+                        large_statistic_category=organization_statistic_category.large_statistic_category
+                        or None,
+                        medium_statistic_category=organization_statistic_category.medium_statistic_category
+                        or None,
+                        small_statistic_category=organization_statistic_category.small_statistic_category
+                        or None,
+                    ).update(
+                        large_statistic_category=large_statistic_category,
+                        medium_statistic_category=medium_statistic_category,
+                        small_statistic_category=small_statistic_category,
+                    )
+
+                    # Case selected large/medium statistic category
+                    categories.filter(
+                        large_statistic_category=organization_statistic_category.large_statistic_category
+                        or None,
+                        medium_statistic_category=organization_statistic_category.medium_statistic_category
+                        or None,
+                        small_statistic_category=None,
+                    ).update(
+                        large_statistic_category=large_statistic_category,
+                        medium_statistic_category=medium_statistic_category,
+                    )
+
+                    # Case selected large statistic category
+                    categories.filter(
+                        large_statistic_category=organization_statistic_category.large_statistic_category
+                        or None,
+                        medium_statistic_category=None,
+                        small_statistic_category=None,
+                    ).update(
+                        large_statistic_category=large_statistic_category,
+                    )
+
                     # Handle to create new organization_statistic_category
                     organization_statistic_category.large_statistic_category = (
                         large_statistic_category
@@ -850,3 +1051,73 @@ class OrganizationCategoryHierarchyViewSet(
                 defaults={"uuid": obj.get("uuid")},
             )
         return large_statistic_category
+
+
+@extend_schema(tags=["System > Team"])
+class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
+    """
+    API endpoint for Organization
+    """
+
+    queryset = (
+        Organization.objects.annotate(user_count=Count("users"))
+        .order_by("-created_at")
+        .all()
+    )
+    serializer_class = OrganizationForUserSerializer
+    permission_classes = [ActionPermission]
+    filter_backends = [
+        DjangoFilterBackend,
+        FilterByPermission,
+    ]
+    screen_name = Screens.TEAMDOCK.value
+    lookup_field = "id"
+
+    def get_permissions(self):
+        """
+        Switch screen name by query params
+        """
+        has_statistic_categories = self.request.query_params.get(
+            "has_statistic_categories"
+        )
+        if has_statistic_categories and has_statistic_categories != "false":
+            self.screen_name = Screens.CATEGORY_HIERARCHY.value
+
+        return super().get_permissions()
+
+    def get_queryset(self):
+        """
+        Filtering users by company.
+        """
+
+        user = self.request.user
+        company = user.company
+
+        return super().get_queryset().filter(company=company)
+
+    def get_serializer_context(self):
+        """
+        Add request to context
+        """
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
+    def get_serializer(self, *args, **kwargs):
+        """
+        Get serializer by action
+        """
+        has_statistic_categories = self.request.query_params.get(
+            "has_statistic_categories"
+        )
+
+        if (
+            self.action == "retrieve"
+            or self.action == "list"
+            and has_statistic_categories
+        ):
+            return OrganizationDetailSerializer(
+                *args, **kwargs, context={"request": self.request}
+            )
+
+        return super().get_serializer(*args, **kwargs)

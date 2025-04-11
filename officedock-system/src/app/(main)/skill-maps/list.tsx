@@ -220,7 +220,7 @@ const ListSkillsMap = () => {
                   </div>
                 </div>
                 <div className="w-1/2 flex items-end gap-4">
-                  <div className="w-full">
+                  <div className="w-full max-w-[310px]">
                     <Controller
                       control={control}
                       name={'staff'}
@@ -287,7 +287,7 @@ const ListSkillsMap = () => {
                 }}
               />
             </div>
-            <div className="w-56">
+            <div className="w-56 ">
               <Dropdown
                 labelClass="truncate max-w-[160px]"
                 className="h-10 flex items-center"
@@ -379,7 +379,7 @@ const ListSkillsMap = () => {
                           />
                         </Link>
                       ) : (
-                        <div className="w-6 h-6"></div>
+                        <div className="w-3.5 h-3.5"></div>
                       )}
                       {element.actions?.delete ? (
                         <ImageRound
@@ -394,7 +394,7 @@ const ListSkillsMap = () => {
                           }
                         />
                       ) : (
-                        <div className="w-6 h-6"></div>
+                        <div className="w-[13px]"></div>
                       )}
                     </div>
                   </td>

@@ -66,7 +66,6 @@ import { WebSocketMessageData } from '@interfaces/chat';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
-import { getRandomColor } from '@utils';
 type HeaderProps = {
   className?: string;
 };
@@ -111,6 +110,9 @@ const Header = ({ className }: HeaderProps) => {
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
 
   const isTaskPage = pathname.startsWith('/task');
+  const isTaskTeamPage = pathname.startsWith('/task-teams');
+  const isScheduleTeamPage =
+    pathname === pageRouters.SCHEDULE_TEAM_MANAGEMENT.href;
 
   const isCalendarPage = pathname === pageRouters.CALENDAR_MANAGEMENT.href;
 
@@ -181,7 +183,7 @@ const Header = ({ className }: HeaderProps) => {
         return {
           id: member.id,
           fullName: member.fullName,
-          avatarColor: getRandomColor(),
+          avatarColor: member.avatarColor,
           mainOrganization: member.organizations?.name || '',
         };
       });
@@ -239,6 +241,27 @@ const Header = ({ className }: HeaderProps) => {
 
   useEffect(() => {
     if (
+      isScheduleTeamPage &&
+      actionType &&
+      (typeDetail === ItemStartType.TASK ||
+        typeDetail === ItemStartType.FIXED_TASK)
+    ) {
+      if (taskDetailId) {
+        getDataDetailTask(parseInt(taskDetailId));
+      } else {
+        setShowModalTask(true);
+      }
+    } else if (
+      actionType &&
+      typeDetail === ItemStartType.FIXED_TASK &&
+      isTaskTeamPage
+    ) {
+      if (taskDetailId) {
+        getDataDetailTask(parseInt(taskDetailId));
+      } else {
+        setShowModalTask(true);
+      }
+    } else if (
       actionType &&
       (typeDetail === ItemStartType.TASK ||
         typeDetail === ItemStartType.FIXED_TASK) &&
@@ -367,26 +390,28 @@ const Header = ({ className }: HeaderProps) => {
         .filter((item) => item.value !== '')
         .map((item) => ({ peopleInChargeId: item.value }));
 
-    const planList = data.plans
-      ? data.plans
-          .filter((item) => item.planStartDate !== null)
-          .map((item) => {
-            return {
-              scheduleId: item.scheduleId || null,
-              planStartDate:
-                item.planStartDate && item.planStartTime
-                  ? addTimeToDate(
-                      item.planStartDate as Date,
-                      item.planStartTime,
-                    )
-                  : null,
-              planEndDate:
-                item.planEndDate && item.planEndTime
-                  ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
-                  : null,
-            };
-          })
-      : null;
+    const planList =
+      data.plans &&
+      data.plans.filter((item) => item.planStartDate !== null).length > 0
+        ? data.plans
+            .filter((item) => item.planStartDate !== null)
+            .map((item) => {
+              return {
+                scheduleId: item.scheduleId || null,
+                planStartDate:
+                  item.planStartDate && item.planStartTime
+                    ? addTimeToDate(
+                        item.planStartDate as Date,
+                        item.planStartTime,
+                      )
+                    : null,
+                planEndDate:
+                  item.planEndDate && item.planEndTime
+                    ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
+                    : null,
+              };
+            })
+        : null;
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
 
@@ -418,7 +443,6 @@ const Header = ({ className }: HeaderProps) => {
         type: EventWorkCategory.SMALL,
       });
     }
-
     editTask({
       id: data.id,
       title: data.title,
@@ -433,7 +457,7 @@ const Header = ({ className }: HeaderProps) => {
       categoryIds: newWorkCategories,
       isImportant: data.isImportant,
       todoList: todoListData,
-      taskSchedules: planList && planList.length ? planList : [],
+      taskSchedules: planList && planList.length ? planList : null,
       oldIdStatus: data.oldIdStatus,
       sendToChat: true,
       peopleInChargeIds: peopleInChargeIds,
@@ -446,6 +470,48 @@ const Header = ({ className }: HeaderProps) => {
       remindType: data.deadlineRemindType?.value
         ? `${data.deadlineRemindType?.value}`
         : null,
+      repeatType:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatType && data.repeatType.value
+            ? String(data.repeatType.value)
+            : null
+          : null,
+      repeatInterval:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatInterval && data.repeatInterval.value
+            ? Number(data.repeatInterval.value)
+            : null
+          : null,
+      weekDay:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.weekDay != undefined && data.weekDay.label != ''
+            ? Number(data.weekDay.value)
+            : null
+          : null,
+      monthDay:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.monthDay && data.monthDay.value != ''
+            ? Number(data.monthDay.value)
+            : null
+          : null,
+      month:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.month && data.month.value != ''
+            ? Number(data.month.value)
+            : null
+          : null,
+      planStartDate:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatStartTime
+            ? addTimeToDate(new Date(), data.repeatStartTime)
+            : null
+          : null,
+      planEndDate:
+        data.statusId?.value == StatusValueTask.MY_ROUTINE
+          ? data.repeatEndTime
+            ? addTimeToDate(new Date(), data.repeatEndTime)
+            : null
+          : null,
     });
   };
 
@@ -527,6 +593,13 @@ const Header = ({ className }: HeaderProps) => {
       idEvent &&
       actionType &&
       typeDetail === ItemStartType.SCHEDULE &&
+      (isTaskTeamPage || isScheduleTeamPage)
+    ) {
+      getDataDetailEvent(idEvent.replace('event', ''));
+    } else if (
+      idEvent &&
+      actionType &&
+      typeDetail === ItemStartType.SCHEDULE &&
       !isTaskPage &&
       !isCalendarPage
     ) {
@@ -536,6 +609,7 @@ const Header = ({ className }: HeaderProps) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getDataDetailEvent, idEvent, actionType]);
+
   const handleConfirmEditEventCalendar = (
     data: EventEditFormData,
     sendToChat: boolean,

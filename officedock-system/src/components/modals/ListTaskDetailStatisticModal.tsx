@@ -103,7 +103,9 @@ const ListTaskDetailStatisticModal = ({
     onSuccess: (data) => {
       setIsSkeletonLoading(false);
       if (data) {
-        setCount(count + data.count);
+        if (!lastCreateAt) {
+          setCount(data.count);
+        }
         setHasMore(data.hasNext as boolean);
         if (data.results) {
           setTaskList((prev) => {
@@ -172,7 +174,7 @@ const ListTaskDetailStatisticModal = ({
           <div>
             <SkeletonContainer className="!p-0 !rounded-sm !gap-0 w-full border-[1px] border-gray-200">
               <div className="">
-                <Table className="!ring-0 !rounded-none !border-separate">
+                <Table className="!ring-0 !rounded-none !border-transparent">
                   <TableBody className="!divide-y-0 [&>tr:nth-child(even)]:bg-gray-100 [&>tr:nth-child(even)]:rounded-lg [&>tr>td:first-child]:rounded-l-lg [&>tr>td:last-child]:rounded-r-lg [&>tr>td]:!py-5">
                     {[...Array(4)].map((_, index) => (
                       <tr key={index}>

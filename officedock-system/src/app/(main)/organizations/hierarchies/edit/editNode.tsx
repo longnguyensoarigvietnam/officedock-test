@@ -77,7 +77,7 @@ export default function EditNode() {
       {
         uuid: uuidv4(),
         value: 'treeNode',
-        name: 'チーム',
+        name: '選択してください',
         children: [],
       },
     ];
@@ -105,7 +105,7 @@ export default function EditNode() {
     if (targetNode) {
       const newItem: ConfigNode = {
         uuid: uuidv4(),
-        name: 'チーム',
+        name: '選択してください',
         value: 'treeNode',
         parentUuid: targetUuId,
         children: [],
@@ -142,7 +142,7 @@ export default function EditNode() {
 
       const newItem: ConfigNode = {
         uuid: uuidv4(),
-        name: 'チーム',
+        name: '選択してください',
         value: 'treeNode',
         parentUuid: parent.model.uuid === 'root' ? null : parent.model.uuid,
         children: [],
@@ -238,7 +238,13 @@ export default function EditNode() {
       const { uuid, name, value, parentUuid } = node.model;
 
       if (uuid !== 'root' && value !== 'treeNode') {
-        result.push({ uuid, name, parentUuid });
+        result.push({
+          uuid,
+          name,
+          parentUuid,
+          type: 'NORMAL',
+          is_hierarchy: true,
+        });
       }
       return true;
     });
@@ -281,18 +287,25 @@ export default function EditNode() {
       (item) => item.uuid,
     );
     const dataProject = listProject
-      .map((pro) => ({ ...pro, type: 'PROJECT' }))
+      .map((pro) => ({
+        ...pro,
+        type: 'PROJECT',
+        parentUuid: null,
+        is_hierarchy: true,
+      }))
       .filter((item) => item.value !== 'treeNode');
+
     const dataOption = optionsTreeNode.map((item) => ({
       name: item.label,
       uuid: item.value as string,
       type: 'NORMAL',
+      parentUuid: null,
     }));
 
     editHierarchyOrganization([
+      ...dataOrganization,
       ...dataProject,
       ...dataOption,
-      ...dataOrganization,
     ]);
   };
 
@@ -323,7 +336,7 @@ export default function EditNode() {
   const handleAddProjectTeam = () => {
     const newItem: ConfigNode = {
       uuid: uuidv4(),
-      name: 'チーム',
+      name: '選択してください',
       value: 'treeNode',
       children: [],
     };
@@ -450,7 +463,7 @@ export default function EditNode() {
 
   return (
     <>
-      <div className="flex justify-between items-start">
+      <div className="flex px-10 justify-between items-start">
         <div className="flex gap-5 items-center mb-5 w-fit">
           <p className="text-black font-medium text-[26px]">チーム管理</p>
           <div className="flex justify-center items-center gap-2 ">
@@ -486,107 +499,113 @@ export default function EditNode() {
           </Button>
         </div>
       </div>
-      <div className="bg-white p-[30px] overflow-auto max-w-[calc(100vw_-_288px)] min-h-[538px] min-w-[1152px]  rounded-[14px]">
-        <p className="text-base font-medium text-[#77858F] mb-[30px]">
-          チーム階層
-        </p>
-        <div className="hr-teams pb-5 w-fit ">
-          {root && root.model.children.length === 0 ? (
-            <div
-              onClick={handleAddNodeDefault}
-              className="w-6 h-6 rounded-full ">
-              <Button
-                sz="sm"
-                variant="outline"
-                className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
-                type="button">
-                <ImageRound
-                  src="/icons/plus.svg"
-                  name="Add organization"
-                  className="h-3 w-3"
-                />
-              </Button>
+      <div className=" flex mt-5 flex-col gap-5 h-[calc(100vh_-_215px)] overflow-y-auto">
+        <div className="px-10">
+          <div className="bg-white p-[30px] overflow-auto max-w-[calc(100vw_-_288px)] min-h-[538px] min-w-[1152px]  rounded-[14px]">
+            <p className="text-base font-medium text-[#77858F] mb-[30px]">
+              チーム階層
+            </p>
+            <div className="hr-teams pb-5 w-fit ">
+              {root && root.model.children.length === 0 ? (
+                <div
+                  onClick={handleAddNodeDefault}
+                  className="w-6 h-6 rounded-full ">
+                  <Button
+                    sz="sm"
+                    variant="outline"
+                    className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                    type="button">
+                    <ImageRound
+                      src="/icons/plus.svg"
+                      name="Add organization"
+                      className="h-3 w-3"
+                    />
+                  </Button>
+                </div>
+              ) : (
+                root && (
+                  <TeamItem items={root.model.children} itemNode={Parent} />
+                )
+              )}
             </div>
-          ) : (
-            root && <TeamItem items={root.model.children} itemNode={Parent} />
-          )}
-        </div>
-      </div>
-      <div className="bg-white p-[30px] w-full min-h-[190px] rounded-[14px] mb-10">
-        <p className="text-base font-medium text-[#77858F] mb-[30px] ">
-          プロジェクトチーム
-        </p>
-        <div className="flex flex-wrap gap-4 w-full">
-          {listProject.length > 0 ? (
-            listProject.map((item, index) => (
-              <div key={index} className="w-[204px] relative">
-                <Dropdown
-                  options={optionsTreeNode}
-                  className="h-[34px] !py-0  !rounded-md border !border-[#77858F]"
-                  classNameOption={`!z-[30]  bottom-[40px]`}
-                  placeholder="チーム"
-                  selectedOption={{
-                    label: item.name || '',
-                    value: item.uuid,
-                  }}
-                  placeholderClass="!text-black text-sm font-normal"
-                  onChange={(e) => {
-                    handleSelectChange({
-                      newSelected: {
+          </div>
+          <div className="bg-white p-[30px] mt-5 w-full min-h-[190px] rounded-[14px] mb-10">
+            <p className="text-base font-medium text-[#77858F] mb-[30px] ">
+              プロジェクトチーム
+            </p>
+            <div className="flex flex-wrap gap-4 w-full">
+              {listProject.length > 0 ? (
+                listProject.map((item, index) => (
+                  <div key={index} className={`w-[203px] relative `}>
+                    <Dropdown
+                      options={optionsTreeNode}
+                      className="h-[34px] !py-0  !rounded-md border !border-[#77858F]"
+                      classNameOption={`!z-[30]  bottom-[40px]`}
+                      placeholder="選択してください"
+                      selectedOption={{
                         label: item.name || '',
-                        value:
-                          item.value && item.value === 'treeNode'
-                            ? item.value
-                            : item.uuid,
-                      },
-                      oldSelected: e,
-                    });
-                    updateItemProject({
-                      uuid: item.uuid,
-                      name: e.label,
-                      value: e.value as string,
-                    });
-                  }}
-                />
-                {index === listProject.length - 1 && (
-                  <div
-                    onClick={() => {
-                      if (item.value === 'treeNode') return;
-                      handleAddProjectTeam();
-                    }}
-                    className="absolute  z-[30] right-[-40px] top-[5px]  w-6 h-6 rounded-full ">
-                    <Button
-                      sz="sm"
-                      disabled={item.value === 'treeNode'}
-                      variant="outline"
-                      className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
-                      type="button">
-                      <ImageRound
-                        src="/icons/plus.svg"
-                        name="Add organization"
-                        className="h-3 w-3"
-                      />
-                    </Button>
+                        value: item.uuid,
+                      }}
+                      placeholderClass="!text-black text-sm font-normal"
+                      onChange={(e) => {
+                        handleSelectChange({
+                          newSelected: {
+                            label: item.name || '',
+                            value:
+                              item.value && item.value === 'treeNode'
+                                ? item.value
+                                : item.uuid,
+                          },
+                          oldSelected: e,
+                        });
+                        updateItemProject({
+                          uuid: item.uuid,
+                          name: e.label,
+                          value: e.value as string,
+                        });
+                      }}
+                    />
+                    {index === listProject.length - 1 && (
+                      <div
+                        onClick={() => {
+                          if (item.value === 'treeNode') return;
+                          handleAddProjectTeam();
+                        }}
+                        className="absolute  z-[30] right-[-36px] top-[5px]  w-6 h-6 rounded-full ">
+                        <Button
+                          sz="sm"
+                          disabled={item.value === 'treeNode'}
+                          variant="outline"
+                          className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                          type="button">
+                          <ImageRound
+                            src="/icons/plus.svg"
+                            name="Add organization"
+                            className="h-3 w-3"
+                          />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="w-6 h-6 rounded-full ">
-              <Button
-                sz="sm"
-                onClick={handleAddProjectTeam}
-                variant="outline"
-                className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
-                type="button">
-                <ImageRound
-                  src="/icons/plus.svg"
-                  name="Add organization"
-                  className="h-3 w-3"
-                />
-              </Button>
+                ))
+              ) : (
+                <div className="w-6 h-6 rounded-full ">
+                  <Button
+                    sz="sm"
+                    onClick={handleAddProjectTeam}
+                    variant="outline"
+                    className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                    type="button">
+                    <ImageRound
+                      src="/icons/plus.svg"
+                      name="Add organization"
+                      className="h-3 w-3"
+                    />
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </>

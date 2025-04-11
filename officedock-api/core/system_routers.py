@@ -27,9 +27,11 @@ from users.apis import (
     SystemUserViewSet,
 )
 from organizations.apis import (
+    OrganizationByIDViewSet,
     OrganizationViewSet,
     OrganizationSkillViewSet,
     OrganizationCategoryHierarchyViewSet,
+    TeamViewSet,
 )
 from common.apis import SystemCreationDataViewSet, CronJobViewSet
 from tags.apis import TagViewSet
@@ -47,7 +49,10 @@ api_router = routers.DefaultRouter()
 # Register router view set
 api_router.register("auth", SystemAuthViewSet, basename="system_auth")
 api_router.register(
-    "organizations", OrganizationViewSet, basename="organizations"
+    "organizations", OrganizationViewSet, basename="organizations_by_uuid"
+)
+api_router.register(
+    "organizations", OrganizationByIDViewSet, basename="organizations_by_id"
 )
 api_router.register(
     "organization-skills",
@@ -109,6 +114,11 @@ api_router.register(
     "organization-statistics",
     OrganizationStatisticViewSet,
     basename="organization_statistics",
+)
+api_router.register(
+    "teams",
+    TeamViewSet,
+    basename="teams",
 )
 
 # Add api router urls

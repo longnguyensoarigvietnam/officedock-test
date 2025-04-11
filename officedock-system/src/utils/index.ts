@@ -8,8 +8,8 @@ import {
   EventWorkCategory,
   PermissionsSystem,
   PermissionType,
-  ScreenAction,
   ScreenName,
+  StatisticViewOptions,
   StatusTask,
 } from '@constants/enums';
 import { formatTime24h } from './date';
@@ -23,6 +23,7 @@ import {
 import { MAX_HEX_COLOR_VALUE } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
+import moment from 'moment';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -436,121 +437,61 @@ export const adjustPositionForViewportSchedule = (position: {
 
 export const getPermissionOptionDropdown = (
   screen: ScreenName,
-  action: string,
   permissionList: OptionDropdownType[],
 ): OptionDropdownType[] => {
-  const isYesOrNo = (permission: OptionDropdownType) =>
-    [PermissionType.ALLOWED, PermissionType.NOT_ALLOWED].includes(
-      permission.label as PermissionType,
+  const includePermissions = (includedLabels: PermissionType[]) =>
+    permissionList.filter((permission) =>
+      includedLabels.includes(permission.label as PermissionType),
     );
 
-  const excludePermissions = (excludedLabels: PermissionType[]) =>
-    permissionList.filter(
-      (permission) =>
-        !excludedLabels.includes(permission.label as PermissionType),
-    );
-
-  const includePermissions = (includedLabel: PermissionType) =>
-    permissionList.filter((permission) => permission.label === includedLabel);
-
-  const commonExclusions = [
-    PermissionType.ALLOWED_WITHOUT_OWN_DATA,
-    PermissionType.ONLY_DATA_ORGANIZATION_WITHOUT_OWN_DATA,
-  ];
-
-  switch (action) {
-    case ScreenAction.VIEW: {
-      if (
-        [
-          ScreenName.USER,
-          ScreenName.SKILL_MAP,
-          ScreenName.SUBMIT_LEVEL,
-        ].includes(screen)
-      ) {
-        return excludePermissions(commonExclusions);
-      }
-      if ([ScreenName.STATISTIC].includes(screen)) {
-        return excludePermissions([
-          ...commonExclusions,
-          PermissionType.ALLOWED,
-          PermissionType.ONLY_DATA_ORGANIZATION,
-        ]);
-      }
-      return permissionList.filter(isYesOrNo);
-    }
-
-    case ScreenAction.ADD: {
-      if (
-        [
-          ScreenName.CATEGORY_HIERARCHY,
-          ScreenName.SKILL_MAP,
-          ScreenName.ORGANIZATION_SKILL,
-        ].includes(screen)
-      ) {
-        return excludePermissions([
-          ...commonExclusions,
-          PermissionType.ONLY_DATA_OWN,
-        ]);
-      }
-      if (screen === ScreenName.STATISTIC) {
-        return includePermissions(PermissionType.ONLY_DATA_OWN);
-      }
-      if (screen === ScreenName.SUBMIT_LEVEL) {
-        return [];
-      }
-      return permissionList.filter(isYesOrNo);
-    }
-
-    case ScreenAction.UPDATE: {
-      if (
-        [
-          ScreenName.CATEGORY_HIERARCHY,
-          ScreenName.SKILL_MAP,
-          ScreenName.ORGANIZATION_SKILL,
-          ScreenName.USER,
-        ].includes(screen)
-      ) {
-        return excludePermissions([
-          ...commonExclusions,
-          PermissionType.ONLY_DATA_OWN,
-        ]);
-      }
-      if (screen === ScreenName.STATISTIC) {
-        return includePermissions(PermissionType.ONLY_DATA_OWN);
-      }
-      if (screen === ScreenName.SUBMIT_LEVEL) {
-        return excludePermissions([
-          PermissionType.ALLOWED,
-          PermissionType.ONLY_DATA_OWN,
-          PermissionType.ONLY_DATA_ORGANIZATION,
-        ]);
-      }
-      return permissionList.filter(isYesOrNo);
-    }
-
-    case ScreenAction.DELETE: {
-      if (
-        [
-          ScreenName.USER,
-          ScreenName.CATEGORY_HIERARCHY,
-          ScreenName.SKILL_MAP,
-          ScreenName.ORGANIZATION_SKILL,
-        ].includes(screen)
-      ) {
-        return excludePermissions([
-          ...commonExclusions,
-          PermissionType.ONLY_DATA_OWN,
-        ]);
-      }
-      if ([ScreenName.STATISTIC, ScreenName.SUBMIT_LEVEL].includes(screen)) {
-        return [];
-      }
-      return permissionList.filter(isYesOrNo);
-    }
-
-    default:
-      return [];
+  if (
+    [
+      ScreenName.USER,
+      ScreenName.ORGANIZATION,
+      ScreenName.ORGANIZATION_HIERARCHY,
+      ScreenName.SKILL,
+    ].includes(screen)
+  ) {
+    return includePermissions([
+      PermissionType.VIEW_ONLY,
+      PermissionType.EDITABLE,
+      PermissionType.NOT_ALLOWED,
+    ]);
   }
+  if ([ScreenName.ROLE].includes(screen)) {
+    return includePermissions([
+      PermissionType.EDITABLE,
+      PermissionType.NOT_ALLOWED,
+    ]);
+  }
+  if ([ScreenName.CATEGORY, ScreenName.TAG].includes(screen)) {
+    return includePermissions([
+      PermissionType.EDITABLE,
+      PermissionType.TEAM_AND_SUB_EDIT,
+      PermissionType.VIEW_ONLY,
+      PermissionType.NOT_ALLOWED,
+    ]);
+  }
+  if ([ScreenName.TEAM_DAILY_REPORT].includes(screen)) {
+    return includePermissions([
+      PermissionType.VIEW_ONLY,
+      PermissionType.TEAM_AND_SUB_VIEW,
+      PermissionType.NOT_ALLOWED,
+    ]);
+  }
+  if ([ScreenName.TEAM_DOCK].includes(screen)) {
+    return includePermissions([
+      PermissionType.ALL_TEAMS,
+      PermissionType.TEAM_AND_SUB,
+    ]);
+  }
+  return includePermissions([
+    PermissionType.VIEW_ONLY,
+    PermissionType.EDITABLE,
+    PermissionType.TEAM_AND_SUB_EDIT,
+    PermissionType.TEAM_AND_SUB_VIEW,
+    PermissionType.NOT_ALLOWED,
+  ]);
 };
 
 export const showBackgroundColorByTime = (hour: number) => {
@@ -714,6 +655,7 @@ export function lightenColor(color: string | null, percent: number): string {
 export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
   return result.map((user) => ({
     id: `user_${user.id}`,
+    avatarColor: user.avatarColor,
     name: user.profile.fullName,
     statuses: {
       NOT_STARTED:
@@ -773,4 +715,64 @@ export const getChunkSize = (size: number) => {
   if (size < 20 * 1024 * 1024) return 1024 * 1024; // 1MB chunks
   if (size < 1024 * 1024 * 1024) return 10 * 1024 * 1024; // 10MB chunks
   return 25 * 1024 * 1024; // 25MB chunks
+};
+
+// Get enable views by diff days
+const getEnableViewsByDiffDays = (diffDays: number): StatisticViewOptions[] => {
+  switch (true) {
+    case diffDays >= 1 && diffDays <= 7:
+      return [StatisticViewOptions.DAY];
+    case diffDays <= 29:
+      return [StatisticViewOptions.DAY, StatisticViewOptions.WEEK];
+    case diffDays <= 59:
+      return [StatisticViewOptions.WEEK];
+    case diffDays <= 120:
+      return [StatisticViewOptions.WEEK, StatisticViewOptions.MONTH];
+    case diffDays <= 365:
+      return [StatisticViewOptions.MONTH];
+    default:
+      return [];
+  }
+};
+
+// Get line chart enable views
+export const getLineChartEnableViews = (start: Date, end: Date) => {
+  const diffDays = moment(end).diff(moment(start), 'days') + 1;
+
+  return getEnableViewsByDiffDays(diffDays);
+};
+
+// Get compare line chart enable views
+export const getCompareLineChartEnableViews = (
+  start: Date,
+  end: Date,
+  compareStart: Date,
+  compareEnd: Date,
+): StatisticViewOptions[] => {
+  const standardDiffDays = moment(end).diff(moment(start), 'days') + 1;
+  const compareDiffDays =
+    moment(compareEnd).diff(moment(compareStart), 'days') + 1;
+
+  const standardViews = getEnableViewsByDiffDays(standardDiffDays);
+  const compareViews = getEnableViewsByDiffDays(compareDiffDays);
+
+  const mutualViews = standardViews.filter((view) =>
+    compareViews.includes(view),
+  );
+
+  if (mutualViews.length > 0) return mutualViews;
+  const viewPriority = [
+    StatisticViewOptions.DAY,
+    StatisticViewOptions.WEEK,
+    StatisticViewOptions.MONTH,
+  ];
+
+  // Return the lower view by priority
+  for (const view of viewPriority) {
+    if (standardViews.includes(view) || compareViews.includes(view)) {
+      return [view];
+    }
+  }
+
+  return [];
 };

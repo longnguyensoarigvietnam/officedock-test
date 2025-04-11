@@ -313,6 +313,41 @@ export enum PermissionsSystem {
   // Submit Level Permissions
   SUBMIT_LEVEL_VIEW = 'submit_level_view',
   SUBMIT_LEVEL_UPDATE = 'submit_level_update',
+  // Teamdock Permissions
+  TEAMDOCK_VIEW = 'teamdock_view',
+  TEAMDOCK_ADD = 'teamdock_add',
+  TEAMDOCK_UPDATE = 'teamdock_update',
+  TEAMDOCK_DELETE = 'teamdock_delete',
+
+  // Team Daily Report Permissions
+  TEAM_DAILY_REPORT_VIEW = 'team_daily_report_view',
+  TEAM_DAILY_REPORT_ADD = 'team_daily_report_add',
+  TEAM_DAILY_REPORT_UPDATE = 'team_daily_report_update',
+  TEAM_DAILY_REPORT_DELETE = 'team_daily_report_delete',
+
+  // Organization Hierarchy Permissions
+  ORGANIZATION_HIERARCHY_VIEW = 'organization_hierarchy_view',
+  ORGANIZATION_HIERARCHY_ADD = 'organization_hierarchy_add',
+  ORGANIZATION_HIERARCHY_UPDATE = 'organization_hierarchy_update',
+  ORGANIZATION_HIERARCHY_DELETE = 'organization_hierarchy_delete',
+
+  // List Member Permissions
+  LIST_MEMBER_VIEW = 'list_member_view',
+  LIST_MEMBER_ADD = 'list_member_add',
+  LIST_MEMBER_UPDATE = 'list_member_update',
+  LIST_MEMBER_DELETE = 'list_member_delete',
+
+  // Actual Duration Permissions
+  ACTUAL_DURATION_VIEW = 'actual_duration_view',
+  ACTUAL_DURATION_ADD = 'actual_duration_add',
+  ACTUAL_DURATION_UPDATE = 'actual_duration_update',
+  ACTUAL_DURATION_DELETE = 'actual_duration_delete',
+
+  // Daily Report Permissions
+  DAILY_REPORT_VIEW = 'daily_report_view',
+  DAILY_REPORT_ADD = 'daily_report_add',
+  DAILY_REPORT_UPDATE = 'daily_report_update',
+  DAILY_REPORT_DELETE = 'daily_report_delete',
 }
 
 export enum ScreenAction {
@@ -336,15 +371,23 @@ export enum ScreenName {
   TAG = 'tag',
   STATISTIC = 'statistic',
   SUBMIT_LEVEL = 'submitLevel',
+  ROLE = 'role',
+  DAILY_REPORT = 'dailyReport',
+  ACTUAL_DURATION = 'actualDuration',
+  LIST_MEMBER = 'listMember',
+  ORGANIZATION_HIERARCHY = 'organizationHierarchy',
+  TEAM_DOCK = 'teamdock',
+  TEAM_DAILY_REPORT = 'teamDailyReport',
 }
 
 export enum PermissionType {
-  ALLOWED = '可',
+  VIEW_ONLY = '閲覧のみ',
+  EDITABLE = '編集可',
+  TEAM_AND_SUB_EDIT = '自チームと下位チームのみ編集可',
+  TEAM_AND_SUB_VIEW = '自チームと下位チームのみ閲覧可',
   NOT_ALLOWED = '不可',
-  ONLY_DATA_OWN = '本人データのみ可',
-  ONLY_DATA_ORGANIZATION = '本人が所属している組織データのみ可',
-  ALLOWED_WITHOUT_OWN_DATA = '可（本人データ除く）',
-  ONLY_DATA_ORGANIZATION_WITHOUT_OWN_DATA = '本人が所属している組織のデータ（本人データ除く）のみ可',
+  ALL_TEAMS = '全チーム参加',
+  TEAM_AND_SUB = '自チームと下位チームのみ参加'
 }
 
 export enum CurrentScreen {
@@ -431,13 +474,11 @@ export enum ScheduleType {
   ACTUAL = 'ACTUAL',
 }
 export enum StatisticViewOptions {
-  YEAR = 'YEAR',
   MONTH = 'MONTH',
   WEEK = 'WEEK',
   DAY = 'DAY',
 }
 export enum StatisticViewLabels {
-  YEAR = '年',
   MONTH = '月',
   WEEK = '週',
   DAY = '日',

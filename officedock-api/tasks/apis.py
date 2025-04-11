@@ -15,6 +15,7 @@ from django.db.models import (
     Max,
 )
 from django.db.models.functions import Coalesce
+import re
 from django.utils import timezone
 from django.utils.timezone import make_aware, now
 from django_filters.rest_framework import DjangoFilterBackend
@@ -42,6 +43,7 @@ from chat.serializers import (
     ChatMessageSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
 )
+from common.constants import DATE_REGEX, BASE_DATE_FORMAT
 from common.filters import CustomOrderFilter
 from common.utils import (
     send_web_socket_event,
@@ -753,13 +755,42 @@ class TaskViewSet(
             # Send message to task card of user logged
             self._send_to_task_space(user, message_data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("task_schedule_from_date", type=datetime),
+            OpenApiParameter("task_schedule_end_date", type=datetime),
+        ]
+    )
     def retrieve(self, request, *args, **kwargs):
         """
         Handle updating the count of task usage by the user.
         """
         task = self.get_object()
         user = request.user
-
+        task_schedule_from_date = request.query_params.get(
+            "task_schedule_from_date"
+        )
+        task_schedule_end_date = request.query_params.get(
+            "task_schedule_end_date"
+        )
+        # Validate date format using regex
+        if (
+            task_schedule_from_date
+            and task_schedule_end_date
+            and not re.match(DATE_REGEX, task_schedule_from_date)
+            and not re.match(DATE_REGEX, task_schedule_end_date)
+        ):
+            raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+        task_schedule_from_date = (
+            datetime.strptime(task_schedule_from_date, BASE_DATE_FORMAT).date()
+            if task_schedule_from_date
+            else None
+        )
+        task_schedule_end_date = (
+            datetime.strptime(task_schedule_end_date, BASE_DATE_FORMAT).date()
+            if task_schedule_end_date
+            else None
+        )
         # Retrieve or create TaskFrequent and set the default company
         task_frequent, created = TaskFrequent.objects.get_or_create(
             user=user, task=task, defaults={"company": task.company}
@@ -770,7 +801,16 @@ class TaskViewSet(
             task_frequent.count += 1
             task_frequent.save()
 
-        return super().retrieve(request, *args, **kwargs)
+        return self.response_ok(
+            self.get_serializer(
+                task,
+                context={
+                    "request": request,
+                    "task_schedule_from_date": task_schedule_from_date,
+                    "task_schedule_end_date": task_schedule_end_date,
+                },
+            ).data
+        )
 
     @transaction.atomic()
     def update(self, request, *args, **kwargs):
@@ -812,6 +852,12 @@ class TaskViewSet(
         week_day = serializer_data.pop("week_day", None)
         month_day = serializer_data.pop("month_day", None)
         month = serializer_data.pop("month", None)
+        task_schedule_from_date = serializer_data.pop(
+            "task_schedule_from_date", None
+        )
+        task_schedule_end_date = serializer_data.pop(
+            "task_schedule_end_date", None
+        )
         old_recurring = current_task.recurring
         # Implement create task template base on T146
         if current_task.type == TaskTypes.MY_TEMPLATE.value:
@@ -1162,6 +1208,8 @@ class TaskViewSet(
                 task,
                 context={
                     "request": request,
+                    "task_schedule_from_date": task_schedule_from_date,
+                    "task_schedule_end_date": task_schedule_end_date,
                     "organization_id": organization.id
                     if is_team_task
                     else None,

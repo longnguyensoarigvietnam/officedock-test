@@ -137,6 +137,15 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     org_ids = request.user.organizations.values_list(
                         "id", flat=True
                     )
+                    # Handle get hierarchy
+                    def _get_children(instance):
+                        children = instance.organizations.all()
+                        for child in children:
+                            org_ids.append(child.id)
+                            _get_children(child)
+
+                    _get_children(request.user)
+                    org_ids = set(org_ids)
                     organizations = organizations.filter(id__in=org_ids)
 
         if is_with_staff:  # Get organization have staff not create skill map

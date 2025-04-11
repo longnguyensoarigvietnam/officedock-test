@@ -42,6 +42,7 @@ class Organization(BaseModel):
         null=True,
         blank=True,
     )
+    hierarchize_at = models.DateTimeField(null=True, blank=True)
     users = models.ManyToManyField(
         "users.User", through="UsersOrganizations", related_name="organizations"
     )

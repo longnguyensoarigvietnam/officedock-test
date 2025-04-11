@@ -262,12 +262,12 @@ const AllocationCategory = memo(
                   name="statistic-progress-bar icon"
                   src={`/icons/statistic-progress-bar.svg`}
                 />
-                <span className="text-black font-semibold text-[18px] relative top-[2px]">
+                <span className="text-black w-[210px] flex-shrink-0 font-semibold text-[18px] relative top-[2px]">
                   各カテゴリーの時間配分
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-[240px]  relative">
+                <div className="w-[240px] flex-shrink-0  relative">
                   <MultiSelectDropdown
                     isShowIconFilter
                     options={tagsOptions}
@@ -298,8 +298,8 @@ const AllocationCategory = memo(
                     </span>
                   )}
                 </div>
-                <div className="relative right-[224px] top-0">
-                  <div className="flex gap-2 flex-wrap ">
+                <div className="relative flex-grow right-[224px] top-0">
+                  <div className="flex gap-2 w-full flex-shrink-0 flex-wrap ">
                     {selectedTags.map((item) => {
                       return (
                         <div

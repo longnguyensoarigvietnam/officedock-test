@@ -89,6 +89,8 @@ const ActionsUserModal = ({
     watch,
     clearErrors,
     handleSubmit,
+    getValues,
+    setValue,
     formState: { errors },
   } = useForm<CreateUserFormData>({
     mode: 'onSubmit',
@@ -409,8 +411,10 @@ const ActionsUserModal = ({
                   boxLabelClass="!ml-2"
                   disable={action == ActionsEvent.EDIT}
                   onChange={() => {
+                    const currentTitle = getValues('name');
                     if (action == ActionsEvent.CREATE) {
                       reset();
+                      setValue('name', currentTitle);
                       setSelectedOrganizationOptions([]);
                       setOptionEmail(true);
                     }
@@ -427,8 +431,12 @@ const ActionsUserModal = ({
                   boxLabelClass="!ml-2"
                   disable={action == ActionsEvent.EDIT}
                   onChange={() => {
+                    const currentTitle = getValues('name');
+
                     if (action == ActionsEvent.CREATE) {
                       reset();
+                      setValue('name', currentTitle);
+
                       setSelectedOrganizationOptions([]);
                       setOptionEmail(false);
                     }
@@ -473,6 +481,7 @@ const ActionsUserModal = ({
                       required
                       placeholder="入力してください"
                       register={register('email', emailRules(true))}
+                      disabled={action == ActionsEvent.EDIT}
                       className={`h-[34px] !border-[#77858F] !w-full rounded-md !text-sm !py-0 ${!errors?.email ? '!border-[#77858F]' : '!border-error'}`}
                     />
                     <ErrorMessage
@@ -578,7 +587,7 @@ const ActionsUserModal = ({
                         name={`mainOrganization`}
                         render={({ field: { value, onChange } }) => {
                           return (
-                            <div className="max-w-[450px]">
+                            <div className="max-w-[441px] w-[441px]">
                               <Dropdown
                                 options={unSelectedOrganizationOptions}
                                 selectedOption={originalOrganizationOptions.find(
@@ -613,7 +622,9 @@ const ActionsUserModal = ({
                         className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
                         type="button"
                         name="Remove TagId"
-                        onClick={() => {}}>
+                        onClick={() => {
+                          setValue('mainOrganization', undefined);
+                        }}>
                         削除
                       </Button>
                     </div>
@@ -623,20 +634,19 @@ const ActionsUserModal = ({
               {/* Sub teams */}
               <div className="flex gap-[10px] items-start">
                 <div className="w-full max-w-[110px] mt-2 text-[14px] font-medium">
-                サブチーム
+                  サブチーム
                 </div>
                 <div className="w-full flex flex-col gap-1 items-start ">
                   {fields.map((field, index) => (
-                    <div className="flex gap-3 relative w-full" key={field.id}>
-                      <div className="flex-1 min-w-0">
+                    <div className="flex gap-2 relative w-full" key={field.id}>
+                      <div className="w-full">
                         <Controller
                           control={control}
                           name={`organizations.${index}`}
                           render={({ field: { value, onChange } }) => {
                             return (
-                              <div className="max-w-[450px]">
+                              <div className="max-w-[441px] w-[441px]">
                                 <Dropdown
-                                  classActive="max-w-[100%]"
                                   options={unSelectedOrganizationOptions}
                                   selectedOption={originalOrganizationOptions.find(
                                     (element) =>
@@ -654,9 +664,9 @@ const ActionsUserModal = ({
                                     });
                                   }}
                                   placeholderClass="!text-black text-sm font-normal"
-                                  className="!h-[34px] !w-[441px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
+                                  className="!h-[34px] w-[441px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
                                   labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                                  classNameOption="!text-sm !max-w-[441px]"
+                                  classNameOption="!text-sm w-[441px]"
                                 />
                               </div>
                             );
@@ -664,7 +674,7 @@ const ActionsUserModal = ({
                         />
                       </div>
 
-                      <div className="mt-[2.5px]  flex-shrink-0">
+                      <div className="mt-[2.5px] w-12">
                         <Button
                           sz="sm"
                           variant="outline"
@@ -758,6 +768,10 @@ const ActionsUserModal = ({
                       )}
                     </div>
                   ))}
+                  <ErrorMessage
+                    error={errors?.roles ? errors.roles.root?.message : ''}
+                    className="mt-[5px] mb-[5px] text-xs"
+                  />
                   <div className="text-right flex justify-center w-full mt-4 ">
                     <Button
                       sz="sm"

@@ -13,6 +13,7 @@ from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
+from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
 from calendars.constants import CalendarTypes
 from calendars.models import Schedule
@@ -36,6 +37,8 @@ from dashboard.serializers import (
     ActualDurationDetailSerializer,
 )
 from dashboard.utils import separate_duration
+from roles.constants import Screens
+from tasks.constants import TaskStatus
 from tasks.models import TaskDuration, PeopleInChargeTasks, Task, TaskSchedule
 from tasks.utils import split_date_range
 
@@ -115,6 +118,10 @@ class DashboardViewSet(BaseAPIViewSet):
                 if item["id"] == model.id and item["type"] == model_type
             ):
                 continue
+            is_my_routine = False
+            if isinstance(model, Task):
+                if model.status_name == TaskStatus.MY_ROUTINE.value:
+                    is_my_routine = True
 
             is_running = model.task_durations.filter(
                 paused_at__isnull=True
@@ -130,6 +137,7 @@ class DashboardViewSet(BaseAPIViewSet):
                     "title": model.title,
                     "type": model_type,
                     "is_running": is_running,
+                    "is_my_routine": is_my_routine,
                     "started_at": durations.last().started_at
                     if durations.exists()
                     else None,
@@ -477,15 +485,28 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         if last_task_duration is None or (
             last_task_duration and last_task_duration.paused_at is not None
         ):
-            TaskDuration.objects.create(
-                schedule=object_model
-                if object_type == CalendarTypes.SCHEDULE.value
-                else None,
-                task=object_model
-                if object_type == CalendarTypes.TASK.value
-                else None,
-                started_at=timezone.now(),
-            )
+            task_durations = []
+            if object_type == CalendarTypes.SCHEDULE.value:
+                for user in object_model.participants.all():
+                    task_durations.append(
+                        TaskDuration(
+                            schedule=object_model,
+                            started_at=timezone.now(),
+                            user=user,
+                            company=user.company,
+                        )
+                    )
+            elif object_type == CalendarTypes.TASK.value:
+                for user in object_model.people_in_charge.all():
+                    task_durations.append(
+                        TaskDuration(
+                            task=object_model,
+                            started_at=timezone.now(),
+                            user=user,
+                            company=user.company,
+                        )
+                    )
+            TaskDuration.objects.bulk_create(task_durations)
             object_model.is_start = True
         else:
             TaskDuration.objects.filter(
@@ -687,10 +708,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             )
 
         if user_id:
-            queryset = queryset.filter(
-                Q(task__people_in_charge__id=user_id)
-                | Q(schedule__participants__id=user_id)
-            )
+            queryset = queryset.filter(user__id=user_id)
         else:
             queryset = queryset.none()
 
@@ -711,6 +729,8 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ActualDurationListSerializer
     filterset_class = ActualDurationFilter
+    filter_backends = [FilterByPermission]
+    screen_name = Screens.ACTUAL_DURATION.value
 
     def get_serializer_class(self):
         """Get serializer by action"""
@@ -718,6 +738,12 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             return ActualDurationCreationSerializer
 
         return super().get_serializer_class()
+
+    def get_serializer_context(self):
+        """Get serializer context"""
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
     def get_queryset(self):
         """Get queryset"""
@@ -841,6 +867,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             started_at=started_at,
             paused_at=paused_at,
             company=user.company,
+            user=user,
             uuid=uuid,
         )
         if started_at.date() != paused_at.date():

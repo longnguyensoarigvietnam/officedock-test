@@ -11,7 +11,6 @@ import { pageRouters } from '@constants/routers';
 
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
-import { getRandomColor } from '@utils';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
@@ -140,7 +139,7 @@ const StatisticTeamTagBoard = () => {
         data.members.map((member) => ({
           id: member.id,
           fullName: member.fullName,
-          color: getRandomColor(),
+          color: member.avatarColor,
         })),
       );
       const optionsTagList = data.tags.map((item) => ({
@@ -306,7 +305,7 @@ const StatisticTeamTagBoard = () => {
               name="Multi users"
             />
           </div>
-          <span className="text-[26px] font-medium relative top-[-2px] max-w-[450px] break-all">
+          <span className="text-[26px] font-medium relative top-[-2px] line-clamp-3 max-w-[450px] break-all">
             {selectedOrganization?.label}
           </span>
           <span className="text-[26px] font-medium relative top-[-2px]">

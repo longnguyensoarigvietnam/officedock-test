@@ -122,12 +122,21 @@ const PercentageTeamCategoryCompare = ({
               return {
                 label: user.user.fullName,
                 percent: item.percent,
+                avatarColor: user.user.avatarColor,
               };
             }
             return undefined;
           }),
         )
-        .filter((item): item is { label: string; percent: number } => !!item),
+        .filter(
+          (
+            item,
+          ): item is {
+            label: string;
+            percent: number;
+            avatarColor: string;
+          } => !!item,
+        ),
     };
 
     const mappedMainItems = mainItems.map((item) => ({
@@ -146,12 +155,19 @@ const PercentageTeamCategoryCompare = ({
               return {
                 label: user.user.fullName,
                 percent: item.percent,
+                avatarColor: user.user.avatarColor,
               };
             }
             return undefined;
           })
           .filter(
-            (user): user is { label: string; percent: number } => !!user,
+            (
+              user,
+            ): user is {
+              label: string;
+              percent: number;
+              avatarColor: string;
+            } => !!user,
           ) || [],
       mergedItems: [],
     }));
@@ -232,12 +248,12 @@ const PercentageTeamCategoryCompare = ({
                 name="statistic-active icon"
                 src={`/icons/statistic-active.svg`}
               />
-              <span className="text-black font-semibold text-[18px] relative top-[2px]">
+              <span className="text-black w-[210px] flex-shrink-0 font-semibold text-[18px] relative top-[2px]">
                 カテゴリーの割合カテゴリーの割合
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-[240px]  relative">
+              <div className="w-[240px] flex-shrink-0  relative">
                 <MultiSelectDropdown
                   isShowIconFilter
                   options={tagsOptions}
@@ -268,8 +284,8 @@ const PercentageTeamCategoryCompare = ({
                   </span>
                 )}
               </div>
-              <div className="relative right-[224px] top-0">
-                <div className="flex gap-2 ">
+              <div className="relative flex-grow right-[224px] top-0">
+                <div className="flex gap-2 flex-wrap w-full flex-shrink-0 ">
                   {selectedTags.map((item) => {
                     return (
                       <div

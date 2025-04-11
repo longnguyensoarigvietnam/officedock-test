@@ -108,6 +108,7 @@ import {
   addTimeToDate,
   convertDateStringFull,
   convertToCurrentTimezone,
+  formatDateServer,
   getRandomDateTimeBetween,
 } from '@utils/date';
 import { compareItems } from '@utils';
@@ -176,6 +177,8 @@ const KanbanBoardTask = () => {
     widthCalendar,
     columnWidth,
     selectedOptionZoom,
+    displayHederDateStart,
+    displayHederDateEnd,
     setExtendByStatus,
     setSelectedOptionZoom,
     setStatusTaskSelected,
@@ -1191,7 +1194,9 @@ const KanbanBoardTask = () => {
     'postUpdateTaskIndex',
     handleUpdateTaskIndex,
     {
-      onSuccess: async () => {},
+      onSuccess: async () => {
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
+      },
       onError: () => {
         // When an error occurs, change the state to re-render the kanban board to its old state
         setResetInitialColumnsData(!resetInitialColumnsData);
@@ -1407,6 +1412,7 @@ const KanbanBoardTask = () => {
                   ? ItemStartType.FIXED_TASK
                   : ItemStartType.TASK,
             });
+
             getDataDetailTask(movedItem.id);
           }
 
@@ -1831,7 +1837,11 @@ const KanbanBoardTask = () => {
   const handleEditTaskInline = async (dataTask: TaskRequest) => {
     const { data } = await api.patch<Task>(
       apiRouters.TASK_DETAIL(`${dataTask.id}`),
-      dataTask,
+      {
+        ...dataTask,
+        task_schedule_from_date: formatDateServer(displayHederDateStart),
+        task_schedule_end_date: formatDateServer(displayHederDateEnd),
+      },
     );
     return data;
   };
@@ -1957,6 +1967,8 @@ const KanbanBoardTask = () => {
       remindType: data.deadlineRemindType?.value
         ? `${data.deadlineRemindType?.value}`
         : null,
+      task_schedule_from_date: formatDateServer(displayHederDateStart),
+      task_schedule_end_date: formatDateServer(displayHederDateEnd),
       repeatType:
         data.statusId?.value == StatusValueTask.MY_ROUTINE
           ? data.repeatType && data.repeatType.value
@@ -2332,6 +2344,8 @@ const KanbanBoardTask = () => {
       organizationId: data.organization
         ? Number(data.organization.value)
         : null,
+      task_schedule_from_date: formatDateServer(displayHederDateStart),
+      task_schedule_end_date: formatDateServer(displayHederDateEnd),
       remindCountdown: data.deadlineRemindCountdown?.value
         ? `${data.deadlineRemindCountdown?.value}`
         : null,

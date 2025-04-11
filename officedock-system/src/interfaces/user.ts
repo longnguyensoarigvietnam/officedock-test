@@ -20,7 +20,6 @@ export interface UserAuth {
   password: string;
   authenticationType: AuthenticationTypes;
   profile: Profile;
-  roles: UserRoleType[];
   permissions: PermissionsSystem[];
   accessToken?: string;
   refreshToken?: string;
@@ -75,6 +74,7 @@ export interface Profile {
   id: number;
   fullName: string;
   birthday: string;
+  avatarColor: string;
   gender: string;
   organizations?: {
     id: number;
@@ -130,5 +130,6 @@ export interface UserOrganization {
   users: {
     id: number;
     fullName: string;
+    avatarColor: string;
   }[];
 }

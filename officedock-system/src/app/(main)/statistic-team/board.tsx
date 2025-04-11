@@ -18,7 +18,6 @@ import TaskListTeamStatistic from '@components/statisticTeam/category/TaskList';
 import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
-import { getRandomColor } from '@utils';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 const StatisticTeamBoard = () => {
@@ -34,9 +33,12 @@ const StatisticTeamBoard = () => {
     listOptionsOrganization,
     selectedLarge,
     selectedMedium,
+    selectedSmall,
     selectedOrganization,
     selectedTags,
     tagsOptions,
+    setTotalDurationTask,
+    setTotalDurationTaskCompare,
     setSelectedTags,
     setTagsOptions,
     setSelectedLarge,
@@ -73,6 +75,7 @@ const StatisticTeamBoard = () => {
       organizationIds: String(selectedOrganization?.value || ''),
       largeCategoryId: Number(selectedLarge?.value),
       mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
       tagIds: selectedTags,
     },
     onSuccess: (data) => {
@@ -93,6 +96,32 @@ const StatisticTeamBoard = () => {
       setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
       setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
       setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
+      if (data.largeTotalDuration) {
+        if (data.mediumTotalDuration) {
+          if (data.smallTotalDuration) {
+            if (selectedSmall && selectedSmall.value && data.smallCategories) {
+              const itemMap = data.smallCategories.find(
+                (item) =>
+                  String(item.categoryId) === String(selectedSmall.value),
+              );
+              if (itemMap) {
+                setTotalDurationTask(itemMap.duration);
+              } else {
+                setTotalDurationTask('00:00:00');
+              }
+            } else {
+              setTotalDurationTask(data.smallTotalDuration);
+            }
+          } else {
+            if (selectedSmall && selectedSmall.value) return;
+
+            setTotalDurationTask(data.mediumTotalDuration);
+          }
+        } else {
+          if (selectedLarge && selectedLarge.value) return;
+          setTotalDurationTask(data.largeTotalDuration);
+        }
+      }
     },
   });
 
@@ -104,6 +133,7 @@ const StatisticTeamBoard = () => {
         organizationIds: String(selectedOrganization?.value || ''),
         largeCategoryId: Number(selectedLarge?.value),
         mediumCategoryId: Number(selectedMedium?.value),
+        smallCategoryId: Number(selectedSmall?.value),
         isCompare: isCheckCompare,
         tagIds: selectedTags,
       },
@@ -113,6 +143,36 @@ const StatisticTeamBoard = () => {
           sumDurations(data.mediumCategories ?? []),
         );
         setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
+        if (data.largeTotalDuration) {
+          if (data.mediumTotalDuration) {
+            if (data.smallTotalDuration) {
+              if (
+                selectedSmall &&
+                selectedSmall.value &&
+                data.smallCategories
+              ) {
+                const itemMap = data.smallCategories.find(
+                  (item) =>
+                    String(item.categoryId) === String(selectedSmall.value),
+                );
+                if (itemMap) {
+                  setTotalDurationTaskCompare(itemMap.duration);
+                } else {
+                  setTotalDurationTaskCompare('00:00:00');
+                }
+              } else {
+                setTotalDurationTaskCompare(data.smallTotalDuration);
+              }
+            } else {
+              if (selectedSmall && selectedSmall.value) return;
+
+              setTotalDurationTaskCompare(data.mediumTotalDuration);
+            }
+          } else {
+            if (selectedLarge && selectedLarge.value) return;
+            setTotalDurationTaskCompare(data.largeTotalDuration);
+          }
+        }
       },
     });
 
@@ -144,7 +204,7 @@ const StatisticTeamBoard = () => {
         data.members.map((member) => ({
           id: member.id,
           fullName: member.fullName,
-          color: getRandomColor(),
+          color: member.avatarColor,
         })),
       );
     },
@@ -318,7 +378,7 @@ const StatisticTeamBoard = () => {
               name="Multi users"
             />
           </div>
-          <span className="text-[26px] font-medium relative top-[-2px] max-w-[450px] break-all">
+          <span className="text-[26px] font-medium relative top-[-2px] max-w-[450px] line-clamp-3 break-all">
             {selectedOrganization?.label}
           </span>
           <span className="text-[26px] font-medium relative top-[-2px]">
@@ -410,7 +470,7 @@ const StatisticTeamBoard = () => {
           </div>
         </div>
         <div className="flex items-center gap-2 mb-[14px] mt-6">
-          <div className="w-[240px]  relative">
+          <div className="w-[240px] flex-shrink-0 relative">
             <MultiSelectDropdown
               isShowIconFilter
               options={tagsOptions}
@@ -441,8 +501,8 @@ const StatisticTeamBoard = () => {
               </span>
             )}
           </div>
-          <div className="relative right-[224px] top-[-8px]">
-            <div className="flex gap-2 ">
+          <div className="relative flex-grow flex-shrink-0 right-[224px] top-[-8px]">
+            <div className="flex gap-2 flex-wrap w-[80%] flex-shrink-0 ">
               {selectedTags.map((item) => {
                 return (
                   <div

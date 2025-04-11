@@ -17,6 +17,7 @@ export interface UserListStatisticType {
   user: {
     id: number;
     fullName: string;
+    avatarColor: string;
   };
 }
 
@@ -239,6 +240,7 @@ export interface DataResponseStatisticCreationTeamType {
   members: {
     id: number;
     fullName: string;
+    avatarColor: string;
   }[];
 }
 export interface DataTaskModalStatisticType {

@@ -69,7 +69,6 @@ import {
   isMoreThanThirtyMinutes,
   isTodaySchedule,
 } from '@utils/date';
-import { getRandomColor } from '@utils';
 import RangeSlider from '@components/common/RangeSlider';
 import { isAfter, isBefore, isToday } from 'date-fns';
 
@@ -151,7 +150,7 @@ const ScheduleTeamBoard = () => {
         data.members.map((member) => ({
           id: member.id,
           fullName: member.fullName,
-          color: getRandomColor(),
+          color: member.avatarColor,
         })),
       );
       setCurrentResources(
@@ -831,9 +830,9 @@ const ScheduleTeamBoard = () => {
                 name="Multi users"
               />
             </div>
-            <span className="text-[26px] font-medium relative top-[-2px] max-w-[350px] truncate">
+            <p className="text-[26px] font-medium relative top-[-2px] line-clamp-3 max-w-[350px] ">
               {selectedOrganization?.label}
-            </span>
+            </p>
             <div className="flex justify-center items-center gap-2 ">
               <Button
                 variant={'outline'}

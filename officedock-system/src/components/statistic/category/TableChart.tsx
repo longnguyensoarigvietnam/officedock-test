@@ -14,7 +14,6 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import { useMutation, useQueryClient } from 'react-query';
@@ -58,6 +57,7 @@ interface ListTaskStatistic {
 }
 
 interface TableChartProps {
+  pageSize: number;
   ordering: string;
   totalDuration: string;
   taskList: DataTaskListStatisticListType[];
@@ -709,7 +709,6 @@ const TableChart = ({
     data: statisticTaskList,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (

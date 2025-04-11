@@ -114,9 +114,10 @@ const PercentageTeamTags = ({
   });
 
   const processChartData = (
-    categories: StatisticCategoryInfo[],
+    dataCategories: StatisticCategoryInfo[],
     colorData?: string,
   ) => {
+    const categories = dataCategories.filter((item) => item.percent > 0);
     const mergedItems: StatisticCategoryInfo[] = [];
     const mergedCategory: StatisticCategoryInfo = {
       categoryName: 'その他',
@@ -170,6 +171,7 @@ const PercentageTeamTags = ({
         item.users?.slice(0, 6).map((user) => ({
           label: user.user.fullName,
           percent: user.percent,
+          avatarColor: user.user.avatarColor,
         })) || [],
     );
     // Get list id

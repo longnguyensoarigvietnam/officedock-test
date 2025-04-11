@@ -201,6 +201,10 @@ const TimeSchedule = memo(
     const {
       memberSelected,
       dataActualAddSchedule,
+      displayHederDateStart,
+      displayHederDateEnd,
+      setDisplayHeaderDayStart,
+      setDisplayHeaderDayEnd,
       setDataEventEdit,
       setIdEventDelete,
       setWidthCalendar,
@@ -211,12 +215,6 @@ const TimeSchedule = memo(
 
     const { setIsLoading } = useContext(LoadingContext);
     const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
-    const [displayHederDateStart, setDisplayHeaderDayStart] = useState<Date>(
-      new Date(),
-    );
-    const [displayHederDateEnd, setDisplayHeaderDayEnd] = useState<Date>(
-      new Date(),
-    );
 
     const { isExtendCalendar, setIsExtendCalendar } =
       useContext(GlobalStateContext);
@@ -507,7 +505,7 @@ const TimeSchedule = memo(
     }) => {
       setIsLoadingSchedule(true);
 
-      const apiUrl = `${apiRouters.TASK_CALENDAR_LIST}?${userId ? `&user_id=${userId}` : ''}${startDate && `&start_date=${startDate}`}${endDate && `&end_date=${endDate}`}`;
+      const apiUrl = `${apiRouters.TASK_CALENDAR_LIST}?${userId ? `&user_id=${userId}` : ''}${startDate && `&start_date=${startDate}`}${startDate && `&task_schedule_from_date=${startDate}`}${endDate && `&end_date=${endDate}`}${endDate && `&task_schedule_end_date=${endDate}`}`;
       const { data } = await api.get<Task[]>(apiUrl);
       return data;
     };
@@ -1192,7 +1190,6 @@ const TimeSchedule = memo(
       const extendedProps = event?.extendedProps;
       if (!extendedProps) null;
       if (!event.start || !event.end) return null;
-
       const overlappingEvents = calendarEvents.filter((e: any) => {
         if (!e.start || !e.end || e.id === event.id) return false;
         const eResourceId =
@@ -1201,9 +1198,13 @@ const TimeSchedule = memo(
           e._def.resourceIds[0] === ItemScheduleType.PLANS;
 
         if (!eResourceId) return false;
+        const eStart = new Date(e.extendedProps.planStartDate);
+        const eEnd = new Date(e.extendedProps.planEndDate);
+        const exStart = new Date(extendedProps.planStartDate);
+        const exEnd = new Date(extendedProps.planEndDate);
         return (
-          e.start.getTime() < event.end!.getTime() &&
-          e.end.getTime() > event.start!.getTime()
+          eStart.getTime() < exEnd!.getTime() &&
+          eEnd.getTime() > exStart!.getTime()
         );
       });
       const allOverlappingEvents = [...overlappingEvents, event];

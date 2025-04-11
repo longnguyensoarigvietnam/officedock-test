@@ -51,12 +51,14 @@ export type ConfigNode = {
   parentUuid?: string;
   children: ConfigNode[];
   type?: string;
+  is_hierarchy?: boolean;
 };
 export type NodeDataRequest = {
   uuid: string;
-  parentUuid?: string;
+  parentUuid?: string | null;
   name: string | null;
   icon?: string;
+  is_hierarchy?: boolean;
 };
 export type NodeResponsive = {
   organizationHierarchies?: ConfigNode[];
