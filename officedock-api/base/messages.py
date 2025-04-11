@@ -57,6 +57,9 @@ _ERROR_MESSAGES = {
         "cannot_create": _("Cannot create"),
         "exists_struct": _("There are duplicate records, please check again."),
         "cannot_delete_type": _("This {type} cannot be deleted."),
+        "cannot_delete_category_has_actual_duration": _(
+            "This category cannot be deleted because it has actual duration."
+        ),
         "read_term": _("This {type} agreed or over period."),
         "exists_index": _("This position exists"),
         "statistic_category_not_exists": _(
@@ -130,6 +133,9 @@ _ERROR_MESSAGES = {
         "same_period": _("有効期間が重複しています。"),
         "cannot_delete": _("削除できません。"),
         "cannot_delete_type": _("この{type}を削除できません。"),
+        "cannot_delete_category_has_actual_duration": _(
+            "この業務カテゴリーは計測データがあるため、削除できません。"
+        ),
         "read_term": _("この{type}は同意済か有効期限が切れています。"),
         "cannot_create": _("作成できません。"),
         "exists_struct": _("重複しているレコードがあります。再度確認してください。"),
