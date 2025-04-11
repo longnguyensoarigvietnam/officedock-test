@@ -154,12 +154,8 @@ export const SCREEN_LIST = [
     value: 'organizationHierarchy',
   },
   {
-    name: 'チーム集計画面',
-    value: 'teamStatistic',
-  },
-  {
-    name: 'チームタスク画面',
-    value: 'teamTask',
+    name: 'チームドック画面',
+    value: 'teamdock',
   },
   {
     name: '日報一覧画面',
@@ -187,6 +183,14 @@ export const PERMISSION_OPTIONS = [
   {
     label: PermissionType.NOT_ALLOWED,
     value: PermissionType.NOT_ALLOWED,
+  },
+  {
+    label: PermissionType.ALL_TEAMS,
+    value: PermissionType.ALL_TEAMS,
+  },
+  {
+    label: PermissionType.TEAM_AND_SUB,
+    value: PermissionType.TEAM_AND_SUB,
   },
 ];
 

@@ -43,18 +43,19 @@ const CreateRoleForm = () => {
   const [isSubmit, setIsSubmit] = useState(false);
   const showErrorToast = useErrorToast();
 
+  const getDefaultScreenAction = (screenName: string) => {
+    if(screenName == ScreenName.TEAM_DOCK) 
+      return PermissionType.TEAM_AND_SUB;
+    return PermissionType.NOT_ALLOWED;
+  };
+
   useEffect(() => {
     const initialRows: rowDataType[] = [];
     SCREEN_LIST.map((screen) => {
       initialRows.push({
         screenLabel: screen.name,
         screenValue: screen.value,
-        actions:
-          screen.value == ScreenName.STATISTIC
-            ? PermissionType.VIEW_ONLY
-            : screen.value == ScreenName.TEAM_TASK
-              ? PermissionType.EDITABLE
-              : PermissionType.NOT_ALLOWED,
+        actions: getDefaultScreenAction(screen.value),
       });
     });
     setRows(initialRows);
