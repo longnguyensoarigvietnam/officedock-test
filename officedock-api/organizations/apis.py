@@ -298,7 +298,11 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
 
         # Checking if there are any users associated with the organization
-        if instance.users.count() > 0 or instance.tasks.count() > 0:
+        if (
+            instance.users.count() > 0
+            or instance.tasks.count() > 0
+            or instance.schedules.count() > 0
+        ):
             raise ValidationError(
                 {
                     "detail": ERROR_MESSAGES["cannot_delete_type"].format(
