@@ -5,7 +5,7 @@ from roles.constants import Actions, SelectionResultOptions
 from submit_levels.models import SubmitLevelHistory
 from users.models import RoleDetail, User
 from skills.models import Skill, SkillMap, StatisticCategory
-from organizations.models import OrganizationsSkills
+from organizations.models import OrganizationsSkills, Organization
 
 
 class FilterByPermission(DjangoFilterBackend):
@@ -52,8 +52,8 @@ class FilterByPermission(DjangoFilterBackend):
             return queryset.none()
 
         org_ids = request.user.organizations.values_list("id", flat=True)
+        # FIXME: check children team of organizations here
         selection_results = [item.selection_result for item in role_permissions]
-
         if SelectionResultOptions.ALLOWED.value in selection_results:
             return queryset
         elif (
@@ -69,6 +69,9 @@ class FilterByPermission(DjangoFilterBackend):
                 SubmitLevelHistory,
             ]:
                 return queryset.filter(organization__in=org_ids)
+            elif queryset.model in [Organization]:
+                return queryset.filter(id__in=org_ids)
+
         elif SelectionResultOptions.ONLY_DATA_OWN.value in selection_results:
             # Filter queryset by own data
             if queryset.model is User:

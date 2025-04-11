@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from chat.constants import WebSocketEventType
-from roles.constants import Actions, Screens, SelectionResultOptions
+from roles.constants import ROLE_PERMISSION_BY_OPTIONS
 from roles.filters import RoleFilter
 from common.utils import send_web_socket_event
 from roles.serializers import (
@@ -72,29 +72,9 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         role = serializer.save(
             company=self.request.user.company, system_role=False
         )
-        for key, actions in permissions.items():
+        for key, action in permissions.items():
             # ======== This code is update permission ADD, DELETE base on UPDATE  =======
-            permission_update = (
-                actions[Actions.UPDATE.value]
-                if actions.get(Actions.UPDATE.value)
-                else actions.get(Actions.ADD.value)
-            )
-            permissions[key].update(
-                {
-                    Actions.ADD.value: permission_update,
-                    Actions.DELETE.value: permission_update,
-                }
-            )
-            if (
-                key == Screens.USER.value
-                and permission_update
-                == SelectionResultOptions.ONLY_DATA_ORGANIZATION.value
-            ):
-                permissions[key].update(
-                    {
-                        Actions.ADD.value: SelectionResultOptions.ALLOWED.value,
-                    }
-                )
+            permissions[key] = ROLE_PERMISSION_BY_OPTIONS[action["actions"]]
             # ======== End update permission =======
 
         create_role_with_permissions(role, permissions)
@@ -126,35 +106,17 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 parsed_queryset[group] = {}
             parsed_queryset[group][action] = item["selection_result"]
 
-        for key, actions in permissions.items():
+        for key, action in permissions.items():
             if key not in parsed_queryset:
                 is_matching = False
                 break
             # ======== This code is update permission ADD, DELETE base on UPDATE  =======
-            permission_update = (
-                actions[Actions.UPDATE.value]
-                if actions.get(Actions.UPDATE.value)
-                else actions.get(Actions.ADD.value)
-            )
-            permissions[key].update(
-                {
-                    Actions.ADD.value: permission_update,
-                    Actions.DELETE.value: permission_update,
-                }
-            )
-            if (
-                key == Screens.USER.value
-                and permission_update
-                == SelectionResultOptions.ONLY_DATA_ORGANIZATION.value
-            ):
-                permissions[key].update(
-                    {
-                        Actions.ADD.value: SelectionResultOptions.ALLOWED.value,
-                    }
-                )
+            permissions[key] = ROLE_PERMISSION_BY_OPTIONS[action["actions"]]
             # ======== End update permission =======
 
-            for action, expected_value in actions.items():
+            for action, expected_value in ROLE_PERMISSION_BY_OPTIONS[
+                action["actions"]
+            ].items():
                 if parsed_queryset[key].get(action, None) != expected_value:
                     is_matching = False
                     break
@@ -194,4 +156,5 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     },
                     user=user,
                 )
+
         return super().perform_destroy(instance)

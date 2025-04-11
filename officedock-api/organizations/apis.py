@@ -61,6 +61,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     filter_backends = [
         DjangoFilterBackend,
         CustomOrderFilter,
+        FilterByPermission,
     ]
     ordering_fields = {
         "id": "id",
