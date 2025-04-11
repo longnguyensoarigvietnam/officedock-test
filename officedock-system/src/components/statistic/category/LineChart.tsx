@@ -855,7 +855,7 @@ const LineChart = ({
             />
           </div>
           <div className="px-[30px]">
-            <div className="flex gap-8 items-center justify-end mb-3 break-words">
+            <div className="flex gap-8 items-center justify-end mb-3 flex-wrap">
               {standardLabelsInfo.map((label, index) => {
                 return (
                   <div key={index} className="flex gap-1 items-center">

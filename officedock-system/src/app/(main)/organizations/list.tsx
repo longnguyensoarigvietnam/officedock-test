@@ -67,7 +67,6 @@ const ListOrganizations = () => {
   const [dataOrganizations, setDataOrganizations] = useState<Organizations[]>(
     [],
   );
-  const [isCreate, setIsCreate] = useState(false);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
 
@@ -163,7 +162,6 @@ const ListOrganizations = () => {
           action: '',
           showError: false,
         });
-        setIsCreate(false);
         refetchOrganizationList();
       },
       onError: (error: AxiosError<any>) => {
@@ -300,7 +298,6 @@ const ListOrganizations = () => {
             <Button
               className="w-[100px] !p-0"
               onClick={() => {
-                setIsCreate(true);
                 const hasEmptyOrganization = dataOrganizations.some(
                   (org) => org.name.trim() === '',
                 );
@@ -379,15 +376,20 @@ const ListOrganizations = () => {
                   <td>
                     <div className="flex w-[50px] break-words gap-3 justify-center">
                       {session?.user.permissions &&
+                      !(
+                        selectedOrganizationToUpdate.action ==
+                          ActionsModal.CREATE &&
+                        selectedOrganizationToUpdate.uuid == element.uuid
+                      ) &&
                       hasPermissionInArray(
                         session?.user.permissions,
                         PermissionsSystem.ORGANIZATION_UPDATE,
                       ) ? (
-                        <button disabled={isCreate}>
+                        <button>
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit-gray.svg'}
-                            className={`w-3.5 h-3.5 hover:cursor-pointer ${isCreate && 'opacity-45'} ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                            className={`w-3.5 h-3.5 hover:cursor-pointer ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
                             onClick={() => {
                               if (
                                 selectedOrganizationToUpdate.action ==
@@ -424,6 +426,11 @@ const ListOrganizations = () => {
                         <div className="w-3.5"></div>
                       )}
                       {session?.user.permissions &&
+                      !(
+                        selectedOrganizationToUpdate.action ==
+                          ActionsModal.CREATE &&
+                        selectedOrganizationToUpdate.uuid == element.uuid
+                      ) &&
                       hasPermissionInArray(
                         session?.user.permissions,
                         PermissionsSystem.ORGANIZATION_DELETE,
@@ -433,7 +440,19 @@ const ListOrganizations = () => {
                           src={'/icons/delete-gray.svg'}
                           className="w-[13px] h-[15px] hover:cursor-pointer"
                           onClick={() => {
-                            setIsCreate(false);
+                            if (
+                              selectedOrganizationToUpdate.uuid != element.uuid
+                            ) {
+                              setDataOrganizations((prev) => {
+                                let updatedCategories = [...prev];
+                                updatedCategories = updatedCategories.filter(
+                                  (category) =>
+                                    category.uuid !=
+                                    selectedOrganizationToUpdate.uuid,
+                                );
+                                return updatedCategories;
+                              });
+                            }
                             if (
                               selectedOrganizationToUpdate.uuid ==
                                 element.uuid &&

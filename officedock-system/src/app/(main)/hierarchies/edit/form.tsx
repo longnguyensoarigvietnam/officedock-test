@@ -17,12 +17,14 @@ import { Table } from '@components/common/Table';
 
 import { HIERARCHY_COLOR_LIST } from '@constants';
 import { apiRouters } from '@constants/routers';
-import { ServerStatusCode } from '@constants/enums';
+import { ServerStatusCode, StatisticCategoryType } from '@constants/enums';
 import { INVALID_CATEGORY_NAME } from '@constants/message';
 
 import { OptionDropdownType } from '@interfaces/common';
 
 import api from '@base/api';
+import WarningChangeHierarchyCategoryModal from '@components/modals/WarningChangeHierarchyCategoryModal';
+import WarningDeleteHierarchyCategoryModal from '@components/modals/WarningDeleteHierarchyCategoryModal';
 
 interface rowDataType {
   id: number | string;
@@ -236,6 +238,20 @@ const TableComponent = ({
     uuid: '',
     status: false,
   });
+  const [warningChangeCategoryModalOpen, setWarningChangeCategoryModalOpen] =
+    useState<boolean>(false);
+  const [warningDeleteCategoryModalOpen, setWarningDeleteCategoryModalOpen] =
+    useState<boolean>(false);
+  const [pendingSelection, setPendingSelection] = useState<{
+    oldLargeOption: OptionDropdownType;
+    oldMediumOption?: OptionDropdownType;
+    oldRowId?: string | number;
+    oldRowSkill?: OptionDropdownType[];
+    oldRowColor?: string;
+    newValue: OptionDropdownType;
+    type: string;
+  } | null>(null);
+
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const findLastUniqueMediumIndexes = (data: rowDataType[]): number[] => {
@@ -856,8 +872,605 @@ const TableComponent = ({
       .filter((value) => value !== '');
   };
 
+  const handleChangeLargeCategoryByPulldown = (
+    oldLargeOption: OptionDropdownType,
+    e: OptionDropdownType,
+  ) => {
+    setSelectedHierarchiesToUpdate((prev) => {
+      const updatedHierarchiesToUpdate = [...prev];
+      const statisticCategories = hierarchyList.statisticCategories;
+
+      const newLarge = {
+        label: e.label,
+        value: e.value,
+        showBy: 'pulldown',
+        isValid: true,
+      };
+
+      const matchedRows = statisticCategories
+        .filter((item) => item.large.value === oldLargeOption.value)
+        .map((item) => ({
+          ...item,
+          large: newLarge,
+        }));
+      const updatedHierarchies = matchedRows.map((row) => {
+        return {
+          organizationStatisticCategoryId: row.id,
+          organizationId: hierarchyList.id as number,
+          largeStatisticCategory:
+            row.large.label == '' || isUUID(row.large.label as string)
+              ? null
+              : {
+                  name: row.large.label as string,
+                  uuid: row.large.value as string,
+                },
+          mediumStatisticCategory:
+            row.medium.label == '' || isUUID(row.medium.label as string)
+              ? null
+              : {
+                  name: row.medium.label as string,
+                  uuid: row.medium.value as string,
+                },
+          smallStatisticCategory:
+            row.small.label == '' || isUUID(row.small.label as string)
+              ? null
+              : {
+                  name: row.small.label as string,
+                  uuid: row.small.value as string,
+                },
+          color: row.color,
+          skillIds: row.skills.map((skill) => Number(skill.value)),
+        };
+      });
+
+      updatedHierarchies.forEach((updatedHierarchy) => {
+        const key = `${updatedHierarchy.organizationId}|${
+          updatedHierarchy.largeStatisticCategory?.uuid || ''
+        }|${updatedHierarchy.mediumStatisticCategory?.uuid || ''}|${
+          updatedHierarchy.smallStatisticCategory?.uuid || ''
+        }`;
+
+        const alreadyExists = updatedHierarchiesToUpdate.some(
+          (item) =>
+            item.organizationStatisticCategoryId ===
+              updatedHierarchy.organizationStatisticCategoryId ||
+            `${item.organizationId}|${
+              item.largeStatisticCategory?.uuid || ''
+            }|${item.mediumStatisticCategory?.uuid || ''}|${
+              item.smallStatisticCategory?.uuid || ''
+            }` === key,
+        );
+
+        if (!alreadyExists) {
+          updatedHierarchiesToUpdate.push(updatedHierarchy);
+        }
+      });
+
+      return updatedHierarchiesToUpdate;
+    });
+
+    setHierarchyList((prev) => {
+      const updatedHierarchyList = prev.map((org) => ({
+        ...org,
+        statisticCategories: [...org.statisticCategories],
+      }));
+
+      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
+        (hierarchy) => hierarchy.id === hierarchyList.id,
+      );
+
+      if (foundOrganizationHierarchyIndex !== -1) {
+        const statisticCategories =
+          updatedHierarchyList[foundOrganizationHierarchyIndex]
+            .statisticCategories;
+
+        const newLarge = {
+          label: e.label,
+          value: e.value,
+          showBy: 'pulldown',
+          isValid: true,
+        };
+
+        // Separate matching and non-matching rows
+        const matchedRows = statisticCategories
+          .filter((item) => item.large.value === oldLargeOption.value)
+          .map((item) => ({
+            ...item,
+            large: newLarge,
+          }));
+
+        const remainingRows = statisticCategories.filter(
+          (item) => item.large.value !== oldLargeOption.value,
+        );
+
+        // Find the last index where newLarge.value already exists
+        let lastIndex = -1;
+        remainingRows.forEach((item, index) => {
+          if (item.large.value === newLarge.value) lastIndex = index;
+        });
+
+        const newStatisticCategories = [...remainingRows];
+        if (lastIndex !== -1) {
+          newStatisticCategories.splice(lastIndex + 1, 0, ...matchedRows);
+        } else {
+          // Instead of pushing, find the **original** position of row.original.large.value
+          const originalIndex = statisticCategories.findIndex(
+            (item) => item.large.value === oldLargeOption.value,
+          );
+
+          if (originalIndex !== -1) {
+            // Insert in the same position as original row
+            newStatisticCategories.splice(originalIndex, 0, ...matchedRows);
+          } else {
+            // If no match found, append to the end
+            newStatisticCategories.push(...matchedRows);
+          }
+        }
+
+        const uniqueMap = new Map();
+        const filteredStatisticCategories = newStatisticCategories.filter(
+          (item) => {
+            const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
+            if (uniqueMap.has(key)) return false;
+            uniqueMap.set(key, true);
+            return true;
+          },
+        );
+
+        // Update hierarchy list
+        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
+          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
+          statisticCategories: filteredStatisticCategories,
+        };
+      }
+
+      return updatedHierarchyList;
+    });
+  };
+
+  const handleChangeMediumCategoryByPulldown = (
+    oldLargeOption: OptionDropdownType,
+    oldMediumOption: OptionDropdownType,
+    e: OptionDropdownType,
+  ) => {
+    setSelectedHierarchiesToUpdate((prev) => {
+      const updatedHierarchiesToUpdate = [...prev];
+      const statisticCategories = hierarchyList.statisticCategories;
+      const newMedium = {
+        label: e.label,
+        value: e.value,
+        showBy: 'pulldown',
+        isValid: true,
+      };
+      const matchedRows = statisticCategories
+        .filter(
+          (item) =>
+            item.medium.value === oldMediumOption.value &&
+            item.large.value === oldLargeOption.value,
+        )
+        .map((item) => ({
+          ...item,
+          medium: newMedium,
+        }));
+
+      const updatedHierarchies = matchedRows.map((row) => {
+        return {
+          organizationStatisticCategoryId: row.id,
+          organizationId: hierarchyList.id as number,
+          largeStatisticCategory:
+            row.large.label == '' || isUUID(row.large.label as string)
+              ? null
+              : {
+                  name: row.large.label as string,
+                  uuid: row.large.value as string,
+                },
+          mediumStatisticCategory:
+            row.medium.label == '' || isUUID(row.medium.label as string)
+              ? null
+              : {
+                  name: row.medium.label as string,
+                  uuid: row.medium.value as string,
+                },
+          smallStatisticCategory:
+            row.small.label == '' || isUUID(row.small.label as string)
+              ? null
+              : {
+                  name: row.small.label as string,
+                  uuid: row.small.value as string,
+                },
+          color: row.color,
+          skillIds: row.skills.map((skill) => Number(skill.value)),
+        };
+      });
+
+      updatedHierarchies.forEach((updatedHierarchy) => {
+        const existingIndex = updatedHierarchiesToUpdate.findIndex(
+          (item) =>
+            item.organizationStatisticCategoryId ===
+            updatedHierarchy.organizationStatisticCategoryId,
+        );
+        if (existingIndex != -1) {
+          updatedHierarchiesToUpdate[existingIndex] = updatedHierarchy;
+        } else {
+          updatedHierarchiesToUpdate.push(updatedHierarchy);
+        }
+      });
+
+      return updatedHierarchiesToUpdate;
+    });
+    setHierarchyList((prev) => {
+      const updatedHierarchyList = prev.map((org) => ({
+        ...org,
+        statisticCategories: [...org.statisticCategories],
+      }));
+
+      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
+        (hierarchy) => hierarchy.id == hierarchyList.id,
+      );
+
+      if (foundOrganizationHierarchyIndex !== -1) {
+        const statisticCategories =
+          updatedHierarchyList[foundOrganizationHierarchyIndex]
+            .statisticCategories;
+
+        const newMedium = {
+          label: e.label,
+          value: e.value,
+          showBy: 'pulldown',
+          isValid: true,
+        };
+
+        // Separate matching and non-matching rows
+        const matchedRows = statisticCategories
+          .filter(
+            (item) =>
+              item.medium.value == oldMediumOption.value &&
+              item.large.value == oldLargeOption.value,
+          )
+          .map((item) => ({
+            ...item,
+            medium: newMedium,
+          }));
+
+        const remainingRows = statisticCategories.filter(
+          (item) =>
+            !(
+              item.medium.value == oldMediumOption.value &&
+              item.large.value == oldLargeOption.value
+            ),
+        );
+
+        // Find the last index where newMedium.value already exists
+        let lastIndex = -1;
+        remainingRows.forEach((item, index) => {
+          if (
+            item.large.value == oldLargeOption.value &&
+            item.medium.value === newMedium.value
+          )
+            lastIndex = index;
+        });
+
+        // Maintain position if lastIndex is -1
+        const newStatisticCategories = [...remainingRows];
+        if (lastIndex !== -1) {
+          newStatisticCategories.splice(lastIndex + 1, 0, ...matchedRows);
+        } else {
+          // Instead of pushing, find the **original** position of row.original.medium.value
+          const originalIndex = statisticCategories.findIndex(
+            (item) =>
+              item.medium.value == oldMediumOption.value &&
+              item.large.value == oldLargeOption.value,
+          );
+
+          if (originalIndex !== -1) {
+            // Insert in the same position as original row
+            newStatisticCategories.splice(originalIndex, 0, ...matchedRows);
+          } else {
+            // If no match found, append to the end
+            newStatisticCategories.push(...matchedRows);
+          }
+        }
+
+        // Remove duplicates
+        const uniqueMap = new Map();
+        const filteredStatisticCategories = newStatisticCategories.filter(
+          (item) => {
+            const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
+            if (uniqueMap.has(key)) return false;
+            uniqueMap.set(key, true);
+            return true;
+          },
+        );
+
+        // Update hierarchy list
+        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
+          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
+          statisticCategories: filteredStatisticCategories,
+        };
+      }
+
+      return updatedHierarchyList;
+    });
+  };
+
+  const handleChangeSmallCategoryByPulldown = (
+    oldLargeOption: OptionDropdownType,
+    oldMediumOption: OptionDropdownType,
+    oldRowId: string | number,
+    oldRowSkill: OptionDropdownType[],
+    oldRowColor: string,
+    e: OptionDropdownType,
+  ) => {
+    setSelectedHierarchiesToUpdate((prev) => {
+      const updatedHierarchiesToUpdate = [...prev];
+
+      const existingIndex = updatedHierarchiesToUpdate.findIndex(
+        (item) => item.organizationStatisticCategoryId === oldRowId,
+      );
+
+      const newEntry = {
+        organizationStatisticCategoryId: oldRowId,
+        organizationId: hierarchyList.id as number,
+        largeStatisticCategory:
+          oldLargeOption.label == '' || isUUID(oldLargeOption.label as string)
+            ? null
+            : {
+                name: oldLargeOption.label as string,
+                uuid: oldLargeOption.value as string,
+              },
+        mediumStatisticCategory:
+          oldMediumOption.label == '' || isUUID(oldMediumOption.label as string)
+            ? null
+            : {
+                name: oldMediumOption.label as string,
+                uuid: oldMediumOption.value as string,
+              },
+        smallStatisticCategory: {
+          name: e.label as string,
+          uuid: e.value as string,
+        },
+        color: oldRowColor,
+        skillIds: oldRowSkill.map((skill) => Number(skill.value)),
+      };
+
+      if (existingIndex !== -1) {
+        // If it exists, replace it
+        updatedHierarchiesToUpdate[existingIndex] = newEntry;
+      } else {
+        // Otherwise, add it
+        updatedHierarchiesToUpdate.push(newEntry);
+      }
+
+      return updatedHierarchiesToUpdate;
+    });
+    setHierarchyList((prev) => {
+      const updatedHierarchyList = prev.map((org) => ({
+        ...org,
+        statisticCategories: [...org.statisticCategories],
+      }));
+
+      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
+        (hierarchy) => hierarchy.id == hierarchyList.id,
+      );
+
+      if (foundOrganizationHierarchyIndex !== -1) {
+        const updatedCategories = updatedHierarchyList[
+          foundOrganizationHierarchyIndex
+        ].statisticCategories.map((hierarchy) =>
+          hierarchy.id === oldRowId
+            ? {
+                ...hierarchy,
+                small: {
+                  label: e.label,
+                  value: e.value,
+                  showBy: 'pulldown',
+                  isValid: true,
+                },
+              }
+            : hierarchy,
+        );
+
+        const uniqueMap = new Map();
+        const filteredCategories = updatedCategories.filter((item) => {
+          const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
+          if (uniqueMap.has(key)) return false;
+          uniqueMap.set(key, true);
+          return true;
+        });
+
+        updatedHierarchyList[
+          foundOrganizationHierarchyIndex
+        ].statisticCategories = filteredCategories;
+      }
+
+      return updatedHierarchyList;
+    });
+  };
+
+  const handleDeleteLargeHierarchyCategory = (
+    oldLargeValue: string | number,
+  ) => {
+    setSelectedHierarchiesToDelete((prev) => {
+      const currentHierarchiesToDelete = [...(prev || [])];
+
+      const matchingHierarchies = hierarchyList.statisticCategories
+        .filter((item) => item.large.value === oldLargeValue)
+        .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
+
+      return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
+    });
+    setSelectedHierarchiesToUpdate((prev) => {
+      const currentHierarchiesToUpdate = [...(prev || [])];
+
+      return currentHierarchiesToUpdate.filter(
+        (hierarchy) => hierarchy.largeStatisticCategory?.uuid != oldLargeValue,
+      );
+    });
+    setHierarchyList((prev) => {
+      const updatedHierarchyList = prev.map((org) => ({
+        ...org,
+        statisticCategories: [...org.statisticCategories],
+      }));
+
+      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
+        (hierarchy) => hierarchy.id === hierarchyList.id,
+      );
+
+      if (foundOrganizationHierarchyIndex !== -1) {
+        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
+          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
+          statisticCategories: [
+            ...updatedHierarchyList[
+              foundOrganizationHierarchyIndex
+            ].statisticCategories.filter(
+              (hierarchy) => hierarchy.large.value != oldLargeValue,
+            ),
+          ],
+        };
+      }
+
+      return updatedHierarchyList;
+    });
+  };
+
+  const handleDeleteMediumHierarchyCategory = (
+    oldLargeValue: string | number,
+    oldMediumValue: string | number,
+  ) => {
+    setSelectedHierarchiesToDelete((prev) => {
+      const currentHierarchiesToDelete = [...(prev || [])];
+
+      const matchingHierarchies = hierarchyList.statisticCategories
+        .filter(
+          (item) =>
+            item.large.value === oldLargeValue &&
+            item.medium.value === oldMediumValue,
+        )
+        .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
+
+      return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
+    });
+    setSelectedHierarchiesToUpdate((prev) => {
+      const currentHierarchiesToUpdate = [...(prev || [])];
+
+      return currentHierarchiesToUpdate.filter(
+        (hierarchy) =>
+          !(
+            hierarchy.largeStatisticCategory?.uuid == oldLargeValue &&
+            hierarchy.mediumStatisticCategory?.uuid == oldMediumValue
+          ),
+      );
+    });
+    setHierarchyList((prev) => {
+      const updatedHierarchyList = prev.map((org) => ({
+        ...org,
+        statisticCategories: [...org.statisticCategories],
+      }));
+
+      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
+        (hierarchy) => hierarchy.id === hierarchyList.id,
+      );
+
+      if (foundOrganizationHierarchyIndex !== -1) {
+        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
+          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
+          statisticCategories: [
+            ...updatedHierarchyList[
+              foundOrganizationHierarchyIndex
+            ].statisticCategories.filter(
+              (hierarchy) =>
+                !(
+                  hierarchy.large.value == oldLargeValue &&
+                  hierarchy.medium.value == oldMediumValue
+                ),
+            ),
+          ],
+        };
+      }
+
+      return updatedHierarchyList;
+    });
+  };
+
+  const handleDeleteSmallHierarchyCategory = (
+    oldLargeValue: string | number,
+    oldMediumValue: string | number,
+    oldSmallValue: string | number,
+  ) => {
+    setSelectedHierarchiesToDelete((prev) => {
+      const currentHierarchiesToDelete = [...(prev || [])];
+
+      const matchingHierarchies = hierarchyList.statisticCategories
+        .filter(
+          (item) =>
+            item.large.value == oldLargeValue &&
+            item.medium.value == oldMediumValue &&
+            item.small.value == oldSmallValue,
+        )
+        .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
+
+      return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
+    });
+    setSelectedHierarchiesToUpdate((prev) => {
+      const currentHierarchiesToUpdate = [...(prev || [])];
+
+      return currentHierarchiesToUpdate.filter(
+        (hierarchy) =>
+          !(
+            hierarchy.largeStatisticCategory?.uuid == oldLargeValue &&
+            hierarchy.mediumStatisticCategory?.uuid == oldMediumValue &&
+            hierarchy.smallStatisticCategory?.uuid == oldSmallValue
+          ),
+      );
+    });
+    setHierarchyList((prev) => {
+      const updatedHierarchyList = prev.map((org) => ({
+        ...org,
+        statisticCategories: [...org.statisticCategories],
+      }));
+
+      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
+        (hierarchy) => hierarchy.id === hierarchyList.id,
+      );
+
+      if (foundOrganizationHierarchyIndex !== -1) {
+        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
+          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
+          statisticCategories: [
+            ...updatedHierarchyList[
+              foundOrganizationHierarchyIndex
+            ].statisticCategories.filter(
+              (hierarchy) =>
+                !(
+                  hierarchy.large.value == oldLargeValue &&
+                  hierarchy.medium.value == oldMediumValue &&
+                  hierarchy.small.value == oldSmallValue
+                ),
+            ),
+          ],
+        };
+      }
+
+      return updatedHierarchyList;
+    });
+  };
+
+  // Check delete hierarchy category
+  const handleCheckDeleteHierarchyCategory = async (ids: string[]) => {
+    return await api.post(apiRouters.CHECK_ACTUAL_DURATION, {
+      ids,
+    });
+  };
+
+  const { mutateAsync: checkDeleteHierarchyCategory } = useMutation(
+    'postCheckDeleteHierarchyCategory',
+    handleCheckDeleteHierarchyCategory,
+  );
+
   return (
-    <div className="w-full p-5 bg-[#F8FAFC] rounded-[14px]" style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
+    <div
+      className="w-full p-5 bg-[#F8FAFC] rounded-[14px]"
+      style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium my-2 max-w-[100%] break-all">
         {organizationName}
       </p>
@@ -1085,212 +1698,21 @@ const TableComponent = ({
                               (element) =>
                                 element.value === row.original.large.value,
                             )}
-                            onChange={(e) => {
-                              setSelectedHierarchiesToUpdate((prev) => {
-                                const updatedHierarchiesToUpdate = [...prev];
-                                const statisticCategories =
-                                  hierarchyList.statisticCategories;
-                                const oldLargeValue = row.original.large.value;
-                                const newLarge = {
-                                  label: e.label,
-                                  value: e.value,
-                                  showBy: 'pulldown',
-                                  isValid: true,
-                                };
-
-                                const matchedRows = statisticCategories
-                                  .filter(
-                                    (item) =>
-                                      item.large.value === oldLargeValue,
-                                  )
-                                  .map((item) => ({
-                                    ...item,
-                                    large: newLarge,
-                                  }));
-                                const updatedHierarchies = matchedRows.map(
-                                  (row) => {
-                                    return {
-                                      organizationStatisticCategoryId: row.id,
-                                      organizationId:
-                                        hierarchyList.id as number,
-                                      largeStatisticCategory:
-                                        row.large.label == '' ||
-                                        isUUID(row.large.label as string)
-                                          ? null
-                                          : {
-                                              name: row.large.label as string,
-                                              uuid: row.large.value as string,
-                                            },
-                                      mediumStatisticCategory:
-                                        row.medium.label == '' ||
-                                        isUUID(row.medium.label as string)
-                                          ? null
-                                          : {
-                                              name: row.medium.label as string,
-                                              uuid: row.medium.value as string,
-                                            },
-                                      smallStatisticCategory:
-                                        row.small.label == '' ||
-                                        isUUID(row.small.label as string)
-                                          ? null
-                                          : {
-                                              name: row.small.label as string,
-                                              uuid: row.small.value as string,
-                                            },
-                                      color: row.color,
-                                      skillIds: row.skills.map((skill) =>
-                                        Number(skill.value),
-                                      ),
-                                    };
-                                  },
+                            onPendingChange={(e) => {
+                              const oldLargeOption = row.original.large;
+                              if (!isUUID(row.original.large.label)) {
+                                setWarningChangeCategoryModalOpen(true);
+                                setPendingSelection({
+                                  oldLargeOption,
+                                  newValue: e,
+                                  type: StatisticCategoryType.LARGE,
+                                });
+                              } else {
+                                handleChangeLargeCategoryByPulldown(
+                                  oldLargeOption,
+                                  e,
                                 );
-
-                                updatedHierarchies.forEach(
-                                  (updatedHierarchy) => {
-                                    const key = `${updatedHierarchy.organizationId}|${
-                                      updatedHierarchy.largeStatisticCategory
-                                        ?.uuid || ''
-                                    }|${updatedHierarchy.mediumStatisticCategory?.uuid || ''}|${
-                                      updatedHierarchy.smallStatisticCategory
-                                        ?.uuid || ''
-                                    }`;
-
-                                    const alreadyExists =
-                                      updatedHierarchiesToUpdate.some(
-                                        (item) =>
-                                          item.organizationStatisticCategoryId ===
-                                            updatedHierarchy.organizationStatisticCategoryId ||
-                                          `${item.organizationId}|${
-                                            item.largeStatisticCategory?.uuid ||
-                                            ''
-                                          }|${item.mediumStatisticCategory?.uuid || ''}|${
-                                            item.smallStatisticCategory?.uuid ||
-                                            ''
-                                          }` === key,
-                                      );
-
-                                    if (!alreadyExists) {
-                                      updatedHierarchiesToUpdate.push(
-                                        updatedHierarchy,
-                                      );
-                                    }
-                                  },
-                                );
-
-                                return updatedHierarchiesToUpdate;
-                              });
-
-                              setHierarchyList((prev) => {
-                                const updatedHierarchyList = prev.map(
-                                  (org) => ({
-                                    ...org,
-                                    statisticCategories: [
-                                      ...org.statisticCategories,
-                                    ],
-                                  }),
-                                );
-
-                                const foundOrganizationHierarchyIndex =
-                                  updatedHierarchyList.findIndex(
-                                    (hierarchy) =>
-                                      hierarchy.id === hierarchyList.id,
-                                  );
-
-                                if (foundOrganizationHierarchyIndex !== -1) {
-                                  const statisticCategories =
-                                    updatedHierarchyList[
-                                      foundOrganizationHierarchyIndex
-                                    ].statisticCategories;
-
-                                  const newLarge = {
-                                    label: e.label,
-                                    value: e.value,
-                                    showBy: 'pulldown',
-                                    isValid: true,
-                                  };
-
-                                  // Separate matching and non-matching rows
-                                  const matchedRows = statisticCategories
-                                    .filter(
-                                      (item) =>
-                                        item.large.value ===
-                                        row.original.large.value,
-                                    )
-                                    .map((item) => ({
-                                      ...item,
-                                      large: newLarge,
-                                    }));
-
-                                  const remainingRows =
-                                    statisticCategories.filter(
-                                      (item) =>
-                                        item.large.value !==
-                                        row.original.large.value,
-                                    );
-
-                                  // Find the last index where newLarge.value already exists
-                                  let lastIndex = -1;
-                                  remainingRows.forEach((item, index) => {
-                                    if (item.large.value === newLarge.value)
-                                      lastIndex = index;
-                                  });
-
-                                  const newStatisticCategories = [
-                                    ...remainingRows,
-                                  ];
-                                  if (lastIndex !== -1) {
-                                    newStatisticCategories.splice(
-                                      lastIndex + 1,
-                                      0,
-                                      ...matchedRows,
-                                    );
-                                  } else {
-                                    // Instead of pushing, find the **original** position of row.original.large.value
-                                    const originalIndex =
-                                      statisticCategories.findIndex(
-                                        (item) =>
-                                          item.large.value ===
-                                          row.original.large.value,
-                                      );
-
-                                    if (originalIndex !== -1) {
-                                      // Insert in the same position as original row
-                                      newStatisticCategories.splice(
-                                        originalIndex,
-                                        0,
-                                        ...matchedRows,
-                                      );
-                                    } else {
-                                      // If no match found, append to the end
-                                      newStatisticCategories.push(
-                                        ...matchedRows,
-                                      );
-                                    }
-                                  }
-
-                                  const uniqueMap = new Map();
-                                  const filteredStatisticCategories =
-                                    newStatisticCategories.filter((item) => {
-                                      const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
-                                      if (uniqueMap.has(key)) return false;
-                                      uniqueMap.set(key, true);
-                                      return true;
-                                    });
-
-                                  // Update hierarchy list
-                                  updatedHierarchyList[
-                                    foundOrganizationHierarchyIndex
-                                  ] = {
-                                    ...updatedHierarchyList[
-                                      foundOrganizationHierarchyIndex
-                                    ],
-                                    statisticCategories:
-                                      filteredStatisticCategories,
-                                  };
-                                }
-
-                                return updatedHierarchyList;
-                              });
+                              }
                             }}
                           />
                         )
@@ -1300,70 +1722,26 @@ const TableComponent = ({
                         name="Delete"
                         src={'/icons/delete-gray.svg'}
                         className="w-[15px] h-[17px] hover:cursor-pointer"
-                        onClick={() => {
-                          setSelectedHierarchiesToDelete((prev) => {
-                            const currentHierarchiesToDelete = [
-                              ...(prev || []),
-                            ];
-
-                            const matchingHierarchies =
-                              hierarchyList.statisticCategories
-                                .filter(
-                                  (item) =>
-                                    item.large.value ===
-                                    row.original.large.value,
-                                )
-                                .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
-
-                            return [
-                              ...currentHierarchiesToDelete,
-                              ...matchingHierarchies,
-                            ]; // Spread to avoid nested arrays
-                          });
-                          setSelectedHierarchiesToUpdate((prev) => {
-                            const currentHierarchiesToUpdate = [
-                              ...(prev || []),
-                            ];
-
-                            return currentHierarchiesToUpdate.filter(
-                              (hierarchy) =>
-                                hierarchy.largeStatisticCategory?.uuid !=
-                                row.original.large.value,
+                        onClick={async () => {
+                          const oldLargeValue = row.original.large.value;
+                          const matchingHierarchies =
+                            hierarchyList.statisticCategories
+                              .filter(
+                                (item) => item.large.value === oldLargeValue,
+                              )
+                              .filter(
+                                (hierarchy) => !isUUID(String(hierarchy.id)),
+                              )
+                              .map((hierarchy) => String(hierarchy.id));
+                          const { data } =
+                            await checkDeleteHierarchyCategory(
+                              matchingHierarchies,
                             );
-                          });
-                          setHierarchyList((prev) => {
-                            const updatedHierarchyList = prev.map((org) => ({
-                              ...org,
-                              statisticCategories: [...org.statisticCategories],
-                            }));
-
-                            const foundOrganizationHierarchyIndex =
-                              updatedHierarchyList.findIndex(
-                                (hierarchy) =>
-                                  hierarchy.id === hierarchyList.id,
-                              );
-
-                            if (foundOrganizationHierarchyIndex !== -1) {
-                              updatedHierarchyList[
-                                foundOrganizationHierarchyIndex
-                              ] = {
-                                ...updatedHierarchyList[
-                                  foundOrganizationHierarchyIndex
-                                ],
-                                statisticCategories: [
-                                  ...updatedHierarchyList[
-                                    foundOrganizationHierarchyIndex
-                                  ].statisticCategories.filter(
-                                    (hierarchy) =>
-                                      hierarchy.large.value !=
-                                      row.original.large.value,
-                                  ),
-                                ],
-                              };
-                            }
-
-                            return updatedHierarchyList;
-                          });
+                          if (!data.hasActualDuration) {
+                            handleDeleteLargeHierarchyCategory(oldLargeValue);
+                          } else {
+                            setWarningDeleteCategoryModalOpen(true);
+                          }
                         }}
                       />
                     </div>
@@ -1433,231 +1811,24 @@ const TableComponent = ({
                                   (element) =>
                                     element.value === row.original.medium.value,
                                 )}
-                                onChange={(e) => {
-                                  setSelectedHierarchiesToUpdate((prev) => {
-                                    const updatedHierarchiesToUpdate = [
-                                      ...prev,
-                                    ];
-                                    const statisticCategories =
-                                      hierarchyList.statisticCategories;
-                                    const oldMediumValue =
-                                      row.original.medium.value;
-                                    const newMedium = {
-                                      label: e.label,
-                                      value: e.value,
-                                      showBy: 'pulldown',
-                                      isValid: true,
-                                    };
-                                    const matchedRows = statisticCategories
-                                      .filter(
-                                        (item) =>
-                                          item.medium.value ===
-                                            oldMediumValue &&
-                                          item.large.value ===
-                                            row.original.large.value,
-                                      )
-                                      .map((item) => ({
-                                        ...item,
-                                        medium: newMedium,
-                                      }));
-
-                                    const updatedHierarchies = matchedRows.map(
-                                      (row) => {
-                                        return {
-                                          organizationStatisticCategoryId:
-                                            row.id,
-                                          organizationId:
-                                            hierarchyList.id as number,
-                                          largeStatisticCategory:
-                                            row.large.label == '' ||
-                                            isUUID(row.large.label as string)
-                                              ? null
-                                              : {
-                                                  name: row.large
-                                                    .label as string,
-                                                  uuid: row.large
-                                                    .value as string,
-                                                },
-                                          mediumStatisticCategory:
-                                            row.medium.label == '' ||
-                                            isUUID(row.medium.label as string)
-                                              ? null
-                                              : {
-                                                  name: row.medium
-                                                    .label as string,
-                                                  uuid: row.medium
-                                                    .value as string,
-                                                },
-                                          smallStatisticCategory:
-                                            row.small.label == '' ||
-                                            isUUID(row.small.label as string)
-                                              ? null
-                                              : {
-                                                  name: row.small
-                                                    .label as string,
-                                                  uuid: row.small
-                                                    .value as string,
-                                                },
-                                          color: row.color,
-                                          skillIds: row.skills.map((skill) =>
-                                            Number(skill.value),
-                                          ),
-                                        };
-                                      },
+                                onPendingChange={(e) => {
+                                  const oldMediumOption = row.original.medium;
+                                  const oldLargeOption = row.original.large;
+                                  if (!isUUID(row.original.medium.label)) {
+                                    setWarningChangeCategoryModalOpen(true);
+                                    setPendingSelection({
+                                      oldLargeOption,
+                                      oldMediumOption,
+                                      newValue: e,
+                                      type: StatisticCategoryType.MEDIUM,
+                                    });
+                                  } else {
+                                    handleChangeMediumCategoryByPulldown(
+                                      oldLargeOption,
+                                      oldMediumOption!,
+                                      e,
                                     );
-
-                                    updatedHierarchies.forEach(
-                                      (updatedHierarchy) => {
-                                        const existingIndex =
-                                          updatedHierarchiesToUpdate.findIndex(
-                                            (item) =>
-                                              item.organizationStatisticCategoryId ===
-                                              updatedHierarchy.organizationStatisticCategoryId,
-                                          );
-                                        if (existingIndex != -1) {
-                                          updatedHierarchiesToUpdate[
-                                            existingIndex
-                                          ] = updatedHierarchy;
-                                        } else {
-                                          updatedHierarchiesToUpdate.push(
-                                            updatedHierarchy,
-                                          );
-                                        }
-                                      },
-                                    );
-
-                                    return updatedHierarchiesToUpdate;
-                                  });
-                                  setHierarchyList((prev) => {
-                                    const updatedHierarchyList = prev.map(
-                                      (org) => ({
-                                        ...org,
-                                        statisticCategories: [
-                                          ...org.statisticCategories,
-                                        ],
-                                      }),
-                                    );
-
-                                    const foundOrganizationHierarchyIndex =
-                                      updatedHierarchyList.findIndex(
-                                        (hierarchy) =>
-                                          hierarchy.id == hierarchyList.id,
-                                      );
-
-                                    if (
-                                      foundOrganizationHierarchyIndex !== -1
-                                    ) {
-                                      const statisticCategories =
-                                        updatedHierarchyList[
-                                          foundOrganizationHierarchyIndex
-                                        ].statisticCategories;
-
-                                      const newMedium = {
-                                        label: e.label,
-                                        value: e.value,
-                                        showBy: 'pulldown',
-                                        isValid: true,
-                                      };
-
-                                      // Separate matching and non-matching rows
-                                      const matchedRows = statisticCategories
-                                        .filter(
-                                          (item) =>
-                                            item.medium.value ==
-                                              row.original.medium.value &&
-                                            item.large.value ==
-                                              row.original.large.value,
-                                        )
-                                        .map((item) => ({
-                                          ...item,
-                                          medium: newMedium,
-                                        }));
-
-                                      const remainingRows =
-                                        statisticCategories.filter(
-                                          (item) =>
-                                            !(
-                                              item.medium.value ==
-                                                row.original.medium.value &&
-                                              item.large.value ==
-                                                row.original.large.value
-                                            ),
-                                        );
-
-                                      // Find the last index where newMedium.value already exists
-                                      let lastIndex = -1;
-                                      remainingRows.forEach((item, index) => {
-                                        if (
-                                          item.large.value ==
-                                            row.original.large.value &&
-                                          item.medium.value === newMedium.value
-                                        )
-                                          lastIndex = index;
-                                      });
-
-                                      // Maintain position if lastIndex is -1
-                                      const newStatisticCategories = [
-                                        ...remainingRows,
-                                      ];
-                                      if (lastIndex !== -1) {
-                                        newStatisticCategories.splice(
-                                          lastIndex + 1,
-                                          0,
-                                          ...matchedRows,
-                                        );
-                                      } else {
-                                        // Instead of pushing, find the **original** position of row.original.medium.value
-                                        const originalIndex =
-                                          statisticCategories.findIndex(
-                                            (item) =>
-                                              item.medium.value ==
-                                                row.original.medium.value &&
-                                              item.large.value ==
-                                                row.original.large.value,
-                                          );
-
-                                        if (originalIndex !== -1) {
-                                          // Insert in the same position as original row
-                                          newStatisticCategories.splice(
-                                            originalIndex,
-                                            0,
-                                            ...matchedRows,
-                                          );
-                                        } else {
-                                          // If no match found, append to the end
-                                          newStatisticCategories.push(
-                                            ...matchedRows,
-                                          );
-                                        }
-                                      }
-
-                                      // Remove duplicates
-                                      const uniqueMap = new Map();
-                                      const filteredStatisticCategories =
-                                        newStatisticCategories.filter(
-                                          (item) => {
-                                            const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
-                                            if (uniqueMap.has(key))
-                                              return false;
-                                            uniqueMap.set(key, true);
-                                            return true;
-                                          },
-                                        );
-
-                                      // Update hierarchy list
-                                      updatedHierarchyList[
-                                        foundOrganizationHierarchyIndex
-                                      ] = {
-                                        ...updatedHierarchyList[
-                                          foundOrganizationHierarchyIndex
-                                        ],
-                                        statisticCategories:
-                                          filteredStatisticCategories,
-                                      };
-                                    }
-
-                                    return updatedHierarchyList;
-                                  });
+                                  }
                                 }}
                               />
                             </div>
@@ -1668,84 +1839,33 @@ const TableComponent = ({
                             name="Delete"
                             src={'/icons/delete-gray.svg'}
                             className="w-[15px] h-[17px] hover:cursor-pointer"
-                            onClick={() => {
-                              setSelectedHierarchiesToDelete((prev) => {
-                                const currentHierarchiesToDelete = [
-                                  ...(prev || []),
-                                ];
-
-                                const matchingHierarchies =
-                                  hierarchyList.statisticCategories
-                                    .filter(
-                                      (item) =>
-                                        item.large.value ===
-                                          row.original.large.value &&
-                                        item.medium.value ===
-                                          row.original.medium.value,
-                                    )
-                                    .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
-
-                                return [
-                                  ...currentHierarchiesToDelete,
-                                  ...matchingHierarchies,
-                                ]; // Spread to avoid nested arrays
-                              });
-                              setSelectedHierarchiesToUpdate((prev) => {
-                                const currentHierarchiesToUpdate = [
-                                  ...(prev || []),
-                                ];
-
-                                return currentHierarchiesToUpdate.filter(
-                                  (hierarchy) =>
-                                    !(
-                                      hierarchy.largeStatisticCategory?.uuid ==
-                                        row.original.large.value &&
-                                      hierarchy.mediumStatisticCategory?.uuid ==
-                                        row.original.medium.value
-                                    ),
-                                );
-                              });
-                              setHierarchyList((prev) => {
-                                const updatedHierarchyList = prev.map(
-                                  (org) => ({
-                                    ...org,
-                                    statisticCategories: [
-                                      ...org.statisticCategories,
-                                    ],
-                                  }),
-                                );
-
-                                const foundOrganizationHierarchyIndex =
-                                  updatedHierarchyList.findIndex(
+                            onClick={async () => {
+                              const oldLargeValue = row.original.large.value;
+                              const oldMediumValue = row.original.medium.value;
+                              const matchingHierarchies =
+                                hierarchyList.statisticCategories
+                                  .filter(
+                                    (item) =>
+                                      item.large.value === oldLargeValue &&
+                                      item.medium.value === oldMediumValue,
+                                  )
+                                  .filter(
                                     (hierarchy) =>
-                                      hierarchy.id === hierarchyList.id,
-                                  );
-
-                                if (foundOrganizationHierarchyIndex !== -1) {
-                                  updatedHierarchyList[
-                                    foundOrganizationHierarchyIndex
-                                  ] = {
-                                    ...updatedHierarchyList[
-                                      foundOrganizationHierarchyIndex
-                                    ],
-                                    statisticCategories: [
-                                      ...updatedHierarchyList[
-                                        foundOrganizationHierarchyIndex
-                                      ].statisticCategories.filter(
-                                        (hierarchy) =>
-                                          !(
-                                            hierarchy.large.value ==
-                                              row.original.large.value &&
-                                            hierarchy.medium.value ==
-                                              row.original.medium.value
-                                          ),
-                                      ),
-                                    ],
-                                  };
-                                }
-
-                                return updatedHierarchyList;
-                              });
+                                      !isUUID(String(hierarchy.id)),
+                                  )
+                                  .map((hierarchy) => String(hierarchy.id));
+                              const { data } =
+                                await checkDeleteHierarchyCategory(
+                                  matchingHierarchies,
+                                );
+                              if (!data.hasActualDuration) {
+                                handleDeleteMediumHierarchyCategory(
+                                  oldLargeValue,
+                                  oldMediumValue,
+                                );
+                              } else {
+                                setWarningDeleteCategoryModalOpen(true);
+                              }
                             }}
                           />
                         )}
@@ -1827,114 +1947,33 @@ const TableComponent = ({
                                 (element) =>
                                   element.value == row.original.small.value,
                               )}
-                              onChange={(e) => {
-                                setSelectedHierarchiesToUpdate((prev) => {
-                                  const updatedHierarchiesToUpdate = [...prev];
-
-                                  const existingIndex =
-                                    updatedHierarchiesToUpdate.findIndex(
-                                      (item) =>
-                                        item.organizationStatisticCategoryId ===
-                                        row.original.id,
-                                    );
-
-                                  const newEntry = {
-                                    organizationStatisticCategoryId:
-                                      row.original.id,
-                                    organizationId: hierarchyList.id as number,
-                                    largeStatisticCategory:
-                                      row.original.large.label == '' ||
-                                      isUUID(row.original.large.label as string)
-                                        ? null
-                                        : {
-                                            name: row.original.large
-                                              .label as string,
-                                            uuid: row.original.large
-                                              .value as string,
-                                          },
-                                    mediumStatisticCategory:
-                                      row.original.medium.label == '' ||
-                                      isUUID(
-                                        row.original.medium.label as string,
-                                      )
-                                        ? null
-                                        : {
-                                            name: row.original.medium
-                                              .label as string,
-                                            uuid: row.original.medium
-                                              .value as string,
-                                          },
-                                    smallStatisticCategory: {
-                                      name: e.label as string,
-                                      uuid: e.value as string,
-                                    },
-                                    color: row.original.color,
-                                    skillIds: row.original.skills.map((skill) =>
-                                      Number(skill.value),
-                                    ),
-                                  };
-
-                                  if (existingIndex !== -1) {
-                                    // If it exists, replace it
-                                    updatedHierarchiesToUpdate[existingIndex] =
-                                      newEntry;
-                                  } else {
-                                    // Otherwise, add it
-                                    updatedHierarchiesToUpdate.push(newEntry);
-                                  }
-
-                                  return updatedHierarchiesToUpdate;
-                                });
-                                setHierarchyList((prev) => {
-                                  const updatedHierarchyList = prev.map(
-                                    (org) => ({
-                                      ...org,
-                                      statisticCategories: [
-                                        ...org.statisticCategories,
-                                      ],
-                                    }),
+                              onPendingChange={(e) => {
+                                const oldMediumOption = row.original.medium;
+                                const oldLargeOption = row.original.large;
+                                const oldRowId = row.original.id;
+                                const oldRowSkill = row.original.skills;
+                                const oldRowColor = row.original.color;
+                                if (!isUUID(row.original.small.label)) {
+                                  setWarningChangeCategoryModalOpen(true);
+                                  setPendingSelection({
+                                    oldLargeOption,
+                                    oldMediumOption,
+                                    oldRowId,
+                                    oldRowSkill,
+                                    oldRowColor,
+                                    newValue: e,
+                                    type: StatisticCategoryType.SMALL,
+                                  });
+                                } else {
+                                  handleChangeSmallCategoryByPulldown(
+                                    oldLargeOption,
+                                    oldMediumOption!,
+                                    oldRowId!,
+                                    oldRowSkill!,
+                                    oldRowColor!,
+                                    e,
                                   );
-
-                                  const foundOrganizationHierarchyIndex =
-                                    updatedHierarchyList.findIndex(
-                                      (hierarchy) =>
-                                        hierarchy.id == hierarchyList.id,
-                                    );
-
-                                  if (foundOrganizationHierarchyIndex !== -1) {
-                                    const updatedCategories =
-                                      updatedHierarchyList[
-                                        foundOrganizationHierarchyIndex
-                                      ].statisticCategories.map((hierarchy) =>
-                                        hierarchy.id === row.original.id
-                                          ? {
-                                              ...hierarchy,
-                                              small: {
-                                                label: e.label,
-                                                value: e.value,
-                                                showBy: 'pulldown',
-                                                isValid: true,
-                                              },
-                                            }
-                                          : hierarchy,
-                                      );
-
-                                    const uniqueMap = new Map();
-                                    const filteredCategories =
-                                      updatedCategories.filter((item) => {
-                                        const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
-                                        if (uniqueMap.has(key)) return false;
-                                        uniqueMap.set(key, true);
-                                        return true;
-                                      });
-
-                                    updatedHierarchyList[
-                                      foundOrganizationHierarchyIndex
-                                    ].statisticCategories = filteredCategories;
-                                  }
-
-                                  return updatedHierarchyList;
-                                });
+                                }
                               }}
                             />
                           </div>
@@ -1945,88 +1984,35 @@ const TableComponent = ({
                           name="Delete"
                           src={'/icons/delete-gray.svg'}
                           className="w-[15px] h-[17px] hover:cursor-pointer"
-                          onClick={() => {
-                            setSelectedHierarchiesToDelete((prev) => {
-                              const currentHierarchiesToDelete = [
-                                ...(prev || []),
-                              ];
-
-                              const matchingHierarchies =
-                                hierarchyList.statisticCategories
-                                  .filter(
-                                    (item) =>
-                                      item.large.value ==
-                                        row.original.large.value &&
-                                      item.medium.value ==
-                                        row.original.medium.value &&
-                                      item.small.value ==
-                                        row.original.small.value,
-                                  )
-                                  .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
-
-                              return [
-                                ...currentHierarchiesToDelete,
-                                ...matchingHierarchies,
-                              ]; // Spread to avoid nested arrays
-                            });
-                            setSelectedHierarchiesToUpdate((prev) => {
-                              const currentHierarchiesToUpdate = [
-                                ...(prev || []),
-                              ];
-
-                              return currentHierarchiesToUpdate.filter(
-                                (hierarchy) =>
-                                  !(
-                                    hierarchy.largeStatisticCategory?.uuid ==
-                                      row.original.large.value &&
-                                    hierarchy.mediumStatisticCategory?.uuid ==
-                                      row.original.medium.value &&
-                                    hierarchy.smallStatisticCategory?.uuid ==
-                                      row.original.small.value
-                                  ),
+                          onClick={async () => {
+                            const oldLargeValue = row.original.large.value;
+                            const oldMediumValue = row.original.medium.value;
+                            const oldSmallValue = row.original.small.value;
+                            const matchingHierarchies =
+                              hierarchyList.statisticCategories
+                                .filter(
+                                  (item) =>
+                                    item.large.value == oldLargeValue &&
+                                    item.medium.value == oldMediumValue &&
+                                    item.small.value == oldSmallValue,
+                                )
+                                .filter(
+                                  (hierarchy) => !isUUID(String(hierarchy.id)),
+                                )
+                                .map((hierarchy) => String(hierarchy.id));
+                            const { data } =
+                              await checkDeleteHierarchyCategory(
+                                matchingHierarchies,
                               );
-                            });
-                            setHierarchyList((prev) => {
-                              const updatedHierarchyList = prev.map((org) => ({
-                                ...org,
-                                statisticCategories: [
-                                  ...org.statisticCategories,
-                                ],
-                              }));
-
-                              const foundOrganizationHierarchyIndex =
-                                updatedHierarchyList.findIndex(
-                                  (hierarchy) =>
-                                    hierarchy.id === hierarchyList.id,
-                                );
-
-                              if (foundOrganizationHierarchyIndex !== -1) {
-                                updatedHierarchyList[
-                                  foundOrganizationHierarchyIndex
-                                ] = {
-                                  ...updatedHierarchyList[
-                                    foundOrganizationHierarchyIndex
-                                  ],
-                                  statisticCategories: [
-                                    ...updatedHierarchyList[
-                                      foundOrganizationHierarchyIndex
-                                    ].statisticCategories.filter(
-                                      (hierarchy) =>
-                                        !(
-                                          hierarchy.large.value ==
-                                            row.original.large.value &&
-                                          hierarchy.medium.value ==
-                                            row.original.medium.value &&
-                                          hierarchy.small.value ==
-                                            row.original.small.value
-                                        ),
-                                    ),
-                                  ],
-                                };
-                              }
-
-                              return updatedHierarchyList;
-                            });
+                            if (!data.hasActualDuration) {
+                              handleDeleteSmallHierarchyCategory(
+                                oldLargeValue,
+                                oldMediumValue,
+                                oldSmallValue,
+                              );
+                            } else {
+                              setWarningDeleteCategoryModalOpen(true);
+                            }
                           }}
                         />
                       )}
@@ -2175,6 +2161,63 @@ const TableComponent = ({
           </tr>
         </tbody>
       </Table>
+
+      {warningDeleteCategoryModalOpen && (
+        <WarningDeleteHierarchyCategoryModal
+          open={warningDeleteCategoryModalOpen}
+          onClose={() => {
+            setWarningDeleteCategoryModalOpen(false);
+          }}
+        />
+      )}
+
+      {warningChangeCategoryModalOpen && (
+        <WarningChangeHierarchyCategoryModal
+          open={warningChangeCategoryModalOpen}
+          onConfirm={() => {
+            if (!pendingSelection) return;
+
+            const {
+              oldLargeOption,
+              oldMediumOption,
+              oldRowId,
+              oldRowSkill,
+              oldRowColor,
+              newValue,
+              type,
+            } = pendingSelection;
+            switch (type) {
+              case StatisticCategoryType.LARGE:
+                handleChangeLargeCategoryByPulldown(oldLargeOption, newValue);
+                break;
+              case StatisticCategoryType.MEDIUM:
+                handleChangeMediumCategoryByPulldown(
+                  oldLargeOption,
+                  oldMediumOption!,
+                  newValue,
+                );
+                break;
+              case StatisticCategoryType.SMALL:
+                handleChangeSmallCategoryByPulldown(
+                  oldLargeOption,
+                  oldMediumOption!,
+                  oldRowId!,
+                  oldRowSkill!,
+                  oldRowColor!,
+                  newValue,
+                );
+                break;
+            }
+
+            setWarningChangeCategoryModalOpen(false);
+            setPendingSelection(null);
+          }}
+          onClose={() => {
+            setWarningChangeCategoryModalOpen(false);
+            setPendingSelection(null);
+          }}
+        />
+      )}
     </div>
   );
 };
