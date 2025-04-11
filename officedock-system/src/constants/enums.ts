@@ -341,8 +341,7 @@ export enum ScreenName {
   ACTUAL_DURATION = 'actualDuration',
   LIST_MEMBER = 'listMember',
   ORGANIZATION_HIERARCHY = 'organizationHierarchy',
-  TEAM_STATISTIC = 'teamStatistic',
-  TEAM_TASK = 'teamTask',
+  TEAM_DOCK = 'teamdock',
   TEAM_DAILY_REPORT = 'teamDailyReport',
 }
 
@@ -352,6 +351,8 @@ export enum PermissionType {
   TEAM_AND_SUB_EDIT = '自チームと下位チームのみ編集可',
   TEAM_AND_SUB_VIEW = '自チームと下位チームのみ閲覧可',
   NOT_ALLOWED = '不可',
+  ALL_TEAMS = '全チーム参加',
+  TEAM_AND_SUB = '自チームと下位チームのみ参加'
 }
 
 export enum CurrentScreen {

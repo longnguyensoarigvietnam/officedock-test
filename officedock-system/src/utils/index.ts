@@ -447,9 +447,9 @@ export const getPermissionOptionDropdown = (
   if (
     [
       ScreenName.USER,
-      ScreenName.CATEGORY,
       ScreenName.ORGANIZATION,
-      ScreenName.TAG,
+      ScreenName.ORGANIZATION_HIERARCHY,
+      ScreenName.SKILL,
     ].includes(screen)
   ) {
     return includePermissions([
@@ -458,37 +458,40 @@ export const getPermissionOptionDropdown = (
       PermissionType.NOT_ALLOWED,
     ]);
   }
-  if (
-    [
-      ScreenName.ROLE,
-    ].includes(screen)
-  ) {
+  if ([ScreenName.ROLE].includes(screen)) {
     return includePermissions([
       PermissionType.EDITABLE,
       PermissionType.NOT_ALLOWED,
     ]);
   }
-  if (
-    [
-      ScreenName.STATISTIC,
-    ].includes(screen)
-  ) {
-    return includePermissions([
-      PermissionType.VIEW_ONLY,
-      PermissionType.TEAM_AND_SUB_VIEW,
-    ]);
-  }
-  if (
-    [
-      ScreenName.TEAM_TASK,
-    ].includes(screen)
-  ) {
+  if ([ScreenName.CATEGORY, ScreenName.TAG].includes(screen)) {
     return includePermissions([
       PermissionType.EDITABLE,
       PermissionType.TEAM_AND_SUB_EDIT,
+      PermissionType.VIEW_ONLY,
+      PermissionType.NOT_ALLOWED,
     ]);
   }
-  return permissionList;
+  if ([ScreenName.TEAM_DAILY_REPORT].includes(screen)) {
+    return includePermissions([
+      PermissionType.VIEW_ONLY,
+      PermissionType.TEAM_AND_SUB_VIEW,
+      PermissionType.NOT_ALLOWED,
+    ]);
+  }
+  if ([ScreenName.TEAM_DOCK].includes(screen)) {
+    return includePermissions([
+      PermissionType.ALL_TEAMS,
+      PermissionType.TEAM_AND_SUB,
+    ]);
+  }
+  return includePermissions([
+    PermissionType.VIEW_ONLY,
+    PermissionType.EDITABLE,
+    PermissionType.TEAM_AND_SUB_EDIT,
+    PermissionType.TEAM_AND_SUB_VIEW,
+    PermissionType.NOT_ALLOWED,
+  ]);
 };
 
 export const showBackgroundColorByTime = (hour: number) => {
