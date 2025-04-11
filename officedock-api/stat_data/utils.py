@@ -301,14 +301,19 @@ def aggregate_durations(
         durations, large_category_id, medium_category_id
     )
     if filter_durations.exists():
-        category_dict["empty_category"] = {
-            "category_id": None,
-            "category_name": NONE_CATEGORY,
-            "category_color": CategoryColors.GRAY.value,
-            "duration": annotate_duration(
+        if category_dict.get("empty_category") is None:
+            category_dict["empty_category"] = {
+                "category_id": None,
+                "category_name": NONE_CATEGORY,
+                "category_color": CategoryColors.GRAY.value,
+                "duration": annotate_duration(
+                    filter_durations, start_of_day, end_of_day
+                )["total_duration"],
+            }
+        else:
+            category_dict["empty_category"]["duration"] += annotate_duration(
                 filter_durations, start_of_day, end_of_day
-            )["total_duration"],
-        }
+            )["total_duration"]
 
     return list(category_dict.values())
 

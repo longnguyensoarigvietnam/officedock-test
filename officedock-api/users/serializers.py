@@ -454,9 +454,6 @@ class UserLoginSerializer(BaseUserSerializer):
     """
 
     profile = ProfileSerializer()
-    company = CompanySerializer(read_only=True)
-    roles = RoleSerializer(read_only=True, many=True)
-    setting = SettingSerializer(read_only=True)
     unread_terms = serializers.SerializerMethodField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
 
@@ -468,12 +465,9 @@ class UserLoginSerializer(BaseUserSerializer):
             "email",
             "is_two_factor_auth",
             "two_factor_auth_email",
-            "roles",
             "permissions",
             "profile",
-            "company",
             "login_type",
-            "setting",
             "unread_terms",
         ]
 
