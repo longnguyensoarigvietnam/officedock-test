@@ -259,12 +259,12 @@ const PercentageCategoryTeam = ({
                 name="statistic-active icon"
                 src={`/icons/statistic-active.svg`}
               />
-              <span className="text-black font-semibold text-[18px] relative top-[2px]">
+              <span className="text-black w-[156px] flex-shrink-0 font-semibold text-[18px] relative top-[2px]">
                 カテゴリーの割合
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-[240px]  relative">
+              <div className="w-[240px] flex-shrink-0  relative">
                 <MultiSelectDropdown
                   isShowIconFilter
                   options={tagsOptions}
@@ -295,16 +295,14 @@ const PercentageCategoryTeam = ({
                   </span>
                 )}
               </div>
-              <div className="relative right-[224px] top-0">
-                <div className="flex gap-2 ">
+              <div className="relative flex-grow right-[224px] top-0">
+                <div className="flex gap-2 flex-wrap w-full flex-shrink-0  ">
                   {selectedTags.map((item) => {
                     return (
                       <div
                         key={item.value}
-                        className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                        <span className="min-w-[32px]  truncate">
-                          {item.label}
-                        </span>
+                        className="min-w-[66px] max-w-[400px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                        <span className=" truncate">{item.label}</span>
                         <ImageRound
                           onClick={() => {
                             removeTag(item);

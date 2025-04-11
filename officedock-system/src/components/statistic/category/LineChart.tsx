@@ -666,19 +666,19 @@ const LineChart = ({
               name="statistic line chart icon"
               src={`/icons/statistic-line-chart.svg`}
             />
-            <span className="text-black font-semibold text-[18px] relative top-[2px]">
+            <span className="text-black w-[210px] flex-shrink-0  font-semibold text-[18px] relative top-[2px]">
               期間における時間の推移
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-[240px] relative">
+            <div className="w-[240px] flex-shrink-0 relative">
               <MultiSelectDropdown
                 isShowIconFilter
                 options={tagsOptions}
                 optionClassName="!top-6"
                 labelOptionClass="break-words w-[190px]"
                 placeholder="集計対象のタグを選択"
-                className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
+                className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                 selectedOptions={selectedTags || []}
                 onChange={(selected) => {
                   let updatedTagIds = [];
@@ -702,8 +702,8 @@ const LineChart = ({
                 </span>
               )}
             </div>
-            <div className="relative right-[224px] top-0">
-              <div className="flex gap-2 flex-wrap ">
+            <div className="relative flex-grow right-[224px] top-0">
+              <div className="flex gap-2 w-full flex-shrink-0 flex-wrap ">
                 {selectedTags.map((item) => {
                   return (
                     <div

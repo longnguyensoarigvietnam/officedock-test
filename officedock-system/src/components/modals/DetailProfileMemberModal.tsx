@@ -1,5 +1,4 @@
 import { memo, useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { useMutation } from 'react-query';
 import { useRouter } from 'next/navigation';
 
@@ -12,12 +11,11 @@ import {
   SkeletonElement,
 } from '@components/common/SkeletonLoading';
 
-import { ItemStartType, UserRoles } from '@constants/enums';
+import { ItemStartType } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { NO_EVENT_MEMBER, TASK_STARTING } from '@constants';
 
 import useUserDetail from '@hooks/useUserDetail';
-import { hasRole } from '@utils';
 import { ChatRoomItem } from '@interfaces/chat';
 import api from '@base/api';
 
@@ -52,7 +50,6 @@ const DetailProfileMemberModal = memo(
     onClose,
   }: DetailProfileMemberProps) => {
     const router = useRouter();
-    const { data: session } = useSession();
     const [isCalling, setIsCalling] = useState(true);
     const { userDetail } = useUserDetail({
       userId: userId,
@@ -180,39 +177,38 @@ const DetailProfileMemberModal = memo(
                   />
                   <span>チャット</span>
                 </Button>
-                {session &&
-                  hasRole(session?.user.roles, UserRoles.SYSTEM_ADMIN) && (
-                    <>
-                      <Button
-                        onClick={() => {
-                          router.push(pageRouters.SKILL_MAP.href);
-                        }}
-                        className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
-                        <ImageRound
-                          src="/icons/skill-map.svg"
-                          name="Extend box"
-                          className={`!w-4 !h-4 `}
-                        />
-                        <span>スキルマップ</span>
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          router.push(
-                            `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(
-                              String(userDetail?.id),
-                            )}?organization=${organizationId}`,
-                          );
-                        }}
-                        className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2 ">
-                        <ImageRound
-                          src="/icons/daily-report.svg"
-                          name="Extend box"
-                          className={`!w-4 !h-4 `}
-                        />
-                        <span>日報</span>
-                      </Button>
-                    </>
-                  )}
+                {
+                  <>
+                    <Button
+                      onClick={() => {
+                        router.push(pageRouters.SKILL_MAP.href);
+                      }}
+                      className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
+                      <ImageRound
+                        src="/icons/skill-map.svg"
+                        name="Extend box"
+                        className={`!w-4 !h-4 `}
+                      />
+                      <span>スキルマップ</span>
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        router.push(
+                          `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(
+                            String(userDetail?.id),
+                          )}?organization=${organizationId}`,
+                        );
+                      }}
+                      className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2 ">
+                      <ImageRound
+                        src="/icons/daily-report.svg"
+                        name="Extend box"
+                        className={`!w-4 !h-4 `}
+                      />
+                      <span>日報</span>
+                    </Button>
+                  </>
+                }
               </div>
             </div>
           </div>
