@@ -232,7 +232,6 @@ const ListRoles = () => {
                             name="Detail"
                             src={'/icons/detail-gray.svg'}
                             className="w-[13px] h-[15px] hover:cursor-pointer"
-                            onClick={() => handleOpenDeleteRoleModal(element)}
                           />
                         </div>
                       </Link>
