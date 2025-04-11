@@ -78,14 +78,7 @@ const ListUsers = () => {
   const [organizationUserOptions, setOrganizationUserOptions] = useState<
     OptionDropdownType[]
   >([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-
-  const [filterRequest, setFilterRequest] = useState({
-    companyName: '',
-    organizationId: '',
-    role: '',
-  });
 
   const [userEditId, setUserEditId] = useState<number | null>(null);
   const [userEditDetail, setUserEditDetail] = useState<User | null>(null);
@@ -110,6 +103,22 @@ const ListUsers = () => {
   const { creationRoleUserData } = useCreationRoleUser({});
   const debouncedSearch = useDebounceText(search, 1000);
 
+  const [debouncedParams, setDebouncedParams] = useState({
+    search: '',
+    companyName: '',
+    organizationId: '',
+    role: '',
+    page: 1,
+  });
+
+  useEffect(() => {
+    setDebouncedParams((prev) => ({
+      ...prev,
+      search: debouncedSearch,
+      page: 1,
+    }));
+  }, [debouncedSearch]);
+
   useCreationOrganization({
     onSuccess: (data) => {
       setOrganizationUserOptions([
@@ -127,14 +136,14 @@ const ListUsers = () => {
 
   const { userList, refetchUserList } = useUserList(
     {
-      page: currentPage,
+      page: debouncedParams.page,
       pageSize,
     },
     {
-      fullName: debouncedSearch,
-      companyName: filterRequest.companyName,
-      organizationId: filterRequest.organizationId,
-      role: filterRequest.role,
+      fullName: debouncedParams.search,
+      companyName: debouncedParams.companyName,
+      organizationId: debouncedParams.organizationId,
+      role: debouncedParams.role,
     },
   );
 
@@ -186,9 +195,12 @@ const ListUsers = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      if (userList?.results.length === 1 && currentPage > 1) {
+      if (userList?.results.length === 1 && debouncedParams.page > 1) {
         // If change current page, useUserList auto recall, just don't need using refetchUserList
-        setCurrentPage(currentPage - 1);
+        setDebouncedParams((prev) => ({
+          ...prev,
+          page: debouncedParams.page - 1,
+        }));
       } else {
         refetchUserList();
       }
@@ -534,10 +546,11 @@ const ListUsers = () => {
                   labelTextClass="!text-[#77858F] !text-xs !font-medium"
                   classNameOption="!text-sm"
                   onChange={(data) => {
-                    setFilterRequest({
-                      ...filterRequest,
+                    setDebouncedParams((prev) => ({
+                      ...prev,
+                      page: 1,
                       organizationId: data.value as string,
-                    });
+                    }));
                   }}
                 />
               </div>
@@ -553,10 +566,11 @@ const ListUsers = () => {
                 classNameOption="!text-sm"
                 selectedOption={undefined}
                 onChange={(data) => {
-                  setFilterRequest({
-                    ...filterRequest,
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: 1,
                     role: data.value as string,
-                  });
+                  }));
                 }}
               />
             </div>
@@ -692,8 +706,13 @@ const ListUsers = () => {
           <div className="flex justify-center flex-1">
             {dataUsers && dataUsers.length ? (
               <Pagination
-                onChange={(pageNumber) => setCurrentPage(pageNumber)}
-                currentPage={currentPage}
+                onChange={(pageNumber) => {
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: pageNumber,
+                  }));
+                }}
+                currentPage={debouncedParams.page}
                 totalPages={totalPages}
               />
             ) : null}
@@ -712,7 +731,10 @@ const ListUsers = () => {
                 labelOptionClass="!text-sm font-medium !pl-1.5"
                 onChange={(e) => {
                   setPageSize(Number(e.value));
-                  setCurrentPage(1);
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                  }));
                 }}
               />
             </div>

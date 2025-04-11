@@ -516,7 +516,6 @@ const KanbanBoardTaskTeam = () => {
   useEffect(() => {
     if (actionType && typeDetail === ItemStartType.TASK) {
       if (taskDetailId) {
-        setIsShowModalEditTeam(true);
         getDataDetailTask(parseInt(taskDetailId));
       } else {
         setIsShowModalEditTeam(true);
@@ -1559,7 +1558,7 @@ const KanbanBoardTaskTeam = () => {
                 name="Multi users"
               />
             </div>
-            <span className="text-[26px] font-medium relative top-[-2px] max-w-[350px] truncate">
+            <span className="text-[26px] font-medium relative top-[-2px] line-clamp-3 max-w-[350px] ">
               {selectedOrganization?.label}
             </span>
             <div className="flex justify-center items-center gap-2 ">
@@ -1572,7 +1571,7 @@ const KanbanBoardTaskTeam = () => {
               <Button
                 onClick={() => {
                   router.push(
-                    `${pageRouters.TASKS_TEAM_MANAGEMENT.href}/schedules?organization=${selectedOrganization?.value}&tabId=1`,
+                    `${pageRouters.SCHEDULE_TEAM_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
                   );
                 }}
                 variant={'outline'}

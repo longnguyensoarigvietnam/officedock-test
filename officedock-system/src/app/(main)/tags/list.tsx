@@ -112,11 +112,14 @@ const ListTags = () => {
   const [organizationLabels, setOrganizationLabels] = useState<
     OptionDropdownType[]
   >([]);
+  const [debouncedParams, setDebouncedParams] = useState({
+    search: '',
+    page: 1,
+  });
 
   const [showFilter, setShowFilter] = useState(true);
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
   const [dataTags, setDataTags] = useState<Tags[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [filterRequest, setFilterRequest] = useState<{
@@ -163,9 +166,9 @@ const ListTags = () => {
   }>();
 
   const { refetchTagList } = useTagList({
-    pagination: { page: currentPage, pageSize },
+    pagination: { page: debouncedParams.page, pageSize },
     filter: {
-      tagName: filterRequest.name,
+      tagName: debouncedParams.search,
       organizationIds: filterRequest.organizationIds,
       isHidden: filterRequest.isHidden,
     },
@@ -190,13 +193,11 @@ const ListTags = () => {
   const debouncedFilterByTagName = useDebounceText(watch('name'), 1000);
 
   useEffect(() => {
-    if (debouncedFilterByTagName || debouncedFilterByTagName === '') {
-      setFilterRequest((prev) => ({
-        ...prev,
-        name: encodeURIComponent(debouncedFilterByTagName || ''),
-      }));
-      setCurrentPage(1);
-    }
+    setDebouncedParams((prev) => ({
+      ...prev,
+      search: debouncedFilterByTagName,
+      page: 1,
+    }));
   }, [debouncedFilterByTagName]);
 
   const handleFilterTagByOrganizations = () => {
@@ -210,7 +211,11 @@ const ListTags = () => {
           : '',
       ),
     }));
-    setCurrentPage(1);
+    setDebouncedParams((prev) => ({
+      ...prev,
+
+      page: 1,
+    }));
     setOrganizationLabels(watch('organizationIds'));
     setIsOpenModalFilter(false);
   };
@@ -397,9 +402,12 @@ const ListTags = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      if (dataTags.length === 1 && currentPage > 1) {
+      if (dataTags.length === 1 && debouncedParams.page > 1) {
         // If change current page, useTagList auto recall, just don't need using refetchTagList
-        setCurrentPage(currentPage - 1);
+        setDebouncedParams((prev) => ({
+          ...prev,
+          page: debouncedParams.page - 1,
+        }));
       } else {
         refetchTagList();
       }
@@ -547,7 +555,10 @@ const ListTags = () => {
                               : '',
                           ),
                         }));
-                        setCurrentPage(1);
+                        setDebouncedParams((prev) => ({
+                          ...prev,
+                          page: 1,
+                        }));
                         setOrganizationLabels(updatedTagIds);
                       }}
                     />
@@ -692,8 +703,13 @@ const ListTags = () => {
           <div className="flex justify-center flex-1">
             {dataTags && dataTags.length ? (
               <Pagination
-                onChange={(pageNumber) => setCurrentPage(pageNumber)}
-                currentPage={currentPage}
+                onChange={(pageNumber) =>
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: pageNumber,
+                  }))
+                }
+                currentPage={debouncedParams.page}
                 totalPages={totalPages}
               />
             ) : null}
@@ -712,7 +728,10 @@ const ListTags = () => {
                 labelOptionClass="!text-sm font-medium !pl-1.5"
                 onChange={(e) => {
                   setPageSize(Number(e.value));
-                  setCurrentPage(1);
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                  }));
                 }}
               />
             </div>
@@ -746,7 +765,7 @@ const ListTags = () => {
             handleConfirmEditTag(data);
           }}
           onDelete={(data) => {
-            handleOpenDeleteTagModal(data)
+            handleOpenDeleteTagModal(data);
             setDataTagEdit(null);
             setOpenActionsTagModal(false);
             handleRemoveParam();

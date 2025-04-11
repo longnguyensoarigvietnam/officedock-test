@@ -223,7 +223,7 @@ const ListHierarchy = () => {
 
   return (
     <Fragment>
-      <div className="sticky z-[21] top-[0px] px-8 pt-8 pb-3 bg-[#EBF1F7]">
+      <div className="sticky z-[21] top-[0px]  pt-8 pb-3 bg-[#EBF1F7]">
         <div className="flex gap-4 items-center mb-5">
           <p className="text-black font-medium text-[26px]">
             業務カテゴリー設定
@@ -285,7 +285,7 @@ const ListHierarchy = () => {
           </div>
         </div>
       </div>
-      <div className="px-8 mt-5">
+      <div className=" mt-5">
         {selectedOrganizationOption.value === '' ? (
           <div className="flex flex-col gap-5">
             {hierarchyList.map((data) => (
