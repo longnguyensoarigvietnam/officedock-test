@@ -827,7 +827,6 @@ def build_category_filters(
 
     # Created At Filter
     if created_at:
-        print("here")
         filters &= Q(created_at__lt=created_at)
 
     return filters
