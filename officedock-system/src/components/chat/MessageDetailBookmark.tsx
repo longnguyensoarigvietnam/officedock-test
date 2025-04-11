@@ -421,7 +421,7 @@ export const MessageDetailBookmark = ({
                               className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                               <div className={`flex flex-col items-start`}>
                                 <p className="w-fit font-semibold text-black">
-                                  {EVENT_EDITED}
+                                  {messageDetail.sender.fullName} {EVENT_EDITED}
                                 </p>
                                 <p className="mt-2">
                                   変更あり:{' '}

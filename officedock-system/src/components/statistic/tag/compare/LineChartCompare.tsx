@@ -22,6 +22,7 @@ import {
 } from '@tanstack/react-table';
 
 import ImageRound from '@components/common/ImageRound';
+import { Table, TableBody } from '@components/common/Table';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Dropdown from '@components/common/Dropdown';
 import {
@@ -827,14 +828,14 @@ const LineChartCompare = ({
           <div className="flex gap-2 px-3 items-start">
             <div
               style={{ backgroundColor: info.row.original.tagColor }}
-              className={`w-[18px] h-4 min-w-[18px] rounded-[3px] flex items-center justify-center mt-1`}>
+              className={`w-4 h-4 min-w-[16px] rounded-[3px] flex items-center justify-center mt-1`}>
               <ImageRound
                 name="Check task"
                 src={'/icons/check-task.svg'}
                 className="w-[10px] h-2"
               />
             </div>
-            <div className="flex flex-col gap-2 w-[calc(100%_-20px)]">
+            <div className="flex flex-col items-start gap-2 w-[calc(100%_-20px)]">
               <p className="font-medium text-[16px] truncate text-black !max-w-[calc(100%_-_40px)]">
                 {' '}
                 {value}{' '}
@@ -1329,16 +1330,16 @@ const LineChartCompare = ({
                 );
               })}
             </div>
-            <table className="w-full border border-gray-300 mt-5 rounded-md">
+            <Table className="w-full border border-gray-300 mt-5 !rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr
                     key={headerGroup.id}
                     className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header) => (
+                    {headerGroup.headers.map((header, index) => (
                       <th
                         key={header.id}
-                        className="px-2 py-2.5 cursor-pointer border"
+                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
                         style={{
                           width: header.getSize(),
                           minWidth: header.getSize(),
@@ -1354,10 +1355,10 @@ const LineChartCompare = ({
                   </tr>
                 ))}
               </thead>
-              <tbody>
+              <TableBody>
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border">
-                    {row.getVisibleCells().map((cell) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell, index) => (
                       <td
                         key={cell.id}
                         style={{
@@ -1365,7 +1366,7 @@ const LineChartCompare = ({
                           minWidth: cell.column.getSize(),
                           maxWidth: cell.column.getSize(),
                         }}
-                        className="px-2 py-3 border">
+                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -1374,8 +1375,8 @@ const LineChartCompare = ({
                     ))}
                   </tr>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </>
       )}

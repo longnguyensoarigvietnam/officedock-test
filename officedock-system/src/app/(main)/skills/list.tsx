@@ -232,7 +232,7 @@ const ListSkills = () => {
                           />
                         </Link>
                       ) : (
-                        <div className="w-6"></div>
+                        <div className="w-3.5 h-3.5"></div>
                       )}
                       {session?.user.permissions &&
                       hasPermissionInArray(
@@ -246,7 +246,7 @@ const ListSkills = () => {
                           onClick={() => handleOpenDeleteSkillModal(element.id)}
                         />
                       ) : (
-                        <div className="w-6"></div>
+                        <div className="w-[13px]"></div>
                       )}
                     </div>
                   </td>

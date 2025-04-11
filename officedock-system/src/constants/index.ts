@@ -130,6 +130,10 @@ export const SCREEN_LIST = [
     value: 'statistic',
   },
   {
+    name: '日報画面',
+    value: 'dailyReport',
+  },
+  {
     name: 'レベルアップ申請確認画面',
     value: 'submitLevel',
   },
@@ -137,32 +141,52 @@ export const SCREEN_LIST = [
     name: 'ロール画面',
     value: 'role',
   },
+  {
+    name: '実績管理画面',
+    value: 'actualDuration',
+  },
+  {
+    name: 'メンバー一覧画面',
+    value: 'listMember',
+  },
+  {
+    name: 'チーム階層画面',
+    value: 'organizationHierarchy',
+  },
+  {
+    name: 'チーム集計画面',
+    value: 'teamStatistic',
+  },
+  {
+    name: 'チームタスク画面',
+    value: 'teamTask',
+  },
+  {
+    name: '日報一覧画面',
+    value: 'teamDailyReport',
+  },
 ];
 
 export const PERMISSION_OPTIONS = [
   {
-    label: PermissionType.ALLOWED_WITHOUT_OWN_DATA,
-    value: PermissionType.ALLOWED_WITHOUT_OWN_DATA,
+    label: PermissionType.VIEW_ONLY,
+    value: PermissionType.VIEW_ONLY,
   },
   {
-    label: PermissionType.ALLOWED,
-    value: PermissionType.ALLOWED,
+    label: PermissionType.EDITABLE,
+    value: PermissionType.EDITABLE,
+  },
+  {
+    label: PermissionType.TEAM_AND_SUB_EDIT,
+    value: PermissionType.TEAM_AND_SUB_EDIT,
+  },
+  {
+    label: PermissionType.TEAM_AND_SUB_VIEW,
+    value: PermissionType.TEAM_AND_SUB_VIEW,
   },
   {
     label: PermissionType.NOT_ALLOWED,
     value: PermissionType.NOT_ALLOWED,
-  },
-  {
-    label: PermissionType.ONLY_DATA_OWN,
-    value: PermissionType.ONLY_DATA_OWN,
-  },
-  {
-    label: PermissionType.ONLY_DATA_ORGANIZATION,
-    value: PermissionType.ONLY_DATA_ORGANIZATION,
-  },
-  {
-    label: PermissionType.ONLY_DATA_ORGANIZATION_WITHOUT_OWN_DATA,
-    value: PermissionType.ONLY_DATA_ORGANIZATION_WITHOUT_OWN_DATA,
   },
 ];
 

@@ -290,7 +290,7 @@ const ListOrganizationSkills = () => {
                           />
                         </Link>
                       ) : (
-                        <div className="w-6"></div>
+                        <div className="w-3.5"></div>
                       )}
                       {element.actions?.delete ? (
                         <ImageRound
@@ -302,7 +302,7 @@ const ListOrganizationSkills = () => {
                           }
                         />
                       ) : (
-                        <div className="w-6"></div>
+                        <div className="w-[13px]"></div>
                       )}
                     </div>
                   </td>

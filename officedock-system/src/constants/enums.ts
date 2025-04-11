@@ -336,15 +336,22 @@ export enum ScreenName {
   TAG = 'tag',
   STATISTIC = 'statistic',
   SUBMIT_LEVEL = 'submitLevel',
+  ROLE = 'role',
+  DAILY_REPORT = 'dailyReport',
+  ACTUAL_DURATION = 'actualDuration',
+  LIST_MEMBER = 'listMember',
+  ORGANIZATION_HIERARCHY = 'organizationHierarchy',
+  TEAM_STATISTIC = 'teamStatistic',
+  TEAM_TASK = 'teamTask',
+  TEAM_DAILY_REPORT = 'teamDailyReport',
 }
 
 export enum PermissionType {
-  ALLOWED = '可',
+  VIEW_ONLY = '閲覧のみ',
+  EDITABLE = '編集可',
+  TEAM_AND_SUB_EDIT = '自チームと下位チームのみ編集可',
+  TEAM_AND_SUB_VIEW = '自チームと下位チームのみ閲覧可',
   NOT_ALLOWED = '不可',
-  ONLY_DATA_OWN = '本人データのみ可',
-  ONLY_DATA_ORGANIZATION = '本人が所属している組織データのみ可',
-  ALLOWED_WITHOUT_OWN_DATA = '可（本人データ除く）',
-  ONLY_DATA_ORGANIZATION_WITHOUT_OWN_DATA = '本人が所属している組織のデータ（本人データ除く）のみ可',
 }
 
 export enum CurrentScreen {

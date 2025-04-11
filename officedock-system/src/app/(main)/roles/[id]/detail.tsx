@@ -87,20 +87,11 @@ const DetailRoleTable = () => {
           <div
             className={`max-h-[calc(100vh_-_350px)] ring-1 ring-gray-200 overflow-x-auto rounded-lg bg-white`}>
             <div className=" bg-[#F8FAFC] flex w-full sticky top-0 z-10 rounded-tl-lg rounded-tr-lg ring-1 ring-gray-200 [&>div]:bg-[#F8FAFC]">
-              <div className="w-1/3 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
+              <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
                 対応機能
               </div>
-              <div className="w-1/3 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
+              <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
                 閲覧
-              </div>
-              <div className="h-12  pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs hidden">
-                追加
-              </div>
-              <div className="w-1/3 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
-                編集
-              </div>
-              <div className="h-12  pl-4 text-center text-[#77858F] font-medium text-xs hidden">
-                削除
               </div>
             </div>
             {dataRoleDetail?.permissions.map((permission, index) => {
@@ -108,22 +99,13 @@ const DetailRoleTable = () => {
                 <div
                   key={index}
                   className="flex w-full bg-white relative border-b-[1px]">
-                  <div className="w-1/3 flex items-center justify-start pl-4 py-3 border-r-[1px] text-[16px] font-medium">
+                  <div className="w-1/2 flex items-center justify-start pl-4 py-3 border-r-[1px] text-[16px] font-medium">
                     {SCREEN_LIST.find(
                       (screen) => screen.value == permission.screenName,
                     )?.name || ''}
                   </div>
-                  <div className="w-1/3 px-3 flex items-center justify-start py-3 border-r-[1px] text-sm font-medium">
-                    {permission.actions.view || '-'}
-                  </div>
-                  <div className="px-3 py-3 border-r-[1px] text-sm font-medium hidden">
-                    {permission.actions.add || '-'}
-                  </div>
-                  <div className="w-1/3 px-3 flex items-center justify-start py-3 border-r-[1px] text-sm font-medium">
-                    {permission.actions.update || '-'}
-                  </div>
-                  <div className="px-3 py-3 text-sm font-medium hidden">
-                    {permission.actions.delete || '-'}
+                  <div className="w-1/2 px-3 flex items-center justify-start py-3 border-r-[1px] text-sm font-medium">
+                    {permission.actions || '-'}
                   </div>
                 </div>
               );

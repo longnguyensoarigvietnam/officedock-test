@@ -41,6 +41,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
+import { Table, TableBody } from '@components/common/Table';
 
 ChartJS.register(
   CategoryScale,
@@ -554,7 +555,7 @@ const LineChart = ({
     },
     {
       accessorKey: 'tagDuration',
-      size: 30,
+      size: 40,
       header: ({ column }) => {
         const isSorted = column.getIsSorted();
         return (
@@ -914,16 +915,16 @@ const LineChart = ({
                 );
               })}
             </div>
-            <table className="w-full border border-gray-300 mt-5 rounded-md">
+            <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr
                     key={headerGroup.id}
                     className="text-[#77858F] bg-[#F8FAFC] font-medium text-xs text-left">
-                    {headerGroup.headers.map((header) => (
+                    {headerGroup.headers.map((header, index) => (
                       <th
                         key={header.id}
-                        className="px-2 py-2.5 cursor-pointer border"
+                        className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
                         style={{
                           width: header.getSize(),
                           minWidth: header.getSize(),
@@ -939,10 +940,10 @@ const LineChart = ({
                   </tr>
                 ))}
               </thead>
-              <tbody>
+              <TableBody>
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border">
-                    {row.getVisibleCells().map((cell) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell, index) => (
                       <td
                         key={cell.id}
                         style={{
@@ -950,7 +951,7 @@ const LineChart = ({
                           minWidth: cell.column.getSize(),
                           maxWidth: cell.column.getSize(),
                         }}
-                        className="px-2 py-3 border">
+                        className={`py-3 !pl-0 ${index !== 0 ? 'border-l' : ''}`}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -959,8 +960,8 @@ const LineChart = ({
                     ))}
                   </tr>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </>
       )}

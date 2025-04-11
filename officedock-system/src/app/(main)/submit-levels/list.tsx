@@ -243,7 +243,7 @@ const ListSubmitLevels = () => {
                           />
                         </Link>
                       ) : (
-                        <div className="w-6 h-6"></div>
+                        <div className="w-3.5 h-3.5"></div>
                       )}
                     </div>
                   </td>

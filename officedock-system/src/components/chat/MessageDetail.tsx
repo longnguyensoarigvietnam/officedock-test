@@ -512,7 +512,7 @@ export const MessageDetail = ({
                                               {file.fileType.includes(
                                                 'image',
                                               ) && (
-                                                <div> 
+                                                <div>
                                                   <Image
                                                     src={getChatFileURL(
                                                       file?.compressedFile ||
@@ -656,6 +656,7 @@ export const MessageDetail = ({
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
                                   <p className="w-fit font-semibold text-black">
+                                    {dataMsgDetail.sender.fullName}{' '}
                                     {EVENT_EDITED}
                                   </p>
                                   <p className="mt-2">

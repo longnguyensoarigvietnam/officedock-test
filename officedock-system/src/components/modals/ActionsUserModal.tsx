@@ -474,6 +474,7 @@ const ActionsUserModal = ({
                       required
                       placeholder="入力してください"
                       register={register('email', emailRules(true))}
+                      disabled={action == ActionsEvent.EDIT}
                       className={`h-[34px] !border-[#77858F] !w-full rounded-md !text-sm !py-0 ${!errors?.email ? '!border-[#77858F]' : '!border-error'}`}
                     />
                     <ErrorMessage
@@ -760,6 +761,10 @@ const ActionsUserModal = ({
                       )}
                     </div>
                   ))}
+                  <ErrorMessage
+                    error={errors?.roles ? errors.roles.root?.message : ''}
+                    className="mt-[5px] mb-[5px] text-xs"
+                  />
                   <div className="text-right flex justify-center w-full mt-4 ">
                     <Button
                       sz="sm"
