@@ -238,7 +238,13 @@ export default function EditNode() {
       const { uuid, name, value, parentUuid } = node.model;
 
       if (uuid !== 'root' && value !== 'treeNode') {
-        result.push({ uuid, name, parentUuid });
+        result.push({
+          uuid,
+          name,
+          parentUuid,
+          type: 'NORMAL',
+          is_hierarchy: true,
+        });
       }
       return true;
     });
@@ -281,18 +287,25 @@ export default function EditNode() {
       (item) => item.uuid,
     );
     const dataProject = listProject
-      .map((pro) => ({ ...pro, type: 'PROJECT' }))
+      .map((pro) => ({
+        ...pro,
+        type: 'PROJECT',
+        parentUuid: null,
+        is_hierarchy: true,
+      }))
       .filter((item) => item.value !== 'treeNode');
+
     const dataOption = optionsTreeNode.map((item) => ({
       name: item.label,
       uuid: item.value as string,
       type: 'NORMAL',
+      parentUuid: null,
     }));
 
     editHierarchyOrganization([
+      ...dataOrganization,
       ...dataProject,
       ...dataOption,
-      ...dataOrganization,
     ]);
   };
 
@@ -519,42 +532,46 @@ export default function EditNode() {
         <div className="flex flex-wrap gap-4 w-full">
           {listProject.length > 0 ? (
             listProject.map((item, index) => (
-              <div key={index} className="w-[204px] relative">
-                <Dropdown
-                  options={optionsTreeNode}
-                  className="h-[34px] !py-0  !rounded-md border !border-[#77858F]"
-                  classNameOption={`!z-[30]  bottom-[40px]`}
-                  placeholder="選択してください"
-                  selectedOption={{
-                    label: item.name || '',
-                    value: item.uuid,
-                  }}
-                  placeholderClass="!text-black text-sm font-normal"
-                  onChange={(e) => {
-                    handleSelectChange({
-                      newSelected: {
-                        label: item.name || '',
-                        value:
-                          item.value && item.value === 'treeNode'
-                            ? item.value
-                            : item.uuid,
-                      },
-                      oldSelected: e,
-                    });
-                    updateItemProject({
-                      uuid: item.uuid,
-                      name: e.label,
-                      value: e.value as string,
-                    });
-                  }}
-                />
+              <div
+                key={index}
+                className={`w-[204px] relative ${index === listProject.length - 1 && '!w-[232px]'}`}>
+                <div className="w-[204px]">
+                  <Dropdown
+                    options={optionsTreeNode}
+                    className="h-[34px] !py-0  !rounded-md border !border-[#77858F]"
+                    classNameOption={`!z-[30]  bottom-[40px]`}
+                    placeholder="選択してください"
+                    selectedOption={{
+                      label: item.name || '',
+                      value: item.uuid,
+                    }}
+                    placeholderClass="!text-black text-sm font-normal"
+                    onChange={(e) => {
+                      handleSelectChange({
+                        newSelected: {
+                          label: item.name || '',
+                          value:
+                            item.value && item.value === 'treeNode'
+                              ? item.value
+                              : item.uuid,
+                        },
+                        oldSelected: e,
+                      });
+                      updateItemProject({
+                        uuid: item.uuid,
+                        name: e.label,
+                        value: e.value as string,
+                      });
+                    }}
+                  />
+                </div>
                 {index === listProject.length - 1 && (
                   <div
                     onClick={() => {
                       if (item.value === 'treeNode') return;
                       handleAddProjectTeam();
                     }}
-                    className="absolute  z-[30] right-[-40px] top-[5px]  w-6 h-6 rounded-full ">
+                    className="absolute  z-[30] right-[-10px] top-[5px]  w-6 h-6 rounded-full ">
                     <Button
                       sz="sm"
                       disabled={item.value === 'treeNode'}

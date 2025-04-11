@@ -1194,7 +1194,9 @@ const KanbanBoardTask = () => {
     'postUpdateTaskIndex',
     handleUpdateTaskIndex,
     {
-      onSuccess: async () => {},
+      onSuccess: async () => {
+        queryClient.refetchQueries(['getDataTaskHeaderList']);
+      },
       onError: () => {
         // When an error occurs, change the state to re-render the kanban board to its old state
         setResetInitialColumnsData(!resetInitialColumnsData);
@@ -1410,6 +1412,7 @@ const KanbanBoardTask = () => {
                   ? ItemStartType.FIXED_TASK
                   : ItemStartType.TASK,
             });
+
             getDataDetailTask(movedItem.id);
           }
 

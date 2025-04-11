@@ -126,6 +126,10 @@ export const pageRouters = {
     name: 'チームタスク',
     href: '/task-teams',
   },
+  SCHEDULE_TEAM_MANAGEMENT: {
+    name: 'チームタスク',
+    href: '/task-teams/schedules',
+  },
 
   // CHAT
   CHAT_MANAGEMENT: {

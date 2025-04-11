@@ -110,6 +110,9 @@ const Header = ({ className }: HeaderProps) => {
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
 
   const isTaskPage = pathname.startsWith('/task');
+  const isTaskTeamPage = pathname.startsWith('/task-teams');
+  const isScheduleTeamPage =
+    pathname === pageRouters.SCHEDULE_TEAM_MANAGEMENT.href;
 
   const isCalendarPage = pathname === pageRouters.CALENDAR_MANAGEMENT.href;
 
@@ -238,6 +241,27 @@ const Header = ({ className }: HeaderProps) => {
 
   useEffect(() => {
     if (
+      isScheduleTeamPage &&
+      actionType &&
+      (typeDetail === ItemStartType.TASK ||
+        typeDetail === ItemStartType.FIXED_TASK)
+    ) {
+      if (taskDetailId) {
+        getDataDetailTask(parseInt(taskDetailId));
+      } else {
+        setShowModalTask(true);
+      }
+    } else if (
+      actionType &&
+      typeDetail === ItemStartType.FIXED_TASK &&
+      isTaskTeamPage
+    ) {
+      if (taskDetailId) {
+        getDataDetailTask(parseInt(taskDetailId));
+      } else {
+        setShowModalTask(true);
+      }
+    } else if (
       actionType &&
       (typeDetail === ItemStartType.TASK ||
         typeDetail === ItemStartType.FIXED_TASK) &&
@@ -419,7 +443,6 @@ const Header = ({ className }: HeaderProps) => {
         type: EventWorkCategory.SMALL,
       });
     }
-
     editTask({
       id: data.id,
       title: data.title,
@@ -567,6 +590,13 @@ const Header = ({ className }: HeaderProps) => {
   );
   useEffect(() => {
     if (
+      idEvent &&
+      actionType &&
+      typeDetail === ItemStartType.SCHEDULE &&
+      (isTaskTeamPage || isScheduleTeamPage)
+    ) {
+      getDataDetailEvent(idEvent.replace('event', ''));
+    } else if (
       idEvent &&
       actionType &&
       typeDetail === ItemStartType.SCHEDULE &&

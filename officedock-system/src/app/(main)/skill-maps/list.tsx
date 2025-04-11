@@ -220,7 +220,7 @@ const ListSkillsMap = () => {
                   </div>
                 </div>
                 <div className="w-1/2 flex items-end gap-4">
-                  <div className="w-full">
+                  <div className="w-full max-w-[310px]">
                     <Controller
                       control={control}
                       name={'staff'}
@@ -287,7 +287,7 @@ const ListSkillsMap = () => {
                 }}
               />
             </div>
-            <div className="w-56">
+            <div className="w-56 ">
               <Dropdown
                 labelClass="truncate max-w-[160px]"
                 className="h-10 flex items-center"

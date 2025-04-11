@@ -1190,7 +1190,6 @@ const TimeSchedule = memo(
       const extendedProps = event?.extendedProps;
       if (!extendedProps) null;
       if (!event.start || !event.end) return null;
-
       const overlappingEvents = calendarEvents.filter((e: any) => {
         if (!e.start || !e.end || e.id === event.id) return false;
         const eResourceId =
@@ -1199,9 +1198,13 @@ const TimeSchedule = memo(
           e._def.resourceIds[0] === ItemScheduleType.PLANS;
 
         if (!eResourceId) return false;
+        const eStart = new Date(e.extendedProps.planStartDate);
+        const eEnd = new Date(e.extendedProps.planEndDate);
+        const exStart = new Date(extendedProps.planStartDate);
+        const exEnd = new Date(extendedProps.planEndDate);
         return (
-          e.start.getTime() < event.end!.getTime() &&
-          e.end.getTime() > event.start!.getTime()
+          eStart.getTime() < exEnd!.getTime() &&
+          eEnd.getTime() > exStart!.getTime()
         );
       });
       const allOverlappingEvents = [...overlappingEvents, event];

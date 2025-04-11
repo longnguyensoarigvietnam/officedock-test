@@ -305,7 +305,7 @@ const StatisticTeamTagBoard = () => {
               name="Multi users"
             />
           </div>
-          <span className="text-[26px] font-medium relative top-[-2px] max-w-[450px] break-all">
+          <span className="text-[26px] font-medium relative top-[-2px] line-clamp-3 max-w-[450px] break-all">
             {selectedOrganization?.label}
           </span>
           <span className="text-[26px] font-medium relative top-[-2px]">

@@ -72,7 +72,6 @@ const ListCategory = () => {
   });
   const categoryNameInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
 
@@ -83,14 +82,25 @@ const ListCategory = () => {
     searchCategoryName,
     1000,
   );
+  const [debouncedParams, setDebouncedParams] = useState({
+    search: '',
+    page: 1,
+  });
+  useEffect(() => {
+    setDebouncedParams((prev) => ({
+      ...prev,
+      search: debouncedFilterByCategoryName,
+      page: 1,
+    }));
+  }, [debouncedFilterByCategoryName]);
 
   const { categoryList, refetchCategoryList } = useCategoryList(
     {
-      page: currentPage,
+      page: debouncedParams.page,
       pageSize,
     },
     {
-      name: debouncedFilterByCategoryName,
+      name: debouncedParams.search,
     },
   );
 
@@ -100,12 +110,6 @@ const ListCategory = () => {
       setTotalPages(categoryList.numPages);
     }
   }, [categoryList]);
-
-  useEffect(() => {
-    if (debouncedFilterByCategoryName) {
-      setCurrentPage(1);
-    }
-  }, [debouncedFilterByCategoryName]);
 
   // Edit category name
   const handleEditCategory = async (data: {
@@ -206,9 +210,12 @@ const ListCategory = () => {
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
       });
-      if (dataCategories.length === 1 && currentPage > 1) {
+      if (dataCategories.length === 1 && debouncedParams.page > 1) {
         // If change current page, useTagList auto recall, just don't need using refetchTagList
-        setCurrentPage(currentPage - 1);
+        setDebouncedParams((prev) => ({
+          ...prev,
+          page: debouncedParams.page - 1,
+        }));
       } else {
         refetchCategoryList();
       }
@@ -506,8 +513,13 @@ const ListCategory = () => {
           <div className="flex justify-center flex-1">
             {dataCategories && dataCategories.length ? (
               <Pagination
-                onChange={(pageNumber) => setCurrentPage(pageNumber)}
-                currentPage={currentPage}
+                onChange={(pageNumber) =>
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: pageNumber,
+                  }))
+                }
+                currentPage={debouncedParams.page}
                 totalPages={totalPages}
               />
             ) : null}
@@ -526,7 +538,10 @@ const ListCategory = () => {
                 labelOptionClass="!text-sm font-medium !pl-1.5"
                 onChange={(e) => {
                   setPageSize(Number(e.value));
-                  setCurrentPage(1);
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                  }));
                 }}
               />
             </div>

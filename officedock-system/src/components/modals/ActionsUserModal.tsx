@@ -89,6 +89,7 @@ const ActionsUserModal = ({
     watch,
     clearErrors,
     handleSubmit,
+    getValues,
     setValue,
     formState: { errors },
   } = useForm<CreateUserFormData>({
@@ -410,8 +411,10 @@ const ActionsUserModal = ({
                   boxLabelClass="!ml-2"
                   disable={action == ActionsEvent.EDIT}
                   onChange={() => {
+                    const currentTitle = getValues('name');
                     if (action == ActionsEvent.CREATE) {
                       reset();
+                      setValue('name', currentTitle);
                       setSelectedOrganizationOptions([]);
                       setOptionEmail(true);
                     }
@@ -428,8 +431,12 @@ const ActionsUserModal = ({
                   boxLabelClass="!ml-2"
                   disable={action == ActionsEvent.EDIT}
                   onChange={() => {
+                    const currentTitle = getValues('name');
+
                     if (action == ActionsEvent.CREATE) {
                       reset();
+                      setValue('name', currentTitle);
+
                       setSelectedOrganizationOptions([]);
                       setOptionEmail(false);
                     }
@@ -616,7 +623,7 @@ const ActionsUserModal = ({
                         type="button"
                         name="Remove TagId"
                         onClick={() => {
-                          setValue('mainOrganization', undefined)
+                          setValue('mainOrganization', undefined);
                         }}>
                         削除
                       </Button>
