@@ -63,7 +63,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     """
 
     permission_classes = [ActionPermission]
-    screen_name = Screens.STATISTIC.value
+    screen_name = Screens.DAILY_REPORT.value
 
     def _separate_duration(self, duration, end_date):
         """
@@ -457,6 +457,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 @extend_schema(tags=["System > Statistics"])
 class StatisticViewSet(BaseAPIViewSet):
     """API endpoint for statistics"""
+
+    permission_classes = [ActionPermission]
+    screen_name = Screens.STATISTIC.value
 
     @extend_schema(
         parameters=[

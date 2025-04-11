@@ -346,7 +346,7 @@ def process_categories(
         TaskCategoryTypes.MEDIUM.value: "medium_id",
         TaskCategoryTypes.SMALL.value: "small_id",
     }
-    if not durations.exists():
+    if durations and not durations.exists():
         return []
     category_ids = [item["category_id"] for item in category_list]
     for cat in category_list:

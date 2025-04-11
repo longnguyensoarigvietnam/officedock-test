@@ -29,18 +29,17 @@ def create_role_with_permissions(role: Role, permissions: list):
     """
     for screen_name, actions in permissions.items():
         for action_name, selection_result in actions.items():
-            permission_obj = Permission.objects.filter(
-                name=f"{screen_name}_{action_name}"
-            ).first()
-
-            if permission_obj:
-                # Create a RoleDetail entry for the role, screen, and action
-                RoleDetail.objects.update_or_create(
-                    company=role.company,
-                    role=role,
-                    permission=permission_obj,
-                    defaults={"selection_result": selection_result},
-                )
+            screen_action = f"{screen_name}_{action_name}"
+            permission_obj, created = Permission.objects.get_or_create(
+                name=screen_action
+            )
+            # Create a RoleDetail entry for the role, screen, and action
+            RoleDetail.objects.update_or_create(
+                company=role.company,
+                role=role,
+                permission=permission_obj,
+                defaults={"selection_result": selection_result},
+            )
 
 
 def get_permission_for_user(user, permission_name):
