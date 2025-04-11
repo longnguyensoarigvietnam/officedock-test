@@ -138,6 +138,7 @@ const PieChartCustom = ({
           const label = String(
             context.chart.data.labels?.[context.dataIndex] || '',
           );
+
           const maxLabelLength = 10;
           const truncatedLabel =
             label.length > maxLabelLength

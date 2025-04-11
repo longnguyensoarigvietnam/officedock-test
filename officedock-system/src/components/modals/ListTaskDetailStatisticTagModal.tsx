@@ -96,7 +96,9 @@ const ListTaskDetailStatisticTagModal = ({
     onSuccess: (data) => {
       setIsSkeletonLoading(false);
       if (data) {
-        setCount(count + data.count);
+        if (!lastCreateAt) {
+          setCount(data.count);
+        }
         setHasMore(data.hasNext as boolean);
         if (data.results) {
           setTaskList((prev) => {

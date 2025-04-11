@@ -424,6 +424,7 @@ const TaskListStatistic = ({
                 taskList={
                   isCheckCompare && isShowCompare ? taskListCompare : taskList
                 }
+                pageSize={pageSize}
                 totalDuration={
                   isCheckCompare && isShowCompare
                     ? getTotalDurationCompare()

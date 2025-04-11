@@ -122,10 +122,11 @@ const PercentageTeamTagsCompare = ({
   >([]);
 
   const mapCategoryData = (
-    categories: StatisticCategoryInfo[],
+    dataCategories: StatisticCategoryInfo[],
     colorData?: string,
   ) => {
-    if (!categories) return [];
+    if (!dataCategories) return [];
+    const categories = dataCategories.filter((item) => item.percent > 0);
 
     const otherItems = categories.filter((item) => item.percent < 0);
     const mainItems = categories.filter((item) => item.percent >= 0);

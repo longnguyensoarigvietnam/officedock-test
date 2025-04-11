@@ -120,10 +120,11 @@ const PercentageTagsCompare = ({
   >([]);
 
   const mapCategoryData = (
-    categories: StatisticCategoryInfo[],
+    dataCategories: StatisticCategoryInfo[],
     colorData?: string,
   ) => {
-    if (!categories) return [];
+    if (!dataCategories) return [];
+    const categories = dataCategories.filter((item) => item.percent > 0);
 
     const otherItems = categories.filter((item) => item.percent < 0);
     const mainItems = categories.filter((item) => item.percent >= 0);
@@ -165,7 +166,11 @@ const PercentageTagsCompare = ({
   useEffect(() => {
     if (statisticTagsList) {
       setDataChartLarge(
-        mapCategoryData(statisticTagsList.largeCategories || []),
+        mapCategoryData(
+          statisticTagsList.largeCategories.filter(
+            (item) => item.percent > 0,
+          ) || [],
+        ),
       );
       setDataChartMedium(
         mapCategoryData(statisticTagsList.mediumCategories || [], '#2E9267'),

@@ -313,6 +313,41 @@ export enum PermissionsSystem {
   // Submit Level Permissions
   SUBMIT_LEVEL_VIEW = 'submit_level_view',
   SUBMIT_LEVEL_UPDATE = 'submit_level_update',
+  // Teamdock Permissions
+  TEAMDOCK_VIEW = 'teamdock_view',
+  TEAMDOCK_ADD = 'teamdock_add',
+  TEAMDOCK_UPDATE = 'teamdock_update',
+  TEAMDOCK_DELETE = 'teamdock_delete',
+
+  // Team Daily Report Permissions
+  TEAM_DAILY_REPORT_VIEW = 'team_daily_report_view',
+  TEAM_DAILY_REPORT_ADD = 'team_daily_report_add',
+  TEAM_DAILY_REPORT_UPDATE = 'team_daily_report_update',
+  TEAM_DAILY_REPORT_DELETE = 'team_daily_report_delete',
+
+  // Organization Hierarchy Permissions
+  ORGANIZATION_HIERARCHY_VIEW = 'organization_hierarchy_view',
+  ORGANIZATION_HIERARCHY_ADD = 'organization_hierarchy_add',
+  ORGANIZATION_HIERARCHY_UPDATE = 'organization_hierarchy_update',
+  ORGANIZATION_HIERARCHY_DELETE = 'organization_hierarchy_delete',
+
+  // List Member Permissions
+  LIST_MEMBER_VIEW = 'list_member_view',
+  LIST_MEMBER_ADD = 'list_member_add',
+  LIST_MEMBER_UPDATE = 'list_member_update',
+  LIST_MEMBER_DELETE = 'list_member_delete',
+
+  // Actual Duration Permissions
+  ACTUAL_DURATION_VIEW = 'actual_duration_view',
+  ACTUAL_DURATION_ADD = 'actual_duration_add',
+  ACTUAL_DURATION_UPDATE = 'actual_duration_update',
+  ACTUAL_DURATION_DELETE = 'actual_duration_delete',
+
+  // Daily Report Permissions
+  DAILY_REPORT_VIEW = 'daily_report_view',
+  DAILY_REPORT_ADD = 'daily_report_add',
+  DAILY_REPORT_UPDATE = 'daily_report_update',
+  DAILY_REPORT_DELETE = 'daily_report_delete',
 }
 
 export enum ScreenAction {
