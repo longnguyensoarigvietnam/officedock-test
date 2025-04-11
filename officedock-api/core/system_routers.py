@@ -31,6 +31,7 @@ from organizations.apis import (
     OrganizationViewSet,
     OrganizationSkillViewSet,
     OrganizationCategoryHierarchyViewSet,
+    TeamViewSet,
 )
 from common.apis import SystemCreationDataViewSet, CronJobViewSet
 from tags.apis import TagViewSet
@@ -113,6 +114,11 @@ api_router.register(
     "organization-statistics",
     OrganizationStatisticViewSet,
     basename="organization_statistics",
+)
+api_router.register(
+    "teams",
+    TeamViewSet,
+    basename="teams",
 )
 
 # Add api router urls

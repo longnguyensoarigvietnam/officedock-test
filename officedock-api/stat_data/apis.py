@@ -13,6 +13,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, NotFound
 
 from base.apis import BaseAPIViewSet
+from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
 from base.paginations import BasePagination
 from calendars.models import Schedule
@@ -63,6 +64,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     """
 
     permission_classes = [ActionPermission]
+    filter_backends = [FilterByPermission]
     screen_name = Screens.DAILY_REPORT.value
 
     def _separate_duration(self, duration, end_date):
@@ -459,6 +461,7 @@ class StatisticViewSet(BaseAPIViewSet):
     """API endpoint for statistics"""
 
     permission_classes = [ActionPermission]
+    filter_backends = [FilterByPermission]
     screen_name = Screens.STATISTIC.value
 
     @extend_schema(
@@ -1258,6 +1261,9 @@ class StatisticViewSet(BaseAPIViewSet):
 class OrganizationStatisticViewSet(BaseAPIViewSet):
     """API endpoint for organization statistics"""
 
+    permission_classes = [ActionPermission]
+    filter_backends = [FilterByPermission]
+    screen_name = Screens.TEAMDOCK.value
     queryset = Organization.objects.all()
 
     @extend_schema(
