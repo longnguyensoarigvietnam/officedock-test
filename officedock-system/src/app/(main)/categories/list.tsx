@@ -44,9 +44,16 @@ import { useToast } from '@providers/ToastProvider';
 
 import { Category } from '@interfaces/category';
 import api from '@base/api';
+import WarningChangeHierarchyCategoryModal from '@components/modals/WarningChangeHierarchyCategoryModal';
 
 const ListCategory = () => {
   const { setIsLoading } = useContext(LoadingContext);
+  const [warningChangeCategoryModalOpen, setWarningChangeCategoryModalOpen] =
+    useState<boolean>(false);
+  const [pendingSelection, setPendingSelection] = useState<{
+    uuid: string;
+    name: string;
+  } | null>(null);
 
   const { data: session } = useSession();
 
@@ -243,7 +250,8 @@ const ListCategory = () => {
               (category) => category.uuid == selectedCategoryToUpdate.uuid,
             )?.name || '';
           if (oldCategoryName.trim() != selectedCategoryToUpdate.name.trim()) {
-            editCategory({
+            setWarningChangeCategoryModalOpen(true);
+            setPendingSelection({
               uuid: selectedCategoryToUpdate.uuid,
               name: selectedCategoryToUpdate.name,
             });
@@ -392,6 +400,11 @@ const ListCategory = () => {
                       )}
                       <div className="flex gap-3 w-[10%] justify-end">
                         {session?.user.permissions &&
+                        !(
+                          selectedCategoryToUpdate.action ==
+                            ActionsModal.CREATE &&
+                          selectedCategoryToUpdate.uuid == element.uuid
+                        ) &&
                         hasPermissionInArray(
                           session?.user.permissions,
                           PermissionsSystem.CATEGORY_UPDATE,
@@ -436,6 +449,11 @@ const ListCategory = () => {
                           <div className="w-3.5"></div>
                         )}
                         {session?.user.permissions &&
+                        !(
+                          selectedCategoryToUpdate.action ==
+                            ActionsModal.CREATE &&
+                          selectedCategoryToUpdate.uuid == element.uuid
+                        ) &&
                         hasPermissionInArray(
                           session?.user.permissions,
                           PermissionsSystem.CATEGORY_DELETE,
@@ -445,6 +463,20 @@ const ListCategory = () => {
                             src={'/icons/delete-gray.svg'}
                             className="w-[13px] h-[15px] hover:cursor-pointer"
                             onClick={() => {
+                              if (
+                                selectedCategoryToUpdate.uuid != element.uuid
+                              ) {
+                                setDataCategories((prev) => {
+                                  let updatedCategories = [...prev];
+                                  updatedCategories =
+                                    updatedCategories.filter(
+                                      (category) =>
+                                        category.uuid !=
+                                        selectedCategoryToUpdate.uuid,
+                                    );
+                                  return updatedCategories;
+                                });
+                              }
                               if (
                                 selectedCategoryToUpdate.uuid == element.uuid &&
                                 selectedCategoryToUpdate.status &&
@@ -557,6 +589,34 @@ const ListCategory = () => {
         onConfirm={handleConfirmDeleteCategory}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />
+      {warningChangeCategoryModalOpen && (
+        <WarningChangeHierarchyCategoryModal
+          open={warningChangeCategoryModalOpen}
+          onConfirm={() => {
+            if (!pendingSelection) return;
+
+            const { uuid, name } = pendingSelection;
+            editCategory({
+              uuid,
+              name,
+            });
+
+            setWarningChangeCategoryModalOpen(false);
+            setPendingSelection(null);
+          }}
+          onClose={() => {
+            setSelectedCategoryToUpdate({
+              uuid: '',
+              name: '',
+              status: false,
+              action: '',
+              showError: false,
+            });
+            setWarningChangeCategoryModalOpen(false);
+            setPendingSelection(null);
+          }}
+        />
+      )}
     </Fragment>
   );
 };

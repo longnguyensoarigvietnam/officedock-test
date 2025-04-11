@@ -1274,7 +1274,7 @@ const LineChartCompare = ({
             />
           </div>
           <div className="px-[30px]">
-            <div className="flex gap-8 items-center justify-end mb-3">
+            <div className="flex gap-8 items-center justify-end mb-3 flex-wrap">
               <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
                 基準
               </p>
@@ -1291,7 +1291,7 @@ const LineChartCompare = ({
                 );
               })}
             </div>
-            <div className="flex gap-8 items-center justify-end">
+            <div className="flex gap-8 items-center justify-end flex-wrap">
               <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
                 比較
               </p>

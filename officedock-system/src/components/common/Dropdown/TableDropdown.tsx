@@ -28,8 +28,9 @@ type Props = {
   searchOption?: boolean;
   addInput?: boolean;
   onChange?: (value: OptionDropdownType) => void;
+  onPendingChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
-  minDropdownHeight?: number
+  minDropdownHeight?: number;
 };
 const TableDropdown = ({
   label,
@@ -48,8 +49,9 @@ const TableDropdown = ({
   searchOption = false,
   addInput = false,
   onChange,
+  onPendingChange,
   onAdd,
-  minDropdownHeight = 0
+  minDropdownHeight = 0,
 }: Props) => {
   const [selected, setSelected] = useState<OptionDropdownType | undefined>(
     selectedOption || undefined,
@@ -71,11 +73,18 @@ const TableDropdown = ({
       setSelected(undefined);
     }
   }, [selectedOption]);
+
   const handleOptionClick = (option: OptionDropdownType) => {
-    setSelected(option);
     setIsOpen(false);
+    setSelected(option);
     onChange && onChange(option);
   };
+
+  const handlePendingOptionClick = (option: OptionDropdownType) => {
+    setIsOpen(false);
+    onPendingChange && onPendingChange(option);
+  };
+
   const calculatePosition = () => {
     if (dropdownRef.current) {
       const rect = dropdownRef.current.getBoundingClientRect();
@@ -158,7 +167,9 @@ const TableDropdown = ({
             }`}
             onClick={(e) => {
               e.stopPropagation();
-              handleOptionClick(option);
+              onPendingChange
+                ? handlePendingOptionClick(option)
+                : handleOptionClick(option);
             }}>
             <div className="flex items-center">
               {option.imgUrl && (
