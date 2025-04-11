@@ -34,10 +34,11 @@ def get_high_level_organizations(orgs):
     existed_ids = []
     for id in high_level_ids:
         if id not in existed_ids:
-            if id not in superior_ids:
-                org_not_hierarchies.append(org_map.get(id))
+            org_instance = org_map.get(id)
+            if id not in superior_ids and not org_instance.hierarchize_at:
+                org_not_hierarchies.append(org_instance)
             else:
-                org_has_hierarchies.append(org_map.get(id))
+                org_has_hierarchies.append(org_instance)
             existed_ids.append(id)
 
     # Return the sorted list of high-level Organization objects

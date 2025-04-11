@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import transaction
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -156,8 +157,8 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             has_children = (
                 request.query_params.get("has_children", "").lower() == "true"
             )
-            order_file = "updated_at" if has_children else "-id"
-            queryset = self.get_queryset().order_by(order_file)
+            order_file = "hierarchize_at" if has_children else "-id"
+            queryset = self.get_queryset().order_by(order_file, "updated_at")
             orgs = queryset.filter(
                 type=OrganizationTypes.NORMAL.value
             ).values_list("id", "superior_id")
@@ -220,6 +221,14 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
                 # Update if exists
                 org_instance = Organization.objects.filter(uuid=uuid).first()
+
+                # Check hierarchy assigned at
+                is_hierarchy = org_data.pop("is_hierarchy", False)
+                if is_hierarchy:
+                    org_data["hierarchize_at"] = datetime.now()
+                else:
+                    org_data["hierarchize_at"] = None
+
                 if org_instance:
                     for key, value in org_data.items():
                         setattr(org_instance, key, value)
@@ -321,7 +330,9 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 _get_children(child)
 
         _get_children(instance)
-        Organization.objects.filter(id__in=descendant_ids).update(superior=None)
+        Organization.objects.filter(id__in=descendant_ids).update(
+            superior=None, hierarchize_at=None
+        )
 
         # Remove icon
         if instance.icon:
