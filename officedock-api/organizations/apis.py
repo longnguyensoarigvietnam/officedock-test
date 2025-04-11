@@ -25,6 +25,7 @@ from roles.constants import Screens
 from organizations.utils import get_high_level_organizations
 from organizations.constants import OrganizationTypes
 from tasks.models import TaskDuration
+from users.serializers import OrganizationForUserSerializer
 from .filters import OrganizationFilter, OrganizationSkillFilter
 from .serializers import (
     CheckActualDurationSerializer,
@@ -148,6 +149,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         detail=False,
         url_path="hierarchy",
         serializer_class=OrganizationHierarchyForCreateSerializer,
+        screen_name=Screens.ORGANIZATION_HIERARCHY.value,
     )
     def hierarchy(self, request):
         """
@@ -346,12 +348,13 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         detail=False,
         url_path="members",
         serializer_class=OrganizationMemberSerializer,
+        screen_name=Screens.LIST_MEMBER.value,
     )
     def members(self, request):
         """
         Get list of member in organization
         """
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
         search = request.query_params.get("search")
 
         if search:
@@ -757,6 +760,10 @@ class OrganizationCategoryHierarchyViewSet(
     queryset = Organization.objects.all()
     serializer_class = OrganizationCategoryHierarchySerializer
     permission_classes = [ActionPermission]
+    filter_backends = [
+        FilterByPermission,
+        DjangoFilterBackend,
+    ]
     pagination_class = None
     screen_name = Screens.CATEGORY_HIERARCHY.value
 
@@ -1044,3 +1051,73 @@ class OrganizationCategoryHierarchyViewSet(
                 defaults={"uuid": obj.get("uuid")},
             )
         return large_statistic_category
+
+
+@extend_schema(tags=["System > Team"])
+class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
+    """
+    API endpoint for Organization
+    """
+
+    queryset = (
+        Organization.objects.annotate(user_count=Count("users"))
+        .order_by("-created_at")
+        .all()
+    )
+    serializer_class = OrganizationForUserSerializer
+    permission_classes = [ActionPermission]
+    filter_backends = [
+        DjangoFilterBackend,
+        FilterByPermission,
+    ]
+    screen_name = Screens.TEAMDOCK.value
+    lookup_field = "id"
+
+    def get_permissions(self):
+        """
+        Switch screen name by query params
+        """
+        has_statistic_categories = self.request.query_params.get(
+            "has_statistic_categories"
+        )
+        if has_statistic_categories and has_statistic_categories != "false":
+            self.screen_name = Screens.CATEGORY_HIERARCHY.value
+
+        return super().get_permissions()
+
+    def get_queryset(self):
+        """
+        Filtering users by company.
+        """
+
+        user = self.request.user
+        company = user.company
+
+        return super().get_queryset().filter(company=company)
+
+    def get_serializer_context(self):
+        """
+        Add request to context
+        """
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
+    def get_serializer(self, *args, **kwargs):
+        """
+        Get serializer by action
+        """
+        has_statistic_categories = self.request.query_params.get(
+            "has_statistic_categories"
+        )
+
+        if (
+            self.action == "retrieve"
+            or self.action == "list"
+            and has_statistic_categories
+        ):
+            return OrganizationDetailSerializer(
+                *args, **kwargs, context={"request": self.request}
+            )
+
+        return super().get_serializer(*args, **kwargs)

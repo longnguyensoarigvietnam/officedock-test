@@ -13,6 +13,7 @@ from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from base.apis import BaseAPIViewSet
+from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
 from calendars.constants import CalendarTypes
 from calendars.models import Schedule
@@ -36,6 +37,7 @@ from dashboard.serializers import (
     ActualDurationDetailSerializer,
 )
 from dashboard.utils import separate_duration
+from roles.constants import Screens
 from tasks.constants import TaskStatus
 from tasks.models import TaskDuration, PeopleInChargeTasks, Task, TaskSchedule
 from tasks.utils import split_date_range
@@ -727,6 +729,8 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ActualDurationListSerializer
     filterset_class = ActualDurationFilter
+    filter_backends = [FilterByPermission]
+    screen_name = Screens.ACTUAL_DURATION.value
 
     def get_serializer_class(self):
         """Get serializer by action"""
@@ -734,6 +738,12 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             return ActualDurationCreationSerializer
 
         return super().get_serializer_class()
+
+    def get_serializer_context(self):
+        """Get serializer context"""
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
     def get_queryset(self):
         """Get queryset"""

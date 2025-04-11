@@ -5,6 +5,7 @@ from users.models import Role
 from roles.constants import (
     PermissionOptions,
     ROLE_PERMISSION_BY_OPTIONS,
+    Screens,
 )
 from base.messages import ERROR_MESSAGES
 
@@ -42,8 +43,7 @@ class PermissionForCreateSerializer(serializers.Serializer):
     actual_duration = BaseActionsSerializer()
     list_member = BaseActionsSerializer()
     organization_hierarchy = BaseActionsSerializer()
-    team_statistic = BaseActionsSerializer()
-    team_task = BaseActionsSerializer()
+    teamdock = BaseActionsSerializer()
     team_daily_report = BaseActionsSerializer()
 
 
@@ -105,7 +105,14 @@ class RolePermissionSerializer(serializers.ModelSerializer):
             # Compare and get action
             for permission, base_actions in ROLE_PERMISSION_BY_OPTIONS.items():
                 if base_actions == actions:
-                    actions = permission
+                    if (
+                        permission
+                        != PermissionOptions.LOGGED_ORGANIZATION.value
+                        and screen == Screens.TEAMDOCK.value
+                    ):
+                        actions = PermissionOptions.LOGGED_ORGANIZATION.value
+                    else:
+                        actions = permission
                     break
             data.append({"screen_name": screen, "actions": actions})
         return data
