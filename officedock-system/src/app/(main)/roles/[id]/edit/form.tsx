@@ -8,11 +8,7 @@ import Input from '@components/common/Input';
 import TableDropdown from '@components/common/Dropdown/TableDropdown';
 import Button from '@components/common/Button';
 
-import {
-  PermissionType,
-  ScreenName,
-  ServerStatusCode,
-} from '@constants/enums';
+import { PermissionType, ScreenName, ServerStatusCode } from '@constants/enums';
 import { PERMISSION_OPTIONS, SCREEN_LIST } from '@constants';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -95,24 +91,28 @@ const EditRoleForm = () => {
   useEffect(() => {
     if (dataRoleDetail) {
       const initialRows: rowDataType[] = [];
-      dataRoleDetail.permissions.map((permission) => {
-        initialRows.push({
-          screenLabel:
-            SCREEN_LIST.find((screen) => screen.value == permission.screenName)
-              ?.name || '',
-          screenValue: permission.screenName,
-          actions: `${permission.actions}`,
+      dataRoleDetail.permissions
+        .filter(
+          (permission) =>
+            permission.screenName != ScreenName.CATEGORY_HIERARCHY &&
+            permission.screenName != ScreenName.ORGANIZATION_HIERARCHY,
+        )
+        .map((permission) => {
+          initialRows.push({
+            screenLabel:
+              SCREEN_LIST.find(
+                (screen) => screen.value == permission.screenName,
+              )?.name || '',
+            screenValue: permission.screenName,
+            actions: `${permission.actions}`,
+          });
         });
-      });
       setRows(initialRows);
       setRoleName(dataRoleDetail.name);
     }
   }, [dataRoleDetail]);
 
-  const handleEditFieldInline = (
-    screenName: string,
-    value: any,
-  ) => {
+  const handleEditFieldInline = (screenName: string, value: any) => {
     setRows((prevRows) => {
       const newRows = [...prevRows];
       const rowIndex = newRows.findIndex(
@@ -136,22 +136,26 @@ const EditRoleForm = () => {
     return data;
   };
 
-  const { mutateAsync: editRole } = useMutation('postEditRole', handleEditRole, {
-    onSuccess: async () => {
-      showToast({
-        variant: 'success',
-        description: SUCCESS_SAVE_MESSAGE,
-      });
-      router.push(pageRouters.ROLES_MANAGEMENT.href);
+  const { mutateAsync: editRole } = useMutation(
+    'postEditRole',
+    handleEditRole,
+    {
+      onSuccess: async () => {
+        showToast({
+          variant: 'success',
+          description: SUCCESS_SAVE_MESSAGE,
+        });
+        router.push(pageRouters.ROLES_MANAGEMENT.href);
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+        setIsSubmit(false);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
     },
-    onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_UPDATE_MESSAGE);
-      setIsSubmit(false);
-    },
-    onSettled: () => {
-      setIsLoading(false);
-    },
-  });
+  );
 
   const handleConfirmEditRole = async (e: any) => {
     e.preventDefault();
@@ -171,12 +175,14 @@ const EditRoleForm = () => {
         };
         return acc;
       },
-      {} as Record<
-        string,
-        { actions: string;}
-      >,
+      {} as Record<string, { actions: string }>,
     );
-
+    if (permissions['category']) {
+      permissions['categoryHierarchy'] = { ...permissions['category'] };
+    }
+    if (permissions['organization']) {
+      permissions['organizationHierarchy'] = { ...permissions['organization'] };
+    }
     setIsSubmit(true);
     await editRole({
       name: roleName,
@@ -236,7 +242,7 @@ const EditRoleForm = () => {
               対応機能
             </div>
             <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
-            権限
+              権限
             </div>
           </div>
           {rows.map((row, index) => {
@@ -269,10 +275,7 @@ const EditRoleForm = () => {
                     ).find((option) => option.label == row.actions)}
                     onChange={(selectedOption: any) => {
                       const value = selectedOption.value;
-                      handleEditFieldInline(
-                        row.screenLabel,
-                        value,
-                      );
+                      handleEditFieldInline(row.screenLabel, value);
                     }}
                   />
                 </div>

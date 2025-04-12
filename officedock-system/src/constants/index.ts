@@ -106,10 +106,6 @@ export const SCREEN_LIST = [
     value: 'category',
   },
   {
-    name: '集計カテゴリ階層画面',
-    value: 'categoryHierarchy',
-  },
-  {
     name: 'スキル画面',
     value: 'skill',
   },
@@ -148,10 +144,6 @@ export const SCREEN_LIST = [
   {
     name: 'メンバー一覧画面',
     value: 'listMember',
-  },
-  {
-    name: 'チーム階層画面',
-    value: 'organizationHierarchy',
   },
   {
     name: 'チームドック画面',
