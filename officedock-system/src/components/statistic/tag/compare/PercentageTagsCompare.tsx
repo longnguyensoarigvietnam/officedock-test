@@ -167,9 +167,7 @@ const PercentageTagsCompare = ({
     if (statisticTagsList) {
       setDataChartLarge(
         mapCategoryData(
-          statisticTagsList.largeCategories.filter(
-            (item) => item.percent > 0,
-          ) || [],
+          statisticTagsList.largeCategories || [],
         ),
       );
       setDataChartMedium(

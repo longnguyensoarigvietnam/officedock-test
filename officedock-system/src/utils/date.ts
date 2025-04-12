@@ -1193,22 +1193,23 @@ export const subtractDurations = (
   compare: string,
 ): string => {
   const parseTime = (time: string) => {
-    const [hours, minutes, seconds] = time.split(':').map(Number);
-    return hours * 3600 + minutes * 60 + seconds;
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes; // ignore seconds
   };
 
-  const standardSeconds = parseTime(standard);
-  const compareSeconds = parseTime(compare);
-  let diffSeconds = standardSeconds - compareSeconds;
+  const standardMinutes = parseTime(standard);
+  const compareMinutes = parseTime(compare);
+  let diffMinutes = standardMinutes - compareMinutes;
 
-  const sign = diffSeconds < 0 ? '-' : '';
-  diffSeconds = Math.abs(diffSeconds);
+  const sign = diffMinutes < 0 ? '-' : '';
+  diffMinutes = Math.abs(diffMinutes);
 
-  const hh = String(Math.floor(diffSeconds / 3600)).padStart(2, '0');
-  const mm = String(Math.floor((diffSeconds % 3600) / 60)).padStart(2, '0');
+  const hh = String(Math.floor(diffMinutes / 60)).padStart(2, '0');
+  const mm = String(diffMinutes % 60).padStart(2, '0');
 
   return `${sign}${hh}時間${mm}分`;
 };
+
 export const getMinuteDifferenceTime = (
   dateStart: Date | string,
   dateEnd: Date | string,
@@ -1232,6 +1233,7 @@ export const convertToStatisticJapaneseLabels = (
   const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土']; // Japanese days of the week
   const date = new Date(dateStr);
 
+  const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Ensure two digits
   const day = String(date.getDate()).padStart(2, '0');
   const dayOfWeek = daysOfWeek[date.getDay()]; // Get Japanese weekday
@@ -1243,7 +1245,7 @@ export const convertToStatisticJapaneseLabels = (
         ? `${month}月${day}日(${dayOfWeek})`
         : `${day}日(${dayOfWeek})`;
     case StatisticViewOptions.MONTH:
-      return isEdge ? `${day}日${month}月` : `${month}月`;
+      return `${year}年${month}月${day}日`;
     default:
       return '';
   }

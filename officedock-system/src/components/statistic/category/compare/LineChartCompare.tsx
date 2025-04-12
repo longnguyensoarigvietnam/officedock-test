@@ -40,7 +40,6 @@ import useStatisticTaskDurationsCompare from '@hooks/useStatisticTaskDurationsCo
 import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
 
 import {
-  convertFromNumberToJapaneseTime,
   convertTimeToDecimal,
   convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
@@ -56,6 +55,7 @@ import {
   lightenColor,
 } from '@utils';
 import { Table, TableBody } from '@components/common/Table';
+import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 ChartJS.register(
   CategoryScale,
@@ -131,6 +131,8 @@ const LineChartCompare = ({
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
+    totalDurationTaskCompare,
+    totalDurationTask,
     lineChartViewBy,
     setSelectedTags,
     setLineChartViewBy,
@@ -153,10 +155,6 @@ const LineChartCompare = ({
     datasets: [],
   });
   const [tableData, setTableData] = useState<MergedTableCategory[]>([]);
-  const [totalStandardDuration, setTotalStandardDuration] =
-    useState<string>('00:00');
-  const [totalCompareDuration, setTotalCompareDuration] =
-    useState<string>('00:00');
   const [standardLabelsInfo, setStandardLabelsInfo] = useState<
     {
       color: string;
@@ -169,6 +167,8 @@ const LineChartCompare = ({
       name: string;
     }[]
   >([]);
+  const [standardDateLabels, setStandardDateLabels] = useState<string[]>([]);
+  const [compareDateLabels, setCompareDateLabels] = useState<string[]>([]);
   const { expanded } = useContext(GlobalStateContext);
 
   const viewOptions = [
@@ -235,63 +235,72 @@ const LineChartCompare = ({
       return;
     }
 
-    const matchingDataPoints = lineChartData.datasets
-      .flatMap((d) => d.data)
-      .filter(
-        (point: any) => point.x === dataPoint.x && point.y === dataPoint.y,
-      )
-      .reduce((acc: Record<string, any[]>, point: any) => {
-        if (!acc[point.label]) {
-          acc[point.label] = [];
-        }
-        acc[point.label].push(point); // Store both 'standard' and 'compare' types
-        return acc;
-      }, {});
-
-    const uniqueDataPoints = Object.values(matchingDataPoints).flat(); // Flatten the grouped values
-
-    const groupedData = uniqueDataPoints.reduce(
-      (acc: Record<string, any[]>, point: any) => {
-        if (!acc[point.label]) {
-          acc[point.label] = [];
-        }
-        acc[point.label].push(point);
-        return acc;
-      },
-      {},
+    const matchingDataPoints = Array.from(
+      new Map(
+        lineChartData.datasets
+          .flatMap((d) => d.data)
+          .filter(
+            (point: any) => point.x === dataPoint.x && point.y === dataPoint.y,
+          )
+          .map((point: any) => [
+            `${point.label}-${point.type == 'compare' ? `${point.startDate} - ${point.endDate}` : `${point.anotherStartDate} - ${point.anotherEndDate}`}`,
+            point,
+          ]),
+      ).values(),
     );
 
-    const tooltipContent = Object.entries(groupedData)
-      .map(([label, points]) => {
-        const firstPoint = points[0]; // Get the first point to display color and label only once
+    const tooltipContent = matchingDataPoints
+      .map((point: any) => {
+        const standardDuration =
+          point.type == 'compare'
+            ? point.anotherDuration ?? '00:00:00'
+            : point.duration ?? '00:00:00';
+        const compareDuration =
+          point.type == 'compare'
+            ? point.duration ?? '00:00:00'
+            : point.anotherDuration ?? '00:00:00';
+        const diffDuration = subtractDurations(
+          standardDuration || '00:00:00',
+          compareDuration || '00:00:00',
+        );
+
+        const displayIcon = (diffDuration: string) => {
+          if (diffDuration.startsWith('-')) {
+            return `<img src="/icons/decrease-icon.svg" alt="Decrease" style="width: 12px; height: 12px;" />`;
+          } else if (diffDuration != '00時間00分') {
+            return `<img src="/icons/increase-icon.svg" alt="Increase" style="width: 12px; height: 12px;" />`;
+          } else {
+            return `<img src="/icons/equal-icon.svg" alt="Equal" style="width: 12px; height: 12px;" />`;
+          }
+        };
+
         return `
-          <div style="
-            display: flex; 
-            align-items: center; 
-            margin-bottom: 8px; 
-            border-bottom: 1px solid #D2DBE1;
-          ">
+          <div style="display: flex; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #D2DBE1;">
             <div style="
-              background-color: ${firstPoint.color}; 
+              background-color: ${point.color}; 
               margin-right: 4px; 
               width: 12px; 
               height: 12px; 
               border-radius: 2px;
               min-width: 12px;
             "></div>
-            <p style="font-weight: 700; font-size: 16px; max-width: 200px;
+            <p style="
+              font-weight: 700; 
+              font-size: 16px; 
+              max-width: 200px;
               white-space: nowrap; 
               overflow: hidden; 
-              text-overflow: ellipsis;">${label}</p>
+              text-overflow: ellipsis;
+            ">
+              ${point.label}
+            </p>
           </div>  
     
-          ${points
-            .map(
-              (point) => `
+          <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <p style="
-                background-color: ${point.type === 'standard' ? '#EBF1F7' : '#F9EAEA'};
-                color: ${point.type === 'standard' ? '#0068B6' : '#C32E2E'};
+                background-color: #EBF1F7;
+                color: #0068B6;
                 height: 18px; 
                 width: 57px; 
                 border-radius: 3px; 
@@ -301,19 +310,77 @@ const LineChartCompare = ({
                 align-items: center; 
                 justify-content: center;
               ">
-                ${point.type === 'standard' ? '基準期間' : '比較期間'}
+                基準期間
               </p>
               <div style="color: #77858F; font-weight: 400; font-size: 12px;">
-                ${convertToJapaneseDateRange(point.x, point.endDate)}
+                ${
+                  point.type == 'compare'
+                    ? point.anotherStartDate
+                      ? convertToJapaneseDateRange(
+                          point.anotherStartDate as string,
+                          point.anotherEndDate as string,
+                        )
+                      : ''
+                    : point.startDate
+                      ? convertToJapaneseDateRange(
+                          point.startDate as string,
+                          point.endDate as string,
+                        )
+                      : ''
+                }
               </div>
             </div>
-            <p style="font-weight: 400; font-size: 15px; margin-bottom: 8px;">
-              ${convertFromNumberToJapaneseTime(point.y).formattedHours}時間
-              ${convertFromNumberToJapaneseTime(point.y).formattedMinutes}分
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; align-items: end">
+            <p style="font-weight: 400; font-size: 16px">
+              ${standardDuration.split(':')[0]}時間 
+              ${standardDuration.split(':')[1]}分
             </p>
-          `,
-            )
-            .join('')}
+            <div style="display: flex; align-items: center; font-weight: 400; font-size: 14px; color: #77858F; gap: 4px;">
+              ${displayIcon(diffDuration)} 
+              <span>${diffDuration != '00時間00分' ? diffDuration.replace('-', '') : ''}</span>
+            </div>
+
+            </div>
+            
+    
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <p style="
+                background-color: #F9EAEA;
+                color: #C32E2E;
+                height: 18px; 
+                width: 57px; 
+                border-radius: 3px; 
+                font-size: 12px; 
+                font-weight: 500; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center;
+              ">
+                基準期間
+              </p>
+              <div style="color: #77858F; font-weight: 400; font-size: 12px;">
+                ${
+                  point.type == 'compare'
+                    ? point.startDate
+                      ? convertToJapaneseDateRange(
+                          point.startDate as string,
+                          point.endDate as string,
+                        )
+                      : ''
+                    : point.anotherStartDate
+                      ? convertToJapaneseDateRange(
+                          point.anotherStartDate as string,
+                          point.anotherEndDate as string,
+                        )
+                      : ''
+                }
+              </div>
+            </div>
+            <p style="font-weight: 400; font-size: 16px; margin-bottom: 8px;">
+              ${compareDuration.split(':')[0]}時間 
+              ${compareDuration.split(':')[1]}分
+            </p>
+          </div>
         `;
       })
       .join('');
@@ -389,11 +456,13 @@ const LineChartCompare = ({
 
             if (!labels || index >= labels.length) return '';
 
-            return convertToStatisticJapaneseLabels(
-              labels[index],
-              lineChartViewBy?.value as string,
-              false,
-            );
+            return isNaN(labels[index] as any)
+              ? convertToStatisticJapaneseLabels(
+                  labels[index],
+                  lineChartViewBy?.value as string,
+                  false,
+                )
+              : '';
           },
         },
       },
@@ -413,23 +482,11 @@ const LineChartCompare = ({
     },
   };
 
-  const { statisticTaskDurationsList } = useStatisticTaskDurations({
-    filter: {
-      fromDate: formatDateToYMD(startDate) || '',
-      endDate: formatDateToYMD(`${endDate}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: Number(selectedLarge?.value),
-      mediumCategoryId: Number(selectedMedium?.value),
-      tagIds: selectedTags,
-      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
-    },
-  });
-
-  const { statisticTaskDurationsCompareList } =
-    useStatisticTaskDurationsCompare({
+  const { statisticTaskDurationsList, isFetchedStatisticTaskDurationsList } =
+    useStatisticTaskDurations({
       filter: {
-        fromDate: formatDateToYMD(startDateCompare) || '',
-        endDate: formatDateToYMD(`${endDateCompare}`) || '',
+        fromDate: formatDateToYMD(startDate) || '',
+        endDate: formatDateToYMD(`${endDate}`) || '',
         organizationIds: String(selectedOrganization?.value || ''),
         largeCategoryId: Number(selectedLarge?.value),
         mediumCategoryId: Number(selectedMedium?.value),
@@ -437,6 +494,21 @@ const LineChartCompare = ({
         statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
       },
     });
+
+  const {
+    statisticTaskDurationsCompareList,
+    isFetchedStatisticTaskDurationsCompareList,
+  } = useStatisticTaskDurationsCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: Number(selectedLarge?.value),
+      mediumCategoryId: Number(selectedMedium?.value),
+      tagIds: selectedTags,
+      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+    },
+  });
 
   const mergeCategories = (
     data: TableCategoryItem[],
@@ -486,7 +558,7 @@ const LineChartCompare = ({
       let comparedLabels: { name: string; color: string }[] = [];
       let tableDetail: TableCategoryItem[] = [];
 
-      const finalLabelList: string[] = Array.from(
+      const standardDateLabels = Array.from(
         new Set([
           ...statisticTaskDurationsList.flatMap((category) =>
             category.durations.flatMap((duration, index) =>
@@ -497,6 +569,10 @@ const LineChartCompare = ({
                 : duration.startDate,
             ),
           ),
+        ]),
+      );
+      const compareDateLabels = Array.from(
+        new Set([
           ...statisticTaskDurationsCompareList.flatMap((category) =>
             category.durations.flatMap((duration, index) =>
               index === category.durations.length - 1 &&
@@ -507,29 +583,62 @@ const LineChartCompare = ({
             ),
           ),
         ]),
-      ).sort((a, b) => a.localeCompare(b));
+      );
 
       const generateDataWithAlignment = (
         durations: any[],
+        compareDurations: any[],
         type: string,
         name: string,
         color: string,
+        alignmentLabels?: string[], // <- optional param
       ) => {
-        return finalLabelList
-          .map((label) => {
-            const foundDuration = durations.find(
-              (duration) => duration.startDate === label,
-            );
+        const shownLabels = [...standardDateLabels];
+        if (standardDateLabels.length < compareDateLabels.length) {
+          const numOfHiddenLabels =
+            compareDateLabels.length - standardDateLabels.length;
+          for (let i = 0; i < numOfHiddenLabels; i++) {
+            shownLabels.push(`${i}`);
+          }
+        }
+        return shownLabels
+          .map((label, index) => {
+            const refLabel = alignmentLabels?.[index] || label; // <- map compare's label to standard index
+            let foundDuration;
+            let anotherDuration;
+            if (type == 'compare') {
+              foundDuration = compareDurations.find(
+                (duration) => duration.startDate == refLabel,
+              );
+              anotherDuration = durations[index];
+            } else {
+              foundDuration = durations.find(
+                (duration) => duration.startDate == refLabel,
+              );
+              anotherDuration = compareDurations[index];
+            }
+
             return foundDuration
               ? {
-                  x: foundDuration.startDate,
+                  x: label,
                   y: foundDuration.duration
                     ? convertTimeToDecimal(foundDuration.duration)
                     : 0,
+                  startDate: foundDuration.startDate,
                   endDate: foundDuration.endDate,
-                  type: type,
+                  duration: foundDuration.duration,
+                  anotherStartDate: anotherDuration
+                    ? anotherDuration.startDate
+                    : null,
+                  anotherEndDate: anotherDuration
+                    ? anotherDuration.endDate
+                    : null,
+                  anotherDuration: anotherDuration
+                    ? anotherDuration.duration
+                    : null,
+                  type,
                   label: name,
-                  color: color,
+                  color,
                 }
               : null;
           })
@@ -601,23 +710,31 @@ const LineChartCompare = ({
                 type: 'standard',
               },
             ];
+
+            const compareCategory = statisticTaskDurationsCompareList.find(
+              (c) => c.categoryName === categoryDetail.categoryName,
+            );
+
             datasets = [
               ...datasets,
               {
                 label: categoryDetail.categoryName,
                 data: generateDataWithAlignment(
                   categoryDetail.durations,
+                  compareCategory?.durations ?? [],
                   'standard',
                   categoryDetail.categoryName,
                   categoryDetail.categoryColor ||
                     (color && lightenColor(color, percent)) ||
                     getRandomColor(),
+                  [],
                 ),
                 borderColor:
                   categoryDetail.categoryColor ||
                   (color && lightenColor(color, percent)) ||
                   getRandomColor(),
                 backgroundColor: 'transparent',
+                borderDash: [],
                 fill: true,
                 tension: 0,
                 pointRadius: 4,
@@ -695,15 +812,22 @@ const LineChartCompare = ({
                 getRandomColor(),
               type: 'compare',
             });
+
+            const standardCategory = statisticTaskDurationsList.find(
+              (c) => c.categoryName === categoryDetail.categoryName,
+            );
+
             datasets.push({
               label: categoryDetail.categoryName,
               data: generateDataWithAlignment(
+                standardCategory?.durations ?? [],
                 categoryDetail.durations,
                 'compare',
                 categoryDetail.categoryName,
                 categoryDetail.categoryColor ||
                   (color && lightenColor(color, percent)) ||
                   getRandomColor(),
+                compareDateLabels,
               ),
               borderColor:
                 categoryDetail.categoryColor ||
@@ -728,34 +852,14 @@ const LineChartCompare = ({
       }
       setStandardLabelsInfo(standardLabels);
       setComparedLabelsInfo(comparedLabels);
+      setStandardDateLabels(standardDateLabels);
+      setCompareDateLabels(compareDateLabels);
       setLineChartData({
-        labels: finalLabelList,
+        labels: standardDateLabels,
         datasets: datasets || [],
       });
 
       setTableData(mergeCategories(tableDetail) || []);
-      if (
-        selectedOrganization?.value &&
-        !selectedLarge?.value &&
-        !selectedMedium?.value
-      ) {
-        setTotalStandardDuration(totalDurationLarge);
-        setTotalCompareDuration(totalDurationLargeCompare);
-      } else if (
-        selectedOrganization?.value &&
-        selectedLarge?.value &&
-        !selectedMedium?.value
-      ) {
-        setTotalStandardDuration(totalDurationMedium);
-        setTotalCompareDuration(totalDurationMediumCompare);
-      } else if (
-        selectedOrganization?.value &&
-        selectedLarge?.value &&
-        selectedMedium?.value
-      ) {
-        setTotalStandardDuration(totalDurationSmall);
-        setTotalCompareDuration(totalDurationSmallCompare);
-      }
     }
   }, [
     statisticTaskDurationsList,
@@ -1216,8 +1320,8 @@ const LineChartCompare = ({
                       </p>
                     </div>
                     <p className="font-medium text-[16px]">
-                      合計 {totalStandardDuration?.split(':')[0]}時間
-                      {totalStandardDuration?.split(':')[1]}分
+                      合計 {totalDurationTask?.split(':')[0] || '00'}時間
+                      {totalDurationTask?.split(':')[1] || '00'}分
                     </p>
                   </div>
                 )}
@@ -1240,8 +1344,8 @@ const LineChartCompare = ({
                       </p>
                     </div>
                     <p className="font-medium text-[16px]">
-                      合計 {totalCompareDuration?.split(':')[0]}時間
-                      {totalCompareDuration?.split(':')[1]}分
+                      合計 {totalDurationTaskCompare?.split(':')[0] || '00'}時間
+                      {totalDurationTaskCompare?.split(':')[1] || '00'}分
                     </p>
                   </div>
                 )}
@@ -1268,50 +1372,69 @@ const LineChartCompare = ({
               </div>
             </div>
           </div>
-          <div
-            style={{ position: 'relative' }}
-            className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
-            <Line data={lineChartData} options={options} />
+          {isFetchedStatisticTaskDurationsList &&
+          isFetchedStatisticTaskDurationsCompareList ? (
             <div
-              ref={tooltipRef}
-              style={{ position: 'absolute', opacity: 0 }}
+              style={{ position: 'relative' }}
+              className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
+              <Line
+                key={standardDateLabels.join('-') + compareDateLabels.join('-')}
+                data={lineChartData}
+                options={options}
+              />
+              <div
+                ref={tooltipRef}
+                style={{ position: 'absolute', opacity: 0 }}
+              />
+            </div>
+          ) : (
+            <RowSkeleton
+              numberOfRows={1}
+              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
             />
-          </div>
+          )}
+
           <div className="px-[30px]">
-            <div className="flex gap-8 items-center justify-end mb-3 flex-wrap">
-              <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
-                基準
-              </p>
-              {standardLabelsInfo.map((label, index) => {
-                return (
-                  <div key={index} className="flex gap-1 items-center">
-                    <div
-                      className="w-8 h-1"
-                      style={{ backgroundColor: label.color }}></div>
-                    <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                      {label.name}
+            {isFetchedStatisticTaskDurationsList &&
+              isFetchedStatisticTaskDurationsCompareList && (
+                <>
+                  <div className="flex gap-8 items-center justify-end flex-wrap">
+                    <p className="bg-[#EBF1F7] w-[30px] h-[18px] text-[#0068B6] rounded-sm text-xs font-medium flex items-center justify-center">
+                      基準
                     </p>
+                    {standardLabelsInfo.map((label, index) => {
+                      return (
+                        <div key={index} className="flex gap-1 items-center">
+                          <div
+                            className="w-8 h-1"
+                            style={{ backgroundColor: label.color }}></div>
+                          <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                            {label.name}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-            <div className="flex gap-8 items-center justify-end flex-wrap">
-              <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
-                比較
-              </p>
-              {comparedLabelsInfo.map((label, index) => {
-                return (
-                  <div key={index} className="flex gap-1 items-center">
-                    <div
-                      className="w-8 h-1 border-t-2 border-dashed"
-                      style={{ borderColor: label.color }}></div>
-                    <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                      {label.name}
+                  <div className="flex gap-8 items-center justify-end flex-wrap">
+                    <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#C32E2E] rounded-sm text-xs font-medium flex items-center justify-center">
+                      比較
                     </p>
+                    {comparedLabelsInfo.map((label, index) => {
+                      return (
+                        <div key={index} className="flex gap-1 items-center">
+                          <div
+                            className="w-8 h-1 border-t-2 border-dashed"
+                            style={{ borderColor: label.color }}></div>
+                          <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                            {label.name}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </>
+              )}
+
             <Table className="w-full border border-gray-300 mt-5 rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (

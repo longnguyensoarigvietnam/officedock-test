@@ -9,7 +9,7 @@ import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 
 import { SCREEN_LIST } from '@constants';
-import { PermissionsSystem, ServerStatusCode } from '@constants/enums';
+import { PermissionsSystem, ScreenName, ServerStatusCode } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
@@ -99,25 +99,31 @@ const DetailRoleTable = () => {
                 対応機能
               </div>
               <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
-              権限
+                権限
               </div>
             </div>
-            {dataRoleDetail?.permissions.map((permission, index) => {
-              return (
-                <div
-                  key={index}
-                  className="flex w-full bg-white relative border-b-[1px]">
-                  <div className="w-1/2 flex items-center justify-start pl-4 py-3 border-r-[1px] text-[16px] font-medium">
-                    {SCREEN_LIST.find(
-                      (screen) => screen.value == permission.screenName,
-                    )?.name || ''}
+            {dataRoleDetail?.permissions
+              ?.filter(
+                (permission) =>
+                  permission.screenName != ScreenName.CATEGORY_HIERARCHY &&
+                  permission.screenName != ScreenName.ORGANIZATION_HIERARCHY,
+              )
+              .map((permission, index) => {
+                return (
+                  <div
+                    key={index}
+                    className="flex w-full bg-white relative border-b-[1px]">
+                    <div className="w-1/2 flex items-center justify-start pl-4 py-3 border-r-[1px] text-[16px] font-medium">
+                      {SCREEN_LIST.find(
+                        (screen) => screen.value == permission.screenName,
+                      )?.name || ''}
+                    </div>
+                    <div className="w-1/2 px-3 flex items-center justify-start py-3 border-r-[1px] text-sm font-medium">
+                      {permission.actions || '-'}
+                    </div>
                   </div>
-                  <div className="w-1/2 px-3 flex items-center justify-start py-3 border-r-[1px] text-sm font-medium">
-                    {permission.actions || '-'}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       </div>

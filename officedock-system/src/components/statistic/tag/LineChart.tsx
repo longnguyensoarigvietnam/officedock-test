@@ -42,6 +42,7 @@ import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
 import { Table, TableBody } from '@components/common/Table';
+import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 ChartJS.register(
   CategoryScale,
@@ -321,7 +322,10 @@ const LineChart = ({
     },
   };
 
-  const { statisticTagTaskDurationsList } = useStatisticTagTaskDurations({
+  const {
+    statisticTagTaskDurationsList,
+    isFetchedStatisticTagTaskDurationsList,
+  } = useStatisticTagTaskDurations({
     filter: {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
@@ -891,30 +895,41 @@ const LineChart = ({
               </div>
             </div>
           </div>
-          <div
-            style={{ position: 'relative' }}
-            className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
-            <Line data={lineChartData} options={options} />
-            <div
-              ref={tooltipRef}
-              style={{ position: 'absolute', opacity: 0 }}
+          {!isFetchedStatisticTagTaskDurationsList ? (
+            <RowSkeleton
+              numberOfRows={1}
+              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
             />
-          </div>
-          <div className="px-[30px]">
-            <div className="flex gap-8 items-center justify-end mb-3 flex-wrap">
-              {standardLabelsInfo.map((label, index) => {
-                return (
-                  <div key={index} className="flex gap-1 items-center">
-                    <div
-                      className="w-8 h-1"
-                      style={{ backgroundColor: label.color }}></div>
-                    <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                      {label.name}
-                    </p>
-                  </div>
-                );
-              })}
+          ) : (
+            <div
+              style={{ position: 'relative' }}
+              className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
+              <Line data={lineChartData} options={options} />
+              <div
+                ref={tooltipRef}
+                style={{ position: 'absolute', opacity: 0 }}
+              />
             </div>
+          )}
+
+          <div className="px-[30px]">
+            {isFetchedStatisticTagTaskDurationsList && (
+              <div className="flex gap-8 items-center justify-end flex-wrap">
+                {standardLabelsInfo.map((label, index) => {
+                  return (
+                    <div key={index} className="flex gap-1 items-center">
+                      <div
+                        className="w-8 h-1"
+                        style={{ backgroundColor: label.color }}></div>
+                      <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                        {label.name}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
