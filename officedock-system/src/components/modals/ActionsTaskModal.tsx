@@ -3052,7 +3052,7 @@ const ActionsTaskModal = ({
                       src="/icons/collapse-description.svg"
                       name="Collapse description icon"
                     />
-                    <p className="text-[#0068B6]">To Do リストを作成</p>
+                    <p className="text-[#0068B6] text-sm">To Do リストを作成</p>
                   </div>
                   <div>
                     <div className="mb-4">
@@ -3198,7 +3198,7 @@ const ActionsTaskModal = ({
                     src="/icons/open-description.svg"
                     name="Open description icon"
                   />
-                  <p className="text-[#0068B6]">To Do リストを作成</p>
+                  <p className="text-[#0068B6] text-sm">To Do リストを作成</p>
                 </div>
               )}
             </div>

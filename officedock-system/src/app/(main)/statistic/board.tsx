@@ -121,6 +121,8 @@ const StatisticBoard = () => {
           if (selectedLarge && selectedLarge.value) return;
           setTotalDurationTask(data.largeTotalDuration);
         }
+      } else {
+        setTotalDurationTask('00:00:00');
       }
     },
   });
@@ -165,6 +167,8 @@ const StatisticBoard = () => {
           if (selectedLarge && selectedLarge.value) return;
           setTotalDurationTaskCompare(data.largeTotalDuration);
         }
+      } else {
+        setTotalDurationTaskCompare('00:00:00');
       }
     },
   });
@@ -424,7 +428,7 @@ const StatisticBoard = () => {
         </div>
         <div className="flex items-center mt-8  gap-1 mb-[30px]">
           <div className="flex items-center gap-2">
-            <div className="w-[240px]  relative">
+            <div className="w-[240px]  relative flex-shrink-0">
               <MultiSelectDropdown
                 isShowIconFilter
                 options={tagsOptions}
@@ -455,8 +459,8 @@ const StatisticBoard = () => {
                 </span>
               )}
             </div>
-            <div className="relative right-[224px] top-[-8px]">
-              <div className="flex gap-2 flex-wrap ">
+            <div className="relative right-[224px] flex-grow top-[-8px]">
+              <div className="flex gap-2 flex-wrap  w-full flex-shrink-0">
                 {selectedTags.map((item) => {
                   return (
                     <div

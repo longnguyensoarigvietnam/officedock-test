@@ -1,6 +1,7 @@
 'use client';
 import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 import MainLayout from '@components/layouts/MainLayout';
 import Button from '@components/common/Button';
@@ -8,9 +9,12 @@ import ListOrganizations from './list';
 
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
+import { hasPermissionInArray } from '@utils';
 
 const OrganizationPage = () => {
   const router = useRouter();
+  const { data: session } = useSession();
+
   return (
     <MainLayout
       title={pageRouters.ORGANIZATION_MANAGEMENT.name}
@@ -26,14 +30,20 @@ const OrganizationPage = () => {
               !rounded-[20px] text-xs`}>
             チーム作成
           </Button>
-          <Button
-            onClick={() => {
-              router.push(pageRouters.ORGANIZATION_HIERARCHY.href);
-            }}
-            variant={'outline'}
-            className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
-            チーム階層
-          </Button>
+          {session?.user.permissions &&
+            hasPermissionInArray(
+              session?.user.permissions,
+              PermissionsSystem.ORGANIZATION_HIERARCHY_VIEW,
+            ) && (
+              <Button
+                onClick={() => {
+                  router.push(pageRouters.ORGANIZATION_HIERARCHY.href);
+                }}
+                variant={'outline'}
+                className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}>
+                チーム階層
+              </Button>
+            )}
         </div>
       </div>
       <div className="flex flex-col gap-6">

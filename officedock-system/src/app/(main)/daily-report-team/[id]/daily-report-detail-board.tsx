@@ -711,12 +711,12 @@ const DailyReportDetailBoard = () => {
     (session?.user.permissions &&
       hasPermissionInArray(
         session?.user.permissions,
-        PermissionsSystem.STATISTIC_UPDATE,
+        PermissionsSystem.TEAM_DAILY_REPORT_UPDATE,
       )) ||
     (session?.user.permissions &&
       hasPermissionInArray(
         session?.user.permissions,
-        PermissionsSystem.STATISTIC_ADD,
+        PermissionsSystem.TEAM_DAILY_REPORT_ADD,
       ));
   const handleExpandChange = (row: Row<dataTaskDailyTable>) => {
     const newExpandedState: any = {

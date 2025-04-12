@@ -456,6 +456,7 @@ const ActionsUserModal = ({
                       name="id"
                       required
                       placeholder="123456"
+                      disabled={action == ActionsEvent.EDIT}
                       register={register('username', {
                         required: ID_REQUIRED_MESSAGE,
                       })}

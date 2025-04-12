@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { useMutation } from 'react-query';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import Modal from '../common/Modal';
@@ -11,13 +12,14 @@ import {
   SkeletonElement,
 } from '@components/common/SkeletonLoading';
 
-import { ItemStartType } from '@constants/enums';
+import { ItemStartType, PermissionsSystem } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { NO_EVENT_MEMBER, TASK_STARTING } from '@constants';
 
 import useUserDetail from '@hooks/useUserDetail';
 import { ChatRoomItem } from '@interfaces/chat';
 import api from '@base/api';
+import { hasPermissionInArray } from '@utils';
 
 export type DetailProfileMemberProps = {
   userId: string;
@@ -49,6 +51,7 @@ const DetailProfileMemberModal = memo(
     organizationId,
     onClose,
   }: DetailProfileMemberProps) => {
+    const { data: session } = useSession();
     const router = useRouter();
     const [isCalling, setIsCalling] = useState(true);
     const { userDetail } = useUserDetail({
@@ -85,6 +88,24 @@ const DetailProfileMemberModal = memo(
         onSettled: () => {},
       },
     );
+    const isPermissionChatView =
+      session?.user.permissions &&
+      hasPermissionInArray(
+        session?.user.permissions,
+        PermissionsSystem.CHAT_VIEW,
+      );
+    const isPermissionSkillMapView =
+      session?.user.permissions &&
+      hasPermissionInArray(
+        session?.user.permissions,
+        PermissionsSystem.SKILL_MAP_VIEW,
+      );
+    const isPermissionDailyTeamView =
+      session?.user.permissions &&
+      hasPermissionInArray(
+        session?.user.permissions,
+        PermissionsSystem.TEAM_DAILY_REPORT_VIEW,
+      );
 
     return (
       <Modal
@@ -160,55 +181,58 @@ const DetailProfileMemberModal = memo(
                 />
               </div>
               <div className="w-[136px] flex flex-col gap-1 justify-end">
-                <Button
-                  onClick={() => {
-                    if (userDetail && userDetail.id) {
-                      createChat({
-                        name: '',
-                        participantIds: [userDetail?.id],
-                      });
-                    }
-                  }}
-                  className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
-                  <ImageRound
-                    src="/icons/chat.svg"
-                    name="Extend box"
-                    className={`!w-[18px] !h-4 `}
-                  />
-                  <span>チャット</span>
-                </Button>
-                {
-                  <>
-                    <Button
-                      onClick={() => {
-                        router.push(pageRouters.SKILL_MAP.href);
-                      }}
-                      className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
-                      <ImageRound
-                        src="/icons/skill-map.svg"
-                        name="Extend box"
-                        className={`!w-4 !h-4 `}
-                      />
-                      <span>スキルマップ</span>
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        router.push(
-                          `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(
-                            String(userDetail?.id),
-                          )}?organization=${organizationId}`,
-                        );
-                      }}
-                      className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2 ">
-                      <ImageRound
-                        src="/icons/daily-report.svg"
-                        name="Extend box"
-                        className={`!w-4 !h-4 `}
-                      />
-                      <span>日報</span>
-                    </Button>
-                  </>
-                }
+                {isPermissionChatView && (
+                  <Button
+                    onClick={() => {
+                      if (userDetail && userDetail.id) {
+                        createChat({
+                          name: '',
+                          participantIds: [userDetail?.id],
+                        });
+                      }
+                    }}
+                    className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
+                    <ImageRound
+                      src="/icons/chat.svg"
+                      name="Extend box"
+                      className={`!w-[18px] !h-4 `}
+                    />
+                    <span>チャット</span>
+                  </Button>
+                )}
+
+                {isPermissionSkillMapView && (
+                  <Button
+                    onClick={() => {
+                      router.push(pageRouters.SKILL_MAP.href);
+                    }}
+                    className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2">
+                    <ImageRound
+                      src="/icons/skill-map.svg"
+                      name="Extend box"
+                      className={`!w-4 !h-4 `}
+                    />
+                    <span>スキルマップ</span>
+                  </Button>
+                )}
+                {isPermissionDailyTeamView && (
+                  <Button
+                    onClick={() => {
+                      router.push(
+                        `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(
+                          String(userDetail?.id),
+                        )}?organization=${organizationId}`,
+                      );
+                    }}
+                    className="!py-0 !pl-[14px] !pr-0 !justify-start w-[136px] h-9 flex items-center  gap-2 ">
+                    <ImageRound
+                      src="/icons/daily-report.svg"
+                      name="Extend box"
+                      className={`!w-4 !h-4 `}
+                    />
+                    <span>日報</span>
+                  </Button>
+                )}
               </div>
             </div>
           </div>

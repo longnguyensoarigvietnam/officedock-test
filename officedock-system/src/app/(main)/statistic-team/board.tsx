@@ -121,6 +121,8 @@ const StatisticTeamBoard = () => {
           if (selectedLarge && selectedLarge.value) return;
           setTotalDurationTask(data.largeTotalDuration);
         }
+      } else {
+        setTotalDurationTask('00:00:00');
       }
     },
   });
@@ -172,6 +174,8 @@ const StatisticTeamBoard = () => {
             if (selectedLarge && selectedLarge.value) return;
             setTotalDurationTaskCompare(data.largeTotalDuration);
           }
+        } else {
+          setTotalDurationTaskCompare('00:00:00');
         }
       },
     });

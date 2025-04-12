@@ -9,7 +9,7 @@ const OrganizationPage = () => {
   return (
     <MainLayout
       title={pageRouters.ORGANIZATION_HIERARCHY.name}
-      permission={PermissionsSystem.ORGANIZATION_VIEW}
+      permission={PermissionsSystem.ORGANIZATION_HIERARCHY_UPDATE}
       className="px-0 pt-8 !overflow-x-auto overflow-y-hidden !bg-[#EBF1F7]"
       showFooter={false}>
       <div className="flex flex-col gap-5">
