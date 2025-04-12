@@ -110,9 +110,6 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             if key not in parsed_queryset:
                 is_matching = False
                 break
-            # ======== This code is update permission ADD, DELETE base on UPDATE  =======
-            permissions[key] = ROLE_PERMISSION_BY_OPTIONS[action["actions"]]
-            # ======== End update permission =======
 
             for action, expected_value in ROLE_PERMISSION_BY_OPTIONS[
                 action["actions"]
@@ -120,6 +117,13 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 if parsed_queryset[key].get(action, None) != expected_value:
                     is_matching = False
                     break
+
+        # Compare specified permissions with request data
+        for key, action in permissions.items():
+            permissions[key] = ROLE_PERMISSION_BY_OPTIONS[action["actions"]]
+
+        create_role_with_permissions(role, permissions)
+
         if not is_matching:
             for user in role.users.all():
                 send_web_socket_event(
@@ -129,7 +133,6 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     },
                     user=user,
                 )
-        create_role_with_permissions(role, permissions)
 
     def perform_destroy(self, instance):
         """
