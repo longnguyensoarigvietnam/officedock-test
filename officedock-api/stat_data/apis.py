@@ -793,7 +793,6 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_id == NONE_CATEGORY
             or medium_category_id == NONE_CATEGORY
             or small_category_id == NONE_CATEGORY
-            or not durations.exists()
         ):
             return self.response_ok(data)
         ranges = split_ranges(
