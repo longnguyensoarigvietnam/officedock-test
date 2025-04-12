@@ -1,24 +1,29 @@
 'use client';
 import React, { useContext } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
+import StatisticTeamCalendar from '@components/statisticTeam/tag/StatisticTeamCalendar';
 import ImageRound from '@components/common/ImageRound';
-
-import { OptionDropdownType } from '@interfaces/common';
-import { formatDateToYMD, sumDurations } from '@utils/date';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { pageRouters } from '@constants/routers';
-
-import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
-import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
 import PercentageTeamTagsCompare from '@components/statisticTeam/tag/compare/PercentageTeamTagsCompare';
 import TaskListStatisticTeamTags from '@components/statisticTeam/tag/TaskList';
+
+import { pageRouters } from '@constants/routers';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
+
+import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useStatisticTagsTeam from '@hooks/useStatisticTagsTeam';
 import useStatisticTagsTeamCompare from '@hooks/useStatisticTagsTeamCompare';
-import StatisticTeamCalendar from '@components/statisticTeam/tag/StatisticTeamCalendar';
+
+import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
+import { useToast } from '@providers/ToastProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
+import { OptionDropdownType } from '@interfaces/common';
+import { formatDateToYMD, sumDurations } from '@utils/date';
 
 const StatisticTeamTagBoard = () => {
   const {
@@ -62,61 +67,20 @@ const StatisticTeamTagBoard = () => {
     setIsLoadingMediumCompare,
     setIsLoadingSmallCompare,
   } = useContext(StatisticTeamTagsStateContext);
+  const { organizationTeamList } = useContext(GlobalStateContext);
+
   const router = useRouter();
+  const { showToast } = useToast();
+
   const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
+
+  const handleSetParam = (id: string) => {
+    params.set('organization', id);
+    router.push(`?${params.toString()}`);
+  };
 
   const organizationId = searchParams.get('organization');
-
-  const { statisticTagsListTeam } = useStatisticTagsTeam({
-    filter: {
-      fromDate: formatDateToYMD(startDate) || '',
-      endDate: formatDateToYMD(`${endDate}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: Number(selectedLarge?.value),
-      mediumCategoryId: Number(selectedMedium?.value),
-      smallCategoryId: Number(selectedSmall?.value),
-
-      tagIds: selectedTags,
-    },
-    onSuccess: (data) => {
-      const organization = creationDataStatisticData?.organization;
-
-      if (organization) {
-        const largeCategories = organization.statisticCategories.map(
-          (stat) => ({
-            value: stat.LARGE.id,
-            label: stat.LARGE.name,
-          }),
-        );
-        setLargeOptions(largeCategories);
-      } else {
-        setLargeOptions([]);
-      }
-      setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
-      setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
-      setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
-      setTotalDurationCategory(sumDurations(data.category ?? []));
-    },
-  });
-  const { statisticTagsListTeamCompare } = useStatisticTagsTeamCompare({
-    filter: {
-      fromDate: formatDateToYMD(startDateCompare) || '',
-      endDate: formatDateToYMD(`${endDateCompare}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: Number(selectedLarge?.value),
-      mediumCategoryId: Number(selectedMedium?.value),
-      smallCategoryId: Number(selectedSmall?.value),
-
-      isCompare: isCheckCompare,
-    },
-    onSuccess: (data) => {
-      setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
-      setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
-      setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
-      setTotalDurationCategoryCompare(sumDurations(data.smallCategories ?? []));
-    },
-  });
-
   const { creationDataStatisticData } = useCreationDataStatisticTeam({
     organization_id: organizationId || '',
     isTeam: true,
@@ -148,6 +112,74 @@ const StatisticTeamTagBoard = () => {
       }));
       setTagsOptions(optionsTagList);
       setSelectedTags(optionsTagList);
+    },
+  });
+
+  const { statisticTagsListTeam } = useStatisticTagsTeam({
+    filter: {
+      fromDate: formatDateToYMD(startDate) || '',
+      endDate: formatDateToYMD(`${endDate}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: Number(selectedLarge?.value),
+      mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
+
+      tagIds: selectedTags,
+    },
+    onSuccess: (data) => {
+      const organization = creationDataStatisticData?.organization;
+
+      if (organization) {
+        const largeCategories = organization.statisticCategories.map(
+          (stat) => ({
+            value: stat.LARGE.id,
+            label: stat.LARGE.name,
+          }),
+        );
+        setLargeOptions(largeCategories);
+      } else {
+        setLargeOptions([]);
+      }
+      setTotalDurationLarge(sumDurations(data.largeCategories ?? []));
+      setTotalDurationMedium(sumDurations(data.mediumCategories ?? []));
+      setTotalDurationSmall(sumDurations(data.smallCategories ?? []));
+      setTotalDurationCategory(sumDurations(data.category ?? []));
+    },
+    onError: () => {
+      showToast({
+        variant: 'error',
+        description: ERROR_COMMON_MESSAGE,
+      });
+      if (organizationTeamList.length) {
+        handleSetParam(String(organizationTeamList[0].value));
+      }
+    },
+  });
+  const { statisticTagsListTeamCompare } = useStatisticTagsTeamCompare({
+    filter: {
+      fromDate: formatDateToYMD(startDateCompare) || '',
+      endDate: formatDateToYMD(`${endDateCompare}`) || '',
+      organizationIds: String(selectedOrganization?.value || ''),
+      largeCategoryId: Number(selectedLarge?.value),
+      mediumCategoryId: Number(selectedMedium?.value),
+      smallCategoryId: Number(selectedSmall?.value),
+
+      isCompare: isCheckCompare,
+    },
+    onSuccess: (data) => {
+      setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
+      setTotalDurationMediumCompare(sumDurations(data.mediumCategories ?? []));
+      setTotalDurationSmallCompare(sumDurations(data.smallCategories ?? []));
+      setTotalDurationCategoryCompare(sumDurations(data.smallCategories ?? []));
+    },
+    onError: () => {
+      showToast({
+        variant: 'error',
+        description: ERROR_COMMON_MESSAGE,
+      });
+      if (organizationTeamList.length) {
+        handleSetParam(String(organizationTeamList[0].value));
+      }
     },
   });
 

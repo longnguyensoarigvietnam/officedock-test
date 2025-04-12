@@ -25,12 +25,14 @@ const useTaskBoardTeam = ({
   ordering,
   isReadyToFetch,
   onSuccess,
+  onError,
 }: {
   organization_id?: string;
   filter?: FilterProps;
   ordering?: string;
 
   isReadyToFetch?: boolean;
+  onError?: () => void;
 
   onSuccess?: (data: KanbanDataTeamResponse) => void;
 }) => {
@@ -85,6 +87,7 @@ const useTaskBoardTeam = ({
           router.push(pageRouters.LOGIN.href);
         }
       }
+      onError && onError();
     },
     onSettled: () => {
       setIsLoadingDataTask(false);

@@ -19,7 +19,7 @@ interface ContextValue {
   dashboardMembersWithAvatars: CalendarDashboardMember[];
   selectedOrganization: OptionDropdownType | undefined;
   isChatFilesUploading: boolean;
-  abortChatSendingMessageControllerRef: MutableRefObject<AbortController | null>
+  abortChatSendingMessageControllerRef: MutableRefObject<AbortController | null>;
   setIsExtendCalendar: Dispatch<SetStateAction<boolean>>;
   setTotalNotifications: Dispatch<SetStateAction<number>>;
   setExpanded: Dispatch<SetStateAction<boolean>>;
@@ -30,7 +30,9 @@ interface ContextValue {
     SetStateAction<OptionDropdownType | undefined>
   >;
   setIsChatFilesUploading: Dispatch<SetStateAction<boolean>>;
-  cancelUploadChatFiles: () => void
+  cancelUploadChatFiles: () => void;
+  organizationTeamList: OptionDropdownType[];
+  setOrganizationTeamList: Dispatch<SetStateAction<OptionDropdownType[]>>;
 }
 
 const defaultValue: ContextValue = {
@@ -50,7 +52,9 @@ const defaultValue: ContextValue = {
   setDashboardMembersWithAvatars: () => {},
   setSelectedOrganization: () => {},
   setIsChatFilesUploading: () => {},
-  cancelUploadChatFiles: () => {}
+  cancelUploadChatFiles: () => {},
+  organizationTeamList: [],
+  setOrganizationTeamList: () => {},
 };
 
 export const GlobalStateContext = createContext<ContextValue>(defaultValue);
@@ -63,8 +67,15 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const [totalNotifications, setTotalNotifications] = useState(0);
   const [selectedOrganization, setSelectedOrganization] =
     useState<OptionDropdownType>();
+
+  const [organizationTeamList, setOrganizationTeamList] = useState<
+    OptionDropdownType[]
+  >([]);
+
   const [isChatFilesUploading, setIsChatFilesUploading] = useState(false);
-  const abortChatSendingMessageControllerRef = useRef<AbortController | null>(null);
+  const abortChatSendingMessageControllerRef = useRef<AbortController | null>(
+    null,
+  );
 
   const cancelUploadChatFiles = () => {
     abortChatSendingMessageControllerRef.current?.abort();
@@ -80,13 +91,15 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     selectedOrganization,
     isChatFilesUploading,
     abortChatSendingMessageControllerRef,
+    organizationTeamList,
+    setOrganizationTeamList,
     setSelectedOrganization,
     setDashboardMembersWithAvatars,
     setExpanded,
     setIsExtendCalendar,
     setTotalNotifications,
     setIsChatFilesUploading,
-    cancelUploadChatFiles
+    cancelUploadChatFiles,
   };
 
   return (

@@ -12,17 +12,18 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import AllocationCategory from '@components/statistic/category/AllocationCategory';
 import PercentageCategoryCompare from '@components/statistic/category/compare/PercentageCategoryCompare';
 import AllocationCategoryCompare from '@components/statistic/category/compare/AllocationCategoryCompare';
+import LineChart from '@components/statistic/category/LineChart';
+import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 
 import { pageRouters } from '@constants/routers';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 import useStatisticCategoriesCompare from '@hooks/useStatisticCategoriesCompare';
 import useStatisticCategories from '@hooks/useStatisticCategories';
+import useTeamList from '@hooks/useListTeam';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import LineChart from '@components/statistic/category/LineChart';
-import LineChartCompare from '@components/statistic/category/compare/LineChartCompare';
 
 const StatisticBoard = () => {
   const {
@@ -203,6 +204,10 @@ const StatisticBoard = () => {
         })),
       ]);
     },
+  });
+
+  useTeamList({
+    onSuccess: () => {},
   });
 
   // Handle Choose organization

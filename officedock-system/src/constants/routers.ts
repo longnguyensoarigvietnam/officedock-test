@@ -360,7 +360,8 @@ export const apiRouters = {
   CATEGORY_LIST: '/statistic-categories/',
   CATEGORY_DETAIL: (id: string) => `/statistic-categories/${id}/`,
   CATEGORY_VALIDATION: '/statistic-categories/validation-data/',
-  CHECK_ACTUAL_DURATION: '/organization-category-hierarchies/check-actual-duration/',
+  CHECK_ACTUAL_DURATION:
+    '/organization-category-hierarchies/check-actual-duration/',
 
   // TASK
   TASK_BOARD_LIST: '/tasks/board/',
@@ -467,6 +468,8 @@ export const apiRouters = {
   CONFIRM_USER_DAILY: (id: number) => `/users/${id}/report/`,
 
   // STATISTICS
+  // ROLES
+  TEAM_LIST: '/teams/',
   STATISTICS_CATEGORIES: '/statistics/categories/',
   STATISTICS_TASKS: '/statistics/tasks/',
   STATISTICS_TAGS: '/statistics/tags/',
