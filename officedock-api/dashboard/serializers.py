@@ -221,6 +221,7 @@ class UpdateDurationSerializer(serializers.ModelSerializer):
                     schedule=instance.schedule,
                 )
                 & Q(started_at__lt=paused_at, paused_at__gt=started_at)
+                & Q(user=instance.user)
             ).exclude(id=instance.id)
 
             if overlapping_qs.exists():
@@ -315,7 +316,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         schedule = data.get("schedule", None)
         model = task or schedule
         instance = self.instance
-
+        user = self.context.get("request").user
         if task is None and schedule is None:
             raise ValidationError(
                 {"detail": ERROR_MESSAGES["task_and_event_not_exists"]}
@@ -337,6 +338,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
                 Q(started_at__lt=paused_at)
                 & Q(Q(paused_at__gt=started_at) | Q(paused_at__isnull=True))
             )
+            & Q(user=user)
         )
 
         # Exclude the current instance when updating
