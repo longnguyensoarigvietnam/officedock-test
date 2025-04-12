@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 
 from base.apis import BaseAPIViewSet
+from base.filters import FilterByPermission
 from base.permissions import ActionPermission
 
 from roles.constants import Screens
@@ -21,9 +22,7 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     queryset = Tag.objects.order_by("-created_at").all()
     serializer_class = TagSerializer
     permission_classes = [ActionPermission]
-    filter_backends = [
-        DjangoFilterBackend,
-    ]
+    filter_backends = [DjangoFilterBackend, FilterByPermission]
     filterset_class = TagFilter
     screen_name = Screens.TAG.value
 

@@ -98,12 +98,22 @@ def has_permission(actions, user, item_org_ids):
     """
     # Retrieve permissions for update and delete actions
     user_org_ids = user.organizations.values_list("id", flat=True)
+    org_ids = list(user_org_ids)
+
+    def _get_children(instance):
+        children = instance.organizations.all()
+        for child in children:
+            org_ids.append(child.id)
+            _get_children(child)
+
+    _get_children(user)
+    org_ids = set(org_ids)
 
     # Check permissions for each action
     permissions = {
         action: check_permission(
             get_permission_for_user(user, action_name),
-            user_org_ids,
+            org_ids,
             item_org_ids,
         )
         for action, action_name in actions.items()

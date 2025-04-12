@@ -3,6 +3,8 @@ from rest_framework import serializers
 from base.messages import ERROR_MESSAGES
 from common.serializers import CreationDataOrganizationSerializer
 from organizations.models import Organization
+from roles.constants import Actions, Screens
+from roles.utils import has_permission
 from .models import Tag
 
 
@@ -32,6 +34,7 @@ class TagSerializer(serializers.ModelSerializer):
     organizations = CreationDataOrganizationSerializer(
         many=True, read_only=True
     )
+    actions = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Tag
@@ -40,6 +43,7 @@ class TagSerializer(serializers.ModelSerializer):
             "name",
             "organization_ids",
             "organizations",
+            "actions",
             "is_hidden",
         ]
 
@@ -77,6 +81,20 @@ class TagSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         return representation
+
+    def get_actions(self, obj):
+        """
+        Get unique role permissions for the given object.
+        """
+        user = self.context.get("request").user
+        actions = {
+            Actions.UPDATE.value: f"{Screens.TAG.value}_{Actions.UPDATE.value}",
+            Actions.DELETE.value: f"{Screens.TAG.value}_{Actions.DELETE.value}",
+        }
+        item_org_ids = obj.organizations.values_list("id", flat=True)
+        permissions = has_permission(actions, user, item_org_ids)
+
+        return permissions
 
 
 class TagsForCreationSerializer(serializers.Serializer):
