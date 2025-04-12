@@ -499,6 +499,16 @@ const ListUsers = () => {
     }
   }, [userIdParam, actionTypeParam, userEditDetail, openActionsUserModal]);
 
+  const isPermissionAdd =
+    session?.user.permissions &&
+    hasPermissionInArray(session?.user.permissions, PermissionsSystem.USER_ADD);
+  const isPermissionUpdate =
+    session?.user.permissions &&
+    hasPermissionInArray(
+      session?.user.permissions,
+      PermissionsSystem.USER_UPDATE,
+    );
+
   return (
     <Fragment>
       <div>
@@ -752,38 +762,44 @@ const ListUsers = () => {
         onConfirm={handleConfirmDeleteUser}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />
-      {openActionsUserModal && actionTypeParam && (
-        <ActionsUserModal
-          open={openActionsUserModal}
-          action={actionTypeParam}
-          dataUserDetail={userEditDetail}
-          originalOrganizationOptions={organizationUserOptions.filter(
-            (role) => role.value,
-          )}
-          roleUserOptions={roleUserOptions.filter((role) => role.value)}
-          emailErrorMessage={emailErrorMessage}
-          usernameErrorMessage={usernameErrorMessage}
-          onClose={() => {
-            handleRemoveParam();
-            setOpenActionsUserModal(false);
-            setUserEditId(null);
-            setUserEditDetail(null);
-          }}
-          onDelete={(userToDelete: User) => {
-            handleOpenDeleteUserModal(userToDelete);
-            setUserEditDetail(null);
-            setOpenActionsUserModal(false);
-            setUserEditId(null);
-            handleRemoveParam();
-          }}
-          onCreate={(data: CreateUserFormData, isOptionEmail: boolean) => {
-            handleConfirmCreateUser(data, isOptionEmail);
-          }}
-          onEdit={(data: CreateUserFormData, isOptionEmail: boolean) => {
-            handleConfirmEditUser(data, isOptionEmail);
-          }}
-        />
-      )}
+      {openActionsUserModal &&
+        actionTypeParam &&
+        (isPermissionAdd || isPermissionUpdate) && (
+          <ActionsUserModal
+            open={openActionsUserModal}
+            action={actionTypeParam}
+            dataUserDetail={userEditDetail}
+            originalOrganizationOptions={organizationUserOptions.filter(
+              (role) => role.value,
+            )}
+            roleUserOptions={roleUserOptions.filter((role) => role.value)}
+            emailErrorMessage={emailErrorMessage}
+            usernameErrorMessage={usernameErrorMessage}
+            onClose={() => {
+              handleRemoveParam();
+              setOpenActionsUserModal(false);
+              setUserEditId(null);
+              setUserEditDetail(null);
+            }}
+            onDelete={(userToDelete: User) => {
+              handleOpenDeleteUserModal(userToDelete);
+              setUserEditDetail(null);
+              setOpenActionsUserModal(false);
+              setUserEditId(null);
+              handleRemoveParam();
+            }}
+            onCreate={(data: CreateUserFormData, isOptionEmail: boolean) => {
+              if (isPermissionAdd) {
+                handleConfirmCreateUser(data, isOptionEmail);
+              }
+            }}
+            onEdit={(data: CreateUserFormData, isOptionEmail: boolean) => {
+              if (isPermissionUpdate) {
+                handleConfirmEditUser(data, isOptionEmail);
+              }
+            }}
+          />
+        )}
     </Fragment>
   );
 };
