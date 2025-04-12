@@ -68,8 +68,8 @@ class BaseUserSerializer(serializers.ModelSerializer):
         """
         Validate user password
         """
-
-        password_validation.validate_password(value, self.instance)
+        if value:
+            password_validation.validate_password(value)
         return value
 
     def validate_email(self, value):
@@ -634,7 +634,7 @@ class SystemUserInviteSerializer(serializers.ModelSerializer):
         Validate user password
         """
         if value:
-            password_validation.validate_password(value, self.instance)
+            password_validation.validate_password(value)
         return value
 
     def validate_email(self, value):
@@ -705,8 +705,8 @@ class ResetPasswordSerializer(serializers.Serializer):
         """
         Validate new password.
         """
-
-        password_validation.validate_password(value, self.instance)
+        if value:
+            password_validation.validate_password(value)
         return value
 
 
@@ -734,8 +734,8 @@ class ChangePasswordSerializer(serializers.Serializer):
         """
         Validate new password.
         """
-
-        password_validation.validate_password(value, self.instance)
+        if value:
+            password_validation.validate_password(value)
         return value
 
 
