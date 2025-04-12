@@ -66,6 +66,9 @@ const TaskListStatistic = ({
     totalDurationTaskCompare,
     isSkeletonCategoryTask,
     isSkeletonCategoryTaskCompare,
+    setIsLoadingLarge,
+    setIsLoadingMedium,
+    setIsLoadingOrganization,
     setSelectedTags,
   } = useContext(StatisticStateContext);
 
@@ -123,6 +126,11 @@ const TaskListStatistic = ({
           setTaskList(data.results);
         }
       }
+      setTimeout(() => {
+        setIsLoadingLarge(false);
+        setIsLoadingMedium(false);
+        setIsLoadingOrganization(false);
+      }, 1000);
     },
   });
   useStatisticTaskCompare({
@@ -147,6 +155,11 @@ const TaskListStatistic = ({
           setTaskListCompare(data.results);
         }
       }
+      setTimeout(() => {
+        setIsLoadingLarge(false);
+        setIsLoadingMedium(false);
+        setIsLoadingOrganization(false);
+      }, 1000);
     },
   });
 

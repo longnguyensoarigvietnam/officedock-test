@@ -113,9 +113,10 @@ const PercentageTags = ({
   });
 
   const processChartData = (
-    categories: StatisticCategoryInfo[],
+    dataCategories: StatisticCategoryInfo[],
     colorData?: string,
   ) => {
+    const categories = dataCategories.filter((item) => item.percent > 0);
     const mergedItems: StatisticCategoryInfo[] = [];
     const mergedCategory: StatisticCategoryInfo = {
       categoryName: 'その他',
@@ -189,7 +190,7 @@ const PercentageTags = ({
     if (statisticTagsList) {
       if (statisticTagsList.largeCategories) {
         const largeChartData = processChartData(
-          statisticTagsList.largeCategories.filter((item) => item.percent > 0),
+          statisticTagsList.largeCategories,
         );
         setDataChartLarge(largeChartData);
       } else {
@@ -206,7 +207,7 @@ const PercentageTags = ({
       }
       if (statisticTagsList.mediumCategories) {
         const mediumChartData = processChartData(
-          statisticTagsList.mediumCategories.filter((item) => item.percent > 0),
+          statisticTagsList.mediumCategories,
           '#2E9267',
         );
         setDataChartMedium(mediumChartData);
@@ -224,7 +225,7 @@ const PercentageTags = ({
       }
       if (statisticTagsList.smallCategories) {
         const smallChartData = processChartData(
-          statisticTagsList.smallCategories.filter((item) => item.percent > 0),
+          statisticTagsList.smallCategories,
           '#2E9267',
         );
         setDataChartSmall(smallChartData);
@@ -242,7 +243,7 @@ const PercentageTags = ({
       }
       if (statisticTagsList.category) {
         const categoryChartData = processChartData(
-          statisticTagsList.category.filter((item) => item.percent > 0),
+          statisticTagsList.category,
           '#2E9267',
         );
         setDataChartCategory(categoryChartData);
