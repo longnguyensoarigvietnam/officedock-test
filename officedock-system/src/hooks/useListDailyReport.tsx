@@ -8,9 +8,11 @@ import { DataListDailyType } from '@interfaces/statistic';
 import api from '@base/api';
 import { useContext } from 'react';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { OptionDropdownType } from '@interfaces/common';
 
 interface UseListDailyReportHooksProps {
   date: string;
+  organization_ids?: OptionDropdownType[];
   onSuccess?: (success: DataListDailyType[]) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -18,6 +20,7 @@ interface UseListDailyReportHooksProps {
 
 const useListDailyReport = ({
   date,
+  organization_ids,
   onSuccess,
   onError,
   onSettled,
@@ -29,7 +32,7 @@ const useListDailyReport = ({
   // Handle call API get list daily report
   const getListDailyReport = async () => {
     setIsLoading(true);
-    const apiUrl = `${apiRouters.STAT_DATA}?date=${date}`;
+    const apiUrl = `${apiRouters.STAT_DATA}?date=${date}${organization_ids ? `&organization_ids=${organization_ids.map((item) => item.value).join(',')}` : ''}`;
 
     const { data } = await api.get<DataListDailyType[]>(apiUrl);
     return data;
@@ -41,7 +44,7 @@ const useListDailyReport = ({
     refetch: refetchListDailyReport,
     isFetched: isFetchedListDailyReport,
   } = useQuery({
-    queryKey: ['getListDailyReport', date],
+    queryKey: ['getListDailyReport', date, organization_ids],
     queryFn: getListDailyReport,
     retry: 0,
     enabled: !!token,

@@ -22,9 +22,12 @@ import {
   isYesterdaySchedule,
 } from '@utils/date';
 import api from '@base/api';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { OptionDropdownType } from '@interfaces/common';
 
 const ListData = () => {
   const { setIsLoading } = useContext(LoadingContext);
+  const { organizationTeamList } = useContext(GlobalStateContext);
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
@@ -32,8 +35,18 @@ const ListData = () => {
     DataListDailyType[]
   >([]);
 
+  const [selectedOrganization, setSelectedOrganization] =
+    useState<OptionDropdownType>({
+      label: 'すべて',
+      value: 'ALL',
+    });
+
   const { listDailyReport } = useListDailyReport({
     date: formatDateServer(currentDate),
+    organization_ids:
+      selectedOrganization.value !== 'ALL'
+        ? [selectedOrganization]
+        : organizationTeamList,
   });
 
   useEffect(() => {
@@ -184,7 +197,23 @@ const ListData = () => {
         </div>
       </header>
       <div className="w-[220px] mb-[30px]">
-        <Dropdown options={[]} className="!h-[34px]" />
+        <Dropdown
+          options={[
+            {
+              label: 'すべて',
+              value: 'ALL',
+            },
+            ...organizationTeamList.map((item) => ({
+              label: item.label,
+              value: item.value,
+            })),
+          ]}
+          selectedOption={selectedOrganization}
+          className="!h-[34px] !py-0"
+          onChange={(e) => {
+            setSelectedOrganization(e);
+          }}
+        />
       </div>
       <div className="flex flex-col gap-5">
         {dataListDailyReport &&
