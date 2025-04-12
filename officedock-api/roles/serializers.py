@@ -3,6 +3,7 @@ from rest_framework import serializers
 from common.utils import to_camel_case
 from users.models import Role
 from roles.constants import (
+    TEAMDOCK_ROLE_PERMISSION_BY_OPTIONS,
     PermissionOptions,
     ROLE_PERMISSION_BY_OPTIONS,
     Screens,
@@ -103,16 +104,21 @@ class RolePermissionSerializer(serializers.ModelSerializer):
         data = []
         for screen, actions in permissions.items():
             # Compare and get action
-            for permission, base_actions in ROLE_PERMISSION_BY_OPTIONS.items():
-                if base_actions == actions:
-                    if (
-                        permission
-                        != PermissionOptions.LOGGED_ORGANIZATION.value
-                        and screen == Screens.TEAMDOCK.value
-                    ):
-                        actions = PermissionOptions.LOGGED_ORGANIZATION.value
-                    else:
+            if screen == Screens.TEAMDOCK.value:
+                for (
+                    permission,
+                    base_actions,
+                ) in TEAMDOCK_ROLE_PERMISSION_BY_OPTIONS.items():
+                    if base_actions == actions:
                         actions = permission
-                    break
+                        break
+            else:
+                for (
+                    permission,
+                    base_actions,
+                ) in ROLE_PERMISSION_BY_OPTIONS.items():
+                    if base_actions == actions:
+                        actions = permission
+                        break
             data.append({"screen_name": screen, "actions": actions})
         return data
