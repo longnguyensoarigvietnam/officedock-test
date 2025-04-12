@@ -455,6 +455,7 @@ def check_task_overtime(task, task_duration, limit_time=None):
         if (
             prev_task_schedule
             and task_duration.is_cancel_alert
+            and task_duration.paused_at is not None
             and prev_task_schedule.plan_end_date
             < timezone.now()
             >= task_schedule.plan_start_date

@@ -399,6 +399,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 else None,
             )
             & Q(started_at__lt=now(), paused_at__gt=now())
+            & Q(user=user)
         )
         if overlapping_qs.exists():
             raise ValidationError({"detail": ERROR_MESSAGES["exists_duration"]})
