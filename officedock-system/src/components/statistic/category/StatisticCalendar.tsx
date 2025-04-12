@@ -552,7 +552,7 @@ function StatisticCalendar() {
                 )}
               </div>
             </div>
-            <div className="flex-1">
+            <div className="flex-1  multi-date-custom">
               <MultiDatePickerCustom
                 isTypeTime={isTypeTime}
                 initialStartDate={dataStartDate}

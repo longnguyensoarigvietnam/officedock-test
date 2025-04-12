@@ -257,11 +257,11 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         instance = serializer.save()  # Save the updated instance
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
-
+        user = request.user
         if started_at.date() != paused_at.date():
             # Call separate_duration to handle multi-day durations
             new_durations = separate_duration(
-                instance, paused_at, is_get_new_durations=True
+                instance, paused_at, is_get_new_durations=True, user=user
             )
             return DurationSerializer(
                 new_durations, many=True, context={"request": request}
@@ -399,6 +399,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 else None,
             )
             & Q(started_at__lt=now(), paused_at__gt=now())
+            & Q(user=user)
         )
         if overlapping_qs.exists():
             raise ValidationError({"detail": ERROR_MESSAGES["exists_duration"]})
@@ -463,7 +464,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         ).all()
         for duration in durations:
             # Split time range by day and create new duration for it
-            separate_duration(duration, timezone.now())
+            for user in participant_ids:
+                separate_duration(duration, timezone.now(), user=user)
         schedules.update(is_start=False)
         # Stop task if task is running
         task_ids = PeopleInChargeTasks.objects.filter(
@@ -474,7 +476,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         ).all()
         for duration in durations:
             # Split time range by day and create new duration for it
-            separate_duration(duration, timezone.now())
+            for user in participant_ids:
+                separate_duration(duration, timezone.now(), user=user)
 
         Task.objects.filter(id__in=task_ids).update(is_start=False)
 
@@ -587,7 +590,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             )
             if task_duration.exists():
                 for duration in task_duration.all():
-                    separate_duration(duration, timezone.now())
+                    separate_duration(duration, timezone.now(), user=user)
 
         separate_task_duration = TaskDuration.objects.filter(
             Q(paused_at__isnull=True)
@@ -600,7 +603,9 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         ).all()
 
         for duration in separate_task_duration:
-            self._separate_duration_while_keep_running(duration, now())
+            self._separate_duration_while_keep_running(
+                duration, now(), user=user
+            )
 
         if current_duration_start:
             start_of_today = datetime.combine(timezone.now().date(), time.min)
@@ -658,7 +663,9 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
 
         return self.response_ok(data)
 
-    def _separate_duration_while_keep_running(self, duration, end_date):
+    def _separate_duration_while_keep_running(
+        self, duration, end_date, user=None
+    ):
         """
         Handle update and create duration by intervals
         """
@@ -675,6 +682,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                     schedule=duration.schedule,
                     started_at=last_date_start,
                     paused_at=None,
+                    user=user,
                 )
             if intervals is not []:
                 for start, end in intervals:
@@ -683,6 +691,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                         schedule=duration.schedule,
                         started_at=start,
                         paused_at=end,
+                        user=user,
                     )
 
     @extend_schema(
@@ -871,7 +880,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             uuid=uuid,
         )
         if started_at.date() != paused_at.date():
-            separate_duration(duration, duration.paused_at)
+            separate_duration(duration, duration.paused_at, user=user)
 
     @transaction.atomic
     def perform_update(self, serializer):
@@ -927,7 +936,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
         if started_at.date() != paused_at.date():
-            separate_duration(instance, instance.paused_at)
+            separate_duration(instance, instance.paused_at, user=user)
 
     @transaction.atomic
     def perform_destroy(self, instance):

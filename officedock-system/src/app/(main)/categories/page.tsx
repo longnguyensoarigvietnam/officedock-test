@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 import MainLayout from '@components/layouts/MainLayout';
 import Button from '@components/common/Button';
@@ -8,8 +9,11 @@ import { pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
 
 import ListCategory from './list';
+import { hasPermissionInArray } from '@utils';
 
 const CategoryPage = () => {
+  const { data: session } = useSession();
+
   return (
     <MainLayout
       title={pageRouters.CATEGORY_MANAGEMENT.name}
@@ -26,14 +30,19 @@ const CategoryPage = () => {
               社内共通カテゴリー
             </Button>
           </Link>
-
-          <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
-            <Button
-              variant="outline"
-              className={`w-[152px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
-              チームカテゴリー
-            </Button>
-          </Link>
+          {session?.user.permissions &&
+            hasPermissionInArray(
+              session?.user.permissions,
+              PermissionsSystem.CATEGORY_HIERARCHY_VIEW,
+            ) && (
+              <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
+                <Button
+                  variant="outline"
+                  className={`w-[152px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                  チームカテゴリー
+                </Button>
+              </Link>
+            )}
         </div>
       </div>
       <div className="flex flex-col gap-6">

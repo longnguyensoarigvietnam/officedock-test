@@ -222,7 +222,9 @@ class SettingSerializer(serializers.ModelSerializer):
     schedule_zoom = serializers.IntegerField(
         min_value=0, max_value=100, default=100
     )
-    date_filter_schedule = serializers.DateField(required=False)
+    date_filter_schedule = serializers.DateField(
+        required=False, allow_null=True
+    )
     task_filter = TaskFilterSerializer(many=True, required=False)
     is_show_list_kanban = serializers.BooleanField(
         default=False, required=False
