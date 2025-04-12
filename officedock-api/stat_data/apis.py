@@ -67,7 +67,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     filter_backends = [FilterByPermission]
     screen_name = Screens.DAILY_REPORT.value
 
-    def _separate_duration(self, duration, end_date):
+    def _separate_duration(self, duration, end_date, user=None):
         """
         Handle update and create duration by intervals
         """
@@ -83,6 +83,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     task_id=duration.task_id,
                     started_at=last_date_start,
                     paused_at=None,
+                    user=user,
                 )
             if intervals is not []:
                 for start, end in intervals:
@@ -90,6 +91,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         task_id=duration.task_id,
                         started_at=start,
                         paused_at=end,
+                        user=user,
                     )
 
             return True
@@ -162,7 +164,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         )
 
         for duration in durations:
-            self._separate_duration(duration, timezone.now())
+            self._separate_duration(duration, timezone.now(), user=user)
 
         if start_of_today == start_of_day:
             durations = TaskDuration.objects.filter(
