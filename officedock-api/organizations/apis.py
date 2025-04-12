@@ -1073,18 +1073,6 @@ class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     screen_name = Screens.TEAMDOCK.value
     lookup_field = "id"
 
-    def get_permissions(self):
-        """
-        Switch screen name by query params
-        """
-        has_statistic_categories = self.request.query_params.get(
-            "has_statistic_categories"
-        )
-        if has_statistic_categories and has_statistic_categories != "false":
-            self.screen_name = Screens.CATEGORY_HIERARCHY.value
-
-        return super().get_permissions()
-
     def get_queryset(self):
         """
         Filtering users by company.
@@ -1103,21 +1091,10 @@ class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         context["request"] = self.request
         return context
 
-    def get_serializer(self, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
         """
-        Get serializer by action
+        Return list of team
         """
-        has_statistic_categories = self.request.query_params.get(
-            "has_statistic_categories"
-        )
+        queryset = self.filter_queryset(self.get_queryset())
 
-        if (
-            self.action == "retrieve"
-            or self.action == "list"
-            and has_statistic_categories
-        ):
-            return OrganizationDetailSerializer(
-                *args, **kwargs, context={"request": self.request}
-            )
-
-        return super().get_serializer(*args, **kwargs)
+        return self.response_ok(self.get_serializer(queryset, many=True).data)
