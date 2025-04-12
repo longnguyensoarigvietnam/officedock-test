@@ -2,7 +2,9 @@ from tasks.models import TaskDuration
 from tasks.utils import split_date_range
 
 
-def separate_duration(duration, end_date, is_get_new_durations=False):
+def separate_duration(
+    duration, end_date, is_get_new_durations=False, user=None
+):
     """
     Handle update and create duration by intervals
     """
@@ -18,10 +20,14 @@ def separate_duration(duration, end_date, is_get_new_durations=False):
                 schedule_id=duration.schedule_id,
                 started_at=start,
                 paused_at=end,
+                user=user,
             )
         elif duration.task_id:
             task_duration = TaskDuration.objects.create(
-                task_id=duration.task_id, started_at=start, paused_at=end
+                task_id=duration.task_id,
+                started_at=start,
+                paused_at=end,
+                user=user,
             )
         durations.append(task_duration)
     return durations if is_get_new_durations else True
