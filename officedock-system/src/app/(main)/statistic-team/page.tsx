@@ -10,7 +10,7 @@ const StatisticTeamPage = () => {
   return (
     <MainLayout
       title={pageRouters.STATISTIC_TEAM_MANAGEMENT.name}
-      permission={PermissionsSystem.STATISTIC_VIEW}
+      permission={PermissionsSystem.TEAMDOCK_VIEW}
       className="!py-0 pl-10 pr-0 !bg-[#EBF1F7]"
       showFooter={false}>
       <StatisticTeamStateProvider>

@@ -9,19 +9,20 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import PercentageTags from '@components/statistic/tag/PercentageTags';
 import StatisticTagCalendar from '@components/statistic/tag/StatisticCalendar';
 import PercentageTagsCompare from '@components/statistic/tag/compare/PercentageTagsCompare';
-
-import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
-import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
-import useStatisticsTags from '@hooks/useStatisticTags';
-import { pageRouters } from '@constants/routers';
-import { OptionDropdownType } from '@interfaces/common';
-import { formatDateToYMD, sumDurations } from '@utils/date';
-
-import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import AllocationTag from '@components/statistic/tag/AllocationTag';
 import AllocationTagCompare from '@components/statistic/tag/compare/AllocationTagCompare';
 import LineChart from '@components/statistic/tag/LineChart';
 import LineChartCompare from '@components/statistic/tag/compare/LineChartCompare';
+
+import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+import useStatisticTagsCompare from '@hooks/useStatisticTagsCompare';
+import useStatisticsTags from '@hooks/useStatisticTags';
+
+import { pageRouters } from '@constants/routers';
+
+import { OptionDropdownType } from '@interfaces/common';
+import { formatDateToYMD, sumDurations } from '@utils/date';
+import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 const StatisticTagBoard = () => {
   const {

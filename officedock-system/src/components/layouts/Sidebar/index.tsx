@@ -33,7 +33,6 @@ import { pageRouters } from '@constants/routers';
 import { MenuItem } from '@interfaces/menu';
 import { OptionDropdownType, OptionTabType } from '@interfaces/common';
 
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import useDashboardUnreadMessages from '@hooks/useDashboardUnreadMessages';
 
 import { TaskContext } from '@providers/TaskProvider';
@@ -42,6 +41,7 @@ import { WebSocketMessageData } from '@interfaces/chat';
 import { showBackgroundColorByTime } from '@utils';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
+import useTeamList from '@hooks/useListTeam';
 
 type Props = {
   className?: string;
@@ -74,7 +74,6 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
 const Sidebar = ({ className }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { authenticatedUser } = useAuthenticatedUser();
   const searchParams = useSearchParams();
   const [organizationList, setOrganizationList] = useState<
     OptionDropdownType[]
@@ -91,6 +90,7 @@ const Sidebar = ({ className }: Props) => {
     expanded,
     selectedOrganization,
     isChatFilesUploading,
+    setOrganizationTeamList,
     setSelectedOrganization,
     setExpanded,
     setTotalNotifications,
@@ -163,28 +163,28 @@ const Sidebar = ({ className }: Props) => {
       setTotalNotifications(dashboardUnreadMessages?.total);
   }, [dashboardUnreadMessages, setTotalNotifications]);
 
-  useEffect(() => {
-    if (authenticatedUser) {
-      setOrganizationList(
-        authenticatedUser.organizations.map((org) => {
-          const randomColor = getRandomColor();
-          return {
-            value: Number(org.id),
-            label: org.name,
-            imgComponent: <GroupIconWithDynamicColor color={randomColor} />,
-          };
-        }),
-      );
-    }
-  }, [authenticatedUser]);
+  const { teamList } = useTeamList({
+    onSuccess: (data) => {
+      setOrganizationList([
+        ...data.map((org) => ({
+          value: org.id as number,
+          label: org.name,
+          imgComponent: <GroupIconWithDynamicColor color={getRandomColor()} />,
+        })),
+      ]);
+      setOrganizationTeamList([
+        ...data.map((org) => ({
+          value: org.id as number,
+          label: org.name,
+          imgComponent: <GroupIconWithDynamicColor color={getRandomColor()} />,
+        })),
+      ]);
+    },
+  });
 
   useEffect(() => {
-    if (
-      organizationId &&
-      authenticatedUser?.organizations &&
-      organizationList
-    ) {
-      const foundOrganization = authenticatedUser?.organizations.find(
+    if (organizationId && teamList && organizationList) {
+      const foundOrganization = teamList.find(
         (org) => org.id == Number(organizationId),
       );
       if (foundOrganization) {
@@ -197,7 +197,7 @@ const Sidebar = ({ className }: Props) => {
         });
       }
     }
-  }, [organizationId, authenticatedUser?.organizations, organizationList]);
+  }, [organizationId, teamList, organizationList]);
 
   const hour = new Intl.DateTimeFormat('ja-JP', {
     timeZone: 'Asia/Tokyo',
@@ -234,7 +234,7 @@ const Sidebar = ({ className }: Props) => {
     label: '',
     value: '',
   };
-  const mainOrganization = authenticatedUser?.organizations.find(
+  const mainOrganization = teamList?.find(
     (organization) => organization.isMain,
   );
   if (mainOrganization) {
@@ -243,13 +243,10 @@ const Sidebar = ({ className }: Props) => {
       value: String(mainOrganization.id),
     };
   } else {
-    if (
-      authenticatedUser?.organizations.length &&
-      authenticatedUser?.organizations.length > 0
-    ) {
+    if (teamList?.length && teamList?.length > 0) {
       defaultOrganization = {
-        label: authenticatedUser?.organizations[0].name,
-        value: String(authenticatedUser?.organizations[0].id),
+        label: teamList[0].name,
+        value: String(teamList[0].id),
       };
     }
   }
@@ -297,7 +294,7 @@ const Sidebar = ({ className }: Props) => {
           label: '',
           value: '',
         };
-        const mainOrganization = authenticatedUser?.organizations.find(
+        const mainOrganization = teamList?.find(
           (organization) => organization.isMain,
         );
         if (mainOrganization) {
@@ -306,13 +303,10 @@ const Sidebar = ({ className }: Props) => {
             value: String(mainOrganization.id),
           };
         } else {
-          if (
-            authenticatedUser?.organizations.length &&
-            authenticatedUser?.organizations.length > 0
-          ) {
+          if (teamList?.length && teamList?.length > 0) {
             defaultOrganization = {
-              label: authenticatedUser?.organizations[0].name,
-              value: String(authenticatedUser?.organizations[0].id),
+              label: teamList[0].name,
+              value: String(teamList[0].id),
             };
           }
         }

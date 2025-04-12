@@ -99,6 +99,7 @@ const useStatisticTask = ({
     if (created_at) params.append('created_at', String(created_at));
     if (filter?.user_id) params.append('user_id', String(filter.user_id));
     if (is_tag_page) params.append('is_tag_page', String(is_tag_page));
+    if (isTeam) params.append('current_screen', 'teamdock');
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
 

@@ -15,6 +15,7 @@ import React, {
 import { useMutation } from 'react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import FullCalendar from '@fullcalendar/react';
+import { isAfter, isBefore, isToday } from 'date-fns';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -30,6 +31,7 @@ import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import InputSearch from '@components/common/InputSearch';
 import ActionFilterTaskTeam from '@components/modals/ActionFilterTeamTask';
 import DatePicker from '@components/common/DatePicker';
+import RangeSlider from '@components/common/RangeSlider';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
@@ -53,6 +55,7 @@ import api from '@base/api';
 
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import {
   adjustEndDate,
@@ -69,8 +72,6 @@ import {
   isMoreThanThirtyMinutes,
   isTodaySchedule,
 } from '@utils/date';
-import RangeSlider from '@components/common/RangeSlider';
-import { isAfter, isBefore, isToday } from 'date-fns';
 
 const ScheduleTeamBoard = () => {
   // Context
@@ -80,9 +81,12 @@ const ScheduleTeamBoard = () => {
     orderingOptions,
     setOrderingOptions,
   } = useContext(TaskTeamStateContext);
+  const { organizationTeamList } = useContext(GlobalStateContext);
 
   // State
   const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
+
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
   const organizationId = searchParams.get('organization');
@@ -134,7 +138,10 @@ const ScheduleTeamBoard = () => {
       label: '',
       value: '',
     });
-
+  const handleSetParamTeam = (id: string) => {
+    params.set('organization', id);
+    router.push(`?${params.toString()}`);
+  };
   useCreationDataStatisticTeam({
     organization_id: organizationId || '',
     isTeam: true,
@@ -560,6 +567,11 @@ const ScheduleTeamBoard = () => {
           });
         }
       },
+      onError: () => {
+        if (organizationTeamList.length > 0) {
+          handleSetParamTeam(String(organizationTeamList[0].value));
+        }
+      },
       onSettled: () => {
         setIsLoading(false);
       },
@@ -641,6 +653,11 @@ const ScheduleTeamBoard = () => {
           setEvents(() => {
             return [...newEvents];
           });
+        }
+      },
+      onError: () => {
+        if (organizationTeamList.length > 0) {
+          handleSetParamTeam(String(organizationTeamList[0].value));
         }
       },
       onSettled: () => {
