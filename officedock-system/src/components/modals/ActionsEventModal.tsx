@@ -567,6 +567,7 @@ const ActionsEventModal = ({
             className="mt-1 w-3 h-[14px] hover:cursor-pointer"
             src="/icons/drawer-close-white.svg"
             name="Close icon"
+            onClick={handleCloseModal}
           />
         </div>
       </header>
