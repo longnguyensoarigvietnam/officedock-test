@@ -293,7 +293,7 @@ const ListOrganizations = () => {
         {session?.user.permissions &&
           hasPermissionInArray(
             session?.user.permissions,
-            PermissionsSystem.ORGANIZATION_ADD,
+            PermissionsSystem.ORGANIZATION_HIERARCHY_VIEW,
           ) && (
             <Button
               className="w-[100px] !p-0"

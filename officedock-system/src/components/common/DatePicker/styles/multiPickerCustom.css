@@ -131,7 +131,12 @@
   background-color: #0068b6 !important;
   color: white !important;
 }
-
+.multi-date-compare .multi-date .react-datepicker__day--selected,
+.multi-date-compare .multi-date .react-datepicker__day--in-range,
+.multi-date-compare .multi-date .react-datepicker__day--today {
+  background-color: #c32e2e !important;
+  color: white !important;
+}
 .multi-date .react-datepicker__month-option--selected,
 .multi-date .react-datepicker__year-option--selected {
   display: none;
@@ -333,7 +338,7 @@
   border-radius: 0 !important;
   color: black !important;
 }
-.multi-date .highlighted-compare {
+.multi-date-compare .multi-date .highlighted-compare {
   background-color: rgba(195, 46, 46, 0.3) !important;
   z-index: 1;
   border-radius: 0 !important;
