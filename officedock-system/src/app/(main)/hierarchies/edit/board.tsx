@@ -10,8 +10,8 @@ import Dropdown from '@components/common/Dropdown';
 import Button from '@components/common/Button';
 
 import useCreationDataStatisticOrganization from '@hooks/useCreationDataStatisticOrganization';
-import useCreationOrganization from '@hooks/useCreationOrganization';
 import useCreationDataSkill from '@hooks/useCreationDataSkill';
+import useTeamList from '@hooks/useListTeam';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -109,7 +109,7 @@ const EditHierarchyForm = () => {
     organizationId: String(selectedOrganizationOption.value),
     current_screen: ScreenName.CATEGORY_HIERARCHY,
   });
-  const { creationOrganization } = useCreationOrganization({});
+  const { teamList } = useTeamList({screenName: ScreenName.CATEGORY_HIERARCHY});
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
   const { showToast } = useToast();
@@ -192,8 +192,8 @@ const EditHierarchyForm = () => {
   }, [creationDataSkillData, selectedOrganizationOption]);
 
   useEffect(() => {
-    if (creationOrganization) {
-      const organizationList = creationOrganization.map((org) => {
+    if (teamList) {
+      const organizationList = teamList.map((org) => {
         return {
           value: Number(org.id),
           label: org.name,
@@ -207,7 +207,7 @@ const EditHierarchyForm = () => {
         ...organizationList,
       ]);
     }
-  }, [creationOrganization]);
+  }, [teamList]);
 
   const handleGetOrganizationCategoryHierarchyList = async () => {
     setIsLoading(true);
