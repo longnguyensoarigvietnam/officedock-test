@@ -1021,7 +1021,7 @@ const DailyReportBoard = () => {
           <div
             className={`daily-custom text-left custom-statistic mt-[12px] ${isHasChild && '!mt-[19px]  mb-[18px]'}`}>
             <SingleSelect
-              className="border-none h-6 text-xs min-w-[162px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
+              className="border-none h-[30px] text-xs min-w-[162px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
               defaultValue={optionSmall.find(
                 (element) =>
                   element.value ===
