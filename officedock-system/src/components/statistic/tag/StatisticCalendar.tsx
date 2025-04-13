@@ -404,7 +404,7 @@ function StatisticTagCalendar() {
             <div className="text-xs font-medium text-[#0068B6] px-[14px] h-[18px] flex items-center  bg-[#EBF1F7] rounded-sm">
               {isTypeTime}
             </div>
-            <div className="text-sm text-black font-normal flex items-center gap-[6px]">
+            <div className="text-[13px] text-black font-normal flex items-center gap-[6px]">
               <span>{startDate && formatShowDateJapanese(startDate)}</span>
               <div className="h-[34px] flex items-center text-[#77858F]">
                 〜
@@ -424,7 +424,7 @@ function StatisticTagCalendar() {
               <div className="text-xs font-medium text-[#C32E2E] px-[14px] flex items-center  bg-[#F9EAEA] rounded-sm">
                 {isTypeTime}
               </div>
-              <div className="text-sm text-black font-normal flex items-center gap-[6px]">
+              <div className="text-[13px] text-black font-normal flex items-center gap-[6px]">
                 <span>
                   {startDateCompare && formatShowDateJapanese(startDateCompare)}
                 </span>

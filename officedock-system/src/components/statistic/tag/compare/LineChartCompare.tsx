@@ -363,7 +363,7 @@ const LineChartCompare = ({
                   align-items: center; 
                   justify-content: center;
                 ">
-                  基準期間
+                 比較期間
                 </p>
                 <div style="color: #77858F; font-weight: 400; font-size: 12px;">
                   ${
@@ -408,30 +408,25 @@ const LineChartCompare = ({
     tooltipEl.style.left = `${offsetLeft + tooltipModel.caretX - 115}px`;
     tooltipEl.style.top = `${offsetTop + tooltipModel.caretY + 10}px`;
     tooltipEl.style.opacity = '1';
+    tooltipEl.style.zIndex = '9999';
+    tooltipEl.style.pointerEvents = 'none';
   };
 
   const options: any = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'nearest',
+      intersect: false,
+    },
     plugins: {
       legend: {
         display: false, // Hides the legend
       },
       tooltip: {
         enabled: false, // Disable default tooltip
+        position: 'nearest',
         external: externalTooltipHandler,
-      },
-      interaction: {
-        mode: 'nearest', // Ensures tooltip appears for the closest point
-        intersect: false, // Allows hovering even if not directly on the point
-        axis: 'x', // Expands hover detection across the x-axis
-      },
-      elements: {
-        point: {
-          radius: 4, // Adjust actual point size
-          hitRadius: 20, // Increase hover detection area
-          hoverRadius: 8, // Increase the highlight effect
-        },
       },
       datalabels: {
         display: false,
@@ -439,8 +434,9 @@ const LineChartCompare = ({
     },
     elements: {
       point: {
-        radius: 0,
-        hoverRadius: 5,
+        radius: 4, // Adjust actual point size
+        hitRadius: 20, // Increase hover detection area
+        hoverRadius: 8, // Increase the highlight effect
       },
     },
     datasets: {
