@@ -356,7 +356,7 @@ const LineChartCompare = ({
                 align-items: center; 
                 justify-content: center;
               ">
-                基準期間
+                比較期間
               </p>
               <div style="color: #77858F; font-weight: 400; font-size: 12px;">
                 ${
