@@ -156,6 +156,12 @@ class TaskViewSet(
         week_day = serializer_data.pop("week_day", None)
         month_day = serializer_data.pop("month_day", None)
         month = serializer_data.pop("month", None)
+        task_schedule_from_date = serializer_data.pop(
+            "task_schedule_from_date", None
+        )
+        task_schedule_end_date = serializer_data.pop(
+            "task_schedule_end_date", None
+        )
 
         # Implement create task template base on T146
         if task_type == TaskTypes.MY_TEMPLATE.value:
@@ -342,6 +348,8 @@ class TaskViewSet(
                 task,
                 context={
                     "request": request,
+                    "task_schedule_from_date": task_schedule_from_date,
+                    "task_schedule_end_date": task_schedule_end_date,
                     "organization_id": organization.id
                     if is_team_task
                     else None,
