@@ -1,6 +1,7 @@
 import io
 from datetime import datetime, timedelta, time
 import random
+import re
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.conf import settings
@@ -108,6 +109,14 @@ def parse_camel_case_json(text_data):
 def to_camel_case(snake_str):
     components = snake_str.split("_")
     return components[0] + "".join(x.capitalize() for x in components[1:])
+
+
+def to_snake_case(string):
+    """Convert text to snake case"""
+    string = string.replace("-", " ")
+    string = re.sub("([A-Z]+)", r" \1", string)
+    string = re.sub("([a-z])([A-Z])", r"\1 \2", string)
+    return "_".join(string.split()).lower()
 
 
 def send_web_socket_event(data, user=None, chat_room=None):
