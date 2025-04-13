@@ -70,6 +70,9 @@ const TaskListStatistic = ({
     setIsLoadingMedium,
     setIsLoadingOrganization,
     setSelectedTags,
+    setIsLoadingLargeCompare,
+    setIsLoadingMediumCompare,
+    setIsLoadingOrganizationCompare,
   } = useContext(StatisticStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
@@ -130,6 +133,9 @@ const TaskListStatistic = ({
         setIsLoadingLarge(false);
         setIsLoadingMedium(false);
         setIsLoadingOrganization(false);
+        setIsLoadingLargeCompare(false);
+        setIsLoadingMediumCompare(false);
+        setIsLoadingOrganizationCompare(false);
       }, 1000);
     },
   });
@@ -159,6 +165,9 @@ const TaskListStatistic = ({
         setIsLoadingLarge(false);
         setIsLoadingMedium(false);
         setIsLoadingOrganization(false);
+        setIsLoadingLargeCompare(false);
+        setIsLoadingMediumCompare(false);
+        setIsLoadingOrganizationCompare(false);
       }, 1000);
     },
   });
