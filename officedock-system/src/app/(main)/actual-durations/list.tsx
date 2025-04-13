@@ -509,7 +509,7 @@ const ListActualDurations = () => {
       {session?.user.permissions &&
         hasPermissionInArray(
           session?.user.permissions,
-          PermissionsSystem.VIEW_ALL,
+          PermissionsSystem.ACTUAL_DURATION_ADD,
         ) && (
           <div className="flex justify-end gap-10">
             <div className="w-60">
@@ -697,7 +697,12 @@ const ListActualDurations = () => {
                           className="w-5 h-5 hover:cursor-pointer"
                         />
                       </Link>
-                      {element.pausedAt ? (
+                      {session?.user.permissions &&
+                      hasPermissionInArray(
+                        session?.user.permissions,
+                        PermissionsSystem.ACTUAL_DURATION_UPDATE,
+                      ) &&
+                      element.pausedAt ? (
                         <Link
                           href={pageRouters.EDIT_ACTUAL_DURATIONS.href(
                             `${element.id}`,
@@ -712,7 +717,12 @@ const ListActualDurations = () => {
                       ) : (
                         <div className="w-3.5 h-3.5"></div>
                       )}
-                      {element.pausedAt ? (
+                      {session?.user.permissions &&
+                      hasPermissionInArray(
+                        session?.user.permissions,
+                        PermissionsSystem.ACTUAL_DURATION_DELETE,
+                      ) &&
+                      element.pausedAt ? (
                         <ImageRound
                           name="Delete"
                           src={'/icons/delete.svg'}

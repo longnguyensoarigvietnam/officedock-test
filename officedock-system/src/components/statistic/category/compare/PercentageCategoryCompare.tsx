@@ -110,10 +110,11 @@ const PercentageCategoryCompare = ({
   >([]);
 
   const mapCategoryData = (
-    categories: StatisticCategoryInfo[],
+    dataCategories: StatisticCategoryInfo[],
     colorData?: string,
   ) => {
-    if (!categories) return [];
+    if (!dataCategories) return [];
+    const categories = dataCategories.filter((item) => item.percent > 0);
 
     const otherItems = categories.filter((item) => item.percent < 10);
     const mainItems = categories.filter((item) => item.percent >= 10);
@@ -700,6 +701,7 @@ const PercentageCategoryCompare = ({
       {isShowModal && (
         <ListTaskDetailStatisticModal
           open={isShowModal}
+          isDisable={`${detailCategory?.id}` == '未設定'}
           startDate={startDate}
           endDate={endDate}
           statisticCategoryList={statisticCategoryList}
@@ -718,6 +720,7 @@ const PercentageCategoryCompare = ({
       {isShowModalCompare && (
         <ListTaskDetailStatisticModal
           open={isShowModalCompare}
+          isDisable={`${detailCategoryCompare?.id}` == '未設定'}
           selectedTags={selectedTags}
           startDate={startDateCompare}
           statisticCategoryList={statisticCategoryList}

@@ -104,9 +104,10 @@ const PercentageCategory = ({
   });
 
   const processChartData = (
-    categories: StatisticCategoryInfo[],
+    dataCategories: StatisticCategoryInfo[],
     colorData?: string,
   ) => {
+    const categories = dataCategories.filter((item) => item.percent > 0);
     const mergedItems: StatisticCategoryInfo[] = [];
     const mergedCategory: StatisticCategoryInfo = {
       categoryName: 'その他',
@@ -639,6 +640,7 @@ const PercentageCategory = ({
       {isShowModal && (
         <ListTaskDetailStatisticModal
           open={isShowModal}
+          isDisable={`${detailCategory?.id}` == '未設定'}
           selectedTags={selectedTags}
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}

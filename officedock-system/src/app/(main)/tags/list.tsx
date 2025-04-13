@@ -37,11 +37,11 @@ import {
 import {
   ActionsModal,
   PermissionsSystem,
+  ScreenName,
   ServerStatusCode,
 } from '@constants/enums';
 
 import useTagList from '@hooks/useTagList';
-import useOrganizationOptions from '@hooks/useFullOrganizationList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDebounceText from '@hooks/useDebounceText';
 
@@ -55,6 +55,7 @@ import { Organizations } from '@interfaces/organization';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
+import useTeamList from '@hooks/useListTeam';
 
 const FilterOrganizationComponent = ({
   dataOrganizationList,
@@ -105,7 +106,17 @@ const ListTags = () => {
 
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
-  const { organizationOptions } = useOrganizationOptions({});
+  useTeamList({
+    screenName: ScreenName.TAG,
+    onSuccess: (data) => {
+      setDataOrganizationList(
+        data.map((org) => ({
+          label: org.name,
+          value: org.id as number,
+        })),
+      );
+    },
+  });
   const [dataOrganizationList, setDataOrganizationList] = useState<
     OptionDropdownType[]
   >([]);
@@ -177,18 +188,6 @@ const ListTags = () => {
       setTotalPages(data.numPages);
     },
   });
-
-  useEffect(() => {
-    if (organizationOptions) {
-      setDataOrganizationList(
-        organizationOptions.map((org) => ({
-          label: org.name,
-          value: org.id as number,
-        })),
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [organizationOptions]);
 
   const debouncedFilterByTagName = useDebounceText(watch('name'), 1000);
 
@@ -620,11 +619,7 @@ const ListTags = () => {
                         {element.name}
                       </p>
                       <div className="flex gap-3 justify-end">
-                        {session?.user.permissions &&
-                        hasPermissionInArray(
-                          session?.user.permissions,
-                          PermissionsSystem.TAG_UPDATE,
-                        ) ? (
+                        {element.actions?.update ? (
                           <div
                             onClick={() => {
                               handleConfirmGetDataDetailTag(String(element.id));
@@ -642,11 +637,7 @@ const ListTags = () => {
                         ) : (
                           <div className="w-3.5"></div>
                         )}
-                        {session?.user.permissions &&
-                        hasPermissionInArray(
-                          session?.user.permissions,
-                          PermissionsSystem.TAG_UPDATE,
-                        ) ? (
+                        {element.actions?.update ? (
                           <div
                             className="hidden"
                             onClick={() => {
@@ -664,11 +655,7 @@ const ListTags = () => {
                         ) : (
                           <div className="w-[17px]"></div>
                         )}
-                        {session?.user.permissions &&
-                        hasPermissionInArray(
-                          session?.user.permissions,
-                          PermissionsSystem.TAG_DELETE,
-                        ) ? (
+                        {element.actions?.delete ? (
                           <ImageRound
                             name="Delete"
                             src={'/icons/delete-gray.svg'}

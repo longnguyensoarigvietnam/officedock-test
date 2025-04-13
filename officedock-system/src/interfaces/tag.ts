@@ -7,6 +7,11 @@ export interface Tags {
   organizations?: Organizations[];
   isHidden?: boolean;
   createdAt?: Date | string;
+  actions?: {
+    update: boolean;
+    delete: boolean;
+    updateName?: boolean;
+  };
 }
 
 export interface TagFilterFormData {

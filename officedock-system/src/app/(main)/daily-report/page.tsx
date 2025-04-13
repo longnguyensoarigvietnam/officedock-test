@@ -10,7 +10,7 @@ const DailyReportPage = () => {
   return (
     <MainLayout
       title={pageRouters.DAILY_REPORT_MANAGEMENT.name}
-      permission={PermissionsSystem.STATISTIC_VIEW}
+      permission={PermissionsSystem.DAILY_REPORT_VIEW}
       className="!py-0 pl-10 pr-0 "
       showFooter={false}>
       <DailyReportBoard />

@@ -18,7 +18,12 @@ from base.permissions import ActionPermission
 
 from common.filters import CustomOrderFilter
 from common.models import Category
-from common.utils import transform_statistic_categories, generate_file_name
+from common.utils import (
+    to_camel_case,
+    to_snake_case,
+    transform_statistic_categories,
+    generate_file_name,
+)
 from skills.models import StatisticCategory, SkillMap
 from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
@@ -1066,12 +1071,19 @@ class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     )
     serializer_class = OrganizationForUserSerializer
     permission_classes = [ActionPermission]
-    filter_backends = [
-        DjangoFilterBackend,
-        FilterByPermission,
-    ]
-    screen_name = Screens.TEAMDOCK.value
-    lookup_field = "id"
+    filter_backends = [FilterByPermission]
+    screen_name = None
+
+    def get_permissions(self):
+        """Filter data by current screen"""
+        screen_name = self.request.query_params.get(
+            "screen_name", Screens.TEAMDOCK.value
+        )
+        if screen_name and to_camel_case(screen_name) in [
+            to_camel_case(item.value) for item in Screens
+        ]:
+            self.screen_name = to_snake_case(screen_name)
+        return super().get_permissions()
 
     def get_queryset(self):
         """
@@ -1091,6 +1103,11 @@ class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         context["request"] = self.request
         return context
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("screen_name", type=str, required=False),
+        ],
+    )
     def list(self, request, *args, **kwargs):
         """
         Return list of team

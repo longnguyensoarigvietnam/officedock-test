@@ -1,24 +1,30 @@
 'use client';
 import React, { useContext } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-
-import { OptionDropdownType } from '@interfaces/common';
-import { formatDateToYMD, sumDurations } from '@utils/date';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { pageRouters } from '@constants/routers';
 import StatisticTeamCalendar from '@components/statisticTeam/category/StatisticTeamCalendar';
-import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
-import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import PercentageTeamCategory from '@components/statisticTeam/category/PercentageTeamCategory';
 import PercentageTeamCategoryCompare from '@components/statisticTeam/category/compare/PercentageCategoryCompare';
 import TaskListTeamStatistic from '@components/statisticTeam/category/TaskList';
-import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
-import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
+import { pageRouters } from '@constants/routers';
+
+import useStatisticCategoriesTeam from '@hooks/useStatisticCategoriesTeam';
+import useStatisticCategoriesTeamCompare from '@hooks/useStatisticCategoriesTeamCompare';
+import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
+
+import { OptionDropdownType } from '@interfaces/common';
+import { formatDateToYMD, sumDurations } from '@utils/date';
+
+import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import { useToast } from '@providers/ToastProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const StatisticTeamBoard = () => {
   const {
@@ -63,8 +69,18 @@ const StatisticTeamBoard = () => {
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
   } = useContext(StatisticTeamStateContext);
+  const { organizationTeamList } = useContext(GlobalStateContext);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const params = new URLSearchParams(searchParams);
+
+  const { showToast } = useToast();
+
+  const handleSetParam = (id: string) => {
+    params.set('organization', id);
+    router.push(`?${params.toString()}`);
+  };
 
   const organizationId = searchParams.get('organization');
 
@@ -125,6 +141,15 @@ const StatisticTeamBoard = () => {
         setTotalDurationTask('00:00:00');
       }
     },
+    onError: () => {
+      showToast({
+        variant: 'error',
+        description: ERROR_COMMON_MESSAGE,
+      });
+      if (organizationTeamList.length > 0) {
+        handleSetParam(String(organizationTeamList[0].value));
+      }
+    },
   });
 
   const { statisticCategoryListTeamCompare } =
@@ -176,6 +201,15 @@ const StatisticTeamBoard = () => {
           }
         } else {
           setTotalDurationTaskCompare('00:00:00');
+        }
+      },
+      onError: () => {
+        showToast({
+          variant: 'error',
+          description: ERROR_COMMON_MESSAGE,
+        });
+        if (organizationTeamList.length > 0) {
+          handleSetParam(String(organizationTeamList[0].value));
         }
       },
     });

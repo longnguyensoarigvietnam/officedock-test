@@ -44,8 +44,7 @@ const CreateRoleForm = () => {
   const showErrorToast = useErrorToast();
 
   const getDefaultScreenAction = (screenName: string) => {
-    if(screenName == ScreenName.TEAM_DOCK) 
-      return PermissionType.TEAM_AND_SUB;
+    if (screenName == ScreenName.TEAM_DOCK) return PermissionType.TEAM_AND_SUB;
     return PermissionType.NOT_ALLOWED;
   };
 
@@ -123,6 +122,12 @@ const CreateRoleForm = () => {
       },
       {} as Record<string, { actions: string }>,
     );
+    if (permissions['category']) {
+      permissions['categoryHierarchy'] = { ...permissions['category'] };
+    }
+    if (permissions['organization']) {
+      permissions['organizationHierarchy'] = { ...permissions['organization'] };
+    }
     setIsSubmit(true);
     await createNewRole({
       name: roleName,

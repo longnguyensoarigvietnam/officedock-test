@@ -42,6 +42,7 @@ import {
 } from '@utils/date';
 import { getLineChartEnableViews, getRandomColor, lightenColor } from '@utils';
 import { Table, TableBody } from '@components/common/Table';
+import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 ChartJS.register(
   CategoryScale,
@@ -77,6 +78,7 @@ const LineChart = ({
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
+    totalDurationTask,
     listOptionsOrganization,
     largeOptions,
     mediumOptions,
@@ -115,7 +117,6 @@ const LineChart = ({
       categoryColor: string;
     }[]
   >([]);
-  const [totalDuration, setTotalDuration] = useState<string>('00:00');
   const [standardLabelsInfo, setStandardLabelsInfo] = useState<
     {
       color: string;
@@ -316,17 +317,18 @@ const LineChart = ({
     },
   };
 
-  const { statisticTaskDurationsList } = useStatisticTaskDurations({
-    filter: {
-      fromDate: formatDateToYMD(startDate) || '',
-      endDate: formatDateToYMD(`${endDate}`) || '',
-      organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: Number(selectedLarge?.value),
-      mediumCategoryId: Number(selectedMedium?.value),
-      tagIds: selectedTags,
-      statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
-    },
-  });
+  const { statisticTaskDurationsList, isFetchedStatisticTaskDurationsList } =
+    useStatisticTaskDurations({
+      filter: {
+        fromDate: formatDateToYMD(startDate) || '',
+        endDate: formatDateToYMD(`${endDate}`) || '',
+        organizationIds: String(selectedOrganization?.value || ''),
+        largeCategoryId: Number(selectedLarge?.value),
+        mediumCategoryId: Number(selectedMedium?.value),
+        tagIds: selectedTags,
+        statisticBy: lineChartViewBy ? String(lineChartViewBy.value) : '',
+      },
+    });
 
   useEffect(() => {
     if (statisticTaskDurationsList) {
@@ -464,25 +466,6 @@ const LineChart = ({
           datasets,
         });
         setTableData(tableDetail);
-        if (
-          selectedOrganization?.value &&
-          !selectedLarge?.value &&
-          !selectedMedium?.value
-        ) {
-          setTotalDuration(totalDurationLarge);
-        } else if (
-          selectedOrganization?.value &&
-          selectedLarge?.value &&
-          !selectedMedium?.value
-        ) {
-          setTotalDuration(totalDurationMedium);
-        } else if (
-          selectedOrganization?.value &&
-          selectedLarge?.value &&
-          selectedMedium?.value
-        ) {
-          setTotalDuration(totalDurationSmall);
-        }
         setStandardLabelsInfo(standardLabels);
       } else {
         setLineChartData({
@@ -490,7 +473,6 @@ const LineChart = ({
           datasets: [],
         });
         setTableData([]);
-        setTotalDuration('00:00');
         setStandardLabelsInfo([]);
       }
     }
@@ -650,7 +632,6 @@ const LineChart = ({
 
     return allViews.filter((view) => !enabledViews.includes(view));
   };
-
   return (
     <div
       style={{
@@ -812,13 +793,13 @@ const LineChart = ({
                 <p>合計時間</p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDuration?.split(':')[0]}
+                    {totalDurationTask?.split(':')[0]}
                   </p>
                   <p className="text-[25px] leading-none">時間</p>
                 </div>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-[34px] leading-none">
-                    {totalDuration?.split(':')[1]}
+                    {totalDurationTask?.split(':')[1]}
                   </p>
                   <p className="text-[25px] leading-none">分</p>
                 </div>
@@ -845,30 +826,41 @@ const LineChart = ({
               </div>
             </div>
           </div>
-          <div
-            style={{ position: 'relative' }}
-            className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
-            <Line data={lineChartData} options={options} />
-            <div
-              ref={tooltipRef}
-              style={{ position: 'absolute', opacity: 0 }}
+          {!isFetchedStatisticTaskDurationsList ? (
+            <RowSkeleton
+              numberOfRows={1}
+              className={`!h-[395px] ${expanded && 'w-[calc(100%_-_60px)]'} mx-auto`}
             />
-          </div>
-          <div className="px-[30px]">
-            <div className="flex gap-8 items-center justify-end mb-3 flex-wrap">
-              {standardLabelsInfo.map((label, index) => {
-                return (
-                  <div key={index} className="flex gap-1 items-center">
-                    <div
-                      className="w-8 h-1"
-                      style={{ backgroundColor: label.color }}></div>
-                    <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
-                      {label.name}
-                    </p>
-                  </div>
-                );
-              })}
+          ) : (
+            <div
+              style={{ position: 'relative' }}
+              className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
+              <Line data={lineChartData} options={options} />
+              <div
+                ref={tooltipRef}
+                style={{ position: 'absolute', opacity: 0 }}
+              />
             </div>
+          )}
+
+          <div className="px-[30px]">
+            {isFetchedStatisticTaskDurationsList && (
+              <div className="flex gap-8 items-center justify-end flex-wrap">
+                {standardLabelsInfo.map((label, index) => {
+                  return (
+                    <div key={index} className="flex gap-1 items-center">
+                      <div
+                        className="w-8 h-1"
+                        style={{ backgroundColor: label.color }}></div>
+                      <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
+                        {label.name}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (

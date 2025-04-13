@@ -79,6 +79,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import { ResponseError } from '@interfaces/response';
 import { TaskContext } from '@providers/TaskProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -98,6 +99,8 @@ const KanbanBoardTaskTeam = () => {
   } = useContext(TaskTeamStateContext);
 
   const { setIsLoading } = useContext(LoadingContext);
+  const { organizationTeamList } = useContext(GlobalStateContext);
+
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
 
@@ -106,6 +109,8 @@ const KanbanBoardTaskTeam = () => {
 
   // Param
   const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
+
   const router = useRouter();
   const organizationId = searchParams.get('organization');
   const actionType = searchParams.get('action');
@@ -168,6 +173,11 @@ const KanbanBoardTaskTeam = () => {
     },
   });
 
+  const handleSetParamTeam = (id: string) => {
+    params.set('organization', id);
+    router.push(`?${params.toString()}`);
+  };
+
   const { creationDataTaskData } = useCreationDataTask({
     onSuccess: (data) => {
       setCreationDataTaskData(data);
@@ -196,6 +206,11 @@ const KanbanBoardTaskTeam = () => {
         const newTotalStatus = transformDataTotalStatus(data.results);
 
         setDataTotalStatus(newTotalStatus);
+      }
+    },
+    onError: () => {
+      if (organizationTeamList.length > 0) {
+        handleSetParamTeam(String(organizationTeamList[0].value));
       }
     },
   });
