@@ -168,7 +168,7 @@ const ActionsTagModal = ({
                 })}
                 placeholder="新規タグ"
                 error={errors.name?.message}
-                disabled={isDisabled || dataTag?.actions?.update === false}
+                disabled={isDisabled || dataTag?.actions?.updateName === false}
               />
             </div>
             <div className="flex gap-2 items-center">

@@ -9,19 +9,19 @@ import { AxiosError } from 'axios';
 
 interface useTeamListProps {
   condition?: boolean[];
+  screenName?: string;
   onSuccess?: (success: Organizations[]) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
 
-const useTeamList = ({ onSuccess, onError, onSettled }: useTeamListProps) => {
+const useTeamList = ({ onSuccess, onError, onSettled, screenName }: useTeamListProps) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-
   // Handle call API get User list
   const getTeamList = async () => {
     const apiUrl = apiRouters.TEAM_LIST;
-    const { data } = await api.get<Organizations[]>(apiUrl);
+    const { data } = await api.get<Organizations[]>(`${apiUrl}${screenName ? `?screen_name=${screenName}` : ''}`);
     return data;
   };
 

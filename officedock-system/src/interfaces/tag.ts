@@ -10,6 +10,7 @@ export interface Tags {
   actions?: {
     update: boolean;
     delete: boolean;
+    updateName?: boolean;
   };
 }
 

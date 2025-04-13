@@ -37,6 +37,7 @@ import {
 import {
   ActionsModal,
   PermissionsSystem,
+  ScreenName,
   ServerStatusCode,
 } from '@constants/enums';
 
@@ -106,6 +107,7 @@ const ListTags = () => {
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
   useTeamList({
+    screenName: ScreenName.TAG,
     onSuccess: (data) => {
       setDataOrganizationList(
         data.map((org) => ({
