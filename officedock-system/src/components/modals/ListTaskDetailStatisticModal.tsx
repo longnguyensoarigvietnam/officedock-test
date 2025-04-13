@@ -22,6 +22,7 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 
 type Props = {
+  isDisable?: boolean;
   detailCategory: {
     id: number | null;
     totalDuration: string;
@@ -43,6 +44,7 @@ type Props = {
 
 const ListTaskDetailStatisticModal = ({
   open,
+  isDisable = false,
   startDate,
   endDate,
   selectedLarge,
@@ -296,7 +298,8 @@ const ListTaskDetailStatisticModal = ({
         <div className="w-fit  text-[#77858F] left-0 text-xs font-normal">
           タスク数 {count}
         </div>
-        <div>
+
+        <div className={`${isDisable && 'hidden'}`}>
           <div className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F]  font-medium  h-[20px] rounded-md">
             <span className="text-xs">タスク一覧へ</span>
             <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
