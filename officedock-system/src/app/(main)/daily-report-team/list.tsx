@@ -22,12 +22,11 @@ import {
   isYesterdaySchedule,
 } from '@utils/date';
 import api from '@base/api';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { OptionDropdownType } from '@interfaces/common';
+import useTeamList from '@hooks/useListTeam';
 
 const ListData = () => {
   const { setIsLoading } = useContext(LoadingContext);
-  const { organizationTeamList } = useContext(GlobalStateContext);
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
@@ -35,11 +34,27 @@ const ListData = () => {
     DataListDailyType[]
   >([]);
 
+  const [organizationTeamList, setOrganizationList] = useState<
+    OptionDropdownType[]
+  >([]);
+
   const [selectedOrganization, setSelectedOrganization] =
     useState<OptionDropdownType>({
       label: 'すべて',
       value: 'ALL',
     });
+
+  useTeamList({
+    screenName: 'team_daily_report',
+    onSuccess: (data) => {
+      setOrganizationList([
+        ...data.map((item) => ({
+          label: item.name,
+          value: item.id as number,
+        })),
+      ]);
+    },
+  });
 
   const { listDailyReport } = useListDailyReport({
     date: formatDateServer(currentDate),
