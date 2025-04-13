@@ -134,14 +134,17 @@ const ActionsTagModal = ({
             hasPermissionInArray(
               session?.user.permissions,
               PermissionsSystem.TAG_DELETE,
-            ) && (
+            ) &&
+            (dataTag?.actions?.updateName === false ? (
+              <></>
+            ) : (
               <ImageRound
                 className="mt-1 w-[14px] h-[17px] hover:cursor-pointer"
                 src="/icons/delete-event.svg"
                 name="Delete icon"
                 onClick={handleDeleteTag}
               />
-            )}
+            ))}
 
           <ImageRound
             className="mt-1 w-3 h-[14px] hover:cursor-pointer"
