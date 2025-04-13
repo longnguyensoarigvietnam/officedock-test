@@ -92,7 +92,14 @@ class TagSerializer(serializers.ModelSerializer):
             Actions.DELETE.value: f"{Screens.TAG.value}_{Actions.DELETE.value}",
         }
         item_org_ids = obj.organizations.values_list("id", flat=True)
-        permissions = has_permission(actions, user, item_org_ids)
+        if item_org_ids:
+            permissions = has_permission(actions, user, item_org_ids)
+        else:
+            permissions = {
+                Actions.UPDATE.value: True,
+                f"{Actions.UPDATE.value}_name": False,
+                Actions.DELETE.value: False,
+            }
 
         return permissions
 
