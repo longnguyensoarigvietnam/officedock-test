@@ -15,13 +15,20 @@ interface useTeamListProps {
   onSettled?: () => void;
 }
 
-const useTeamList = ({ onSuccess, onError, onSettled, screenName }: useTeamListProps) => {
+const useTeamList = ({
+  onSuccess,
+  onError,
+  onSettled,
+  screenName,
+}: useTeamListProps) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
   // Handle call API get User list
   const getTeamList = async () => {
     const apiUrl = apiRouters.TEAM_LIST;
-    const { data } = await api.get<Organizations[]>(`${apiUrl}${screenName ? `?screen_name=${screenName}` : ''}`);
+    const { data } = await api.get<Organizations[]>(
+      `${apiUrl}${screenName ? `?screen_name=${screenName}` : ''}`,
+    );
     return data;
   };
 
@@ -31,7 +38,7 @@ const useTeamList = ({ onSuccess, onError, onSettled, screenName }: useTeamListP
     refetch: refetchTeamList,
     isFetched: isFetchedTeams,
   } = useQuery({
-    queryKey: ['getTeamList'],
+    queryKey: ['getTeamList', screenName],
     queryFn: getTeamList,
     retry: 0,
     enabled: !!token,
