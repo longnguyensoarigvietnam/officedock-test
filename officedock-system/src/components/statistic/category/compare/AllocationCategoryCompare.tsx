@@ -1224,6 +1224,7 @@ const AllocationCategoryCompare = memo(
             open={isShowModal}
             startDate={startDate}
             endDate={endDate}
+            isDisable={`${detailCategory?.id}` == '未設定'}
             statisticCategoryList={statisticCategoryList}
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}
@@ -1240,6 +1241,7 @@ const AllocationCategoryCompare = memo(
         {isShowModalCompare && (
           <ListTaskDetailStatisticModal
             open={isShowModalCompare}
+            isDisable={`${detailCategoryCompare?.id}` == '未設定'}
             selectedTags={selectedTags}
             startDate={startDateCompare}
             statisticCategoryList={statisticCategoryList}

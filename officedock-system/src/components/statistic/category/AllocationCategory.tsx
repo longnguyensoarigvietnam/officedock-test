@@ -542,6 +542,7 @@ const AllocationCategory = memo(
         {isShowModal && (
           <ListTaskDetailStatisticModal
             open={isShowModal}
+            isDisable={`${detailCategory?.id}` == '未設定'}
             selectedTags={selectedTags}
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}

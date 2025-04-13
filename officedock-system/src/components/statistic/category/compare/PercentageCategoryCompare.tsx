@@ -701,6 +701,7 @@ const PercentageCategoryCompare = ({
       {isShowModal && (
         <ListTaskDetailStatisticModal
           open={isShowModal}
+          isDisable={`${detailCategory?.id}` == '未設定'}
           startDate={startDate}
           endDate={endDate}
           statisticCategoryList={statisticCategoryList}
@@ -719,6 +720,7 @@ const PercentageCategoryCompare = ({
       {isShowModalCompare && (
         <ListTaskDetailStatisticModal
           open={isShowModalCompare}
+          isDisable={`${detailCategoryCompare?.id}` == '未設定'}
           selectedTags={selectedTags}
           startDate={startDateCompare}
           statisticCategoryList={statisticCategoryList}
