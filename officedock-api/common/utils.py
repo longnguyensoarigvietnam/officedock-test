@@ -446,18 +446,20 @@ def add_default_entries_to_categories(data):
         new_medium_list = []
         for medium_entry in item["MEDIUM"]:
             # Add default in to Small
-            smalls = medium_entry.get("SMALL", [])
-            smalls.append(default)
+            smalls = (
+                medium_entry.get("SMALL") if medium_entry.get("SMALL") else []
+            )
+            smalls.insert(0, default)
 
             # Add default to Medium
             medium_with_default = {
                 "MEDIUM": medium_entry["MEDIUM"],
                 "SMALL": smalls,
             }
-            new_medium_list.append(medium_with_default)
+            new_medium_list.insert(0, medium_with_default)
 
         default_medium = {"MEDIUM": default, "SMALL": [default]}
-        new_medium_list.append(default_medium)
+        new_medium_list.insert(0, default_medium)
 
         item["MEDIUM"] = new_medium_list
     default_entry = {
