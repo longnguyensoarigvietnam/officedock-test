@@ -20,8 +20,10 @@ from base.messages import ERROR_MESSAGES
 from calendars.constants import ScheduleCategoryTypes
 from chat.constants import USER_ACTION_GROUP, WebSocketEventType
 from common.constants import STRIP_TAGS
+from organizations.constants import CategoryColors
 from organizations.models import OrganizationsStatisticCategories
 from roles.constants import SelectionResultOptions
+from stat_data.constants import NONE_CATEGORY
 from users.models import User, RoleDetail
 
 
@@ -426,6 +428,45 @@ def create_categories_by_model(model, categories):
 def generate_random_color():
     """Generate a random hex color code."""
     return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+
+
+def add_default_entries_to_categories(data):
+    """
+    Handle add default entries to categories
+    """
+    # Add default to Large
+    default = {
+        "id": NONE_CATEGORY,
+        "name": NONE_CATEGORY,
+        "uuid": NONE_CATEGORY,
+        "color": CategoryColors.GRAY.value,
+    }
+    for item in data:
+        # Handle Medium
+        new_medium_list = []
+        for medium_entry in item["MEDIUM"]:
+            # Add default in to Small
+            smalls = medium_entry.get("SMALL", [])
+            smalls.append(default)
+
+            # Add default to Medium
+            medium_with_default = {
+                "MEDIUM": medium_entry["MEDIUM"],
+                "SMALL": smalls,
+            }
+            new_medium_list.append(medium_with_default)
+
+        default_medium = {"MEDIUM": default, "SMALL": [default]}
+        new_medium_list.append(default_medium)
+
+        item["MEDIUM"] = new_medium_list
+    default_entry = {
+        "LARGE": default,
+        "MEDIUM": [{"MEDIUM": default, "SMALL": [default]}],
+    }
+
+    data.insert(0, default_entry)
+    return data
 
 
 class StripTags(Func):

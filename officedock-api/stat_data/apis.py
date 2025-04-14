@@ -47,6 +47,7 @@ from stat_data.utils import (
     get_list_durations_by_users,
     get_total_durations,
     get_duration_of_none_category,
+    check_is_not_none_category,
 )
 from tasks.constants import TaskCategoryTypes
 from tasks.models import Task, TaskDuration
@@ -789,12 +790,12 @@ class StatisticViewSet(BaseAPIViewSet):
         tasks = tasks.filter(filters)
         events = events.filter(filters)
         data = []
-        if (
-            large_category_id == NONE_CATEGORY
-            or medium_category_id == NONE_CATEGORY
-            or small_category_id == NONE_CATEGORY
+        if not check_is_not_none_category(
+            large_category_id, medium_category_id, small_category_id
         ):
-            return self.response_ok(data)
+            durations = get_duration_of_none_category(
+                durations, large_category_id, medium_category_id
+            )
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
         )
@@ -858,7 +859,9 @@ class StatisticViewSet(BaseAPIViewSet):
                 data.append(tag)
             else:
                 for tag in tag_list:
-                    if large_category_id:
+                    if check_is_not_none_category(
+                        large_category_id, medium_category_id, small_category_id
+                    ):
                         filter_durations = get_list_durations_by_users(
                             durations=durations,
                             large_id=large_category_id,
@@ -901,27 +904,32 @@ class StatisticViewSet(BaseAPIViewSet):
                 for category in category_list:
                     category_id = category["category_id"]
                     filter_durations = None
-                    if not large_category_id and not medium_category_id:
-                        filter_durations = get_list_durations_by_users(
-                            durations=durations,
-                            large_id=category_id,
-                        )
-                    if large_category_id:
-                        filter_durations = get_list_durations_by_users(
-                            durations=durations,
-                            large_id=large_category_id,
-                            medium_id=category_id,
-                        )
-                        if medium_category_id:
+
+                    if check_is_not_none_category(
+                        large_category_id, medium_category_id, small_category_id
+                    ):
+                        if not large_category_id and not medium_category_id:
+                            filter_durations = get_list_durations_by_users(
+                                durations=durations,
+                                large_id=category_id,
+                            )
+
+                        if large_category_id:
                             filter_durations = get_list_durations_by_users(
                                 durations=durations,
                                 large_id=large_category_id,
-                                medium_id=medium_category_id,
-                                small_id=category_id,
+                                medium_id=category_id,
                             )
+                            if medium_category_id:
+                                filter_durations = get_list_durations_by_users(
+                                    durations=durations,
+                                    large_id=large_category_id,
+                                    medium_id=medium_category_id,
+                                    small_id=category_id,
+                                )
                     if category_id is None:
                         filter_durations = get_duration_of_none_category(
-                            filter_durations,
+                            filter_durations if filter_durations else durations,
                             large_category_id,
                             medium_category_id,
                         )
@@ -1061,6 +1069,7 @@ class StatisticViewSet(BaseAPIViewSet):
                             large_id=large_category_id,
                             medium_id=medium_category_id,
                         )
+
                         duration = get_total_durations(durations)
 
                         tasks, events = get_list_models(durations)

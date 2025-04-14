@@ -49,6 +49,7 @@ from .utils import (
     send_web_socket_event,
     transform_statistic_categories,
     check_task_overtime,
+    add_default_entries_to_categories,
 )
 
 
@@ -475,6 +476,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
     @extend_schema(
         parameters=[
             OpenApiParameter("organization_id", type=int, required=False),
+            OpenApiParameter("is_statistic", type=bool, required=False),
         ],
     )
     @action(methods=["GET"], detail=False, url_path="statistics")
@@ -483,6 +485,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Return creation data for statistics
         """
         organization_id = request.query_params.get("organization_id")
+        is_statistic = request.query_params.get("is_statistic")
         user = request.user
         organizations = []
         if not organization_id:
@@ -510,7 +513,11 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     ).data
                 )
             data["organizations"] = list_org
-
+        if is_statistic:
+            for org in data["organizations"]:
+                org["statistic_categories"] = add_default_entries_to_categories(
+                    org["statistic_categories"]
+                )
         tags = (
             request.user.company.tags.filter(
                 is_hidden=False,
