@@ -98,6 +98,9 @@ interface ContextValue {
   setIsLoadingMediumCompare: Dispatch<SetStateAction<boolean>>;
   setIsLoadingSmallCompare: Dispatch<SetStateAction<boolean>>;
   setIsLoadingOrganizationCompare: Dispatch<SetStateAction<boolean>>;
+
+  currentPage: number;
+  setCurrentPage: Dispatch<SetStateAction<number>>;
 }
 
 const defaultValue: ContextValue = {
@@ -174,6 +177,8 @@ const defaultValue: ContextValue = {
   setIsLoadingMediumCompare: () => {},
   setIsLoadingSmallCompare: () => {},
   setIsLoadingOrganizationCompare: () => {},
+  currentPage: 1,
+  setCurrentPage: () => {},
 };
 
 export const StatisticTeamTagsStateContext =
@@ -222,6 +227,10 @@ export const StatisticTeamTagsStateProvider = ({
   const [selectedSmall, setSelectedSmall] = useState<OptionDropdownType | null>(
     null,
   );
+
+  // Page task list
+
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Total
   // Total duration
@@ -341,6 +350,8 @@ export const StatisticTeamTagsStateProvider = ({
     setIsLoadingMediumCompare,
     setIsLoadingSmallCompare,
     setIsLoadingOrganizationCompare,
+    currentPage,
+    setCurrentPage,
   };
 
   return (

@@ -71,19 +71,19 @@ const TaskListStatisticTeamTags = ({
     isSkeletonTagTeamTask,
     isSkeletonTagTeamTaskCompare,
     setSelectedTags,
+    currentPage,
+    setCurrentPage,
   } = useContext(StatisticTeamTagsStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
 
   // Value
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
 
   const [selectedMember, setSelectedMember] = useState<number | null>(null);
 
   // Value Compare
-  const [currentPageCompare, setCurrentPageCompare] = useState<number>(1);
   const [totalPagesCompare, setTotalPagesCompare] = useState<number>(1);
   const [taskListCompare, setTaskListCompare] = useState<
     DataTaskListStatisticListType[]
@@ -298,7 +298,10 @@ const TaskListStatisticTeamTags = ({
                   <div className="w-4">
                     <Checkbox
                       isChecked={selectedMember === member.id}
-                      onChange={() => setSelectedMember(member.id)}
+                      onChange={() => {
+                        setCurrentPage(1);
+                        setSelectedMember(member.id);
+                      }}
                       classSize="!rounded-full"
                     />
                   </div>
@@ -435,7 +438,10 @@ const TaskListStatisticTeamTags = ({
                 <div className="w-4">
                   <Checkbox
                     isChecked={!isShowCompare}
-                    onChange={() => setIsShowCompare(false)}
+                    onChange={() => {
+                      setCurrentPage(1);
+                      setIsShowCompare(false);
+                    }}
                     className="!rounded-full"
                     classSize="!rounded-full"
                   />
@@ -452,7 +458,10 @@ const TaskListStatisticTeamTags = ({
                 <div className="w-4">
                   <Checkbox
                     isChecked={isShowCompare}
-                    onChange={() => setIsShowCompare(true)}
+                    onChange={() => {
+                      setCurrentPage(1);
+                      setIsShowCompare(true);
+                    }}
                     className="!rounded-full"
                     classSize="!rounded-full"
                   />
@@ -500,8 +509,8 @@ const TaskListStatisticTeamTags = ({
             {isShowCompare ? (
               taskListCompare && taskListCompare.length ? (
                 <Pagination
-                  onChange={(pageNumber) => setCurrentPageCompare(pageNumber)}
-                  currentPage={currentPageCompare}
+                  onChange={(pageNumber) => setCurrentPage(pageNumber)}
+                  currentPage={currentPage}
                   totalPages={totalPagesCompare}
                 />
               ) : null
@@ -521,7 +530,10 @@ const TaskListStatisticTeamTags = ({
                   )}
                   options={optionList}
                   onChange={(e) => {
-                    setPageSize(e.value as number);
+                    if (e.value !== pageSize) {
+                      setCurrentPage(1);
+                      setPageSize(e.value as number);
+                    }
                   }}
                   className="h-[34px]  
                   !text-sm !py-0 !pl-[7px] !pr-0 !text-[#6B7280] mt-1 !bg-white !border-[#77858F]"

@@ -2804,7 +2804,6 @@ const KanbanBoardTask = () => {
 
   // Handle save zoom
   const handleSaveZoomKanban = async (kanbanZoom: number) => {
-    return;
     const { data: response } = await api.post(apiRouters.USER_SETTING, {
       kanbanZoom,
     });
