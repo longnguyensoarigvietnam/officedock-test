@@ -1033,13 +1033,17 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
-        date_filter_schedule = serializer_data.pop("date_filter_schedule")
-        task_filter = serializer_data.pop("task_filter")
-        is_show_list_kanban = serializer_data.pop("is_show_list_kanban")
-        is_show_week_schedule = serializer_data.pop("is_show_week_schedule")
-        is_show_my_template = serializer_data.pop("is_show_my_template")
+        date_filter_schedule = serializer_data.pop("date_filter_schedule", None)
+        task_filter = serializer_data.pop("task_filter", None)
+        is_show_list_kanban = serializer_data.pop("is_show_list_kanban", None)
+        is_show_week_schedule = serializer_data.pop(
+            "is_show_week_schedule", None
+        )
+        is_show_my_template = serializer_data.pop("is_show_my_template", None)
         serializer_data["task_settings"] = {
-            "date_filter_schedule": date_filter_schedule.isoformat(),
+            "date_filter_schedule": date_filter_schedule.isoformat()
+            if date_filter_schedule
+            else None,
             "task_filter": task_filter,
             "is_show_list_kanban": is_show_list_kanban,
             "is_show_week_schedule": is_show_week_schedule,

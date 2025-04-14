@@ -514,10 +514,19 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 )
             data["organizations"] = list_org
         if is_statistic:
-            for org in data["organizations"]:
-                org["statistic_categories"] = add_default_entries_to_categories(
-                    org["statistic_categories"]
+            if organization_id:
+                data["organization"][
+                    "statistic_categories"
+                ] = add_default_entries_to_categories(
+                    data["organization"]["statistic_categories"]
                 )
+            else:
+                for org in data["organizations"]:
+                    org[
+                        "statistic_categories"
+                    ] = add_default_entries_to_categories(
+                        org["statistic_categories"]
+                    )
         tags = (
             request.user.company.tags.filter(
                 is_hidden=False,
