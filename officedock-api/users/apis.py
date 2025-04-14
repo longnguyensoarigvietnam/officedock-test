@@ -1033,19 +1033,18 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
-        # TODO: This code is store task settings by user
-        # date_filter_schedule = serializer_data.pop("date_filter_schedule")
-        # task_filter = serializer_data.pop("task_filter")
-        # is_show_list_kanban = serializer_data.pop("is_show_list_kanban")
-        # is_show_week_schedule = serializer_data.pop("is_show_week_schedule")
-        # is_show_my_template = serializer_data.pop("is_show_my_template")
-        # serializer_data["task_settings"] = {
-        #     "date_filter_schedule": date_filter_schedule.isoformat(),
-        #     "task_filter": task_filter,
-        #     "is_show_list_kanban": is_show_list_kanban,
-        #     "is_show_week_schedule": is_show_week_schedule,
-        #     "is_show_my_template": is_show_my_template,
-        # }
+        date_filter_schedule = serializer_data.pop("date_filter_schedule")
+        task_filter = serializer_data.pop("task_filter")
+        is_show_list_kanban = serializer_data.pop("is_show_list_kanban")
+        is_show_week_schedule = serializer_data.pop("is_show_week_schedule")
+        is_show_my_template = serializer_data.pop("is_show_my_template")
+        serializer_data["task_settings"] = {
+            "date_filter_schedule": date_filter_schedule.isoformat(),
+            "task_filter": task_filter,
+            "is_show_list_kanban": is_show_list_kanban,
+            "is_show_week_schedule": is_show_week_schedule,
+            "is_show_my_template": is_show_my_template,
+        }
         user = request.user
         user.set_setting(serializer_data)
         user.save()

@@ -109,6 +109,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     )
                 if send_to_chat:
                     self._send_to_calendar_room(
+                        user,
                         participant,
                         schedule,
                         data,
@@ -268,6 +269,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     )
                 if send_to_chat:
                     self._send_to_calendar_room(
+                        user,
                         participant,
                         instance,
                         data,
@@ -346,6 +348,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     )
                 if send_to_chat:
                     self._send_to_calendar_room(
+                        user,
                         participant,
                         instance,
                         data,
@@ -379,6 +382,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
     def _send_to_calendar_room(
         self,
+        sender,
         user,
         schedule,
         chat_data,
@@ -403,7 +407,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         action = WebSocketEventType.MESSAGE.value
 
         message_data = {
-            "sender": user,
+            "sender": sender,
             "company": user.company,
             "schedule": schedule,
             "type": type,
