@@ -268,19 +268,19 @@ export const pageRouters = {
   // HIERARCHY
   HIERARCHY_MANAGEMENT: {
     name: '集計カテゴリー階層',
-    href: '/hierarchies',
+    href: '/categories/hierarchies',
   },
   EDIT_HIERARCHY: {
     name: '集計カテゴリー階層編集',
-    href: '/hierarchies/edit',
+    href: '/categories/hierarchies/edit',
   },
   CREATE_HIERARCHY: {
     name: '集計カテゴリー階層作成',
-    href: (id: string) => `/hierarchies/${id}/create`,
+    href: (id: string) => `/categories/hierarchies/${id}/create`,
   },
   DETAIL_HIERARCHY: {
     name: '集計カテゴリー階層詳細',
-    href: (id: string) => `/hierarchies/${id}`,
+    href: (id: string) => `/categories/hierarchies/${id}`,
   },
 
   // ACTUAL_DURATIONS MANAGEMENT

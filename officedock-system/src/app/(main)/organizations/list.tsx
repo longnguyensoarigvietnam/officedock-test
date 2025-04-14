@@ -61,6 +61,8 @@ const ListOrganizations = () => {
   const [selectedOrganizationToDelete, setSelectedOrganizationToDelete] =
     useState<Organizations | null>(null);
   const organizationNameInputRef = useRef<HTMLInputElement | null>(null);
+  const isCreatingRef = useRef(false);
+  const isEditingRef = useRef(false);
 
   const { showToast } = useToast();
 
@@ -114,6 +116,9 @@ const ListOrganizations = () => {
     'postEditOrganization',
     handleEditOrganization,
     {
+      onMutate: () => {
+        isEditingRef.current = true;
+      },
       onSuccess: () => {
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
@@ -126,6 +131,7 @@ const ListOrganizations = () => {
           showError: false,
         });
         refetchOrganizationList();
+        isEditingRef.current = false;
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -135,6 +141,7 @@ const ListOrganizations = () => {
             showError: true,
           };
         });
+        isEditingRef.current = false;
       },
     },
   );
@@ -151,6 +158,9 @@ const ListOrganizations = () => {
     'postCreateOrganization',
     handleCreateOrganization,
     {
+      onMutate: () => {
+        isCreatingRef.current = true;
+      },
       onSuccess: () => {
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
@@ -163,6 +173,7 @@ const ListOrganizations = () => {
           showError: false,
         });
         refetchOrganizationList();
+        isCreatingRef.current = false;
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
@@ -172,6 +183,7 @@ const ListOrganizations = () => {
             showError: true,
           };
         });
+        isCreatingRef.current = false;
       },
     },
   );
@@ -227,9 +239,11 @@ const ListOrganizations = () => {
     const handleClickOutside = (event: any) => {
       if (
         organizationNameInputRef.current &&
-        !organizationNameInputRef.current.contains(event.target)
+        !organizationNameInputRef.current.contains(event.target) &&
+        !event.target.closest('.toast-container')
       ) {
         if (selectedOrganizationToUpdate.action == ActionsModal.EDIT) {
+          if (isEditingRef.current) return;
           const oldCategoryName =
             dataOrganizations.find(
               (category) => category.uuid == selectedOrganizationToUpdate.uuid,
@@ -251,6 +265,7 @@ const ListOrganizations = () => {
             });
           }
         } else {
+          if (isCreatingRef.current) return;
           if (selectedOrganizationToUpdate.name.trim()) {
             createOrganization({
               uuid: String(selectedOrganizationToUpdate.uuid),
