@@ -19,6 +19,7 @@ import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import InputSearch from '@components/common/InputSearch';
 import Input from '@components/common/Input';
 import Dropdown from '@components/common/Dropdown';
+import WarningChangeHierarchyCategoryModal from '@components/modals/WarningChangeHierarchyCategoryModal';
 
 import { apiRouters } from '@constants/routers';
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
@@ -44,7 +45,6 @@ import { useToast } from '@providers/ToastProvider';
 
 import { Category } from '@interfaces/category';
 import api from '@base/api';
-import WarningChangeHierarchyCategoryModal from '@components/modals/WarningChangeHierarchyCategoryModal';
 
 const ListCategory = () => {
   const { setIsLoading } = useContext(LoadingContext);
@@ -78,6 +78,8 @@ const ListCategory = () => {
     showError: false,
   });
   const categoryNameInputRef = useRef<HTMLInputElement | null>(null);
+  const isCreatingRef = useRef(false);
+  const isEditingRef = useRef(false);
 
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -132,6 +134,9 @@ const ListCategory = () => {
     'postEditCategory',
     handleEditCategory,
     {
+      onMutate: () => {
+        isEditingRef.current = true;
+      },
       onSuccess: () => {
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
@@ -144,6 +149,7 @@ const ListCategory = () => {
           showError: false,
         });
         refetchCategoryList();
+        isEditingRef.current = false;
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -153,6 +159,7 @@ const ListCategory = () => {
             showError: true,
           };
         });
+        isEditingRef.current = false;
       },
     },
   );
@@ -166,6 +173,9 @@ const ListCategory = () => {
     'postCreateCategory',
     handleCreateCategory,
     {
+      onMutate: () => {
+        isCreatingRef.current = true;
+      },
       onSuccess: () => {
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
@@ -178,6 +188,7 @@ const ListCategory = () => {
           showError: false,
         });
         refetchCategoryList();
+        isCreatingRef.current = false;
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
@@ -187,6 +198,7 @@ const ListCategory = () => {
             showError: true,
           };
         });
+        isCreatingRef.current = false;
       },
     },
   );
@@ -242,9 +254,11 @@ const ListCategory = () => {
     const handleClickOutside = (event: any) => {
       if (
         categoryNameInputRef.current &&
-        !categoryNameInputRef.current.contains(event.target)
+        !categoryNameInputRef.current.contains(event.target) &&
+        !(event.target.closest('.toast-container'))
       ) {
         if (selectedCategoryToUpdate.action == ActionsModal.EDIT) {
+          if (isEditingRef.current) return;
           const oldCategoryName =
             dataCategories.find(
               (category) => category.uuid == selectedCategoryToUpdate.uuid,
@@ -265,6 +279,7 @@ const ListCategory = () => {
             });
           }
         } else {
+          if (isCreatingRef.current) return;
           if (selectedCategoryToUpdate.name.trim()) {
             createCategory({
               uuid: String(selectedCategoryToUpdate.uuid),

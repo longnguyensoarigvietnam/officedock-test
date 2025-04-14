@@ -78,7 +78,7 @@ const Toast = ({
   return (
     <div
       aria-live="assertive"
-      className={`pointer-events-none z-40  inset-0 flex px-4 py-6 sm:p-6 ${fixedToast ? 'fixed' : ''} ${toastPosition.container}`}>
+      className={`pointer-events-none z-40 toast-container inset-0 flex px-4 py-6 sm:p-6 ${fixedToast ? 'fixed' : ''} ${toastPosition.container}`}>
       <div className={`flex w-full flex-col space-y-4 ${toastPosition.toast}`}>
         <Transition
           show={show}

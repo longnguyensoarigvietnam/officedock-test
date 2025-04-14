@@ -2,12 +2,10 @@
 import { useQuery } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
-import { useContext } from 'react';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
 import { TaskDuration } from '@interfaces/task';
-import { LoadingContext } from '@providers/LoadingProvider';
 
 interface UseTaskDurationDetailHooksProps {
   item: {
@@ -28,7 +26,6 @@ const useTaskDurationDetail = ({
 }: UseTaskDurationDetailHooksProps) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
-  const { setIsLoading } = useContext(LoadingContext);
 
   // Handle call API get task duration detail
   const getTaskDurationDetail = async () => {
@@ -66,7 +63,6 @@ const useTaskDurationDetail = ({
     },
     onSettled: () => {
       onSettled && onSettled();
-      setIsLoading(false);
     },
   });
 

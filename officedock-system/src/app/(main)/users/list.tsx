@@ -38,6 +38,8 @@ import useUserList from '@hooks/useUserList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationOrganization from '@hooks/useCreationOrganization';
 import useDebounceText from '@hooks/useDebounceText';
+import useUserDetail from '@hooks/useUserDetail';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -51,10 +53,8 @@ import {
   UserRoleType,
 } from '@interfaces/user';
 import ActionsUserModal from '@components/modals/ActionsUserModal';
-import useUserDetail from '@hooks/useUserDetail';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ResponseError } from '@interfaces/response';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 const ListUsers = () => {
   const { data: session } = useSession();
