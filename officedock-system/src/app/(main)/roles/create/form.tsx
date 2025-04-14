@@ -50,7 +50,7 @@ const CreateRoleForm = () => {
 
   useEffect(() => {
     const initialRows: rowDataType[] = [];
-    SCREEN_LIST.map((screen) => {
+    SCREEN_LIST.filter((screen) => screen.show).map((screen) => {
       initialRows.push({
         screenLabel: screen.name,
         screenValue: screen.value,
@@ -116,7 +116,7 @@ const CreateRoleForm = () => {
           (row) => row.screenValue === screen.value,
         );
         acc[screen.value] = {
-          actions: matchingRow?.actions as string,
+          actions: matchingRow?.actions || PermissionType.EDITABLE,
         };
         return acc;
       },

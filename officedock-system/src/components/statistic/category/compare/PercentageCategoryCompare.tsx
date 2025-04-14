@@ -517,6 +517,7 @@ const PercentageCategoryCompare = ({
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
                         options={listOptionsOrganization}
                         selectedOption={selectedOrganization || undefined}
                         onChange={(data) => handleSelectOrganization(data)}
@@ -582,6 +583,7 @@ const PercentageCategoryCompare = ({
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
@@ -645,6 +647,7 @@ const PercentageCategoryCompare = ({
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}

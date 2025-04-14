@@ -192,6 +192,9 @@ const TableChart = ({
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTagTaskDurations',
+        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
@@ -203,6 +206,10 @@ const TableChart = ({
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListCompare',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTagTaskDurationsCompare',
           });
         }
       },
@@ -242,6 +249,9 @@ const TableChart = ({
         queryClient.invalidateQueries({
           predicate: (query) => query.queryKey[0] === 'getStatisticTagsList',
         });
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === 'getStatisticTagTaskDurations',
+        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
@@ -253,6 +263,10 @@ const TableChart = ({
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticTagsListCompare',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTagTaskDurationsCompare',
           });
         }
       },

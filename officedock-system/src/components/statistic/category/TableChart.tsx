@@ -194,6 +194,10 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryList',
         });
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticTaskDurations',
+        });
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
           setIsLoadingMediumCompare(true);
@@ -205,6 +209,10 @@ const TableChart = ({
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryCompareList',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskDurationsCompareList',
           });
         }
       },
@@ -245,6 +253,10 @@ const TableChart = ({
           predicate: (query) =>
             query.queryKey[0] === 'getStatisticCategoryList',
         });
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'getStatisticTaskDurations',
+        });
 
         if (isCheckCompare) {
           setIsLoadingLargeCompare(true);
@@ -257,6 +269,10 @@ const TableChart = ({
           queryClient.invalidateQueries({
             predicate: (query) =>
               query.queryKey[0] === 'getStatisticCategoryCompareList',
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === 'getStatisticTaskDurationsCompareList',
           });
         }
       },

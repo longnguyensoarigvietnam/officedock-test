@@ -61,11 +61,11 @@ const PercentageBarCompare = ({
               </div>
             </div>
             {data.length > 0 ? (
-              <div className="font-medium text-sm text-black mt-[10px]">
+              <div className="font-medium text-sm text-black">
                 合計 {totalDuration && formatTimeToJapanese(totalDuration)}
               </div>
             ) : (
-              <div className="mt-[10px]">-</div>
+              <div className="">-</div>
             )}
           </div>
           <div
