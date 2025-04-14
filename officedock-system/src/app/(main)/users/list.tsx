@@ -671,7 +671,7 @@ const ListUsers = () => {
                             </div>
                           </>
                         )}
-                        {element.actions && element.actions.update && (
+                        {element.actions && element.actions.delete && (
                           <ImageRound
                             name="Delete"
                             onClick={() => handleOpenDeleteUserModal(element)}

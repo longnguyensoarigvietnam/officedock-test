@@ -96,6 +96,8 @@ interface ContextValue {
   setTotalDurationTask: Dispatch<SetStateAction<string>>;
   totalDurationTaskCompare: string;
   setTotalDurationTaskCompare: Dispatch<SetStateAction<string>>;
+  currentPage: number;
+  setCurrentPage: Dispatch<SetStateAction<number>>;
 }
 
 const defaultValue: ContextValue = {
@@ -169,6 +171,8 @@ const defaultValue: ContextValue = {
   totalDurationTaskCompare: '',
   setTotalDurationTask: () => {},
   setTotalDurationTaskCompare: () => {},
+  currentPage: 1,
+  setCurrentPage: () => {},
 };
 
 export const StatisticTeamStateContext =
@@ -217,6 +221,9 @@ export const StatisticTeamStateProvider = ({
   const [selectedSmall, setSelectedSmall] = useState<OptionDropdownType | null>(
     null,
   );
+
+  // Page task list
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Total
   // Total duration
@@ -337,6 +344,8 @@ export const StatisticTeamStateProvider = ({
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setIsLoadingOrganizationCompare,
+    currentPage,
+    setCurrentPage,
   };
 
   return (

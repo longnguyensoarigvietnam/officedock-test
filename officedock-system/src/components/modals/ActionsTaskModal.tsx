@@ -749,7 +749,7 @@ const ActionsTaskModal = ({
 
   useEffect(() => {
     if (dataTask) {
-      if (dataTask.taskSchedules?.length) {
+      if (dataTask.taskSchedules?.length && action !== ActionTask.COPY) {
         dataTask.taskSchedules.map((plan) =>
           appendPlanField({
             scheduleId: plan.id || null,

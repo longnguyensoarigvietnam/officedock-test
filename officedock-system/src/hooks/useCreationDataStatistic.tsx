@@ -9,6 +9,7 @@ import { DataResponseStatisticCreationType } from '@interfaces/statistic';
 
 interface useCreationDataStatisticHooksProps {
   condition?: boolean[];
+  is_statistic?: boolean;
   onSuccess?: (success: DataResponseStatisticCreationType) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -16,6 +17,7 @@ interface useCreationDataStatisticHooksProps {
 
 const useCreationDataStatistic = ({
   condition,
+  is_statistic,
   onSuccess,
   onError,
   onSettled,
@@ -25,7 +27,7 @@ const useCreationDataStatistic = ({
 
   // Handle call API get creation Statistic data
   const getCreationDataStatistic = async () => {
-    const apiUrl = `${apiRouters.STATISTIC_CREATION}`;
+    const apiUrl = `${apiRouters.STATISTIC_CREATION}${is_statistic ? `?is_statistic=true` : ''}`;
 
     const { data } = await api.get<DataResponseStatisticCreationType>(apiUrl);
     return data;

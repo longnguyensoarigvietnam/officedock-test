@@ -87,6 +87,9 @@ interface ContextValue {
   // View by
   lineChartViewBy: OptionDropdownType | null;
   setLineChartViewBy: Dispatch<SetStateAction<OptionDropdownType | null>>;
+
+  currentPage: number;
+  setCurrentPage: Dispatch<SetStateAction<number>>;
 }
 
 const defaultValue: ContextValue = {
@@ -166,6 +169,8 @@ const defaultValue: ContextValue = {
 
   lineChartViewBy: null,
   setLineChartViewBy: () => {},
+  currentPage: 1,
+  setCurrentPage: () => {},
 };
 
 export const StatisticTagStateContext =
@@ -217,6 +222,9 @@ export const StatisticTagStateProvider = ({
   const [selectedSmall, setSelectedSmall] = useState<OptionDropdownType | null>(
     null,
   );
+  // Page task list
+
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Total
   // Total duration
@@ -328,6 +336,8 @@ export const StatisticTagStateProvider = ({
 
     lineChartViewBy,
     setLineChartViewBy,
+    currentPage,
+    setCurrentPage,
   };
 
   return (

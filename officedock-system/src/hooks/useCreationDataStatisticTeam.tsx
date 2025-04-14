@@ -11,6 +11,7 @@ interface useCreationDataStatisticTeamHooksProps {
   condition?: boolean[];
   organization_id?: string;
   isTeam?: boolean;
+  is_statistic?: boolean;
   onSuccess?: (success: DataResponseStatisticCreationTeamType) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -20,6 +21,7 @@ const useCreationDataStatisticTeam = ({
   condition,
   isTeam = false,
   organization_id,
+  is_statistic,
   onSuccess,
   onError,
   onSettled,
@@ -30,7 +32,7 @@ const useCreationDataStatisticTeam = ({
   // Handle call API get creation Statistic data
   const getCreationDataStatistic = async () => {
     if (isTeam && !organization_id) return null;
-    const apiUrl = `${apiRouters.STATISTIC_CREATION}?${organization_id ? `organization_id=${organization_id}` : ''}`;
+    const apiUrl = `${apiRouters.STATISTIC_CREATION}?${organization_id ? `organization_id=${organization_id}` : ''}${is_statistic ? `&is_statistic=true` : ''}`;
 
     const { data } =
       await api.get<DataResponseStatisticCreationTeamType>(apiUrl);

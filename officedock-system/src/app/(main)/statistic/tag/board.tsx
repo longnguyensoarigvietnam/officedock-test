@@ -63,6 +63,7 @@ const StatisticTagBoard = () => {
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setIsLoadingSmallCompare,
+    setCurrentPage,
   } = useContext(StatisticTagStateContext);
   const [isMyTask, setIsMyTask] = useState(true);
   const router = useRouter();
@@ -72,8 +73,8 @@ const StatisticTagBoard = () => {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: Number(selectedLarge?.value),
-      mediumCategoryId: Number(selectedMedium?.value),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
       smallCategoryId: selectedSmall?.value as number,
       tagIds: selectedTags,
     },
@@ -104,8 +105,9 @@ const StatisticTagBoard = () => {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: Number(selectedLarge?.value),
-      mediumCategoryId: Number(selectedMedium?.value),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+
       smallCategoryId: selectedSmall?.value as number,
       tagIds: selectedTags,
 
@@ -119,6 +121,8 @@ const StatisticTagBoard = () => {
     },
   });
   const { creationDataStatisticData } = useCreationDataStatistic({
+    is_statistic: true,
+
     onSuccess: (data) => {
       const result = (() => {
         if (data.organizations.length === 0) {
@@ -157,6 +161,7 @@ const StatisticTagBoard = () => {
     const updatedTagIds = currentTagIds.filter(
       (tag) => tag.value !== selected.value,
     );
+    setCurrentPage(1);
     setSelectedTags(updatedTagIds);
   };
 
@@ -168,6 +173,8 @@ const StatisticTagBoard = () => {
         setIsLoadingOrganizationCompare(true);
       }
     }
+    setCurrentPage(1);
+
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -195,6 +202,8 @@ const StatisticTagBoard = () => {
         setIsLoadingLargeCompare(true);
       }
     }
+    setCurrentPage(1);
+
     setSelectedLarge(data);
     setSelectedMedium(null);
     setSelectedSmall(null);
@@ -259,6 +268,7 @@ const StatisticTagBoard = () => {
         setIsLoadingSmallCompare(true);
       }
     }
+    setCurrentPage(1);
     setSelectedSmall(data);
   };
 
