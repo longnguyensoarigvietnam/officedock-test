@@ -48,26 +48,35 @@ def get_list_durations_by_users(
     filter_tasks = Q()
     filter_events = Q()
     if large_id:
-        filter_tasks &= Q(
-            task__categories__large_statistic_category__id=large_id
-        )
-        filter_events &= Q(
-            schedule__categories__large_statistic_category__id=large_id
-        )
+        if large_id == NONE_CATEGORY and durations:
+            return get_duration_of_none_category(durations)
+        else:
+            filter_tasks &= Q(
+                task__categories__large_statistic_category__id=large_id
+            )
+            filter_events &= Q(
+                schedule__categories__large_statistic_category__id=large_id
+            )
     if medium_id:
-        filter_tasks &= Q(
-            task__categories__medium_statistic_category__id=medium_id
-        )
-        filter_events &= Q(
-            schedule__categories__medium_statistic_category__id=medium_id
-        )
+        if medium_id == NONE_CATEGORY and durations:
+            return get_duration_of_none_category(durations, large_id)
+        else:
+            filter_tasks &= Q(
+                task__categories__medium_statistic_category__id=medium_id
+            )
+            filter_events &= Q(
+                schedule__categories__medium_statistic_category__id=medium_id
+            )
     if small_id:
-        filter_tasks &= Q(
-            task__categories__small_statistic_category__id=small_id
-        )
-        filter_events &= Q(
-            schedule__categories__small_statistic_category__id=small_id
-        )
+        if medium_id == NONE_CATEGORY and durations:
+            return get_duration_of_none_category(durations, large_id, medium_id)
+        else:
+            filter_tasks &= Q(
+                task__categories__small_statistic_category__id=small_id
+            )
+            filter_events &= Q(
+                schedule__categories__small_statistic_category__id=small_id
+            )
     if tags:
         filter_tasks &= Q(task__tags__in=tags)
         filter_events &= Q(schedule__tags__in=tags)
@@ -177,139 +186,143 @@ def aggregate_durations(
 ):
     """Aggregates durations from tasks or events into a single dictionary."""
     category_dict = {}
-    combine_cards = list(
-        get_category_durations(tasks, large_category_id, medium_category_id)
-    ) + list(
-        get_category_durations(events, large_category_id, medium_category_id)
-    )
-    category_fields = [
-        (
-            "categories__large_statistic_category__name",
-            "categories__large_statistic_category__id",
-        ),
-        (
-            "categories__medium_statistic_category__name",
-            "categories__medium_statistic_category__id",
-        ),
-        (
-            "categories__small_statistic_category__name",
-            "categories__small_statistic_category__id",
-        ),
-    ]
-    for card in combine_cards:
-        category_name, category_id, category_color = None, None, None
-        organization_id = card["organization__id"]
-        for name_key, id_key in category_fields:
-            if card.get(name_key):
-                category_name = card[name_key]
-                category_id = card[id_key]
-                break
-        organization_statistic_cats = (
-            OrganizationsStatisticCategories.objects.filter(
-                organization_id=organization_id,
+    if check_is_not_none_category(large_category_id, medium_category_id):
+        combine_cards = list(
+            get_category_durations(tasks, large_category_id, medium_category_id)
+        ) + list(
+            get_category_durations(
+                events, large_category_id, medium_category_id
             )
         )
-        filter_durations = None
-        if not large_category_id and not medium_category_id:
-            category_color = (
-                organization_statistic_cats.filter(
-                    large_statistic_category__id=category_id,
+        category_fields = [
+            (
+                "categories__large_statistic_category__name",
+                "categories__large_statistic_category__id",
+            ),
+            (
+                "categories__medium_statistic_category__name",
+                "categories__medium_statistic_category__id",
+            ),
+            (
+                "categories__small_statistic_category__name",
+                "categories__small_statistic_category__id",
+            ),
+        ]
+        for card in combine_cards:
+            category_name, category_id, category_color = None, None, None
+            organization_id = card["organization__id"]
+            for name_key, id_key in category_fields:
+                if card.get(name_key):
+                    category_name = card[name_key]
+                    category_id = card[id_key]
+                    break
+            organization_statistic_cats = (
+                OrganizationsStatisticCategories.objects.filter(
+                    organization_id=organization_id,
                 )
-                .values_list("color", flat=True)
-                .first()
             )
-            filter_durations = get_list_durations_by_users(
-                durations=durations,
-                large_id=category_id,
-            )
-        if large_category_id:
-            filter_durations = get_list_durations_by_users(
-                durations=durations,
-                large_id=large_category_id,
-                medium_id=category_id,
-            )
-            if medium_category_id:
+            filter_durations = None
+            if not large_category_id and not medium_category_id:
+                category_color = (
+                    organization_statistic_cats.filter(
+                        large_statistic_category__id=category_id,
+                    )
+                    .values_list("color", flat=True)
+                    .first()
+                )
+                filter_durations = get_list_durations_by_users(
+                    durations=durations,
+                    large_id=category_id,
+                )
+            if large_category_id:
                 filter_durations = get_list_durations_by_users(
                     durations=durations,
                     large_id=large_category_id,
-                    medium_id=medium_category_id,
-                    small_id=category_id,
+                    medium_id=category_id,
                 )
-        duration = (
-            annotate_duration(filter_durations, start_of_day, end_of_day)[
-                "total_duration"
-            ]
-            if filter_durations
-            else timedelta(0)
-        )
-        if not large_category_id and not medium_category_id:
-            key = category_name if category_color else "empty_category"
-        else:
-            key = category_name
-
-        if (
-            key not in category_dict
-            and not large_category_id
-            and not medium_category_id
-        ):
-            category_dict[key] = {
-                "category_id": category_id if category_color else None,
-                "category_name": category_name
-                if category_color
-                else NONE_CATEGORY,
-                "category_color": category_color
-                if category_color
-                else CategoryColors.GRAY.value,
-                "duration": duration,
-            }
-        else:
-            check_medium_category_exists = (
-                large_category_id
-                and not medium_category_id
-                and not organization_statistic_cats.filter(
-                    large_statistic_category__id=large_category_id,
-                    medium_statistic_category__id=category_id,
-                ).exists()
+                if medium_category_id:
+                    filter_durations = get_list_durations_by_users(
+                        durations=durations,
+                        large_id=large_category_id,
+                        medium_id=medium_category_id,
+                        small_id=category_id,
+                    )
+            duration = (
+                annotate_duration(filter_durations, start_of_day, end_of_day)[
+                    "total_duration"
+                ]
+                if filter_durations
+                else timedelta(0)
             )
-            check_small_category_exists = (
-                large_category_id
-                and medium_category_id
-                and not organization_statistic_cats.filter(
-                    large_statistic_category__id=large_category_id,
-                    medium_statistic_category__id=medium_category_id,
-                    small_statistic_category__id=category_id,
-                ).exists()
-            )
-            check_not_have_color = (
-                not large_category_id
-                and not medium_category_id
-                and not category_color
-            )
-            if (
-                check_medium_category_exists
-                or check_small_category_exists
-                or (
-                    large_category_id and medium_category_id and not category_id
-                )
-                or check_not_have_color
-            ):
-                if category_dict.get("empty_category") is None:
-                    category_dict["empty_category"] = {
-                        "category_id": None,
-                        "category_name": NONE_CATEGORY,
-                        "category_color": CategoryColors.GRAY.value,
-                        "duration": duration,
-                    }
-                else:
-                    category_dict["empty_category"]["duration"] += duration
+            if not large_category_id and not medium_category_id:
+                key = category_name if category_color else "empty_category"
             else:
+                key = category_name
+
+            if (
+                key not in category_dict
+                and not large_category_id
+                and not medium_category_id
+            ):
                 category_dict[key] = {
-                    "category_id": category_id,
-                    "category_name": category_name,
-                    "category_color": category_color,
+                    "category_id": category_id if category_color else None,
+                    "category_name": category_name
+                    if category_color
+                    else NONE_CATEGORY,
+                    "category_color": category_color
+                    if category_color
+                    else CategoryColors.GRAY.value,
                     "duration": duration,
                 }
-
+            else:
+                check_medium_category_exists = (
+                    large_category_id
+                    and not medium_category_id
+                    and not organization_statistic_cats.filter(
+                        large_statistic_category__id=large_category_id,
+                        medium_statistic_category__id=category_id,
+                    ).exists()
+                )
+                check_small_category_exists = (
+                    large_category_id
+                    and medium_category_id
+                    and not organization_statistic_cats.filter(
+                        large_statistic_category__id=large_category_id,
+                        medium_statistic_category__id=medium_category_id,
+                        small_statistic_category__id=category_id,
+                    ).exists()
+                )
+                check_not_have_color = (
+                    not large_category_id
+                    and not medium_category_id
+                    and not category_color
+                )
+                if (
+                    check_medium_category_exists
+                    or check_small_category_exists
+                    or (
+                        large_category_id
+                        and medium_category_id
+                        and not category_id
+                    )
+                    or check_not_have_color
+                ):
+                    if category_dict.get("empty_category") is None:
+                        category_dict["empty_category"] = {
+                            "category_id": None,
+                            "category_name": NONE_CATEGORY,
+                            "category_color": CategoryColors.GRAY.value,
+                            "duration": duration,
+                        }
+                    else:
+                        category_dict["empty_category"]["duration"] += duration
+                else:
+                    category_dict[key] = {
+                        "category_id": category_id,
+                        "category_name": category_name,
+                        "category_color": category_color,
+                        "duration": duration,
+                    }
     filter_durations = get_duration_of_none_category(
         durations, large_category_id, medium_category_id
     )
@@ -874,7 +887,7 @@ def get_duration_of_none_category(durations, large_id=None, medium_id=None):
         & Q(schedule__categories__large_statistic_category__isnull=True)
     )
 
-    if large_id:
+    if large_id and large_id != NONE_CATEGORY:
         filter_durations = get_list_durations_by_users(
             durations=durations,
             large_id=large_id,
@@ -883,7 +896,7 @@ def get_duration_of_none_category(durations, large_id=None, medium_id=None):
             & Q(schedule__categories__medium_statistic_category__isnull=True)
         )
 
-        if medium_id:
+        if medium_id and medium_id != NONE_CATEGORY:
             filter_durations = get_list_durations_by_users(
                 durations=durations,
                 large_id=large_id,
@@ -894,3 +907,15 @@ def get_duration_of_none_category(durations, large_id=None, medium_id=None):
             )
 
     return filter_durations
+
+
+def check_is_not_none_category(large_id=None, medium_id=None, small_id=None):
+    """
+    Handle check category is none in query params
+    """
+
+    return not (
+        (large_id == NONE_CATEGORY)
+        or (large_id and medium_id == NONE_CATEGORY)
+        or (large_id and medium_id and small_id == NONE_CATEGORY)
+    )
