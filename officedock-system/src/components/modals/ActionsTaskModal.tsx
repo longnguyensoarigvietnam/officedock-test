@@ -83,7 +83,9 @@ import {
   formatShowDateJapanese,
   formatTime,
   formatTimeInput,
+  formatTimeInputFilter,
   generateTimeOptionsAsObjects,
+  getFilteredTimeOptions,
 } from '@utils/date';
 import {
   generateOptionsCount,
@@ -821,6 +823,7 @@ const ActionsTaskModal = ({
       });
     }
   }, [append, appendPlanField, dataTask, peopleDefaultId]);
+
   useEffect(() => {
     if (peopleDefaultId && session) {
       setSelectedPersonInChargeOptions([
@@ -1109,7 +1112,7 @@ const ActionsTaskModal = ({
           resetDataCategoryOptions();
           reset();
           onClose();
-        } else if(isValid) {
+        } else if (isValid) {
           const taskData = getValues();
           const filteredTagIds = (getValues('tagIds') || []).filter(
             (item): item is OptionDropdownType => item !== undefined,
@@ -1918,7 +1921,12 @@ const ActionsTaskModal = ({
                                         if (time) {
                                           setValue(
                                             `plans.${index}.planStartTime`,
-                                            formatTimeInput(time),
+                                            formatTimeInputFilter(
+                                              time,
+                                              getValues(
+                                                `plans.${index}.planStartDate`,
+                                              ) || new Date(),
+                                            ),
                                           );
                                         }
                                         setTime('');
@@ -1926,7 +1934,10 @@ const ActionsTaskModal = ({
                                     },
                                   )}
                                   type="text"
-                                  options={optionTimeInput}
+                                  options={getFilteredTimeOptions(
+                                    getValues(`plans.${index}.planStartDate`) ||
+                                      new Date(),
+                                  )}
                                   onChangeDropdown={(e) => {
                                     setIsFormTouched(true);
                                     setValue(
@@ -2082,7 +2093,12 @@ const ActionsTaskModal = ({
                                         if (time) {
                                           setValue(
                                             `plans.${index}.planEndTime`,
-                                            formatTimeInput(time),
+                                            formatTimeInputFilter(
+                                              time,
+                                              getValues(
+                                                `plans.${index}.planEndDate`,
+                                              ) || new Date(),
+                                            ),
                                           );
                                         }
                                         if (
@@ -2127,7 +2143,10 @@ const ActionsTaskModal = ({
                                       },
                                     },
                                   )}
-                                  options={optionTimeInput}
+                                  options={getFilteredTimeOptions(
+                                    getValues(`plans.${index}.planEndDate`) ||
+                                      new Date(),
+                                  )}
                                   onChangeDropdown={(e) => {
                                     setIsFormTouched(true);
                                     setValue(

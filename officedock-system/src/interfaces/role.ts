@@ -6,9 +6,12 @@ export interface Role {
 
 export interface RoleFormData {
   name: string;
-  permissions: Record<string, {
-    actions: string
-  }>;
+  permissions: Record<
+    string,
+    {
+      actions: string;
+    }
+  >;
 }
 
 export interface RoleDetail {

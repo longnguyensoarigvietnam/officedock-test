@@ -41,8 +41,6 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
       const delta = newX - dragStartX;
       const newValue = Math.min(Math.max(startValue + delta / 3, min), max);
       setValue(newValue);
-
-      if (onChange) onChange(newValue);
     }
   };
 
@@ -81,14 +79,11 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
 
   useEffect(() => {
     setValue(initialValue);
-
-    if (onChange) onChange(initialValue);
-  }, [resetTrigger, initialValue, onChange]);
+  }, [resetTrigger, initialValue]);
 
   useEffect(() => {
     setValue(initialValue);
-    if (onChange) onChange(initialValue);
-  }, [resetTrigger, initialValue, onChange]);
+  }, [resetTrigger, initialValue]);
 
   const marks = [18, 38.5, 59, 79.5, 100];
 
