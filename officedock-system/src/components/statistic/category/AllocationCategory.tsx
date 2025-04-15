@@ -271,7 +271,7 @@ const AllocationCategory = memo(
                   <MultiSelectDropdown
                     isShowIconFilter
                     options={tagsOptions}
-                    labelOptionClass="break-all"
+                    labelOptionClass="break-all w-[190px]"
                     optionClassName="!top-6"
                     placeholder="集計対象のタグを選択"
                     className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
