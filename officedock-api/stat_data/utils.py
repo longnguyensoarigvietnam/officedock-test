@@ -872,7 +872,7 @@ def get_total_durations(durations):
     for duration in durations:
         paused_at = duration.paused_at if duration.paused_at else timezone.now()
         total_duration += paused_at - duration.started_at
-    return total_duration
+    return time_str_to_timedelta(format_duration(total_duration))
 
 
 def get_duration_of_none_category(durations, large_id=None, medium_id=None):

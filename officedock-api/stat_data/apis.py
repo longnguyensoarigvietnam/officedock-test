@@ -316,7 +316,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             }
 
         category_list = list(category_dict.values())
-
+        total_duration = time_str_to_timedelta(format_duration(total_duration))
         percent = 100
         for cat in category_list:
             category_duration = format_duration(cat["duration"]) or timedelta(0)

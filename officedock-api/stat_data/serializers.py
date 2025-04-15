@@ -289,6 +289,8 @@ class StatisticTaskSerializer(DailyTaskSerializer):
         if tag_ids:
             related_tag_count = obj.tags.filter(id__in=tag_ids).count()
             duration = duration * related_tag_count
+        duration = time_str_to_timedelta(format_duration(duration))
+
         if time_str_to_timedelta(total_duration).total_seconds() > 0:
             percent_per_total_duration = (
                 duration.total_seconds()
