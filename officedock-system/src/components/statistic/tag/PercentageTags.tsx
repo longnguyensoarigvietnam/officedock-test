@@ -291,7 +291,9 @@ const PercentageTags = ({
       totalDuration: duration,
     });
 
-    setIsShowModal(true);
+    setTimeout(() => {
+      setIsShowModal(true);
+    }, 1000);
   };
 
   const handleScroll = () => {

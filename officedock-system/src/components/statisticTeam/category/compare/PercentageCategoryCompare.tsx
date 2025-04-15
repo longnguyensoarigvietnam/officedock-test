@@ -249,8 +249,8 @@ const PercentageTeamCategoryCompare = ({
                 name="statistic-active icon"
                 src={`/icons/statistic-active.svg`}
               />
-              <span className="text-black w-[210px] flex-shrink-0 font-semibold text-[18px] relative top-[2px]">
-                カテゴリーの割合カテゴリーの割合
+              <span className="text-black w-[154px] flex-shrink-0 font-semibold text-[18px] relative top-[2px]">
+                カテゴリーの割合
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -357,18 +357,16 @@ const PercentageTeamCategoryCompare = ({
                         dataCompare={dataChartLargeCompare}
                         handleClickTooltip={() => {}}
                         handleClickChart={(data: number) => {
-                          if (data && String(data) !== '未設定') {
-                            const select = largeOptions.find(
-                              (item) => item.value === data,
-                            );
+                          const select = largeOptions.find(
+                            (item) => item.value === data,
+                          );
 
-                            selectedOrganization &&
-                              handleSelectOrganizationCustom(
-                                selectedOrganization,
-                              );
-                            if (select) {
-                              handleSelectLarge(select);
-                            }
+                          selectedOrganization &&
+                            handleSelectOrganizationCustom(
+                              selectedOrganization,
+                            );
+                          if (select) {
+                            handleSelectLarge(select);
                           }
                         }}
                       />
@@ -413,14 +411,12 @@ const PercentageTeamCategoryCompare = ({
                         totalDurationCompare={totalDurationMediumCompare}
                         handleClickTooltip={() => {}}
                         handleClickChart={(data: number) => {
-                          if (data && String(data) !== '未設定') {
-                            const select = mediumOptions.find(
-                              (item) => item.value === data,
-                            );
+                          const select = mediumOptions.find(
+                            (item) => item.value === data,
+                          );
 
-                            if (select) {
-                              handleSelectMedium(select);
-                            }
+                          if (select) {
+                            handleSelectMedium(select);
                           }
                         }}
                       />
@@ -466,14 +462,12 @@ const PercentageTeamCategoryCompare = ({
                         totalDurationCompare={totalDurationSmallCompare}
                         handleClickTooltip={() => {}}
                         handleClickChart={(data: number) => {
-                          if (data && String(data) !== '未設定') {
-                            const select = smallOptions.find(
-                              (item) => item.value === data,
-                            );
+                          const select = smallOptions.find(
+                            (item) => item.value === data,
+                          );
 
-                            if (select) {
-                              handleSelectSmall(select);
-                            }
+                          if (select) {
+                            handleSelectSmall(select);
                           }
                         }}
                       />

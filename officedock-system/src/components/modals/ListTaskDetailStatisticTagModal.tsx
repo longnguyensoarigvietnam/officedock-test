@@ -20,6 +20,7 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 import useStatisticTask from '@hooks/useStatisticTask';
+import Spinner from '@components/common/Spinner';
 
 type Props = {
   detailCategory: {
@@ -62,6 +63,7 @@ const ListTaskDetailStatisticTagModal = ({
   const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
   const [ordering, setOrdering] = useState<string>('');
   const [isSkeletonLoading, setIsSkeletonLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   const { refetchStatisticCategoryList } = useStatisticTask({
     parentData: statisticTagsListTeam,
@@ -95,6 +97,7 @@ const ListTaskDetailStatisticTagModal = ({
     created_at: lastCreateAt,
     onSuccess: (data) => {
       setIsSkeletonLoading(false);
+      setIsFetching(false);
       if (data) {
         if (!lastCreateAt) {
           setCount(data.count);
@@ -127,6 +130,7 @@ const ListTaskDetailStatisticTagModal = ({
         chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) ===
           chatContainer.scrollHeight
       ) {
+        setIsFetching(true);
         refetchStatisticCategoryList();
       }
     };
@@ -281,6 +285,18 @@ const ListTaskDetailStatisticTagModal = ({
                 })
               ) : (
                 <></>
+              )}
+              {taskList.length > 9 && (
+                <div>
+                  {hastMore && isFetching && (
+                    <div className="h-7">
+                      <Spinner
+                        className="!h-fit py-3"
+                        iconClassName="h-6 w-6"
+                      />
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

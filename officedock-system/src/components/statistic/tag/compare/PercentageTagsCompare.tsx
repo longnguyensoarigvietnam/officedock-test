@@ -166,9 +166,7 @@ const PercentageTagsCompare = ({
   useEffect(() => {
     if (statisticTagsList) {
       setDataChartLarge(
-        mapCategoryData(
-          statisticTagsList.largeCategories || [],
-        ),
+        mapCategoryData(statisticTagsList.largeCategories || []),
       );
       setDataChartMedium(
         mapCategoryData(statisticTagsList.mediumCategories || [], '#2E9267'),
@@ -272,7 +270,9 @@ const PercentageTagsCompare = ({
         totalDuration: duration,
       });
 
-      setIsShowModal(true);
+      setTimeout(() => {
+        setIsShowModal(true);
+      }, 1000);
     }
   };
 

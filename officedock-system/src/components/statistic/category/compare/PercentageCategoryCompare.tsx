@@ -335,7 +335,9 @@ const PercentageCategoryCompare = ({
     }
 
     const element = document.getElementById('task-list-statistic');
-    setIsShowModal(false);
+    setTimeout(() => {
+      setIsShowModal(true);
+    }, 1000);
 
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });

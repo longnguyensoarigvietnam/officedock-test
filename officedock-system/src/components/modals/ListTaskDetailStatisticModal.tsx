@@ -20,6 +20,7 @@ import {
   StatisticsCategories,
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
+import Spinner from '@components/common/Spinner';
 
 type Props = {
   isDisable?: boolean;
@@ -66,6 +67,7 @@ const ListTaskDetailStatisticModal = ({
   const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
   const [ordering, setOrdering] = useState<string>('');
   const [isSkeletonLoading, setIsSkeletonLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   const { refetchStatisticCategoryList } = useStatisticTask({
     parentData: statisticCategoryList,
@@ -108,6 +110,7 @@ const ListTaskDetailStatisticModal = ({
         if (!lastCreateAt) {
           setCount(data.count);
         }
+        setIsFetching(false);
         setHasMore(data.hasNext as boolean);
         if (data.results) {
           setTaskList((prev) => {
@@ -136,6 +139,7 @@ const ListTaskDetailStatisticModal = ({
         chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) ===
           chatContainer.scrollHeight
       ) {
+        setIsFetching(true);
         refetchStatisticCategoryList();
       }
     };
@@ -288,6 +292,18 @@ const ListTaskDetailStatisticModal = ({
                 })
               ) : (
                 <></>
+              )}
+              {taskList.length > 9 && (
+                <div>
+                  {hastMore && isFetching && (
+                    <div className="h-7">
+                      <Spinner
+                        className="!h-fit py-3"
+                        iconClassName="h-6 w-6"
+                      />
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
