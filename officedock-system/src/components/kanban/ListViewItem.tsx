@@ -52,7 +52,7 @@ interface ListViewItemProps {
   content: Task;
   creationDataTaskData?: CreationDataTask;
   handleActionEditTask: (id: number, type?: string) => void
-  handleConfirmCopyTask: (id: number) => void;
+  handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTask: UseMutateFunction<
     Task,
@@ -429,7 +429,7 @@ const ListViewItem = ({
                       <div
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleConfirmCopyTask(parseInt(`${content.id}`));
+                          handleConfirmCopyTask(parseInt(`${content.id}`), content.status?.id == StatusValueTask.MY_ROUTINE ? ItemStartType.FIXED_TASK : ItemStartType.TASK);
                         }}>
                         <ImageRound
                           src="/icons/copy.svg"

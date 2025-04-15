@@ -49,7 +49,7 @@ interface ItemProps {
   content: Task;
   creationDataTaskData?: CreationDataTask;
   handleActionEditTask: (id: number, type?: string) => void
-  handleConfirmCopyTask: (id: number) => void;
+  handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTask: UseMutateFunction<
     Task,
@@ -443,7 +443,7 @@ const ItemRoutine = ({
                         }}
                         className="text-gray-400 cursor-pointer"
                         onClick={() => {
-                          handleConfirmCopyTask(parseInt(`${content.id}`));
+                          handleConfirmCopyTask(parseInt(`${content.id}`), ItemStartType.FIXED_TASK);
                         }}
                       />
                     </div>
