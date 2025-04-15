@@ -10,7 +10,6 @@ class ActualDurationFilter(django_filters.FilterSet):
     Custom Organization filter
     """
 
-    # FIXME: Refactor later
     type = django_filters.ChoiceFilter(
         method="get_type", choices=CalendarTypes.choices()
     )
