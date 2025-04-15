@@ -49,7 +49,7 @@ interface ItemProps {
   content: Task;
   creationDataTaskData?: CreationDataTask;
   handleActionEditTask: (id: number, type?: string) => void
-  handleConfirmCopyTask: (id: number) => void;
+  handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTask: UseMutateFunction<
     Task,
