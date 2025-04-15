@@ -185,7 +185,6 @@ const ActionsTaskModalTeam = ({
 
   const [showDescriptionSection, setShowDescriptionSection] =
     useState<boolean>(false);
-
   const [showTodoSection, setShowTodoSection] = useState<boolean>(false);
   const [isFormTouched, setIsFormTouched] = useState<boolean>(false);
 
@@ -1288,62 +1287,68 @@ const ActionsTaskModalTeam = ({
                 }}
               />
               {/* Category medium */}
-              <Controller
-                control={control}
-                name={'categories.MEDIUM'}
-                render={({ field: { value, onChange } }) => {
-                  return (
-                    <Dropdown
-                      placeholder="中カテゴリ"
-                      className="h-[34px] !py-1 text-xs "
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs"
-                      classNameError="!text-xs"
-                      disabled={isCheckActionPermission}
-                      options={dataOptionsCategoryMedium}
-                      selectedOption={dataOptionsCategoryMedium.find(
-                        (element) => element.value === value?.value,
-                      )}
-                      onChange={(e) => {
-                        if (e.value != watch('categories.MEDIUM.value')) {
-                          setValue('categories.SMALL', {
-                            label: '',
-                            value: '',
-                          });
-                        }
-                        setIsFormTouched(true);
-                        onChange(e);
-                      }}
-                      error={errors.categories?.MEDIUM?.message}
-                    />
-                  );
-                }}
-              />
-
-              {/* Category small */}
-              <Controller
-                control={control}
-                name={'categories.SMALL'}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    className="h-[34px] !py-1 text-xs "
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
-                    classNameError="!text-xs"
-                    disabled={isCheckActionPermission}
-                    options={dataOptionsCategorySmall}
-                    selectedOption={dataOptionsCategorySmall.find(
-                      (element) => element.value === value?.value,
-                    )}
-                    placeholder="小カテゴリ"
-                    onChange={(e) => {
-                      setIsFormTouched(true);
-                      onChange(e);
+              {watch('organization')?.value &&
+                watch('categories.LARGE')?.value && (
+                  <Controller
+                    control={control}
+                    name={'categories.MEDIUM'}
+                    render={({ field: { value, onChange } }) => {
+                      return (
+                        <Dropdown
+                          placeholder="中カテゴリ"
+                          className="h-[34px] !py-1 text-xs "
+                          classNameTextData="!text-xs"
+                          classNameOption="!text-xs"
+                          classNameError="!text-xs"
+                          disabled={isCheckActionPermission}
+                          options={dataOptionsCategoryMedium}
+                          selectedOption={dataOptionsCategoryMedium.find(
+                            (element) => element.value === value?.value,
+                          )}
+                          onChange={(e) => {
+                            if (e.value != watch('categories.MEDIUM.value')) {
+                              setValue('categories.SMALL', {
+                                label: '',
+                                value: '',
+                              });
+                            }
+                            setIsFormTouched(true);
+                            onChange(e);
+                          }}
+                          error={errors.categories?.MEDIUM?.message}
+                        />
+                      );
                     }}
-                    error={errors.categories?.SMALL?.message}
                   />
                 )}
-              />
+
+              {/* Category small */}
+              {watch('organization')?.value &&
+                watch('categories.MEDIUM')?.value && (
+                  <Controller
+                    control={control}
+                    name={'categories.SMALL'}
+                    render={({ field: { value, onChange } }) => (
+                      <Dropdown
+                        className="h-[34px] !py-1 text-xs "
+                        classNameTextData="!text-xs"
+                        classNameOption="!text-xs"
+                        classNameError="!text-xs"
+                        disabled={isCheckActionPermission}
+                        options={dataOptionsCategorySmall}
+                        selectedOption={dataOptionsCategorySmall.find(
+                          (element) => element.value === value?.value,
+                        )}
+                        placeholder="小カテゴリ"
+                        onChange={(e) => {
+                          setIsFormTouched(true);
+                          onChange(e);
+                        }}
+                        error={errors.categories?.SMALL?.message}
+                      />
+                    )}
+                  />
+                )}
             </div>
           </div>
           {/* Tag */}
@@ -2528,7 +2533,6 @@ const ActionsTaskModalTeam = ({
               </div>
             </div>
           )}
-
           {/* Description  */}
           <div>
             {showDescriptionSection ? (
@@ -2733,7 +2737,7 @@ const ActionsTaskModalTeam = ({
               )}
             </div>
           )}
-
+          {/* Submit button */}
           {isPermissionAdd &&
             (action === ActionTask.COPY || action === ActionTask.CREATE) && (
               <div className="flex justify-center">

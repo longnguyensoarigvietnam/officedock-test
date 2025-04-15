@@ -81,12 +81,10 @@ const EditRoleForm = () => {
   }, [setDataRoleDetail, roleDetail]);
 
   useEffect(() => {
-    if (!dataRoleDetail) {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
+    if (!isSubmit) {
+      setIsLoading(!dataRoleDetail);
     }
-  }, [dataRoleDetail, setIsLoading]);
+  }, [dataRoleDetail, isSubmit, setIsLoading]);
 
   useEffect(() => {
     if (dataRoleDetail) {

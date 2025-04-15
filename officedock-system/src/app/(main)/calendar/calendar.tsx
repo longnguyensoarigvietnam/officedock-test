@@ -2336,6 +2336,7 @@ const EventCalendar = () => {
           defaultStartDate={defaultCreateStartDate}
           calendarView={searchParams.get('view')}
           action={actionEventClick}
+          authenticatedUser={authenticatedUser}
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEdit(undefined);

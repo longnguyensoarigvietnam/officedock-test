@@ -1,5 +1,5 @@
 'use client';
-import { UseMutateFunction } from 'react-query';
+import { UseMutateFunction, useMutation } from 'react-query';
 import { Dispatch, SetStateAction, useContext } from 'react';
 import { useSearchParams } from 'next/navigation';
 
@@ -17,7 +17,13 @@ import { ResponseError } from '@interfaces/response';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
+
 import { StatusTask } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
+
+import api from '@base/api';
+import { ERROR_EXTEND_COLUMN } from '@constants/message';
+import { useToast } from '@providers/ToastProvider';
 
 interface CardListViewProps {
   creationDataTaskData?: CreationDataTask;
@@ -74,10 +80,33 @@ const CardListView = ({
   const { memberSelected, orderingRequest, searchValue } =
     useContext(TaskContext);
   const userIdTask = searchParams.get('user');
+  const { showToast } = useToast();
 
   const handlePinItem = (id: string) => {
     pinItemToTop(id);
   };
+
+  const handleExtendColumn = async (tabVisibility: Record<string, boolean>) => {
+    const { data: response } = await api.post(apiRouters.USER_SETTING, {
+      tabVisibility,
+    });
+    return response;
+  };
+
+  const { mutate: saveExtendColumn } = useMutation(
+    'saveExtendColumn',
+    handleExtendColumn,
+    {
+      onSuccess: () => {},
+      onError: () => {
+        showToast({
+          variant: 'error',
+          description: ERROR_EXTEND_COLUMN,
+        });
+      },
+      onSettled: () => {},
+    },
+  );
 
   return (
     <>
@@ -130,6 +159,9 @@ const CardListView = ({
                   userId={
                     `${memberSelected}` || `${userIdTask ? userIdTask : ''}`
                   }
+                  saveExtendColumn={(data: Record<string, boolean>) => {
+                    saveExtendColumn(data);
+                  }}
                 />
               </div>
             );
