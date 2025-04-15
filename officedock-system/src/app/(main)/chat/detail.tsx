@@ -1005,10 +1005,7 @@ const ChatDetail = ({
               [messageUuid]: { progress: Math.min(percentCompleted, 99) },
             }));
           } catch (error) {
-            setUploadFileStatus((prev) => ({
-              ...prev,
-              [messageUuid]: { progress: 0 },
-            }));
+            setUploadFileStatus({});
           }
         },
       );
@@ -1095,11 +1092,8 @@ const ChatDetail = ({
         [variables.uuid]: { progress: 100 },
       }));
     },
-    onError: (error: AxiosError<any>, variables) => {
-      setUploadFileStatus((prev) => ({
-        ...prev,
-        [variables.uuid]: { progress: 0 },
-      }));
+    onError: (error: AxiosError<any>) => {
+      setUploadFileStatus({});
       showErrorToast(error, ERROR_SAVE_MESSAGE);
     },
     onSettled: () => {
@@ -1179,7 +1173,7 @@ const ChatDetail = ({
     editor.commands.clearContent();
     setMentionMembers([]);
     setQuoteTaskList([]);
-    if(uploadFiles.length > 0){
+    if (uploadFiles.length > 0) {
       setIsChatFilesUploading(true);
     }
     handleSendMsgChat({
@@ -1278,11 +1272,8 @@ const ChatDetail = ({
         [variables.uuid]: { progress: 100 },
       }));
     },
-    onError: (_data, variables) => {
-      setUploadFileStatus((prev) => ({
-        ...prev,
-        [variables.uuid]: { progress: 0 },
-      }));
+    onError: () => {
+      setUploadFileStatus({});
     },
     onSettled: () => {
       setMessage('');
@@ -1314,7 +1305,7 @@ const ChatDetail = ({
         ...prev,
         [uuid]: { progress: 0 },
       }));
-      if([...uploadFiles, ...preserveFiles].length > 0){
+      if ([...uploadFiles, ...preserveFiles].length > 0) {
         setIsChatFilesUploading(true);
       }
       handleUpdateMsgChat({

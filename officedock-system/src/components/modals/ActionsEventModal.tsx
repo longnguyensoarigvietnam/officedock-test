@@ -63,7 +63,7 @@ export type ActionsEventModalProps = {
   dataEvent?: EventEditFormData;
   creationDataEventCalendar: CreationDataEventCalendar | undefined;
   action?: string;
-  authenticatedUser: User | undefined
+  authenticatedUser?: User | undefined
   onDelete?: (values: EventEditFormData) => void;
   onClose: () => void;
   onSubmit?: (values: EventFormData) => void;
