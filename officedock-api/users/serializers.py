@@ -215,11 +215,11 @@ class SettingSerializer(serializers.ModelSerializer):
     """
 
     tab_visibility = serializers.JSONField(default=dict)
-    kanban_zoom = serializers.IntegerField(
+    kanban_zoom = serializers.FloatField(
         min_value=0, max_value=100, default=100
     )
 
-    schedule_zoom = serializers.IntegerField(
+    schedule_zoom = serializers.FloatField(
         min_value=0, max_value=100, default=100
     )
     date_filter_schedule = serializers.DateField(
