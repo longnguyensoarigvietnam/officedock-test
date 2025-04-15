@@ -340,6 +340,7 @@ const PercentageCategory = ({
 
     const element = document.getElementById('task-list-statistic');
     setIsShowModal(false);
+    setDetailCategory(null)
 
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -371,7 +372,7 @@ const PercentageCategory = ({
                 <MultiSelectDropdown
                   isShowIconFilter
                   options={tagsOptions}
-                  labelOptionClass="break-all"
+                  labelOptionClass="break-all w-[190px]"
                   optionClassName="!top-6"
                   placeholder="集計対象のタグを選択"
                   className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
@@ -647,6 +648,8 @@ const PercentageCategory = ({
           selectedOrganization={selectedOrganization}
           onClose={() => {
             setIsShowModal(false);
+            setDetailCategory(null)
+
           }}
           handleScroll={handleScroll}
         />

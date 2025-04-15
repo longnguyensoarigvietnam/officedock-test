@@ -335,9 +335,7 @@ const PercentageCategoryCompare = ({
     }
 
     const element = document.getElementById('task-list-statistic');
-    setTimeout(() => {
-      setIsShowModal(true);
-    }, 1000);
+      setIsShowModal(false);
 
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -430,7 +428,7 @@ const PercentageCategoryCompare = ({
                 name="statistic-active icon"
                 src={`/icons/statistic-active.svg`}
               />
-              <span className="text-black w-[154px] flex-shrink-0 font-semibold text-[18px] relative top-[2px]">
+              <span className="texMultiSelectDropdownt-black w-[154px] flex-shrink-0 font-semibold text-[18px] relative top-[2px]">
                 カテゴリーの割合
               </span>
             </div>
@@ -440,7 +438,7 @@ const PercentageCategoryCompare = ({
                   isShowIconFilter
                   options={tagsOptions}
                   placeholder="集計対象のタグを選択"
-                  labelOptionClass="break-all"
+                  labelOptionClass="break-all w-[240px]"
                   optionClassName="!top-6"
                   className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                   selectedOptions={selectedTags || []}
