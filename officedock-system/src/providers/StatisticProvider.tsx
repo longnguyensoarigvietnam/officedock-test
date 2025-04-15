@@ -87,6 +87,8 @@ interface ContextValue {
   // View by
   lineChartViewBy: OptionDropdownType | null;
   setLineChartViewBy: Dispatch<SetStateAction<OptionDropdownType | null>>;
+  currentPage: number;
+  setCurrentPage: Dispatch<SetStateAction<number>>;
 }
 
 const defaultValue: ContextValue = {
@@ -166,6 +168,8 @@ const defaultValue: ContextValue = {
 
   lineChartViewBy: null,
   setLineChartViewBy: () => {},
+  currentPage: 1,
+  setCurrentPage: () => {},
 };
 
 export const StatisticStateContext = createContext<ContextValue>(defaultValue);
@@ -243,6 +247,10 @@ export const StatisticStateProvider = ({
   // Tag
   const [tagsOptions, setTagsOptions] = useState<OptionDropdownType[]>([]);
   const [selectedTags, setSelectedTags] = useState<OptionDropdownType[]>([]);
+
+  // Page task list
+
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
@@ -333,6 +341,8 @@ export const StatisticStateProvider = ({
 
     lineChartViewBy,
     setLineChartViewBy,
+    currentPage,
+    setCurrentPage,
   };
 
   return (

@@ -84,74 +84,92 @@ export const SCREEN_LIST = [
   {
     name: 'マイタスク画面',
     value: 'myTask',
+    show: false
   },
   {
     name: 'カレンダー画面',
     value: 'calendar',
+    show: false
   },
   {
     name: 'チャット画面',
     value: 'chat',
+    show: false
   },
   {
     name: 'ユーザー画面',
     value: 'user',
+    show: true
   },
   {
     name: '組織画面',
     value: 'organization',
+    show: true
   },
   {
     name: '集計カテゴリ画面',
     value: 'category',
+    show: true
   },
   {
     name: 'スキル画面',
     value: 'skill',
+    show: false
   },
   {
     name: 'スキルマップ画面',
     value: 'skillMap',
+    show: false
   },
   {
     name: '組織_スキル画面',
     value: 'organizationSkill',
+    show: false
   },
   {
     name: '集計タグ画面',
     value: 'tag',
+    show: true
   },
   {
     name: '集計画面',
     value: 'statistic',
+    show: false
   },
   {
     name: '日報画面',
     value: 'dailyReport',
+    show: false
   },
   {
     name: 'レベルアップ申請確認画面',
     value: 'submitLevel',
+    show: false
   },
   {
     name: 'ロール画面',
     value: 'role',
+    show: true
   },
   {
     name: '実績管理画面',
     value: 'actualDuration',
+    show: false
   },
   {
     name: 'メンバー一覧画面',
     value: 'listMember',
+    show: false
   },
   {
     name: 'チームドック画面',
     value: 'teamdock',
+    show: true
   },
   {
     name: '日報一覧画面',
     value: 'teamDailyReport',
+    show: true
   },
 ];
 

@@ -335,7 +335,9 @@ const PercentageCategoryCompare = ({
     }
 
     const element = document.getElementById('task-list-statistic');
-    setIsShowModal(false);
+    setTimeout(() => {
+      setIsShowModal(true);
+    }, 1000);
 
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -517,6 +519,7 @@ const PercentageCategoryCompare = ({
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
                         options={listOptionsOrganization}
                         selectedOption={selectedOrganization || undefined}
                         onChange={(data) => handleSelectOrganization(data)}
@@ -535,17 +538,15 @@ const PercentageCategoryCompare = ({
                         endDateCompare={endDateCompare}
                         dataCompare={dataChartLargeCompare}
                         handleClickChart={(data: number) => {
-                          if (data && String(data) !== '未設定') {
-                            const select = largeOptions.find(
-                              (item) => item.value === data,
+                          const select = largeOptions.find(
+                            (item) => item.value === data,
+                          );
+                          selectedOrganization &&
+                            handleSelectOrganizationCustom(
+                              selectedOrganization,
                             );
-                            selectedOrganization &&
-                              handleSelectOrganizationCustom(
-                                selectedOrganization,
-                              );
-                            if (select) {
-                              handleSelectLarge(select);
-                            }
+                          if (select) {
+                            handleSelectLarge(select);
                           }
                         }}
                         handleClickTooltip={(
@@ -584,6 +585,7 @@ const PercentageCategoryCompare = ({
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
                         options={largeOptions}
                         selectedOption={selectedLarge || undefined}
                         onChange={(data) => handleSelectLarge(data)}
@@ -603,14 +605,12 @@ const PercentageCategoryCompare = ({
                         totalDuration={totalDurationMedium}
                         totalDurationCompare={totalDurationMediumCompare}
                         handleClickChart={(data: number) => {
-                          if (data && String(data) !== '未設定') {
-                            const select = mediumOptions.find(
-                              (item) => item.value === data,
-                            );
+                          const select = mediumOptions.find(
+                            (item) => item.value === data,
+                          );
 
-                            if (select) {
-                              handleSelectMedium(select);
-                            }
+                          if (select) {
+                            handleSelectMedium(select);
                           }
                         }}
                         handleClickTooltip={(
@@ -649,6 +649,7 @@ const PercentageCategoryCompare = ({
                         placeholderClass="!text-black text-sm font-normal"
                         className="!h-[34px] !rounded-md !border text-sm !py-0 font-normal !border-[#77858F]"
                         labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                        classNameOption="!text-sm"
                         options={mediumOptions}
                         selectedOption={selectedMedium || undefined}
                         onChange={(data) => handleSelectMedium(data)}
@@ -669,14 +670,12 @@ const PercentageCategoryCompare = ({
                         totalDuration={totalDurationSmall}
                         totalDurationCompare={totalDurationSmallCompare}
                         handleClickChart={(data: number) => {
-                          if (data && String(data) !== '未設定') {
-                            const select = smallOptions.find(
-                              (item) => item.value === data,
-                            );
+                          const select = smallOptions.find(
+                            (item) => item.value === data,
+                          );
 
-                            if (select) {
-                              handleSelectSmall(select);
-                            }
+                          if (select) {
+                            handleSelectSmall(select);
                           }
                         }}
                         handleClickTooltip={(
@@ -701,7 +700,6 @@ const PercentageCategoryCompare = ({
       {isShowModal && (
         <ListTaskDetailStatisticModal
           open={isShowModal}
-          isDisable={`${detailCategory?.id}` == '未設定'}
           startDate={startDate}
           endDate={endDate}
           statisticCategoryList={statisticCategoryList}
@@ -720,7 +718,6 @@ const PercentageCategoryCompare = ({
       {isShowModalCompare && (
         <ListTaskDetailStatisticModal
           open={isShowModalCompare}
-          isDisable={`${detailCategoryCompare?.id}` == '未設定'}
           selectedTags={selectedTags}
           startDate={startDateCompare}
           statisticCategoryList={statisticCategoryList}

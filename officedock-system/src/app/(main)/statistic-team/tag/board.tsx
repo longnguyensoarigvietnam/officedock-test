@@ -66,6 +66,7 @@ const StatisticTeamTagBoard = () => {
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setIsLoadingSmallCompare,
+    setCurrentPage,
   } = useContext(StatisticTeamTagsStateContext);
   const { organizationTeamList } = useContext(GlobalStateContext);
 
@@ -84,6 +85,8 @@ const StatisticTeamTagBoard = () => {
   const { creationDataStatisticData } = useCreationDataStatisticTeam({
     organization_id: organizationId || '',
     isTeam: true,
+    is_statistic: true,
+
     onSuccess: (data) => {
       if (!data) return;
       if (data.organization) {
@@ -120,9 +123,9 @@ const StatisticTeamTagBoard = () => {
       fromDate: formatDateToYMD(startDate) || '',
       endDate: formatDateToYMD(`${endDate}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: Number(selectedLarge?.value),
-      mediumCategoryId: Number(selectedMedium?.value),
-      smallCategoryId: Number(selectedSmall?.value),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      smallCategoryId: selectedSmall?.value as number,
 
       tagIds: selectedTags,
     },
@@ -160,9 +163,9 @@ const StatisticTeamTagBoard = () => {
       fromDate: formatDateToYMD(startDateCompare) || '',
       endDate: formatDateToYMD(`${endDateCompare}`) || '',
       organizationIds: String(selectedOrganization?.value || ''),
-      largeCategoryId: Number(selectedLarge?.value),
-      mediumCategoryId: Number(selectedMedium?.value),
-      smallCategoryId: Number(selectedSmall?.value),
+      largeCategoryId: selectedLarge?.value as number,
+      mediumCategoryId: selectedMedium?.value as number,
+      smallCategoryId: selectedSmall?.value as number,
 
       isCompare: isCheckCompare,
     },
@@ -189,6 +192,7 @@ const StatisticTeamTagBoard = () => {
     const updatedTagIds = currentTagIds.filter(
       (tag) => tag.value !== selected.value,
     );
+    setCurrentPage(1);
     setSelectedTags(updatedTagIds);
   };
 
@@ -200,6 +204,8 @@ const StatisticTeamTagBoard = () => {
         setIsLoadingOrganizationCompare(true);
       }
     }
+    setCurrentPage(1);
+
     setSelectedOrganization(data);
     setSelectedLarge(null);
     setSelectedMedium(null);
@@ -226,6 +232,8 @@ const StatisticTeamTagBoard = () => {
         setIsLoadingLargeCompare(true);
       }
     }
+    setCurrentPage(1);
+
     setSelectedLarge(data);
     setSelectedMedium(null);
     setSelectedSmall(null);
@@ -255,6 +263,8 @@ const StatisticTeamTagBoard = () => {
         setIsLoadingMediumCompare(true);
       }
     }
+    setCurrentPage(1);
+
     setSelectedMedium(data);
     setSelectedSmall(null);
 
@@ -288,6 +298,8 @@ const StatisticTeamTagBoard = () => {
         setIsLoadingSmallCompare(true);
       }
     }
+    setCurrentPage(1);
+
     setSelectedSmall(data);
   };
   const getParticipantAvatars = (

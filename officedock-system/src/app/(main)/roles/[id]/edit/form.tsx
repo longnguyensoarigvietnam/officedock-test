@@ -81,21 +81,19 @@ const EditRoleForm = () => {
   }, [setDataRoleDetail, roleDetail]);
 
   useEffect(() => {
-    if (!dataRoleDetail) {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
+    if (!isSubmit) {
+      setIsLoading(!dataRoleDetail);
     }
-  }, [dataRoleDetail, setIsLoading]);
+  }, [dataRoleDetail, isSubmit, setIsLoading]);
 
   useEffect(() => {
     if (dataRoleDetail) {
       const initialRows: rowDataType[] = [];
-      dataRoleDetail.permissions
-        .filter(
-          (permission) =>
-            permission.screenName != ScreenName.CATEGORY_HIERARCHY &&
-            permission.screenName != ScreenName.ORGANIZATION_HIERARCHY,
+      dataRoleDetail?.permissions
+        ?.filter((permission) =>
+          SCREEN_LIST.find(
+            (screen) => screen.value == permission.screenName && screen.show,
+          ),
         )
         .map((permission) => {
           initialRows.push({
@@ -171,7 +169,7 @@ const EditRoleForm = () => {
           (row) => row.screenValue === screen.value,
         );
         acc[screen.value] = {
-          actions: matchingRow?.actions as string,
+          actions: matchingRow?.actions || PermissionType.EDITABLE,
         };
         return acc;
       },

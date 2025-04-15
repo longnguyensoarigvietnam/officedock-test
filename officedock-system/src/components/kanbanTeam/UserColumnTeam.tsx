@@ -121,7 +121,7 @@ const UserColumnTeam = ({
                 offset={[0, 5]}>
                 <div
                   style={{
-                    padding: '5px',
+                    padding: '6.5px',
                   }}
                   className={`rounded-full cursor-pointer w-fit bg-white `}
                   onClick={() => {
@@ -147,7 +147,9 @@ const UserColumnTeam = ({
                 delay={1000}
                 placement="top"
                 offset={[0, 5]}>
-                <div onClick={() => setIsExtendUser(false)}>
+                <div
+                  className="flex items-center justify-center cursor-pointer hover:bg-white rounded-full w-[22px] h-[22px]"
+                  onClick={() => setIsExtendUser(false)}>
                   <ImageRound
                     src={`/icons/extend-column.svg`}
                     className={`${isExtendUser ? 'rotate-0' : 'rotate-180'} cursor-pointer`}
@@ -200,11 +202,9 @@ const UserColumnTeam = ({
               placement="top"
               offset={[0, 5]}>
               <div
-                className="w-3"
+                className="flex items-center justify-center cursor-pointer hover:bg-white rounded-full w-[22px] h-[22px]"
                 onClick={() => setIsExtendUser(true)}
-                style={{
-                  padding: `${(247 / 247) * 0}px`,
-                }}>
+                >
                 <ImageRound
                   src={`/icons/extend-column.svg`}
                   className={`${isExtendUser ? 'rotate-0' : 'rotate-180'} cursor-pointer`}

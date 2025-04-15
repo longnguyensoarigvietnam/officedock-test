@@ -2471,10 +2471,11 @@ const KanbanBoardTask = () => {
 
   // Action copy
   // Handle call api copy task
-  const handleActionCopyTask = (id: number) => {
+  const handleActionCopyTask = (id: number, type?: string) => {
     handleSetParam({
       id: `${id}`,
       action: ActionTask.COPY,
+      type: type,
     });
   };
 
@@ -2804,7 +2805,6 @@ const KanbanBoardTask = () => {
 
   // Handle save zoom
   const handleSaveZoomKanban = async (kanbanZoom: number) => {
-    return;
     const { data: response } = await api.post(apiRouters.USER_SETTING, {
       kanbanZoom,
     });

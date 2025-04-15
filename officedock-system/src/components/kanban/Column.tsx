@@ -352,7 +352,7 @@ const Column = ({
               </span>
             )}
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-1">
             {session?.user.permissions &&
               hasPermissionInArray(
                 session?.user.permissions,
@@ -366,7 +366,7 @@ const Column = ({
                   offset={[0, 5]}>
                   <div
                     style={{
-                      padding: '5px',
+                      padding: '6.5px',
                     }}
                     className={`rounded-full cursor-pointer w-fit ${Number(columnId) != StatusValueTask.MY_ROUTINE ? 'bg-[#E3EAED]' : 'bg-[#EBF2F7]'}`}
                     onClick={() => {
@@ -406,11 +406,7 @@ const Column = ({
                   setExtendByStatus(newList);
                   saveExtendColumn && saveExtendColumn(dataExtend);
                 }}
-                className="h-full flex items-center cursor-pointer  "
-                style={{
-                  padding: `${(columnWidth / 247) * 5}px`,
-                  paddingLeft: `${(columnWidth / 247) * 12}px`,
-                }}>
+                className={`flex items-center justify-center cursor-pointer ${Number(columnId) != StatusValueTask.MY_ROUTINE ? 'hover:bg-[#E3EAED]' : 'hover:bg-[#EBF2F7]'} rounded-full w-[22px] h-[22px]`}>
                 <ImageRound
                   src={`/icons/extend-column.svg`}
                   className={` ${
@@ -526,9 +522,22 @@ const Column = ({
           placement="top"
           offset={[0, 5]}>
           <div
-            style={{
-              padding: `${(columnWidth / 247) * 5}px`,
-              paddingLeft: `${(columnWidth / 247) * 12}px`,
+            className={`flex items-center justify-center cursor-pointer ${Number(columnId) != StatusValueTask.MY_ROUTINE ? 'hover:bg-[#E3EAED]' : 'hover:bg-[#EBF2F7]'} rounded-full w-[22px] h-[22px]`}
+            onClick={async () => {
+              const newList = extendByStatus.map((item) =>
+                String(item.id) == String(columnId)
+                  ? { ...item, status: !item.status }
+                  : item,
+              );
+              const dataExtend: Record<string, boolean> = newList.reduce(
+                (acc, item) => {
+                  acc[item.id] = item.status;
+                  return acc;
+                },
+                {} as Record<string, boolean>,
+              );
+              setExtendByStatus(newList);
+              saveExtendColumn(dataExtend);
             }}>
             <ImageRound
               src={`/icons/extend-column.svg`}
@@ -540,22 +549,6 @@ const Column = ({
                   : 'rotate-180'
               } cursor-pointer`}
               name="extend"
-              onClick={async () => {
-                const newList = extendByStatus.map((item) =>
-                  String(item.id) == String(columnId)
-                    ? { ...item, status: !item.status }
-                    : item,
-                );
-                const dataExtend: Record<string, boolean> = newList.reduce(
-                  (acc, item) => {
-                    acc[item.id] = item.status;
-                    return acc;
-                  },
-                  {} as Record<string, boolean>,
-                );
-                setExtendByStatus(newList);
-                saveExtendColumn(dataExtend);
-              }}
               style={{
                 width: `8px`,
                 height: `12px`,

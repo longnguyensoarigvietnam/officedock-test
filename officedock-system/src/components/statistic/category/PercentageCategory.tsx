@@ -280,7 +280,7 @@ const PercentageCategory = ({
 
     setTimeout(() => {
       setIsShowModal(true);
-    }, 500);
+    }, 1000);
   };
 
   const handleScroll = () => {
@@ -482,13 +482,11 @@ const PercentageCategory = ({
                                 handleClickTooltip(id, EventWorkCategory.ALL);
                               }}
                               handleClickChart={(data: OptionDropdownType) => {
-                                if (data.value && data.value !== '未設定') {
-                                  selectedOrganization &&
-                                    handleSelectOrganizationCustom(
-                                      selectedOrganization,
-                                    );
-                                  handleSelectLarge(data);
-                                }
+                                selectedOrganization &&
+                                  handleSelectOrganizationCustom(
+                                    selectedOrganization,
+                                  );
+                                handleSelectLarge(data);
                               }}
                             />
                           ) : (
@@ -553,9 +551,7 @@ const PercentageCategory = ({
                                 handleClickTooltip(id, EventWorkCategory.LARGE);
                               }}
                               handleClickChart={(data: OptionDropdownType) => {
-                                if (data.value && data.value !== '未設定') {
-                                  handleSelectMedium(data);
-                                }
+                                handleSelectMedium(data);
                               }}
                             />
                           ) : (
@@ -640,7 +636,6 @@ const PercentageCategory = ({
       {isShowModal && (
         <ListTaskDetailStatisticModal
           open={isShowModal}
-          isDisable={`${detailCategory?.id}` == '未設定'}
           selectedTags={selectedTags}
           selectedLarge={selectedLarge}
           selectedMedium={selectedMedium}

@@ -56,12 +56,14 @@ import {
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
+import { User } from '@interfaces/user';
 
 export type ActionsEventModalProps = {
   open: boolean;
   dataEvent?: EventEditFormData;
   creationDataEventCalendar: CreationDataEventCalendar | undefined;
   action?: string;
+  authenticatedUser?: User | undefined
   onDelete?: (values: EventEditFormData) => void;
   onClose: () => void;
   onSubmit?: (values: EventFormData) => void;
@@ -75,6 +77,7 @@ const ActionsEventModal = ({
   open,
   dataEvent,
   action = 'CREATE',
+  authenticatedUser,
   onClose,
   onEdit,
   onDelete,
@@ -140,18 +143,19 @@ const ActionsEventModal = ({
   });
 
   const { refetchCreationDataStatistic } = useCreationDataStatisticTeam({
-      organization_id: organizationValue ? String(organizationValue) : '',
-      isTeam: true,
-      onSuccess: (data) => {
-        if (!data) return;
-  
-        const organizationCategories = data.organization.statisticCategories.map((category) => {
+    organization_id: organizationValue ? String(organizationValue) : '',
+    isTeam: true,
+    onSuccess: (data) => {
+      if (!data) return;
+
+      const organizationCategories = data.organization.statisticCategories.map(
+        (category) => {
           const largeCategory = category.LARGE || {
             id: NO_OPTION_CATEGORY,
             name: NO_OPTION_CATEGORY,
             uuid: '',
           };
-  
+
           const mediumCategories = (category.MEDIUM || []).map(
             (mediumCategory) => {
               const mediumCategoryField = mediumCategory.MEDIUM || {
@@ -162,46 +166,47 @@ const ActionsEventModal = ({
               const smallCategories = mediumCategory.SMALL || [
                 { id: NO_OPTION_CATEGORY, name: NO_OPTION_CATEGORY, uuid: '' },
               ];
-  
+
               return {
                 MEDIUM: mediumCategoryField,
                 SMALL: smallCategories,
               };
             },
           );
-  
+
           return {
             LARGE: largeCategory,
             MEDIUM: mediumCategories,
           };
+        },
+      );
+
+      setDataOrganizationCategories(organizationCategories);
+      setDataOptionsCategoryLarge(() => {
+        const largeCategories: OptionDropdownType[] = [
+          {
+            label: NO_OPTION_CATEGORY,
+            value: NO_OPTION_CATEGORY,
+          },
+        ];
+        data.organization.statisticCategories.map((category) => {
+          if (category.LARGE) {
+            largeCategories.push({
+              label: category.LARGE.name,
+              value: category.LARGE.id,
+            });
+          }
         });
-  
-        setDataOrganizationCategories(organizationCategories);
-        setDataOptionsCategoryLarge(() => {
-          const largeCategories: OptionDropdownType[] = [
-            {
-              label: NO_OPTION_CATEGORY,
-              value: NO_OPTION_CATEGORY,
-            },
-          ];
-          data.organization.statisticCategories.map((category) => {
-            if (category.LARGE) {
-              largeCategories.push({
-                label: category.LARGE.name,
-                value: category.LARGE.id,
-              });
-            }
-          });
-          return largeCategories;
-        });
-        setDataOptionsTagIds(
-          data.tags.map((org) => ({
-            label: String(org.name),
-            value: String(org.id),
-          })),
-        );
-      },
-    });
+        return largeCategories;
+      });
+      setDataOptionsTagIds(
+        data.tags.map((org) => ({
+          label: String(org.name),
+          value: String(org.id),
+        })),
+      );
+    },
+  });
 
   useEffect(() => {
     if (organizationValue) {
@@ -228,7 +233,35 @@ const ActionsEventModal = ({
       address: '',
       isAllDay: false,
       tagIds: dataEvent ? [] : [{ label: '', value: '' }],
+      organization: authenticatedUser?.organizations
+        ? {
+            label:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.name || '',
+            value:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.id || '',
+          }
+        : undefined,
     };
+    if (authenticatedUser) {
+      value.organization = authenticatedUser?.organizations.find(
+        (organization) => organization.isMain,
+      )
+        ? {
+            label:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.name || '',
+            value:
+              authenticatedUser?.organizations.find(
+                (organization) => organization.isMain,
+              )?.id || '',
+          }
+        : undefined;
+    }
     if (dataEvent) {
       let newParticipantIds: number[] = [];
       if (backToEditing) {
@@ -379,7 +412,7 @@ const ActionsEventModal = ({
     }
     return value;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataEvent]);
+  }, [dataEvent, authenticatedUser]);
 
   useEffect(() => {
     reset(defaultValues);
@@ -417,7 +450,7 @@ const ActionsEventModal = ({
         })),
       );
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataOrganizationCategories, largeCategoryValue, watch]);
 
   useMemo(() => {
@@ -990,12 +1023,65 @@ const ActionsEventModal = ({
                   )}
                 />
               </div>
-              <div className="mb-2">
-                <Controller
-                  control={control}
-                  name={'mediumCategory'}
-                  render={({ field: { value, onChange } }) => {
-                    return (
+              {(watch('organization') as OptionDropdownType)?.value && watch('largeCategory')?.value && (
+                <div className="mb-2">
+                  <Controller
+                    control={control}
+                    name={'mediumCategory'}
+                    render={({ field: { value, onChange } }) => {
+                      return (
+                        <Dropdown
+                          className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
+                          classNameTextData="!text-xs"
+                          classNameOption="!text-xs"
+                          options={[
+                            {
+                              label: NO_OPTION_CATEGORY,
+                              value: NO_OPTION_CATEGORY,
+                            },
+                            ...dataOptionsCategoryMedium.filter(
+                              (category) =>
+                                category.label !== NO_OPTION_CATEGORY,
+                            ),
+                          ]}
+                          selectedOption={[
+                            {
+                              label: NO_OPTION_CATEGORY,
+                              value: NO_OPTION_CATEGORY,
+                            },
+                            ...dataOptionsCategoryMedium.filter(
+                              (category) =>
+                                category.label !== NO_OPTION_CATEGORY,
+                            ),
+                          ].find(
+                            (element) =>
+                              element.value ==
+                              (value as OptionDropdownType)?.value,
+                          )}
+                          placeholder={'中カテゴリ'}
+                          onChange={(e) => {
+                            if (e.value != watch('mediumCategory.value')) {
+                              setValue('smallCategory', {
+                                label: '',
+                                value: '',
+                              });
+                            }
+                            onChange(e);
+                          }}
+                          disabled={isDisabled}
+                        />
+                      );
+                    }}
+                  />
+                </div>
+              )}
+
+              {(watch('organization') as OptionDropdownType)?.value && watch('mediumCategory')?.value && (
+                <div className="mb-2">
+                  <Controller
+                    control={control}
+                    name={'smallCategory'}
+                    render={({ field: { value, onChange } }) => (
                       <Dropdown
                         className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
                         classNameTextData="!text-xs"
@@ -1005,7 +1091,7 @@ const ActionsEventModal = ({
                             label: NO_OPTION_CATEGORY,
                             value: NO_OPTION_CATEGORY,
                           },
-                          ...dataOptionsCategoryMedium.filter(
+                          ...dataOptionsCategorySmall.filter(
                             (category) => category.label !== NO_OPTION_CATEGORY,
                           ),
                         ]}
@@ -1014,7 +1100,7 @@ const ActionsEventModal = ({
                             label: NO_OPTION_CATEGORY,
                             value: NO_OPTION_CATEGORY,
                           },
-                          ...dataOptionsCategoryMedium.filter(
+                          ...dataOptionsCategorySmall.filter(
                             (category) => category.label !== NO_OPTION_CATEGORY,
                           ),
                         ].find(
@@ -1022,58 +1108,16 @@ const ActionsEventModal = ({
                             element.value ==
                             (value as OptionDropdownType)?.value,
                         )}
-                        placeholder={'中カテゴリ'}
+                        placeholder={'小カテゴリ'}
                         onChange={(e) => {
-                          if (e.value != watch('mediumCategory.value')) {
-                            setValue('smallCategory', { label: '', value: '' });
-                          }
                           onChange(e);
                         }}
                         disabled={isDisabled}
                       />
-                    );
-                  }}
-                />
-              </div>
-              <div className="mb-2">
-                <Controller
-                  control={control}
-                  name={'smallCategory'}
-                  render={({ field: { value, onChange } }) => (
-                    <Dropdown
-                      className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs"
-                      options={[
-                        {
-                          label: NO_OPTION_CATEGORY,
-                          value: NO_OPTION_CATEGORY,
-                        },
-                        ...dataOptionsCategorySmall.filter(
-                          (category) => category.label !== NO_OPTION_CATEGORY,
-                        ),
-                      ]}
-                      selectedOption={[
-                        {
-                          label: NO_OPTION_CATEGORY,
-                          value: NO_OPTION_CATEGORY,
-                        },
-                        ...dataOptionsCategorySmall.filter(
-                          (category) => category.label !== NO_OPTION_CATEGORY,
-                        ),
-                      ].find(
-                        (element) =>
-                          element.value == (value as OptionDropdownType)?.value,
-                      )}
-                      placeholder={'小カテゴリ'}
-                      onChange={(e) => {
-                        onChange(e);
-                      }}
-                      disabled={isDisabled}
-                    />
-                  )}
-                />
-              </div>
+                    )}
+                  />
+                </div>
+              )}
             </div>
           </div>
           {/* Tag */}
@@ -1094,6 +1138,7 @@ const ActionsEventModal = ({
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
+                    noDataClass="w-[461px]"
                     labelOptionClass="break-words w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {

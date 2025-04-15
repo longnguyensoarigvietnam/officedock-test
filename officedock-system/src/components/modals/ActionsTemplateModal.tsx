@@ -809,60 +809,66 @@ const ActionsTemplateModal = ({
                 }}
               />
               {/* Category medium */}
-              <Controller
-                control={control}
-                name={'categories.MEDIUM'}
-                render={({ field: { value, onChange } }) => {
-                  return (
-                    <Dropdown
-                      placeholder="中カテゴリ"
-                      className="h-[34px] !py-1 text-xs"
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs"
-                      classNameError="!text-xs"
-                      disabled={isCheckActionPermission}
-                      options={dataOptionsCategoryMedium}
-                      selectedOption={dataOptionsCategoryMedium.find(
-                        (element) => element.value === value?.value,
-                      )}
-                      onChange={(e) => {
-                        if (e.value != watch('categories.MEDIUM.value')) {
-                          setValue('categories.SMALL', {
-                            label: '',
-                            value: '',
-                          });
-                        }
-                        onChange(e);
-                      }}
-                      error={errors.categories?.MEDIUM?.message}
-                    />
-                  );
-                }}
-              />
-
-              {/* Category small */}
-              <Controller
-                control={control}
-                name={'categories.SMALL'}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    className="h-[34px] !py-1 text-xs"
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
-                    classNameError="!text-xs"
-                    disabled={isCheckActionPermission}
-                    options={dataOptionsCategorySmall}
-                    selectedOption={dataOptionsCategorySmall.find(
-                      (element) => element.value === value?.value,
-                    )}
-                    placeholder="小カテゴリ"
-                    onChange={(e) => {
-                      onChange(e);
+              {watch('organization')?.value &&
+                watch('categories.LARGE')?.value && (
+                  <Controller
+                    control={control}
+                    name={'categories.MEDIUM'}
+                    render={({ field: { value, onChange } }) => {
+                      return (
+                        <Dropdown
+                          placeholder="中カテゴリ"
+                          className="h-[34px] !py-1 text-xs"
+                          classNameTextData="!text-xs"
+                          classNameOption="!text-xs"
+                          classNameError="!text-xs"
+                          disabled={isCheckActionPermission}
+                          options={dataOptionsCategoryMedium}
+                          selectedOption={dataOptionsCategoryMedium.find(
+                            (element) => element.value === value?.value,
+                          )}
+                          onChange={(e) => {
+                            if (e.value != watch('categories.MEDIUM.value')) {
+                              setValue('categories.SMALL', {
+                                label: '',
+                                value: '',
+                              });
+                            }
+                            onChange(e);
+                          }}
+                          error={errors.categories?.MEDIUM?.message}
+                        />
+                      );
                     }}
-                    error={errors.categories?.SMALL?.message}
                   />
                 )}
-              />
+
+              {/* Category small */}
+              {watch('organization')?.value &&
+                watch('categories.MEDIUM')?.value && (
+                  <Controller
+                    control={control}
+                    name={'categories.SMALL'}
+                    render={({ field: { value, onChange } }) => (
+                      <Dropdown
+                        className="h-[34px] !py-1 text-xs"
+                        classNameTextData="!text-xs"
+                        classNameOption="!text-xs"
+                        classNameError="!text-xs"
+                        disabled={isCheckActionPermission}
+                        options={dataOptionsCategorySmall}
+                        selectedOption={dataOptionsCategorySmall.find(
+                          (element) => element.value === value?.value,
+                        )}
+                        placeholder="小カテゴリ"
+                        onChange={(e) => {
+                          onChange(e);
+                        }}
+                        error={errors.categories?.SMALL?.message}
+                      />
+                    )}
+                  />
+                )}
             </div>
           </div>
           {/* Tag */}

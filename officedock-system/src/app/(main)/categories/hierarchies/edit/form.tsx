@@ -1700,6 +1700,7 @@ const TableComponent = ({
                             )}
                             onPendingChange={(e) => {
                               const oldLargeOption = row.original.large;
+                              if(e.value == oldLargeOption.value) return;
                               if ((row.original.large.label && !isUUID(row.original.large.label) && !isUUID(row.original.id as string))) {
                                 setWarningChangeCategoryModalOpen(true);
                                 setPendingSelection({
@@ -1814,6 +1815,7 @@ const TableComponent = ({
                                 onPendingChange={(e) => {
                                   const oldMediumOption = row.original.medium;
                                   const oldLargeOption = row.original.large;
+                                  if(e.value == oldMediumOption.value) return;
                                   if (row.original.medium.label && !isUUID(row.original.medium.label) && !isUUID(row.original.id as string)) {
                                     setWarningChangeCategoryModalOpen(true);
                                     setPendingSelection({
@@ -1953,6 +1955,7 @@ const TableComponent = ({
                                 const oldRowId = row.original.id;
                                 const oldRowSkill = row.original.skills;
                                 const oldRowColor = row.original.color;
+                                if(e.value == row.original.small.value) return;
                                 if (row.original.small.label && !isUUID(row.original.small.label)  && !isUUID(row.original.id as string)) {
                                   setWarningChangeCategoryModalOpen(true);
                                   setPendingSelection({

@@ -71,6 +71,7 @@ interface ListViewByStatusProps {
       }[]
     >
   >;
+  saveExtendColumn: (data: Record<string, boolean>) => void;
 }
 const ListViewByStatus = ({
   listItems,
@@ -92,6 +93,7 @@ const ListViewByStatus = ({
   columnsKanbanData,
   setColumnsKanbanData,
   setNumberPagesData,
+  saveExtendColumn
 }: ListViewByStatusProps) => {
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
@@ -257,22 +259,34 @@ const ListViewByStatus = ({
           delay={1000}
           placement="top"
           offset={[3, 0]}>
-          <div>
+          <div
+            className="flex items-center justify-center cursor-pointer hover:bg-[#E3EAED] rounded-full w-[22px] h-[22px]"
+            onClick={async () => {
+              const newList = extendByStatus.map((item) =>
+                String(item.id) == String(listId)
+                  ? { ...item, status: !item.status }
+                  : item,
+              );
+              const dataExtend: Record<string, boolean> = newList.reduce(
+                (acc, item) => {
+                  acc[item.id] = item.status;
+                  return acc;
+                },
+                {} as Record<string, boolean>,
+              );
+              setExtendByStatus(newList);
+              saveExtendColumn && saveExtendColumn(dataExtend);
+            }}>
             <ImageRound
-              src="/icons/extend-calendar.svg"
-              name="Extend calendar"
+              src="/icons/extend-column.svg"
+              name="Extend column"
               className={`!w-3 !h-3 hover:cursor-pointer ${
-                extendByStatus.find((list) => list.id == listId)?.status &&
-                'rotate-90'
+                extendByStatus.find((list) => list.id == listId)?.status ?
+                '-rotate-90' : 'rotate-180'
               }`}
-              onClick={() => {
-                setExtendByStatus((prev) =>
-                  prev.map((item) =>
-                    item.id == listId
-                      ? { ...item, status: !item.status }
-                      : item,
-                  ),
-                );
+              style={{
+                width: `8px`,
+                height: `12px`,
               }}
             />
           </div>
@@ -295,9 +309,16 @@ const ListViewByStatus = ({
           placement="top"
           offset={[0, 5]}>
           <div
-            className={`rounded-full cursor-pointer p-1.5 w-fit bg-gray-200`}
-            onClick={() => addTask(String(listId))}>
-            <ImageRound src={`/icons/add.svg`} name="Add" className="w-3 h-3" />
+            className={`rounded-full cursor-pointer p-1.5 w-fit bg-[#E3EAED]`}
+            onClick={() => addTask(String(listId))}
+            style={{
+              padding: '6.5px',
+            }}>
+            <ImageRound
+              src={`/icons/add.svg`}
+              name="Add"
+              className="w-[9px] h-[9px]"
+            />
           </div>
         </Tippy>
       </div>

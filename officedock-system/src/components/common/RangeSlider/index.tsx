@@ -30,6 +30,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const newValue = Number(e.target.value);
+
     setValue(newValue);
     setIsDragging(false);
     if (onChange) onChange(newValue);
@@ -40,6 +41,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
       const delta = newX - dragStartX;
       const newValue = Math.min(Math.max(startValue + delta / 3, min), max);
       setValue(newValue);
+
       if (onChange) onChange(newValue);
     }
   };
@@ -79,6 +81,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
 
   useEffect(() => {
     setValue(initialValue);
+
     if (onChange) onChange(initialValue);
   }, [resetTrigger, initialValue, onChange]);
 
@@ -87,35 +90,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
     if (onChange) onChange(initialValue);
   }, [resetTrigger, initialValue, onChange]);
 
-  // Create 5 red apartments from the 2nd to the 6th section running from 100% down
-
-  // TODO : Confirm QA
-  // const handleMarkerClick = (markerValue: number) => {
-  //   setValue(markerValue);
-  //   if (onChange) onChange(markerValue);
-  // };
-  // const numMarkers = 6;
-  // const markerValues = [100, 84, 68, 50, 33];
-
-  // const markers = Array.from({ length: numMarkers }, (_, index) => {
-  //   if (index === 5) return null;
-
-  //   const percent = ((numMarkers - index) / numMarkers) * 100;
-  //   const markerValue = markerValues[index];
-
-  //   return (
-  //     <div
-  //       key={index}
-  //       className="absolute w-[2px] z-30 h-[14px] bg-red-500"
-  //       style={{
-  //         left: `${percent}%`,
-  //         transform: 'translateX(-50%)',
-  //         top: '-2px',
-  //       }}
-  //       onClick={() => handleMarkerClick(markerValue)}
-  //     />
-  //   );
-  // });
+  const marks = [18, 38.5, 59, 79.5, 100];
 
   return (
     <div className="flex w-full items-center gap-2 justify-between">
@@ -128,9 +103,13 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
         <div>
           <button
             onClick={() => {
-              const newValue = Math.max(value - 1, min);
-              setValue(newValue);
-              if (onChange) onChange(newValue);
+              const prevMark = [...marks]
+                .reverse()
+                .find((mark) => mark < value);
+              if (prevMark !== undefined) {
+                setValue(prevMark);
+                if (onChange) onChange(prevMark);
+              }
             }}
             className="text-2xl h-[18px] rounded-full bg-[#ECF0F2] w-[18px] flex items-center justify-center cursor-pointer  border-none">
             <ImageRound
@@ -158,6 +137,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
           type="range"
           min={min}
           max={max}
+          step={1}
           value={value}
           onChange={handleChange}
           className="absolute w-full h-full z-20 appearance-none bg-transparent outline-none cursor-pointer"
@@ -191,9 +171,11 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
         <div>
           <button
             onClick={() => {
-              const newValue = Math.min(value + 1, max);
-              setValue(newValue);
-              if (onChange) onChange(newValue);
+              const nextMark = marks.find((mark) => mark > value);
+              if (nextMark !== undefined) {
+                setValue(nextMark);
+                if (onChange) onChange(nextMark);
+              }
             }}
             className="text-2xl cursor-pointer h-[18px] rounded-full bg-[#ECF0F2] w-[18px] border-none">
             <ImageRound

@@ -4,7 +4,8 @@ from base.messages import ERROR_MESSAGES
 from common.serializers import CreationDataOrganizationSerializer
 from organizations.models import Organization
 from roles.constants import Actions, Screens
-from roles.utils import has_permission
+from roles.utils import get_permission_for_user, has_permission
+from roles.constants import SelectionResultOptions
 from .models import Tag
 
 
@@ -92,9 +93,15 @@ class TagSerializer(serializers.ModelSerializer):
             Actions.DELETE.value: f"{Screens.TAG.value}_{Actions.DELETE.value}",
         }
         item_org_ids = obj.organizations.values_list("id", flat=True)
-        if item_org_ids:
-            permissions = has_permission(actions, user, item_org_ids)
-        else:
+        permissions = has_permission(actions, user, item_org_ids)
+
+        if (
+            get_permission_for_user(
+                user, f"{Screens.TAG.value}_{Actions.UPDATE.value}"
+            )
+            == SelectionResultOptions.ONLY_DATA_ORGANIZATION.value
+            and not item_org_ids
+        ):
             permissions = {
                 Actions.UPDATE.value: True,
                 f"{Actions.UPDATE.value}_name": False,

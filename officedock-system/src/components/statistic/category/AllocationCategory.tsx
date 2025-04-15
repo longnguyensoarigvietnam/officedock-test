@@ -382,7 +382,6 @@ const AllocationCategory = memo(
                                 ) => {
                                   if (
                                     data.value &&
-                                    data.value !== '未設定' &&
                                     data.value != selectedLarge?.value
                                   ) {
                                     const select = largeOptions.find(
@@ -457,7 +456,6 @@ const AllocationCategory = memo(
                                 ) => {
                                   if (
                                     data.value &&
-                                    data.value !== '未設定' &&
                                     data.value != selectedMedium?.value
                                   ) {
                                     const select = mediumOptions.find(
@@ -542,7 +540,6 @@ const AllocationCategory = memo(
         {isShowModal && (
           <ListTaskDetailStatisticModal
             open={isShowModal}
-            isDisable={`${detailCategory?.id}` == '未設定'}
             selectedTags={selectedTags}
             selectedLarge={selectedLarge}
             selectedMedium={selectedMedium}

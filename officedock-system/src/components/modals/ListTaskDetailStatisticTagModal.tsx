@@ -20,6 +20,7 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 import useStatisticTask from '@hooks/useStatisticTask';
+import Spinner from '@components/common/Spinner';
 
 type Props = {
   detailCategory: {
@@ -56,12 +57,14 @@ const ListTaskDetailStatisticTagModal = ({
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
   const [count, setCount] = useState<number>(0);
-  const [lastCreateAt, setLastCreateAt] = useState<string>('');
+  const [lastItem, setLastItem] = useState<DataTaskListStatisticListType>();
+
   const [hastMore, setHasMore] = useState(false);
 
   const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
   const [ordering, setOrdering] = useState<string>('');
   const [isSkeletonLoading, setIsSkeletonLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   const { refetchStatisticCategoryList } = useStatisticTask({
     parentData: statisticTagsListTeam,
@@ -92,11 +95,13 @@ const ListTaskDetailStatisticTagModal = ({
         },
       ],
     },
-    created_at: lastCreateAt,
+    cursor_id: String(lastItem?.id),
+    cursor: lastItem?.totalDuration,
     onSuccess: (data) => {
       setIsSkeletonLoading(false);
+      setIsFetching(false);
       if (data) {
-        if (!lastCreateAt) {
+        if (!lastItem) {
           setCount(data.count);
         }
         setHasMore(data.hasNext as boolean);
@@ -112,7 +117,7 @@ const ListTaskDetailStatisticTagModal = ({
           });
           if (data.results.length > 0) {
             const lastItem = data.results[data.results.length - 1];
-            setLastCreateAt(lastItem.createdAt);
+            setLastItem(lastItem);
           }
         }
       }
@@ -127,6 +132,7 @@ const ListTaskDetailStatisticTagModal = ({
         chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) ===
           chatContainer.scrollHeight
       ) {
+        setIsFetching(true);
         refetchStatisticCategoryList();
       }
     };
@@ -203,7 +209,7 @@ const ListTaskDetailStatisticTagModal = ({
                   <div
                     onClick={() => {
                       setTaskList([]);
-                      setLastCreateAt('');
+                      setLastItem(undefined);
                       if (ordering === OrderingDataType.TOTAL_DURATION) {
                         setIsSkeletonLoading(true);
                         setOrdering('');
@@ -230,8 +236,7 @@ const ListTaskDetailStatisticTagModal = ({
                   <div
                     onClick={() => {
                       setTaskList([]);
-                      setLastCreateAt('');
-
+                      setLastItem(undefined);
                       if (ordering === OrderingDataType.PERCENT) {
                         setIsSkeletonLoading(true);
 
@@ -281,6 +286,18 @@ const ListTaskDetailStatisticTagModal = ({
                 })
               ) : (
                 <></>
+              )}
+              {taskList.length > 9 && (
+                <div>
+                  {hastMore && isFetching && (
+                    <div className="h-7">
+                      <Spinner
+                        className="!h-fit py-3"
+                        iconClassName="h-6 w-6"
+                      />
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

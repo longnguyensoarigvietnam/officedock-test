@@ -9,7 +9,10 @@ import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 
 import { SCREEN_LIST } from '@constants';
-import { PermissionsSystem, ScreenName, ServerStatusCode } from '@constants/enums';
+import {
+  PermissionsSystem,
+  ServerStatusCode,
+} from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
@@ -103,10 +106,11 @@ const DetailRoleTable = () => {
               </div>
             </div>
             {dataRoleDetail?.permissions
-              ?.filter(
-                (permission) =>
-                  permission.screenName != ScreenName.CATEGORY_HIERARCHY &&
-                  permission.screenName != ScreenName.ORGANIZATION_HIERARCHY,
+              ?.filter((permission) =>
+                SCREEN_LIST.find(
+                  (screen) =>
+                    screen.value == permission.screenName && screen.show,
+                ),
               )
               .map((permission, index) => {
                 return (
