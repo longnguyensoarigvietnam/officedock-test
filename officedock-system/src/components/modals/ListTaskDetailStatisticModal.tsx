@@ -61,7 +61,7 @@ const ListTaskDetailStatisticModal = ({
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
   const [count, setCount] = useState<number>(0);
-  const [lastCreateAt, setLastCreateAt] = useState<string>('');
+  const [lastItem, setLastItem] = useState<DataTaskListStatisticListType>();
   const [hastMore, setHasMore] = useState(false);
 
   const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
@@ -103,11 +103,13 @@ const ListTaskDetailStatisticModal = ({
       pageSize: PAGINATION_PAGE_SIZE_SMALL,
       tagIds: selectedTags,
     },
-    created_at: lastCreateAt,
+    cursor_id: String(lastItem?.id),
+    cursor: lastItem?.totalDuration,
+
     onSuccess: (data) => {
       setIsSkeletonLoading(false);
       if (data) {
-        if (!lastCreateAt) {
+        if (!lastItem) {
           setCount(data.count);
         }
         setIsFetching(false);
@@ -124,7 +126,7 @@ const ListTaskDetailStatisticModal = ({
           });
           if (data.results.length > 0) {
             const lastItem = data.results[data.results.length - 1];
-            setLastCreateAt(lastItem.createdAt);
+            setLastItem(lastItem);
           }
         }
       }
@@ -216,7 +218,7 @@ const ListTaskDetailStatisticModal = ({
                   <div
                     onClick={() => {
                       setTaskList([]);
-                      setLastCreateAt('');
+                      setLastItem(undefined);
                       if (ordering === OrderingDataType.TOTAL_DURATION) {
                         setIsSkeletonLoading(true);
 
@@ -244,7 +246,7 @@ const ListTaskDetailStatisticModal = ({
                   <div
                     onClick={() => {
                       setTaskList([]);
-                      setLastCreateAt('');
+                      setLastItem(undefined);
                       setIsSkeletonLoading(true);
 
                       if (ordering === OrderingDataType.PERCENT) {
