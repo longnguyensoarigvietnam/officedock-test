@@ -30,7 +30,7 @@ import {
   OrderingDataType,
   ScreenName,
 } from '@constants/enums';
-import { NO_OPTION_CATEGORY } from '@constants';
+import { NO_SETTING } from '@constants';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
@@ -171,7 +171,7 @@ const TableChart = ({
       categoryId: number | null;
       type: string;
     }[];
-    organizationId?: number;
+    organizationId?: number | null;
   }) => {
     const { data } = await api.patch(
       `${apiRouters.TASK_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
@@ -230,7 +230,7 @@ const TableChart = ({
       categoryId: number | null;
       type: string;
     }[];
-    organizationId?: number;
+    organizationId?: number | null;
   }) => {
     const { data } = await api.patch(
       `${apiRouters.SCHEDULE_DETAIL(`${dataTask.id}`)}?current_screen=${ScreenName.STATISTIC}`,
@@ -475,12 +475,14 @@ const TableChart = ({
                   if (info.row.original.type === EventCalendarType.TASK) {
                     editCategoryInline({
                       id: String(info.row.original.id),
-                      organizationId: e?.value as number,
+                      organizationId:
+                        e?.value == NO_SETTING ? null : (e?.value as number),
                     });
                   } else {
                     editCategoryEventInline({
                       id: String(info.row.original.id),
-                      organizationId: e?.value as number,
+                      organizationId:
+                        e?.value == NO_SETTING ? null : (e?.value as number),
                     });
                   }
                 }}
@@ -513,7 +515,7 @@ const TableChart = ({
                       categoryIds: [
                         {
                           categoryId:
-                            e?.value == NO_OPTION_CATEGORY
+                            e?.value == NO_SETTING
                               ? null
                               : (e?.value as number),
                           type: EventWorkCategory.LARGE,
@@ -534,7 +536,7 @@ const TableChart = ({
                       categoryIds: [
                         {
                           categoryId:
-                            e?.value == NO_OPTION_CATEGORY
+                            e?.value == NO_SETTING
                               ? null
                               : (e?.value as number),
                           type: EventWorkCategory.LARGE,
@@ -579,11 +581,17 @@ const TableChart = ({
                       id: String(info.row.original.id),
                       categoryIds: [
                         {
-                          categoryId: e?.value as number,
+                          categoryId:
+                            e?.value == NO_SETTING
+                              ? null
+                              : (e?.value as number),
                           type: EventWorkCategory.MEDIUM,
                         },
                         {
-                          categoryId: largeItem?.value as number,
+                          categoryId:
+                            largeItem?.value == NO_SETTING
+                              ? null
+                              : (largeItem?.value as number),
                           type: EventWorkCategory.LARGE,
                         },
                         {
@@ -597,11 +605,17 @@ const TableChart = ({
                       id: String(info.row.original.id),
                       categoryIds: [
                         {
-                          categoryId: e?.value as number,
+                          categoryId:
+                            e?.value == NO_SETTING
+                              ? null
+                              : (e?.value as number),
                           type: EventWorkCategory.MEDIUM,
                         },
                         {
-                          categoryId: largeItem?.value as number,
+                          categoryId:
+                            largeItem?.value == NO_SETTING
+                              ? null
+                              : (largeItem?.value as number),
                           type: EventWorkCategory.LARGE,
                         },
                         {
@@ -640,15 +654,24 @@ const TableChart = ({
                       id: String(info.row.original.id),
                       categoryIds: [
                         {
-                          categoryId: e?.value as number,
+                          categoryId:
+                            e?.value == NO_SETTING
+                              ? null
+                              : (e?.value as number),
                           type: EventWorkCategory.SMALL,
                         },
                         {
-                          categoryId: largeItem?.value as number,
+                          categoryId:
+                            largeItem?.value == NO_SETTING
+                              ? null
+                              : (largeItem?.value as number),
                           type: EventWorkCategory.LARGE,
                         },
                         {
-                          categoryId: mediumItem?.value as number,
+                          categoryId:
+                            mediumItem?.value == NO_SETTING
+                              ? null
+                              : (mediumItem?.value as number),
                           type: EventWorkCategory.MEDIUM,
                         },
                       ],
@@ -658,15 +681,24 @@ const TableChart = ({
                       id: String(info.row.original.id),
                       categoryIds: [
                         {
-                          categoryId: e?.value as number,
+                          categoryId:
+                            e?.value == NO_SETTING
+                              ? null
+                              : (e?.value as number),
                           type: EventWorkCategory.SMALL,
                         },
                         {
-                          categoryId: largeItem?.value as number,
+                          categoryId:
+                            largeItem?.value == NO_SETTING
+                              ? null
+                              : (largeItem?.value as number),
                           type: EventWorkCategory.LARGE,
                         },
                         {
-                          categoryId: mediumItem?.value as number,
+                          categoryId:
+                            mediumItem?.value == NO_SETTING
+                              ? null
+                              : (mediumItem?.value as number),
                           type: EventWorkCategory.MEDIUM,
                         },
                       ],
