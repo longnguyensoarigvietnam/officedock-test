@@ -1214,7 +1214,7 @@ const ActionsTaskModalTeam = ({
                   <Dropdown
                     className="h-[34px] !py-1 text-xs max-w-[515px] rounded-md !border-none !shadow-none !w-fit !pl-0"
                     classNameTextData="!text-xs !w-fit"
-                    classNameOption="!text-xs !w-fit max-w-[515px]"
+                    classNameOption="!text-xs !w-fit max-w-[515px] !z-[999]"
                     classNameError="!text-xs !w-fit"
                     placeholder="選択してください"
                     disabled
@@ -1260,7 +1260,7 @@ const ActionsTaskModalTeam = ({
                       placeholder="大カテゴリー"
                       className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
                       classNameTextData="!text-xs"
-                      classNameOption="!text-xs"
+                      classNameOption="!text-xs !z-[999]"
                       classNameError="!text-xs"
                       disabled={isCheckActionPermission}
                       options={dataOptionsCategoryLarge}
@@ -1298,7 +1298,7 @@ const ActionsTaskModalTeam = ({
                           placeholder="中カテゴリ"
                           className="h-[34px] !py-1 text-xs "
                           classNameTextData="!text-xs"
-                          classNameOption="!text-xs"
+                          classNameOption="!text-xs !z-[999]"
                           classNameError="!text-xs"
                           disabled={isCheckActionPermission}
                           options={dataOptionsCategoryMedium}
@@ -1332,7 +1332,7 @@ const ActionsTaskModalTeam = ({
                       <Dropdown
                         className="h-[34px] !py-1 text-xs "
                         classNameTextData="!text-xs"
-                        classNameOption="!text-xs"
+                        classNameOption="!text-xs !z-[999]"
                         classNameError="!text-xs"
                         disabled={isCheckActionPermission}
                         options={dataOptionsCategorySmall}
