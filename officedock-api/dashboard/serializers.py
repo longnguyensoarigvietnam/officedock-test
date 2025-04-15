@@ -329,6 +329,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         if instance:
             paused_at = paused_at or instance.paused_at or now()
             started_at = started_at or instance.started_at
+            user = instance.user
         overlapping_qs = TaskDuration.objects.filter(
             Q(
                 task=model if isinstance(model, Task) else None,
@@ -434,17 +435,7 @@ class ActualDurationListSerializer(serializers.ModelSerializer):
 
     def get_staffs(self, obj):
         """Get staffs of task or event"""
-        return (
-            obj.task.people_in_charge.values_list(
-                "profile__full_name", flat=True
-            )
-            if obj.task
-            else obj.schedule.participants.values_list(
-                "profile__full_name", flat=True
-            )
-            if obj.schedule
-            else []
-        )
+        return [obj.user.profile.full_name] if obj.user else []
 
 
 class ActualDurationDetailSerializer(ActualDurationListSerializer):
