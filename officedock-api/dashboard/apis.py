@@ -1,6 +1,7 @@
 from datetime import timedelta, datetime, time
 from uuid import uuid4
 
+from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
 from django.db.models import Q, Value, CharField
 from django.utils import timezone
@@ -738,7 +739,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ActualDurationListSerializer
     filterset_class = ActualDurationFilter
-    filter_backends = [FilterByPermission]
+    filter_backends = [FilterByPermission, DjangoFilterBackend]
     screen_name = Screens.ACTUAL_DURATION.value
 
     def get_serializer_class(self):
