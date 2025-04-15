@@ -280,7 +280,7 @@ const PercentageCategory = ({
 
     setTimeout(() => {
       setIsShowModal(true);
-    }, 500);
+    }, 1000);
   };
 
   const handleScroll = () => {

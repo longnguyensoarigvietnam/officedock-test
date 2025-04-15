@@ -298,6 +298,7 @@ const TaskListStatisticTeamTags = ({
                   <div className="w-4">
                     <Checkbox
                       isChecked={selectedMember === member.id}
+                      disable={selectedMember === member.id}
                       onChange={() => {
                         setCurrentPage(1);
                         setSelectedMember(member.id);
@@ -438,6 +439,7 @@ const TaskListStatisticTeamTags = ({
                 <div className="w-4">
                   <Checkbox
                     isChecked={!isShowCompare}
+                    disable={!isShowCompare}
                     onChange={() => {
                       setCurrentPage(1);
                       setIsShowCompare(false);
@@ -458,6 +460,7 @@ const TaskListStatisticTeamTags = ({
                 <div className="w-4">
                   <Checkbox
                     isChecked={isShowCompare}
+                    disable={isShowCompare}
                     onChange={() => {
                       setCurrentPage(1);
                       setIsShowCompare(true);

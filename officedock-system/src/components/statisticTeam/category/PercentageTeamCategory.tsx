@@ -377,13 +377,11 @@ const PercentageCategoryTeam = ({
                           listIdData={dataChartLarge.listId}
                           handleClickTooltip={() => {}}
                           handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value && data.value !== '未設定') {
-                              selectedOrganization &&
-                                handleSelectOrganizationCustom(
-                                  selectedOrganization,
-                                );
-                              handleSelectLarge(data);
-                            }
+                            selectedOrganization &&
+                              handleSelectOrganizationCustom(
+                                selectedOrganization,
+                              );
+                            handleSelectLarge(data);
                           }}
                         />
                       ) : (
@@ -438,9 +436,7 @@ const PercentageCategoryTeam = ({
                           className="w-[280px] h-[280px] "
                           listIdData={dataChartMedium.listId}
                           handleClickChart={(data: OptionDropdownType) => {
-                            if (data.value && data.value !== '未設定') {
-                              handleSelectMedium(data);
-                            }
+                            handleSelectMedium(data);
                           }}
                         />
                       ) : (
