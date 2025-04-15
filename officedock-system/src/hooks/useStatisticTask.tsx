@@ -34,7 +34,8 @@ interface FilterProps {
 }
 
 const useStatisticTask = ({
-  created_at,
+  cursor_id,
+  cursor,
   filter,
   isTeam = false,
   is_tag_page = false,
@@ -45,7 +46,8 @@ const useStatisticTask = ({
   is_tag_page?: boolean;
   parentData?: StatisticsCategories;
   isScroll?: boolean;
-  created_at?: string;
+  cursor_id?: string;
+  cursor?: string;
   isTeam?: boolean;
   filter?: FilterProps;
 
@@ -96,7 +98,8 @@ const useStatisticTask = ({
       params.append('total_duration', String(filter.totalDuration));
     if (filter?.ordering) params.append('ordering', String(filter.ordering));
     if (filter?.pageSize) params.append('page_size', String(filter.pageSize));
-    if (created_at) params.append('created_at', String(created_at));
+    if (cursor_id) params.append('cursor_id', String(cursor_id));
+    if (cursor) params.append('cursor', String(cursor));
     if (filter?.user_id) params.append('user_id', String(filter.user_id));
     if (is_tag_page) params.append('is_tag_page', String(is_tag_page));
     if (isTeam) params.append('current_screen', 'teamdock');
