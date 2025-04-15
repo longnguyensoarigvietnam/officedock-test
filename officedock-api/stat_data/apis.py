@@ -4,7 +4,14 @@ from itertools import chain
 
 from django.db.models import (
     Q,
+    Sum,
+    ExpressionWrapper,
+    F,
+    DurationField,
+    Case,
+    When,
 )
+from django.db.models.functions import Now, Coalesce
 from django.utils import timezone
 from django.utils.translation import trim_whitespace
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -48,6 +55,7 @@ from stat_data.utils import (
     get_total_durations,
     get_duration_of_none_category,
     check_is_not_none_category,
+    get_list_id_category_of_organization,
 )
 from tasks.constants import TaskCategoryTypes
 from tasks.models import Task, TaskDuration
@@ -489,7 +497,8 @@ class StatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="tag_ids", type=str),
             OpenApiParameter(name="total_duration", type=str),
             OpenApiParameter(name="ordering", type=str),
-            OpenApiParameter(name="created_at", type=datetime),
+            OpenApiParameter(name="cursor", type=str),
+            OpenApiParameter(name="cursor_id", type=int),
             OpenApiParameter(name="is_tag_page", type=bool),
         ]
     )
@@ -516,7 +525,8 @@ class StatisticViewSet(BaseAPIViewSet):
         end_date = request.query_params.get("end_date")
         total_duration = request.query_params.get("total_duration")
         ordering = request.query_params.get("ordering")
-        created_at = request.query_params.get("created_at")
+        cursor = request.query_params.get("cursor")
+        cursor_id = request.query_params.get("cursor_id")
         is_tag_page = request.query_params.get("is_tag_page")
         # Validate date format using regex
         if (
@@ -545,31 +555,11 @@ class StatisticViewSet(BaseAPIViewSet):
                     organization_ids.append(int(id))
                 except ValueError:
                     continue
-        large_category_ids = []
-        medium_category_ids = []
-        small_category_ids = []
-        if organization := Organization.objects.filter(
-            id=organization_ids[0]
-        ).first():
-            organization_categories = OrganizationDetailSerializer(
-                organization
-            ).data["statistic_categories"]
-            if organization_categories:
-                large_category_ids = [
-                    item["large_statistic_category"]["id"]
-                    for item in organization_categories
-                    if item["large_statistic_category"]
-                ]
-                medium_category_ids = {
-                    item["medium_statistic_category"]["id"]
-                    for item in organization_categories
-                    if item["medium_statistic_category"]
-                }
-                small_category_ids = {
-                    item["small_statistic_category"]["id"]
-                    for item in organization_categories
-                    if item["small_statistic_category"]
-                }
+        (
+            large_category_ids,
+            medium_category_ids,
+            small_category_ids,
+        ) = get_list_id_category_of_organization(organization_ids)
 
         if tag_ids_param:
             for id in tag_ids_param.split(","):
@@ -585,7 +575,62 @@ class StatisticViewSet(BaseAPIViewSet):
             tags=tag_ids,
         )
         tasks, events = get_list_models(durations)
-
+        tasks = (
+            tasks.filter(
+                task_durations__user=user,
+                task_durations__paused_at__lte=end_of_day,
+                task_durations__started_at__gte=start_of_day,
+            )
+            .annotate(
+                total_duration=Sum(
+                    ExpressionWrapper(
+                        Case(
+                            When(
+                                task_durations__paused_at__isnull=True,
+                                then=end_of_day
+                                if end_of_day < timezone.now()
+                                else Now(),
+                            ),
+                            default=F("task_durations__paused_at"),
+                            output_field=DurationField(),
+                        )
+                        - Coalesce(
+                            F("task_durations__started_at"), start_of_day
+                        ),
+                        output_field=DurationField(),
+                    )
+                )
+            )
+            .distinct()
+        )
+        events = (
+            events.filter(
+                task_durations__user=user,
+                task_durations__paused_at__lte=end_of_day,
+                task_durations__started_at__gte=start_of_day,
+            )
+            .annotate(
+                total_duration=Sum(
+                    ExpressionWrapper(
+                        Case(
+                            When(
+                                task_durations__paused_at__isnull=True,
+                                then=end_of_day
+                                if end_of_day < timezone.now()
+                                else Now(),
+                            ),
+                            default=F("task_durations__paused_at"),
+                            output_field=DurationField(),
+                        )
+                        - Coalesce(
+                            F("task_durations__started_at"), start_of_day
+                        ),
+                        output_field=DurationField(),
+                    )
+                )
+            )
+            .distinct()
+        )
         filters = build_category_filters(
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
@@ -593,70 +638,59 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_ids=large_category_ids,
             medium_category_ids=medium_category_ids,
             small_category_ids=small_category_ids,
-            created_at=created_at,
-            NONE_CATEGORY=NONE_CATEGORY,
         )
-
         tasks = tasks.filter(filters)
         events = events.filter(filters)
+        merged_qs = sorted(
+            chain(tasks, events),
+            key=lambda x: (x.total_duration or timedelta(0), x.id),
+            reverse=not bool(ordering),
+        )
+        new_qs = merged_qs
+        if cursor and cursor_id:
+            new_qs = []
+            cursor = time_str_to_timedelta(cursor)
+            cursor_id = int(cursor_id)
+            for x in merged_qs:
+                duration = time_str_to_timedelta(
+                    format_duration(x.total_duration or timedelta(0))
+                )
+                if ordering:
+                    if duration > cursor or (
+                        duration == cursor and x.id > cursor_id
+                    ):
+                        new_qs.append(x)
+                else:
+                    if duration < cursor or (
+                        duration == cursor and x.id < cursor_id
+                    ):
+                        new_qs.append(x)
 
-        list_task = StatisticTaskSerializer(
-            tasks.order_by("-created_at"),
-            many=True,
-            context={
-                "start_of_day": start_of_day,
-                "end_of_day": end_of_day,
-                "total_duration": total_duration,
-                "tag_ids": tag_ids if is_tag_page else None,
-                "user": user,
-            },
-        ).data
-        list_event = StatisticEventSerializer(
-            events.order_by("-created_at"),
-            many=True,
-            context={
-                "start_of_day": start_of_day,
-                "end_of_day": end_of_day,
-                "total_duration": total_duration,
-                "tag_ids": tag_ids if is_tag_page else None,
-                "user": user,
-            },
-        ).data
-        merged_duration = list(chain(list_task, list_event))
-
-        def adjust_percentages(cards):
-            """
-            Adjust percentages
-            """
-            total_percent = sum(
-                task["percent"] if task["percent"] else 0 for task in cards
-            )
-
-            if total_percent > 100:
-                excess = total_percent - 100
-                while excess > 0:
-                    # Find card have large percent
-                    max_task = max(cards, key=lambda x: x["percent"])
-                    if max_task["percent"] > 0:
-                        max_task["percent"] -= 1
-                        excess -= 1
-
-            return cards
-
-        if ordering:
-            merged_duration = sorted(
-                merged_duration,
-                key=lambda x: (x.get(ordering, "")),
-                reverse=False,
-            )
-        else:
-            merged_duration = sorted(
-                merged_duration,
-                key=lambda x: (x.get("created_at", "")),
-                reverse=True,
-            )
-
-        merged_duration = adjust_percentages(merged_duration)
+        merged_duration = []
+        for item in new_qs:
+            if isinstance(item, Task):
+                serializer = StatisticTaskSerializer(
+                    item,
+                    context={
+                        "start_of_day": start_of_day,
+                        "end_of_day": end_of_day,
+                        "total_duration": total_duration,
+                        "tag_ids": tag_ids if is_tag_page else None,
+                        "user": user,
+                    },
+                )
+            else:
+                serializer = StatisticEventSerializer(
+                    item,
+                    context={
+                        "start_of_day": start_of_day,
+                        "end_of_day": end_of_day,
+                        "total_duration": total_duration,
+                        "tag_ids": tag_ids if is_tag_page else None,
+                        "user": user,
+                    },
+                )
+            merged_duration.append(serializer.data)
 
         paginator = self.pagination_class()
         paginated_data = paginator.paginate_queryset(merged_duration, request)
@@ -674,6 +708,7 @@ class StatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="user_id", type=int),
             OpenApiParameter(name="tag_ids", type=str),
             OpenApiParameter(name="total_duration", type=str),
+            OpenApiParameter(name="is_compare", type=bool),
             OpenApiParameter(name="is_tag_page", type=bool),
             OpenApiParameter(
                 name="statistic_by",
@@ -710,6 +745,7 @@ class StatisticViewSet(BaseAPIViewSet):
         end_date = request.query_params.get("end_date")
         statistic_by = request.query_params.get("statistic_by")
         is_tag_page = request.query_params.get("is_tag_page")
+        is_compare = request.query_params.get("is_compare")
         # Validate date format using regex
         if (
             not from_date
@@ -737,32 +773,11 @@ class StatisticViewSet(BaseAPIViewSet):
                     organization_ids.append(int(id))
                 except ValueError:
                     continue
-        large_category_ids = []
-        medium_category_ids = []
-        small_category_ids = []
-        if organization := Organization.objects.filter(
-            id=organization_ids[0]
-        ).first():
-            organization_categories = OrganizationDetailSerializer(
-                organization
-            ).data["statistic_categories"]
-            if organization_categories:
-                large_category_ids = [
-                    item["large_statistic_category"]["id"]
-                    for item in organization_categories
-                    if item["large_statistic_category"]
-                ]
-                medium_category_ids = {
-                    item["medium_statistic_category"]["id"]
-                    for item in organization_categories
-                    if item["medium_statistic_category"]
-                }
-                small_category_ids = {
-                    item["small_statistic_category"]["id"]
-                    for item in organization_categories
-                    if item["small_statistic_category"]
-                }
-
+        (
+            large_category_ids,
+            medium_category_ids,
+            small_category_ids,
+        ) = get_list_id_category_of_organization(organization_ids)
         if tag_ids_param:
             for id in tag_ids_param.split(","):
                 try:
@@ -784,8 +799,6 @@ class StatisticViewSet(BaseAPIViewSet):
             large_category_ids=large_category_ids,
             medium_category_ids=medium_category_ids,
             small_category_ids=small_category_ids,
-            created_at=None,
-            NONE_CATEGORY=NONE_CATEGORY,
         )
         tasks = tasks.filter(filters)
         events = events.filter(filters)
@@ -847,7 +860,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 tag_ids,
                 durations=durations,
             )
-            if not tag_list:
+            if not tag_list and is_compare:
                 tag = {
                     "tag_id": None,
                     "tag_name": NONE_CATEGORY,
@@ -889,7 +902,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 large_category_id=large_category_id,
                 medium_category_id=medium_category_id,
             )
-            if not category_list:
+            if not category_list and is_compare:
                 category = {
                     "category_id": None,
                     "category_name": NONE_CATEGORY,

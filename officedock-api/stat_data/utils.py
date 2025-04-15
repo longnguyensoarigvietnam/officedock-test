@@ -20,7 +20,8 @@ from common.utils import (
     time_str_to_timedelta,
 )
 from organizations.constants import CategoryColors
-from organizations.models import OrganizationsStatisticCategories
+from organizations.models import OrganizationsStatisticCategories, Organization
+from organizations.serializers import OrganizationDetailSerializer
 from stat_data.constants import NONE_CATEGORY, FilterTime
 from stat_data.serializers import (
     BaseStatisticTaskSerializer,
@@ -68,7 +69,9 @@ def get_list_durations_by_users(
                 schedule__categories__medium_statistic_category__id=medium_id
             )
     if small_id:
-        if medium_id == NONE_CATEGORY and durations:
+        if (medium_id == NONE_CATEGORY and durations) or (
+            small_id == NONE_CATEGORY
+        ):
             return get_duration_of_none_category(durations, large_id, medium_id)
         else:
             filter_tasks &= Q(
@@ -826,8 +829,6 @@ def build_category_filters(
     large_category_ids=None,
     medium_category_ids=None,
     small_category_ids=None,
-    created_at=None,
-    NONE_CATEGORY=None,
 ):
     """
     Handle build category filter
@@ -859,10 +860,6 @@ def build_category_filters(
         filters &= Q(categories__small_statistic_category__isnull=True) | ~Q(
             categories__small_statistic_category__in=small_category_ids
         )
-
-    # Created At Filter
-    if created_at:
-        filters &= Q(created_at__lt=created_at)
 
     return filters
 
@@ -918,4 +915,41 @@ def check_is_not_none_category(large_id=None, medium_id=None, small_id=None):
         (large_id == NONE_CATEGORY)
         or (large_id and medium_id == NONE_CATEGORY)
         or (large_id and medium_id and small_id == NONE_CATEGORY)
+    )
+
+
+def get_list_id_category_of_organization(organization_ids):
+    """
+    Handle get list id category of organization
+    """
+    large_category_ids = []
+    medium_category_ids = []
+    small_category_ids = []
+    if organization := Organization.objects.filter(
+        id=organization_ids[0]
+    ).first():
+        organization_categories = OrganizationDetailSerializer(
+            organization
+        ).data["statistic_categories"]
+        if organization_categories:
+            large_category_ids = [
+                item["large_statistic_category"]["id"]
+                for item in organization_categories
+                if item["large_statistic_category"]
+            ]
+            medium_category_ids = [
+                item["medium_statistic_category"]["id"]
+                for item in organization_categories
+                if item["medium_statistic_category"]
+            ]
+            small_category_ids = [
+                item["small_statistic_category"]["id"]
+                for item in organization_categories
+                if item["small_statistic_category"]
+            ]
+
+    return (
+        set(large_category_ids),
+        set(medium_category_ids),
+        set(small_category_ids),
     )
