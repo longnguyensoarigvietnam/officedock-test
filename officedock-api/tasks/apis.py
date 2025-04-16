@@ -148,6 +148,7 @@ class TaskViewSet(
         task_type = serializer_data.get("type", None)
         remind_countdown = serializer_data.pop("remind_countdown", None)
         remind_type = serializer_data.pop("remind_type", None)
+        show_deadline_time = serializer_data.pop("show_deadline_time", None)
         # Item for loop task schedule
         plan_start_date = serializer_data.pop("plan_start_date", None)
         plan_end_date = serializer_data.pop("plan_end_date", None)
@@ -178,10 +179,14 @@ class TaskViewSet(
             serializer_data["remind_at"] = calculate_new_time(
                 serializer_data["deadline"], remind_countdown, remind_type
             )
-            serializer_data["reminds"] = {
-                "type": remind_type,
-                "countdown": remind_countdown,
-            }
+        serializer_data["reminds"] = {
+            "type": remind_type,
+            "countdown": remind_countdown,
+            "show_deadline_time": show_deadline_time
+            if show_deadline_time
+            else False,
+        }
+
         if repeat_type:
             serializer_data["recurring"] = {
                 "repeat_type": repeat_type,
@@ -851,6 +856,7 @@ class TaskViewSet(
         serializer_data.get("type", None)
         remind_countdown = serializer_data.pop("remind_countdown", None)
         remind_type = serializer_data.pop("remind_type", None)
+        show_deadline_time = serializer_data.pop("show_deadline_time", None)
         # Item for loop task schedule
         is_exists_repeat = "repeat_type" in serializer_data
         plan_start_date = serializer_data.pop("plan_start_date", None)
@@ -887,6 +893,9 @@ class TaskViewSet(
             serializer_data["reminds"] = {
                 "type": remind_type,
                 "countdown": remind_countdown,
+                "show_deadline_time": show_deadline_time
+                if show_deadline_time
+                else False,
             }
             if remind_countdown and remind_type:
                 serializer_data["remind_at"] = calculate_new_time(
@@ -896,6 +905,9 @@ class TaskViewSet(
             serializer_data["reminds"] = {
                 "type": None,
                 "countdown": None,
+                "show_deadline_time": show_deadline_time
+                if show_deadline_time
+                else False,
             }
 
         if (
