@@ -101,6 +101,7 @@ class DashboardViewSet(BaseAPIViewSet):
         """Handle append data to cards"""
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")
+        user = request.user
 
         for ele in list:
             if isinstance(ele, Schedule):
@@ -130,6 +131,7 @@ class DashboardViewSet(BaseAPIViewSet):
             durations = model.task_durations.filter(
                 Q(started_at__gte=start_date)
                 & Q(Q(paused_at__lte=end_date) | Q(paused_at__isnull=True))
+                & Q(user=user)
             ).all()
 
             data.append(

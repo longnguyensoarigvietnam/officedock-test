@@ -29,7 +29,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 
 from base.apis import BaseAPIViewSet
-from base.constants import REPLACE_NULL_DATE
+from base.constants import REPLACE_NULL_DATE, REPLACE_NULL_DATE_WITH_FUTURE
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission
 from calendars.constants import CalendarTypes
@@ -1866,15 +1866,19 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 and int(status_id) == task_routine_status.id
             ):
                 tasks = queryset.all()
-                # TODO: Sort is_important and deadline decreasing
-                # if "is_important" in ordering:
-                #     tasks = tasks.annotate(
-                #         coalesced_ordering_datetime=Coalesce(
-                #             "deadline",
-                #             Value(REPLACE_NULL_DATE_WITH_FUTURE),
-                #             output_field=DateTimeField(),
-                #         )
-                #     ).order_by("-is_important", "coalesced_ordering_datetime")
+                tasks = tasks.annotate(
+                    coalesced_ordering_datetime=Coalesce(
+                        "deadline",
+                        Value(REPLACE_NULL_DATE_WITH_FUTURE),
+                        output_field=DateTimeField(),
+                    )
+                )
+                if "is_important" in ordering:
+                    tasks = tasks.order_by(
+                        "-is_important", "coalesced_ordering_datetime"
+                    )
+                if "deadline" in ordering:
+                    tasks = tasks.order_by("coalesced_ordering_datetime")
                 for idx, task in enumerate(tasks):
                     task_index = task.task_index.filter(user=user).first()
                     if task_index.pin_at:
