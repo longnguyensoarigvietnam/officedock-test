@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 from django.db.models import (
     OuterRef,
@@ -17,6 +17,7 @@ from base.messages import ERROR_MESSAGES
 from base.constants import REPLACE_NULL_DATE
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 from chat.constants import ChatMessageTypes
+from common.constants import BASE_DATETIME_FORMAT
 from common.serializers import CreationDataUserSerializer
 from common.utils import get_common_categories, split_id_from_string
 from organizations.models import Organization
@@ -703,9 +704,10 @@ class TaskCalendarSerializer(TaskCommonSerializer):
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")
         if start_date and end_date:
+            end_date = datetime.strptime(end_date, BASE_DATETIME_FORMAT).date()
             task_schedules = instance.task_schedules.filter(
                 plan_start_date__gte=start_date,
-                plan_end_date__lte=end_date,
+                plan_end_date__lte=datetime.combine(end_date, time.max),
             ).all()
         else:
             task_schedules = instance.task_schedules.all()
