@@ -438,7 +438,7 @@ const PercentageCategoryCompare = ({
                   isShowIconFilter
                   options={tagsOptions}
                   placeholder="集計対象のタグを選択"
-                  labelOptionClass="break-all w-[240px]"
+                  labelOptionClass="break-all w-[190px]"
                   optionClassName="!top-6"
                   className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
                   selectedOptions={selectedTags || []}

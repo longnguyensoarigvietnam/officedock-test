@@ -163,6 +163,8 @@ const Header = ({ className }: HeaderProps) => {
     resetDataCategoryOptions?: () => void;
     reset?: () => void;
   }>({});
+  const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
+  const [closeAction, setCloseAction] = useState<ActionTask | null>();
 
   const { showToast } = useToast();
 
@@ -343,6 +345,8 @@ const Header = ({ className }: HeaderProps) => {
       });
       setDataTaskEdit(null);
       setShowModalTask(false);
+      setPendingTaskData(null);
+      setCloseAction(null);
       setOpenWarningDeadlineModal(false);
     },
     onError: (error: AxiosError<any>) => {
@@ -955,14 +959,20 @@ const Header = ({ className }: HeaderProps) => {
           onWarning={({
             reset,
             resetDataCategoryOptions,
+            taskData,
+            action,
           }: {
             reset: () => void;
             resetDataCategoryOptions: () => void;
+            taskData: TaskFormData;
+            action: ActionTask;
           }) => {
             setResetFunctions({
               resetDataCategoryOptions,
               reset,
             });
+            setPendingTaskData(taskData);
+            setCloseAction(action);
             setOpenWarningCloseModal(true);
           }}
           onEdit={handleConfirmEditTask}
@@ -976,17 +986,24 @@ const Header = ({ className }: HeaderProps) => {
       {openWarningCloseModal && (
         <WarningCloseTaskModal
           open={openWarningCloseModal}
-          onClose={() => {
+          onCloseByIcon={() => {
             setOpenWarningCloseModal(false);
+          }}
+          onClose={() => {
+            setShowModalTask(false);
+            setOpenWarningCloseModal(false);
+            handleRemoveParam();
+            setDataTaskEdit(null);
+            setIsLoading(false);
+            resetFunctions.resetDataCategoryOptions?.();
+            resetFunctions.reset?.();
           }}
           onConfirm={() => {
             setShowModalTask(false);
             setOpenWarningCloseModal(false);
-            setDataTaskEdit(null);
-            handleRemoveParam();
-            setIsLoading(false);
-            resetFunctions.resetDataCategoryOptions?.();
-            resetFunctions.reset?.();
+            if (closeAction == ActionTask.EDIT) {
+              handleConfirmEditTask(pendingTaskData as TaskFormData);
+            }
           }}
         />
       )}

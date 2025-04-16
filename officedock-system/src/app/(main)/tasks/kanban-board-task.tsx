@@ -253,6 +253,9 @@ const KanbanBoardTask = () => {
   const [frequentlyTasks, setFrequentlyTasks] = useState<Task[]>([]);
   const [orderTaskSave, setOrderTaskSave] = useState<Task[]>([]);
 
+  const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
+  const [closeAction, setCloseAction] = useState<ActionTask | null>();
+
   // Template
   const [dataTemplateEdit, setDataTemplateEdit] = useState<Template | null>(
     null,
@@ -1802,6 +1805,8 @@ const KanbanBoardTask = () => {
       queryClient.refetchQueries(['getDataTaskHeaderList']);
 
       handleRemoveParam();
+      setPendingTaskData(null);
+      setCloseAction(null);
       showToast({
         description: SUCCESS_UPDATE_MESSAGE,
       });
@@ -2454,6 +2459,8 @@ const KanbanBoardTask = () => {
             );
           }
         }
+        setPendingTaskData(null);
+        setCloseAction(null);
         handleRemoveParam();
         setDataTaskEdit(null);
         setShowEditTaskModal(false);
@@ -2808,7 +2815,6 @@ const KanbanBoardTask = () => {
       };
     });
   };
-
   // Handle save zoom
   const handleSaveZoomKanban = async (kanbanZoom: number) => {
     const { data: response } = await api.post(apiRouters.USER_SETTING, {
@@ -3171,14 +3177,20 @@ const KanbanBoardTask = () => {
                   onWarning={({
                     reset,
                     resetDataCategoryOptions,
+                    taskData,
+                    action,
                   }: {
                     reset: () => void;
                     resetDataCategoryOptions: () => void;
+                    taskData: TaskFormData;
+                    action: ActionTask;
                   }) => {
                     setResetFunctions({
                       resetDataCategoryOptions,
                       reset,
                     });
+                    setPendingTaskData(taskData);
+                    setCloseAction(action);
                     setOpenWarningCloseModal(true);
                   }}
                 />
@@ -3187,10 +3199,10 @@ const KanbanBoardTask = () => {
               {openWarningCloseModal && (
                 <WarningCloseTaskModal
                   open={openWarningCloseModal}
-                  onClose={() => {
+                  onCloseByIcon={() => {
                     setOpenWarningCloseModal(false);
                   }}
-                  onConfirm={() => {
+                  onClose={() => {
                     setShowEditTaskModal(false);
                     setOpenWarningCloseModal(false);
                     setColumnId('');
@@ -3199,6 +3211,18 @@ const KanbanBoardTask = () => {
                     setIsLoading(false);
                     resetFunctions.resetDataCategoryOptions?.();
                     resetFunctions.reset?.();
+                  }}
+                  onConfirm={() => {
+                    setShowEditTaskModal(false);
+                    setOpenWarningCloseModal(false);
+                    if (closeAction == ActionTask.EDIT) {
+                      handleConfirmEditTask(pendingTaskData as TaskFormData);
+                    } else if (
+                      closeAction == ActionTask.CREATE ||
+                      closeAction == ActionTask.COPY
+                    ) {
+                      handleConfirmCreateTask(pendingTaskData as TaskFormData);
+                    }
                   }}
                 />
               )}
