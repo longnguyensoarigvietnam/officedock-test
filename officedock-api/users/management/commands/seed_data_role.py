@@ -10,11 +10,12 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         # Seed roles
         for role in RoleTypes:
-            if Role.objects.filter(name=role.name).exists():
-                Role.objects.filter(name=role.name).update(name=role.value)
+            system_role = None
+            if role.value != RoleTypes.OPERATION_ADMIN.value:
+                system_role = True
 
             if not Role.objects.filter(name=role.value).exists():
-                Role.objects.create(name=role.value)
+                Role.objects.create(name=role.value, system_role=system_role)
 
         self.stdout.write(
             self.style.SUCCESS(f"Successfully seeded fake data into Role")
