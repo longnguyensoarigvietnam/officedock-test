@@ -448,6 +448,10 @@ export enum OrderingDataType {
   TOTAL_DURATION = 'total_duration',
   PERCENT = 'percent',
 }
+export enum StatisticChartType {
+  COMPARE = 'compare',
+  STANDARD = 'standard'
+}
 export enum TimeOptionsType {
   WEEK = '1週間',
   MONTH = '1ヶ月',

@@ -31,7 +31,7 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+import { StatisticChartType, StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 
 import {
   convertTimeToDecimal,
@@ -87,7 +87,7 @@ type TableCategoryItem = {
   tagDuration: string;
   tagPercent: string;
   tagColor: string;
-  type: 'standard' | 'compare';
+  type: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
 };
 
 type MergedTableCategory = {
@@ -250,7 +250,7 @@ const LineChartCompare = ({
             (point: any) => point.x === dataPoint.x && point.y === dataPoint.y,
           )
           .map((point: any) => [
-            `${point.label}-${point.type == 'compare' ? `${point.startDate} - ${point.endDate}` : `${point.anotherStartDate} - ${point.anotherEndDate}`}`,
+            `${point.label}-${point.type == StatisticChartType.COMPARE ? `${point.startDate} - ${point.endDate}` : `${point.anotherStartDate} - ${point.anotherEndDate}`}`,
             point,
           ]),
       ).values(),
@@ -259,11 +259,11 @@ const LineChartCompare = ({
     const tooltipContent = matchingDataPoints
       .map((point: any) => {
         const standardDuration =
-          point.type == 'compare'
+          point.type == StatisticChartType.COMPARE
             ? point.anotherDuration ?? '00:00:00'
             : point.duration ?? '00:00:00';
         const compareDuration =
-          point.type == 'compare'
+          point.type == StatisticChartType.COMPARE
             ? point.duration ?? '00:00:00'
             : point.anotherDuration ?? '00:00:00';
         const diffDuration = subtractDurations(
@@ -321,7 +321,7 @@ const LineChartCompare = ({
                 </p>
                 <div style="color: #77858F; font-weight: 400; font-size: 12px;">
                   ${
-                    point.type == 'compare'
+                    point.type == StatisticChartType.COMPARE
                       ? point.anotherStartDate
                         ? convertToJapaneseDateRange(
                             point.anotherStartDate as string,
@@ -367,7 +367,7 @@ const LineChartCompare = ({
                 </p>
                 <div style="color: #77858F; font-weight: 400; font-size: 12px;">
                   ${
-                    point.type == 'compare'
+                    point.type == StatisticChartType.COMPARE
                       ? point.startDate
                         ? convertToJapaneseDateRange(
                             point.startDate as string,
@@ -533,12 +533,12 @@ const LineChartCompare = ({
         };
       }
 
-      if (item.type === 'standard') {
+      if (item.type === StatisticChartType.STANDARD) {
         grouped[key].standardInfo = {
           tagDuration: item.tagDuration,
           tagPercent: item.tagPercent,
         };
-      } else if (item.type === 'compare') {
+      } else if (item.type === StatisticChartType.COMPARE) {
         grouped[key].compareInfo = {
           tagDuration: item.tagDuration,
           tagPercent: item.tagPercent,
@@ -589,7 +589,6 @@ const LineChartCompare = ({
         type: string,
         name: string,
         color: string,
-        alignmentLabels?: string[], // <- optional param
       ) => {
         const shownLabels = [...standardDateLabels];
         if (standardDateLabels.length < compareDateLabels.length) {
@@ -601,18 +600,13 @@ const LineChartCompare = ({
         }
         return shownLabels
           .map((label, index) => {
-            const refLabel = alignmentLabels?.[index] || label; // <- map compare's label to standard index
             let foundDuration;
             let anotherDuration;
-            if (type == 'compare') {
-              foundDuration = compareDurations.find(
-                (duration) => duration.startDate == refLabel,
-              );
+            if (type == StatisticChartType.COMPARE) {
+              foundDuration = compareDurations[index];
               anotherDuration = durations[index];
             } else {
-              foundDuration = durations.find(
-                (duration) => duration.startDate == refLabel,
-              );
+              foundDuration = durations[index];
               anotherDuration = compareDurations[index];
             }
 
@@ -695,7 +689,7 @@ const LineChartCompare = ({
                 tagColor:
                   lightenColor('#2E9267' as string, percent) ||
                   getRandomColor(),
-                type: 'standard',
+                type: StatisticChartType.STANDARD,
               },
             ];
             const compareTag = statisticTagTaskDurationsCompareList.find(
@@ -708,11 +702,10 @@ const LineChartCompare = ({
                 data: generateDataWithAlignment(
                   categoryDetail.durations,
                   compareTag?.durations ?? [],
-                  'standard',
+                  StatisticChartType.STANDARD,
                   categoryDetail.tagName,
                   lightenColor('#2E9267' as string, percent) ||
                     getRandomColor(),
-                  [],
                 ),
                 borderColor:
                   lightenColor('#2E9267' as string, percent) ||
@@ -785,7 +778,7 @@ const LineChartCompare = ({
               tagPercent: String(percent),
               tagColor:
                 lightenColor('#2E9267' as string, percent) || getRandomColor(),
-              type: 'compare',
+              type: StatisticChartType.COMPARE,
             });
 
             const standardTag = statisticTagTaskDurationsList.find(
@@ -797,10 +790,9 @@ const LineChartCompare = ({
               data: generateDataWithAlignment(
                 standardTag?.durations ?? [],
                 categoryDetail.durations,
-                'compare',
+                StatisticChartType.COMPARE,
                 categoryDetail.tagName,
                 lightenColor('#2E9267' as string, percent) || getRandomColor(),
-                compareDateLabels,
               ),
               borderColor:
                 lightenColor('#2E9267' as string, percent) || getRandomColor(),

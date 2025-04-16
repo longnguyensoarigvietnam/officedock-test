@@ -409,7 +409,7 @@ const ListCategory = () => {
                           />
                         </div>
                       ) : (
-                        <p className="text-justify w-[90%] text-[16px] font-medium">
+                        <p className="text-justify w-[90%] max-w-[90%] break-all text-[16px] font-medium">
                           {element.name}
                         </p>
                       )}
