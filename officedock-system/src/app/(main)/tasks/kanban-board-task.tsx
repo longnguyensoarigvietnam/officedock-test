@@ -1948,7 +1948,9 @@ const KanbanBoardTask = () => {
       deadline:
         data.deadlineDate && data.deadlineTime
           ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
-          : null,
+          : data.deadlineDate && !data.deadlineTime
+            ? formatDateServer(data.deadlineDate)
+            : null,
       description: data.description,
       tagIds: tagIds,
       categoryIds: newWorkCategories,
@@ -2011,6 +2013,7 @@ const KanbanBoardTask = () => {
             ? addTimeToDate(new Date(), data.repeatEndTime)
             : null
           : null,
+      showDeadlineTime: data.showDeadlineTime,
     });
     const isCheckPeopleInCharge =
       data.peopleInChargeIds &&
@@ -2331,7 +2334,9 @@ const KanbanBoardTask = () => {
       deadline:
         data.deadlineDate && data.deadlineTime
           ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
-          : null,
+          : data.deadlineDate && !data.deadlineTime
+            ? formatDateServer(data.deadlineDate)
+            : null,
       description: data.description || '',
       tagIds: tagIds,
       peopleInChargeIds: peopleInChargeIds,
@@ -2399,6 +2404,7 @@ const KanbanBoardTask = () => {
             : null
           : null,
       isTeamTask: false,
+      showDeadlineTime: data.showDeadlineTime,
     });
   };
 

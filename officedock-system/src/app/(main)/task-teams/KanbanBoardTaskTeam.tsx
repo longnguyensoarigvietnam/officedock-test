@@ -73,6 +73,7 @@ import api from '@base/api';
 import {
   addTimeToDate,
   convertDateStringFull,
+  formatDateServer,
   getRandomDateTimeBetween,
 } from '@utils/date';
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -639,7 +640,9 @@ const KanbanBoardTaskTeam = () => {
       deadline:
         data.deadlineDate && data.deadlineTime
           ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
-          : null,
+          : data.deadlineDate && !data.deadlineTime
+            ? formatDateServer(data.deadlineDate)
+            : null,
       description: data.description || '',
       tagIds: tagIds,
       isImportant: data.isImportant,
@@ -708,6 +711,7 @@ const KanbanBoardTaskTeam = () => {
         ? [{ peopleInChargeId: data.peopleInChart.value }]
         : [],
       isTeamTask: true,
+      showDeadlineTime: data.showDeadlineTime,
     });
   };
   //  Handle call api create task
@@ -830,7 +834,9 @@ const KanbanBoardTaskTeam = () => {
       deadline:
         data.deadlineDate && data.deadlineTime
           ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
-          : null,
+          : data.deadlineDate && !data.deadlineTime
+            ? formatDateServer(data.deadlineDate)
+            : null,
       description: data.description,
       tagIds: tagIds,
       categoryIds: newWorkCategories,
@@ -902,6 +908,7 @@ const KanbanBoardTaskTeam = () => {
         ? [{ peopleInChargeId: data.peopleInChart.value }]
         : [],
       isTeamTask: true,
+      showDeadlineTime: data.showDeadlineTime,
     });
   };
   //  Handle call api edit task
