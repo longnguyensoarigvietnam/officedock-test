@@ -9,7 +9,7 @@ import { Table, TableBody, TableHeader } from '@components/common/Table';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 const SkillMap = () => {
-  const { authenticatedUser } = useAuthenticatedUser();
+  const { authenticatedUser } = useAuthenticatedUser({});
   return (
     <Fragment>
       <div className="flex items-center mb-5">

@@ -31,8 +31,8 @@
   color: #0068b6 !important;
 }
 
-.saturday.react-datepicker__day--selected{
-  color: white !important
+.saturday.react-datepicker__day--selected {
+  color: white !important;
 }
 .small .react-datepicker {
   padding: 20px 20px !important;
@@ -80,10 +80,6 @@
   line-height: 20px !important;
   color: #77858f !important;
   text-align: center;
-}
-
-.single-date .react-datepicker__day--keyboard-selected:hover {
-  background-color: #f0f0f0 !important;
 }
 
 .react-datepicker__triangle {

@@ -223,7 +223,7 @@ const ChatDetail = ({
   const { chatRoomDetail } = useChatRoomDetail({
     code: `${chatRoomCode}`,
   });
-  const { authenticatedUser } = useAuthenticatedUser();
+  const { authenticatedUser } = useAuthenticatedUser({});
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [isLoadingNewer, setIsLoadingNewer] = useState(false);

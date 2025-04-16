@@ -1,4 +1,4 @@
-import { format, formatISO, parseISO, startOfDay } from 'date-fns';
+import { format, formatISO, isSameDay, parseISO, startOfDay } from 'date-fns';
 
 import {
   DATE_FORMAT_SERVER,
@@ -94,6 +94,48 @@ export const formatTimeInput = (value: string): string => {
   const formattedHours = String(hours).padStart(2, '0');
   const formattedMinutes = String(minutes).padStart(2, '0');
   return `${formattedHours}:${formattedMinutes}`;
+};
+
+export const formatTimeInputFilter = (value: string, date: Date): string => {
+  let hours: number, minutes: number;
+
+  // Parse input
+  if (value.length === 3) {
+    hours = parseInt(value.substring(0, 1), 10);
+    minutes = parseInt(value.substring(1, 3), 10);
+  } else {
+    hours = parseInt(value.substring(0, 2), 10);
+    minutes = parseInt(value.substring(2, 4) || '00', 10);
+  }
+
+  if (value.length < 2) {
+    hours = parseInt(value.substring(0, 1), 10) || 0;
+  }
+
+  // Validate range
+  if (hours >= 24 || minutes >= 60) {
+    const now = new Date();
+    hours = now.getHours();
+    minutes = now.getMinutes();
+  }
+
+  let formattedHours = String(hours).padStart(2, '0');
+  let formattedMinutes = String(minutes).padStart(2, '0');
+  let inputTime = `${formattedHours}:${formattedMinutes}`;
+
+  const now = new Date();
+  if (isSameDay(date, now)) {
+    const inputTotalMinutes = hours * 60 + minutes;
+    const nowTotalMinutes = now.getHours() * 60 + now.getMinutes();
+
+    if (inputTotalMinutes < nowTotalMinutes) {
+      formattedHours = String(now.getHours()).padStart(2, '0');
+      formattedMinutes = String(now.getMinutes()).padStart(2, '0');
+      inputTime = `${formattedHours}:${formattedMinutes}`;
+    }
+  }
+
+  return inputTime;
 };
 
 // Format date time
@@ -853,6 +895,24 @@ export const generateTimeOptionsAsObjects = (): OptionDropdownType[] => {
   return options;
 };
 
+export const getFilteredTimeOptions = (
+  selectedDate: Date,
+): OptionDropdownType[] => {
+  const allOptions = generateTimeOptionsAsObjects();
+  const now = new Date();
+  const isToday = isSameDay(selectedDate, now);
+
+  if (!isToday) return allOptions;
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  return allOptions.filter((option) => {
+    const [hourStr, minuteStr] = String(option.value).split(':');
+    const totalMinutes = parseInt(hourStr) * 60 + parseInt(minuteStr);
+    return totalMinutes >= currentMinutes;
+  });
+};
+
 export const isTodaySchedule = (date: Date) => {
   const today = new Date();
   return (
@@ -1261,3 +1321,18 @@ export const compareAndSetDate = (start: Date, end: Date): Date => {
   }
   return end;
 };
+export function isDateInPast(date: Date) {
+  return new Date(date) < new Date();
+}
+export function isTimeEarlierToday(date: Date) {
+  const now = new Date();
+  const isSameDay =
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear();
+  if (isSameDay) {
+    return date.getTime() < now.getTime();
+  }
+
+  return false;
+}

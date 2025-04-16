@@ -64,7 +64,7 @@ const ListUsers = () => {
 
   const { showToast } = useToast();
   const router = useRouter();
-  const { authenticatedUser } = useAuthenticatedUser();
+  const { authenticatedUser } = useAuthenticatedUser({});
 
   // State
   const [dataUsers, setDataUsers] = useState<User[]>([]);

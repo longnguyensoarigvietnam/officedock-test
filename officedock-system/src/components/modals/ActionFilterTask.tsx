@@ -10,14 +10,32 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { CreationDataTask, Team } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
 import { TaskContext } from '@providers/TaskProvider';
+import { UseMutateFunction } from 'react-query';
+import { AxiosError } from 'axios';
 
 type ActionTaskFilterProp = {
   creationDataTaskData: CreationDataTask | undefined;
   handleClose: () => void;
+  saveZoomKanban: UseMutateFunction<
+    any,
+    AxiosError<any, any>,
+    {
+      kanbanZoom?: number;
+      taskFilter?: {
+        organization?: OptionDropdownType[];
+        category?: OptionDropdownType[];
+        tag?: OptionDropdownType[];
+      };
+      isShowMyTemplate?: boolean;
+      isShowListKanban?: boolean;
+    },
+    unknown
+  >;
 };
 
 const ActionFilterTask = ({
   creationDataTaskData,
+  saveZoomKanban,
   handleClose,
 }: ActionTaskFilterProp) => {
   const boxListRef = useRef<HTMLDivElement | null>(null);
@@ -196,6 +214,14 @@ const ActionFilterTask = ({
             teamId: Number(teamId),
           })),
     );
+    saveZoomKanban &&
+      saveZoomKanban({
+        taskFilter: {
+          category: selectedCategoriesList,
+          organization: selectedTeamsList,
+          tag: getValues('tagIds'),
+        },
+      });
 
     setOrderingOptions({
       category_ids: selectedCategoriesList,
@@ -205,6 +231,14 @@ const ActionFilterTask = ({
     handleClose();
   };
   const handleReset = () => {
+    saveZoomKanban &&
+      saveZoomKanban({
+        taskFilter: {
+          organization: [],
+          category: [],
+          tag: [],
+        },
+      });
     setOrderingOptions({
       category_ids: [],
       organization_ids: [],
@@ -261,12 +295,16 @@ const ActionFilterTask = ({
                     <div
                       className={`flex items-center relative  justify-between p-2 border-b border-transparent cursor-pointer  ${selectedTeams[Number(team.organization.id)] ? 'bg-[#F6F9FA] border-b border-[#EBF1F4]  rounded' : ''}`}
                       onClick={() =>
-                        toggleTeam(Number(team.organization.id), team.organization.name)
+                        toggleTeam(
+                          Number(team.organization.id),
+                          team.organization.name,
+                        )
                       }>
                       <div onClick={() => {}} className="w-full">
                         <Checkbox
                           isChecked={
-                            !!selectedTeams[Number(team.organization.id)]?.selected
+                            !!selectedTeams[Number(team.organization.id)]
+                              ?.selected
                           }
                           onChange={() => {}}
                           label={team.organization.name}
@@ -335,7 +373,7 @@ const ActionFilterTask = ({
               className="!h-[34px] !rounded-md"
               labelClass="!min-h-0 !text-sm font-medium"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
-              optionClassName="!border-[1px] !border-[#77858F]"
+              optionClassName="!border-[1px] !border-[#77858F] w-full"
               labelOptionClass="break-words max-w-[300px] line-clamp-2 !text-sm"
               options={dataOptionsTagIds}
               selectedOptions={watch('tagIds') ?? []}

@@ -62,6 +62,16 @@ export interface User {
     scheduleZoom?: number;
     kanbanZoom?: number;
     tabVisibility?: Record<string, boolean>;
+    isShowMyTemplate?: boolean;
+    isShowListKanban?: boolean;
+    dateFilterScheduleFrom?: string;
+    dateFilterScheduleTo?: string;
+    isShowWeekSchedule?: boolean;
+    taskFilter?: {
+      category: OptionDropdownType[];
+      organization: OptionDropdownType[];
+      tag: OptionDropdownType[];
+    };
   };
   actions?: {
     update: boolean;
