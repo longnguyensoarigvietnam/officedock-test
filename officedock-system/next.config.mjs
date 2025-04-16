@@ -24,6 +24,15 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: process.env.API_INTERNAL_URL.replace(
+          /^https?:\/\/|:\d+$/g,
+          '',
+        ),
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

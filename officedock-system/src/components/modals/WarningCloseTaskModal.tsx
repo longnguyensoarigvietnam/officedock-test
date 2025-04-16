@@ -7,20 +7,21 @@ export type WarningCloseTaskModalProps = {
   open: boolean;
   onConfirm: () => void;
   onClose: () => void;
+  onCloseByIcon: () => void
 };
 
 const WarningCloseTaskModal = memo(
-  ({ open, onConfirm, onClose }: WarningCloseTaskModalProps) => {
+  ({ open, onConfirm, onClose, onCloseByIcon }: WarningCloseTaskModalProps) => {
 
     return (
       <Modal
         open={open}
         className="font-primary bg-white w-[515px] !rounded-2xl py-4"
-        onClose={onClose}
+        onClose={onCloseByIcon}
         isOutSideAction={false}
         title="確認">
         <div className="text-sm text-gray-700">
-          <p className="leading-6 text-neutral-02">閉じると保存しませんが、本当によろしいでしょうか？</p>
+          <p className="leading-6 text-neutral-02">変更を保存しますか？</p>
         </div>
         <div className="border-t mt-4 pt-2  border-solid border-gray-100 gap-4 flex justify-end">
           <Button

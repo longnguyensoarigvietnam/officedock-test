@@ -1007,7 +1007,6 @@ const ActionsTaskModal = ({
       (item): item is OptionDropdownType => item !== undefined,
     );
     const isValid = await trigger();
-
     if (isValid) {
       if (action === ActionTask.EDIT) {
         onEdit &&
@@ -1100,18 +1099,40 @@ const ActionsTaskModal = ({
     ]);
   };
   const isRoutineTaskModal = type == ItemStartType.FIXED_TASK;
-
   return (
     <Drawer
       open={open}
       className="font-primary  bg-white h-screen w-[700px] !rounded-tl-xl !p-0"
-      onClose={() => {
+      onClose={async () => {
+        const isValid = await trigger();
         if (!isFormTouched) {
           resetDataCategoryOptions();
           reset();
           onClose();
-        } else {
-          onWarning && onWarning({ reset, resetDataCategoryOptions });
+        } else if(isValid) {
+          const taskData = getValues();
+          const filteredTagIds = (getValues('tagIds') || []).filter(
+            (item): item is OptionDropdownType => item !== undefined,
+          );
+          onWarning &&
+            onWarning({
+              reset,
+              resetDataCategoryOptions,
+              taskData: {
+                ...taskData,
+                todoList: todoList,
+                tagIds: filteredTagIds,
+                oldIdStatus: `${dataTask?.status?.id}`,
+                deadlineRemindType: isShowFieldRemind
+                  ? taskData.deadlineRemindType
+                  : null,
+                deadlineRemindCountdown: isShowFieldRemind
+                  ? taskData.deadlineRemindCountdown
+                  : null,
+                showDeadlineTime: Boolean(watch('deadlineTime')),
+              },
+              action,
+            });
         }
       }}>
       <header
@@ -1188,7 +1209,7 @@ const ActionsTaskModal = ({
               disabled={isCheckActionPermission}
               autoCompleteInput
               placeholder="タスクのタイトル"
-              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md"
+              className={`shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[1px] rounded-md  ${!errors?.title ? '!border-[#77858F]' : '!border-error'}`}
               register={register('title', {
                 required: watch('title') !== null ? true : false,
                 onChange: () => {
@@ -1573,7 +1594,11 @@ const ActionsTaskModal = ({
                           type="text"
                           disabled={isCheckActionPermission}
                           register={register('deadlineTime', {
-                            required: Boolean(isShowFieldRemind && watch('deadlineRemindCountdown') && watch('deadlineRemindType')),
+                            required: Boolean(
+                              isShowFieldRemind &&
+                                watch('deadlineRemindCountdown') &&
+                                watch('deadlineRemindType'),
+                            ),
                             onChange: (e) => {
                               setIsFormTouched(true);
                               handleChange(e, 'deadlineTime');
@@ -1610,7 +1635,7 @@ const ActionsTaskModal = ({
                               );
                             }
                           }}
-                          className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                          className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] rounded-md  ${!errors?.deadlineTime ? '!border-[#77858F]' : '!border-error'}`}
                         />
                       </div>
                     ) : (
@@ -1633,6 +1658,7 @@ const ActionsTaskModal = ({
                     <div>
                       <ImageRound
                         onClick={() => {
+                          setIsFormTouched(true);
                           setIsShowFieldRemind(!isShowFieldRemind);
                           if (!isShowFieldRemind) {
                             setShowDeadlineTimeSetting(true);
@@ -1675,6 +1701,7 @@ const ActionsTaskModal = ({
                                 (element) => element.value === value?.value,
                               )}
                               onChange={(e) => {
+                                setIsFormTouched(true);
                                 onChange(e);
                               }}
                             />
@@ -1704,6 +1731,7 @@ const ActionsTaskModal = ({
                                 (element) => element.value === value?.value,
                               )}
                               onChange={(e) => {
+                                setIsFormTouched(true);
                                 onChange(e);
                               }}
                             />

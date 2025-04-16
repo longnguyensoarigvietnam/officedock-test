@@ -31,7 +31,7 @@ import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useTaskBoardTeam from '@hooks/useTaskBoardTeam';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 
-import { pageRouters } from '@constants/routers';
+import { pageRouters, apiRouters } from '@constants/routers';
 import {
   ActionTask,
   EventWorkCategory,
@@ -41,7 +41,6 @@ import {
   StatusValueTask,
 } from '@constants/enums';
 import { INITIAL_INDEX_VALUE, NO_OPTION_CATEGORY } from '@constants';
-import { apiRouters } from '@constants/routers';
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
@@ -136,6 +135,8 @@ const KanbanBoardTaskTeam = () => {
     resetDataCategoryOptions?: () => void;
     reset?: () => void;
   }>({});
+  const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
+  const [closeAction, setCloseAction] = useState<ActionTask | null>();
 
   // State
   // Member
@@ -745,7 +746,8 @@ const KanbanBoardTaskTeam = () => {
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
         });
-
+        setPendingTaskData(null);
+        setCloseAction(null);
         handleRemoveParam();
         setDataTaskEdit(null);
         setIsShowModalEditTeam(false);
@@ -929,6 +931,8 @@ const KanbanBoardTaskTeam = () => {
         oldStatusName: variant.oldNameStatus || '',
       });
       handleRemoveParam();
+      setPendingTaskData(null);
+      setCloseAction(null);
       showToast({
         description: SUCCESS_UPDATE_MESSAGE,
       });
@@ -1874,14 +1878,20 @@ const KanbanBoardTaskTeam = () => {
           onWarning={({
             reset,
             resetDataCategoryOptions,
+            taskData,
+            action,
           }: {
             reset: () => void;
             resetDataCategoryOptions: () => void;
+            taskData: TaskFormData;
+            action: ActionTask;
           }) => {
             setResetFunctions({
               resetDataCategoryOptions,
               reset,
             });
+            setPendingTaskData(taskData);
+            setCloseAction(action);
             setOpenWarningCloseModal(true);
           }}
         />
@@ -1899,10 +1909,10 @@ const KanbanBoardTaskTeam = () => {
       {openWarningCloseModal && (
         <WarningCloseTaskModal
           open={openWarningCloseModal}
-          onClose={() => {
+          onCloseByIcon={() => {
             setOpenWarningCloseModal(false);
           }}
-          onConfirm={() => {
+          onClose={() => {
             setIsShowModalEditTeam(false);
             setOpenWarningCloseModal(false);
             handleRemoveParam();
@@ -1910,6 +1920,18 @@ const KanbanBoardTaskTeam = () => {
             setIsLoading(false);
             resetFunctions.resetDataCategoryOptions?.();
             resetFunctions.reset?.();
+          }}
+          onConfirm={() => {
+            setIsShowModalEditTeam(false);
+            setOpenWarningCloseModal(false);
+            if (closeAction == ActionTask.EDIT) {
+              handleConfirmEditTask(pendingTaskData as TaskFormData);
+            } else if (
+              closeAction == ActionTask.CREATE ||
+              closeAction == ActionTask.COPY
+            ) {
+              handleConfirmCreateTask(pendingTaskData as TaskFormData);
+            }
           }}
         />
       )}
