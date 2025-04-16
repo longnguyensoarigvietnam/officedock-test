@@ -1,6 +1,9 @@
+from datetime import datetime, time
+
 from django.contrib.auth import password_validation, authenticate
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.timezone import now
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -204,9 +207,9 @@ class TaskFilterSerializer(serializers.Serializer):
     Serializer for task filter setting
     """
 
-    organization = serializers.IntegerField(required=False, allow_null=True)
-    category = serializers.IntegerField(required=False, allow_null=True)
-    tag = serializers.IntegerField(required=False, allow_null=True)
+    organization = serializers.JSONField(required=False, allow_null=True)
+    category = serializers.JSONField(required=False, allow_null=True)
+    tag = serializers.JSONField(required=False, allow_null=True)
 
 
 class SettingSerializer(serializers.ModelSerializer):
@@ -214,27 +217,21 @@ class SettingSerializer(serializers.ModelSerializer):
     Serializer for the Role model.
     """
 
-    tab_visibility = serializers.JSONField(default=dict)
+    tab_visibility = serializers.JSONField(required=False, allow_null=True)
     kanban_zoom = serializers.FloatField(
-        min_value=0, max_value=100, default=100
+        min_value=0, max_value=100, required=False, allow_null=True
     )
 
     schedule_zoom = serializers.FloatField(
-        min_value=0, max_value=100, default=100
+        min_value=0, max_value=100, required=False, allow_null=True
     )
-    date_filter_schedule = serializers.DateField(
+    date_filter_schedule_from = serializers.CharField(
         required=False, allow_null=True
     )
-    task_filter = TaskFilterSerializer(many=True, required=False)
-    is_show_list_kanban = serializers.BooleanField(
-        default=False, required=False
-    )
-    is_show_week_schedule = serializers.BooleanField(
-        default=False, required=False
-    )
-    is_show_my_template = serializers.BooleanField(
-        default=False, required=False
-    )
+    task_filter = TaskFilterSerializer(required=False)
+    is_show_list_kanban = serializers.BooleanField(required=False)
+    is_show_week_schedule = serializers.BooleanField(required=False)
+    is_show_my_template = serializers.BooleanField(required=False)
 
     class Meta:
         model = Setting
@@ -249,7 +246,7 @@ class SettingSerializer(serializers.ModelSerializer):
             "kanban_zoom",
             "schedule_zoom",
             "tab_visibility",
-            "date_filter_schedule",
+            "date_filter_schedule_from",
             "task_filter",
             "is_show_list_kanban",
             "is_show_week_schedule",
@@ -261,16 +258,13 @@ class SettingSerializer(serializers.ModelSerializer):
         Representation of setting
         """
         representation = super().to_representation(instance)
-        if instance.task_settings:
-            fields = [
-                "date_filter_schedule",
-                "task_filter",
-                "is_show_list_kanban",
-                "is_show_week_schedule",
-                "is_show_my_template",
-            ]
-            for field in fields:
-                representation[field] = instance.task_settings.get(field)
+        representation["date_filter_schedule_from"] = datetime.combine(
+            now(), time.min
+        )
+        if instance.date_filter_schedule_from:
+            representation[
+                "date_filter_schedule_from"
+            ] = instance.date_filter_schedule_from
         return representation
 
     def validate_tab_visibility(self, value):

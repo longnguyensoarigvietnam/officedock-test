@@ -323,6 +323,9 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
     remind_type = serializers.ChoiceField(
         allow_null=True, required=False, choices=DatetimeUnitTypes.choices()
     )
+    show_deadline_time = serializers.BooleanField(
+        write_only=True, default=False
+    )
     plan_start_date = serializers.DateTimeField(allow_null=True, required=False)
     plan_end_date = serializers.DateTimeField(allow_null=True, required=False)
     repeat_type = serializers.ChoiceField(
@@ -390,6 +393,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "month",
             "task_schedule_from_date",
             "task_schedule_end_date",
+            "show_deadline_time",
         ]
 
         read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
@@ -449,7 +453,14 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             for task_schedule in task_schedules:
                 plan_start_date = task_schedule["plan_start_date"]
                 plan_end_date = task_schedule["plan_end_date"]
-
+                if plan_start_date < now():
+                    raise serializers.ValidationError(
+                        {
+                            "task_schedules": ERROR_MESSAGES[
+                                "schedule_not_in_the_past"
+                            ]
+                        }
+                    )
                 check_exists_schedule = TaskSchedule.objects.filter(
                     Q(
                         Q(plan_start_date__lt=plan_end_date)
@@ -510,7 +521,9 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             sorted_users, many=True
         ).data
 
-        task_schedules = instance.task_schedules
+        task_schedules = instance.task_schedules.filter(
+            plan_start_date__date__gte=now().date()
+        )
         if task_schedule_from_date and task_schedule_end_date:
             task_schedules = task_schedules.filter(
                 Q(
@@ -522,9 +535,15 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         representation["task_schedules"] = TaskScheduleSerializer(
             task_schedules, many=True
         ).data
+        representation["show_deadline_time"] = False
         if instance.reminds:
             representation["remind_countdown"] = instance.reminds["countdown"]
             representation["remind_type"] = instance.reminds["type"]
+            representation["show_deadline_time"] = (
+                instance.reminds["show_deadline_time"]
+                if instance.reminds.get("show_deadline_time")
+                else False
+            )
         if recurring := instance.recurring:
             fields = [
                 "plan_start_date",
@@ -739,6 +758,10 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
         ):
             raise serializers.ValidationError(
                 {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
+            )
+        if plan_start_date < now():
+            raise serializers.ValidationError(
+                {"task_schedules": ERROR_MESSAGES["schedule_not_in_the_past"]}
             )
         check_exists_schedule = TaskSchedule.objects.filter(
             Q(

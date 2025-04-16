@@ -300,8 +300,11 @@ class Setting(BaseModel):
     kanban_zoom = models.IntegerField(default=100)
     schedule_zoom = models.IntegerField(default=100)
     tab_visibility = models.JSONField(default=dict, blank=True, null=True)
-    task_settings = models.JSONField(blank=True, null=True)
-
+    date_filter_schedule_from = models.CharField(blank=True, null=True)
+    task_filter = models.JSONField(blank=True, null=True)
+    is_show_list_kanban = models.BooleanField(default=False)
+    is_show_week_schedule = models.BooleanField(default=False)
+    is_show_my_template = models.BooleanField(default=False)
     user = models.OneToOneField(
         "User", related_name="setting", on_delete=models.CASCADE
     )
