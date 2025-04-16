@@ -7,6 +7,7 @@ DATE_REGEX = r"^\d{4}-\d{2}-\d{2}$"
 
 # Define format
 BASE_DATE_FORMAT = "%Y-%m-%d"
+BASE_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
 
 # Define upload folders
 ORGANIZATION_ICON_FOLDER_UPLOAD = (

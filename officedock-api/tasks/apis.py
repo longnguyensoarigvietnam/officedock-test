@@ -505,8 +505,8 @@ class TaskViewSet(
                 else:
                     raise ValidationError(
                         {
-                            "task_schedules": ERROR_MESSAGES[
-                                "exists_task_schedule"
+                            "task_schedules": [
+                                ERROR_MESSAGES["exists_task_schedule"]
                             ]
                         }
                     )
@@ -542,8 +542,8 @@ class TaskViewSet(
                 else:
                     raise ValidationError(
                         {
-                            "task_schedules": ERROR_MESSAGES[
-                                "exists_task_schedule"
+                            "task_schedules": [
+                                ERROR_MESSAGES["exists_task_schedule"]
                             ]
                         }
                     )
