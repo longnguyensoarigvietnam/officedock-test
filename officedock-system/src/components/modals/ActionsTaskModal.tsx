@@ -1185,13 +1185,9 @@ const ActionsTaskModal = ({
             src="/icons/drawer-close-white.svg"
             name="Close icon"
             onClick={() => {
-              if (!isFormTouched) {
-                resetDataCategoryOptions();
-                reset();
-                onClose();
-              } else {
-                onWarning && onWarning({ reset, resetDataCategoryOptions });
-              }
+              resetDataCategoryOptions();
+              reset();
+              onClose();
             }}
           />
         </div>
