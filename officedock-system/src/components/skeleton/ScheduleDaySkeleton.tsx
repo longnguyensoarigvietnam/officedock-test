@@ -11,7 +11,10 @@ const ScheduleDaySkeleton: React.FC<ScheduleDaySkeletonProps> = ({
 
   return (
     <div
-      className={`flex flex-col h-[${height}px] w-full  rounded-md overflow-hidden`}>
+      style={{
+        height: `${height}px`,
+      }}
+      className={`flex flex-col  w-full  rounded-md overflow-hidden`}>
       <div className="flex-1 grid grid-rows-[repeat(auto-fill,_60px)]">
         {Array.from({
           length: numberOfRows,
