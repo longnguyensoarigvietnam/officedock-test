@@ -336,10 +336,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
-        handleCallApiAllData(startDateISOString, endDateISOString);
         saveZoomSchedule({
           dateFilterScheduleFrom: startDateISOString,
         });
+        handleCallApiAllData(startDateISOString, endDateISOString);
         scrollToNowIndicator();
       }
     };
@@ -361,10 +361,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
-        handleCallApiAllData(startDateISOString, endDateISOString);
         saveZoomSchedule({
           dateFilterScheduleFrom: startDateISOString,
         });
+        handleCallApiAllData(startDateISOString, endDateISOString);
         scrollToNowIndicator();
       }
     };
@@ -381,6 +381,7 @@ const TimeSchedule = memo(
             calendarApi.view.activeEnd,
           );
           setDisplayHeaderDayStart(new Date(startDateISOString));
+          setDisplayHeaderDayEnd(new Date(endDateISOString));
 
           handleCallApiAllData(startDateISOString, endDateISOString);
           saveZoomSchedule({
@@ -1368,7 +1369,9 @@ const TimeSchedule = memo(
       const resourcePlanDay =
         newEvent._def.resourceIds?.length &&
         newEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
-
+      if (isLoadingSchedule) {
+        return info.revert();
+      }
       if (!info.draggedEl) {
         return info.revert();
       }
