@@ -43,7 +43,7 @@ from chat.serializers import (
     ChatMessageSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
 )
-from common.constants import DATE_REGEX, BASE_DATE_FORMAT
+from common.constants import DATE_REGEX, BASE_DATE_FORMAT, BASE_DATETIME_FORMAT
 from common.filters import CustomOrderFilter
 from common.utils import (
     send_web_socket_event,
@@ -1545,6 +1545,17 @@ class TaskCalendarViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         if not user_id:
             queryset = queryset.filter(people_in_charge__id=user.id)
+        if start_date and end_date:
+            start_date = datetime.strptime(
+                start_date, BASE_DATETIME_FORMAT
+            ).date()
+            end_date = datetime.strptime(end_date, BASE_DATETIME_FORMAT).date()
+            start_date = datetime.combine(start_date, time.min)
+            end_date = datetime.combine(end_date, time.max)
+            queryset = queryset.filter(
+                task_schedules__plan_start_date__gte=start_date,
+                task_schedules__plan_start_date__lte=end_date,
+            ).distinct()
 
         return queryset.filter(company=user.company)
 
