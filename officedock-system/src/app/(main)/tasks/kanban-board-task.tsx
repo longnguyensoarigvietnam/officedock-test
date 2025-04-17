@@ -3259,7 +3259,6 @@ const KanbanBoardTask = () => {
                     resetFunctions.reset?.();
                   }}
                   onConfirm={() => {
-                    setShowEditTaskModal(false);
                     setOpenWarningCloseModal(false);
                     if (closeAction == ActionTask.EDIT) {
                       handleConfirmEditTask(pendingTaskData as TaskFormData);

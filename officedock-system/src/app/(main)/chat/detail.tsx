@@ -3086,7 +3086,6 @@ const ChatDetail = ({
             resetFunctions.reset?.();
           }}
           onConfirm={() => {
-            setShowModalTask(false);
             setOpenWarningCloseModal(false);
             if (closeAction == ActionTask.EDIT) {
               handleConfirmEditTask(pendingTaskData as TaskFormData);
