@@ -1177,6 +1177,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayEnd(new Date(endDateISOString));
         setSlotHeight(baseHeight);
         setResetTrigger((prev) => prev + 1);
+        saveZoomSchedule({
+          isShowWeekSchedule: calendarView === CalendarViewOptions.VIEW_BY_WEEK,
+          dateFilterScheduleFrom: startDateISOString,
+        });
         setIsLoadingSchedule(true);
         await handleCallApiAllData(startDateISOString, endDateISOString);
 
@@ -1184,11 +1188,6 @@ const TimeSchedule = memo(
           calendarApi.refetchEvents();
         }, 300);
         setTimeout(() => {
-          saveZoomSchedule({
-            isShowWeekSchedule:
-              calendarView === CalendarViewOptions.VIEW_BY_WEEK,
-            dateFilterScheduleFrom: startDateISOString,
-          });
           scrollToNowIndicator();
         }, 300);
       }
