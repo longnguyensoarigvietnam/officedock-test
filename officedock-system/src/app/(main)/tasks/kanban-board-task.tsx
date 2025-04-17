@@ -113,6 +113,7 @@ import {
 } from '@utils/date';
 import { compareItems } from '@utils';
 import api from '@base/api';
+import { OptionDropdownType } from '@interfaces/common';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -252,6 +253,10 @@ const KanbanBoardTask = () => {
   const [showFrequentlyTasks, setShowFrequentlyTasks] = useState(false);
   const [frequentlyTasks, setFrequentlyTasks] = useState<Task[]>([]);
   const [orderTaskSave, setOrderTaskSave] = useState<Task[]>([]);
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+
+  const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
+  const [closeAction, setCloseAction] = useState<ActionTask | null>();
 
   // Template
   const [dataTemplateEdit, setDataTemplateEdit] = useState<Template | null>(
@@ -266,7 +271,6 @@ const KanbanBoardTask = () => {
   const { dashboardMemberList } = useDashboardMemberList();
   const { frequentlyTasks: frequentlyTasksList } = useFrequentlyTasks();
   const { templates: templateList } = useTemplateList();
-  const { authenticatedUser } = useAuthenticatedUser();
   const [loggedInUser, setLoggedInUser] = useState<User>();
   const [openWarningCloseModal, setOpenWarningCloseModal] =
     useState<boolean>(false);
@@ -305,38 +309,51 @@ const KanbanBoardTask = () => {
     }
   }, [numberPages]);
 
-  useEffect(() => {
-    if (authenticatedUser) {
-      setLoggedInUser(authenticatedUser);
-      if (authenticatedUser.setting?.kanbanZoom) {
+  // Call api (hook) get creation data task. Data such as: tags, status, types, priorities
+  const { creationDataTaskData } = useCreationDataTask({});
+  useAuthenticatedUser({
+    onSuccess: (data) => {
+      setLoggedInUser(data);
+      if (data.setting?.kanbanZoom) {
         setSelectedOptionZoom({
-          label: `${authenticatedUser.setting?.kanbanZoom}%`,
-          value: authenticatedUser.setting?.kanbanZoom,
+          label: `${data.setting?.kanbanZoom}%`,
+          value: data.setting?.kanbanZoom,
         });
-        if (authenticatedUser.setting?.kanbanZoom === 25) {
+        if (data.setting?.kanbanZoom === 25) {
           setColumnWidth(calculateWidth(247, 50));
         } else {
           setColumnWidth(
-            calculateWidth(
-              247,
-              authenticatedUser.setting?.kanbanZoom as number,
-            ),
+            calculateWidth(247, data.setting?.kanbanZoom as number),
           );
         }
       }
-      if (authenticatedUser.setting?.tabVisibility) {
+      if (data.setting?.tabVisibility) {
         setExtendByStatus((prev) =>
           prev.map((item) => ({
             ...item,
-            status: authenticatedUser.setting?.tabVisibility?.[item.id] ?? true,
+            status: data.setting?.tabVisibility?.[item.id] ?? true,
           })),
         );
       }
-    }
-  }, [authenticatedUser]);
-
-  // Call api (hook) get creation data task. Data such as: tags, status, types, priorities
-  const { creationDataTaskData } = useCreationDataTask({});
+      if (data.setting?.isSortingTaskByImportant) {
+        setDataOrderRing(FilterTypeKanban.IMPORTANT);
+      } else if (data.setting?.isSortingTaskByDeadline) {
+        setDataOrderRing(FilterTypeKanban.DEADLINE);
+      } else {
+        setDataOrderRing('');
+      }
+      if (data.setting?.taskFilter && data.setting?.taskFilter !== null) {
+        setOrderingOptions({
+          category_ids: data.setting?.taskFilter.category || [],
+          organization_ids: data.setting?.taskFilter.organization || [],
+          tag_ids: data.setting?.taskFilter.tag || [],
+        });
+      }
+      setIsListView(data.setting?.isShowListKanban || false);
+      setShowFrequentlyTasks(data.setting?.isShowMyTemplate || false);
+      setIsReadyToFetch(true);
+    },
+  });
 
   useEffect(() => {
     if (dataItemResizeSchedule) {
@@ -1802,6 +1819,8 @@ const KanbanBoardTask = () => {
       queryClient.refetchQueries(['getDataTaskHeaderList']);
 
       handleRemoveParam();
+      setPendingTaskData(null);
+      setCloseAction(null);
       showToast({
         description: SUCCESS_UPDATE_MESSAGE,
       });
@@ -1811,14 +1830,16 @@ const KanbanBoardTask = () => {
       response,
     }: ResponseError<{
       detail: TaskErrorPerson;
-      taskSchedules: TaskErrorPerson;
+      taskSchedules: string[];
     }>) => {
       if (response?.data.detail) {
         setDataErrorTask(response?.data.detail);
       } else if (response?.data.taskSchedules) {
         showToast({
           variant: 'error',
-          description: ERROR_MESSAGE_OVERLAP_TASK,
+          description: response?.data.taskSchedules.length
+            ? response?.data.taskSchedules[0]
+            : ERROR_MESSAGE_OVERLAP_TASK,
         });
       } else {
         showToast({
@@ -1948,7 +1969,9 @@ const KanbanBoardTask = () => {
       deadline:
         data.deadlineDate && data.deadlineTime
           ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
-          : null,
+          : data.deadlineDate && !data.deadlineTime
+            ? formatDateServer(data.deadlineDate)
+            : null,
       description: data.description,
       tagIds: tagIds,
       categoryIds: newWorkCategories,
@@ -2011,6 +2034,7 @@ const KanbanBoardTask = () => {
             ? addTimeToDate(new Date(), data.repeatEndTime)
             : null
           : null,
+      showDeadlineTime: data.showDeadlineTime,
     });
     const isCheckPeopleInCharge =
       data.peopleInChargeIds &&
@@ -2331,7 +2355,9 @@ const KanbanBoardTask = () => {
       deadline:
         data.deadlineDate && data.deadlineTime
           ? addTimeToDate(data.deadlineDate as Date, data.deadlineTime)
-          : null,
+          : data.deadlineDate && !data.deadlineTime
+            ? formatDateServer(data.deadlineDate)
+            : null,
       description: data.description || '',
       tagIds: tagIds,
       peopleInChargeIds: peopleInChargeIds,
@@ -2399,6 +2425,7 @@ const KanbanBoardTask = () => {
             : null
           : null,
       isTeamTask: false,
+      showDeadlineTime: data.showDeadlineTime,
     });
   };
 
@@ -2448,6 +2475,8 @@ const KanbanBoardTask = () => {
             );
           }
         }
+        setPendingTaskData(null);
+        setCloseAction(null);
         handleRemoveParam();
         setDataTaskEdit(null);
         setShowEditTaskModal(false);
@@ -2455,7 +2484,12 @@ const KanbanBoardTask = () => {
       },
       onError: (error: AxiosError<any>) => {
         if (error.response?.data.taskSchedules) {
-          showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
+          showErrorToast(
+            error,
+            error.response?.data.taskSchedules.length
+              ? error.response?.data.taskSchedules[0]
+              : ERROR_MESSAGE_OVERLAP_TASK,
+          );
         } else {
           showErrorToast(error, ERROR_CREATE_MESSAGE);
         }
@@ -2732,20 +2766,6 @@ const KanbanBoardTask = () => {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
-
-  useEffect(() => {
-    if (authenticatedUser) {
-      if (authenticatedUser.setting?.isSortingTaskByImportant) {
-        setDataOrderRing(FilterTypeKanban.IMPORTANT);
-      } else if (authenticatedUser.setting?.isSortingTaskByDeadline) {
-        setDataOrderRing(FilterTypeKanban.DEADLINE);
-      } else {
-        setDataOrderRing('');
-      }
-      setIsReadyToFetch(true);
-    }
-  }, [authenticatedUser]);
 
   // Socket
   useEffect(() => {
@@ -2795,6 +2815,25 @@ const KanbanBoardTask = () => {
     setOrderingOptions((prevData) => {
       if (!prevData) return prevData;
 
+      saveZoomKanban({
+        taskFilter: {
+          category:
+            category === 'category_ids'
+              ? prevData.category_ids?.filter((item) => item.value !== value)
+              : prevData.category_ids,
+          organization:
+            category === 'organization_ids'
+              ? prevData.organization_ids?.filter(
+                  (item) => item.value !== value,
+                )
+              : prevData.organization_ids,
+          tag:
+            category === 'tag_ids'
+              ? prevData.tag_ids?.filter((item) => item.value !== value)
+              : prevData.tag_ids,
+        },
+      });
+
       return {
         ...prevData,
         [category]:
@@ -2802,11 +2841,19 @@ const KanbanBoardTask = () => {
       };
     });
   };
-
   // Handle save zoom
-  const handleSaveZoomKanban = async (kanbanZoom: number) => {
+  const handleSaveZoomKanban = async (data: {
+    kanbanZoom?: number;
+    taskFilter?: {
+      organization?: OptionDropdownType[];
+      category?: OptionDropdownType[];
+      tag?: OptionDropdownType[];
+    };
+    isShowMyTemplate?: boolean;
+    isShowListKanban?: boolean;
+  }) => {
     const { data: response } = await api.post(apiRouters.USER_SETTING, {
-      kanbanZoom,
+      ...data,
     });
     return response;
   };
@@ -2889,7 +2936,12 @@ const KanbanBoardTask = () => {
                   setShowTemplateModal(true);
                 }}
                 templates={templates}
-                setShowFrequentlyTasks={setShowFrequentlyTasks}
+                setShowFrequentlyTasks={(value: boolean) => {
+                  setShowFrequentlyTasks(value);
+                  saveZoomKanban({
+                    isShowMyTemplate: value,
+                  });
+                }}
                 showFrequentlyTasks={showFrequentlyTasks}
                 creationDataTaskData={creationDataTaskData}
                 editTask={editTaskInline}
@@ -3039,6 +3091,7 @@ const KanbanBoardTask = () => {
                             <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
                               <ActionFilterTask
                                 creationDataTaskData={creationDataTaskData}
+                                saveZoomKanban={saveZoomKanban}
                                 handleClose={() => setIsOpenModalFilter(false)}
                               />
                             </PopoverPanel>
@@ -3069,7 +3122,12 @@ const KanbanBoardTask = () => {
                         src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
                         name="List view icon"
                         className="w-12 h-12 hover:cursor-pointer"
-                        onClick={() => setIsListView((prev) => !prev)}
+                        onClick={() => {
+                          setIsListView(!isListView);
+                          saveZoomKanban({
+                            isShowListKanban: !isListView,
+                          });
+                        }}
                       />
                     </div>
                   </Tippy>
@@ -3165,14 +3223,20 @@ const KanbanBoardTask = () => {
                   onWarning={({
                     reset,
                     resetDataCategoryOptions,
+                    taskData,
+                    action,
                   }: {
                     reset: () => void;
                     resetDataCategoryOptions: () => void;
+                    taskData: TaskFormData;
+                    action: ActionTask;
                   }) => {
                     setResetFunctions({
                       resetDataCategoryOptions,
                       reset,
                     });
+                    setPendingTaskData(taskData);
+                    setCloseAction(action);
                     setOpenWarningCloseModal(true);
                   }}
                 />
@@ -3181,10 +3245,10 @@ const KanbanBoardTask = () => {
               {openWarningCloseModal && (
                 <WarningCloseTaskModal
                   open={openWarningCloseModal}
-                  onClose={() => {
+                  onCloseByIcon={() => {
                     setOpenWarningCloseModal(false);
                   }}
-                  onConfirm={() => {
+                  onClose={() => {
                     setShowEditTaskModal(false);
                     setOpenWarningCloseModal(false);
                     setColumnId('');
@@ -3193,6 +3257,17 @@ const KanbanBoardTask = () => {
                     setIsLoading(false);
                     resetFunctions.resetDataCategoryOptions?.();
                     resetFunctions.reset?.();
+                  }}
+                  onConfirm={() => {
+                    setOpenWarningCloseModal(false);
+                    if (closeAction == ActionTask.EDIT) {
+                      handleConfirmEditTask(pendingTaskData as TaskFormData);
+                    } else if (
+                      closeAction == ActionTask.CREATE ||
+                      closeAction == ActionTask.COPY
+                    ) {
+                      handleConfirmCreateTask(pendingTaskData as TaskFormData);
+                    }
                   }}
                 />
               )}
@@ -3291,7 +3366,9 @@ const KanbanBoardTask = () => {
               ]}
               onChange={(selectedOption) => {
                 setSelectedOptionZoom(selectedOption);
-                saveZoomKanban(selectedOption.value as number);
+                saveZoomKanban({
+                  kanbanZoom: selectedOption.value as number,
+                });
                 if (selectedOption.value === 25) {
                   setColumnWidth(calculateWidth(247, 50));
                 } else {

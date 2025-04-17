@@ -708,7 +708,6 @@ class StatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="user_id", type=int),
             OpenApiParameter(name="tag_ids", type=str),
             OpenApiParameter(name="total_duration", type=str),
-            OpenApiParameter(name="is_compare", type=bool),
             OpenApiParameter(name="is_tag_page", type=bool),
             OpenApiParameter(
                 name="statistic_by",
@@ -745,7 +744,6 @@ class StatisticViewSet(BaseAPIViewSet):
         end_date = request.query_params.get("end_date")
         statistic_by = request.query_params.get("statistic_by")
         is_tag_page = request.query_params.get("is_tag_page")
-        is_compare = request.query_params.get("is_compare")
         # Validate date format using regex
         if (
             not from_date
@@ -860,7 +858,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 tag_ids,
                 durations=durations,
             )
-            if not tag_list and is_compare:
+            if not tag_list:
                 tag = {
                     "tag_id": None,
                     "tag_name": NONE_CATEGORY,
@@ -902,7 +900,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 large_category_id=large_category_id,
                 medium_category_id=medium_category_id,
             )
-            if not category_list and is_compare:
+            if not category_list:
                 category = {
                     "category_id": None,
                     "category_name": NONE_CATEGORY,

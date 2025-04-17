@@ -32,8 +32,8 @@
   color: #0068b6 !important;
 }
 
-.saturday.react-datepicker__day--selected{
-  color: white !important
+.saturday.react-datepicker__day--selected {
+  color: white !important;
 }
 
 .small .react-datepicker {
@@ -87,10 +87,6 @@
   border-bottom: none !important;
 }
 
-.react-datepicker__day--keyboard-selected:hover {
-  background-color: #f0f0f0 !important;
-}
-
 .react-datepicker__day,
 .react-datepicker__day-name {
   width: 35px !important;
@@ -116,7 +112,7 @@
 }
 
 .react-datepicker__day--outside-month {
-  color: #A8B6BE !important;
+  color: #a8b6be !important;
 }
 
 .react-datepicker__day--selected,

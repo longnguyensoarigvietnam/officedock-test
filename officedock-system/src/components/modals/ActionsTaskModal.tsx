@@ -83,7 +83,9 @@ import {
   formatShowDateJapanese,
   formatTime,
   formatTimeInput,
+  formatTimeInputFilter,
   generateTimeOptionsAsObjects,
+  getFilteredTimeOptions,
 } from '@utils/date';
 import {
   generateOptionsCount,
@@ -133,7 +135,7 @@ const ActionsTaskModal = ({
   onDelete,
   onWarning,
 }: ActionTaskModalProps) => {
-  const [minDatePlans, setMinDatePlans] = useState<{
+  const [_minDatePlans, setMinDatePlans] = useState<{
     [key: number]: Date | null;
   }>({});
   const { data: session } = useSession();
@@ -188,7 +190,11 @@ const ActionsTaskModal = ({
 
   const [showDescriptionSection, setShowDescriptionSection] =
     useState<boolean>(false);
+  const [showAdvancedSettings, setShowAdvancedSettings] =
+    useState<boolean>(false);
   const [showTodoSection, setShowTodoSection] = useState<boolean>(false);
+  const [showDeadlineTimeSetting, setShowDeadlineTimeSetting] =
+    useState<boolean>(false);
   const [isFormTouched, setIsFormTouched] = useState<boolean>(false);
 
   const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
@@ -451,51 +457,60 @@ const ActionsTaskModal = ({
         (value.deadlineDate = dataTask.deadline
           ? new Date(dataTask.deadline)
           : null),
-        (value.deadlineTime = dataTask.deadline
-          ? convertToTimeString(dataTask.deadline)
-          : null);
+        (value.deadlineTime =
+          dataTask.deadline && dataTask.showDeadlineTime
+            ? convertToTimeString(dataTask.deadline)
+            : null);
       value.description = dataTask.description || '';
 
-      value.repeatInterval = dataTask.repeatInterval
-        ? {
-            label: `${dataTask.repeatInterval}`,
-            value: dataTask.repeatInterval,
-          }
-        : undefined;
+      value.repeatInterval =
+        action != ActionTask.COPY && dataTask.repeatInterval
+          ? {
+              label: `${dataTask.repeatInterval}`,
+              value: dataTask.repeatInterval,
+            }
+          : undefined;
 
-      value.repeatType = dataTask.repeatType
-        ? {
-            label:
-              TASK_REPETITIVE_OPTIONS.find(
-                (option) => option.value == dataTask.repeatType,
-              )?.label || '',
-            value: dataTask.repeatType,
-          }
-        : undefined;
+      value.repeatType =
+        action != ActionTask.COPY && dataTask.repeatType
+          ? {
+              label:
+                TASK_REPETITIVE_OPTIONS.find(
+                  (option) => option.value == dataTask.repeatType,
+                )?.label || '',
+              value: dataTask.repeatType,
+            }
+          : undefined;
 
-      value.repeatStartTime = dataTask.planStartDate
-        ? convertToTimeString(dataTask.planStartDate)
-        : '';
-      value.repeatEndTime = dataTask.planEndDate
-        ? convertToTimeString(dataTask.planEndDate)
-        : '';
+      value.repeatStartTime =
+        action != ActionTask.COPY && dataTask.planStartDate
+          ? convertToTimeString(dataTask.planStartDate)
+          : '';
+      value.repeatEndTime =
+        action != ActionTask.COPY && dataTask.planEndDate
+          ? convertToTimeString(dataTask.planEndDate)
+          : '';
 
-      value.month = dataTask.month
-        ? {
-            label: `${dataTask.month}`,
-            value: dataTask.month,
-          }
-        : undefined;
+      value.month =
+        action != ActionTask.COPY && dataTask.month
+          ? {
+              label: `${dataTask.month}`,
+              value: dataTask.month,
+            }
+          : undefined;
 
-      value.monthDay = dataTask.monthDay
-        ? {
-            label: `${dataTask.monthDay}`,
-            value: dataTask.monthDay,
-          }
-        : undefined;
+      value.monthDay =
+        action != ActionTask.COPY && dataTask.monthDay
+          ? {
+              label: `${dataTask.monthDay}`,
+              value: dataTask.monthDay,
+            }
+          : undefined;
 
       value.weekDay =
-        dataTask.weekDay != undefined && dataTask.weekDay != null
+        action != ActionTask.COPY &&
+        dataTask.weekDay != undefined &&
+        dataTask.weekDay != null
           ? {
               label: `${dataTask.weekDay}`,
               value: dataTask.weekDay,
@@ -777,8 +792,11 @@ const ActionsTaskModal = ({
         });
       }
 
-      if (dataTask.remindType && dataTask.remindType) {
+      if (dataTask.remindType) {
         setIsShowFieldRemind(true);
+      }
+      if (dataTask.showDeadlineTime) {
+        setShowDeadlineTimeSetting(true);
       }
       // Default focus input fake
       if (dataTask.peopleInCharge.length) {
@@ -805,6 +823,7 @@ const ActionsTaskModal = ({
       });
     }
   }, [append, appendPlanField, dataTask, peopleDefaultId]);
+
   useEffect(() => {
     if (peopleDefaultId && session) {
       setSelectedPersonInChargeOptions([
@@ -991,7 +1010,6 @@ const ActionsTaskModal = ({
       (item): item is OptionDropdownType => item !== undefined,
     );
     const isValid = await trigger();
-
     if (isValid) {
       if (action === ActionTask.EDIT) {
         onEdit &&
@@ -1006,6 +1024,7 @@ const ActionsTaskModal = ({
             deadlineRemindCountdown: isShowFieldRemind
               ? data.deadlineRemindCountdown
               : null,
+            showDeadlineTime: Boolean(watch('deadlineTime')),
           });
       }
       if (action === ActionTask.CREATE) {
@@ -1021,6 +1040,7 @@ const ActionsTaskModal = ({
             deadlineRemindCountdown: isShowFieldRemind
               ? data.deadlineRemindCountdown
               : null,
+            showDeadlineTime: Boolean(watch('deadlineTime')),
           });
       }
       if (action === ActionTask.COPY) {
@@ -1036,6 +1056,7 @@ const ActionsTaskModal = ({
             deadlineRemindCountdown: isShowFieldRemind
               ? data.deadlineRemindCountdown
               : null,
+            showDeadlineTime: Boolean(watch('deadlineTime')),
           });
       }
     }
@@ -1080,20 +1101,41 @@ const ActionsTaskModal = ({
       },
     ]);
   };
-
   const isRoutineTaskModal = type == ItemStartType.FIXED_TASK;
-
   return (
     <Drawer
       open={open}
       className="font-primary  bg-white h-screen w-[700px] !rounded-tl-xl !p-0"
-      onClose={() => {
+      onClose={async () => {
+        const isValid = await trigger();
         if (!isFormTouched) {
           resetDataCategoryOptions();
           reset();
           onClose();
-        } else {
-          onWarning && onWarning({ reset, resetDataCategoryOptions });
+        } else if (isValid) {
+          const taskData = getValues();
+          const filteredTagIds = (getValues('tagIds') || []).filter(
+            (item): item is OptionDropdownType => item !== undefined,
+          );
+          onWarning &&
+            onWarning({
+              reset,
+              resetDataCategoryOptions,
+              taskData: {
+                ...taskData,
+                todoList: todoList,
+                tagIds: filteredTagIds,
+                oldIdStatus: `${dataTask?.status?.id}`,
+                deadlineRemindType: isShowFieldRemind
+                  ? taskData.deadlineRemindType
+                  : null,
+                deadlineRemindCountdown: isShowFieldRemind
+                  ? taskData.deadlineRemindCountdown
+                  : null,
+                showDeadlineTime: Boolean(watch('deadlineTime')),
+              },
+              action,
+            });
         }
       }}>
       <header
@@ -1143,13 +1185,9 @@ const ActionsTaskModal = ({
             src="/icons/drawer-close-white.svg"
             name="Close icon"
             onClick={() => {
-              if (!isFormTouched) {
-                resetDataCategoryOptions();
-                reset();
-                onClose();
-              } else {
-                onWarning && onWarning({ reset, resetDataCategoryOptions });
-              }
+              resetDataCategoryOptions();
+              reset();
+              onClose();
             }}
           />
         </div>
@@ -1170,7 +1208,7 @@ const ActionsTaskModal = ({
               disabled={isCheckActionPermission}
               autoCompleteInput
               placeholder="タスクのタイトル"
-              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md"
+              className={`shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[1px] rounded-md  ${!errors?.title ? '!border-[#77858F]' : '!border-error'}`}
               register={register('title', {
                 required: watch('title') !== null ? true : false,
                 onChange: () => {
@@ -1529,7 +1567,7 @@ const ActionsTaskModal = ({
                 締切日時
               </div>
               <div className="w-full max-w-[515px] items-start flex gap-1 justify-between">
-                <div className="max-w-[250px]">
+                <div className="max-w-[315px]">
                   <div className="flex gap-1 items-center">
                     <div className="w-[140px]">
                       <Controller
@@ -1543,28 +1581,48 @@ const ActionsTaskModal = ({
                             onChange={(e) => {
                               setIsFormTouched(true);
                               onChange(e);
-                              if (!getValues('deadlineTime')) {
-                                setValue(
-                                  'deadlineTime',
-                                  convertToTimeString(`${currentDate}`),
-                                );
-                              }
                             }}
                           />
                         )}
                       />
                     </div>
-                    <div className="w-[72px] relative z-20">
-                      <Input
-                        isShowClockIcon={true}
-                        type="text"
-                        disabled={isCheckActionPermission}
-                        register={register('deadlineTime', {
-                          required:
-                            watch('deadlineDate') !== null ? true : false,
-                          onChange: (e) => {
+                    {showDeadlineTimeSetting ? (
+                      <div className="w-[72px] relative z-20">
+                        <Input
+                          isShowClockIcon={true}
+                          type="text"
+                          disabled={isCheckActionPermission}
+                          register={register('deadlineTime', {
+                            required: Boolean(
+                              isShowFieldRemind &&
+                                watch('deadlineRemindCountdown') &&
+                                watch('deadlineRemindType'),
+                            ),
+                            onChange: (e) => {
+                              setIsFormTouched(true);
+                              handleChange(e, 'deadlineTime');
+                              if (getValues('deadlineDate') === null) {
+                                setValue(
+                                  'deadlineDate',
+                                  (() => {
+                                    const today: Date = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    return today;
+                                  })(),
+                                );
+                              }
+                            },
+                            onBlur: () => {
+                              if (time) {
+                                setValue('deadlineTime', formatTimeInput(time));
+                              }
+                              setTime('');
+                            },
+                          })}
+                          options={optionTimeInput}
+                          onChangeDropdown={(e) => {
                             setIsFormTouched(true);
-                            handleChange(e, 'deadlineTime');
+                            setValue('deadlineTime', e.label);
                             if (getValues('deadlineDate') === null) {
                               setValue(
                                 'deadlineDate',
@@ -1575,35 +1633,36 @@ const ActionsTaskModal = ({
                                 })(),
                               );
                             }
-                          },
-                          onBlur: () => {
-                            if (time) {
-                              setValue('deadlineTime', formatTimeInput(time));
-                            }
-                            setTime('');
-                          },
-                        })}
-                        options={optionTimeInput}
-                        onChangeDropdown={(e) => {
+                          }}
+                          className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] rounded-md  ${!errors?.deadlineTime ? '!border-[#77858F]' : '!border-error'}`}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="flex gap-1 items-center hover:cursor-pointer"
+                        onClick={() => {
+                          setShowDeadlineTimeSetting(true);
+                        }}>
+                        <ImageRound
+                          className="h-[14px] w-[15px] hover:cursor-pointer"
+                          src="/icons/clock-time.svg"
+                          name="Clock icon"
+                        />
+                        <p className="text-[#77858F] text-xs font-medium">
+                          締切時間を追加
+                        </p>
+                      </div>
+                    )}
+
+                    <div>
+                      <ImageRound
+                        onClick={() => {
                           setIsFormTouched(true);
-                          setValue('deadlineTime', e.label);
-                          if (getValues('deadlineDate') === null) {
-                            setValue(
-                              'deadlineDate',
-                              (() => {
-                                const today: Date = new Date();
-                                today.setHours(0, 0, 0, 0);
-                                return today;
-                              })(),
-                            );
+                          setIsShowFieldRemind(!isShowFieldRemind);
+                          if (!isShowFieldRemind) {
+                            setShowDeadlineTimeSetting(true);
                           }
                         }}
-                        className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                      />
-                    </div>
-                    <div className="ml-2">
-                      <ImageRound
-                        onClick={() => setIsShowFieldRemind(!isShowFieldRemind)}
                         src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell-white.svg'}`}
                         name="Bell icon"
                         className="h-4 w-4"
@@ -1616,7 +1675,7 @@ const ActionsTaskModal = ({
                   />
                 </div>
                 {isShowFieldRemind ? (
-                  <div className="max-w-[250px]">
+                  <div>
                     <div className="flex items-center gap-1">
                       <div className="w-[56px]">
                         <Controller
@@ -1641,14 +1700,14 @@ const ActionsTaskModal = ({
                                 (element) => element.value === value?.value,
                               )}
                               onChange={(e) => {
+                                setIsFormTouched(true);
                                 onChange(e);
                               }}
-                              error={errors.statusId?.message}
                             />
                           )}
                         />
                       </div>
-                      <div className="w-[82px] ">
+                      <div className="w-[82px]">
                         <Controller
                           control={control}
                           name="deadlineRemindType"
@@ -1671,14 +1730,14 @@ const ActionsTaskModal = ({
                                 (element) => element.value === value?.value,
                               )}
                               onChange={(e) => {
+                                setIsFormTouched(true);
                                 onChange(e);
                               }}
-                              error={errors.statusId?.message}
                             />
                           )}
                         />
                       </div>
-                      <div className="w-[60px]">に通知</div>
+                      <p>に通知</p>
                     </div>
                     <ErrorMessage
                       error={errors.deadlineTime?.message}
@@ -1711,754 +1770,36 @@ const ActionsTaskModal = ({
               </div>
             </div>
           )}
-          {/* Plan date */}
-          {!isRoutineTaskModal && (
-            <div className="flex gap-[10px] items-start">
-              <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
-                実施予定日時
-              </div>
-              <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
-                {planFields.map((field, index) => {
-                  return (
-                    <div
-                      key={field.id}
-                      style={{ zIndex: planFields.length - index }}
-                      className="w-full max-w-[515px] flex gap-2 items-start">
-                      <div className="max-w-[220px]">
-                        <div className="flex gap-1">
-                          <div className="w-[140px]">
-                            <Controller
-                              control={control}
-                              name={`plans.${index}.planStartDate`}
-                              rules={{
-                                required: watch(`plans.${index}.planEndDate`)
-                                  ? START_DATE_REQUIRED_SELECTED
-                                  : false,
-                              }}
-                              render={({ field: { value, onChange } }) => {
-                                return (
-                                  <DatePickerCustom
-                                    className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
-                                    selected={
-                                      value
-                                        ? new Date(value)
-                                        : watch(`plans.${index}.planStartDate`)
-                                    }
-                                    disabled={isCheckActionPermission}
-                                    onChange={(e) => {
-                                      setIsFormTouched(true);
-                                      onChange(e);
-                                      if (e !== null) {
-                                        const newDate = new Date(e.getTime());
-                                        updateMinDatePlan(index, newDate);
-                                      } else {
-                                        updateMinDatePlan(index, null);
-                                      }
-                                      if (
-                                        !getValues(
-                                          `plans.${index}.planStartTime`,
-                                        )
-                                      ) {
-                                        setValue(
-                                          `plans.${index}.planStartTime`,
-                                          convertToTimeString(`${currentDate}`),
-                                        );
-                                      }
-                                      setValue(
-                                        `plans.${index}.planEndDate`,
-                                        null,
-                                      );
-                                      setValue(
-                                        `plans.${index}.planEndTime`,
-                                        '',
-                                      );
-                                    }}
-                                  />
-                                );
-                              }}
-                            />
-                          </div>
-                          <div className="w-[72px] relative">
-                            <Input
-                              isShowClockIcon={true}
-                              autoFocus={false}
-                              disabled={isCheckActionPermission}
-                              register={register(
-                                `plans.${index}.planStartTime`,
-                                {
-                                  required:
-                                    watch(`plans.${index}.planStartDate`) !==
-                                    null
-                                      ? true
-                                      : false,
-                                  onChange: (e) => {
-                                    setIsFormTouched(true);
-                                    handleChange(
-                                      e,
-                                      `plans.${index}.planStartTime`,
-                                    );
-                                    if (
-                                      getValues(
-                                        `plans.${index}.planStartDate`,
-                                      ) === null
-                                    ) {
-                                      setValue(
-                                        `plans.${index}.planStartDate`,
-                                        (() => {
-                                          const today: Date = new Date();
-                                          today.setHours(0, 0, 0, 0);
-                                          return today;
-                                        })(),
-                                      );
-                                      setValue(
-                                        `plans.${index}.planEndDate`,
-                                        null,
-                                      );
-                                      setValue(
-                                        `plans.${index}.planEndTime`,
-                                        '',
-                                      );
-                                      updateMinDatePlan(index, new Date());
-                                    }
-                                  },
-                                  onBlur: () => {
-                                    if (time) {
-                                      setValue(
-                                        `plans.${index}.planStartTime`,
-                                        formatTimeInput(time),
-                                      );
-                                    }
-                                    setTime('');
-                                  },
-                                },
-                              )}
-                              type="text"
-                              options={optionTimeInput}
-                              onChangeDropdown={(e) => {
-                                setIsFormTouched(true);
-                                setValue(
-                                  `plans.${index}.planStartTime`,
-                                  e.label,
-                                );
-                                if (
-                                  getValues(`plans.${index}.planStartDate`) ===
-                                  null
-                                ) {
-                                  setValue(
-                                    `plans.${index}.planStartDate`,
-                                    (() => {
-                                      const today: Date = new Date();
-                                      today.setHours(0, 0, 0, 0);
-                                      return today;
-                                    })(),
-                                  );
-
-                                  updateMinDatePlan(index, new Date());
-                                }
-                              }}
-                              className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                            />
-                          </div>
-                        </div>
-                        <ErrorMessage
-                          error={errors.planStartDate?.message}
-                          className="mt-[6px] text-xs"
-                        />
-                      </div>
-                      <div className="h-[34px] flex items-center">〜</div>
-                      <div className="max-w-[220px]">
-                        <div className="flex gap-1">
-                          <div className="w-[140px]">
-                            <Controller
-                              rules={{
-                                required: watch(`plans.${index}.planStartDate`)
-                                  ? END_DATE_WRONG_SELECTED
-                                  : false,
-                              }}
-                              control={control}
-                              name={`plans.${index}.planEndDate`}
-                              render={({ field: { value, onChange } }) => (
-                                <DatePickerCustom
-                                  className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2 !pl-[30px] !text-xs !pt-2 text-center"
-                                  selected={
-                                    value
-                                      ? new Date(value)
-                                      : watch(`plans.${index}.planEndDate`)
-                                  }
-                                  disabled={isCheckActionPermission}
-                                  minDate={
-                                    watch(`plans.${index}.planStartDate`) ||
-                                    minDatePlans[index]
-                                  }
-                                  onChange={(e) => {
-                                    setIsFormTouched(true);
-                                    onChange(e);
-                                    if (
-                                      !getValues(`plans.${index}.planEndTime`)
-                                    ) {
-                                      setValue(
-                                        `plans.${index}.planEndTime`,
-                                        convertToTimeString(`${currentDate}`),
-                                      );
-                                    }
-                                  }}
-                                />
-                              )}
-                            />
-                          </div>
-                          <div className="w-[72px] relative">
-                            <Input
-                              isShowClockIcon={true}
-                              disabled={isCheckActionPermission}
-                              register={register(`plans.${index}.planEndTime`, {
-                                required:
-                                  watch(`plans.${index}.planEndDate`) !== null
-                                    ? true
-                                    : false,
-                                validate: (value) => {
-                                  if (
-                                    watch(
-                                      `plans.${index}.planEndDate`,
-                                    )?.getTime() ===
-                                      watch(
-                                        `plans.${index}.planStartDate`,
-                                      )?.getTime() &&
-                                    watch(`plans.${index}.planEndDate`) !== null
-                                  ) {
-                                    return (
-                                      (value &&
-                                        watch(`plans.${index}.planStartTime`) &&
-                                        convertToMinutes(value) >
-                                          convertToMinutes(
-                                            `${watch(`plans.${index}.planStartTime`)}`,
-                                          )) ||
-                                      END_DATE_WRONG_SELECTED
-                                    );
-                                  }
-                                  return true;
-                                },
-                                onChange: (e) => {
-                                  setIsFormTouched(true);
-                                  handleChange(e, `plans.${index}.planEndTime`);
-                                  if (
-                                    getValues(`plans.${index}.planEndDate`) ===
-                                    null
-                                  ) {
-                                    if (
-                                      getValues(
-                                        `plans.${index}.planStartDate`,
-                                      ) !== null
-                                    ) {
-                                      setValue(
-                                        `plans.${index}.planEndDate`,
-                                        getValues(
-                                          `plans.${index}.planStartDate`,
-                                        ),
-                                      );
-                                    } else {
-                                      setValue(
-                                        `plans.${index}.planEndDate`,
-                                        (() => {
-                                          const today: Date = new Date();
-                                          today.setHours(0, 0, 0, 0);
-                                          return today;
-                                        })(),
-                                      );
-                                    }
-                                  }
-                                },
-                                onBlur: (e) => {
-                                  if (time) {
-                                    setValue(
-                                      `plans.${index}.planEndTime`,
-                                      formatTimeInput(time),
-                                    );
-                                  }
-                                  if (
-                                    watch(
-                                      `plans.${index}.planEndDate`,
-                                    )?.getTime() ===
-                                      watch(
-                                        `plans.${index}.planStartDate`,
-                                      )?.getTime() &&
-                                    watch(`plans.${index}.planEndDate`) !== null
-                                  ) {
-                                    if (
-                                      e.target.value &&
-                                      watch(`plans.${index}.planStartTime`) &&
-                                      convertToMinutes(e.target.value) >
-                                        convertToMinutes(
-                                          `${watch(`plans.${index}.planStartTime`)}`,
-                                        )
-                                    ) {
-                                      setError(`plans.${index}.planEndTime`, {
-                                        message: '',
-                                      });
-                                    } else {
-                                      setError(`plans.${index}.planEndTime`, {
-                                        message: END_DATE_WRONG_SELECTED,
-                                      });
-                                    }
-                                  }
-
-                                  setTime('');
-                                },
-                              })}
-                              options={optionTimeInput}
-                              onChangeDropdown={(e) => {
-                                setIsFormTouched(true);
-                                setValue(`plans.${index}.planEndTime`, e.label);
-                                if (
-                                  getValues(`plans.${index}.planEndDate`) ===
-                                  null
-                                ) {
-                                  if (
-                                    getValues(
-                                      `plans.${index}.planStartDate`,
-                                    ) !== null
-                                  ) {
-                                    setValue(
-                                      `plans.${index}.planEndDate`,
-                                      getValues(`plans.${index}.planStartDate`),
-                                    );
-                                  } else {
-                                    setValue(
-                                      `plans.${index}.planEndDate`,
-                                      (() => {
-                                        const today: Date = new Date();
-                                        today.setHours(0, 0, 0, 0);
-                                        return today;
-                                      })(),
-                                    );
-                                  }
-                                }
-                                if (
-                                  watch(
-                                    `plans.${index}.planEndDate`,
-                                  )?.getTime() ===
-                                    watch(
-                                      `plans.${index}.planStartDate`,
-                                    )?.getTime() &&
-                                  watch(`plans.${index}.planEndDate`) !== null
-                                ) {
-                                  if (
-                                    e.label &&
-                                    watch(`plans.${index}.planStartTime`) &&
-                                    convertToMinutes(e.label) >
-                                      convertToMinutes(
-                                        `${watch(`plans.${index}.planStartTime`)}`,
-                                      )
-                                  ) {
-                                    setError(`plans.${index}.planEndTime`, {
-                                      message: '',
-                                    });
-                                  } else {
-                                    setError(`plans.${index}.planEndTime`, {
-                                      message: END_DATE_WRONG_SELECTED,
-                                    });
-                                  }
-                                }
-                              }}
-                              type="text"
-                              className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                            />
-                          </div>
-                        </div>
-                        <ErrorMessage
-                          error={
-                            errors?.plans?.[index]?.planEndTime?.message ||
-                            errors?.plans?.[index]?.planEndDate?.message
-                          }
-                          className="mt-[6px] text-xs"
-                        />
-                      </div>
-                      <div>
-                        {!isCheckActionPermission && (
-                          <Button
-                            sz="sm"
-                            variant="outline"
-                            className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                            type="button"
-                            name="Remove plan"
-                            onClick={() => {
-                              setIsFormTouched(true);
-                              removePlanField(index);
-                            }}>
-                            削除
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-                {!isCheckActionPermission && (
-                  <div className="text-right flex justify-center w-full mt-2 ">
-                    <Button
-                      sz="sm"
-                      variant="outline"
-                      className="w-6 h-6 mr-[54px] text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
-                      type="button"
-                      onClick={async () => {
-                        setIsFormTouched(true);
-                        await appendPlanField({
-                          planStartDate: null,
-                          planStartTime: '',
-                          planEndDate: null,
-                          planEndTime: '',
-                        });
-                      }}>
-                      <ImageRound
-                        src="/icons/plus.svg"
-                        name="Add organization"
-                        className="h-3 w-3"
-                      />
-                    </Button>
-                  </div>
-                )}
+          <div className="flex gap-2 items-center">
+            <div className="h-[1px] bg-[#D2DBE1] w-[calc((100%_-_125px)/2)]"></div>
+            <div
+              className="flex items-center w-[125px] justify-between hover:cursor-pointer"
+              onClick={() => {
+                setShowAdvancedSettings((prev) => !prev);
+              }}>
+              <p className="text-[#77858F] text-xs font-medium">
+                {showAdvancedSettings
+                  ? '詳細の設定を閉じる'
+                  : '詳細の設定を表示'}
+              </p>
+              <div>
+                <ImageRound
+                  name="Arrow down icon"
+                  src={'/icons/arrow-down.svg'}
+                  className={`w-3 h-4 cursor-pointer ${showAdvancedSettings && 'rotate-180'} opacity-70`}
+                />
               </div>
             </div>
-          )}
-          {isRoutineTaskModal && (
-            <div className="flex gap-[10px] items-start">
-              <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
-                実施予定日時
-              </div>
-              <div className="w-full max-w-[515px] flex flex-col gap-3 items-start">
-                <div className="w-full flex justify-between">
-                  <div className="flex gap-3">
-                    <div className="w-[140px]" style={{ zIndex: 500 }}>
-                      <Controller
-                        control={control}
-                        name={'repeatType'}
-                        render={({ field: { onChange } }) => {
-                          return (
-                            <Dropdown
-                              className="h-[34px] !py-1 text-xs !border-[#77858F]"
-                              classNameTextData="!text-xs"
-                              classNameOption="!text-xs"
-                              classNameError="!text-xs"
-                              labelOptionClass="!pr-0"
-                              disabled={isCheckActionPermission}
-                              options={TASK_REPETITIVE_OPTIONS}
-                              selectedOption={TASK_REPETITIVE_OPTIONS.find(
-                                (element) =>
-                                  element.value === watch('repeatType')?.value,
-                              )}
-                              onChange={(e) => {
-                                setIsFormTouched(true);
-                                onChange(e);
-                                setValue('repeatInterval', undefined);
-                                setValue('weekDay', undefined);
-                                setValue('monthDay', undefined);
-                                setValue('month', undefined);
-                                setValue('plans', [
-                                  {
-                                    planStartDate: null,
-                                    planEndTime: '',
-                                    planEndDate: null,
-                                    planStartTime: '',
-                                  },
-                                ]);
-                              }}
-                            />
-                          );
-                        }}
-                      />
-                    </div>
-                    {watch('repeatType') &&
-                      watch('repeatType')?.label ==
-                        TaskRepetitiveType.DAILY && (
-                        <div className="flex gap-2 items-center">
-                          <Controller
-                            control={control}
-                            name={'repeatInterval'}
-                            rules={{
-                              required: true,
-                            }}
-                            render={({ field: { onChange } }) => (
-                              <Dropdown
-                                className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
-                                classNameTextData="!text-xs"
-                                classNameOption="!text-xs"
-                                classNameError="!text-xs"
-                                labelOptionClass="!pr-0"
-                                disabled={isCheckActionPermission}
-                                options={REPEAT_INTERVAL_OPTIONS}
-                                selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) =>
-                                    element.value ===
-                                    watch('repeatInterval')?.value,
-                                )}
-                                onChange={(e) => {
-                                  setIsFormTouched(true);
-                                  onChange(e);
-                                }}
-                              />
-                            )}
-                          />
-                          <p className="text-sm font-normal whitespace-nowrap">
-                            日ごと
-                          </p>
-                          <ErrorMessage
-                            error={errors?.repeatInterval?.message}
-                            className="mt-[-10px] text-xs"
-                          />
-                        </div>
-                      )}
-                    {watch('repeatType') &&
-                      watch('repeatType')?.label ==
-                        TaskRepetitiveType.WEEKLY && (
-                        <div className="flex gap-2 items-center">
-                          <Controller
-                            control={control}
-                            name={'weekDay'}
-                            rules={{
-                              required: true,
-                            }}
-                            render={({ field: { onChange } }) => (
-                              <Dropdown
-                                className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.weekDay ? '!border-[#77858F]' : '!border-error'}`}
-                                classNameTextData="!text-xs"
-                                classNameOption="!text-xs"
-                                classNameError="!text-xs"
-                                labelOptionClass="!pr-0"
-                                disabled={isCheckActionPermission}
-                                options={WEEKDAY_OPTIONS}
-                                selectedOption={
-                                  watch('weekDay')?.value != null &&
-                                  watch('weekDay')?.value != undefined
-                                    ? WEEKDAY_OPTIONS.find(
-                                        (element) =>
-                                          element.value ===
-                                          watch('weekDay')?.value,
-                                      )
-                                    : undefined
-                                }
-                                onChange={(e) => {
-                                  setIsFormTouched(true);
-                                  onChange(e);
-                                }}
-                              />
-                            )}
-                          />
-                          <p className="text-sm font-normal whitespace-nowrap">
-                            曜日
-                          </p>
-                          <Controller
-                            control={control}
-                            name={'repeatInterval'}
-                            rules={{
-                              required: true,
-                            }}
-                            render={({ field: { onChange } }) => (
-                              <Dropdown
-                                className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
-                                classNameTextData="!text-xs"
-                                classNameOption="!text-xs"
-                                classNameError="!text-xs"
-                                labelOptionClass="!pr-0"
-                                disabled={isCheckActionPermission}
-                                options={REPEAT_INTERVAL_OPTIONS}
-                                selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) =>
-                                    element.value ===
-                                    watch('repeatInterval')?.value,
-                                )}
-                                onChange={(e) => {
-                                  setIsFormTouched(true);
-                                  onChange(e);
-                                }}
-                              />
-                            )}
-                          />
-                          <p className="text-sm font-normal whitespace-nowrap">
-                            週間ごと
-                          </p>
-                        </div>
-                      )}
-                    {watch('repeatType') &&
-                      watch('repeatType')?.label ==
-                        TaskRepetitiveType.MONTHLY && (
-                        <div className="flex gap-2 items-center">
-                          <Controller
-                            control={control}
-                            name={'monthDay'}
-                            rules={{
-                              required: true,
-                            }}
-                            render={({ field: { onChange } }) => (
-                              <Dropdown
-                                className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.monthDay ? '!border-[#77858F]' : '!border-error'}`}
-                                classNameTextData="!text-xs"
-                                classNameOption="!text-xs"
-                                classNameError="!text-xs"
-                                labelOptionClass="!pr-0"
-                                disabled={isCheckActionPermission}
-                                options={DAY_OPTIONS}
-                                selectedOption={DAY_OPTIONS.find(
-                                  (element) =>
-                                    element.value === watch('monthDay')?.value,
-                                )}
-                                onChange={(e) => {
-                                  setIsFormTouched(true);
-                                  onChange(e);
-                                }}
-                              />
-                            )}
-                          />
-                          <p className="text-sm font-normal whitespace-nowrap">
-                            日
-                          </p>
-                          <Controller
-                            control={control}
-                            name={'repeatInterval'}
-                            rules={{
-                              required: true,
-                            }}
-                            render={({ field: { onChange } }) => (
-                              <Dropdown
-                                className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
-                                classNameTextData="!text-xs"
-                                classNameOption="!text-xs"
-                                classNameError="!text-xs"
-                                labelOptionClass="!pr-0"
-                                disabled={isCheckActionPermission}
-                                options={REPEAT_INTERVAL_OPTIONS}
-                                selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) =>
-                                    element.value ===
-                                    watch('repeatInterval')?.value,
-                                )}
-                                onChange={(e) => {
-                                  setIsFormTouched(true);
-                                  onChange(e);
-                                }}
-                              />
-                            )}
-                          />
-                          <p className="text-sm font-normal whitespace-nowrap">
-                            ヶ月ごと
-                          </p>
-                        </div>
-                      )}
-                    {watch('repeatType') &&
-                      watch('repeatType')?.label ==
-                        TaskRepetitiveType.YEARLY && (
-                        <div className="flex gap-2 items-center">
-                          <Controller
-                            control={control}
-                            name={'month'}
-                            rules={{
-                              required: true,
-                            }}
-                            render={({ field: { onChange } }) => (
-                              <Dropdown
-                                className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.month ? '!border-[#77858F]' : '!border-error'}`}
-                                classNameTextData="!text-xs"
-                                classNameOption="!text-xs"
-                                classNameError="!text-xs"
-                                labelOptionClass="!pr-0"
-                                disabled={isCheckActionPermission}
-                                options={MONTH_OPTIONS}
-                                selectedOption={MONTH_OPTIONS.find(
-                                  (element) =>
-                                    element.value === watch('month')?.value,
-                                )}
-                                onChange={(e) => {
-                                  setIsFormTouched(true);
-                                  onChange(e);
-                                }}
-                              />
-                            )}
-                          />
-                          <p className="text-sm font-normal whitespace-nowrap">
-                            月
-                          </p>
-                          <Controller
-                            control={control}
-                            name={'monthDay'}
-                            rules={{
-                              required: true,
-                            }}
-                            render={({ field: { onChange } }) => (
-                              <Dropdown
-                                className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.monthDay ? '!border-[#77858F]' : '!border-error'}`}
-                                classNameTextData="!text-xs"
-                                classNameOption="!text-xs"
-                                classNameError="!text-xs"
-                                labelOptionClass="!pr-0"
-                                disabled={isCheckActionPermission}
-                                options={DAY_OPTIONS}
-                                selectedOption={DAY_OPTIONS.find(
-                                  (element) =>
-                                    element.value === watch('monthDay')?.value,
-                                )}
-                                onChange={(e) => {
-                                  setIsFormTouched(true);
-                                  onChange(e);
-                                }}
-                              />
-                            )}
-                          />
-                          <p className="text-sm font-normal whitespace-nowrap">
-                            日
-                          </p>
-                          <Controller
-                            control={control}
-                            name={'repeatInterval'}
-                            rules={{
-                              required: true,
-                            }}
-                            render={({ field: { onChange } }) => (
-                              <Dropdown
-                                className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
-                                classNameTextData="!text-xs"
-                                classNameOption="!text-xs"
-                                classNameError="!text-xs"
-                                labelOptionClass="!pr-0"
-                                disabled={isCheckActionPermission}
-                                options={REPEAT_INTERVAL_OPTIONS}
-                                selectedOption={REPEAT_INTERVAL_OPTIONS.find(
-                                  (element) =>
-                                    element.value ===
-                                    watch('repeatInterval')?.value,
-                                )}
-                                onChange={(e) => {
-                                  setIsFormTouched(true);
-                                  onChange(e);
-                                }}
-                              />
-                            )}
-                          />
-                          <p className="text-sm font-normal whitespace-nowrap">
-                            年ごと
-                          </p>
-                        </div>
-                      )}
+            <div className="h-[1px] bg-[#D2DBE1] w-[calc((100%_-_122px)/2)]"></div>
+          </div>
+          {showAdvancedSettings && (
+            <>
+              {/* Plan date */}
+              {!isRoutineTaskModal && (
+                <div className="flex gap-[10px] items-start">
+                  <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+                    実施予定日時
                   </div>
-
-                  <div className="mb-[2.5px] w-12">
-                    {!isCheckActionPermission && (
-                      <Button
-                        sz="sm"
-                        variant="outline"
-                        className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                        type="button"
-                        name="Remove TagId"
-                        onClick={() => {
-                          setValue('repeatType', undefined);
-                          setValue('repeatInterval', undefined);
-                          setValue('weekDay', undefined);
-                          setValue('monthDay', undefined);
-                          setValue('month', undefined);
-                        }}>
-                        削除
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                {watch('repeatType') &&
-                watch('repeatType')?.label == TaskRepetitiveType.ONCE ? (
                   <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
                     {planFields.map((field, index) => {
                       return (
@@ -2482,7 +1823,7 @@ const ActionsTaskModal = ({
                                   render={({ field: { value, onChange } }) => {
                                     return (
                                       <DatePickerCustom
-                                        className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2 !pl-[30px] !text-xs !pt-2 text-center"
+                                        className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
                                         selected={
                                           value
                                             ? new Date(value)
@@ -2491,6 +1832,7 @@ const ActionsTaskModal = ({
                                               )
                                         }
                                         disabled={isCheckActionPermission}
+                                        minDate={new Date()}
                                         onChange={(e) => {
                                           setIsFormTouched(true);
                                           onChange(e);
@@ -2576,7 +1918,12 @@ const ActionsTaskModal = ({
                                         if (time) {
                                           setValue(
                                             `plans.${index}.planStartTime`,
-                                            formatTimeInput(time),
+                                            formatTimeInputFilter(
+                                              time,
+                                              getValues(
+                                                `plans.${index}.planStartDate`,
+                                              ) || new Date(),
+                                            ),
                                           );
                                         }
                                         setTime('');
@@ -2584,7 +1931,10 @@ const ActionsTaskModal = ({
                                     },
                                   )}
                                   type="text"
-                                  options={optionTimeInput}
+                                  options={getFilteredTimeOptions(
+                                    getValues(`plans.${index}.planStartDate`) ||
+                                      new Date(),
+                                  )}
                                   onChangeDropdown={(e) => {
                                     setIsFormTouched(true);
                                     setValue(
@@ -2642,7 +1992,7 @@ const ActionsTaskModal = ({
                                       disabled={isCheckActionPermission}
                                       minDate={
                                         watch(`plans.${index}.planStartDate`) ||
-                                        minDatePlans[index]
+                                        new Date()
                                       }
                                       onChange={(e) => {
                                         setIsFormTouched(true);
@@ -2740,7 +2090,12 @@ const ActionsTaskModal = ({
                                         if (time) {
                                           setValue(
                                             `plans.${index}.planEndTime`,
-                                            formatTimeInput(time),
+                                            formatTimeInputFilter(
+                                              time,
+                                              getValues(
+                                                `plans.${index}.planEndDate`,
+                                              ) || new Date(),
+                                            ),
                                           );
                                         }
                                         if (
@@ -2785,7 +2140,10 @@ const ActionsTaskModal = ({
                                       },
                                     },
                                   )}
-                                  options={optionTimeInput}
+                                  options={getFilteredTimeOptions(
+                                    getValues(`plans.${index}.planEndDate`) ||
+                                      new Date(),
+                                  )}
                                   onChangeDropdown={(e) => {
                                     setIsFormTouched(true);
                                     setValue(
@@ -2904,329 +2262,1190 @@ const ActionsTaskModal = ({
                       </div>
                     )}
                   </div>
-                ) : (
-                  <div className="w-full flex justify-between">
-                    <div className="flex gap-2">
-                      <div className="w-[72px] relative">
-                        <Input
-                          isShowClockIcon={true}
-                          autoFocus={false}
-                          disabled={isCheckActionPermission}
-                          type="text"
-                          options={optionTimeInput}
-                          register={register('repeatStartTime', {
-                            onChange: (e) => {
-                              setIsFormTouched(true);
-                              handleChange(e, 'repeatStartTime');
-                            },
-                            onBlur: () => {
-                              if (time) {
-                                setValue(
-                                  'repeatStartTime',
-                                  formatTimeInput(time),
-                                );
-                              }
-                              setTime('');
-                            },
-                          })}
-                          className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                          onChangeDropdown={(e) => {
-                            setIsFormTouched(true);
-                            setValue('repeatStartTime', e.label);
-                          }}
-                        />
-                      </div>
-                      <div className="h-[34px] flex items-center">〜</div>
-                      <div className="w-[72px] relative">
-                        <Input
-                          isShowClockIcon={true}
-                          autoFocus={false}
-                          disabled={isCheckActionPermission}
-                          type="text"
-                          options={optionTimeInput}
-                          register={register('repeatEndTime', {
-                            onChange: (e) => {
-                              setIsFormTouched(true);
-                              handleChange(e, 'repeatEndTime');
-                            },
-                            onBlur: () => {
-                              if (time) {
-                                setValue(
-                                  'repeatEndTime',
-                                  formatTimeInput(time),
-                                );
-                              }
-                              setTime('');
-                            },
-                            validate: (value) => {
-                              if (!watch('repeatType')) return true;
-                              return (
-                                convertToMinutes(String(value)) >
-                                  convertToMinutes(
-                                    `${watch('repeatStartTime')}`,
-                                  ) || END_DATE_WRONG_SELECTED
-                              );
-                            },
-                          })}
-                          className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                          onChangeDropdown={(e) => {
-                            setIsFormTouched(true);
-                            setValue('repeatEndTime', e.label);
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mb-[2.5px] w-12">
-                      {!isCheckActionPermission && (
-                        <Button
-                          sz="sm"
-                          variant="outline"
-                          className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                          type="button"
-                          name="Remove TagId"
-                          onClick={() => {
-                            setIsFormTouched(true);
-                            setValue('repeatStartTime', '');
-                            setValue('repeatEndTime', '');
-                          }}>
-                          削除
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <ErrorMessage
-                  error={errors?.repeatEndTime?.message}
-                  className="mt-[-10px] text-xs"
-                />
-              </div>
-            </div>
-          )}
-          {/* Description  */}
-          <div>
-            {showDescriptionSection ? (
-              <>
-                <div
-                  className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
-                  onClick={() => setShowDescriptionSection(false)}>
-                  <ImageRound
-                    className="w-[17px] h-[17px] hover:cursor-pointer"
-                    src="/icons/collapse-description.svg"
-                    name="Collapse description icon"
-                  />
-                  <p className="text-[#0068B6] text-sm">タスクについての詳細</p>
-                </div>
-
-                {/* Description */}
-                <TextArea
-                  disabled={isCheckActionPermission}
-                  register={Object.assign(register('description'), {
-                    onChange: () => {
-                      setIsFormTouched(true);
-                    },
-                  })}
-                  labelClassName="font-medium"
-                  className="resize-none !border-[1px] !border-[#77858F]"
-                />
-              </>
-            ) : (
-              <div
-                className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
-                onClick={() => setShowDescriptionSection(true)}>
-                <ImageRound
-                  className="w-[17px] h-[17px] hover:cursor-pointer"
-                  src="/icons/open-description.svg"
-                  name="Open description icon"
-                />
-                <p className="text-[#0068B6] text-sm">タスクについての詳細</p>
-              </div>
-            )}
-          </div>
-          {/* Todo list */}
-          {!isRoutineTaskModal && (
-            <div className="mb-3">
-              {showTodoSection ? (
-                <>
-                  <div
-                    className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
-                    onClick={() => setShowTodoSection(false)}>
-                    <ImageRound
-                      className="w-[17px] h-[17px] hover:cursor-pointer"
-                      src="/icons/collapse-description.svg"
-                      name="Collapse description icon"
-                    />
-                    <p className="text-[#0068B6] text-sm">To Do リストを作成</p>
-                  </div>
-                  <div>
-                    <div className="mb-4">
-                      <Button
-                        disabled={isCheckActionPermission}
-                        type="button"
-                        variant="outline"
-                        className="!px-2 !py-1 !text-sm"
-                        onClick={handleAddItem}>
-                        To Do リストを作成
-                      </Button>
-                    </div>
-                    <DragDropContext onDragEnd={handleOnDragEnd}>
-                      <Droppable droppableId="todo-list">
-                        {(provided) => (
-                          <ul
-                            className="flex flex-col "
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}>
-                            {todoList.map((todo, index) => (
-                              <Draggable
-                                isDragDisabled={isCheckActionPermission}
-                                key={todo.id ? todo.id : todo.customId}
-                                draggableId={
-                                  todo.id ? `${todo.id}` : `${todo.customId}`
-                                }
-                                index={index}>
-                                {(provided, snapshot) => {
-                                  const draggableElement = (
-                                    <>
-                                      <li
-                                        className={`mb-2 gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}>
-                                        <div
-                                          className="w-4 h-[42px] flex items-center justify-center"
-                                          {...provided.dragHandleProps}>
-                                          <ImageRound
-                                            className="w-[6px] h-[10px] cursor-grab hover:cursor-pointer"
-                                            src="/icons/drag.svg"
-                                            name="drag item"
-                                          />
-                                        </div>
-                                        <div className="w-5">
-                                          {!isCheckActionPermission &&
-                                          todo.isChecked ? (
-                                            <ImageRound
-                                              className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
-                                              src="/icons/complete-blue.svg"
-                                              name="complete item"
-                                              onClick={() => {
-                                                handleCheck(index);
-                                              }}
-                                            />
-                                          ) : (
-                                            <ImageRound
-                                              className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
-                                              src="/icons/complete.svg"
-                                              name="complete item"
-                                              onClick={() => {
-                                                handleCheck(index);
-                                              }}
-                                            />
-                                          )}
-                                        </div>
-                                        <TextareaAutosize
-                                          defaultValue={todo.content}
-                                          ref={(el) => {
-                                            textareaRefs.current[index] = el;
-                                          }}
-                                          disabled={isCheckActionPermission}
-                                          placeholder={DEFAULT_VALUE_TODO_LIST}
-                                          onBlur={(
-                                            e: React.ChangeEvent<HTMLTextAreaElement>,
-                                          ) => {
-                                            if (todo.id) {
-                                              handleBlur({
-                                                id: todo.id,
-                                                content: e.target.value,
-                                              });
-                                            } else {
-                                              handleBlur({
-                                                customId: todo.customId,
-                                                content: e.target.value,
-                                              });
-                                            }
-                                          }}
-                                          rows={3}
-                                          className="resize-none focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md"
-                                        />
-                                        <div className="mt-[2.5px] ml-2 flex items-center">
-                                          {!isCheckActionPermission && (
-                                            <ImageRound
-                                              className="w-[16px] h-[10px] opacity-40 hover:cursor-pointer"
-                                              src="/icons/zoom-out.svg"
-                                              name="remove icon"
-                                              onClick={() => {
-                                                if (todo.customId) {
-                                                  const listData =
-                                                    todoList.filter(
-                                                      (item) =>
-                                                        item.customId !==
-                                                        todo.customId,
-                                                    );
-                                                  setTodoList([...listData]);
-                                                } else if (todo.id) {
-                                                  const listData =
-                                                    todoList.filter(
-                                                      (item) =>
-                                                        item.id !== todo.id,
-                                                    );
-                                                  setTodoList([...listData]);
-                                                }
-                                              }}
-                                            />
-                                          )}
-                                        </div>
-                                      </li>
-                                    </>
-                                  );
-                                  return snapshot.isDragging
-                                    ? ReactDOM.createPortal(
-                                        draggableElement,
-                                        document.body,
-                                      )
-                                    : draggableElement;
-                                }}
-                              </Draggable>
-                            ))}
-                            {provided.placeholder}
-                          </ul>
-                        )}
-                      </Droppable>
-                    </DragDropContext>
-                  </div>
-                </>
-              ) : (
-                <div
-                  className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
-                  onClick={() => setShowTodoSection(true)}>
-                  <ImageRound
-                    className="w-[17px] h-[17px] hover:cursor-pointer"
-                    src="/icons/open-description.svg"
-                    name="Open description icon"
-                  />
-                  <p className="text-[#0068B6] text-sm">To Do リストを作成</p>
                 </div>
               )}
-            </div>
-          )}
-          {/* Submit button */}
-          {isPermissionAdd &&
-            (action === ActionTask.COPY || action === ActionTask.CREATE) && (
-              <div className="flex justify-center">
-                <Button
-                  type="submit"
-                  className="w-[200px] !rounded-md h-[46] !text-[15px] !px-2">
-                  保存
-                </Button>
+              {isRoutineTaskModal && (
+                <div className="flex gap-[10px] items-start">
+                  <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+                    実施予定日時
+                  </div>
+                  <div className="w-full max-w-[515px] flex flex-col gap-3 items-start">
+                    <div className="w-full flex justify-between">
+                      <div className="flex gap-3">
+                        <div className="w-[140px]" style={{ zIndex: 500 }}>
+                          <Controller
+                            control={control}
+                            name={'repeatType'}
+                            render={({ field: { onChange } }) => {
+                              return (
+                                <Dropdown
+                                  className="h-[34px] !py-1 text-xs !border-[#77858F]"
+                                  classNameTextData="!text-xs"
+                                  classNameOption="!text-xs"
+                                  classNameError="!text-xs"
+                                  labelOptionClass="!pr-0"
+                                  disabled={isCheckActionPermission}
+                                  options={TASK_REPETITIVE_OPTIONS}
+                                  selectedOption={TASK_REPETITIVE_OPTIONS.find(
+                                    (element) =>
+                                      element.value ===
+                                      watch('repeatType')?.value,
+                                  )}
+                                  onChange={(e) => {
+                                    setIsFormTouched(true);
+                                    onChange(e);
+                                    setValue('repeatInterval', undefined);
+                                    setValue('weekDay', undefined);
+                                    setValue('monthDay', undefined);
+                                    setValue('month', undefined);
+                                    setValue('plans', [
+                                      {
+                                        planStartDate: null,
+                                        planEndTime: '',
+                                        planEndDate: null,
+                                        planStartTime: '',
+                                      },
+                                    ]);
+                                  }}
+                                />
+                              );
+                            }}
+                          />
+                        </div>
+                        {watch('repeatType') &&
+                          watch('repeatType')?.label ==
+                            TaskRepetitiveType.DAILY && (
+                            <div className="flex gap-2 items-center">
+                              <Controller
+                                control={control}
+                                name={'repeatInterval'}
+                                rules={{
+                                  required: true,
+                                }}
+                                render={({ field: { onChange } }) => (
+                                  <Dropdown
+                                    className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
+                                    classNameTextData="!text-xs"
+                                    classNameOption="!text-xs"
+                                    classNameError="!text-xs"
+                                    labelOptionClass="!pr-0"
+                                    disabled={isCheckActionPermission}
+                                    options={REPEAT_INTERVAL_OPTIONS}
+                                    selectedOption={REPEAT_INTERVAL_OPTIONS.find(
+                                      (element) =>
+                                        element.value ===
+                                        watch('repeatInterval')?.value,
+                                    )}
+                                    onChange={(e) => {
+                                      setIsFormTouched(true);
+                                      onChange(e);
+                                    }}
+                                  />
+                                )}
+                              />
+                              <p className="text-sm font-normal whitespace-nowrap">
+                                日ごと
+                              </p>
+                              <ErrorMessage
+                                error={errors?.repeatInterval?.message}
+                                className="mt-[-10px] text-xs"
+                              />
+                            </div>
+                          )}
+                        {watch('repeatType') &&
+                          watch('repeatType')?.label ==
+                            TaskRepetitiveType.WEEKLY && (
+                            <div className="flex gap-2 items-center">
+                              <Controller
+                                control={control}
+                                name={'weekDay'}
+                                rules={{
+                                  required: true,
+                                }}
+                                render={({ field: { onChange } }) => (
+                                  <Dropdown
+                                    className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.weekDay ? '!border-[#77858F]' : '!border-error'}`}
+                                    classNameTextData="!text-xs"
+                                    classNameOption="!text-xs"
+                                    classNameError="!text-xs"
+                                    labelOptionClass="!pr-0"
+                                    disabled={isCheckActionPermission}
+                                    options={WEEKDAY_OPTIONS}
+                                    selectedOption={
+                                      watch('weekDay')?.value != null &&
+                                      watch('weekDay')?.value != undefined
+                                        ? WEEKDAY_OPTIONS.find(
+                                            (element) =>
+                                              element.value ===
+                                              watch('weekDay')?.value,
+                                          )
+                                        : undefined
+                                    }
+                                    onChange={(e) => {
+                                      setIsFormTouched(true);
+                                      onChange(e);
+                                    }}
+                                  />
+                                )}
+                              />
+                              <p className="text-sm font-normal whitespace-nowrap">
+                                曜日
+                              </p>
+                              <Controller
+                                control={control}
+                                name={'repeatInterval'}
+                                rules={{
+                                  required: true,
+                                }}
+                                render={({ field: { onChange } }) => (
+                                  <Dropdown
+                                    className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
+                                    classNameTextData="!text-xs"
+                                    classNameOption="!text-xs"
+                                    classNameError="!text-xs"
+                                    labelOptionClass="!pr-0"
+                                    disabled={isCheckActionPermission}
+                                    options={REPEAT_INTERVAL_OPTIONS}
+                                    selectedOption={REPEAT_INTERVAL_OPTIONS.find(
+                                      (element) =>
+                                        element.value ===
+                                        watch('repeatInterval')?.value,
+                                    )}
+                                    onChange={(e) => {
+                                      setIsFormTouched(true);
+                                      onChange(e);
+                                    }}
+                                  />
+                                )}
+                              />
+                              <p className="text-sm font-normal whitespace-nowrap">
+                                週間ごと
+                              </p>
+                            </div>
+                          )}
+                        {watch('repeatType') &&
+                          watch('repeatType')?.label ==
+                            TaskRepetitiveType.MONTHLY && (
+                            <div className="flex gap-2 items-center">
+                              <Controller
+                                control={control}
+                                name={'monthDay'}
+                                rules={{
+                                  required: true,
+                                }}
+                                render={({ field: { onChange } }) => (
+                                  <Dropdown
+                                    className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.monthDay ? '!border-[#77858F]' : '!border-error'}`}
+                                    classNameTextData="!text-xs"
+                                    classNameOption="!text-xs"
+                                    classNameError="!text-xs"
+                                    labelOptionClass="!pr-0"
+                                    disabled={isCheckActionPermission}
+                                    options={DAY_OPTIONS}
+                                    selectedOption={DAY_OPTIONS.find(
+                                      (element) =>
+                                        element.value ===
+                                        watch('monthDay')?.value,
+                                    )}
+                                    onChange={(e) => {
+                                      setIsFormTouched(true);
+                                      onChange(e);
+                                    }}
+                                  />
+                                )}
+                              />
+                              <p className="text-sm font-normal whitespace-nowrap">
+                                日
+                              </p>
+                              <Controller
+                                control={control}
+                                name={'repeatInterval'}
+                                rules={{
+                                  required: true,
+                                }}
+                                render={({ field: { onChange } }) => (
+                                  <Dropdown
+                                    className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
+                                    classNameTextData="!text-xs"
+                                    classNameOption="!text-xs"
+                                    classNameError="!text-xs"
+                                    labelOptionClass="!pr-0"
+                                    disabled={isCheckActionPermission}
+                                    options={REPEAT_INTERVAL_OPTIONS}
+                                    selectedOption={REPEAT_INTERVAL_OPTIONS.find(
+                                      (element) =>
+                                        element.value ===
+                                        watch('repeatInterval')?.value,
+                                    )}
+                                    onChange={(e) => {
+                                      setIsFormTouched(true);
+                                      onChange(e);
+                                    }}
+                                  />
+                                )}
+                              />
+                              <p className="text-sm font-normal whitespace-nowrap">
+                                ヶ月ごと
+                              </p>
+                            </div>
+                          )}
+                        {watch('repeatType') &&
+                          watch('repeatType')?.label ==
+                            TaskRepetitiveType.YEARLY && (
+                            <div className="flex gap-2 items-center">
+                              <Controller
+                                control={control}
+                                name={'month'}
+                                rules={{
+                                  required: true,
+                                }}
+                                render={({ field: { onChange } }) => (
+                                  <Dropdown
+                                    className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.month ? '!border-[#77858F]' : '!border-error'}`}
+                                    classNameTextData="!text-xs"
+                                    classNameOption="!text-xs"
+                                    classNameError="!text-xs"
+                                    labelOptionClass="!pr-0"
+                                    disabled={isCheckActionPermission}
+                                    options={MONTH_OPTIONS}
+                                    selectedOption={MONTH_OPTIONS.find(
+                                      (element) =>
+                                        element.value === watch('month')?.value,
+                                    )}
+                                    onChange={(e) => {
+                                      setIsFormTouched(true);
+                                      onChange(e);
+                                    }}
+                                  />
+                                )}
+                              />
+                              <p className="text-sm font-normal whitespace-nowrap">
+                                月
+                              </p>
+                              <Controller
+                                control={control}
+                                name={'monthDay'}
+                                rules={{
+                                  required: true,
+                                }}
+                                render={({ field: { onChange } }) => (
+                                  <Dropdown
+                                    className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.monthDay ? '!border-[#77858F]' : '!border-error'}`}
+                                    classNameTextData="!text-xs"
+                                    classNameOption="!text-xs"
+                                    classNameError="!text-xs"
+                                    labelOptionClass="!pr-0"
+                                    disabled={isCheckActionPermission}
+                                    options={DAY_OPTIONS}
+                                    selectedOption={DAY_OPTIONS.find(
+                                      (element) =>
+                                        element.value ===
+                                        watch('monthDay')?.value,
+                                    )}
+                                    onChange={(e) => {
+                                      setIsFormTouched(true);
+                                      onChange(e);
+                                    }}
+                                  />
+                                )}
+                              />
+                              <p className="text-sm font-normal whitespace-nowrap">
+                                日
+                              </p>
+                              <Controller
+                                control={control}
+                                name={'repeatInterval'}
+                                rules={{
+                                  required: true,
+                                }}
+                                render={({ field: { onChange } }) => (
+                                  <Dropdown
+                                    className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
+                                    classNameTextData="!text-xs"
+                                    classNameOption="!text-xs"
+                                    classNameError="!text-xs"
+                                    labelOptionClass="!pr-0"
+                                    disabled={isCheckActionPermission}
+                                    options={REPEAT_INTERVAL_OPTIONS}
+                                    selectedOption={REPEAT_INTERVAL_OPTIONS.find(
+                                      (element) =>
+                                        element.value ===
+                                        watch('repeatInterval')?.value,
+                                    )}
+                                    onChange={(e) => {
+                                      setIsFormTouched(true);
+                                      onChange(e);
+                                    }}
+                                  />
+                                )}
+                              />
+                              <p className="text-sm font-normal whitespace-nowrap">
+                                年ごと
+                              </p>
+                            </div>
+                          )}
+                      </div>
+
+                      <div className="mb-[2.5px] w-12">
+                        {!isCheckActionPermission && (
+                          <Button
+                            sz="sm"
+                            variant="outline"
+                            className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                            type="button"
+                            name="Remove TagId"
+                            onClick={() => {
+                              setValue('repeatType', undefined);
+                              setValue('repeatInterval', undefined);
+                              setValue('weekDay', undefined);
+                              setValue('monthDay', undefined);
+                              setValue('month', undefined);
+                            }}>
+                            削除
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    {watch('repeatType') &&
+                    watch('repeatType')?.label == TaskRepetitiveType.ONCE ? (
+                      <div className="w-full max-w-[515px] flex flex-col gap-1 items-start ">
+                        {planFields.map((field, index) => {
+                          return (
+                            <div
+                              key={field.id}
+                              style={{ zIndex: planFields.length - index }}
+                              className="w-full max-w-[515px] flex gap-2 items-start">
+                              <div className="max-w-[220px]">
+                                <div className="flex gap-1">
+                                  <div className="w-[140px]">
+                                    <Controller
+                                      control={control}
+                                      name={`plans.${index}.planStartDate`}
+                                      rules={{
+                                        required: watch(
+                                          `plans.${index}.planEndDate`,
+                                        )
+                                          ? START_DATE_REQUIRED_SELECTED
+                                          : false,
+                                      }}
+                                      render={({
+                                        field: { value, onChange },
+                                      }) => {
+                                        return (
+                                          <DatePickerCustom
+                                            className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2 !pl-[30px] !text-xs !pt-2 text-center"
+                                            selected={
+                                              value
+                                                ? new Date(value)
+                                                : watch(
+                                                    `plans.${index}.planStartDate`,
+                                                  )
+                                            }
+                                            minDate={new Date()}
+                                            disabled={isCheckActionPermission}
+                                            onChange={(e) => {
+                                              setIsFormTouched(true);
+                                              onChange(e);
+                                              if (e !== null) {
+                                                const newDate = new Date(
+                                                  e.getTime(),
+                                                );
+                                                updateMinDatePlan(
+                                                  index,
+                                                  newDate,
+                                                );
+                                              } else {
+                                                updateMinDatePlan(index, null);
+                                              }
+                                              if (
+                                                !getValues(
+                                                  `plans.${index}.planStartTime`,
+                                                )
+                                              ) {
+                                                setValue(
+                                                  `plans.${index}.planStartTime`,
+                                                  convertToTimeString(
+                                                    `${currentDate}`,
+                                                  ),
+                                                );
+                                              }
+                                              setValue(
+                                                `plans.${index}.planEndDate`,
+                                                null,
+                                              );
+                                              setValue(
+                                                `plans.${index}.planEndTime`,
+                                                '',
+                                              );
+                                            }}
+                                          />
+                                        );
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="w-[72px] relative">
+                                    <Input
+                                      isShowClockIcon={true}
+                                      autoFocus={false}
+                                      disabled={isCheckActionPermission}
+                                      register={register(
+                                        `plans.${index}.planStartTime`,
+                                        {
+                                          required:
+                                            watch(
+                                              `plans.${index}.planStartDate`,
+                                            ) !== null
+                                              ? true
+                                              : false,
+                                          onChange: (e) => {
+                                            setIsFormTouched(true);
+                                            handleChange(
+                                              e,
+                                              `plans.${index}.planStartTime`,
+                                            );
+                                            if (
+                                              getValues(
+                                                `plans.${index}.planStartDate`,
+                                              ) === null
+                                            ) {
+                                              setValue(
+                                                `plans.${index}.planStartDate`,
+                                                (() => {
+                                                  const today: Date =
+                                                    new Date();
+                                                  today.setHours(0, 0, 0, 0);
+                                                  return today;
+                                                })(),
+                                              );
+                                              setValue(
+                                                `plans.${index}.planEndDate`,
+                                                null,
+                                              );
+                                              setValue(
+                                                `plans.${index}.planEndTime`,
+                                                '',
+                                              );
+                                              updateMinDatePlan(
+                                                index,
+                                                new Date(),
+                                              );
+                                            }
+                                          },
+                                          onBlur: () => {
+                                            if (time) {
+                                              setValue(
+                                                `plans.${index}.planStartTime`,
+                                                formatTimeInputFilter(
+                                                  time,
+                                                  getValues(
+                                                    `plans.${index}.planStartDate`,
+                                                  ) || new Date(),
+                                                ),
+                                              );
+                                            }
+                                            setTime('');
+                                          },
+                                        },
+                                      )}
+                                      type="text"
+                                      options={getFilteredTimeOptions(
+                                        getValues(
+                                          `plans.${index}.planStartDate`,
+                                        ) || new Date(),
+                                      )}
+                                      onChangeDropdown={(e) => {
+                                        setIsFormTouched(true);
+                                        setValue(
+                                          `plans.${index}.planStartTime`,
+                                          e.label,
+                                        );
+                                        if (
+                                          getValues(
+                                            `plans.${index}.planStartDate`,
+                                          ) === null
+                                        ) {
+                                          setValue(
+                                            `plans.${index}.planStartDate`,
+                                            (() => {
+                                              const today: Date = new Date();
+                                              today.setHours(0, 0, 0, 0);
+                                              return today;
+                                            })(),
+                                          );
+
+                                          updateMinDatePlan(index, new Date());
+                                        }
+                                      }}
+                                      className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                                    />
+                                  </div>
+                                </div>
+                                <ErrorMessage
+                                  error={errors.planStartDate?.message}
+                                  className="mt-[6px] text-xs"
+                                />
+                              </div>
+                              <div className="h-[34px] flex items-center">
+                                〜
+                              </div>
+                              <div className="max-w-[220px]">
+                                <div className="flex gap-1">
+                                  <div className="w-[140px]">
+                                    <Controller
+                                      rules={{
+                                        required: watch(
+                                          `plans.${index}.planStartDate`,
+                                        )
+                                          ? END_DATE_WRONG_SELECTED
+                                          : false,
+                                      }}
+                                      control={control}
+                                      name={`plans.${index}.planEndDate`}
+                                      render={({
+                                        field: { value, onChange },
+                                      }) => (
+                                        <DatePickerCustom
+                                          className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2 !pl-[30px] !text-xs !pt-2 text-center"
+                                          selected={
+                                            value
+                                              ? new Date(value)
+                                              : watch(
+                                                  `plans.${index}.planEndDate`,
+                                                )
+                                          }
+                                          disabled={isCheckActionPermission}
+                                          minDate={
+                                            watch(
+                                              `plans.${index}.planStartDate`,
+                                            ) || new Date()
+                                          }
+                                          onChange={(e) => {
+                                            setIsFormTouched(true);
+                                            onChange(e);
+                                            if (
+                                              !getValues(
+                                                `plans.${index}.planEndTime`,
+                                              )
+                                            ) {
+                                              setValue(
+                                                `plans.${index}.planEndTime`,
+                                                convertToTimeString(
+                                                  `${currentDate}`,
+                                                ),
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      )}
+                                    />
+                                  </div>
+                                  <div className="w-[72px] relative">
+                                    <Input
+                                      isShowClockIcon={true}
+                                      disabled={isCheckActionPermission}
+                                      register={register(
+                                        `plans.${index}.planEndTime`,
+                                        {
+                                          required:
+                                            watch(
+                                              `plans.${index}.planEndDate`,
+                                            ) !== null
+                                              ? true
+                                              : false,
+                                          validate: (value) => {
+                                            if (
+                                              watch(
+                                                `plans.${index}.planEndDate`,
+                                              )?.getTime() ===
+                                                watch(
+                                                  `plans.${index}.planStartDate`,
+                                                )?.getTime() &&
+                                              watch(
+                                                `plans.${index}.planEndDate`,
+                                              ) !== null
+                                            ) {
+                                              return (
+                                                (value &&
+                                                  watch(
+                                                    `plans.${index}.planStartTime`,
+                                                  ) &&
+                                                  convertToMinutes(value) >
+                                                    convertToMinutes(
+                                                      `${watch(`plans.${index}.planStartTime`)}`,
+                                                    )) ||
+                                                END_DATE_WRONG_SELECTED
+                                              );
+                                            }
+                                            return true;
+                                          },
+                                          onChange: (e) => {
+                                            setIsFormTouched(true);
+                                            handleChange(
+                                              e,
+                                              `plans.${index}.planEndTime`,
+                                            );
+                                            if (
+                                              getValues(
+                                                `plans.${index}.planEndDate`,
+                                              ) === null
+                                            ) {
+                                              if (
+                                                getValues(
+                                                  `plans.${index}.planStartDate`,
+                                                ) !== null
+                                              ) {
+                                                setValue(
+                                                  `plans.${index}.planEndDate`,
+                                                  getValues(
+                                                    `plans.${index}.planStartDate`,
+                                                  ),
+                                                );
+                                              } else {
+                                                setValue(
+                                                  `plans.${index}.planEndDate`,
+                                                  (() => {
+                                                    const today: Date =
+                                                      new Date();
+                                                    today.setHours(0, 0, 0, 0);
+                                                    return today;
+                                                  })(),
+                                                );
+                                              }
+                                            }
+                                          },
+                                          onBlur: (e) => {
+                                            if (time) {
+                                              setValue(
+                                                `plans.${index}.planEndTime`,
+                                                formatTimeInputFilter(
+                                                  time,
+                                                  getValues(
+                                                    `plans.${index}.planEndDate`,
+                                                  ) || new Date(),
+                                                ),
+                                              );
+                                            }
+                                            if (
+                                              watch(
+                                                `plans.${index}.planEndDate`,
+                                              )?.getTime() ===
+                                                watch(
+                                                  `plans.${index}.planStartDate`,
+                                                )?.getTime() &&
+                                              watch(
+                                                `plans.${index}.planEndDate`,
+                                              ) !== null
+                                            ) {
+                                              if (
+                                                e.target.value &&
+                                                watch(
+                                                  `plans.${index}.planStartTime`,
+                                                ) &&
+                                                convertToMinutes(
+                                                  e.target.value,
+                                                ) >
+                                                  convertToMinutes(
+                                                    `${watch(`plans.${index}.planStartTime`)}`,
+                                                  )
+                                              ) {
+                                                setError(
+                                                  `plans.${index}.planEndTime`,
+                                                  {
+                                                    message: '',
+                                                  },
+                                                );
+                                              } else {
+                                                setError(
+                                                  `plans.${index}.planEndTime`,
+                                                  {
+                                                    message:
+                                                      END_DATE_WRONG_SELECTED,
+                                                  },
+                                                );
+                                              }
+                                            }
+
+                                            setTime('');
+                                          },
+                                        },
+                                      )}
+                                      options={getFilteredTimeOptions(
+                                        getValues(
+                                          `plans.${index}.planEndDate`,
+                                        ) || new Date(),
+                                      )}
+                                      onChangeDropdown={(e) => {
+                                        setIsFormTouched(true);
+                                        setValue(
+                                          `plans.${index}.planEndTime`,
+                                          e.label,
+                                        );
+                                        if (
+                                          getValues(
+                                            `plans.${index}.planEndDate`,
+                                          ) === null
+                                        ) {
+                                          if (
+                                            getValues(
+                                              `plans.${index}.planStartDate`,
+                                            ) !== null
+                                          ) {
+                                            setValue(
+                                              `plans.${index}.planEndDate`,
+                                              getValues(
+                                                `plans.${index}.planStartDate`,
+                                              ),
+                                            );
+                                          } else {
+                                            setValue(
+                                              `plans.${index}.planEndDate`,
+                                              (() => {
+                                                const today: Date = new Date();
+                                                today.setHours(0, 0, 0, 0);
+                                                return today;
+                                              })(),
+                                            );
+                                          }
+                                        }
+                                        if (
+                                          watch(
+                                            `plans.${index}.planEndDate`,
+                                          )?.getTime() ===
+                                            watch(
+                                              `plans.${index}.planStartDate`,
+                                            )?.getTime() &&
+                                          watch(
+                                            `plans.${index}.planEndDate`,
+                                          ) !== null
+                                        ) {
+                                          if (
+                                            e.label &&
+                                            watch(
+                                              `plans.${index}.planStartTime`,
+                                            ) &&
+                                            convertToMinutes(e.label) >
+                                              convertToMinutes(
+                                                `${watch(`plans.${index}.planStartTime`)}`,
+                                              )
+                                          ) {
+                                            setError(
+                                              `plans.${index}.planEndTime`,
+                                              {
+                                                message: '',
+                                              },
+                                            );
+                                          } else {
+                                            setError(
+                                              `plans.${index}.planEndTime`,
+                                              {
+                                                message:
+                                                  END_DATE_WRONG_SELECTED,
+                                              },
+                                            );
+                                          }
+                                        }
+                                      }}
+                                      type="text"
+                                      className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                                    />
+                                  </div>
+                                </div>
+                                <ErrorMessage
+                                  error={
+                                    errors?.plans?.[index]?.planEndTime
+                                      ?.message ||
+                                    errors?.plans?.[index]?.planEndDate?.message
+                                  }
+                                  className="mt-[6px] text-xs"
+                                />
+                              </div>
+                              <div>
+                                {!isCheckActionPermission && (
+                                  <Button
+                                    sz="sm"
+                                    variant="outline"
+                                    className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                                    type="button"
+                                    name="Remove plan"
+                                    onClick={() => {
+                                      setIsFormTouched(true);
+                                      removePlanField(index);
+                                    }}>
+                                    削除
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {!isCheckActionPermission && (
+                          <div className="text-right flex justify-center w-full mt-2 ">
+                            <Button
+                              sz="sm"
+                              variant="outline"
+                              className="w-6 h-6 mr-[54px] text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                              type="button"
+                              onClick={async () => {
+                                setIsFormTouched(true);
+                                await appendPlanField({
+                                  planStartDate: null,
+                                  planStartTime: '',
+                                  planEndDate: null,
+                                  planEndTime: '',
+                                });
+                              }}>
+                              <ImageRound
+                                src="/icons/plus.svg"
+                                name="Add organization"
+                                className="h-3 w-3"
+                              />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="w-full flex justify-between">
+                        <div className="flex gap-2">
+                          <div className="w-[72px] relative">
+                            <Input
+                              isShowClockIcon={true}
+                              autoFocus={false}
+                              disabled={isCheckActionPermission}
+                              type="text"
+                              options={optionTimeInput}
+                              register={register('repeatStartTime', {
+                                onChange: (e) => {
+                                  setIsFormTouched(true);
+                                  handleChange(e, 'repeatStartTime');
+                                },
+                                onBlur: () => {
+                                  if (time) {
+                                    setValue(
+                                      'repeatStartTime',
+                                      formatTimeInput(time),
+                                    );
+                                  }
+                                  setTime('');
+                                },
+                              })}
+                              className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                              onChangeDropdown={(e) => {
+                                setIsFormTouched(true);
+                                setValue('repeatStartTime', e.label);
+                              }}
+                            />
+                          </div>
+                          <div className="h-[34px] flex items-center">〜</div>
+                          <div className="w-[72px] relative">
+                            <Input
+                              isShowClockIcon={true}
+                              autoFocus={false}
+                              disabled={isCheckActionPermission}
+                              type="text"
+                              options={optionTimeInput}
+                              register={register('repeatEndTime', {
+                                onChange: (e) => {
+                                  setIsFormTouched(true);
+                                  handleChange(e, 'repeatEndTime');
+                                },
+                                onBlur: () => {
+                                  if (time) {
+                                    setValue(
+                                      'repeatEndTime',
+                                      formatTimeInput(time),
+                                    );
+                                  }
+                                  setTime('');
+                                },
+                                validate: (value) => {
+                                  if (!watch('repeatType')) return true;
+                                  return (
+                                    convertToMinutes(String(value)) >
+                                      convertToMinutes(
+                                        `${watch('repeatStartTime')}`,
+                                      ) || END_DATE_WRONG_SELECTED
+                                  );
+                                },
+                              })}
+                              className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                              onChangeDropdown={(e) => {
+                                setIsFormTouched(true);
+                                setValue('repeatEndTime', e.label);
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mb-[2.5px] w-12">
+                          {!isCheckActionPermission && (
+                            <Button
+                              sz="sm"
+                              variant="outline"
+                              className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                              type="button"
+                              name="Remove TagId"
+                              onClick={() => {
+                                setIsFormTouched(true);
+                                setValue('repeatStartTime', '');
+                                setValue('repeatEndTime', '');
+                              }}>
+                              削除
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <ErrorMessage
+                      error={errors?.repeatEndTime?.message}
+                      className="mt-[-10px] text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+              {/* Description  */}
+              <div>
+                {showDescriptionSection ? (
+                  <>
+                    <div
+                      className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                      onClick={() => setShowDescriptionSection(false)}>
+                      <ImageRound
+                        className="w-[17px] h-[17px] hover:cursor-pointer"
+                        src="/icons/collapse-description.svg"
+                        name="Collapse description icon"
+                      />
+                      <p className="text-[#0068B6] text-sm">
+                        タスクについての詳細
+                      </p>
+                    </div>
+
+                    {/* Description */}
+                    <TextArea
+                      disabled={isCheckActionPermission}
+                      register={Object.assign(register('description'), {
+                        onChange: () => {
+                          setIsFormTouched(true);
+                        },
+                      })}
+                      labelClassName="font-medium"
+                      className="resize-none !border-[1px] !border-[#77858F]"
+                    />
+                  </>
+                ) : (
+                  <div
+                    className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                    onClick={() => setShowDescriptionSection(true)}>
+                    <ImageRound
+                      className="w-[17px] h-[17px] hover:cursor-pointer"
+                      src="/icons/open-description.svg"
+                      name="Open description icon"
+                    />
+                    <p className="text-[#0068B6] text-sm">
+                      タスクについての詳細
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
-          {isPermissionUpdate && action === ActionTask.EDIT && (
-            <div className="flex justify-center">
-              <Button
-                type="submit"
-                className="w-[200px] !rounded-md h-[46] !text-[15px] !px-2">
-                保存
-              </Button>
-            </div>
+              {/* Todo list */}
+              {!isRoutineTaskModal && (
+                <div className="mb-3">
+                  {showTodoSection ? (
+                    <>
+                      <div
+                        className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                        onClick={() => setShowTodoSection(false)}>
+                        <ImageRound
+                          className="w-[17px] h-[17px] hover:cursor-pointer"
+                          src="/icons/collapse-description.svg"
+                          name="Collapse description icon"
+                        />
+                        <p className="text-[#0068B6] text-sm">
+                          To Do リストを作成
+                        </p>
+                      </div>
+                      <div>
+                        <div className="mb-4">
+                          <Button
+                            disabled={isCheckActionPermission}
+                            type="button"
+                            variant="outline"
+                            className="!px-2 !py-1 !text-sm"
+                            onClick={handleAddItem}>
+                            To Do リストを作成
+                          </Button>
+                        </div>
+                        <DragDropContext onDragEnd={handleOnDragEnd}>
+                          <Droppable droppableId="todo-list">
+                            {(provided) => (
+                              <ul
+                                className="flex flex-col "
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}>
+                                {todoList.map((todo, index) => (
+                                  <Draggable
+                                    isDragDisabled={isCheckActionPermission}
+                                    key={todo.id ? todo.id : todo.customId}
+                                    draggableId={
+                                      todo.id
+                                        ? `${todo.id}`
+                                        : `${todo.customId}`
+                                    }
+                                    index={index}>
+                                    {(provided, snapshot) => {
+                                      const draggableElement = (
+                                        <>
+                                          <li
+                                            className={`mb-2 gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}>
+                                            <div
+                                              className="w-4 h-[42px] flex items-center justify-center"
+                                              {...provided.dragHandleProps}>
+                                              <ImageRound
+                                                className="w-[6px] h-[10px] cursor-grab hover:cursor-pointer"
+                                                src="/icons/drag.svg"
+                                                name="drag item"
+                                              />
+                                            </div>
+                                            <div className="w-5">
+                                              {!isCheckActionPermission &&
+                                              todo.isChecked ? (
+                                                <ImageRound
+                                                  className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
+                                                  src="/icons/complete-blue.svg"
+                                                  name="complete item"
+                                                  onClick={() => {
+                                                    handleCheck(index);
+                                                  }}
+                                                />
+                                              ) : (
+                                                <ImageRound
+                                                  className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
+                                                  src="/icons/complete.svg"
+                                                  name="complete item"
+                                                  onClick={() => {
+                                                    handleCheck(index);
+                                                  }}
+                                                />
+                                              )}
+                                            </div>
+                                            <TextareaAutosize
+                                              defaultValue={todo.content}
+                                              ref={(el) => {
+                                                textareaRefs.current[index] =
+                                                  el;
+                                              }}
+                                              disabled={isCheckActionPermission}
+                                              placeholder={
+                                                DEFAULT_VALUE_TODO_LIST
+                                              }
+                                              onBlur={(
+                                                e: React.ChangeEvent<HTMLTextAreaElement>,
+                                              ) => {
+                                                if (todo.id) {
+                                                  handleBlur({
+                                                    id: todo.id,
+                                                    content: e.target.value,
+                                                  });
+                                                } else {
+                                                  handleBlur({
+                                                    customId: todo.customId,
+                                                    content: e.target.value,
+                                                  });
+                                                }
+                                              }}
+                                              rows={3}
+                                              className="resize-none focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md"
+                                            />
+                                            <div className="mt-[2.5px] ml-2 flex items-center">
+                                              {!isCheckActionPermission && (
+                                                <ImageRound
+                                                  className="w-[16px] h-[10px] opacity-40 hover:cursor-pointer"
+                                                  src="/icons/zoom-out.svg"
+                                                  name="remove icon"
+                                                  onClick={() => {
+                                                    if (todo.customId) {
+                                                      const listData =
+                                                        todoList.filter(
+                                                          (item) =>
+                                                            item.customId !==
+                                                            todo.customId,
+                                                        );
+                                                      setTodoList([
+                                                        ...listData,
+                                                      ]);
+                                                    } else if (todo.id) {
+                                                      const listData =
+                                                        todoList.filter(
+                                                          (item) =>
+                                                            item.id !== todo.id,
+                                                        );
+                                                      setTodoList([
+                                                        ...listData,
+                                                      ]);
+                                                    }
+                                                  }}
+                                                />
+                                              )}
+                                            </div>
+                                          </li>
+                                        </>
+                                      );
+                                      return snapshot.isDragging
+                                        ? ReactDOM.createPortal(
+                                            draggableElement,
+                                            document.body,
+                                          )
+                                        : draggableElement;
+                                    }}
+                                  </Draggable>
+                                ))}
+                                {provided.placeholder}
+                              </ul>
+                            )}
+                          </Droppable>
+                        </DragDropContext>
+                      </div>
+                    </>
+                  ) : (
+                    <div
+                      className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                      onClick={() => setShowTodoSection(true)}>
+                      <ImageRound
+                        className="w-[17px] h-[17px] hover:cursor-pointer"
+                        src="/icons/open-description.svg"
+                        name="Open description icon"
+                      />
+                      <p className="text-[#0068B6] text-sm">
+                        To Do リストを作成
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Submit button */}
+              {isPermissionAdd &&
+                (action === ActionTask.COPY ||
+                  action === ActionTask.CREATE) && (
+                  <div className="flex justify-center">
+                    <Button
+                      type="submit"
+                      className="w-[200px] !rounded-md h-[46] !text-[15px] !px-2">
+                      保存
+                    </Button>
+                  </div>
+                )}
+              {isPermissionUpdate && action === ActionTask.EDIT && (
+                <div className="flex justify-center">
+                  <Button
+                    type="submit"
+                    className="w-[200px] !rounded-md h-[46] !text-[15px] !px-2">
+                    保存
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </form>

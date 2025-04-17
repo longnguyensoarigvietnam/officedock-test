@@ -5,6 +5,7 @@ from faker import Faker
 from companies.models import Company
 from users.models import Role, User
 from users.constants import RoleTypes
+from common.utils import get_username_alias
 
 
 class Command(BaseCommand):
@@ -26,14 +27,17 @@ class Command(BaseCommand):
             company, _ = Company.all_objects.update_or_create(
                 pk=0, defaults=company_data
             )
-
+            username_alias = get_username_alias(
+                login_text=email, is_operation_admin=True
+            )
             user = User.objects.create(
                 company=company,
                 email=email,
                 password=password,
+                username_alias=username_alias,
             )
             user.roles.set(
-                Role.get_role(RoleTypes.OPERATION_ADMIN.value),
+                [Role.get_role(RoleTypes.OPERATION_ADMIN.value)],
                 through_defaults={"company": company},
             )
 

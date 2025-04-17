@@ -29,7 +29,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 
 from base.apis import BaseAPIViewSet
-from base.constants import REPLACE_NULL_DATE
+from base.constants import REPLACE_NULL_DATE, REPLACE_NULL_DATE_WITH_FUTURE
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission
 from calendars.constants import CalendarTypes
@@ -43,7 +43,7 @@ from chat.serializers import (
     ChatMessageSerializer,
     ChatRoomsParticipantsWebSocketSerializer,
 )
-from common.constants import DATE_REGEX, BASE_DATE_FORMAT
+from common.constants import DATE_REGEX, BASE_DATE_FORMAT, BASE_DATETIME_FORMAT
 from common.filters import CustomOrderFilter
 from common.utils import (
     send_web_socket_event,
@@ -148,6 +148,7 @@ class TaskViewSet(
         task_type = serializer_data.get("type", None)
         remind_countdown = serializer_data.pop("remind_countdown", None)
         remind_type = serializer_data.pop("remind_type", None)
+        show_deadline_time = serializer_data.pop("show_deadline_time", None)
         # Item for loop task schedule
         plan_start_date = serializer_data.pop("plan_start_date", None)
         plan_end_date = serializer_data.pop("plan_end_date", None)
@@ -178,10 +179,14 @@ class TaskViewSet(
             serializer_data["remind_at"] = calculate_new_time(
                 serializer_data["deadline"], remind_countdown, remind_type
             )
-            serializer_data["reminds"] = {
-                "type": remind_type,
-                "countdown": remind_countdown,
-            }
+        serializer_data["reminds"] = {
+            "type": remind_type,
+            "countdown": remind_countdown,
+            "show_deadline_time": show_deadline_time
+            if show_deadline_time
+            else False,
+        }
+
         if repeat_type:
             serializer_data["recurring"] = {
                 "repeat_type": repeat_type,
@@ -500,8 +505,8 @@ class TaskViewSet(
                 else:
                     raise ValidationError(
                         {
-                            "task_schedules": ERROR_MESSAGES[
-                                "exists_task_schedule"
+                            "task_schedules": [
+                                ERROR_MESSAGES["exists_task_schedule"]
                             ]
                         }
                     )
@@ -537,8 +542,8 @@ class TaskViewSet(
                 else:
                     raise ValidationError(
                         {
-                            "task_schedules": ERROR_MESSAGES[
-                                "exists_task_schedule"
+                            "task_schedules": [
+                                ERROR_MESSAGES["exists_task_schedule"]
                             ]
                         }
                     )
@@ -851,6 +856,7 @@ class TaskViewSet(
         serializer_data.get("type", None)
         remind_countdown = serializer_data.pop("remind_countdown", None)
         remind_type = serializer_data.pop("remind_type", None)
+        show_deadline_time = serializer_data.pop("show_deadline_time", None)
         # Item for loop task schedule
         is_exists_repeat = "repeat_type" in serializer_data
         plan_start_date = serializer_data.pop("plan_start_date", None)
@@ -887,6 +893,9 @@ class TaskViewSet(
             serializer_data["reminds"] = {
                 "type": remind_type,
                 "countdown": remind_countdown,
+                "show_deadline_time": show_deadline_time
+                if show_deadline_time
+                else False,
             }
             if remind_countdown and remind_type:
                 serializer_data["remind_at"] = calculate_new_time(
@@ -896,6 +905,9 @@ class TaskViewSet(
             serializer_data["reminds"] = {
                 "type": None,
                 "countdown": None,
+                "show_deadline_time": show_deadline_time
+                if show_deadline_time
+                else False,
             }
 
         if (
@@ -1533,6 +1545,17 @@ class TaskCalendarViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         if not user_id:
             queryset = queryset.filter(people_in_charge__id=user.id)
+        if start_date and end_date:
+            start_date = datetime.strptime(
+                start_date, BASE_DATETIME_FORMAT
+            ).date()
+            end_date = datetime.strptime(end_date, BASE_DATETIME_FORMAT).date()
+            start_date = datetime.combine(start_date, time.min)
+            end_date = datetime.combine(end_date, time.max)
+            queryset = queryset.filter(
+                task_schedules__plan_start_date__gte=start_date,
+                task_schedules__plan_start_date__lte=end_date,
+            ).distinct()
 
         return queryset.filter(company=user.company)
 
@@ -1854,15 +1877,19 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 and int(status_id) == task_routine_status.id
             ):
                 tasks = queryset.all()
-                # TODO: Sort is_important and deadline decreasing
-                # if "is_important" in ordering:
-                #     tasks = tasks.annotate(
-                #         coalesced_ordering_datetime=Coalesce(
-                #             "deadline",
-                #             Value(REPLACE_NULL_DATE_WITH_FUTURE),
-                #             output_field=DateTimeField(),
-                #         )
-                #     ).order_by("-is_important", "coalesced_ordering_datetime")
+                tasks = tasks.annotate(
+                    coalesced_ordering_datetime=Coalesce(
+                        "deadline",
+                        Value(REPLACE_NULL_DATE_WITH_FUTURE),
+                        output_field=DateTimeField(),
+                    )
+                )
+                if "is_important" in ordering:
+                    tasks = tasks.order_by(
+                        "-is_important", "coalesced_ordering_datetime"
+                    )
+                if "deadline" in ordering:
+                    tasks = tasks.order_by("coalesced_ordering_datetime")
                 for idx, task in enumerate(tasks):
                     task_index = task.task_index.filter(user=user).first()
                     if task_index.pin_at:

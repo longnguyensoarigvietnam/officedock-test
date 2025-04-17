@@ -1,17 +1,20 @@
 'use client';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
-import { apiRouters, pageRouters } from '@constants/routers';
-import { ServerStatusCode } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
 import { User } from '@interfaces/user';
-import { ResponseError } from '@interfaces/response';
 import api from '@base/api';
+import { AxiosError } from 'axios';
 
-const useAuthenticatedUser = () => {
+const useAuthenticatedUser = ({
+  onSuccess,
+  onError,
+}: {
+  onSuccess?: (data: User) => void;
+  onError?: (error: AxiosError) => void;
+}) => {
   const { data: session } = useSession();
-  const router = useRouter();
   const token = session?.accessToken;
   const getAuthenticatedUser = async () => {
     const apiUrl = apiRouters.AUTHENTICATED_USER;
@@ -32,13 +35,11 @@ const useAuthenticatedUser = () => {
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onError: ({ response }: ResponseError<any>) => {
-      if (response?.status === ServerStatusCode.UNAUTHORIZED) {
-        if (session) {
-          signOut();
-          router.push(pageRouters.LOGIN.href);
-        }
-      }
+    onSuccess: (data: User) => {
+      onSuccess && onSuccess(data);
+    },
+    onError: (error: AxiosError) => {
+      onError && onError(error);
     },
   });
 

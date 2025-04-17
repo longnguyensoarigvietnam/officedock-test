@@ -96,6 +96,7 @@ import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
   ERROR_NOT_FOUND_EVENT,
+  ERROR_SAVE_ZOOM,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -133,8 +134,10 @@ import {
   getDateInfo,
   getNext30MinuteSlot,
   isDateInFutureOrToday,
+  isDateInPast,
   isDateLessThanToday,
   isMidnight,
+  isTimeEarlierToday,
   isTodaySchedule,
 } from '@utils/date';
 
@@ -145,6 +148,7 @@ import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
 } from '@utils';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -253,7 +257,6 @@ const TimeSchedule = memo(
     const actionType = searchParams.get('action');
 
     const typeDetail = searchParams.get('type');
-    const view = searchParams.get('view');
 
     const screenHeight = window.innerHeight;
 
@@ -334,6 +337,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
         handleCallApiAllData(startDateISOString, endDateISOString);
+        saveZoomSchedule({
+          dateFilterScheduleFrom: startDateISOString,
+        });
+        scrollToNowIndicator();
       }
     };
     const handleNextDay = () => {
@@ -355,6 +362,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
         handleCallApiAllData(startDateISOString, endDateISOString);
+        saveZoomSchedule({
+          dateFilterScheduleFrom: startDateISOString,
+        });
+        scrollToNowIndicator();
       }
     };
     const handleChooseDay = (date?: Date) => {
@@ -372,6 +383,10 @@ const TimeSchedule = memo(
           setDisplayHeaderDayStart(new Date(startDateISOString));
 
           handleCallApiAllData(startDateISOString, endDateISOString);
+          saveZoomSchedule({
+            dateFilterScheduleFrom: startDateISOString,
+          });
+          scrollToNowIndicator();
         }
       }
     };
@@ -505,7 +520,7 @@ const TimeSchedule = memo(
     }) => {
       setIsLoadingSchedule(true);
 
-      const apiUrl = `${apiRouters.TASK_CALENDAR_LIST}?${userId ? `&user_id=${userId}` : ''}${startDate && `&start_date=${startDate}`}${startDate && `&task_schedule_from_date=${startDate}`}${endDate && `&end_date=${endDate}`}${endDate && `&task_schedule_end_date=${endDate}`}`;
+      const apiUrl = `${apiRouters.TASK_CALENDAR_LIST}?${userId ? `&user_id=${userId}` : ''}${startDate && `&start_date=${startDate}`}${endDate && `&end_date=${endDate}`}`;
       const { data } = await api.get<Task[]>(apiUrl);
       return data;
     };
@@ -1157,25 +1172,55 @@ const TimeSchedule = memo(
         const endDateISOString = formatQueryEndDateForCalendar(
           calendarApi.view.activeEnd,
         );
+
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
         setSlotHeight(baseHeight);
         setResetTrigger((prev) => prev + 1);
+        saveZoomSchedule({
+          isShowWeekSchedule: calendarView === CalendarViewOptions.VIEW_BY_WEEK,
+          dateFilterScheduleFrom: startDateISOString,
+        });
         setIsLoadingSchedule(true);
-        handleCallApiAllData(startDateISOString, endDateISOString);
+        await handleCallApiAllData(startDateISOString, endDateISOString);
 
+        setTimeout(() => {
+          calendarApi.refetchEvents();
+        }, 300);
+        setTimeout(() => {
+          scrollToNowIndicator();
+        }, 300);
+      }
+    };
+    const handleViewChangeDefault = async (calendarView: string) => {
+      if (calendarRef.current) {
+        const calendarApi = calendarRef.current.getApi();
+
+        if (calendarView === CalendarViewOptions.VIEW_BY_WEEK) {
+          params.set('view', ViewOptions.WEEK);
+          router.push(`?${params.toString()}`);
+          setIsExtendCalendar(true);
+        } else if (calendarView === CalendarViewOptions.VIEW_BY_DAY) {
+          params.set('view', ViewOptions.DAY);
+          router.push(`?${params.toString()}`);
+          setIsExtendCalendar(false);
+        }
+        calendarApi.changeView(calendarView);
+        const startDateISOString = formatQueryStartDateForCalendar(
+          calendarApi.view.activeStart,
+        );
+        const endDateISOString = formatQueryEndDateForCalendar(
+          calendarApi.view.activeEnd,
+        );
+        setDisplayHeaderDayStart(new Date(startDateISOString));
+        setDisplayHeaderDayEnd(new Date(endDateISOString));
+        setSlotHeight(baseHeight);
+        setResetTrigger((prev) => prev + 1);
         setTimeout(() => {
           calendarApi.refetchEvents();
         }, 300);
       }
     };
-    useEffect(() => {
-      if (searchParams.get('view') == ViewOptions.WEEK) {
-        handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-      } else if (searchParams.get('view') == ViewOptions.DAY) {
-        handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
-      }
-    }, []);
 
     const isErrorObject = (obj: any): boolean => {
       return obj instanceof Error || obj?.message || obj?.stack;
@@ -1318,7 +1363,12 @@ const TimeSchedule = memo(
       const newEvent = info.event as any;
       const newEventId = newEvent.id;
       const uuidData = uuidv4();
+
       const isLessThanToday = isDateLessThanToday(newEvent.start);
+      const resourcePlanDay =
+        newEvent._def.resourceIds?.length &&
+        newEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
+
       if (!info.draggedEl) {
         return info.revert();
       }
@@ -1326,8 +1376,22 @@ const TimeSchedule = memo(
         return info.revert();
       }
 
+      if (
+        isDateInPast(newEvent.start) &&
+        searchParams.get('view') === ViewOptions.DAY &&
+        resourcePlanDay
+      ) {
+        return info.revert();
+      }
+
+      if (
+        isTimeEarlierToday(newEvent.start) &&
+        searchParams.get('view') === ViewOptions.WEEK
+      ) {
+        return info.revert();
+      }
       const resourcePlan =
-        isToday && searchParams.get('view') === ViewOptions.DAY
+        searchParams.get('view') === ViewOptions.DAY
           ? newEvent._def.resourceIds?.length &&
             newEvent._def.resourceIds[0] === ItemScheduleType.PLANS
           : isLessThanToday
@@ -1340,15 +1404,6 @@ const TimeSchedule = memo(
 
       if (newEvent.extendedProps.itemKanban) {
         if (
-          isToday &&
-          searchParams.get('view') === ViewOptions.DAY &&
-          isDateInFutureOrToday(`${newEvent.end}`) &&
-          !resourcePlan
-        ) {
-          return info.revert();
-        }
-        if (
-          isToday &&
           searchParams.get('view') === ViewOptions.DAY &&
           isDateInFutureOrToday(`${newEvent.end}`) &&
           !resourcePlan
@@ -1528,6 +1583,19 @@ const TimeSchedule = memo(
         resizedEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
 
       const resourcePlanWeek = isLessThanToday ? false : true;
+      if (
+        isDateInPast(resizedEvent.start) &&
+        searchParams.get('view') === ViewOptions.DAY &&
+        resourcePlanDay
+      ) {
+        return info.revert();
+      }
+      if (
+        isTimeEarlierToday(resizedEvent.start) &&
+        searchParams.get('view') === ViewOptions.WEEK
+      ) {
+        return info.revert();
+      }
 
       if (areDatesDifferent(`${resizedEvent.start}`, `${resizedEvent.end}`)) {
         return info.revert();
@@ -1672,6 +1740,20 @@ const TimeSchedule = memo(
         droppedEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
       const draggedResourceId = info.oldResource?.id;
       const dropResourceId = info.newResource?.id;
+
+      if (
+        isDateInPast(droppedEvent.start as Date) &&
+        searchParams.get('view') === ViewOptions.DAY &&
+        resourcePlanDay
+      ) {
+        return info.revert();
+      }
+      if (
+        isTimeEarlierToday(droppedEvent.start as Date) &&
+        searchParams.get('view') === ViewOptions.WEEK
+      ) {
+        return info.revert();
+      }
 
       if (
         draggedResourceId &&
@@ -2610,6 +2692,7 @@ const TimeSchedule = memo(
       }
       return taskTimeScheduleList;
     }, [isExtendCalendar, taskTimeScheduleList]);
+
     const scrollToNowIndicator = () => {
       setTimeout(() => {
         const nowIndicator = document.querySelector(
@@ -2646,35 +2729,36 @@ const TimeSchedule = memo(
         setIsCurrentWeek(false);
       }
 
-      if (
-        currentDate > today &&
-        currentResources[0].id !== ItemScheduleType.PLANS
-      ) {
-        setCurrentResources([
-          { id: ItemScheduleType.PLANS, title: ItemScheduleTitleType.PLANS },
-        ]);
-      } else if (currentDate < today) {
+      if (currentDate > today) {
         if (
           currentResources.length !== 1 ||
-          currentResources[0].id !== ItemScheduleType.ACTUAL
+          currentResources[0].id !== ItemScheduleType.PLANS
         ) {
+          setCurrentResources([
+            {
+              id: ItemScheduleType.PLANS,
+              title: ItemScheduleTitleType.PLANS,
+            },
+          ]);
+        }
+      } else {
+        const shouldUpdateResources =
+          currentResources.length !== 2 ||
+          currentResources[0].id !== ItemScheduleType.ACTUAL ||
+          currentResources[1].id !== ItemScheduleType.PLANS;
+
+        if (shouldUpdateResources) {
           setCurrentResources([
             {
               id: ItemScheduleType.ACTUAL,
               title: ItemScheduleTitleType.ACTUAL,
             },
+            {
+              id: ItemScheduleType.PLANS,
+              title: ItemScheduleTitleType.PLANS,
+            },
           ]);
         }
-      } else if (
-        currentDate.getTime() === today.getTime() &&
-        (currentResources.length !== 2 ||
-          currentResources[0].id !== ItemScheduleType.ACTUAL ||
-          currentResources[1].id !== ItemScheduleType.PLANS)
-      ) {
-        setCurrentResources([
-          { id: ItemScheduleType.ACTUAL, title: ItemScheduleTitleType.ACTUAL },
-          { id: ItemScheduleType.PLANS, title: ItemScheduleTitleType.PLANS },
-        ]);
       }
     };
 
@@ -2816,18 +2900,59 @@ const TimeSchedule = memo(
       }
       return '00:15:00';
     };
+    // Get data zoom
+    useAuthenticatedUser({
+      onSuccess: (data) => {
+        const value = data.setting?.scheduleZoom as number;
+        setSliderValue(value);
+        const calculatedHeight = calculateSlotHeight(value);
+        const calculatedDuration = calculateSlotDuration(value);
 
-    useEffect(() => {
-      if (!view) {
-        params.set('view', ViewOptions.DAY);
-        router.push(`?${params.toString()}`);
-      } else {
-        if (view !== ViewOptions.DAY && view !== ViewOptions.WEEK) {
-          params.set('view', ViewOptions.DAY);
-          router.push(`?${params.toString()}`);
+        setSlotHeight(calculatedHeight);
+        setIsOptionZoomSchedule(calculatedDuration);
+
+        if (data.setting?.dateFilterScheduleFrom) {
+          if (data.setting?.isShowWeekSchedule) {
+            handleViewChangeDefault(CalendarViewOptions.VIEW_BY_WEEK);
+
+            handleChooseDay(new Date(data.setting?.dateFilterScheduleFrom));
+          } else {
+            handleViewChangeDefault(CalendarViewOptions.VIEW_BY_DAY);
+            handleChooseDay(new Date(data.setting?.dateFilterScheduleFrom));
+          }
+        } else {
+          if (data.setting?.isShowWeekSchedule) {
+            handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
+          } else {
+            handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
+          }
         }
-      }
-    }, [view]);
+      },
+    });
+
+    // Handle save zoom
+    const handleSaveZoomSchedule = async (data: {
+      scheduleZoom?: number;
+      isShowWeekSchedule?: boolean;
+      dateFilterScheduleFrom?: string;
+    }) => {
+      const { data: response } = await api.post(apiRouters.USER_SETTING, {
+        ...data,
+      });
+      return response;
+    };
+
+    const { mutate: saveZoomSchedule } = useMutation(
+      'saeZoomSchedule',
+      handleSaveZoomSchedule,
+      {
+        onSuccess: () => {},
+        onError: (error: AxiosError<any>) => {
+          showErrorToast(error, ERROR_SAVE_ZOOM);
+        },
+        onSettled: () => {},
+      },
+    );
 
     return (
       <>
@@ -3070,6 +3195,9 @@ const TimeSchedule = memo(
                 const calculatedDuration = calculateSlotDuration(value);
                 setSlotHeight(calculatedHeight);
                 setIsOptionZoomSchedule(calculatedDuration);
+                saveZoomSchedule({
+                  scheduleZoom: value,
+                });
               }}
             />
           </div>

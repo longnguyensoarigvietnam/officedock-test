@@ -54,6 +54,7 @@ export interface TaskRequest {
   isTeamTask?: boolean;
   task_schedule_from_date?: string;
   task_schedule_end_date?: string;
+  showDeadlineTime?: boolean;
 }
 export interface TaskFormData {
   id?: string;
@@ -102,6 +103,7 @@ export interface TaskFormData {
   repeatStartTime?: string | null;
   repeatEndTime?: string | null;
   peopleInChart?: OptionDropdownType;
+  showDeadlineTime?: boolean;
 }
 
 export interface StatusTask {
@@ -144,6 +146,7 @@ export interface Task {
   action?: string;
   isDrag?: boolean;
   isScheduleInToday?: boolean;
+  showDeadlineTime?: boolean;
   categories?: {
     name: string;
     type: string;

@@ -84,12 +84,12 @@ const FrequentlyTask = ({
   setShowTemplateModal: Dispatch<SetStateAction<boolean>>;
   templates: Template[];
   showFrequentlyTasks: boolean;
-  setShowFrequentlyTasks: Dispatch<SetStateAction<boolean>>;
   creationDataTaskData?: CreationDataTask;
   handleActionEditTemplate: (id: number) => void;
   handleActionEditTask: (id: number) => void;
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
+  setShowFrequentlyTasks: (value: boolean) => void;
   handleCreateTaskFromTemplate: (id?: number) => void;
   editTask: UseMutateFunction<
     Task,
@@ -108,7 +108,9 @@ const FrequentlyTask = ({
     <div className={`w-fit`}>
       <div className={`${isExtendCalendar && 'overflow-y-hidden'} `}>
         <div className="flex gap-2 min-w-[130px]">
-          <p className="text-gray-500 text-xs break-all min-w-[110px]">マイテンプレート</p>
+          <p className="text-gray-500 text-xs break-all min-w-[110px]">
+            マイテンプレート
+          </p>
           <Tippy
             content={showFrequentlyTasks ? '閉じる' : '開く'}
             arrow={false}

@@ -191,24 +191,64 @@ const LineChart = ({
     }
 
     // Extract dataset label safely
-    const datasetLabel = dataset.label ?? 'Unknown';
+    const matchingDataPoints = Array.from(
+      lineChartData.datasets
+        .flatMap((d) => d.data)
+        .filter(
+          (point: any) => point.x === dataPoint.x && point.y === dataPoint.y,
+        ),
+    );
+
+    const tooltipContent = matchingDataPoints
+      .map((point: any, index: number) => {
+        const isNotLast = index != matchingDataPoints.length - 1;
+        const containerStyle = `
+      ${isNotLast ? 'margin-bottom: 8px; border-bottom: 1px solid #D2DBE1;' : ''}
+    `.trim();
+
+        return `
+          <div style="${containerStyle}">
+            <div style="color: #77858F; font-weight: 400; font-size: 14px; margin-bottom: 8px">
+              ${convertToJapaneseDateRange(point.x, point.endDate)}
+            </div>
+
+            <div style="display: flex; align-items: center; margin-bottom: 8px">
+              <div style="
+                background-color: ${point.color};
+                margin-right: 4px;
+                width: 12px;
+                height: 12px;
+                border-radius: 2px;
+                min-width: 12px;">
+              </div>
+              <p style="
+                font-weight: 700;
+                font-size: 16px;
+                max-width: 200px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;">
+                ${point.label}
+              </p>
+            </div>
+
+            <p style="margin-bottom: 8px; font-weight: 400; font-size: 16px">
+              ${convertFromNumberToJapaneseTime(point.y).formattedHours}時間
+              ${convertFromNumberToJapaneseTime(point.y).formattedMinutes}分
+            </p>
+          </div>
+        `;
+      })
+      .join('');
 
     tooltipEl.innerHTML = `
-      <div style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0px 2px 8px 0px #0000001A; width: 220px">
-        <div style="color: #77858F; font-weight: 400; font-size: 14px; margin-bottom: 8px">
-          ${convertToJapaneseDateRange(dataPoint.x, dataPoint.endDate)}
-        </div>
-        <div style="display: flex; align-items: center; margin-bottom: 8px">
-          <div style="background-color: ${dataset.borderColor}; margin-right: 4px; width: 12px; height: 12px; border-radius: 2px; min-width: 12px;"></div>
-          <p style="font-weight: 700; font-size: 16px; max-width: 200px;
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis;">${datasetLabel}</p>
-        </div>
-        <p style="font-weight: 400; font-size: 16px">
-          ${convertFromNumberToJapaneseTime(dataPoint.y).formattedHours}時間
-          ${convertFromNumberToJapaneseTime(dataPoint.y).formattedMinutes}分
-        </p>
+      <div style="
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0px 2px 8px 0px #0000001A;
+        width: 220px;">
+        ${tooltipContent}
       </div>
     `;
 
@@ -424,6 +464,8 @@ const LineChart = ({
                   ? convertTimeToDecimal(duration.duration)
                   : 0,
                 endDate: duration.endDate,
+                color: categoryDetail.categoryColor,
+                label: categoryDetail.categoryName,
               },
               ...(index === categoryDetail.durations.length - 1 &&
               String(duration.endDate) != String(duration.startDate)
@@ -434,6 +476,8 @@ const LineChart = ({
                         ? convertTimeToDecimal(duration.duration)
                         : 0,
                       endDate: duration.endDate,
+                      color: categoryDetail.categoryColor,
+                      label: categoryDetail.categoryName,
                     },
                   ]
                 : []),

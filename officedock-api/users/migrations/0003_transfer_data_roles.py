@@ -13,6 +13,9 @@ def transfer_data_roles(apps, schema_editor):
     User = apps.get_model("users", "User")
     UserRole = apps.get_model("users", "UserRole")
 
+    # Seed data in role permissions
+    call_command("seed_data_role")
+
     # Update system role
     Role.objects.exclude(name=RoleTypes.OPERATION_ADMIN.value).update(
         system_role=True

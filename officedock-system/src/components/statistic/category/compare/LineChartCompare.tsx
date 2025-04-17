@@ -34,7 +34,7 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+import { StatisticChartType, StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
 
 import useStatisticTaskDurationsCompare from '@hooks/useStatisticTaskDurationsCompare';
 import useStatisticTaskDurations from '@hooks/useStatisticTaskDurations';
@@ -87,7 +87,7 @@ type TableCategoryItem = {
   categoryDuration: string;
   categoryPercent: string;
   categoryColor: string;
-  type: 'standard' | 'compare';
+  type: StatisticChartType.STANDARD | StatisticChartType.COMPARE;
 };
 
 type MergedTableCategory = {
@@ -243,7 +243,7 @@ const LineChartCompare = ({
             (point: any) => point.x === dataPoint.x && point.y === dataPoint.y,
           )
           .map((point: any) => [
-            `${point.label}-${point.type == 'compare' ? `${point.startDate} - ${point.endDate}` : `${point.anotherStartDate} - ${point.anotherEndDate}`}`,
+            `${point.label}-${point.type == StatisticChartType.COMPARE ? `${point.startDate} - ${point.endDate}` : `${point.anotherStartDate} - ${point.anotherEndDate}`}`,
             point,
           ]),
       ).values(),
@@ -252,11 +252,11 @@ const LineChartCompare = ({
     const tooltipContent = matchingDataPoints
       .map((point: any) => {
         const standardDuration =
-          point.type == 'compare'
+          point.type == StatisticChartType.COMPARE
             ? point.anotherDuration ?? '00:00:00'
             : point.duration ?? '00:00:00';
         const compareDuration =
-          point.type == 'compare'
+          point.type == StatisticChartType.COMPARE
             ? point.duration ?? '00:00:00'
             : point.anotherDuration ?? '00:00:00';
         const diffDuration = subtractDurations(
@@ -314,7 +314,7 @@ const LineChartCompare = ({
               </p>
               <div style="color: #77858F; font-weight: 400; font-size: 12px;">
                 ${
-                  point.type == 'compare'
+                  point.type == StatisticChartType.COMPARE
                     ? point.anotherStartDate
                       ? convertToJapaneseDateRange(
                           point.anotherStartDate as string,
@@ -360,7 +360,7 @@ const LineChartCompare = ({
               </p>
               <div style="color: #77858F; font-weight: 400; font-size: 12px;">
                 ${
-                  point.type == 'compare'
+                  point.type == StatisticChartType.COMPARE
                     ? point.startDate
                       ? convertToJapaneseDateRange(
                           point.startDate as string,
@@ -522,12 +522,12 @@ const LineChartCompare = ({
         };
       }
 
-      if (item.type === 'standard') {
+      if (item.type === StatisticChartType.STANDARD) {
         grouped[key].standardInfo = {
           categoryDuration: item.categoryDuration,
           categoryPercent: item.categoryPercent,
         };
-      } else if (item.type === 'compare') {
+      } else if (item.type === StatisticChartType.COMPARE) {
         grouped[key].compareInfo = {
           categoryDuration: item.categoryDuration,
           categoryPercent: item.categoryPercent,
@@ -587,7 +587,6 @@ const LineChartCompare = ({
         type: string,
         name: string,
         color: string,
-        alignmentLabels?: string[], // <- optional param
       ) => {
         const shownLabels = [...standardDateLabels];
         if (standardDateLabels.length < compareDateLabels.length) {
@@ -597,20 +596,15 @@ const LineChartCompare = ({
             shownLabels.push(`${i}`);
           }
         }
-        return shownLabels
+        const data = shownLabels
           .map((label, index) => {
-            const refLabel = alignmentLabels?.[index] || label; // <- map compare's label to standard index
             let foundDuration;
             let anotherDuration;
-            if (type == 'compare') {
-              foundDuration = compareDurations.find(
-                (duration) => duration.startDate == refLabel,
-              );
+            if (type == StatisticChartType.COMPARE) {
+              foundDuration = compareDurations[index]
               anotherDuration = durations[index];
             } else {
-              foundDuration = durations.find(
-                (duration) => duration.startDate == refLabel,
-              );
+              foundDuration = durations[index]
               anotherDuration = compareDurations[index];
             }
 
@@ -639,6 +633,7 @@ const LineChartCompare = ({
               : null;
           })
           .filter((dataPoint) => dataPoint !== null);
+        return data
       };
 
       if (statisticTaskDurationsList.length > 0) {
@@ -703,7 +698,7 @@ const LineChartCompare = ({
                   categoryDetail.categoryColor ||
                   (color && lightenColor(color, percent)) ||
                   getRandomColor(),
-                type: 'standard',
+                type: StatisticChartType.STANDARD,
               },
             ];
 
@@ -718,12 +713,11 @@ const LineChartCompare = ({
                 data: generateDataWithAlignment(
                   categoryDetail.durations,
                   compareCategory?.durations ?? [],
-                  'standard',
+                  StatisticChartType.STANDARD,
                   categoryDetail.categoryName,
                   categoryDetail.categoryColor ||
                     (color && lightenColor(color, percent)) ||
                     getRandomColor(),
-                  [],
                 ),
                 borderColor:
                   categoryDetail.categoryColor ||
@@ -806,7 +800,7 @@ const LineChartCompare = ({
                 categoryDetail.categoryColor ||
                 (color && lightenColor(color, percent)) ||
                 getRandomColor(),
-              type: 'compare',
+              type: StatisticChartType.COMPARE,
             });
 
             const standardCategory = statisticTaskDurationsList.find(
@@ -818,12 +812,11 @@ const LineChartCompare = ({
               data: generateDataWithAlignment(
                 standardCategory?.durations ?? [],
                 categoryDetail.durations,
-                'compare',
+                StatisticChartType.COMPARE,
                 categoryDetail.categoryName,
                 categoryDetail.categoryColor ||
                   (color && lightenColor(color, percent)) ||
                   getRandomColor(),
-                compareDateLabels,
               ),
               borderColor:
                 categoryDetail.categoryColor ||
@@ -1165,7 +1158,7 @@ const LineChartCompare = ({
               <MultiSelectDropdown
                 isShowIconFilter
                 options={tagsOptions}
-                labelOptionClass="break-all w-[240px]"
+                labelOptionClass="break-all w-[190px]"
                 optionClassName="!top-6"
                 placeholder="集計対象のタグを選択"
                 className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
