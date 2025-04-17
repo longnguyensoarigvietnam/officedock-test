@@ -336,10 +336,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
-        handleCallApiAllData(startDateISOString, endDateISOString);
         saveZoomSchedule({
           dateFilterScheduleFrom: startDateISOString,
         });
+        handleCallApiAllData(startDateISOString, endDateISOString);
         scrollToNowIndicator();
       }
     };
@@ -361,10 +361,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
-        handleCallApiAllData(startDateISOString, endDateISOString);
         saveZoomSchedule({
           dateFilterScheduleFrom: startDateISOString,
         });
+        handleCallApiAllData(startDateISOString, endDateISOString);
         scrollToNowIndicator();
       }
     };
@@ -381,6 +381,7 @@ const TimeSchedule = memo(
             calendarApi.view.activeEnd,
           );
           setDisplayHeaderDayStart(new Date(startDateISOString));
+          setDisplayHeaderDayEnd(new Date(endDateISOString));
 
           handleCallApiAllData(startDateISOString, endDateISOString);
           saveZoomSchedule({
@@ -1368,7 +1369,9 @@ const TimeSchedule = memo(
       const resourcePlanDay =
         newEvent._def.resourceIds?.length &&
         newEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
-
+      if (isLoadingSchedule) {
+        return info.revert();
+      }
       if (!info.draggedEl) {
         return info.revert();
       }
@@ -2879,7 +2882,7 @@ const TimeSchedule = memo(
         const calendarHeight = calendarElement.offsetHeight;
         setHeighSkeleton(calendarHeight);
       }
-    }, [slotHeight]);
+    }, [slotHeight, isLoadingSchedule]);
     const dataDate = getDateInfo(displayHederDateStart);
 
     const calculateSlotHeight = (value: number): number => {
@@ -2980,7 +2983,8 @@ const TimeSchedule = memo(
             <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
               <div className={`items-center gap-4 flex h-12 sticky z-20`}>
                 {!isExtendCalendar ? (
-                  <div className="flex relative">
+                  <div
+                    className={`flex relative ${isLoadingSchedule && '!opacity-45'}`}>
                     <div className="w-[260px] ml-6 z-20 flex gap-[18px] items-center">
                       <Tippy
                         content="前日"
@@ -2990,7 +2994,11 @@ const TimeSchedule = memo(
                         offset={[0, 5]}>
                         <div>
                           <ImageRound
-                            onClick={() => debouncedFunction(handlePreviousDay)}
+                            onClick={() => {
+                              if (!isLoadingSchedule) {
+                                debouncedFunction(handlePreviousDay);
+                              }
+                            }}
                             className=" !w-2 !h-3 cursor-pointer"
                             src="/icons/left-schedule.svg"
                             name="left"
@@ -3014,7 +3022,11 @@ const TimeSchedule = memo(
                         offset={[0, 5]}>
                         <div>
                           <ImageRound
-                            onClick={() => debouncedFunction(handleNextDay)}
+                            onClick={() => {
+                              if (!isLoadingSchedule) {
+                                debouncedFunction(handleNextDay);
+                              }
+                            }}
                             className=" !w-2 !h-3 cursor-pointer"
                             src="/icons/right-schedule.svg"
                             name="right"
@@ -3031,14 +3043,17 @@ const TimeSchedule = memo(
                         tooltipMsg="カレンダーから日付を選択"
                         iconClassName="!static !w-8"
                         onChange={(e) => {
-                          handleChooseDay(e as Date);
+                          if (!isLoadingSchedule) {
+                            handleChooseDay(e as Date);
+                          }
                         }}
                       />
                     </div>
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-3">
+                    <div
+                      className={`flex items-center gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
                       <Tippy
                         content="前日"
                         arrow={false}
@@ -3050,7 +3065,11 @@ const TimeSchedule = memo(
                             src="/icons/chevron-left-calendar.svg"
                             name="Previous day"
                             className="!w-[6px] !h-3  hover:cursor-pointer"
-                            onClick={handlePreviousDay}
+                            onClick={() => {
+                              if (!isLoadingSchedule) {
+                                handlePreviousDay();
+                              }
+                            }}
                           />
                         </div>
                       </Tippy>
@@ -3065,7 +3084,11 @@ const TimeSchedule = memo(
                             src="/icons/chevron-left-calendar.svg"
                             name="Next day"
                             className="!w-[6px] !h-3 rotate-180 hover:cursor-pointer"
-                            onClick={handleNextDay}
+                            onClick={() => {
+                              if (!isLoadingSchedule) {
+                                handleNextDay();
+                              }
+                            }}
                           />
                         </div>
                       </Tippy>
