@@ -1371,7 +1371,9 @@ const TimeSchedule = memo(
       if (areDatesDifferent(`${newEvent.start}`, `${newEvent.end}`)) {
         return info.revert();
       }
-
+      if (isLoadingSchedule) {
+        return info.revert();
+      }
       const resourcePlan =
         searchParams.get('view') === ViewOptions.DAY
           ? newEvent._def.resourceIds?.length &&
@@ -3145,6 +3147,7 @@ const TimeSchedule = memo(
               resetTrigger={resetTrigger}
               onChange={(value) => {
                 setSliderValue(value);
+
                 const calculatedHeight = calculateSlotHeight(value);
                 const calculatedDuration = calculateSlotDuration(value);
                 setSlotHeight(calculatedHeight);
