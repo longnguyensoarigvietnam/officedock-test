@@ -514,16 +514,17 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             sorted_users, many=True
         ).data
 
-        task_schedules = instance.task_schedules.filter(
-            plan_start_date__date__gte=now().date()
-        )
         if task_schedule_from_date and task_schedule_end_date:
-            task_schedules = task_schedules.filter(
+            task_schedules = instance.task_schedules.filter(
                 Q(
-                    Q(plan_start_date__date__gte=task_schedule_from_date)
-                    & Q(plan_end_date__date__lte=task_schedule_end_date)
+                    Q(plan_start_date__date__gte=task_schedule_from_date.date())
+                    & Q(plan_end_date__date__lte=task_schedule_end_date.date())
                 )
             ).all()
+        else:
+            task_schedules = instance.task_schedules.filter(
+                plan_start_date__date__gte=now().date()
+            )
 
         representation["task_schedules"] = TaskScheduleSerializer(
             task_schedules, many=True
