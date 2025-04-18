@@ -2622,7 +2622,6 @@ const ActionsTaskModal = ({
                                                     `plans.${index}.planStartDate`,
                                                   )
                                             }
-                                            minDate={new Date()}
                                             disabled={isCheckActionPermission}
                                             onChange={(e) => {
                                               setIsFormTouched(true);
