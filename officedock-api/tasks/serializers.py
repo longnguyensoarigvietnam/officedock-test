@@ -454,14 +454,6 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             for task_schedule in task_schedules:
                 plan_start_date = task_schedule["plan_start_date"]
                 plan_end_date = task_schedule["plan_end_date"]
-                if plan_start_date < now():
-                    raise serializers.ValidationError(
-                        {
-                            "task_schedules": ERROR_MESSAGES[
-                                "schedule_not_in_the_past"
-                            ]
-                        }
-                    )
                 check_exists_schedule = TaskSchedule.objects.filter(
                     Q(
                         Q(plan_start_date__lt=plan_end_date)
@@ -760,10 +752,6 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
         ):
             raise serializers.ValidationError(
                 {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
-            )
-        if plan_start_date < now():
-            raise serializers.ValidationError(
-                {"task_schedules": ERROR_MESSAGES["schedule_not_in_the_past"]}
             )
         check_exists_schedule = TaskSchedule.objects.filter(
             Q(
