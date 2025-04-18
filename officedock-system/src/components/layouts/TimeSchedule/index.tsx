@@ -134,10 +134,8 @@ import {
   getDateInfo,
   getNext30MinuteSlot,
   isDateInFutureOrToday,
-  isDateInPast,
   isDateLessThanToday,
   isMidnight,
-  isTimeEarlierToday,
   isTodaySchedule,
 } from '@utils/date';
 
@@ -336,10 +334,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
+        handleCallApiAllData(startDateISOString, endDateISOString);
         saveZoomSchedule({
           dateFilterScheduleFrom: startDateISOString,
         });
-        handleCallApiAllData(startDateISOString, endDateISOString);
         scrollToNowIndicator();
       }
     };
@@ -361,10 +359,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
+        handleCallApiAllData(startDateISOString, endDateISOString);
         saveZoomSchedule({
           dateFilterScheduleFrom: startDateISOString,
         });
-        handleCallApiAllData(startDateISOString, endDateISOString);
         scrollToNowIndicator();
       }
     };
@@ -381,7 +379,6 @@ const TimeSchedule = memo(
             calendarApi.view.activeEnd,
           );
           setDisplayHeaderDayStart(new Date(startDateISOString));
-          setDisplayHeaderDayEnd(new Date(endDateISOString));
 
           handleCallApiAllData(startDateISOString, endDateISOString);
           saveZoomSchedule({
@@ -1178,10 +1175,6 @@ const TimeSchedule = memo(
         setDisplayHeaderDayEnd(new Date(endDateISOString));
         setSlotHeight(baseHeight);
         setResetTrigger((prev) => prev + 1);
-        saveZoomSchedule({
-          isShowWeekSchedule: calendarView === CalendarViewOptions.VIEW_BY_WEEK,
-          dateFilterScheduleFrom: startDateISOString,
-        });
         setIsLoadingSchedule(true);
         await handleCallApiAllData(startDateISOString, endDateISOString);
 
@@ -1189,6 +1182,11 @@ const TimeSchedule = memo(
           calendarApi.refetchEvents();
         }, 300);
         setTimeout(() => {
+          saveZoomSchedule({
+            isShowWeekSchedule:
+              calendarView === CalendarViewOptions.VIEW_BY_WEEK,
+            dateFilterScheduleFrom: startDateISOString,
+          });
           scrollToNowIndicator();
         }, 300);
       }
@@ -1366,12 +1364,7 @@ const TimeSchedule = memo(
       const uuidData = uuidv4();
 
       const isLessThanToday = isDateLessThanToday(newEvent.start);
-      const resourcePlanDay =
-        newEvent._def.resourceIds?.length &&
-        newEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
-      if (isLoadingSchedule) {
-        return info.revert();
-      }
+
       if (!info.draggedEl) {
         return info.revert();
       }
@@ -1379,20 +1372,6 @@ const TimeSchedule = memo(
         return info.revert();
       }
 
-      if (
-        isDateInPast(newEvent.start) &&
-        searchParams.get('view') === ViewOptions.DAY &&
-        resourcePlanDay
-      ) {
-        return info.revert();
-      }
-
-      if (
-        isTimeEarlierToday(newEvent.start) &&
-        searchParams.get('view') === ViewOptions.WEEK
-      ) {
-        return info.revert();
-      }
       const resourcePlan =
         searchParams.get('view') === ViewOptions.DAY
           ? newEvent._def.resourceIds?.length &&
@@ -1586,20 +1565,6 @@ const TimeSchedule = memo(
         resizedEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
 
       const resourcePlanWeek = isLessThanToday ? false : true;
-      if (
-        isDateInPast(resizedEvent.start) &&
-        searchParams.get('view') === ViewOptions.DAY &&
-        resourcePlanDay
-      ) {
-        return info.revert();
-      }
-      if (
-        isTimeEarlierToday(resizedEvent.start) &&
-        searchParams.get('view') === ViewOptions.WEEK
-      ) {
-        return info.revert();
-      }
-
       if (areDatesDifferent(`${resizedEvent.start}`, `${resizedEvent.end}`)) {
         return info.revert();
       }
@@ -1743,20 +1708,6 @@ const TimeSchedule = memo(
         droppedEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
       const draggedResourceId = info.oldResource?.id;
       const dropResourceId = info.newResource?.id;
-
-      if (
-        isDateInPast(droppedEvent.start as Date) &&
-        searchParams.get('view') === ViewOptions.DAY &&
-        resourcePlanDay
-      ) {
-        return info.revert();
-      }
-      if (
-        isTimeEarlierToday(droppedEvent.start as Date) &&
-        searchParams.get('view') === ViewOptions.WEEK
-      ) {
-        return info.revert();
-      }
 
       if (
         draggedResourceId &&
@@ -2814,19 +2765,14 @@ const TimeSchedule = memo(
 
       switch (weekState) {
         case 'currentWeek':
-          selector = '.schedule-custom .fc-day.fc-day-today.fc-daygrid-day';
-          break;
-        case 'nextWeek':
-          selector = '.schedule-custom .fc-day.fc-day-mon.fc-daygrid-day';
-          break;
-        case 'pastWeek':
-          selector = '.schedule-custom .fc-day.fc-day-mon.fc-daygrid-day';
+          selector = '.schedule-custom .fc-day-today';
           break;
         default:
           selector = '.schedule-custom .fc-day.fc-day-mon.fc-daygrid-day';
           break;
       }
-      setTimeout(() => {
+
+      const tryScroll = (retries = 10) => {
         const target = document.querySelector(selector);
         if (target) {
           setIsScroll(false);
@@ -2835,9 +2781,14 @@ const TimeSchedule = memo(
             block: 'start',
             inline: 'start',
           });
+        } else if (retries > 0) {
+          setTimeout(() => tryScroll(retries - 1), 100);
         }
-      }, 700);
+      };
+
+      tryScroll();
     }, []);
+
     useEffect(() => {
       if (calendarRef.current && isScroll) {
         const calendarApi = calendarRef.current.getApi();
@@ -2882,7 +2833,7 @@ const TimeSchedule = memo(
         const calendarHeight = calendarElement.offsetHeight;
         setHeighSkeleton(calendarHeight);
       }
-    }, [slotHeight, isLoadingSchedule]);
+    }, [slotHeight]);
     const dataDate = getDateInfo(displayHederDateStart);
 
     const calculateSlotHeight = (value: number): number => {
@@ -2983,8 +2934,7 @@ const TimeSchedule = memo(
             <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
               <div className={`items-center gap-4 flex h-12 sticky z-20`}>
                 {!isExtendCalendar ? (
-                  <div
-                    className={`flex relative ${isLoadingSchedule && '!opacity-45'}`}>
+                  <div className="flex relative">
                     <div className="w-[260px] ml-6 z-20 flex gap-[18px] items-center">
                       <Tippy
                         content="前日"
@@ -2994,11 +2944,7 @@ const TimeSchedule = memo(
                         offset={[0, 5]}>
                         <div>
                           <ImageRound
-                            onClick={() => {
-                              if (!isLoadingSchedule) {
-                                debouncedFunction(handlePreviousDay);
-                              }
-                            }}
+                            onClick={() => debouncedFunction(handlePreviousDay)}
                             className=" !w-2 !h-3 cursor-pointer"
                             src="/icons/left-schedule.svg"
                             name="left"
@@ -3022,11 +2968,7 @@ const TimeSchedule = memo(
                         offset={[0, 5]}>
                         <div>
                           <ImageRound
-                            onClick={() => {
-                              if (!isLoadingSchedule) {
-                                debouncedFunction(handleNextDay);
-                              }
-                            }}
+                            onClick={() => debouncedFunction(handleNextDay)}
                             className=" !w-2 !h-3 cursor-pointer"
                             src="/icons/right-schedule.svg"
                             name="right"
@@ -3043,17 +2985,14 @@ const TimeSchedule = memo(
                         tooltipMsg="カレンダーから日付を選択"
                         iconClassName="!static !w-8"
                         onChange={(e) => {
-                          if (!isLoadingSchedule) {
-                            handleChooseDay(e as Date);
-                          }
+                          handleChooseDay(e as Date);
                         }}
                       />
                     </div>
                   </div>
                 ) : (
                   <>
-                    <div
-                      className={`flex items-center gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
+                    <div className="flex items-center gap-3">
                       <Tippy
                         content="前日"
                         arrow={false}
@@ -3065,11 +3004,7 @@ const TimeSchedule = memo(
                             src="/icons/chevron-left-calendar.svg"
                             name="Previous day"
                             className="!w-[6px] !h-3  hover:cursor-pointer"
-                            onClick={() => {
-                              if (!isLoadingSchedule) {
-                                handlePreviousDay();
-                              }
-                            }}
+                            onClick={handlePreviousDay}
                           />
                         </div>
                       </Tippy>
@@ -3084,11 +3019,7 @@ const TimeSchedule = memo(
                             src="/icons/chevron-left-calendar.svg"
                             name="Next day"
                             className="!w-[6px] !h-3 rotate-180 hover:cursor-pointer"
-                            onClick={() => {
-                              if (!isLoadingSchedule) {
-                                handleNextDay();
-                              }
-                            }}
+                            onClick={handleNextDay}
                           />
                         </div>
                       </Tippy>
