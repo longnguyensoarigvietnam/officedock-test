@@ -8,7 +8,7 @@ from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
 )
-from rest_framework import viewsets, mixins, status
+from rest_framework import viewsets, mixins, status, filters
 from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
@@ -53,6 +53,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     ]
     pagination_class = None
     screen_name = Screens.CALENDAR.value
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["title"]
 
     def get_queryset(self):
         """
