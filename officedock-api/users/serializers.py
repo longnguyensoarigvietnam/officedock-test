@@ -313,6 +313,7 @@ class OrganizationForUserSerializer(OrganizationSerializer):
             "user_count",
             "is_main",
             "icon",
+            "icon_color",
         ]
 
     def get_is_main(self, obj):
