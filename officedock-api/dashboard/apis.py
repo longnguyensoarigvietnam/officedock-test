@@ -586,10 +586,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             task_duration = TaskDuration.objects.filter(
                 Q(paused_at__isnull=True)
                 & Q(Q(task__is_start=False) | Q(schedule__is_start=False))
-                & Q(
-                    Q(task__people_in_charge__id=user.id)
-                    | Q(schedule__participants__id=user.id)
-                )
+                & Q(user=user)
             )
             if task_duration.exists():
                 for duration in task_duration.all():
@@ -599,10 +596,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             Q(paused_at__isnull=True)
             & Q(Q(task__is_start=True) | Q(schedule__is_start=True))
             & Q(started_at__date__lt=now().date())
-            & Q(
-                Q(task__people_in_charge__id=user.id)
-                | Q(schedule__participants__id=user.id)
-            )
+            & Q(user=user)
         ).all()
 
         for duration in separate_task_duration:
@@ -616,6 +610,7 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             task_durations = current_duration_start.task_durations.filter(
                 Q(started_at__gte=start_of_today)
                 & Q(Q(paused_at__lte=end_of_today) | Q(paused_at__isnull=True))
+                & Q(user=user)
             ).all()
             total_duration = timedelta()
             # Calculate time between started and paused
