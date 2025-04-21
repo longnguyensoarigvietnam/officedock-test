@@ -8,6 +8,7 @@ from common.constants import (
     ORGANIZATION_ICON_FOLDER_UPLOAD,
 )
 from organizations.constants import OrganizationTypes
+from users.constants import AvatarColors
 
 
 class Organization(BaseModel):
@@ -24,6 +25,7 @@ class Organization(BaseModel):
         null=True,
         blank=True,
     )
+    icon_color = models.CharField(max_length=255, null=True, blank=True)
     name = models.CharField(max_length=255)
     type = models.CharField(
         max_length=50,
@@ -58,6 +60,14 @@ class Organization(BaseModel):
         related_name="organizations",
         through_fields=("organization", "skill"),
     )
+
+    def save(self, *args, **kwargs):
+        """
+        Set icon color default
+        """
+        if self.icon_color is None:
+            self.icon_color = AvatarColors.random()
+        super().save(*args, **kwargs)
 
 
 class UsersOrganizations(BaseModel):
