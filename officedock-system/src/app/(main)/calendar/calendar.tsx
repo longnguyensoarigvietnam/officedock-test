@@ -92,6 +92,8 @@ import {
   NO_OPTION_CATEGORY,
 } from '@constants';
 import api from '@base/api';
+import RangeSlider from '@components/common/RangeSlider';
+import useDebounceText from '@hooks/useDebounceText';
 
 const EventCalendar = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -169,15 +171,25 @@ const EventCalendar = () => {
 
   const debouncedFetchCalendarData = useRef(
     debounce(
-      async (
+      async ({
         startDate,
         endDate,
+        keySearch,
         selectedScheduleUserIds,
-        date?: Date,
-        clientX?: number,
-        clientY?: number,
-        isYearView?: boolean,
-      ) => {
+        date,
+        clientX,
+        clientY,
+        isYearView,
+      }: {
+        startDate: string;
+        endDate: string;
+        keySearch: string;
+        selectedScheduleUserIds: any;
+        date?: Date;
+        clientX?: number;
+        clientY?: number;
+        isYearView?: boolean;
+      }) => {
         const updatedUserIds: string[] = selectedScheduleUserIds
           ? selectedScheduleUserIds.split(',').filter(Boolean)
           : [];
@@ -190,6 +202,7 @@ const EventCalendar = () => {
           date,
           clientX,
           clientY,
+          keySearch,
         });
         setPopoverInfoLoading(false);
         setIsEventRendering(false);
@@ -212,11 +225,12 @@ const EventCalendar = () => {
         calendarApi.view.activeEnd,
       );
 
-      debouncedFetchCalendarData(
-        startDateISOString,
-        endDateISOString,
-        selectedScheduleUserIds,
-      );
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+      });
     }
   };
 
@@ -234,11 +248,12 @@ const EventCalendar = () => {
         calendarApi.view.activeEnd,
       );
 
-      debouncedFetchCalendarData(
-        startDateISOString,
-        endDateISOString,
-        selectedScheduleUserIds,
-      );
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+      });
     }
   };
 
@@ -254,12 +269,12 @@ const EventCalendar = () => {
       const endDateISOString = formatQueryEndDateForCalendar(
         calendarApi.view.activeEnd,
       );
-
-      debouncedFetchCalendarData(
-        startDateISOString,
-        endDateISOString,
-        selectedScheduleUserIds,
-      );
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+      });
     }
   };
 
@@ -276,11 +291,12 @@ const EventCalendar = () => {
         calendarApi.view.activeEnd,
       );
 
-      debouncedFetchCalendarData(
-        startDateISOString,
-        endDateISOString,
-        selectedScheduleUserIds,
-      );
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+      });
     }
   };
 
@@ -330,15 +346,16 @@ const EventCalendar = () => {
         ).top,
       });
 
-      debouncedFetchCalendarData(
-        startDateISOString,
-        endDateISOString,
-        selectedScheduleUserIds,
-        date,
-        clientX,
-        clientY,
-        true,
-      );
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+        date: date,
+        clientX: clientX,
+        clientY: clientY,
+        isYearView: true,
+      });
     }
   };
 
@@ -376,6 +393,7 @@ const EventCalendar = () => {
             userId: updatedUserIds.join(','),
             startDate: startDateISOString,
             endDate: endDateISOString,
+            keySearch: keySearch,
           }),
         );
       }
@@ -1018,8 +1036,9 @@ const EventCalendar = () => {
     date?: Date;
     clientX?: number;
     clientY?: number;
+    keySearch: string;
   }) => {
-    const apiUrl = `${apiRouters.SCHEDULES}?${userId ? `&user_ids=${userId}` : ''}${startDate ? `&start_date=${startDate}` : `&start_date=${currentRange.start}`}${endDate ? `&end_date=${endDate}` : `&end_date=${currentRange.end}`}`;
+    const apiUrl = `${apiRouters.SCHEDULES}?${userId ? `&user_ids=${userId}` : ''}${startDate ? `&start_date=${startDate}` : `&start_date=${currentRange.start}`}${endDate ? `&end_date=${endDate}` : `&end_date=${currentRange.end}`}${keySearch ? `&search=${keySearch}` : ''}`;
     const { data } = await api.get(apiUrl);
     return data;
   };
@@ -1063,7 +1082,10 @@ const EventCalendar = () => {
 
             if (event.end) {
               const end = new Date(event.end);
-              if ((start.toDateString() !== end.toDateString() && event.allDay) || isMidnight(new Date(event.end))) {
+              if (
+                (start.toDateString() !== end.toDateString() && event.allDay) ||
+                isMidnight(new Date(event.end))
+              ) {
                 end.setDate(end.getDate() + 1);
                 event.end = end.toISOString();
               }
@@ -1126,6 +1148,7 @@ const EventCalendar = () => {
         `${updatedUserIds.join(',')}`.length > 0
           ? `${updatedUserIds.join(',')}`
           : ``,
+      keySearch: keySearch,
     });
   };
 
@@ -1161,6 +1184,7 @@ const EventCalendar = () => {
         `${updatedMemberIds.join(',')}`.length > 0
           ? `${updatedMemberIds.join(',')}`
           : ``,
+      keySearch: keySearch,
     });
     setCurrentResources(() => {
       const updatedResources: { id: string; title: string }[] = [];
@@ -1203,6 +1227,7 @@ const EventCalendar = () => {
         `${updatedMemberIds.join(',')}`.length > 0
           ? `${updatedMemberIds.join(',')}`
           : ``,
+      keySearch: keySearch,
     });
 
     setCurrentResources(() => {
@@ -1545,7 +1570,8 @@ const EventCalendar = () => {
               data.endDate &&
               ((new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              data.isAllDay) || isMidnight(new Date(data.endDate)))
+                data.isAllDay) ||
+                isMidnight(new Date(data.endDate)))
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
@@ -1721,7 +1747,8 @@ const EventCalendar = () => {
               data.endDate &&
               ((new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              data.isAllDay) || isMidnight(new Date(data.endDate)))
+                data.isAllDay) ||
+                isMidnight(new Date(data.endDate)))
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
@@ -1945,9 +1972,90 @@ const EventCalendar = () => {
     return 'zero-all-day-events';
   };
 
+  // Zoom calendar
+  const screenHeight = window.innerHeight;
+
+  const baseHeight = Math.round(43 * (screenHeight / 717));
+  const baseSlider = Math.round(43 * (screenHeight / 717));
+  const [resetTrigger, _setResetTrigger] = useState(0);
+  const [isOptionZoomSchedule, setIsOptionZoomSchedule] = useState('00:15:00');
+
+  const [sliderValue, setSliderValue] = useState(baseSlider);
+  const [slotHeight, setSlotHeight] = useState(baseHeight);
+
+  const calculateSlotHeight = (value: number): number => {
+    if (value < 40) {
+      return 93 - (40 - value);
+    } else if (value > 58 && value < 80) {
+      return 0.732 * value - 8.17;
+    } else if (value < 94) {
+      return value;
+    }
+    return 24 + (value - 94);
+  };
+  const calculateSlotDuration = (value: number): string => {
+    if (value < 40) {
+      return '01:00:00';
+    } else if (value >= 94) {
+      return '00:05:00';
+    }
+    return '00:15:00';
+  };
+
+  // ZOOM IN / ZOOM OUT SCHEDULE
+  useEffect(() => {
+    const slots = document.querySelectorAll('.fc-timegrid-slot');
+
+    slots.forEach((slot) => {
+      const slotElement = slot as HTMLElement;
+      slotElement.style.height = `${slotHeight}px`;
+      slotElement.style.minHeight = `${slotHeight}px`;
+    });
+
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      if (calendarApi) {
+        calendarApi.updateSize();
+        const newDataTimeList = events.map((event) => {
+          return { ...event };
+        });
+        // Set data schedule
+        setEvents(newDataTimeList);
+      }
+    }
+  }, [slotHeight, searchParams]);
+
+  const [keySearch, setKeySearch] = useState<string>('');
+  const debouncedSearch = useDebounceText(keySearch, 800);
+
+  useEffect(() => {
+    if (debouncedSearch) {
+      if (calendarRef.current) {
+        setIsEventRendering(true);
+        setEvents([]);
+        const calendarApi = calendarRef.current.getApi() as any;
+        const startDateISOString = formatQueryStartDateForCalendar(
+          calendarApi.view.activeStart,
+        );
+        const endDateISOString = formatQueryEndDateForCalendar(
+          calendarApi.view.activeEnd,
+        );
+
+        debouncedFetchCalendarData({
+          startDate: startDateISOString,
+          endDate: endDateISOString,
+          selectedScheduleUserIds: selectedScheduleUserIds,
+          keySearch: keySearch,
+        });
+      }
+    }
+  }, [debouncedSearch]);
+
   return (
     <Fragment>
-      <div className="flex mb-3 pl-8 overflow-y-hidden" ref={containerRef}>
+      <div
+        className="flex relative mb-3 pl-8 overflow-y-hidden"
+        ref={containerRef}>
         <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'} p-4`}>
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center ml-[-1rem] gap-4">
@@ -2033,7 +2141,11 @@ const EventCalendar = () => {
               className={`flex gap-5 items-center ${!showSidebar && 'mr-14'}`}>
               <InputSearch
                 placeholder="予定、キーワードを検索"
+                value={keySearch}
                 inputClassName="!w-[300px] !py-2 !rounded-[20px] text-sm !bg-white border-none placeholder-[#77858F99]"
+                onChange={(e) => {
+                  setKeySearch(e.target.value);
+                }}
               />
               <div className="!w-[54px]">
                 <Controller
@@ -2212,8 +2324,7 @@ const EventCalendar = () => {
                 meridiem: false,
                 hour12: false,
               }}
-              slotDuration="00:30:00"
-              slotLabelInterval="00:30:00"
+              slotDuration={isOptionZoomSchedule}
               slotEventOverlap={false}
               slotLabelContent={({ text }) => (
                 <div className="text-[12px] text-[#77858F]">{text}</div>
@@ -2295,6 +2406,22 @@ const EventCalendar = () => {
                 },
               }}
             />
+            <div
+              className={`w-[180px] px-3 z-[9999] h-[38px] absolute  rounded-md right-[10px] bottom-[5px] bg-white flex items-center `}>
+              <RangeSlider
+                min={18}
+                max={100}
+                initialValue={sliderValue}
+                resetTrigger={resetTrigger}
+                onChange={(value) => {
+                  setSliderValue(value);
+                  const calculatedHeight = calculateSlotHeight(value);
+                  const calculatedDuration = calculateSlotDuration(value);
+                  setSlotHeight(calculatedHeight);
+                  setIsOptionZoomSchedule(calculatedDuration);
+                }}
+              />
+            </div>
           </div>
         </div>
         {popoverInfo && (
@@ -2314,6 +2441,7 @@ const EventCalendar = () => {
         <div
           className={`${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
           <CalendarSidebar
+            keySearch={keySearch}
             getEventCalendarByUsers={getEventCalendarByUsers}
             handleFilterScheduleByUserIds={handleFilterScheduleByUserIds}
             handleGetAllMemberSchedules={handleGetAllMemberSchedules}
