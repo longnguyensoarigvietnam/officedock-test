@@ -401,15 +401,12 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
 
     def validate(self, attrs):
         """Validation data"""
-        task_schedules = attrs.get("task_schedules")
-        people_in_charge_ids = attrs.get("people_in_charge_ids")
         repeat_type = attrs.get("repeat_type")
         week_day = attrs.get("week_day", None)
         month_day = attrs.get("month_day", None)
         plan_start_date = attrs.get("plan_start_date", None)
         plan_end_date = attrs.get("plan_end_date", None)
         month = attrs.get("month", None)
-        instance = self.instance
 
         if repeat_type == FrequencyMap.WEEKLY.value and week_day is None:
             raise serializers.ValidationError(
@@ -430,63 +427,6 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             raise serializers.ValidationError(
                 {"plan_end_date": ERROR_MESSAGES["select_day"]}
             )
-
-        # Sort list by plan start date
-        if task_schedules:
-            task_schedules.sort(key=lambda x: x["plan_start_date"])
-            current_task_schedules = []
-            if instance:
-                current_task_schedules = instance.task_schedules.values_list(
-                    "id", flat=True
-                )
-            for i in range(len(task_schedules) - 1):
-                if (
-                    task_schedules[i]["plan_end_date"]
-                    > task_schedules[i + 1]["plan_start_date"]
-                ):
-                    raise serializers.ValidationError(
-                        {
-                            "task_schedules": ERROR_MESSAGES[
-                                "exists_task_schedule"
-                            ]
-                        }
-                    )
-            for task_schedule in task_schedules:
-                plan_start_date = task_schedule["plan_start_date"]
-                plan_end_date = task_schedule["plan_end_date"]
-                check_exists_schedule = TaskSchedule.objects.filter(
-                    Q(
-                        Q(plan_start_date__lt=plan_end_date)
-                        | Q(plan_start_date__lte=plan_start_date)
-                    )
-                    & Q(
-                        Q(plan_end_date__gt=plan_start_date)
-                        | Q(plan_end_date__gte=plan_end_date)
-                    )
-                    & Q(
-                        task__people_in_charge_tasks__user__in=[
-                            user["people_in_charge"]
-                            for user in people_in_charge_ids
-                        ]
-                    )
-                )
-                if current_task_schedules:
-                    check_exists_schedule = check_exists_schedule.exclude(
-                        id__in=current_task_schedules
-                    )
-                elif task_schedule.get("schedule_id"):
-                    check_exists_schedule = check_exists_schedule.exclude(
-                        id=task_schedule.get("schedule_id").id
-                    )
-
-                if check_exists_schedule.exists():
-                    raise serializers.ValidationError(
-                        {
-                            "task_schedules": ERROR_MESSAGES[
-                                "exists_task_schedule"
-                            ]
-                        }
-                    )
 
         return attrs
 
@@ -745,7 +685,6 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
         """Validation"""
         plan_start_date = attrs.get("plan_start_date")
         plan_end_date = attrs.get("plan_end_date")
-        task = attrs.get("task")
         if (
             plan_start_date
             and plan_end_date
@@ -753,28 +692,6 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
         ):
             raise serializers.ValidationError(
                 {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
-            )
-        check_exists_schedule = TaskSchedule.objects.filter(
-            Q(
-                Q(plan_start_date__lt=plan_end_date)
-                | Q(plan_start_date__lte=plan_start_date)
-            )
-            & Q(
-                Q(plan_end_date__gt=plan_start_date)
-                | Q(plan_end_date__gte=plan_end_date)
-            )
-        )
-
-        if task:
-            check_exists_schedule = check_exists_schedule.filter(
-                task__people_in_charge_tasks__user__in=task.people_in_charge_tasks.values_list(
-                    "user", flat=True
-                )
-            )
-
-        if check_exists_schedule.exists():
-            raise serializers.ValidationError(
-                {"detail": ERROR_MESSAGES["exists_task_schedule"]}
             )
 
         return attrs
