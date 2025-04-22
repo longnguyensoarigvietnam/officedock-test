@@ -8,6 +8,7 @@ import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import Input from '@components/common/Input';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import TextArea from '@components/common/TextArea';
 import ImageRound from '@components/common/ImageRound';
 import ErrorMessage from '@components/common/ErrorMessage';
@@ -25,9 +26,11 @@ import {
 } from '@interfaces/calendar';
 import { CategoryStructure } from '@interfaces/skills';
 import { Organizations } from '@interfaces/organization';
+import { User } from '@interfaces/user';
 
 import {
   ActionsEvent,
+  EventParticipantType,
   EventWorkCategory,
   PermissionsSystem,
   ViewOptions,
@@ -56,14 +59,14 @@ import {
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
-import { User } from '@interfaces/user';
+import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
 export type ActionsEventModalProps = {
   open: boolean;
   dataEvent?: EventEditFormData;
   creationDataEventCalendar: CreationDataEventCalendar | undefined;
   action?: string;
-  authenticatedUser?: User | undefined
+  authenticatedUser?: User | undefined;
   onDelete?: (values: EventEditFormData) => void;
   onClose: () => void;
   onSubmit?: (values: EventFormData) => void;
@@ -181,7 +184,7 @@ const ActionsEventModal = ({
         },
       );
 
-      setDataOrganizationCategories(organizationCategories);
+      setDataOrganizationCategories(organizationCategories || []);
       setDataOptionsCategoryLarge(() => {
         const largeCategories: OptionDropdownType[] = [
           {
@@ -208,6 +211,21 @@ const ActionsEventModal = ({
     },
   });
 
+  const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
+    is_calendar_page: true,
+
+    onSuccess: (data) => {
+      setDataOptionsOrganizations([
+        ...data.organizations.map((org) => ({
+          value: org.id || '',
+          label: org.name,
+          userIds: org.users ? org.users.map((user) => user.id) : [],
+          iconColor: org.iconColor || '#0068B6',
+        })),
+      ]);
+    },
+  });
+
   useEffect(() => {
     if (organizationValue) {
       refetchCreationDataStatistic();
@@ -217,6 +235,7 @@ const ActionsEventModal = ({
   const defaultValues = useMemo<EventEditFormData>(() => {
     const value: EventEditFormData = {
       participantIds: [session?.user.id as number],
+      selectOrganizations: [],
       largeCategory: { label: '', value: '' },
       mediumCategory: { label: '', value: '' },
       smallCategory: { label: '', value: '' },
@@ -264,10 +283,10 @@ const ActionsEventModal = ({
     }
     if (dataEvent) {
       let newParticipantIds: number[] = [];
+      let newSelectedOrganizations: number[] = [];
       if (backToEditing) {
-        newParticipantIds = dataEvent.participantIds
-          ? dataEvent.participantIds
-          : [];
+        newParticipantIds = dataEvent.participantIds || [];
+        newSelectedOrganizations = dataEvent.selectOrganizations || [];
         value.tagIds = dataEvent.tagIds
           ? dataEvent.tagIds.map((tag) => {
               return {
@@ -278,9 +297,10 @@ const ActionsEventModal = ({
           : [];
       } else {
         if (dataEvent.participants) {
-          dataEvent.participants
+          newParticipantIds = dataEvent.participants
             .filter((item) => item.id !== '')
-            .map((item) => newParticipantIds.push(item.id as number));
+            .map((item) => item.id as number);
+          newSelectedOrganizations = dataEvent.selectOrganizations || [];
         }
         value.tagIds = dataEvent.tags
           ? dataEvent.tags.map((tag) => {
@@ -322,6 +342,7 @@ const ActionsEventModal = ({
       (value.id = `${dataEvent.id}`),
         (value.title = dataEvent.title),
         (value.participantIds = newParticipantIds),
+        (value.selectOrganizations = newSelectedOrganizations),
         (value.organization = dataEvent.organization
           ? {
               label: backToEditing
@@ -483,28 +504,36 @@ const ActionsEventModal = ({
 
   useEffect(() => {
     if (creationDataEventCalendar) {
-      setDataOptionsOrganizations(
-        creationDataEventCalendar.organizations.map((org) => ({
-          label: org.name,
-          value: org.id as number,
-        })),
-      );
       setDataOptionsEventTypes(
         creationDataEventCalendar.types.map((org) => ({
           label: org,
           value: org,
         })),
       );
-      setDataOptionsParticipants(
-        creationDataEventCalendar.members.map((org) => ({
-          id: org.id,
-          fullName: org.fullName,
-          organizations: org.organizations || [],
-        })),
-      );
+      const eventMembers = creationDataEventCalendar.members.map((org) => ({
+        id: org.id,
+        fullName: org.fullName,
+        type: EventParticipantType.USER,
+      }));
+      if (isFetchedCreationDataStatistic) {
+        const eventOrganizations = dataOptionsOrganizations
+          ? dataOptionsOrganizations.map((org) => ({
+              id: org.value,
+              fullName: org.label,
+              type: EventParticipantType.ORGANIZATION,
+              userIds: org.userIds,
+              color: org.iconColor,
+            }))
+          : [];
+        setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [creationDataEventCalendar]);
+  }, [
+    creationDataEventCalendar,
+    dataOptionsOrganizations,
+    isFetchedCreationDataStatistic,
+  ]);
 
   const [isCall, setIsCall] = useState<boolean>(false);
 
@@ -556,6 +585,83 @@ const ActionsEventModal = ({
           session?.user.permissions,
           PermissionsSystem.CALENDAR_ADD,
         )));
+
+  const checkIsParticipantSelected = (member: EventParticipant) => {
+    if (member.type == EventParticipantType.USER) {
+      return Boolean(
+        watch('participantIds') &&
+          watch('participantIds')?.find(
+            (participant) => participant == Number(member.id),
+          ),
+      );
+    } else {
+      return Boolean(
+        watch('selectOrganizations') &&
+          watch('selectOrganizations')?.find(
+            (participant) => participant == Number(member.id),
+          ),
+      );
+    }
+  };
+
+  const handleSelectEventParticipant = (member: EventParticipant) => {
+    const isUser = member.type === EventParticipantType.USER;
+    const isOrganization = member.type === EventParticipantType.ORGANIZATION;
+    const currentParticipantList = watch('participantIds') || [];
+    const currentOrganizationList = watch('selectOrganizations') || [];
+    const memberId = Number(member.id);
+
+    let updatedParticipantList = [...currentParticipantList];
+    let updatedOrganizationList = [...currentOrganizationList];
+
+    if (isUser) {
+      const isAlreadySelected = currentParticipantList.includes(memberId);
+
+      if (isAlreadySelected) {
+        // Remove the user
+        updatedParticipantList = updatedParticipantList.filter(
+          (id) => id !== memberId,
+        );
+
+        // Remove any org that includes the removed user
+        const belongedOrganizations = dataOptionsParticipants
+          .filter(
+            (participant) =>
+              participant.type == EventParticipantType.ORGANIZATION &&
+              participant.userIds?.includes(Number(member.id)),
+          )
+          .map((org) => org.id as number);
+        updatedOrganizationList = updatedOrganizationList.filter(
+          (org) => !belongedOrganizations.includes(org),
+        );
+      } else {
+        updatedParticipantList.push(memberId);
+      }
+
+      setValue('participantIds', updatedParticipantList);
+      setValue('selectOrganizations', updatedOrganizationList);
+    } else if (isOrganization) {
+      const isAlreadySelected = currentOrganizationList.includes(memberId);
+      const organizationMembers = member.userIds || [];
+
+      if (isAlreadySelected) {
+        updatedOrganizationList = updatedOrganizationList.filter(
+          (id) => id !== memberId,
+        );
+        updatedParticipantList = updatedParticipantList.filter(
+          (id) => !organizationMembers.includes(id),
+        );
+      } else {
+        updatedOrganizationList.push(memberId);
+        updatedParticipantList = Array.from(
+          new Set([...updatedParticipantList, ...organizationMembers]),
+        );
+      }
+
+      setValue('selectOrganizations', updatedOrganizationList);
+      setValue('participantIds', updatedParticipantList);
+    }
+  };
 
   return (
     <Drawer
@@ -1023,13 +1129,67 @@ const ActionsEventModal = ({
                   )}
                 />
               </div>
-              {(watch('organization') as OptionDropdownType)?.value && watch('largeCategory')?.value && (
-                <div className="mb-2">
-                  <Controller
-                    control={control}
-                    name={'mediumCategory'}
-                    render={({ field: { value, onChange } }) => {
-                      return (
+              {(watch('organization') as OptionDropdownType)?.value &&
+                watch('largeCategory')?.value && (
+                  <div className="mb-2">
+                    <Controller
+                      control={control}
+                      name={'mediumCategory'}
+                      render={({ field: { value, onChange } }) => {
+                        return (
+                          <Dropdown
+                            className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
+                            classNameTextData="!text-xs"
+                            classNameOption="!text-xs"
+                            options={[
+                              {
+                                label: NO_OPTION_CATEGORY,
+                                value: NO_OPTION_CATEGORY,
+                              },
+                              ...dataOptionsCategoryMedium.filter(
+                                (category) =>
+                                  category.label !== NO_OPTION_CATEGORY,
+                              ),
+                            ]}
+                            selectedOption={[
+                              {
+                                label: NO_OPTION_CATEGORY,
+                                value: NO_OPTION_CATEGORY,
+                              },
+                              ...dataOptionsCategoryMedium.filter(
+                                (category) =>
+                                  category.label !== NO_OPTION_CATEGORY,
+                              ),
+                            ].find(
+                              (element) =>
+                                element.value ==
+                                (value as OptionDropdownType)?.value,
+                            )}
+                            placeholder={'中カテゴリ'}
+                            onChange={(e) => {
+                              if (e.value != watch('mediumCategory.value')) {
+                                setValue('smallCategory', {
+                                  label: '',
+                                  value: '',
+                                });
+                              }
+                              onChange(e);
+                            }}
+                            disabled={isDisabled}
+                          />
+                        );
+                      }}
+                    />
+                  </div>
+                )}
+
+              {(watch('organization') as OptionDropdownType)?.value &&
+                watch('mediumCategory')?.value && (
+                  <div className="mb-2">
+                    <Controller
+                      control={control}
+                      name={'smallCategory'}
+                      render={({ field: { value, onChange } }) => (
                         <Dropdown
                           className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
                           classNameTextData="!text-xs"
@@ -1039,7 +1199,7 @@ const ActionsEventModal = ({
                               label: NO_OPTION_CATEGORY,
                               value: NO_OPTION_CATEGORY,
                             },
-                            ...dataOptionsCategoryMedium.filter(
+                            ...dataOptionsCategorySmall.filter(
                               (category) =>
                                 category.label !== NO_OPTION_CATEGORY,
                             ),
@@ -1049,7 +1209,7 @@ const ActionsEventModal = ({
                               label: NO_OPTION_CATEGORY,
                               value: NO_OPTION_CATEGORY,
                             },
-                            ...dataOptionsCategoryMedium.filter(
+                            ...dataOptionsCategorySmall.filter(
                               (category) =>
                                 category.label !== NO_OPTION_CATEGORY,
                             ),
@@ -1058,66 +1218,16 @@ const ActionsEventModal = ({
                               element.value ==
                               (value as OptionDropdownType)?.value,
                           )}
-                          placeholder={'中カテゴリ'}
+                          placeholder={'小カテゴリ'}
                           onChange={(e) => {
-                            if (e.value != watch('mediumCategory.value')) {
-                              setValue('smallCategory', {
-                                label: '',
-                                value: '',
-                              });
-                            }
                             onChange(e);
                           }}
                           disabled={isDisabled}
                         />
-                      );
-                    }}
-                  />
-                </div>
-              )}
-
-              {(watch('organization') as OptionDropdownType)?.value && watch('mediumCategory')?.value && (
-                <div className="mb-2">
-                  <Controller
-                    control={control}
-                    name={'smallCategory'}
-                    render={({ field: { value, onChange } }) => (
-                      <Dropdown
-                        className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
-                        classNameTextData="!text-xs"
-                        classNameOption="!text-xs"
-                        options={[
-                          {
-                            label: NO_OPTION_CATEGORY,
-                            value: NO_OPTION_CATEGORY,
-                          },
-                          ...dataOptionsCategorySmall.filter(
-                            (category) => category.label !== NO_OPTION_CATEGORY,
-                          ),
-                        ]}
-                        selectedOption={[
-                          {
-                            label: NO_OPTION_CATEGORY,
-                            value: NO_OPTION_CATEGORY,
-                          },
-                          ...dataOptionsCategorySmall.filter(
-                            (category) => category.label !== NO_OPTION_CATEGORY,
-                          ),
-                        ].find(
-                          (element) =>
-                            element.value ==
-                            (value as OptionDropdownType)?.value,
-                        )}
-                        placeholder={'小カテゴリ'}
-                        onChange={(e) => {
-                          onChange(e);
-                        }}
-                        disabled={isDisabled}
-                      />
-                    )}
-                  />
-                </div>
-              )}
+                      )}
+                    />
+                  </div>
+                )}
             </div>
           </div>
           {/* Tag */}
@@ -1242,20 +1352,67 @@ const ActionsEventModal = ({
                             .toLowerCase()
                             .includes(searchName.toLowerCase()),
                         );
-                      let newParticipantList: number[] = [];
-                      if (updatedParticipantList) {
-                        newParticipantList = updatedParticipantList.map(
-                          (participant) => Number(participant.id),
-                        );
-                      }
-                      setValue('participantIds', newParticipantList);
+                      setValue('participantIds', [
+                        ...(watch('participantIds') || []),
+                        ...updatedParticipantList
+                          .filter(
+                            (participant) =>
+                              participant.type === EventParticipantType.USER,
+                          )
+                          .map((participant) => Number(participant.id)),
+                      ]);
+
+                      setValue('selectOrganizations', [
+                        ...(watch('selectOrganizations') || []),
+                        ...updatedParticipantList
+                          .filter(
+                            (participant) =>
+                              participant.type ==
+                              EventParticipantType.ORGANIZATION,
+                          )
+                          .map((participant) => Number(participant.id)),
+                      ]);
                     }}>
                     全てをチェック
                   </p>
                   <p
                     className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
                     onClick={() => {
-                      setValue('participantIds', []);
+                      const matchingParticipantList =
+                        dataOptionsParticipants?.filter((member) =>
+                          member.fullName
+                            .toLowerCase()
+                            .includes(searchName.toLowerCase()),
+                        );
+                      const currentParticipantIds =
+                        watch('participantIds') || [];
+                      const currentOrganizationIds =
+                        watch('selectOrganizations') || [];
+
+                      const filteredParticipantIds =
+                        currentParticipantIds.filter(
+                          (participantId) =>
+                            !matchingParticipantList.find(
+                              (matchingParticipant) =>
+                                matchingParticipant.id === participantId &&
+                                matchingParticipant.type ===
+                                  EventParticipantType.USER,
+                            ),
+                        );
+                      const filteredOrganizationIds =
+                        currentOrganizationIds.filter(
+                          (participantId) =>
+                            !matchingParticipantList.find(
+                              (matchingParticipant) =>
+                                matchingParticipant.id === participantId &&
+                                matchingParticipant.type ===
+                                  EventParticipantType.ORGANIZATION,
+                            ),
+                        );
+
+                      setValue('participantIds', filteredParticipantIds);
+
+                      setValue('selectOrganizations', filteredOrganizationIds);
                     }}>
                     全てのチェックをクリア
                   </p>
@@ -1280,84 +1437,51 @@ const ActionsEventModal = ({
                       return (
                         <div
                           className={`flex gap-2 items-center px-3 py-2.5 hover:cursor-pointer ${
-                            watch('participantIds') &&
-                            watch('participantIds')?.find(
-                              (participant) => participant == member.id,
-                            ) &&
-                            'bg-[#EBF1F7]'
+                            checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
                           }`}
                           key={member.id}>
                           <div>
-                            <Controller
-                              control={control}
-                              name="participantIds"
-                              render={() => (
-                                <Checkbox
-                                  isChecked={
-                                    watch('participantIds') &&
-                                    watch('participantIds')?.find(
-                                      (participant) => participant == member.id,
-                                    )
-                                      ? true
-                                      : false
-                                  }
-                                  disable={isDisabled}
-                                  onChange={() => {
-                                    const currentParticipantList =
-                                      watch('participantIds') || [];
-                                    const foundParticipantIndex =
-                                      currentParticipantList.findIndex(
-                                        (participant) =>
-                                          participant == member.id,
-                                      );
-                                    let updatedParticipantList = [];
-                                    if (foundParticipantIndex == -1) {
-                                      updatedParticipantList = [
-                                        ...currentParticipantList,
-                                        Number(member.id),
-                                      ];
-                                    } else {
-                                      updatedParticipantList = [
-                                        ...currentParticipantList,
-                                      ].filter(
-                                        (participant) =>
-                                          participant != member.id,
-                                      );
-                                    }
-
-                                    setValue(
-                                      'participantIds',
-                                      updatedParticipantList,
-                                    );
-                                  }}
-                                />
-                              )}
+                            <Checkbox
+                              isChecked={checkIsParticipantSelected(member)}
+                              disable={isDisabled}
+                              onChange={() => {
+                                handleSelectEventParticipant(member);
+                              }}
                             />
                           </div>
-                          {dashboardMembersWithAvatars &&
-                          dashboardMembersWithAvatars.find(
-                            (memberWithAvatar) =>
-                              memberWithAvatar.id == member.id,
-                          ) ? (
-                            <>
-                              {AvatarIconWithDynamicColor({
-                                color:
-                                  dashboardMembersWithAvatars?.find(
-                                    (memberWithAvatar) =>
-                                      memberWithAvatar.id == member.id,
-                                  )?.avatarColor || '#0068B6',
-                                size: 34,
-                              })}
-                            </>
-                          ) : (
-                            <ImageRound
-                              className="w-8 h-8"
-                              src="/images/avatar-default.svg"
-                              border="full"
-                              name="Avatar user"
-                            />
+                          {member.type == EventParticipantType.USER &&
+                            (dashboardMembersWithAvatars &&
+                            dashboardMembersWithAvatars.find(
+                              (memberWithAvatar) =>
+                                memberWithAvatar.id == member.id,
+                            ) ? (
+                              <>
+                                {AvatarIconWithDynamicColor({
+                                  color:
+                                    dashboardMembersWithAvatars?.find(
+                                      (memberWithAvatar) =>
+                                        memberWithAvatar.id == member.id,
+                                    )?.avatarColor || '#0068B6',
+                                  size: 33,
+                                })}
+                              </>
+                            ) : (
+                              <ImageRound
+                                className="w-8 h-8"
+                                src="/images/avatar-default.svg"
+                                border="full"
+                                name="Avatar user"
+                              />
+                            ))}
+                          {member.type == EventParticipantType.ORGANIZATION && (
+                            <div className="scale-110">
+                              <GroupIconWithDynamicColor
+                                color={member.color || '#0068B6'}
+                              />
+                            </div>
                           )}
-                          <p className="text-[15px] truncate max-w-[350px] text-black leading-normal">
+                          <p
+                            className={`text-[15px] truncate max-w-[350px] text-black leading-normal ${member.type == EventParticipantType.ORGANIZATION && 'ml-1'}`}>
                             {member.fullName}
                           </p>
                         </div>
@@ -1371,9 +1495,10 @@ const ActionsEventModal = ({
                     if (state) {
                       const currentParticipantList =
                         watch('participantIds') || [];
+
                       const filterParticipantList =
                         currentParticipantList.filter(
-                          (participant) => participant !== session?.user.id,
+                          (participant) => participant != session?.user.id,
                         );
                       setValue('participantIds', filterParticipantList);
                     }

@@ -1,7 +1,7 @@
 import { Tags } from './tag';
 import { Organizations } from './organization';
 import { OptionDropdownType } from './common';
-import { EventCalendarType } from '@constants/enums';
+import { EventCalendarType, EventParticipantType } from '@constants/enums';
 
 export interface EventCalendarDetail {
   id?: string;
@@ -35,6 +35,7 @@ export interface EventFormData {
   isAllDay?: boolean;
   tagIds?: OptionDropdownType[];
   participantIds?: number[];
+  selectOrganizations?: number[];
   address?: string;
   memo?: string;
   type?: OptionDropdownType;
@@ -56,6 +57,7 @@ export interface EventEditFormData {
   tagIds?: OptionDropdownType[];
   participants?: EventParticipant[];
   participantIds?: number[];
+  selectOrganizations?: number[];
   address?: string;
   memo?: string;
   type?: string | OptionDropdownType;
@@ -88,6 +90,7 @@ export interface EventRequest {
       }[]
     | null;
   organizationId?: number | null;
+  selectOrganizations?: number[];
 }
 
 export interface CreationDataEventCalendar {
@@ -113,6 +116,10 @@ export interface EventParticipant {
   fullName: string;
   id: number | string;
   organizations?: Organizations[];
+  type?: EventParticipantType;
+  userIds?: number[];
+  mainOrganization?: string;
+  color?: string;
 }
 
 export interface CalendarDashboardMember {

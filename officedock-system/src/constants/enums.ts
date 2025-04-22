@@ -492,3 +492,7 @@ export enum PendingNavigationType {
   TEAM_DOCK = 'TEAM_DOCK',
   MEMBER = 'MEMBER',
 }
+export enum EventParticipantType{
+  USER = 'USER',
+  ORGANIZATION = 'ORGANIZATION'
+}

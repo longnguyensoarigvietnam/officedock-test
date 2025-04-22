@@ -229,6 +229,12 @@ export interface CreationStatisticType {
   name: string;
   isMain: boolean;
   statisticCategories: LargeCategory[];
+  users?: {
+    id: number,
+    fullName: string,
+    avatarColor: string
+  }[],
+  iconColor?: string
 }
 export interface DataResponseStatisticCreationType {
   organizations: CreationStatisticType[];
