@@ -180,17 +180,37 @@
 .schedule-custom .fc-timegrid-col-frame {
   overflow: visible !important;
 }
-.schedule-custom
-  .fc-timegrid-cols
-  td:first-child
-  .fc-timegrid-now-indicator-container {
-  right: -30px !important;
-}
 .schedule-custom .fc-scrollgrid-section .fc-timegrid-divider.fc-cell-shaded {
   background: transparent !important;
 }
 .schedule-custom .fc .fc-timegrid-now-indicator-arrow {
-  border: transparent !important;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid #C32E2E;
+  width: 0;
+  height: 0;
+  position: relative;
+}
+.schedule-custom .fc .fc-timegrid-now-indicator-arrow::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 2px;
+  background-color: #C32E2E;
+  margin-left: -3px;
+}
+.schedule-custom .fc-timegrid-now-indicator-line {
+  border: 1.2px solid #C32E2E;
+}
+.schedule-custom .fc-timeGridWeek-view .fc-timegrid-now-indicator-line {
+  margin-top: -6px;
+}
+.schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-now-indicator-line {
+  margin-top: -1px;
 }
 .schedule-custom
   .fc-col-header
@@ -312,17 +332,8 @@
 .schedule-custom .fc-timegrid-col-frame {
   overflow: visible !important;
 }
-.schedule-custom
-  .fc-timegrid-cols
-  td:first-child
-  .fc-timegrid-now-indicator-container {
-  right: -30px !important;
-}
 .schedule-custom .fc-scrollgrid-section .fc-timegrid-divider.fc-cell-shaded {
   background: transparent !important;
-}
-.schedule-custom .fc .fc-timegrid-now-indicator-arrow {
-  border: transparent !important;
 }
 .schedule-custom
   .fc-col-header
@@ -511,7 +522,7 @@
   .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
   position: relative;
   top: -9px;
-  left: -5px;
+  left: 3px;
 }
 .schedule-custom
   .fc-timeGridWeek-view
@@ -523,7 +534,7 @@
   .fc-timeGridWeek-view
   .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
   position: relative;
-  top: -5px;
+  top: 3px;
 }
 
 .schedule-custom

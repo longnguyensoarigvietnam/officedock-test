@@ -8,7 +8,7 @@ const CalendarSkeleton: React.FC<CalendarSkeletonProps> = ({
   className
 }) => {
   return (
-    <div className={`flex flex-col h-[1516px] mt-[42px] pt-[20px] w-full bg-[#ebf1f4] rounded-md overflow-hidden ${className}`}>
+    <div className={`flex flex-col h-[1516px] mt-[30px] pl-[25px] w-full bg-[#ebf1f4] rounded-md overflow-hidden ${className}`}>
       <div className="flex-1 grid grid-rows-[repeat(auto-fill,_87px)]">
         {Array.from({
           length: 26,

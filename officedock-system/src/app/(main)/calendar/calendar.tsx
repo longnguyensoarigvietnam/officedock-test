@@ -33,7 +33,9 @@ import Button from '@components/common/Button';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { CalendarSidebar } from '@components/calendar/Sidebar';
 import { TaskAndEventListModal } from '@components/modals/TaskAndEventListModal';
+import RangeSlider from '@components/common/RangeSlider';
 
+import useDebounceText from '@hooks/useDebounceText';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
@@ -92,9 +94,8 @@ import {
   DEFAULT_START_TIME,
   NO_OPTION_CATEGORY,
 } from '@constants';
+
 import api from '@base/api';
-import RangeSlider from '@components/common/RangeSlider';
-import useDebounceText from '@hooks/useDebounceText';
 
 const EventCalendar = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -171,6 +172,14 @@ const EventCalendar = () => {
   >();
   const [popoverInfoLoading, setPopoverInfoLoading] = useState<boolean>(false);
   const showErrorToast = useErrorToast();
+
+  const isDayOrWeekView = () => {
+    return (
+      watch('calendarView') &&
+      (watch('calendarView').value == CalendarViewOptions.VIEW_BY_DAY ||
+        watch('calendarView').value == CalendarViewOptions.VIEW_BY_WEEK)
+    );
+  };
 
   const debouncedFetchCalendarData = useRef(
     debounce(
@@ -278,6 +287,7 @@ const EventCalendar = () => {
         selectedScheduleUserIds: selectedScheduleUserIds,
         keySearch: keySearch,
       });
+      if (isDayOrWeekView()) scrollToStartOfDay();
     }
   };
 
@@ -300,6 +310,10 @@ const EventCalendar = () => {
         selectedScheduleUserIds: selectedScheduleUserIds,
         keySearch: keySearch,
       });
+      if (
+        isDayOrWeekView()
+      )
+        scrollToStartOfDay();
     }
   };
 
@@ -399,6 +413,10 @@ const EventCalendar = () => {
       }
 
       setIsEventRendering(false);
+      if (
+        isDayOrWeekView()
+      )
+        scrollToStartOfDay();
     }
   };
 
@@ -434,6 +452,14 @@ const EventCalendar = () => {
 
     return () => resizeObserver.disconnect();
   }, [calendarRef, containerRef]);
+
+  const scrollToStartOfDay = () => {
+    if (calendarRef.current === null) {
+      return;
+    }
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.scrollToTime('00:00:00');
+  };
 
   const checkShowUserAvatar = (
     type?: EventCalendarType,
@@ -2127,10 +2153,10 @@ const EventCalendar = () => {
   return (
     <Fragment>
       <div
-        className="flex relative mb-3 pl-8 overflow-y-hidden"
+        className="flex relative mb-3 overflow-y-hidden pt-5"
         ref={containerRef}>
-        <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'} p-4`}>
-          <div className="flex items-center justify-between mb-1">
+        <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'}`}>
+          <div className="flex items-center justify-between mb-7 pl-10">
             <div className="flex items-center ml-[-1rem] gap-4">
               <ImageRound
                 name="Chevron left"
@@ -2274,7 +2300,7 @@ const EventCalendar = () => {
           </div>
 
           <div
-            className={`w-full relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} ${showSidebar ? '' : 'pr-8'}`}
+            className={`w-full ${!isDayOrWeekView() && 'pl-6'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} ${showSidebar ? '' : 'pr-8'}`}
             style={{ overflowX: 'auto', width: '100%' }}>
             {calendarLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#ebf1f4] z-10"></div>
@@ -2288,7 +2314,7 @@ const EventCalendar = () => {
                       numberOfResources={
                         searchParams.get('view') == ViewOptions.WEEK ? 7 : 2
                       }
-                      className={`${searchParams.get('view') == ViewOptions.WEEK && 'mt-[27px]'}`}
+                      className={`${searchParams.get('view') == ViewOptions.WEEK ? 'pt-[20px]' : 'mt-[50px] pt-[10px]'}`}
                     />
                   </div>
                 )}
