@@ -524,21 +524,21 @@ const ListCategory = () => {
                     </div>
                   </td>
                   <td className="border-r-[1px] border-r-[#D2DBE1]">
-                    <p className="text-center text-sm font-medium">
+                    <p className="text-center text-sm font-medium w-[100%] max-w-[100%] break-all">
                       {getCategoryFormattedDate(
                         new Date(element.createdAt || new Date()),
                       )}
                     </p>
                   </td>
                   <td className="border-r-[1px] border-r-[#D2DBE1]">
-                    <p className="text-center text-sm font-medium">
+                    <p className="text-center text-sm font-medium w-[100%] max-w-[100%] break-all">
                       {getCategoryFormattedDate(
                         new Date(element.updatedAt || new Date()),
                       )}
                     </p>
                   </td>
                   <td>
-                    <p className="text-justify text-sm font-medium">
+                    <p className="text-justify text-sm font-medium w-[100%] max-w-[100%] break-all">
                       {element.organizations
                         ?.map((org: { id: number; name: string }) => org.name)
                         .join('/ ')}

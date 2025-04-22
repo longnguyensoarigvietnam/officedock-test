@@ -153,6 +153,7 @@ const EditHierarchyForm = () => {
         return {
           value: category.uuid,
           label: category.name,
+          teamId: category.team
         };
       });
       setCategoryList([...options]);
