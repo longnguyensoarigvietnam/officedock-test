@@ -916,26 +916,32 @@ class OrganizationCategoryHierarchyViewSet(
 
         if data_to_create:
             for item in data_to_create:
+                organization = item.get("organization", None)
                 organization_statistic_category = item.pop(
                     "organization_statistic_category", None
                 )
                 large_statistic_category = (
                     self._get_statistic_category_instance(
-                        item.pop("large_statistic_category", None), company
+                        item.pop("large_statistic_category", None),
+                        company,
+                        organization,
                     )
                 )
                 medium_statistic_category = (
                     self._get_statistic_category_instance(
-                        item.pop("medium_statistic_category", None), company
+                        item.pop("medium_statistic_category", None),
+                        company,
+                        organization,
                     )
                 )
                 small_statistic_category = (
                     self._get_statistic_category_instance(
-                        item.pop("small_statistic_category", None), company
+                        item.pop("small_statistic_category", None),
+                        company,
+                        organization,
                     )
                 )
                 color = item.get("color", None)
-                organization = item.get("organization", None)
                 skills = item.pop("skills", [])
 
                 if organization_statistic_category:
@@ -1042,19 +1048,24 @@ class OrganizationCategoryHierarchyViewSet(
 
         return self.response_created()
 
-    def _get_statistic_category_instance(self, obj, company):
+    def _get_statistic_category_instance(self, obj, company, org):
         """Get instance"""
         large_statistic_category = None
 
         if obj:
             (
                 large_statistic_category,
-                _,
+                created,
             ) = StatisticCategory.objects.get_or_create(
                 company=company,
                 name=obj.get("name"),
                 defaults={"uuid": obj.get("uuid")},
             )
+
+            if created:
+                large_statistic_category.team = org
+                large_statistic_category.save()
+
         return large_statistic_category
 
 

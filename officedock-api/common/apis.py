@@ -17,7 +17,7 @@ from calendars.models import Schedule
 from chat.constants import WebSocketEventType
 from skills.models import StatisticCategory
 from organizations.serializers import (
-    StatisticCategorySerializer,
+    BaseStatisticCategorySerializer,
     OrganizationDetailSerializer,
 )
 from tags.serializers import BaseTagSerializer
@@ -381,7 +381,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         methods=["GET"],
         detail=False,
         url_path="statistic-categories",
-        serializer_class=StatisticCategorySerializer,
+        serializer_class=BaseStatisticCategorySerializer,
     )
     def statistic_categories(self, request):
         """
