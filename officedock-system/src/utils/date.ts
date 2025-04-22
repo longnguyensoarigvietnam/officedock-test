@@ -365,6 +365,22 @@ export function addHoursToDate(dateString: string, hours: number = 1): string {
   return date.toISOString();
 }
 
+// Add minutes in time
+export function addMinutesToDate(
+  dateString: string,
+  minutes: number = 15,
+): string {
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) {
+    return '';
+  }
+
+  date.setMinutes(date.getMinutes() + minutes);
+
+  return date.toISOString();
+}
+
 // Check start & end with minutes
 export function adjustEndDate(
   start: Date,
