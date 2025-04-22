@@ -86,6 +86,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "send_to_chat",
             "message",
             "is_start",
+            "select_organizations",
         ]
         read_only_fields = ["id"]
 
@@ -160,6 +161,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "is_start",
             "event_type",
             "categories",
+            "select_organizations",
         ]
 
     def get_categories(self, obj):

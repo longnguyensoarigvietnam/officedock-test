@@ -73,6 +73,14 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             return BaseScheduleSerializer(*args, **kwargs)
         return super().get_serializer(*args, **kwargs)
 
+    def get_serializer_context(self):
+        """
+        Add request to context
+        """
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
     @transaction.atomic()
     def perform_create(self, serializer):
         """
@@ -214,6 +222,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 new_value != old_value
                 and field_name != "start_date"
                 and field_name != "end_date"
+                and field_name != "select_organizations"
             ):
                 changes.append(
                     ScheduleFields.__members__[field_name.upper()].value
