@@ -41,6 +41,7 @@ export type CalendarSidebarProps = {
     unknown,
     {
       userId: string;
+      keySearch: string;
       startDate?: string;
       endDate?: string;
       filterMyTask?: boolean;
@@ -51,12 +52,14 @@ export type CalendarSidebarProps = {
     },
     unknown
   >;
+  keySearch: string;
 };
 
 export const CalendarSidebar = ({
   removeMyselfOption,
   selectedScheduleUserIds,
   searchName,
+  keySearch,
   setSearchName,
   setShowSidebar,
   setRemoveMyselfOption,
@@ -245,6 +248,7 @@ export const CalendarSidebar = ({
                   `${updatedUserIds.join(',')}`.length > 0
                     ? `${updatedUserIds.join(',')}`
                     : ``,
+                keySearch: keySearch,
               });
             }
           }}
