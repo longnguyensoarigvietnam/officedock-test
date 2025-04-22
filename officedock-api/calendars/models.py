@@ -33,6 +33,7 @@ class Schedule(BaseModel):
         through="ParticipantsSchedules",
         related_name="schedules",
     )
+    select_organizations = models.JSONField(null=True, blank=True)
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.CASCADE,

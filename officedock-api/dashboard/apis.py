@@ -18,6 +18,8 @@ from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
 from calendars.constants import CalendarTypes
 from calendars.models import Schedule
+from calendars.serializers import BaseScheduleSerializer
+from common.constants import BASE_DATETIME_FORMAT
 from common.serializers import (
     CreationDataTagSerializer,
     CreationDataUserWithMainOrganizationSerializer,
@@ -41,6 +43,7 @@ from dashboard.utils import separate_duration
 from roles.constants import Screens
 from tasks.constants import TaskStatus
 from tasks.models import TaskDuration, PeopleInChargeTasks, Task, TaskSchedule
+from tasks.serializers import TaskCalendarSerializer
 from tasks.utils import split_date_range
 
 
@@ -219,6 +222,49 @@ class DashboardViewSet(BaseAPIViewSet):
             .all()
         )
         data = self._append_data_to_cards(data, event_durations, request)
+
+        return self.response_ok(data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("start_date", type=datetime, required=True),
+            OpenApiParameter("end_date", type=datetime, required=True),
+        ],
+    )
+    @action(methods=["GET"], detail=False, url_path="kanban_schedules")
+    def kanban_schedules(self, request):
+        """
+        Get all schedule in kanban
+        """
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+        user = request.user
+        data = []
+        if start_date and end_date:
+            start_date = datetime.strptime(
+                start_date, BASE_DATETIME_FORMAT
+            ).date()
+            end_date = datetime.strptime(end_date, BASE_DATETIME_FORMAT).date()
+            start_date = datetime.combine(start_date, time.min)
+            end_date = datetime.combine(end_date, time.max)
+            tasks = Task.objects.filter(
+                task_schedules__plan_start_date__gte=start_date,
+                task_schedules__plan_start_date__lte=end_date,
+                people_in_charge=user,
+            ).distinct()
+            schedules = Schedule.objects.filter(
+                repeat_schedules__plan_start_date__gte=start_date,
+                repeat_schedules__plan_end_date__lte=end_date,
+                participants=user,
+            )
+            data = (
+                TaskCalendarSerializer(
+                    tasks, many=True, context={"request": request}
+                ).data
+                + BaseScheduleSerializer(
+                    schedules, many=True, context={"request": request}
+                ).data
+            )
 
         return self.response_ok(data)
 
