@@ -2889,7 +2889,7 @@ const TimeSchedule = memo(
             onMouseDown={handleMouseDown}
           />
           <div
-            className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 px-4 `}>
+            className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 pr-4 `}>
             <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
               <div className={`items-center gap-4 flex h-12 sticky z-20`}>
                 {!isExtendCalendar ? (
@@ -2963,7 +2963,7 @@ const TimeSchedule = memo(
                 ) : (
                   <>
                     <div
-                      className={`flex items-center gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
+                      className={`flex items-center ml-8 gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
                       <Tippy
                         content="前日"
                         arrow={false}
