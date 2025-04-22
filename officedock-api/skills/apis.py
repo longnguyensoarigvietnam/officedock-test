@@ -64,7 +64,7 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         queryset = super().get_queryset().filter(company=company)
 
         if self.action == "list":
-            return queryset.order_by("-id")
+            return queryset.filter(team__isnull=True).order_by("-id")
 
         return queryset.order_by("id")
 
@@ -112,7 +112,7 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     )
     def validation_data(self, request):
         """
-        Get list of member in organization
+        Validation data before create category in hierarchy
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

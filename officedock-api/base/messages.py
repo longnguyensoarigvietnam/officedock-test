@@ -97,6 +97,9 @@ _ERROR_MESSAGES = {
             "Can not create a project team hierarchy."
         ),
         "schedule_not_in_the_past": _("Can not choose schedule in the past"),
+        "cannot_select_category_other_team": _(
+            "Cannot select categories from other team."
+        ),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -168,6 +171,7 @@ _ERROR_MESSAGES = {
         "organization_uuid_not_exists": _("{parent_uuid}の組織が存在していません。"),
         "organization_team_not_hierarchy": _("プロジェクトチームの階層を作成できません。"),
         "schedule_not_in_the_past": _("実施予定日時は未来の日時を選択してください。"),
+        "cannot_select_category_other_team": _("他のチームのカテゴリーを選択できません。"),
     },
 }
 

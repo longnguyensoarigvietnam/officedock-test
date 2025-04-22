@@ -20,6 +20,13 @@ class StatisticCategory(BaseModel):
     name = models.CharField(
         max_length=255,
     )
+    team = models.ForeignKey(
+        "organizations.Organization",
+        related_name="team_statistic_categories",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
 
 class Skill(BaseModel):
