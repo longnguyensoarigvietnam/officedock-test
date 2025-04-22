@@ -1404,22 +1404,9 @@ const TimeSchedule = memo(
             item.taskId === Number(newEventId)
           );
         });
-        const hasOverlapPlan = taskTimeScheduleList.some((item) => {
-          return (
-            newEvent.start < item.end &&
-            newEvent.end > item.start &&
-            item.resourceId === ItemScheduleType.PLANS &&
-            resourcePlan &&
-            item.type === ItemStartType.TASK
-          );
-        });
+
         // Check overlap actual
         if (hasOverlap) {
-          return info.revert();
-        }
-        // Check overlap plan
-
-        if (hasOverlapPlan) {
           return info.revert();
         }
         info.view.calendar.refetchEvents();
@@ -1623,23 +1610,6 @@ const TimeSchedule = memo(
             return info.revert();
           }
         }
-      } else {
-        // Check overlap plan
-        const hasOverlap = taskTimeScheduleList
-          .filter((data) => data.uuid !== resizedEvent.extendedProps.uuid)
-          .some((item) => {
-            return (
-              resizedEvent.start < item.end &&
-              resizedEvent.end > item.start &&
-              item.resourceId === ItemScheduleType.PLANS &&
-              resourcePlanDay &&
-              item.type === ItemStartType.TASK &&
-              resizedEvent.extendedProps.type === ItemStartType.TASK
-            );
-          });
-        if (hasOverlap) {
-          return info.revert();
-        }
       }
 
       setTaskTimeScheduleList((prevEvents) => {
@@ -1771,24 +1741,6 @@ const TimeSchedule = memo(
         if (hasOverlapWeek) {
           return info.revert();
         }
-        const hasOverlapPlanWeek = taskTimeScheduleList
-          .filter((data) => data.uuid !== droppedEvent.extendedProps.uuid)
-          .some((item) => {
-            return (
-              startDrop < item.end &&
-              endDrop > item.start &&
-              item.resourceId === isCheckWeek &&
-              resourcePlanWeek &&
-              item.type === ItemStartType.TASK &&
-              droppedEvent.extendedProps.type === ItemStartType.TASK
-            );
-          });
-
-        // Check overlap plan week
-        if (hasOverlapPlanWeek) {
-          return info.revert();
-        }
-
         if (matchData && matchData.uuid !== droppedEvent.extendedProps.uuid) {
           info.view.calendar.refetchEvents();
         }
@@ -1925,23 +1877,6 @@ const TimeSchedule = memo(
             );
           });
 
-          if (hasOverlap) {
-            return info.revert();
-          }
-        } else {
-          // Check overlap plan
-          const hasOverlap = taskTimeScheduleList
-            .filter((data) => data.uuid !== droppedEvent.extendedProps.uuid)
-            .some((item) => {
-              return (
-                startDrop < item.end &&
-                endDrop > item.start &&
-                item.resourceId === ItemScheduleType.PLANS &&
-                resourcePlanDay &&
-                item.type === ItemStartType.TASK &&
-                droppedEvent.extendedProps.type === ItemStartType.TASK
-              );
-            });
           if (hasOverlap) {
             return info.revert();
           }
@@ -2909,6 +2844,28 @@ const TimeSchedule = memo(
         onSettled: () => {},
       },
     );
+
+    useEffect(() => {
+      const updateSlotLineColors = () => {
+        const slots = document.querySelectorAll(
+          '.fc-timegrid-slot.fc-timegrid-slot-lane',
+        );
+
+        slots.forEach((slot) => {
+          const time = slot.getAttribute('data-time');
+          if (time) {
+            const [_hour, minute] = time.split(':').map(Number);
+            if (minute === 0) {
+              slot.classList.add('hour-line');
+            } else if (minute === 30) {
+              slot.classList.add('half-hour-line');
+            }
+          }
+        });
+      };
+      // Call the function after FullCalendar renders
+      setTimeout(updateSlotLineColors, 100);
+    }, [isExtendCalendar]);
 
     return (
       <>

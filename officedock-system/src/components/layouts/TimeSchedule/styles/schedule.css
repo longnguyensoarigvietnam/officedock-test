@@ -63,6 +63,7 @@
   background-color: #d2dbe1;
   top: 0%;
   transform: -translateX(50%);
+  opacity: 0.7;
 }
 
 .schedule-custom .fc-timeGridDay-view .fc-day-today {
@@ -381,11 +382,13 @@
   padding: 0 18px 0 !important;
 }
 .schedule-custom .hour-line::after {
-  background-color: red !important; /* Màu đỏ cho mốc giờ */
+  background-color: #d2dbe1 !important;
+  height: 2px !important;
+  opacity: 1 !important;
 }
 
 .schedule-custom .half-hour-line::after {
-  background-color: green !important; /* Màu xanh cho mốc 30 phút */
+  background-color: #d2dbe1 !important;
 }
 /* Day */
 
@@ -504,6 +507,7 @@
   top: -3px;
   background-color: #d2dbe1;
   transform: -translateX(50%);
+  opacity: 0.7;
 }
 
 .schedule-custom
@@ -536,6 +540,7 @@
   background-color: #d2dbe1;
   transform: -translateX(50%);
   top: 18px;
+  opacity: 0.7;
 }
 
 .schedule-custom

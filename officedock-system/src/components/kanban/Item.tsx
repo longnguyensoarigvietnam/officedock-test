@@ -36,7 +36,7 @@ import { TaskContext } from '@providers/TaskProvider';
 
 import api from '@base/api';
 import {
-  addHoursToDate,
+  addMinutesToDate,
   compareWithCurrentDate,
   convertToCurrentTimezone,
   formatShowDeadlineTask,
@@ -48,7 +48,7 @@ interface ItemProps {
   index: number;
   content: Task;
   creationDataTaskData?: CreationDataTask;
-  handleActionEditTask: (id: number, type?: string) => void
+  handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTask: UseMutateFunction<
@@ -333,7 +333,7 @@ const Item = ({
                 ...content,
                 title: content.title ? content.title : '',
                 start: formatISO(now),
-                end: formatISO(addHoursToDate(`${now}`)),
+                end: formatISO(addMinutesToDate(`${now}`)),
                 startEditable: true,
                 itemKanban: true,
                 largeColor: largeColor,
@@ -724,7 +724,7 @@ const Item = ({
                 ...content,
                 title: content.title ? content.title : '',
                 start: formatISO(now),
-                end: formatISO(addHoursToDate(`${now}`)),
+                end: formatISO(addMinutesToDate(`${now}`)),
                 startEditable: true,
                 itemKanban: true,
               })}
