@@ -658,7 +658,7 @@ def process_per_user(
     aggregate_total = []
     tags = []
     if not durations.exists():
-        return None, None
+        return total_duration, None
     if tag_ids:
         tags = Tag.objects.filter(id__in=tag_ids).all()
     for user in users:
