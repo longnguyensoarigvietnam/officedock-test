@@ -703,6 +703,14 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
         }
 
 
+class TaskScheduleForCreationMultipleSerializer(serializers.Serializer):
+    """
+    Serializer for create task schedule multiple
+    """
+
+    task_schedules = TaskScheduleForCreationSerializer(many=True)
+
+
 class TaskIndexSerializer(serializers.ModelSerializer):
     """
     Serializer for task index

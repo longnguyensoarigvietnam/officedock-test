@@ -98,6 +98,7 @@ from .serializers import (
     TaskTemplateSerializer,
     TeamTaskIndexSerializer,
     TodoListSerializer,
+    TaskScheduleForCreationMultipleSerializer,
 )
 from .filters import TaskBoardFilter, TaskCalendarFilter, TaskScheduleFilter
 
@@ -1591,6 +1592,28 @@ class TaskScheduleViewSet(
         """
         task_schedule = serializer.save()
         self._check_overtime(task_schedule)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="multiple",
+        serializer_class=TaskScheduleForCreationMultipleSerializer,
+    )
+    @transaction.atomic()
+    def update_multiple_schedules(self, request):
+        """
+        Handle update multiple task schedules
+        """
+        task_schedules = request.data.get("task_schedules")
+        for data in task_schedules:
+            task_schedule = TaskSchedule.objects.filter(uuid=data["uuid"])
+            if task_schedule.exists():
+                task_schedule_updated = task_schedule.update(
+                    plan_start_date=data["plan_start_date"],
+                    plan_end_date=data["plan_end_date"],
+                )
+                self._check_overtime(task_schedule.get())
+        return self.response_ok()
 
 
 @extend_schema(tags=["System > Task"])
