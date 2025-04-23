@@ -36,10 +36,6 @@ const useStatisticTagsTeamCompare = ({
   const { data: session } = useSession();
   const token = session?.accessToken;
   const {
-    setIsLoadingLarge,
-    setIsLoadingMedium,
-    setIsLoadingOrganization,
-    setIsLoadingSmall,
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
     setIsLoadingOrganizationCompare,
@@ -90,10 +86,6 @@ const useStatisticTagsTeamCompare = ({
       onError && onError(error);
     },
     onSettled: () => {
-      setIsLoadingLarge(false);
-      setIsLoadingMedium(false);
-      setIsLoadingOrganization(false);
-      setIsLoadingSmall(false);
       setIsLoadingLargeCompare(false);
       setIsLoadingMediumCompare(false);
       setIsLoadingOrganizationCompare(false);

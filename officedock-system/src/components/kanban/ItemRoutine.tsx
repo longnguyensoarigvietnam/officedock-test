@@ -35,7 +35,7 @@ import { TaskContext } from '@providers/TaskProvider';
 
 import api from '@base/api';
 import {
-  addHoursToDate,
+  addMinutesToDate,
   convertToCurrentTimezone,
   convertToTimeString,
   getJapaneseWeekDay,
@@ -48,7 +48,7 @@ interface ItemProps {
   index: number;
   content: Task;
   creationDataTaskData?: CreationDataTask;
-  handleActionEditTask: (id: number, type?: string) => void
+  handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTask: UseMutateFunction<
@@ -329,7 +329,14 @@ const ItemRoutine = ({
         break;
       case TaskRepetitiveValue.YEARLY:
         title =
-          '毎年' + item.month + '月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
+          '毎年' +
+          item.month +
+          '月' +
+          item.monthDay +
+          '日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
         break;
     }
     return title;
@@ -349,7 +356,7 @@ const ItemRoutine = ({
                 ...content,
                 title: content.title ? content.title : '',
                 start: formatISO(now),
-                end: formatISO(addHoursToDate(`${now}`)),
+                end: formatISO(addMinutesToDate(`${now}`)),
                 startEditable: true,
                 itemKanban: true,
                 largeColor: largeColor,
@@ -443,7 +450,10 @@ const ItemRoutine = ({
                         }}
                         className="text-gray-400 cursor-pointer"
                         onClick={() => {
-                          handleConfirmCopyTask(parseInt(`${content.id}`), ItemStartType.FIXED_TASK);
+                          handleConfirmCopyTask(
+                            parseInt(`${content.id}`),
+                            ItemStartType.FIXED_TASK,
+                          );
                         }}
                       />
                     </div>
@@ -574,7 +584,7 @@ const ItemRoutine = ({
                 ...content,
                 title: content.title ? content.title : '',
                 start: formatISO(now),
-                end: formatISO(addHoursToDate(`${now}`)),
+                end: formatISO(addMinutesToDate(`${now}`)),
                 startEditable: true,
                 itemKanban: true,
               })}

@@ -62,9 +62,11 @@ const TaskListStatisticTeamTags = ({
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
+    totalDurationCategory,
     totalDurationLargeCompare,
     totalDurationMediumCompare,
     totalDurationSmallCompare,
+    totalDurationCategoryCompare,
     selectedTags,
     tagsOptions,
     listMemberTeam,
@@ -97,6 +99,9 @@ const TaskListStatisticTeamTags = ({
     if (selectedOrganization?.value) {
       if (selectedLarge?.value) {
         if (selectedMedium?.value) {
+          if (selectedSmall?.value) {
+            return totalDurationCategory;
+          }
           return totalDurationSmall;
         }
         return totalDurationMedium;
@@ -110,6 +115,9 @@ const TaskListStatisticTeamTags = ({
     if (selectedOrganization?.value) {
       if (selectedLarge?.value) {
         if (selectedMedium?.value) {
+          if (selectedSmall?.value) {
+            return totalDurationCategoryCompare;
+          }
           return totalDurationSmallCompare;
         }
         return totalDurationMediumCompare;

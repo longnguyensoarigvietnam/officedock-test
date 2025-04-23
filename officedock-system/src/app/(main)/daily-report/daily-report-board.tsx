@@ -196,10 +196,7 @@ const DailyReportBoard = () => {
     });
   };
 
-  const createTaskDurationItems = (
-    tasks: dataTaskDaily[],
-    listColor: string[],
-  ) => {
+  const createTaskDurationItems = (tasks: dataTaskDaily[]) => {
     return tasks.flatMap((task) =>
       task.taskDurations.map((duration) => ({
         id: `${duration.id}`,
@@ -218,7 +215,7 @@ const DailyReportBoard = () => {
             ? task.categories.find(
                 (item) => item.type === EventWorkCategory.LARGE,
               )?.color
-            : listColor[0],
+            : '#83919E',
       })),
     );
   };
@@ -266,10 +263,7 @@ const DailyReportBoard = () => {
 
       const dataTaskResult = transformDataTaskDailyToTable(dataStatistic.tasks);
 
-      const taskDurationItems = createTaskDurationItems(
-        dataStatistic.tasks,
-        listColor,
-      );
+      const taskDurationItems = createTaskDurationItems(dataStatistic.tasks);
 
       setDataOrganizationCategories(dataStatistic.organizationCategories);
 
