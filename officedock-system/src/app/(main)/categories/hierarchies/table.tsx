@@ -16,18 +16,21 @@ interface rowDataType {
     label: string;
     showBy: string;
     isValid: boolean;
+    errorMessage: string;
   };
   medium: {
     value: string | number;
     label: string;
     showBy: string;
     isValid: boolean;
+    errorMessage: string;
   };
   small: {
     value: string | number;
     label: string;
     showBy: string;
     isValid: boolean;
+    errorMessage: string;
   };
   skills: OptionDropdownType[];
   color: string;

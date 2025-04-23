@@ -48,6 +48,7 @@ export const DATE_REQUIRED_DURATION = '計測時間を入力してください�
 export const UPLOAD_FILE_MAXIMUM_SZIE =
   '5GB以上のファイルをアップロードできません。';
 export const INVALID_CATEGORY_NAME = 'カテゴリー名がすでに存在しています。';
+export const REQUIRED_CATEGORY_NAME = 'この項目は空にできません。'
 
 // Success message
 export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました。';

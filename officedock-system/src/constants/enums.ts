@@ -496,3 +496,12 @@ export enum EventParticipantType{
   USER = 'USER',
   ORGANIZATION = 'ORGANIZATION'
 }
+export enum HierarchyType {
+  LARGE = 'large',
+  MEDIUM = 'medium',
+  SMALL = 'small'
+}
+export enum AddCategoryHierarchyType {
+  INPUT = 'input',
+  PULLDOWN = 'pulldown'
+}
