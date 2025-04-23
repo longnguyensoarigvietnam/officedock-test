@@ -648,8 +648,21 @@ const ActionsEventModal = ({
         updatedOrganizationList = updatedOrganizationList.filter(
           (id) => id !== memberId,
         );
+        // Collect member IDs that should be removed (if not in any other selected org)
+        const removeMemberIds = organizationMembers.filter((memberId) => {
+          return !updatedOrganizationList.some((orgId) => {
+            const org = dataOptionsParticipants.find(
+              (item) =>
+                Number(item.id) === orgId &&
+                item.type === EventParticipantType.ORGANIZATION,
+            );
+            return org?.userIds?.includes(memberId);
+          });
+        });
+
+        // Remove the filtered member IDs from selected users
         updatedParticipantList = updatedParticipantList.filter(
-          (id) => !organizationMembers.includes(id),
+          (id) => !removeMemberIds.includes(id),
         );
       } else {
         updatedOrganizationList.push(memberId);
@@ -1433,6 +1446,21 @@ const ActionsEventModal = ({
                         .toLowerCase()
                         .includes(searchName.toLowerCase()),
                     )
+                    .sort((prev: EventParticipant, next: EventParticipant) => {
+                      if (
+                        prev.type === EventParticipantType.ORGANIZATION &&
+                        next.type === EventParticipantType.USER
+                      )
+                        return -1;
+                      if (
+                        prev.type === EventParticipantType.USER &&
+                        next.type === EventParticipantType.ORGANIZATION
+                      )
+                        return 1;
+                      if (prev.id === session?.user.id) return -1;
+                      if (next.id === session?.user.id) return 1;
+                      return prev.fullName.localeCompare(next.fullName);
+                    })
                     .map((member) => {
                       return (
                         <div
