@@ -33,7 +33,9 @@ import Button from '@components/common/Button';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { CalendarSidebar } from '@components/calendar/Sidebar';
 import { TaskAndEventListModal } from '@components/modals/TaskAndEventListModal';
+import RangeSlider from '@components/common/RangeSlider';
 
+import useDebounceText from '@hooks/useDebounceText';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
@@ -81,6 +83,7 @@ import {
   ActionsEvent,
   CalendarViewOptions,
   EventCalendarType,
+  EventParticipantType,
   EventWorkCategory,
   PermissionsSystem,
   ServerStatusCode,
@@ -91,6 +94,7 @@ import {
   DEFAULT_START_TIME,
   NO_OPTION_CATEGORY,
 } from '@constants';
+
 import api from '@base/api';
 
 const EventCalendar = () => {
@@ -106,6 +110,8 @@ const EventCalendar = () => {
   const [events, setEvents] = useState<EventCalendarDetail[]>([]);
   const [selectedScheduleUserIds, setSelectedScheduleUserIds] =
     useState<string>(`${Number(session?.user.id)}`);
+  const [selectedScheduleOrgIds, setSelectedScheduleOrgIds] =
+    useState<string>('');
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [openConfirmDeleteEventModal, setOpenConfirmDeleteEventModal] =
     useState(false);
@@ -167,17 +173,35 @@ const EventCalendar = () => {
   const [popoverInfoLoading, setPopoverInfoLoading] = useState<boolean>(false);
   const showErrorToast = useErrorToast();
 
+  const isDayOrWeekView = () => {
+    return (
+      watch('calendarView') &&
+      (watch('calendarView').value == CalendarViewOptions.VIEW_BY_DAY ||
+        watch('calendarView').value == CalendarViewOptions.VIEW_BY_WEEK)
+    );
+  };
+
   const debouncedFetchCalendarData = useRef(
     debounce(
-      async (
+      async ({
         startDate,
         endDate,
+        keySearch,
         selectedScheduleUserIds,
-        date?: Date,
-        clientX?: number,
-        clientY?: number,
-        isYearView?: boolean,
-      ) => {
+        date,
+        clientX,
+        clientY,
+        isYearView,
+      }: {
+        startDate: string;
+        endDate: string;
+        keySearch: string;
+        selectedScheduleUserIds: any;
+        date?: Date;
+        clientX?: number;
+        clientY?: number;
+        isYearView?: boolean;
+      }) => {
         const updatedUserIds: string[] = selectedScheduleUserIds
           ? selectedScheduleUserIds.split(',').filter(Boolean)
           : [];
@@ -190,6 +214,7 @@ const EventCalendar = () => {
           date,
           clientX,
           clientY,
+          keySearch,
         });
         setPopoverInfoLoading(false);
         setIsEventRendering(false);
@@ -212,11 +237,12 @@ const EventCalendar = () => {
         calendarApi.view.activeEnd,
       );
 
-      debouncedFetchCalendarData(
-        startDateISOString,
-        endDateISOString,
-        selectedScheduleUserIds,
-      );
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+      });
     }
   };
 
@@ -234,11 +260,12 @@ const EventCalendar = () => {
         calendarApi.view.activeEnd,
       );
 
-      debouncedFetchCalendarData(
-        startDateISOString,
-        endDateISOString,
-        selectedScheduleUserIds,
-      );
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+      });
     }
   };
 
@@ -254,12 +281,13 @@ const EventCalendar = () => {
       const endDateISOString = formatQueryEndDateForCalendar(
         calendarApi.view.activeEnd,
       );
-
-      debouncedFetchCalendarData(
-        startDateISOString,
-        endDateISOString,
-        selectedScheduleUserIds,
-      );
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+      });
+      if (isDayOrWeekView()) scrollToStartOfDay();
     }
   };
 
@@ -276,11 +304,16 @@ const EventCalendar = () => {
         calendarApi.view.activeEnd,
       );
 
-      debouncedFetchCalendarData(
-        startDateISOString,
-        endDateISOString,
-        selectedScheduleUserIds,
-      );
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+      });
+      if (
+        isDayOrWeekView()
+      )
+        scrollToStartOfDay();
     }
   };
 
@@ -330,15 +363,16 @@ const EventCalendar = () => {
         ).top,
       });
 
-      debouncedFetchCalendarData(
-        startDateISOString,
-        endDateISOString,
-        selectedScheduleUserIds,
-        date,
-        clientX,
-        clientY,
-        true,
-      );
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+        date: date,
+        clientX: clientX,
+        clientY: clientY,
+        isYearView: true,
+      });
     }
   };
 
@@ -364,25 +398,25 @@ const EventCalendar = () => {
       );
 
       calendarRef.current?.getApi().refetchEvents();
-      const apiCalls: Promise<any>[] = [];
 
       if (calendarView !== CalendarViewOptions.VIEW_BY_YEAR) {
         const updatedUserIds: string[] = selectedScheduleUserIds
           ? selectedScheduleUserIds.split(',').filter(Boolean)
           : [];
 
-        apiCalls.push(
-          getEventCalendarByUsers({
-            userId: updatedUserIds.join(','),
-            startDate: startDateISOString,
-            endDate: endDateISOString,
-          }),
-        );
+        getEventCalendarByUsers({
+          userId: updatedUserIds.join(','),
+          startDate: startDateISOString,
+          endDate: endDateISOString,
+          keySearch: keySearch,
+        });
       }
 
-      await Promise.all(apiCalls);
-
       setIsEventRendering(false);
+      if (
+        isDayOrWeekView()
+      )
+        scrollToStartOfDay();
     }
   };
 
@@ -418,6 +452,14 @@ const EventCalendar = () => {
 
     return () => resizeObserver.disconnect();
   }, [calendarRef, containerRef]);
+
+  const scrollToStartOfDay = () => {
+    if (calendarRef.current === null) {
+      return;
+    }
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.scrollToTime('00:00:00');
+  };
 
   const checkShowUserAvatar = (
     type?: EventCalendarType,
@@ -539,7 +581,7 @@ const EventCalendar = () => {
                     placement="top"
                     offset={[0, 5]}>
                     <div
-                      className={`text-[#77858F] text-[11px] font-medium ${isWeekView && 'border-[1px] !ml-[-12px] text-[14px] border-white rounded-full !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'} `}>
+                      className={`text-[#77858F] text-[11px] font-medium ml-[-12px] ${isWeekView && 'border-[1px] !ml-[-12px] border-white text-white rounded-full shrink-0 !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'}`}>
                       +{participantList.length - 5}
                     </div>
                   </Tippy>
@@ -553,7 +595,7 @@ const EventCalendar = () => {
                     placement="top"
                     offset={[0, 5]}>
                     <div
-                      className={`text-[#77858F] text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white border-white rounded-full !w-[19px] !h-[19px] bg-[#77858F] flex items-center justify-center'} `}>
+                      className={`text-[#77858F] text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white shrink-0 border-white rounded-full !w-[19px] !h-[19px] bg-[#77858F] flex items-center justify-center'} `}>
                       +{participantList.length - 1}
                     </div>
                   </Tippy>
@@ -901,16 +943,17 @@ const EventCalendar = () => {
         }
         return [...prevCurrentResources];
       });
+      if (searchParams.get('view') == ViewOptions.WEEK) {
+        handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
+      } else if (searchParams.get('view') == ViewOptions.DAY) {
+        handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
+      } else if (searchParams.get('view') == ViewOptions.YEAR) {
+        handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
+      } else {
+        handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
+      }
     }
-    if (searchParams.get('view') == ViewOptions.WEEK) {
-      handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-    } else if (searchParams.get('view') == ViewOptions.DAY) {
-      handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
-    } else if (searchParams.get('view') == ViewOptions.YEAR) {
-      handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
-    } else {
-      handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
-    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticatedUser]);
 
@@ -1018,8 +1061,9 @@ const EventCalendar = () => {
     date?: Date;
     clientX?: number;
     clientY?: number;
+    keySearch: string;
   }) => {
-    const apiUrl = `${apiRouters.SCHEDULES}?${userId ? `&user_ids=${userId}` : ''}${startDate ? `&start_date=${startDate}` : `&start_date=${currentRange.start}`}${endDate ? `&end_date=${endDate}` : `&end_date=${currentRange.end}`}`;
+    const apiUrl = `${apiRouters.SCHEDULES}?${userId ? `&user_ids=${userId}` : ''}${startDate ? `&start_date=${startDate}` : `&start_date=${currentRange.start}`}${endDate ? `&end_date=${endDate}` : `&end_date=${currentRange.end}`}${keySearch ? `&search=${keySearch}` : ''}`;
     const { data } = await api.get(apiUrl);
     return data;
   };
@@ -1063,7 +1107,10 @@ const EventCalendar = () => {
 
             if (event.end) {
               const end = new Date(event.end);
-              if ((start.toDateString() !== end.toDateString() && event.allDay) || isMidnight(new Date(event.end))) {
+              if (
+                (start.toDateString() !== end.toDateString() && event.allDay) ||
+                isMidnight(new Date(event.end))
+              ) {
                 end.setDate(end.getDate() + 1);
                 event.end = end.toISOString();
               }
@@ -1089,83 +1136,149 @@ const EventCalendar = () => {
     },
   );
 
-  const handleFilterScheduleByUserIds = (userId: number) => {
-    let updatedUserIds: string[] = selectedScheduleUserIds
-      ? selectedScheduleUserIds.split(',').filter(Boolean)
+  const handleFilterScheduleByUserIds = (
+    member: EventParticipant,
+    dataOptionsParticipants: EventParticipant[],
+  ) => {
+    let updatedUserIds: number[] = selectedScheduleUserIds
+      ? selectedScheduleUserIds
+          .split(',')
+          .filter(Boolean)
+          .map((id) => Number(id))
       : [];
-    setCurrentResources((prevCurrentResources) => {
-      const userStringId = String(userId);
-      const userExists = prevCurrentResources.some(
-        (resource) => resource.id === userStringId,
+    let updatedOrgIds: number[] = selectedScheduleOrgIds
+      ? selectedScheduleOrgIds
+          .split(',')
+          .filter(Boolean)
+          .map((id) => Number(id))
+      : [];
+    const isUser = member.type === EventParticipantType.USER;
+    const isOrganization = member.type === EventParticipantType.ORGANIZATION;
+    const memberId = Number(member.id);
+
+    if (isUser) {
+      const isAlreadySelected = selectedScheduleUserIds.includes(
+        String(memberId),
       );
-      const userFullName =
-        dashboardMemberList?.find(
-          (member) => String(member.id) === userStringId,
-        )?.fullName || '';
 
-      const addUserResource = () => [
-        ...prevCurrentResources,
-        { id: userStringId, title: userFullName },
-      ];
+      if (isAlreadySelected) {
+        // Remove the user
+        updatedUserIds = updatedUserIds.filter((id) => id !== memberId);
 
-      const removeUserResource = () =>
-        prevCurrentResources.filter((resource) => resource.id !== userStringId);
+        // Remove any org that includes the removed user
+        const belongedOrganizations = dataOptionsParticipants
+          .filter(
+            (participant) =>
+              participant.type == EventParticipantType.ORGANIZATION &&
+              participant.userIds?.includes(Number(member.id)),
+          )
+          .map((org) => org.id as number);
+        updatedOrgIds = updatedOrgIds.filter(
+          (org) => !belongedOrganizations.includes(org),
+        );
+      } else {
+        updatedUserIds.push(memberId);
+      }
+    } else if (isOrganization) {
+      const isAlreadySelected = selectedScheduleOrgIds.includes(
+        String(memberId),
+      );
+      const organizationMembers = member.userIds || [];
 
-      return userExists ? removeUserResource() : addUserResource();
-    });
-
-    const userIdStr = String(userId);
-    if (updatedUserIds.includes(userIdStr)) {
-      updatedUserIds = updatedUserIds.filter((id) => id !== userIdStr);
-    } else {
-      updatedUserIds.push(userIdStr);
+      if (isAlreadySelected) {
+        updatedOrgIds = updatedOrgIds.filter((id) => id != memberId);
+        updatedUserIds = updatedUserIds.filter(
+          (id) => !organizationMembers.includes(id),
+        );
+      } else {
+        updatedOrgIds.push(memberId);
+        updatedUserIds = Array.from(
+          new Set([...updatedUserIds, ...organizationMembers]),
+        );
+      }
     }
+
     setSelectedScheduleUserIds(updatedUserIds.join(','));
+    setSelectedScheduleOrgIds(updatedOrgIds.join(','));
     getEventCalendarByUsers({
       userId:
         `${updatedUserIds.join(',')}`.length > 0
           ? `${updatedUserIds.join(',')}`
           : ``,
+      keySearch: keySearch,
+    });
+    setCurrentResources(() => {
+      return updatedUserIds.map((userId) => {
+        return {
+          id: String(userId),
+          title:
+            dashboardMemberList?.find(
+              (member) => String(member.id) == String(userId),
+            )?.fullName || '',
+        };
+      });
     });
   };
 
-  const handleGetAllMemberSchedules = () => {
-    const allMemberIds: number[] = [];
-
-    dashboardMemberList
-      ?.filter((member) =>
-        member.fullName.toLowerCase().includes(searchName.toLowerCase()),
-      )
-      ?.forEach((member) => {
-        allMemberIds.push(member.id);
-      });
-    const updatedSelectedScheduleUserIds = selectedScheduleUserIds
+  const handleGetAllMemberSchedules = (
+    dataOptionsParticipants: EventParticipant[],
+  ) => {
+    const updatedParticipantList = dataOptionsParticipants?.filter((member) =>
+      member.fullName.toLowerCase().includes(searchName.toLowerCase()),
+    );
+    const currentSelectedUserIds = selectedScheduleUserIds
       ? selectedScheduleUserIds.split(',').filter(Boolean)
       : [];
-    let updatedMemberIds: number[] = [];
+    const currentSelectedOrgIds = selectedScheduleOrgIds
+      ? selectedScheduleOrgIds.split(',').filter(Boolean)
+      : [];
+    let updatedParticipantIds: number[] = [];
     if (removeMyselfOption) {
-      updatedMemberIds = [...updatedSelectedScheduleUserIds, ...allMemberIds]
+      updatedParticipantIds = [
+        ...currentSelectedUserIds,
+        ...updatedParticipantList
+          .filter(
+            (participant) => participant.type === EventParticipantType.USER,
+          )
+          .map((participant) => Number(participant.id)),
+      ]
         .filter((id) => id != Number(session?.user.id))
         .map(Number);
     } else {
-      updatedMemberIds = [
-        ...updatedSelectedScheduleUserIds,
-        ...allMemberIds,
+      updatedParticipantIds = [
+        ...currentSelectedUserIds,
+        ...updatedParticipantList
+          .filter(
+            (participant) => participant.type === EventParticipantType.USER,
+          )
+          .map((participant) => Number(participant.id)),
       ].map(Number);
     }
 
-    setSelectedScheduleUserIds(updatedMemberIds.join(','));
+    setSelectedScheduleUserIds(updatedParticipantIds.join(','));
+    setSelectedScheduleOrgIds(
+      [
+        ...(currentSelectedOrgIds || []),
+        ...updatedParticipantList
+          .filter(
+            (participant) =>
+              participant.type === EventParticipantType.ORGANIZATION,
+          )
+          .map((participant) => Number(participant.id)),
+      ].join(','),
+    );
 
     getEventCalendarByUsers({
       userId:
-        `${updatedMemberIds.join(',')}`.length > 0
-          ? `${updatedMemberIds.join(',')}`
+        `${updatedParticipantIds.join(',')}`.length > 0
+          ? `${updatedParticipantIds.join(',')}`
           : ``,
+      keySearch: keySearch,
     });
     setCurrentResources(() => {
       const updatedResources: { id: string; title: string }[] = [];
 
-      [...updatedMemberIds].forEach((userId) => {
+      [...updatedParticipantIds].forEach((userId) => {
         updatedResources.push({
           id: String(userId),
           title:
@@ -1179,36 +1292,47 @@ const EventCalendar = () => {
     });
   };
 
-  const handleRemoveAllMemberSchedules = () => {
-    const allMemberIds: number[] = [];
-
-    dashboardMemberList
-      ?.filter((member) =>
-        member.fullName.toLowerCase().includes(searchName.toLowerCase()),
-      )
-      ?.forEach((member) => {
-        allMemberIds.push(member.id);
-      });
-    const updatedSelectedScheduleUserIds = selectedScheduleUserIds
+  const handleRemoveAllMemberSchedules = (
+    dataOptionsParticipants: EventParticipant[],
+  ) => {
+    const matchingParticipantList = dataOptionsParticipants?.filter((member) =>
+      member.fullName.toLowerCase().includes(searchName.toLowerCase()),
+    );
+    const currentSelectedUserIds = selectedScheduleUserIds
       ? selectedScheduleUserIds.split(',').filter(Boolean)
       : [];
-    const updatedMemberIds = updatedSelectedScheduleUserIds
-      .filter((userId) => !allMemberIds.includes(Number(userId)))
-      .map(Number);
+    const currentSelectedOrgIds = selectedScheduleOrgIds
+      ? selectedScheduleOrgIds.split(',').filter(Boolean)
+      : [];
 
-    setSelectedScheduleUserIds(updatedMemberIds.join(','));
+    const filteredParticipantIds = currentSelectedUserIds.filter(
+      (participantId) =>
+        !matchingParticipantList.find(
+          (matchingParticipant) =>
+            matchingParticipant.id == participantId &&
+            matchingParticipant.type === EventParticipantType.USER,
+        ),
+    );
+    const filteredOrganizationIds = currentSelectedOrgIds.filter(
+      (participantId) =>
+        !matchingParticipantList.find(
+          (matchingParticipant) =>
+            matchingParticipant.id == participantId &&
+            matchingParticipant.type === EventParticipantType.ORGANIZATION,
+        ),
+    );
+    setSelectedScheduleUserIds(filteredParticipantIds.join(','));
+    setSelectedScheduleOrgIds(filteredOrganizationIds.join(','));
 
     getEventCalendarByUsers({
-      userId:
-        `${updatedMemberIds.join(',')}`.length > 0
-          ? `${updatedMemberIds.join(',')}`
-          : ``,
+      userId: filteredParticipantIds.join(','),
+      keySearch: keySearch,
     });
 
     setCurrentResources(() => {
       const updatedResources: { id: string; title: string }[] = [];
 
-      updatedMemberIds.forEach((userId) => {
+      filteredParticipantIds.forEach((userId) => {
         updatedResources.push({
           id: String(userId),
           title:
@@ -1351,7 +1475,7 @@ const EventCalendar = () => {
     }
   };
 
-  const { control } = useForm({
+  const { control, watch } = useForm({
     mode: 'onSubmit',
   });
 
@@ -1492,6 +1616,7 @@ const EventCalendar = () => {
       isAllDay: data.isAllDay || false,
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
+      selectOrganizations: data.selectOrganizations || [],
       address: data.address || '',
       memo: data.memo || '',
       type: newType,
@@ -1545,7 +1670,8 @@ const EventCalendar = () => {
               data.endDate &&
               ((new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              data.isAllDay) || isMidnight(new Date(data.endDate)))
+                data.isAllDay) ||
+                isMidnight(new Date(data.endDate)))
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
@@ -1663,6 +1789,7 @@ const EventCalendar = () => {
       isAllDay: data.isAllDay || false,
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
+      selectOrganizations: data.selectOrganizations || [],
       address: data.address || '',
       memo: data.memo || '',
       type: newType,
@@ -1721,7 +1848,8 @@ const EventCalendar = () => {
               data.endDate &&
               ((new Date(data.startDate).toDateString() !==
                 new Date(data.endDate).toDateString() &&
-              data.isAllDay) || isMidnight(new Date(data.endDate)))
+                data.isAllDay) ||
+                isMidnight(new Date(data.endDate)))
                 ? new Date(data.endDate).setDate(
                     new Date(data.endDate).getDate() + 1,
                   )
@@ -1945,11 +2073,90 @@ const EventCalendar = () => {
     return 'zero-all-day-events';
   };
 
+  // Zoom calendar
+  const screenHeight = window.innerHeight;
+
+  const baseHeight = Math.round(43 * (screenHeight / 717));
+  const baseSlider = Math.round(43 * (screenHeight / 717));
+  const [resetTrigger, _setResetTrigger] = useState(0);
+  const [isOptionZoomSchedule, setIsOptionZoomSchedule] = useState('00:15:00');
+
+  const [sliderValue, setSliderValue] = useState(baseSlider);
+  const [slotHeight, setSlotHeight] = useState(baseHeight);
+
+  const calculateSlotHeight = (value: number): number => {
+    if (value < 40) {
+      return 93 - (40 - value);
+    } else if (value > 58 && value < 80) {
+      return 0.732 * value - 8.17;
+    } else if (value < 94) {
+      return value;
+    }
+    return 24 + (value - 94);
+  };
+  const calculateSlotDuration = (value: number): string => {
+    if (value < 40) {
+      return '01:00:00';
+    } else if (value >= 94) {
+      return '00:05:00';
+    }
+    return '00:15:00';
+  };
+
+  // ZOOM IN / ZOOM OUT SCHEDULE
+  useEffect(() => {
+    const slots = document.querySelectorAll('.fc-timegrid-slot');
+
+    slots.forEach((slot) => {
+      const slotElement = slot as HTMLElement;
+      slotElement.style.height = `${slotHeight}px`;
+      slotElement.style.minHeight = `${slotHeight}px`;
+    });
+
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      if (calendarApi) {
+        calendarApi.updateSize();
+        const newDataTimeList = events.map((event) => {
+          return { ...event };
+        });
+        // Set data schedule
+        setEvents(newDataTimeList);
+      }
+    }
+  }, [slotHeight, searchParams]);
+
+  const [keySearch, setKeySearch] = useState<string>('');
+  const debouncedSearch = useDebounceText(keySearch, 800);
+
+  useEffect(() => {
+    if (calendarRef.current) {
+      setIsEventRendering(true);
+      setEvents([]);
+      const calendarApi = calendarRef.current.getApi() as any;
+      const startDateISOString = formatQueryStartDateForCalendar(
+        calendarApi.view.activeStart,
+      );
+      const endDateISOString = formatQueryEndDateForCalendar(
+        calendarApi.view.activeEnd,
+      );
+
+      debouncedFetchCalendarData({
+        startDate: startDateISOString,
+        endDate: endDateISOString,
+        selectedScheduleUserIds: selectedScheduleUserIds,
+        keySearch: keySearch,
+      });
+    }
+  }, [debouncedSearch]);
+
   return (
     <Fragment>
-      <div className="flex mb-3 pl-8 overflow-y-hidden" ref={containerRef}>
-        <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'} p-4`}>
-          <div className="flex items-center justify-between mb-1">
+      <div
+        className="flex relative mb-3 overflow-y-hidden pt-5"
+        ref={containerRef}>
+        <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'}`}>
+          <div className="flex items-center justify-between mb-7 pl-10">
             <div className="flex items-center ml-[-1rem] gap-4">
               <ImageRound
                 name="Chevron left"
@@ -2033,7 +2240,11 @@ const EventCalendar = () => {
               className={`flex gap-5 items-center ${!showSidebar && 'mr-14'}`}>
               <InputSearch
                 placeholder="予定、キーワードを検索"
+                value={keySearch}
                 inputClassName="!w-[300px] !py-2 !rounded-[20px] text-sm !bg-white border-none placeholder-[#77858F99]"
+                onChange={(e) => {
+                  setKeySearch(e.target.value);
+                }}
               />
               <div className="!w-[54px]">
                 <Controller
@@ -2050,7 +2261,7 @@ const EventCalendar = () => {
                       classNameTextData="!text-xs"
                       classActive="!text-sm"
                       classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
-                      labelOptionClass="!text-sm font-medium !pl-0.5 !border-b-[1px] !border-[#EBF1F7]"
+                      labelOptionClass="!text-sm font-medium"
                       onChange={(e) => {
                         onChange(e);
                         handleViewChange(e.value as string);
@@ -2089,7 +2300,7 @@ const EventCalendar = () => {
           </div>
 
           <div
-            className={`w-full relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} ${showSidebar ? '' : 'pr-8'}`}
+            className={`w-full ${!isDayOrWeekView() && 'pl-6'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} ${showSidebar ? '' : 'pr-8'}`}
             style={{ overflowX: 'auto', width: '100%' }}>
             {calendarLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#ebf1f4] z-10"></div>
@@ -2103,7 +2314,7 @@ const EventCalendar = () => {
                       numberOfResources={
                         searchParams.get('view') == ViewOptions.WEEK ? 7 : 2
                       }
-                      className={`${searchParams.get('view') == ViewOptions.WEEK && 'mt-[27px]'}`}
+                      className={`${searchParams.get('view') == ViewOptions.WEEK ? 'pt-[20px]' : 'mt-[50px] pt-[10px]'}`}
                     />
                   </div>
                 )}
@@ -2212,8 +2423,7 @@ const EventCalendar = () => {
                 meridiem: false,
                 hour12: false,
               }}
-              slotDuration="00:30:00"
-              slotLabelInterval="00:30:00"
+              slotDuration={isOptionZoomSchedule}
               slotEventOverlap={false}
               slotLabelContent={({ text }) => (
                 <div className="text-[12px] text-[#77858F]">{text}</div>
@@ -2295,6 +2505,28 @@ const EventCalendar = () => {
                 },
               }}
             />
+            {watch('calendarView') &&
+              watch('calendarView').value !=
+                CalendarViewOptions.VIEW_BY_MONTH &&
+              watch('calendarView').value !=
+                CalendarViewOptions.VIEW_BY_YEAR && (
+                <div
+                  className={`w-[180px] px-3 z-[20] h-[38px] absolute  rounded-md right-[10px] bottom-[5px] bg-white flex items-center `}>
+                  <RangeSlider
+                    min={18}
+                    max={100}
+                    initialValue={sliderValue}
+                    resetTrigger={resetTrigger}
+                    onChange={(value) => {
+                      setSliderValue(value);
+                      const calculatedHeight = calculateSlotHeight(value);
+                      const calculatedDuration = calculateSlotDuration(value);
+                      setSlotHeight(calculatedHeight);
+                      setIsOptionZoomSchedule(calculatedDuration);
+                    }}
+                  />
+                </div>
+              )}
           </div>
         </div>
         {popoverInfo && (
@@ -2314,6 +2546,7 @@ const EventCalendar = () => {
         <div
           className={`${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
           <CalendarSidebar
+            keySearch={keySearch}
             getEventCalendarByUsers={getEventCalendarByUsers}
             handleFilterScheduleByUserIds={handleFilterScheduleByUserIds}
             handleGetAllMemberSchedules={handleGetAllMemberSchedules}
@@ -2321,6 +2554,7 @@ const EventCalendar = () => {
             removeMyselfOption={removeMyselfOption}
             searchName={searchName}
             selectedScheduleUserIds={selectedScheduleUserIds}
+            selectedScheduleOrgIds={selectedScheduleOrgIds}
             setCurrentResources={setCurrentResources}
             setRemoveMyselfOption={setRemoveMyselfOption}
             setSearchName={setSearchName}

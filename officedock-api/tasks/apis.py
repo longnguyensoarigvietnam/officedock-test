@@ -463,73 +463,10 @@ class TaskViewSet(
                 plan_end_date = datetime.combine(
                     occurrence.date(), end_time, occurrence.tzinfo
                 )
-                # Check validate task schedule is exists datetime
-                if (
-                    not TaskSchedule.objects.filter(
-                        Q(
-                            Q(plan_start_date__lt=plan_end_date)
-                            | Q(plan_start_date__lte=occurrence)
-                        )
-                        & Q(
-                            Q(plan_end_date__gt=occurrence)
-                            | Q(plan_end_date__gte=plan_end_date)
-                        )
-                        & Q(
-                            task__people_in_charge_tasks__user__in=task.people_in_charge_tasks.values_list(
-                                "user", flat=True
-                            )
-                        )
-                    )
-                    .exclude(
-                        id__in=list_task_schedule_edited.values_list(
-                            "id", flat=True
-                        )
-                        if list_task_schedule_edited
-                        else []
-                    )
-                    .exists()
-                ):
-                    # Check not have task edited in the day
-                    if not list_task_schedule_edited.filter(
-                        Q(plan_start_date__date=occurrence.date())
-                        & Q(plan_end_date__date=occurrence.date())
-                    ).exists():
-                        schedules.append(
-                            TaskSchedule(
-                                task=task,
-                                company=task.company,
-                                plan_start_date=occurrence,
-                                plan_end_date=plan_end_date,
-                            )
-                        )
-                else:
-                    raise ValidationError(
-                        {
-                            "task_schedules": [
-                                ERROR_MESSAGES["exists_task_schedule"]
-                            ]
-                        }
-                    )
-
-        else:
-            for occurrence in rule:
-                plan_end_date = datetime.combine(
-                    occurrence.date(), end_time, occurrence.tzinfo
-                )
-                if not TaskSchedule.objects.filter(
-                    Q(
-                        Q(plan_start_date__lt=plan_end_date)
-                        | Q(plan_start_date__lte=occurrence)
-                    )
-                    & Q(
-                        Q(plan_end_date__gt=occurrence)
-                        | Q(plan_end_date__gte=plan_end_date)
-                    )
-                    & Q(
-                        task__people_in_charge_tasks__user__in=task.people_in_charge_tasks.values_list(
-                            "user", flat=True
-                        )
-                    )
+                # Check not have task edited in the day
+                if not list_task_schedule_edited.filter(
+                    Q(plan_start_date__date=occurrence.date())
+                    & Q(plan_end_date__date=occurrence.date())
                 ).exists():
                     schedules.append(
                         TaskSchedule(
@@ -539,14 +476,20 @@ class TaskViewSet(
                             plan_end_date=plan_end_date,
                         )
                     )
-                else:
-                    raise ValidationError(
-                        {
-                            "task_schedules": [
-                                ERROR_MESSAGES["exists_task_schedule"]
-                            ]
-                        }
+        else:
+            for occurrence in rule:
+                plan_end_date = datetime.combine(
+                    occurrence.date(), end_time, occurrence.tzinfo
+                )
+                schedules.append(
+                    TaskSchedule(
+                        task=task,
+                        company=task.company,
+                        plan_start_date=occurrence,
+                        plan_end_date=plan_end_date,
                     )
+                )
+
         TaskSchedule.objects.bulk_create(schedules)
 
     def _send_to_task_space(self, user, message):
@@ -1620,17 +1563,20 @@ class TaskScheduleViewSet(
             is_send_sk, is_over_estimate = check_task_overtime(
                 task_schedule.task, task_duration
             )
-            for user in task_schedule.task.people_in_charge.all():
-                send_web_socket_event(
-                    {
-                        "id": task_schedule.task.id,
-                        "task_duration_running_uuid": str(task_duration.uuid),
-                        "is_over_estimate": is_over_estimate,
-                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
-                        "type": CalendarTypes.TASK.value,
-                    },
-                    user=user,
-                )
+            if is_send_sk:
+                for user in task_schedule.task.people_in_charge.all():
+                    send_web_socket_event(
+                        {
+                            "id": task_schedule.task.id,
+                            "task_duration_running_uuid": str(
+                                task_duration.uuid
+                            ),
+                            "is_over_estimate": is_over_estimate,
+                            "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                            "type": CalendarTypes.TASK.value,
+                        },
+                        user=user,
+                    )
 
     def perform_create(self, serializer):
         """

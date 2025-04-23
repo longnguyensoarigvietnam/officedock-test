@@ -7,9 +7,11 @@ export interface OptionDropdownType {
   type?: string;
   totalData?: string;
   largeColor?: string;
-  teamId?: number;
+  teamId?: number | null;
   imgComponent?: any;
   isMyRoutine?: boolean;
+  userIds?: number[];
+  iconColor?: string;
 }
 
 export interface BasePagination<T> {

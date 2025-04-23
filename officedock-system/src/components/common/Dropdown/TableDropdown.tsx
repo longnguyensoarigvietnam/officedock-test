@@ -179,7 +179,7 @@ const TableDropdown = ({
                   className="!w-4 !h-4"
                 />
               )}
-              <span className={`ml-3 block ${labelOptionClass}`}>
+              <span className={`ml-3 block ${labelOptionClass} w-[100%] break-all`}>
                 {option.label}
               </span>
             </div>

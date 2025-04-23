@@ -17,7 +17,7 @@ from calendars.models import Schedule
 from chat.constants import WebSocketEventType
 from skills.models import StatisticCategory
 from organizations.serializers import (
-    StatisticCategorySerializer,
+    BaseStatisticCategorySerializer,
     OrganizationDetailSerializer,
 )
 from tags.serializers import BaseTagSerializer
@@ -44,6 +44,7 @@ from .serializers import (
     OrganizationWithUserNotHaveSkillMapSerializer,
     CreationDataOrganizationWithTagSerializer,
     CreationDataOrganizationWithStructCategorySerializer,
+    CreationDataOrganizationWithUserSerializer,
 )
 from .utils import (
     send_web_socket_event,
@@ -380,7 +381,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         methods=["GET"],
         detail=False,
         url_path="statistic-categories",
-        serializer_class=StatisticCategorySerializer,
+        serializer_class=BaseStatisticCategorySerializer,
     )
     def statistic_categories(self, request):
         """
@@ -477,6 +478,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         parameters=[
             OpenApiParameter("organization_id", type=int, required=False),
             OpenApiParameter("is_statistic", type=bool, required=False),
+            OpenApiParameter("is_calendar_page", type=bool, required=False),
         ],
     )
     @action(methods=["GET"], detail=False, url_path="statistics")
@@ -486,6 +488,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         organization_id = request.query_params.get("organization_id")
         is_statistic = request.query_params.get("is_statistic")
+        is_calendar_page = request.query_params.get("is_calendar_page")
         user = request.user
         organizations = []
         if not organization_id:
@@ -495,38 +498,49 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         ).first():
             organizations = [organization]
         data = {}
-        if organization_id:
-            data[
-                "organization"
-            ] = CreationDataOrganizationWithStructCategorySerializer(
-                organizations[0], context={"user": user}
-            ).data
-            data["members"] = CreationDataUserSerializer(
-                organizations[0].users.order_by("created_at"), many=True
-            ).data
-        else:
+        if not is_calendar_page:
+            if organization_id:
+                data[
+                    "organization"
+                ] = CreationDataOrganizationWithStructCategorySerializer(
+                    organizations[0], context={"user": user}
+                ).data
+                data["members"] = CreationDataUserSerializer(
+                    organizations[0].users.order_by("created_at"), many=True
+                ).data
+            else:
+                list_org = []
+                for organization in organizations:
+                    list_org.append(
+                        CreationDataOrganizationWithStructCategorySerializer(
+                            organization, context={"user": user}
+                        ).data
+                    )
+                data["organizations"] = list_org
+            if is_statistic:
+                if organization_id:
+                    data["organization"][
+                        "statistic_categories"
+                    ] = add_default_entries_to_categories(
+                        data["organization"]["statistic_categories"]
+                    )
+                else:
+                    for org in data["organizations"]:
+                        org[
+                            "statistic_categories"
+                        ] = add_default_entries_to_categories(
+                            org["statistic_categories"]
+                        )
+        if is_calendar_page and not organization_id:
             list_org = []
             for organization in organizations:
                 list_org.append(
-                    CreationDataOrganizationWithStructCategorySerializer(
-                        organization, context={"user": user}
+                    CreationDataOrganizationWithUserSerializer(
+                        organization
                     ).data
                 )
             data["organizations"] = list_org
-        if is_statistic:
-            if organization_id:
-                data["organization"][
-                    "statistic_categories"
-                ] = add_default_entries_to_categories(
-                    data["organization"]["statistic_categories"]
-                )
-            else:
-                for org in data["organizations"]:
-                    org[
-                        "statistic_categories"
-                    ] = add_default_entries_to_categories(
-                        org["statistic_categories"]
-                    )
+
         tags = (
             request.user.company.tags.filter(
                 is_hidden=False,

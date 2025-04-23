@@ -10,6 +10,7 @@ interface CreationDataStatisticCategory {
   id: number;
   name: string;
   uuid: string;
+  team?: number | null
 }
 
 interface useCreationDataTaskHooksProps {

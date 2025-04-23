@@ -12,13 +12,18 @@ import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { CalendarDashboardMember } from '@interfaces/calendar';
+import { EventParticipant } from '@interfaces/calendar';
+import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+
+import { EventParticipantType } from '@constants/enums';
 import { NO_DATA_AVAILABLE } from '@constants';
 
 export type CalendarSidebarProps = {
   selectedScheduleUserIds: string;
+  selectedScheduleOrgIds: string;
   removeMyselfOption: boolean;
   searchName: string;
   setShowSidebar: Dispatch<SetStateAction<boolean>>;
@@ -33,14 +38,22 @@ export type CalendarSidebarProps = {
       }[]
     >
   >;
-  handleGetAllMemberSchedules: () => void;
-  handleRemoveAllMemberSchedules: () => void;
-  handleFilterScheduleByUserIds: (userId: number) => void;
+  handleGetAllMemberSchedules: (
+    dataOptionsParticipants: EventParticipant[],
+  ) => void;
+  handleRemoveAllMemberSchedules: (
+    dataOptionsParticipants: EventParticipant[],
+  ) => void;
+  handleFilterScheduleByUserIds: (
+    user: EventParticipant,
+    dataOptionsParticipants: EventParticipant[],
+  ) => void;
   getEventCalendarByUsers: UseMutateAsyncFunction<
     any,
     unknown,
     {
       userId: string;
+      keySearch: string;
       startDate?: string;
       endDate?: string;
       filterMyTask?: boolean;
@@ -51,12 +64,15 @@ export type CalendarSidebarProps = {
     },
     unknown
   >;
+  keySearch: string;
 };
 
 export const CalendarSidebar = ({
   removeMyselfOption,
   selectedScheduleUserIds,
+  selectedScheduleOrgIds,
   searchName,
+  keySearch,
   setSearchName,
   setShowSidebar,
   setRemoveMyselfOption,
@@ -70,6 +86,58 @@ export const CalendarSidebar = ({
   const { data: session } = useSession();
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+  const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
+    EventParticipant[]
+  >([]);
+  const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
+    {
+      id: string | number;
+      fullName: string;
+      color: string;
+      userIds: number[];
+    }[]
+  >([]);
+
+  const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
+    is_calendar_page: true,
+
+    onSuccess: (data) => {
+      setDataOptionsOrganizations([
+        ...data.organizations.map((org) => ({
+          id: org.id || '',
+          fullName: org.name,
+          userIds: org.users ? org.users.map((user) => user.id) : [],
+          color: org.iconColor || '#0068B6',
+        })),
+      ]);
+    },
+  });
+
+  useEffect(() => {
+    if (dashboardMembersWithAvatars && isFetchedCreationDataStatistic) {
+      const eventMembers = dashboardMembersWithAvatars.map((member) => ({
+        id: member.id,
+        fullName: member.fullName,
+        type: EventParticipantType.USER,
+        mainOrganization: member.mainOrganization || '',
+      }));
+      const eventOrganizations = dataOptionsOrganizations
+        ? dataOptionsOrganizations.map((org) => ({
+            id: org.id,
+            fullName: org.fullName,
+            type: EventParticipantType.ORGANIZATION,
+            userIds: org.userIds,
+            color: org.color,
+          }))
+        : [];
+      setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    dashboardMembersWithAvatars,
+    dataOptionsOrganizations,
+    isFetchedCreationDataStatistic,
+  ]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -80,6 +148,31 @@ export const CalendarSidebar = ({
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const checkIsParticipantSelected = (member: EventParticipant) => {
+    const updatedUserIds: string[] = selectedScheduleUserIds
+      ? selectedScheduleUserIds.split(',').filter(Boolean)
+      : [];
+
+    const updatedOrgIds: string[] = selectedScheduleOrgIds
+      ? selectedScheduleOrgIds.split(',').filter(Boolean)
+      : [];
+    if (member.type == EventParticipantType.USER) {
+      return Boolean(
+        updatedUserIds &&
+          updatedUserIds?.find(
+            (participant) => participant == String(member.id),
+          ),
+      );
+    } else {
+      return Boolean(
+        updatedOrgIds &&
+          updatedOrgIds?.find(
+            (participant) => participant == String(member.id),
+          ),
+      );
+    }
+  };
 
   return (
     <div className="overflow-y-auto">
@@ -115,26 +208,30 @@ export const CalendarSidebar = ({
         <div className="flex justify-between my-2 px-3">
           <p
             className="text-[#77858F] text-xs hover:cursor-pointer hover:text-gray-700"
-            onClick={() => handleGetAllMemberSchedules()}>
+            onClick={() =>
+              handleGetAllMemberSchedules(dataOptionsParticipants)
+            }>
             全てをチェック
           </p>
           <p
             className="text-[#77858F] text-xs hover:cursor-pointer hover:text-gray-700"
-            onClick={() => handleRemoveAllMemberSchedules()}>
+            onClick={() =>
+              handleRemoveAllMemberSchedules(dataOptionsParticipants)
+            }>
             全てのチェックをクリア
           </p>
         </div>
         <div className="pt-3 max-h-[calc(85vh_-_200px)] overflow-y-auto overflow-x-hidden scrollbar-gutter-stable">
-          {dashboardMembersWithAvatars &&
-            dashboardMembersWithAvatars.filter((member) =>
+          {dataOptionsParticipants &&
+            dataOptionsParticipants.filter((member) =>
               member.fullName.toLowerCase().includes(searchName.toLowerCase()),
             ).length == 0 && (
               <p className="text-center text-[#6B7280] text-[14px]">
                 {NO_DATA_AVAILABLE}
               </p>
             )}
-          {dashboardMembersWithAvatars &&
-            dashboardMembersWithAvatars
+          {dataOptionsParticipants &&
+            dataOptionsParticipants
               .filter((member) =>
                 member.fullName
                   .toLowerCase()
@@ -144,58 +241,73 @@ export const CalendarSidebar = ({
                 (member) =>
                   !removeMyselfOption || member.id != session?.user.id,
               )
-              .sort(
-                (
-                  prev: CalendarDashboardMember,
-                  next: CalendarDashboardMember,
-                ) => {
-                  if (prev.id === session?.user.id) return -1;
-                  if (next.id === session?.user.id) return 1;
-                  return prev.fullName.localeCompare(next.fullName);
-                },
-              )
+              .sort((prev: EventParticipant, next: EventParticipant) => {
+                if (
+                  prev.type === EventParticipantType.ORGANIZATION &&
+                  next.type === EventParticipantType.USER
+                )
+                  return -1;
+                if (
+                  prev.type === EventParticipantType.USER &&
+                  next.type === EventParticipantType.ORGANIZATION
+                )
+                  return 1;
+                if (prev.id === session?.user.id) return -1;
+                if (next.id === session?.user.id) return 1;
+                return prev.fullName.localeCompare(next.fullName);
+              })
               .map((member) => {
                 return (
                   <div
                     key={member.id}
-                    className={`flex items-center px-3 ${selectedScheduleUserIds.includes(`${member.id}`) && 'bg-[#EBF1F7]'}`}>
+                    className={`flex items-center px-3 ${
+                      checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
+                    }`}>
                     <div className="w-5">
                       <Checkbox
                         label=""
                         className="mr-2"
-                        isChecked={
-                          selectedScheduleUserIds.includes(`${member.id}`)
-                            ? true
-                            : false
-                        }
+                        isChecked={checkIsParticipantSelected(member)}
                         onChange={() =>
-                          handleFilterScheduleByUserIds(Number(member.id))
+                          handleFilterScheduleByUserIds(
+                            member,
+                            dataOptionsParticipants,
+                          )
                         }
                       />
                     </div>
                     <div
                       className={`flex flex-1 gap-3 items-center p-1.5 hover:cursor-pointer`}>
-                      {dashboardMembersWithAvatars &&
-                      dashboardMembersWithAvatars.find(
-                        (memberWithAvatar) => memberWithAvatar.id == member.id,
-                      ) ? (
-                        <>
-                          {AvatarIconWithDynamicColor({
-                            color:
-                              dashboardMembersWithAvatars?.find(
-                                (memberWithAvatar) =>
-                                  memberWithAvatar.id == member.id,
-                              )?.avatarColor || '#0068B6',
-                            size: 36,
-                          })}
-                        </>
-                      ) : (
-                        <ImageRound
-                          className="w-8 h-8"
-                          src="/images/avatar-default.svg"
-                          border="full"
-                          name="Avatar user"
-                        />
+                      {member.type == EventParticipantType.USER &&
+                        (dashboardMembersWithAvatars &&
+                        dashboardMembersWithAvatars.find(
+                          (memberWithAvatar) =>
+                            memberWithAvatar.id == member.id,
+                        ) ? (
+                          <>
+                            {AvatarIconWithDynamicColor({
+                              color:
+                                dashboardMembersWithAvatars?.find(
+                                  (memberWithAvatar) =>
+                                    memberWithAvatar.id == member.id,
+                                )?.avatarColor || '#0068B6',
+                              size: 33,
+                            })}
+                          </>
+                        ) : (
+                          <ImageRound
+                            className="w-9 h-9"
+                            src="/images/avatar-default.svg"
+                            border="full"
+                            name="Avatar user"
+                          />
+                        ))}
+                      {member.type == EventParticipantType.ORGANIZATION && (
+                        <div className="scale-110">
+                          <GroupIconWithDynamicColor
+                            color={member.color || '#0068B6'}
+                          />
+                        </div>
                       )}
                       <div className="!w-full">
                         <p
@@ -245,6 +357,7 @@ export const CalendarSidebar = ({
                   `${updatedUserIds.join(',')}`.length > 0
                     ? `${updatedUserIds.join(',')}`
                     : ``,
+                keySearch: keySearch,
               });
             }
           }}

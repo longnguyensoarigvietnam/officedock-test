@@ -8,7 +8,7 @@ from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
 )
-from rest_framework import viewsets, mixins, status
+from rest_framework import viewsets, mixins, status, filters
 from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
@@ -53,6 +53,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     ]
     pagination_class = None
     screen_name = Screens.CALENDAR.value
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["title"]
 
     def get_queryset(self):
         """
@@ -70,6 +72,14 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if self.action == "list":
             return BaseScheduleSerializer(*args, **kwargs)
         return super().get_serializer(*args, **kwargs)
+
+    def get_serializer_context(self):
+        """
+        Add request to context
+        """
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
     @transaction.atomic()
     def perform_create(self, serializer):
@@ -212,6 +222,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 new_value != old_value
                 and field_name != "start_date"
                 and field_name != "end_date"
+                and field_name != "select_organizations"
             ):
                 changes.append(
                     ScheduleFields.__members__[field_name.upper()].value

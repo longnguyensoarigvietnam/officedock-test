@@ -1,4 +1,4 @@
-from django.db.models import Max
+from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -23,7 +23,7 @@ class BaseOrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "name", "icon"]
+        fields = ["id", "uuid", "name", "icon", "icon_color"]
 
     def to_representation(self, instance):
         """Override file URL representation to ensure consistency"""
@@ -46,6 +46,7 @@ class BaseStatisticCategorySerializer(serializers.ModelSerializer):
             "id",
             "name",
             "uuid",
+            "team",
         ]
 
 
@@ -63,6 +64,7 @@ class StatisticCategorySerializer(BaseStatisticCategorySerializer):
             "id",
             "name",
             "uuid",
+            "team",
             "organizations",
             "created_at",
             "updated_at",
@@ -93,16 +95,22 @@ class StatisticCategorySerializer(BaseStatisticCategorySerializer):
 
     def get_organizations(self, obj):
         """Get organizations by category"""
-        orgs = (
-            obj.organizations.annotate(
-                latest_stat_category_id=Max(
-                    "organizations_statistic_categories__id"
-                )
+        org_stats = (
+            OrganizationsStatisticCategories.objects.filter(
+                Q(large_statistic_category=obj)
+                | Q(medium_statistic_category=obj)
+                | Q(small_statistic_category=obj)
             )
-            .order_by("-latest_stat_category_id")
-            .distinct()
+            .order_by("id")
+            .select_related("organization")
         )
-        return BaseOrganizationSerializer(orgs, many=True).data
+
+        organizations = []
+        for stat in org_stats:
+            if stat.organization not in organizations:
+                organizations.append(stat.organization)
+
+        return BaseOrganizationSerializer(organizations, many=True).data
 
 
 class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
@@ -252,6 +260,7 @@ class OrganizationSerializer(BaseOrganizationSerializer):
             "user_count",
             "actions",
             "icon",
+            "icon_color",
         ]
 
     def get_actions(self, obj):
@@ -340,6 +349,7 @@ class BaseOrganizationHierarchySerializer(serializers.ModelSerializer):
             "type",
             "name",
             "icon",
+            "icon_color",
             "parent_uuid",
             "is_hierarchy",
         ]
@@ -412,6 +422,7 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
             "type",
             "name",
             "icon",
+            "icon_color",
             "children",
         ]
 
@@ -461,6 +472,7 @@ class OrganizationDetailSerializer(OrganizationSerializer):
             "skills",
             "actions",
             "icon",
+            "icon_color",
         ]
 
     def get_statistic_categories(self, obj):
@@ -584,7 +596,7 @@ class OrganizationMemberSerializer(BaseOrganizationSerializer):
 
     class Meta:
         model = Organization
-        fields = ["id", "uuid", "name", "users", "icon"]
+        fields = ["id", "uuid", "name", "users", "icon", "icon_color"]
 
     def get_users(self, obj):
         """Get users in organization"""
@@ -674,6 +686,7 @@ class OrganizationCategoryHierarchySerializer(BaseOrganizationSerializer):
             "uuid",
             "name",
             "icon",
+            "icon_color",
             "statistic_categories",
         ]
 
@@ -759,6 +772,46 @@ class OrganizationCategoryHierarchyForCreateSerializer(serializers.Serializer):
     ids = serializers.ListField(
         child=serializers.IntegerField(), allow_null=True, required=False
     )
+
+    def validate_category(self, category_data, organization, company):
+        """
+        Validate that the category belongs to the same team as the organization.
+        """
+        if not category_data:
+            return
+
+        category_name = category_data.get("name")
+        if not category_name:
+            return
+
+        category = StatisticCategory.objects.filter(
+            company=company, name=category_name
+        ).first()
+
+        if category and category.team and category.team != organization:
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["cannot_select_category_other_team"]}
+            )
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        company = request.user.company
+        items = attrs.get("items", [])
+
+        for item in items:
+            organization = item.get("organization")
+
+            self.validate_category(
+                item.get("large_statistic_category"), organization, company
+            )
+            self.validate_category(
+                item.get("medium_statistic_category"), organization, company
+            )
+            self.validate_category(
+                item.get("small_statistic_category"), organization, company
+            )
+
+        return super().validate(attrs)
 
 
 class CheckActualDurationSerializer(serializers.Serializer):

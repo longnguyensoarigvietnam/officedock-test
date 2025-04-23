@@ -134,10 +134,8 @@ import {
   getDateInfo,
   getNext30MinuteSlot,
   isDateInFutureOrToday,
-  isDateInPast,
   isDateLessThanToday,
   isMidnight,
-  isTimeEarlierToday,
   isTodaySchedule,
 } from '@utils/date';
 
@@ -336,10 +334,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
+        handleCallApiAllData(startDateISOString, endDateISOString);
         saveZoomSchedule({
           dateFilterScheduleFrom: startDateISOString,
         });
-        handleCallApiAllData(startDateISOString, endDateISOString);
         scrollToNowIndicator();
       }
     };
@@ -361,10 +359,10 @@ const TimeSchedule = memo(
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
 
+        handleCallApiAllData(startDateISOString, endDateISOString);
         saveZoomSchedule({
           dateFilterScheduleFrom: startDateISOString,
         });
-        handleCallApiAllData(startDateISOString, endDateISOString);
         scrollToNowIndicator();
       }
     };
@@ -381,7 +379,6 @@ const TimeSchedule = memo(
             calendarApi.view.activeEnd,
           );
           setDisplayHeaderDayStart(new Date(startDateISOString));
-          setDisplayHeaderDayEnd(new Date(endDateISOString));
 
           handleCallApiAllData(startDateISOString, endDateISOString);
           saveZoomSchedule({
@@ -1178,10 +1175,6 @@ const TimeSchedule = memo(
         setDisplayHeaderDayEnd(new Date(endDateISOString));
         setSlotHeight(baseHeight);
         setResetTrigger((prev) => prev + 1);
-        saveZoomSchedule({
-          isShowWeekSchedule: calendarView === CalendarViewOptions.VIEW_BY_WEEK,
-          dateFilterScheduleFrom: startDateISOString,
-        });
         setIsLoadingSchedule(true);
         await handleCallApiAllData(startDateISOString, endDateISOString);
 
@@ -1189,6 +1182,11 @@ const TimeSchedule = memo(
           calendarApi.refetchEvents();
         }, 300);
         setTimeout(() => {
+          saveZoomSchedule({
+            isShowWeekSchedule:
+              calendarView === CalendarViewOptions.VIEW_BY_WEEK,
+            dateFilterScheduleFrom: startDateISOString,
+          });
           scrollToNowIndicator();
         }, 300);
       }
@@ -1366,31 +1364,14 @@ const TimeSchedule = memo(
       const uuidData = uuidv4();
 
       const isLessThanToday = isDateLessThanToday(newEvent.start);
-      const resourcePlanDay =
-        newEvent._def.resourceIds?.length &&
-        newEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
-      if (isLoadingSchedule) {
-        return info.revert();
-      }
+
       if (!info.draggedEl) {
         return info.revert();
       }
       if (areDatesDifferent(`${newEvent.start}`, `${newEvent.end}`)) {
         return info.revert();
       }
-
-      if (
-        isDateInPast(newEvent.start) &&
-        searchParams.get('view') === ViewOptions.DAY &&
-        resourcePlanDay
-      ) {
-        return info.revert();
-      }
-
-      if (
-        isTimeEarlierToday(newEvent.start) &&
-        searchParams.get('view') === ViewOptions.WEEK
-      ) {
+      if (isLoadingSchedule) {
         return info.revert();
       }
       const resourcePlan =
@@ -1423,22 +1404,9 @@ const TimeSchedule = memo(
             item.taskId === Number(newEventId)
           );
         });
-        const hasOverlapPlan = taskTimeScheduleList.some((item) => {
-          return (
-            newEvent.start < item.end &&
-            newEvent.end > item.start &&
-            item.resourceId === ItemScheduleType.PLANS &&
-            resourcePlan &&
-            item.type === ItemStartType.TASK
-          );
-        });
+
         // Check overlap actual
         if (hasOverlap) {
-          return info.revert();
-        }
-        // Check overlap plan
-
-        if (hasOverlapPlan) {
           return info.revert();
         }
         info.view.calendar.refetchEvents();
@@ -1586,20 +1554,6 @@ const TimeSchedule = memo(
         resizedEvent._def.resourceIds[0] === ItemScheduleType.PLANS;
 
       const resourcePlanWeek = isLessThanToday ? false : true;
-      if (
-        isDateInPast(resizedEvent.start) &&
-        searchParams.get('view') === ViewOptions.DAY &&
-        resourcePlanDay
-      ) {
-        return info.revert();
-      }
-      if (
-        isTimeEarlierToday(resizedEvent.start) &&
-        searchParams.get('view') === ViewOptions.WEEK
-      ) {
-        return info.revert();
-      }
-
       if (areDatesDifferent(`${resizedEvent.start}`, `${resizedEvent.end}`)) {
         return info.revert();
       }
@@ -1655,23 +1609,6 @@ const TimeSchedule = memo(
           if (hasOverlap) {
             return info.revert();
           }
-        }
-      } else {
-        // Check overlap plan
-        const hasOverlap = taskTimeScheduleList
-          .filter((data) => data.uuid !== resizedEvent.extendedProps.uuid)
-          .some((item) => {
-            return (
-              resizedEvent.start < item.end &&
-              resizedEvent.end > item.start &&
-              item.resourceId === ItemScheduleType.PLANS &&
-              resourcePlanDay &&
-              item.type === ItemStartType.TASK &&
-              resizedEvent.extendedProps.type === ItemStartType.TASK
-            );
-          });
-        if (hasOverlap) {
-          return info.revert();
         }
       }
 
@@ -1745,20 +1682,6 @@ const TimeSchedule = memo(
       const dropResourceId = info.newResource?.id;
 
       if (
-        isDateInPast(droppedEvent.start as Date) &&
-        searchParams.get('view') === ViewOptions.DAY &&
-        resourcePlanDay
-      ) {
-        return info.revert();
-      }
-      if (
-        isTimeEarlierToday(droppedEvent.start as Date) &&
-        searchParams.get('view') === ViewOptions.WEEK
-      ) {
-        return info.revert();
-      }
-
-      if (
         draggedResourceId &&
         dropResourceId &&
         draggedResourceId !== dropResourceId
@@ -1818,24 +1741,6 @@ const TimeSchedule = memo(
         if (hasOverlapWeek) {
           return info.revert();
         }
-        const hasOverlapPlanWeek = taskTimeScheduleList
-          .filter((data) => data.uuid !== droppedEvent.extendedProps.uuid)
-          .some((item) => {
-            return (
-              startDrop < item.end &&
-              endDrop > item.start &&
-              item.resourceId === isCheckWeek &&
-              resourcePlanWeek &&
-              item.type === ItemStartType.TASK &&
-              droppedEvent.extendedProps.type === ItemStartType.TASK
-            );
-          });
-
-        // Check overlap plan week
-        if (hasOverlapPlanWeek) {
-          return info.revert();
-        }
-
         if (matchData && matchData.uuid !== droppedEvent.extendedProps.uuid) {
           info.view.calendar.refetchEvents();
         }
@@ -1972,23 +1877,6 @@ const TimeSchedule = memo(
             );
           });
 
-          if (hasOverlap) {
-            return info.revert();
-          }
-        } else {
-          // Check overlap plan
-          const hasOverlap = taskTimeScheduleList
-            .filter((data) => data.uuid !== droppedEvent.extendedProps.uuid)
-            .some((item) => {
-              return (
-                startDrop < item.end &&
-                endDrop > item.start &&
-                item.resourceId === ItemScheduleType.PLANS &&
-                resourcePlanDay &&
-                item.type === ItemStartType.TASK &&
-                droppedEvent.extendedProps.type === ItemStartType.TASK
-              );
-            });
           if (hasOverlap) {
             return info.revert();
           }
@@ -2814,19 +2702,14 @@ const TimeSchedule = memo(
 
       switch (weekState) {
         case 'currentWeek':
-          selector = '.schedule-custom .fc-day.fc-day-today.fc-daygrid-day';
-          break;
-        case 'nextWeek':
-          selector = '.schedule-custom .fc-day.fc-day-mon.fc-daygrid-day';
-          break;
-        case 'pastWeek':
-          selector = '.schedule-custom .fc-day.fc-day-mon.fc-daygrid-day';
+          selector = '.schedule-custom .fc-day-today';
           break;
         default:
           selector = '.schedule-custom .fc-day.fc-day-mon.fc-daygrid-day';
           break;
       }
-      setTimeout(() => {
+
+      const tryScroll = (retries = 10) => {
         const target = document.querySelector(selector);
         if (target) {
           setIsScroll(false);
@@ -2835,9 +2718,14 @@ const TimeSchedule = memo(
             block: 'start',
             inline: 'start',
           });
+        } else if (retries > 0) {
+          setTimeout(() => tryScroll(retries - 1), 100);
         }
-      }, 700);
+      };
+
+      tryScroll();
     }, []);
+
     useEffect(() => {
       if (calendarRef.current && isScroll) {
         const calendarApi = calendarRef.current.getApi();
@@ -2957,6 +2845,28 @@ const TimeSchedule = memo(
       },
     );
 
+    useEffect(() => {
+      const updateSlotLineColors = () => {
+        const slots = document.querySelectorAll(
+          '.fc-timegrid-slot.fc-timegrid-slot-lane',
+        );
+
+        slots.forEach((slot) => {
+          const time = slot.getAttribute('data-time');
+          if (time) {
+            const [_hour, minute] = time.split(':').map(Number);
+            if (minute === 0) {
+              slot.classList.add('hour-line');
+            } else if (minute === 30) {
+              slot.classList.add('half-hour-line');
+            }
+          }
+        });
+      };
+      // Call the function after FullCalendar renders
+      setTimeout(updateSlotLineColors, 100);
+    }, [isExtendCalendar]);
+
     return (
       <>
         <div
@@ -2979,7 +2889,7 @@ const TimeSchedule = memo(
             onMouseDown={handleMouseDown}
           />
           <div
-            className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 px-4 `}>
+            className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 pr-4 `}>
             <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
               <div className={`items-center gap-4 flex h-12 sticky z-20`}>
                 {!isExtendCalendar ? (
@@ -3053,7 +2963,7 @@ const TimeSchedule = memo(
                 ) : (
                   <>
                     <div
-                      className={`flex items-center gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
+                      className={`flex items-center ml-8 gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
                       <Tippy
                         content="前日"
                         arrow={false}
@@ -3214,6 +3124,7 @@ const TimeSchedule = memo(
               resetTrigger={resetTrigger}
               onChange={(value) => {
                 setSliderValue(value);
+
                 const calculatedHeight = calculateSlotHeight(value);
                 const calculatedDuration = calculateSlotDuration(value);
                 setSlotHeight(calculatedHeight);

@@ -242,6 +242,9 @@ const TableComponent = ({
     useState<boolean>(false);
   const [warningDeleteCategoryModalOpen, setWarningDeleteCategoryModalOpen] =
     useState<boolean>(false);
+  const [categoryDropdownOptions, setCategoryDropdownOptions] = useState<
+    OptionDropdownType[]
+  >([]);
   const [pendingSelection, setPendingSelection] = useState<{
     oldLargeOption: OptionDropdownType;
     oldMediumOption?: OptionDropdownType;
@@ -254,6 +257,16 @@ const TableComponent = ({
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  useEffect(() => {
+    if (categoryList) {
+      const categoryOptions = categoryList.filter(
+        (category) =>
+          category.teamId == null || category.teamId == hierarchyList.id,
+      );
+      setCategoryDropdownOptions(categoryOptions);
+    }
+  }, [categoryList, hierarchyList.id]);
+  
   const findLastUniqueMediumIndexes = (data: rowDataType[]): number[] => {
     const lastIndexes: number[] = [];
     let currentLargeValue: number | string | null = null;
@@ -1683,7 +1696,7 @@ const TableComponent = ({
                           <TableDropdown
                             key={JSON.stringify(row.original.large)}
                             options={[
-                              ...categoryList.filter(
+                              ...categoryDropdownOptions.filter(
                                 (option) =>
                                   option.value !== row.original.medium.value && // Prevent selecting the same as medium
                                   option.value !== row.original.small.value && // Prevent selecting the same as small
@@ -1694,14 +1707,18 @@ const TableComponent = ({
                             className="h-full !rounded-[5px] w-full flex-grow"
                             valueClassName="!border-[#77858F]"
                             labelClass="w-[160px]"
-                            selectedOption={categoryList.find(
+                            selectedOption={categoryDropdownOptions.find(
                               (element) =>
                                 element.value === row.original.large.value,
                             )}
                             onPendingChange={(e) => {
                               const oldLargeOption = row.original.large;
-                              if(e.value == oldLargeOption.value) return;
-                              if ((row.original.large.label && !isUUID(row.original.large.label) && !isUUID(row.original.id as string))) {
+                              if (e.value == oldLargeOption.value) return;
+                              if (
+                                row.original.large.label &&
+                                !isUUID(row.original.large.label) &&
+                                !isUUID(row.original.id as string)
+                              ) {
                                 setWarningChangeCategoryModalOpen(true);
                                 setPendingSelection({
                                   oldLargeOption,
@@ -1795,7 +1812,7 @@ const TableComponent = ({
                               <TableDropdown
                                 key={JSON.stringify(row.original.medium)}
                                 options={[
-                                  ...categoryList.filter(
+                                  ...categoryDropdownOptions.filter(
                                     (option) =>
                                       option.value !==
                                         row.original.large.value &&
@@ -1808,15 +1825,19 @@ const TableComponent = ({
                                 className="h-full !rounded-[5px] w-full flex-grow"
                                 valueClassName="!border-[#77858F]"
                                 labelClass="w-[160px]"
-                                selectedOption={categoryList.find(
+                                selectedOption={categoryDropdownOptions.find(
                                   (element) =>
                                     element.value === row.original.medium.value,
                                 )}
                                 onPendingChange={(e) => {
                                   const oldMediumOption = row.original.medium;
                                   const oldLargeOption = row.original.large;
-                                  if(e.value == oldMediumOption.value) return;
-                                  if (row.original.medium.label && !isUUID(row.original.medium.label) && !isUUID(row.original.id as string)) {
+                                  if (e.value == oldMediumOption.value) return;
+                                  if (
+                                    row.original.medium.label &&
+                                    !isUUID(row.original.medium.label) &&
+                                    !isUUID(row.original.id as string)
+                                  ) {
                                     setWarningChangeCategoryModalOpen(true);
                                     setPendingSelection({
                                       oldLargeOption,
@@ -1932,7 +1953,7 @@ const TableComponent = ({
                             <TableDropdown
                               key={JSON.stringify(row.original.small)}
                               options={[
-                                ...categoryList.filter(
+                                ...categoryDropdownOptions.filter(
                                   (option) =>
                                     !excludedSmalls.includes(option.value) && // Prevent selecting the same as other rows in the group
                                     option.value !== row.original.large.value && // Prevent selecting the same as large
@@ -1945,7 +1966,7 @@ const TableComponent = ({
                               className="h-full !rounded-[5px]"
                               valueClassName="!border-[#77858F]"
                               labelClass="w-[160px]"
-                              selectedOption={categoryList.find(
+                              selectedOption={categoryDropdownOptions.find(
                                 (element) =>
                                   element.value == row.original.small.value,
                               )}
@@ -1955,8 +1976,12 @@ const TableComponent = ({
                                 const oldRowId = row.original.id;
                                 const oldRowSkill = row.original.skills;
                                 const oldRowColor = row.original.color;
-                                if(e.value == row.original.small.value) return;
-                                if (row.original.small.label && !isUUID(row.original.small.label)  && !isUUID(row.original.id as string)) {
+                                if (e.value == row.original.small.value) return;
+                                if (
+                                  row.original.small.label &&
+                                  !isUUID(row.original.small.label) &&
+                                  !isUUID(row.original.id as string)
+                                ) {
                                   setWarningChangeCategoryModalOpen(true);
                                   setPendingSelection({
                                     oldLargeOption,

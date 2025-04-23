@@ -83,9 +83,7 @@ import {
   formatShowDateJapanese,
   formatTime,
   formatTimeInput,
-  formatTimeInputFilter,
   generateTimeOptionsAsObjects,
-  getFilteredTimeOptions,
 } from '@utils/date';
 import {
   generateOptionsCount,
@@ -135,7 +133,7 @@ const ActionsTaskModal = ({
   onDelete,
   onWarning,
 }: ActionTaskModalProps) => {
-  const [_minDatePlans, setMinDatePlans] = useState<{
+  const [minDatePlans, setMinDatePlans] = useState<{
     [key: number]: Date | null;
   }>({});
   const { data: session } = useSession();
@@ -1832,7 +1830,6 @@ const ActionsTaskModal = ({
                                               )
                                         }
                                         disabled={isCheckActionPermission}
-                                        minDate={new Date()}
                                         onChange={(e) => {
                                           setIsFormTouched(true);
                                           onChange(e);
@@ -1918,12 +1915,7 @@ const ActionsTaskModal = ({
                                         if (time) {
                                           setValue(
                                             `plans.${index}.planStartTime`,
-                                            formatTimeInputFilter(
-                                              time,
-                                              getValues(
-                                                `plans.${index}.planStartDate`,
-                                              ) || new Date(),
-                                            ),
+                                            formatTimeInput(time),
                                           );
                                         }
                                         setTime('');
@@ -1931,10 +1923,7 @@ const ActionsTaskModal = ({
                                     },
                                   )}
                                   type="text"
-                                  options={getFilteredTimeOptions(
-                                    getValues(`plans.${index}.planStartDate`) ||
-                                      new Date(),
-                                  )}
+                                  options={optionTimeInput}
                                   onChangeDropdown={(e) => {
                                     setIsFormTouched(true);
                                     setValue(
@@ -1992,7 +1981,7 @@ const ActionsTaskModal = ({
                                       disabled={isCheckActionPermission}
                                       minDate={
                                         watch(`plans.${index}.planStartDate`) ||
-                                        new Date()
+                                        minDatePlans[index]
                                       }
                                       onChange={(e) => {
                                         setIsFormTouched(true);
@@ -2090,12 +2079,7 @@ const ActionsTaskModal = ({
                                         if (time) {
                                           setValue(
                                             `plans.${index}.planEndTime`,
-                                            formatTimeInputFilter(
-                                              time,
-                                              getValues(
-                                                `plans.${index}.planEndDate`,
-                                              ) || new Date(),
-                                            ),
+                                            formatTimeInput(time),
                                           );
                                         }
                                         if (
@@ -2140,10 +2124,7 @@ const ActionsTaskModal = ({
                                       },
                                     },
                                   )}
-                                  options={getFilteredTimeOptions(
-                                    getValues(`plans.${index}.planEndDate`) ||
-                                      new Date(),
-                                  )}
+                                  options={optionTimeInput}
                                   onChangeDropdown={(e) => {
                                     setIsFormTouched(true);
                                     setValue(
@@ -2641,7 +2622,6 @@ const ActionsTaskModal = ({
                                                     `plans.${index}.planStartDate`,
                                                   )
                                             }
-                                            minDate={new Date()}
                                             disabled={isCheckActionPermission}
                                             onChange={(e) => {
                                               setIsFormTouched(true);
@@ -2735,12 +2715,7 @@ const ActionsTaskModal = ({
                                             if (time) {
                                               setValue(
                                                 `plans.${index}.planStartTime`,
-                                                formatTimeInputFilter(
-                                                  time,
-                                                  getValues(
-                                                    `plans.${index}.planStartDate`,
-                                                  ) || new Date(),
-                                                ),
+                                                formatTimeInput(time),
                                               );
                                             }
                                             setTime('');
@@ -2748,11 +2723,7 @@ const ActionsTaskModal = ({
                                         },
                                       )}
                                       type="text"
-                                      options={getFilteredTimeOptions(
-                                        getValues(
-                                          `plans.${index}.planStartDate`,
-                                        ) || new Date(),
-                                      )}
+                                      options={optionTimeInput}
                                       onChangeDropdown={(e) => {
                                         setIsFormTouched(true);
                                         setValue(
@@ -2817,7 +2788,7 @@ const ActionsTaskModal = ({
                                           minDate={
                                             watch(
                                               `plans.${index}.planStartDate`,
-                                            ) || new Date()
+                                            ) || minDatePlans[index]
                                           }
                                           onChange={(e) => {
                                             setIsFormTouched(true);
@@ -2917,12 +2888,7 @@ const ActionsTaskModal = ({
                                             if (time) {
                                               setValue(
                                                 `plans.${index}.planEndTime`,
-                                                formatTimeInputFilter(
-                                                  time,
-                                                  getValues(
-                                                    `plans.${index}.planEndDate`,
-                                                  ) || new Date(),
-                                                ),
+                                                formatTimeInput(time),
                                               );
                                             }
                                             if (
@@ -2969,11 +2935,7 @@ const ActionsTaskModal = ({
                                           },
                                         },
                                       )}
-                                      options={getFilteredTimeOptions(
-                                        getValues(
-                                          `plans.${index}.planEndDate`,
-                                        ) || new Date(),
-                                      )}
+                                      options={optionTimeInput}
                                       onChangeDropdown={(e) => {
                                         setIsFormTouched(true);
                                         setValue(
