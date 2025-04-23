@@ -63,7 +63,6 @@ import {
   EventRequest,
 } from '@interfaces/calendar';
 import { OptionDropdownType } from '@interfaces/common';
-import { User } from '@interfaces/user';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -96,6 +95,7 @@ import {
 } from '@constants';
 
 import api from '@base/api';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 const EventCalendar = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -136,7 +136,6 @@ const EventCalendar = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const { dashboardMemberList } = useDashboardMemberList();
-  const [authenticatedUser, setAuthenticatedUser] = useState<User>();
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
   const searchParams = useSearchParams();
@@ -151,6 +150,7 @@ const EventCalendar = () => {
   );
   const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const { authenticatedUser } = useAuthenticatedUser({});
 
   const [infoModalPosition, setInfoModalPosition] = useState<{
     top: number;
@@ -310,10 +310,7 @@ const EventCalendar = () => {
         selectedScheduleUserIds: selectedScheduleUserIds,
         keySearch: keySearch,
       });
-      if (
-        isDayOrWeekView()
-      )
-        scrollToStartOfDay();
+      if (isDayOrWeekView()) scrollToStartOfDay();
     }
   };
 
@@ -413,30 +410,9 @@ const EventCalendar = () => {
       }
 
       setIsEventRendering(false);
-      if (
-        isDayOrWeekView()
-      )
-        scrollToStartOfDay();
+      if (isDayOrWeekView()) scrollToStartOfDay();
     }
   };
-
-  const handleGetAuthenticatedUser = async () => {
-    setIsEventRendering(true);
-    const apiUrl = apiRouters.AUTHENTICATED_USER;
-
-    const { data } = await api.get<User>(apiUrl);
-    return data;
-  };
-
-  const { mutate: getAuthenticatedUser } = useMutation(
-    'getAuthenticatedUser',
-    handleGetAuthenticatedUser,
-    {
-      onSuccess: (data) => {
-        setAuthenticatedUser(data);
-      },
-    },
-  );
 
   useEffect(() => {
     if (containerRef.current === null) {
@@ -923,10 +899,6 @@ const EventCalendar = () => {
   };
 
   useEffect(() => {
-    getAuthenticatedUser && getAuthenticatedUser();
-  }, [getAuthenticatedUser]);
-
-  useEffect(() => {
     if (authenticatedUser) {
       setCurrentResources((prevCurrentResources) => {
         const existedResource = prevCurrentResources.find(
@@ -943,19 +915,25 @@ const EventCalendar = () => {
         }
         return [...prevCurrentResources];
       });
-      if (searchParams.get('view') == ViewOptions.WEEK) {
-        handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-      } else if (searchParams.get('view') == ViewOptions.DAY) {
-        handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
-      } else if (searchParams.get('view') == ViewOptions.YEAR) {
-        handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
-      } else {
-        handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
-      }
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticatedUser]);
+
+  useEffect(() => {
+    const currentView = searchParams.get('view');
+    switch (currentView) {
+      case ViewOptions.WEEK:
+        handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
+        break;
+      case ViewOptions.DAY:
+        handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
+        break;
+      case ViewOptions.YEAR:
+        handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
+        break;
+      default:
+        handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
+    }
+  }, [searchParams]);
 
   const handleDatesSet = (arg: any) => {
     const startDate = new Date(arg.startStr);
@@ -1186,9 +1164,24 @@ const EventCalendar = () => {
       const organizationMembers = member.userIds || [];
 
       if (isAlreadySelected) {
-        updatedOrgIds = updatedOrgIds.filter((id) => id != memberId);
+        // Remove the deselected organization
+        updatedOrgIds = updatedOrgIds.filter((id) => id !== memberId);
+
+        // Collect member IDs that should be removed (if not in any other selected org)
+        const removeMemberIds = organizationMembers.filter((memberId) => {
+          return !updatedOrgIds.some((orgId) => {
+            const org = dataOptionsParticipants.find(
+              (item) =>
+                Number(item.id) === orgId &&
+                item.type === EventParticipantType.ORGANIZATION,
+            );
+            return org?.userIds?.includes(memberId);
+          });
+        });
+
+        // Remove the filtered member IDs from selected users
         updatedUserIds = updatedUserIds.filter(
-          (id) => !organizationMembers.includes(id),
+          (id) => !removeMemberIds.includes(id),
         );
       } else {
         updatedOrgIds.push(memberId);
@@ -2152,9 +2145,7 @@ const EventCalendar = () => {
 
   return (
     <Fragment>
-      <div
-        className="flex relative mb-3 overflow-y-hidden pt-5"
-        ref={containerRef}>
+      <div className="flex mb-3 overflow-y-hidden pt-5" ref={containerRef}>
         <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'}`}>
           <div className="flex items-center justify-between mb-7 pl-10">
             <div className="flex items-center ml-[-1rem] gap-4">
@@ -2314,7 +2305,7 @@ const EventCalendar = () => {
                       numberOfResources={
                         searchParams.get('view') == ViewOptions.WEEK ? 7 : 2
                       }
-                      className={`${searchParams.get('view') == ViewOptions.WEEK ? 'pt-[20px]' : 'mt-[50px] pt-[10px]'}`}
+                      className={`${searchParams.get('view') == ViewOptions.WEEK ? 'pt-[20px]' : `${authenticatedUser ? 'mt-[50px] pt-[10px]' : 'mt-[20px] pt-[40px]'} pl-[15px]`}`}
                     />
                   </div>
                 )}

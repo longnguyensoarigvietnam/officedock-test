@@ -199,7 +199,7 @@
   left: 100%;
   top: 50%;
   transform: translateY(-50%);
-  width: 50px;
+  width: 70px;
   height: 2px;
   background-color: #C32E2E;
   margin-left: -3px;
@@ -644,4 +644,10 @@
   background-size: contain;
   cursor: pointer !important;
   opacity: 1;
+}
+.schedule-custom .fc-scroller-harness .fc-scroller-harness-liquid {
+  margin-left: -5px;
+}
+.schedule-custom .fc .fc-timegrid-slot-label {
+  padding-left: 22px;
 }

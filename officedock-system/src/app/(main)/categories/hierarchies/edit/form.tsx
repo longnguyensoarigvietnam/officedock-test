@@ -122,6 +122,37 @@ const OptionsBoxToAddCategory = ({
     };
   }, [isOpen]);
 
+  const renderOptions = () => {
+    return (
+      <div
+        ref={dropdownRef}
+        className="fixed bg-[#5B6770] text-white rounded-[6px] w-[252px] py-[5px] text-sm font-medium shadow-lg z-50 transition-opacity duration-200"
+        style={{
+          top: `${position.top}px`,
+          left: `${position.left}px`,
+          opacity: isReady ? 1 : 0,
+          visibility: isReady ? 'visible' : 'hidden',
+        }}>
+        <button
+          className="py-[10px] px-[14px] text-left w-full hover:bg-[#7D8A94] transition-all duration-200 rounded-[6px]"
+          onClick={() => {
+            setIsOpen(false);
+            addCategoryUsingInput('input');
+          }}>
+          チームの業務カテゴリーを入力
+        </button>
+        <button
+          className="py-[10px] px-[14px] text-left w-full hover:bg-[#7D8A94] transition-all duration-200 rounded-[6px]"
+          onClick={() => {
+            setIsOpen(false);
+            addCategoryUsingDropdown('pulldown');
+          }}>
+          登録済みの業務カテゴリーから選択
+        </button>
+      </div>
+    );
+  };
+
   return (
     <>
       <Popover className="relative">
@@ -141,33 +172,12 @@ const OptionsBoxToAddCategory = ({
       {isOpen &&
         createPortal(
           <div
-            ref={dropdownRef}
-            className="fixed bg-[#5B6770] text-white rounded-[6px] w-[252px] py-[5px] text-sm font-medium shadow-lg z-50 transition-opacity duration-200"
-            style={{
-              top: `${position.top}px`,
-              left: `${position.left}px`,
-              opacity: isReady ? 1 : 0,
-              visibility: isReady ? 'visible' : 'hidden',
-            }}>
-            <button
-              className="py-[10px] px-[14px] text-left w-full hover:bg-[#7D8A94] transition-all duration-200 rounded-[6px]"
-              onClick={() => {
-                setIsOpen(false);
-                addCategoryUsingInput('input');
-              }}>
-              チームの業務カテゴリーを入力
-            </button>
-            <button
-              className="py-[10px] px-[14px] text-left w-full hover:bg-[#7D8A94] transition-all duration-200 rounded-[6px]"
-              onClick={() => {
-                setIsOpen(false);
-                addCategoryUsingDropdown('pulldown');
-              }}>
-              登録済みの業務カテゴリーから選択
-            </button>
-          </div>,
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />,
           document.body,
         )}
+      {isOpen && createPortal(renderOptions(), document.body)}
     </>
   );
 };
@@ -266,7 +276,7 @@ const TableComponent = ({
       setCategoryDropdownOptions(categoryOptions);
     }
   }, [categoryList, hierarchyList.id]);
-  
+
   const findLastUniqueMediumIndexes = (data: rowDataType[]): number[] => {
     const lastIndexes: number[] = [];
     let currentLargeValue: number | string | null = null;

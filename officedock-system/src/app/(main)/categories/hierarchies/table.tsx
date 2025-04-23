@@ -234,7 +234,7 @@ const HierarchyTable = ({
               <tr key={row.id} className="h-[1px]">
                 {largeRowspan[rowIndex] > 0 && (
                   <td
-                    className={`${table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px]'} border-r-[1px] w-1/4 border-[#D2DBE1] h-full`}
+                    className={`${table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px]'} border-r-[1px] w-[25%] max-w-[25%] break-all border-[#D2DBE1] h-full`}
                     style={{ height: 'inherit' }}
                     rowSpan={largeRowspan[rowIndex]}>
                     <div className="p-3 h-full flex items-center gap-3">
@@ -252,7 +252,7 @@ const HierarchyTable = ({
                 )}
                 {mediumRowspan[rowIndex] > 0 && (
                   <td
-                    className={`w-1/4 px-3 ${lastMediumIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
+                    className={`w-[25%] max-w-[25%] break-all px-3 ${lastMediumIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
                     style={{ height: 'inherit' }}
                     rowSpan={mediumRowspan[rowIndex]}>
                     <p
@@ -262,7 +262,7 @@ const HierarchyTable = ({
                   </td>
                 )}
                 <td
-                  className={`w-1/4 px-3 ${lastLargeIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
+                  className={`w-[25%] max-w-[25%] break-all px-3 ${lastLargeIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
                   style={{ height: 'inherit' }}>
                   <p
                     className={`text-sm h-full flex justify-left items-center font-medium py-4 ${!lastLargeIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} `}>
@@ -270,7 +270,7 @@ const HierarchyTable = ({
                   </p>
                 </td>
                 <td
-                  className={`h-full px-3 !w-1/4 max-w-[1/4] ${lastLargeIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px]'} border-l-[1px] border-[#D2DBE1]`}
+                  className={`h-full px-3 w-[25%] max-w-[25%] break-all ${lastLargeIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px]'} border-l-[1px] border-[#D2DBE1]`}
                   style={{ height: 'inherit' }}>
                   <div
                     className={`flex gap-2 flex-wrap py-4 ${!lastLargeIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'}`}>
