@@ -2792,16 +2792,8 @@ const TimeSchedule = memo(
       return '00:15:00';
     };
     // Get data zoom
-    useAuthenticatedUser({
+    const { authenticatedUser } = useAuthenticatedUser({
       onSuccess: (data) => {
-        const value = data.setting?.scheduleZoom as number;
-        setSliderValue(value);
-        const calculatedHeight = calculateSlotHeight(value);
-        const calculatedDuration = calculateSlotDuration(value);
-
-        setSlotHeight(calculatedHeight);
-        setIsOptionZoomSchedule(calculatedDuration);
-
         if (data.setting?.dateFilterScheduleFrom) {
           if (data.setting?.isShowWeekSchedule) {
             handleViewChangeDefault(CalendarViewOptions.VIEW_BY_WEEK);
@@ -2820,6 +2812,17 @@ const TimeSchedule = memo(
         }
       },
     });
+    useEffect(() => {
+      if (authenticatedUser) {
+        const value = authenticatedUser.setting?.scheduleZoom as number;
+        setSliderValue(value);
+        const calculatedHeight = calculateSlotHeight(value);
+        const calculatedDuration = calculateSlotDuration(value);
+
+        setSlotHeight(calculatedHeight);
+        setIsOptionZoomSchedule(calculatedDuration);
+      }
+    }, [authenticatedUser]);
 
     // Handle save zoom
     const handleSaveZoomSchedule = async (data: {
