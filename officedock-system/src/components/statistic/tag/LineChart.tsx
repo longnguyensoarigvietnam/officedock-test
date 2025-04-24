@@ -424,6 +424,7 @@ const LineChart = ({
                 )?.percent || 0
               : 0;
           } else if (
+            !selectedSmall?.value &&
             statisticTagsList?.smallCategories &&
             statisticTagsList?.smallCategories.length > 0
           ) {
@@ -432,6 +433,16 @@ const LineChart = ({
                   (category) => category.tagName == categoryDetail.tagName,
                 )?.percent || 0
               : 0;
+          } else {
+            if (
+              statisticTagsList?.category &&
+              statisticTagsList?.category.length > 0
+            )
+              percent = statisticTagsList?.category
+                ? statisticTagsList?.category.find(
+                    (category) => category.tagName == categoryDetail.tagName,
+                  )?.percent || 0
+                : 0;
           }
 
           standardLabels = [

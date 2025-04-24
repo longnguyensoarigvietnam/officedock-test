@@ -435,7 +435,7 @@ const ItemTeam = ({
                     style={{
                       width: `${(columnWidth / 247) * 20}px`,
                     }}
-                    className="h-full flex items-center">
+                    className="h-full flex items-start mt-[3px]">
                     <ImageRound
                       src="/icons/clock.svg"
                       name="Clock icon"
@@ -463,9 +463,7 @@ const ItemTeam = ({
                         : '85px',
                     fontSize:
                       (selectedOptionZoom.value as number) > 75
-                        ? (selectedOptionZoom.value as number) == 90
-                          ? '15px'
-                          : '16px'
+                        ? '14px'
                         : '12px',
                     minHeight:
                       (selectedOptionZoom.value as number) > 75
@@ -473,7 +471,7 @@ const ItemTeam = ({
                         : '18px',
                     marginRight: `${(columnWidth / 247) * 12}px`,
                   }}
-                  className={`!border-none break-words leading-[1.5] cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                  className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                   {content.title}
                 </p>
               </div>
