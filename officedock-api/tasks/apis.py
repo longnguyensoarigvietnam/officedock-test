@@ -1564,20 +1564,17 @@ class TaskScheduleViewSet(
             is_send_sk, is_over_estimate = check_task_overtime(
                 task_schedule.task, task_duration
             )
-            if is_send_sk:
-                for user in task_schedule.task.people_in_charge.all():
-                    send_web_socket_event(
-                        {
-                            "id": task_schedule.task.id,
-                            "task_duration_running_uuid": str(
-                                task_duration.uuid
-                            ),
-                            "is_over_estimate": is_over_estimate,
-                            "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
-                            "type": CalendarTypes.TASK.value,
-                        },
-                        user=user,
-                    )
+            for user in task_schedule.task.people_in_charge.all():
+                send_web_socket_event(
+                    {
+                        "id": task_schedule.task.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": is_over_estimate,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.TASK.value,
+                    },
+                    user=user,
+                )
 
     def perform_create(self, serializer):
         """

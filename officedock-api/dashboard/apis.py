@@ -252,9 +252,10 @@ class DashboardViewSet(BaseAPIViewSet):
                 task_schedules__plan_start_date__lte=end_date,
                 people_in_charge=user,
             ).distinct()
+            # FIXME: Change conditional when implement repeat schedule of event
             schedules = Schedule.objects.filter(
-                repeat_schedules__plan_start_date__gte=start_date,
-                repeat_schedules__plan_end_date__lte=end_date,
+                start_date__gte=start_date,
+                end_date__lte=end_date,
                 participants=user,
             )
             data = (
