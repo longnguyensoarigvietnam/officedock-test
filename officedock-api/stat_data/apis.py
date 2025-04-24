@@ -30,6 +30,7 @@ from common.utils import (
     format_duration,
     time_str_to_timedelta,
     transform_statistic_categories,
+    split_id_from_string,
 )
 from organizations.constants import CategoryColors
 from organizations.models import Organization, OrganizationsStatisticCategories
@@ -392,7 +393,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         Return list of statistic data
         """
         organization_ids_params = request.query_params.get("organization_ids")
-        organization_ids = []
         date = request.query_params.get("date", None)
         request_user = request.user
 
@@ -414,11 +414,8 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 "id", flat=True
             )
         else:
-            for id in organization_ids_params.split(","):
-                try:
-                    organization_ids.append(int(id))
-                except ValueError:
-                    continue
+            organization_ids = split_id_from_string(organization_ids_params)
+
         data = []
         if organization_ids:
             for organization_id in organization_ids:
@@ -519,7 +516,6 @@ class StatisticViewSet(BaseAPIViewSet):
         small_category_id = request.query_params.get("small_category_id")
         user_id = request.query_params.get("user_id")
         tag_ids_param = request.query_params.get("tag_ids")
-        organization_ids = []
         tag_ids = []
         from_date = request.query_params.get("from_date")
         end_date = request.query_params.get("end_date")
@@ -550,11 +546,8 @@ class StatisticViewSet(BaseAPIViewSet):
                 "id", flat=True
             )
         else:
-            for id in organization_ids_param.split(","):
-                try:
-                    organization_ids.append(int(id))
-                except ValueError:
-                    continue
+            organization_ids = split_id_from_string(organization_ids_param)
+
         (
             large_category_ids,
             medium_category_ids,
@@ -562,11 +555,8 @@ class StatisticViewSet(BaseAPIViewSet):
         ) = get_list_id_category_of_organization(organization_ids)
 
         if tag_ids_param:
-            for id in tag_ids_param.split(","):
-                try:
-                    tag_ids.append(int(id))
-                except ValueError:
-                    continue
+            tag_ids = split_id_from_string(tag_ids_param)
+
         durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
@@ -738,7 +728,6 @@ class StatisticViewSet(BaseAPIViewSet):
         small_category_id = request.query_params.get("small_category_id")
         user_id = request.query_params.get("user_id")
         tag_ids_param = request.query_params.get("tag_ids")
-        organization_ids = []
         tag_ids = []
         from_date = request.query_params.get("from_date")
         end_date = request.query_params.get("end_date")
@@ -766,22 +755,16 @@ class StatisticViewSet(BaseAPIViewSet):
                 "id", flat=True
             )
         else:
-            for id in organization_ids_param.split(","):
-                try:
-                    organization_ids.append(int(id))
-                except ValueError:
-                    continue
+            organization_ids = split_id_from_string(organization_ids_param)
+
         (
             large_category_ids,
             medium_category_ids,
             small_category_ids,
         ) = get_list_id_category_of_organization(organization_ids)
         if tag_ids_param:
-            for id in tag_ids_param.split(","):
-                try:
-                    tag_ids.append(int(id))
-                except ValueError:
-                    continue
+            tag_ids = split_id_from_string(tag_ids_param)
+
         durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
@@ -998,17 +981,10 @@ class StatisticViewSet(BaseAPIViewSet):
         if organization_ids_param is None:
             return self.response_ok({})
         else:
-            for id in organization_ids_param.split(","):
-                try:
-                    organization_ids.append(int(id))
-                except ValueError:
-                    continue
+            organization_ids = split_id_from_string(organization_ids_param)
         if tag_ids_param:
-            for id in tag_ids_param.split(","):
-                try:
-                    tag_ids.append(int(id))
-                except ValueError:
-                    continue
+            tag_ids = split_id_from_string(tag_ids_param)
+
         data = {}
         if organization_ids:
             durations = get_list_durations_by_users(
@@ -1134,7 +1110,6 @@ class StatisticViewSet(BaseAPIViewSet):
         medium_category_id = request.query_params.get("medium_category_id")
         small_category_id = request.query_params.get("small_category_id")
         tag_ids_param = request.query_params.get("tag_ids")
-        organization_ids = []
         tag_ids = []
         from_date = request.query_params.get("from_date")
         end_date = request.query_params.get("end_date")
@@ -1155,17 +1130,10 @@ class StatisticViewSet(BaseAPIViewSet):
         if organization_ids_param is None:
             return self.response_ok({})
         else:
-            for id in organization_ids_param.split(","):
-                try:
-                    organization_ids.append(int(id))
-                except ValueError:
-                    continue
+            organization_ids = split_id_from_string(organization_ids_param)
+
         if tag_ids_param:
-            for id in tag_ids_param.split(","):
-                try:
-                    tag_ids.append(int(id))
-                except ValueError:
-                    continue
+            tag_ids = split_id_from_string(tag_ids_param)
 
         data = {}
         if tag_ids:
@@ -1294,6 +1262,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="large_category_id", type=str),
             OpenApiParameter(name="medium_category_id", type=str),
             OpenApiParameter(name="tag_ids", type=str),
+            OpenApiParameter(name="user_ids", type=str),
         ]
     )
     @action(
@@ -1319,10 +1288,16 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
 
         tag_ids_param = request.query_params.get("tag_ids")
+        user_ids_param = request.query_params.get("user_ids")
         large_category_id = request.query_params.get("large_category_id")
         medium_category_id = request.query_params.get("medium_category_id")
         instance = self.get_object()
-        users = instance.users.all()
+        if user_ids_param:
+            users = instance.users.filter(
+                id__in=split_id_from_string(user_ids_param)
+            )
+        else:
+            users = instance.users.all()
         from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
         end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
         start_of_day = datetime.combine(from_date, time.min)
@@ -1330,11 +1305,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         data = {}
         tag_ids = []
         if tag_ids_param:
-            for id in tag_ids_param.split(","):
-                try:
-                    tag_ids.append(int(id))
-                except ValueError:
-                    continue
+            tag_ids = split_id_from_string(tag_ids_param)
         if instance:
             durations = get_list_durations_by_users(
                 start_of_day,
@@ -1441,6 +1412,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="medium_category_id", type=str),
             OpenApiParameter(name="small_category_id", type=str),
             OpenApiParameter(name="tag_ids", type=str),
+            OpenApiParameter(name="user_ids", type=str),
         ]
     )
     @action(
@@ -1471,7 +1443,13 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
 
         instance = self.get_object()
-        users = instance.users.all()
+        user_ids_param = request.query_params.get("user_ids")
+        if user_ids_param:
+            users = instance.users.filter(
+                id__in=split_id_from_string(user_ids_param)
+            )
+        else:
+            users = instance.users.all()
         from_date = datetime.strptime(from_date, BASE_DATE_FORMAT).date()
         end_date = datetime.strptime(end_date, BASE_DATE_FORMAT).date()
         start_of_day = datetime.combine(from_date, time.min)
