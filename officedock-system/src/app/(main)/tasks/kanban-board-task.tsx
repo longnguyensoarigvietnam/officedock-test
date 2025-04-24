@@ -2894,7 +2894,7 @@ const KanbanBoardTask = () => {
           setDataItemChangeInline={setDataItemChangeInline}
           handleEditShowClockItem={handleEditShowClockItem}
         />
-        <div className="flex-1 pl-10">
+        <div className="flex-1 pl-10 ">
           <DragDropContext onDragStart={() => {}} onDragEnd={onDragEnd}>
             <div
               ref={exEvents}
