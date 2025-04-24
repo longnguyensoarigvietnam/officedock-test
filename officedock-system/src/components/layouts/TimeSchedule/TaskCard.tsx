@@ -1,4 +1,5 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
 import { useContext, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
 import { EventContentArg } from '@fullcalendar/core/index.js';
@@ -28,7 +29,6 @@ import {
   isMoreThanThirtyMinutes,
 } from '@utils/date';
 import { TaskActualType, TaskTimeSchedule } from '@interfaces/task';
-import { useSearchParams } from 'next/navigation';
 
 interface TaskCardProps {
   event: EventContentArg;
@@ -36,6 +36,7 @@ interface TaskCardProps {
   titleSize: number;
   contentSize: number;
   isOptionZoomSchedule: string;
+  isSelect: boolean;
   handleSetEventParam: ({
     id,
     action,
@@ -54,6 +55,7 @@ interface TaskCardProps {
 }
 const TaskCard = ({
   event,
+  isSelect,
   slotHeight,
   isOptionZoomSchedule,
   handleUpdateItemStart,
@@ -380,7 +382,7 @@ const TaskCard = ({
               ? largeColor
               : '#A7B9C2',
         }}
-        className={`h-full ${largeColor && resourcePlan && 'border border-l-2'}  group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}>
+        className={`h-full ${isSelect && '!opacity-30'} ${largeColor && resourcePlan && 'border border-l-2'}  group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}>
         <div className="flex w-full relative h-full justify-between overflow-hidden">
           <div className="flex overflow-hidden flex-col gap-2 w-[95%]">
             <p
