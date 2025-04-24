@@ -228,6 +228,11 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
         return self.response_ok(self.get_serializer(users, many=True).data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=str, required=False),
+        ],
+    )
     @action(
         methods=["GET"],
         detail=False,
@@ -238,8 +243,12 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get creation data for Tag
         """
+        user = request.user
+        organization_id = request.query_params.get("organization_id")
         status = TaskStatus.objects.order_by("created_at").all()
-        organizations = request.user.organizations.order_by("created_at")
+        organizations = Organization.objects.filter(
+            Q(users=user) | Q(id=organization_id)
+        ).order_by("created_at")
         list_cats = []
         for organization in organizations:
             organization_categories = OrganizationDetailSerializer(
@@ -259,9 +268,11 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 }
             )
         tags = (
-            request.user.company.tags.filter(
+            user.company.tags.filter(
                 is_hidden=False,
-                organizations__in=organizations,
+                organizations__id__in=[organization_id]
+                if organization_id
+                else organizations,
             )
             .order_by("created_at")
             .all()
@@ -270,7 +281,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
         data = {
             "tags": CreationDataTagSerializer(
-                tags, many=True, context={"user": self.request.user}
+                tags, many=True, context={"user": user}
             ).data,
             "status": CreationDataTaskStatusSerializer(status, many=True).data,
             "types": [item.value for item in TaskTypes],
