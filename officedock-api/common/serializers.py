@@ -22,7 +22,7 @@ class CreationDataUserSerializer(BaseUserSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "full_name", "avatar_color"]
+        fields = ["id", "full_name", "avatar_color", "avatar"]
 
     def get_full_name(self, obj):
         """
@@ -183,7 +183,7 @@ class CreationDataUserWithMainOrganizationSerializer(
 
     class Meta:
         model = User
-        fields = ["id", "full_name", "avatar_color", "organizations"]
+        fields = ["id", "full_name", "avatar_color", "avatar", "organizations"]
 
     def get_organizations(self, obj):
         """Return main organization of user"""

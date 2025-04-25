@@ -9,6 +9,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from base.messages import ERROR_MESSAGES
+from common.utils import get_signed_url
+from common.constants import USER_AVATAR_UPLOAD_MAX_SIZE
 from calendars.constants import CalendarTypes
 from companies.serializers import CompanySerializer
 from organizations.models import UsersOrganizations, Organization
@@ -61,11 +63,21 @@ class BaseUserSerializer(serializers.ModelSerializer):
             "profile",
             "login_type",
             "avatar_color",
+            "avatar",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
             "login_type": {"read_only": True},
         }
+
+    def to_representation(self, instance):
+        """Override file URL representation to ensure consistency"""
+        representation = super().to_representation(instance)
+
+        if instance.avatar:
+            representation["avatar"] = get_signed_url(instance.avatar)
+
+        return representation
 
     def validate_password(self, value):
         """
@@ -91,6 +103,21 @@ class BaseUserSerializer(serializers.ModelSerializer):
         User.validate_unique_username(
             instance=self.instance, username=value, is_admin_site=False
         )
+        return super().validate(value)
+
+    def validate_avatar(self, value):
+        """
+        Validate size avatar upload.
+        """
+        if value and value.size > USER_AVATAR_UPLOAD_MAX_SIZE:
+            raise serializers.ValidationError(
+                {
+                    "detail": ERROR_MESSAGES["max_file_size"].format(
+                        max_size="30MB"
+                    )
+                }
+            )
+
         return super().validate(value)
 
 
@@ -359,6 +386,7 @@ class UserSerializer(BaseUserSerializer):
             "unread_terms",
             "current_event",
             "avatar_color",
+            "avatar",
             "created_at",
         ]
 
@@ -538,6 +566,7 @@ class UserListSerializer(UserSerializer):
             "actions",
             "email",
             "avatar_color",
+            "avatar",
         ]
 
     def get_actions(self, obj):
@@ -574,7 +603,7 @@ class UserRegisterSerializer(ProfileSerializer):
         write_only_fields = ["token"]
 
 
-class SystemUserInviteSerializer(serializers.ModelSerializer):
+class SystemUserInviteSerializer(BaseUserSerializer):
     """
     Serializer for the User organization create form.
     """
@@ -601,6 +630,7 @@ class SystemUserInviteSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+            "avatar",
             "username",
             "email",
             "password",

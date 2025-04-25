@@ -89,4 +89,9 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """Handle destroy company"""
         instance.organizations_statistic_categories.all().delete()
 
+        # Remove all avatar user
+        for user in instance.user.all():
+            if user.avatar:
+                user.avatar.delete()
+
         instance.delete()

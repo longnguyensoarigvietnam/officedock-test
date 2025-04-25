@@ -13,6 +13,7 @@ BASE_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
 ORGANIZATION_ICON_FOLDER_UPLOAD = (
     "organizations/icons"  # Folder for organization icons
 )
+USER_AVATAR_FOLDER_UPLOAD = "users/avatars"  # Folder for user avatars
 ALLOW_IMAGE_FORMATS = [
     "jpg",
     "jpeg",
@@ -20,3 +21,4 @@ ALLOW_IMAGE_FORMATS = [
     "webp",
 ]  # Allowed image formats for uploads
 ORGANIZATION_ICON_UPLOAD_MAX_SIZE = 20 * 1024 * 1024  # 20MB
+USER_AVATAR_UPLOAD_MAX_SIZE = 30 * 1024 * 1024  # 30MB
