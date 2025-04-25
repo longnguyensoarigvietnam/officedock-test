@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { v4 as uuidv4, validate as isUUID } from 'uuid';
 import {
   flexRender,
@@ -18,7 +18,12 @@ import { OptionsBoxToAddCategory } from '@components/category/OptionsBoxToAddCat
 
 import { HIERARCHY_COLOR_LIST } from '@constants';
 import { apiRouters } from '@constants/routers';
-import { AddCategoryHierarchyType, HierarchyType, ServerStatusCode, StatisticCategoryType } from '@constants/enums';
+import {
+  AddCategoryHierarchyType,
+  HierarchyType,
+  ServerStatusCode,
+  StatisticCategoryType,
+} from '@constants/enums';
 
 import { OptionDropdownType } from '@interfaces/common';
 
@@ -140,8 +145,6 @@ const TableComponent = ({
     newValue: OptionDropdownType;
     type: string;
   } | null>(null);
-
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (categoryList) {
@@ -693,7 +696,7 @@ const TableComponent = ({
                   ? {
                       ...hierarchy,
                       large: {
-                        label: newCategory.name,
+                        label: newCategory.name || newCategory.uuid,
                         value: newCategory.uuid,
                         showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
@@ -702,9 +705,11 @@ const TableComponent = ({
                             : false,
                         errorMessage: !checkIsValidRowInput(newCategory)
                           ? INVALID_CATEGORY_NAME
-                          : error?.response?.data?.name?.[0] ||
-                            error?.response?.data?.detail?.[0] ||
-                            '',
+                          : newCategory.name == ''
+                            ? ''
+                            : error?.response?.data?.name?.[0] ||
+                              error?.response?.data?.detail?.[0] ||
+                              '',
                       },
                     }
                   : hierarchy,
@@ -719,7 +724,7 @@ const TableComponent = ({
                   ? {
                       ...hierarchy,
                       medium: {
-                        label: newCategory.name,
+                        label: newCategory.name || newCategory.uuid,
                         value: newCategory.uuid,
                         showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
@@ -728,9 +733,11 @@ const TableComponent = ({
                             : false,
                         errorMessage: !checkIsValidRowInput(newCategory)
                           ? INVALID_CATEGORY_NAME
-                          : error?.response?.data?.name?.[0] ||
-                            error?.response?.data?.detail?.[0] ||
-                            '',
+                          : newCategory.name == ''
+                            ? ''
+                            : error?.response?.data?.name?.[0] ||
+                              error?.response?.data?.detail?.[0] ||
+                              '',
                       },
                     }
                   : hierarchy,
@@ -746,7 +753,7 @@ const TableComponent = ({
                   ? {
                       ...hierarchy,
                       small: {
-                        label: newCategory.name,
+                        label: newCategory.name || newCategory.uuid,
                         value: newCategory.uuid,
                         showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
@@ -755,9 +762,11 @@ const TableComponent = ({
                             : false,
                         errorMessage: !checkIsValidRowInput(newCategory)
                           ? INVALID_CATEGORY_NAME
-                          : error?.response?.data?.name?.[0] ||
-                            error?.response?.data?.detail?.[0] ||
-                            '',
+                          : newCategory.name == ''
+                            ? ''
+                            : error?.response?.data?.name?.[0] ||
+                              error?.response?.data?.detail?.[0] ||
+                              '',
                       },
                     }
                   : hierarchy,
@@ -806,27 +815,6 @@ const TableComponent = ({
       },
     },
   );
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
-        validateCategory({
-          name: newCategory.name,
-          uuid: newCategory.uuid,
-        });
-      }
-    };
-
-    if(newCategory.name){
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [newCategory.name, newCategory.uuid, validateCategory]);
 
   const getExcludedSmalls = (currentRow: rowDataType) => {
     return hierarchyList.statisticCategories
@@ -1882,12 +1870,13 @@ const TableComponent = ({
                           </div>
                         )}
                       </div>
-                      {row.original.large.showBy == AddCategoryHierarchyType.INPUT ? (
+                      {row.original.large.showBy ==
+                      AddCategoryHierarchyType.INPUT ? (
                         <div className="flex flex-col !h-full w-full">
-                          <div className="mb-1 !h-full w-full" ref={inputRef}>
+                          <div className="mb-1 !h-full w-full">
                             <input
                               type="text"
-                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.large.isValid && !isUUID(row.original.large.label) && 'border-red-500'}`}
+                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.large.isValid && row.original.large.errorMessage && 'border-red-500'}`}
                               placeholder="新しいカテゴリーを入力"
                               value={
                                 newCategory.type == HierarchyType.LARGE &&
@@ -1897,6 +1886,12 @@ const TableComponent = ({
                                     ? row.original.large.label
                                     : ''
                               }
+                              onBlur={() => {
+                                validateCategory({
+                                  name: newCategory.name,
+                                  uuid: newCategory.uuid,
+                                });
+                              }}
                               onChange={(e) =>
                                 setNewCategory({
                                   name: e.target.value,
@@ -1913,7 +1908,8 @@ const TableComponent = ({
                           </p>
                         </div>
                       ) : (
-                        row.original.large.showBy == AddCategoryHierarchyType.PULLDOWN && (
+                        row.original.large.showBy ==
+                          AddCategoryHierarchyType.PULLDOWN && (
                           <TableDropdown
                             key={JSON.stringify(row.original.large)}
                             options={[
@@ -1994,12 +1990,13 @@ const TableComponent = ({
                     <div className="p-3 flex flex-col !h-[100%]">
                       <div
                         className={`flex items-center ${lastMediumIndexes.includes(rowIndex) ? 'h-[calc(100%_-_46px)]' : 'h-[calc(100%)]'} mb-3 gap-3`}>
-                        {row.original.medium.showBy == AddCategoryHierarchyType.INPUT ? (
+                        {row.original.medium.showBy ==
+                        AddCategoryHierarchyType.INPUT ? (
                           <div className="flex flex-col !h-full w-full">
-                            <div className="mb-1 !h-full w-full" ref={inputRef}>
+                            <div className="mb-1 !h-full w-full">
                               <input
                                 type="text"
-                                className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.medium.isValid && !isUUID(row.original.medium.label) && 'border-red-500'}`}
+                                className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.medium.isValid && row.original.medium.errorMessage && 'border-red-500'}`}
                                 placeholder="新しいカテゴリーを入力"
                                 value={
                                   newCategory.type == HierarchyType.MEDIUM &&
@@ -2009,6 +2006,12 @@ const TableComponent = ({
                                       ? row.original.medium.label
                                       : ''
                                 }
+                                onBlur={() => {
+                                  validateCategory({
+                                    name: newCategory.name,
+                                    uuid: newCategory.uuid,
+                                  });
+                                }}
                                 onChange={(e) =>
                                   setNewCategory({
                                     name: e.target.value,
@@ -2026,7 +2029,8 @@ const TableComponent = ({
                             </p>
                           </div>
                         ) : (
-                          row.original.medium.showBy == AddCategoryHierarchyType.PULLDOWN && (
+                          row.original.medium.showBy ==
+                            AddCategoryHierarchyType.PULLDOWN && (
                             <div className={`w-full h-full`}>
                               <TableDropdown
                                 key={JSON.stringify(row.original.medium)}
@@ -2118,10 +2122,16 @@ const TableComponent = ({
                           <OptionsBoxToAddCategory
                             text={'中カテゴリーを追加'}
                             addCategoryUsingInput={() =>
-                              handleAddMediumCategory(AddCategoryHierarchyType.INPUT, row.original)
+                              handleAddMediumCategory(
+                                AddCategoryHierarchyType.INPUT,
+                                row.original,
+                              )
                             }
                             addCategoryUsingDropdown={() =>
-                              handleAddMediumCategory(AddCategoryHierarchyType.PULLDOWN, row.original)
+                              handleAddMediumCategory(
+                                AddCategoryHierarchyType.PULLDOWN,
+                                row.original,
+                              )
                             }
                           />
                         </>
@@ -2134,12 +2144,13 @@ const TableComponent = ({
                   style={{ height: 'inherit' }}>
                   <div className="p-3 flex flex-col !h-[100%]">
                     <div className={`flex items-center mb-3 gap-3`}>
-                      {row.original.small.showBy == AddCategoryHierarchyType.INPUT ? (
+                      {row.original.small.showBy ==
+                      AddCategoryHierarchyType.INPUT ? (
                         <div className="flex flex-col !h-full w-full">
-                          <div className="mb-1 !h-full w-full" ref={inputRef}>
+                          <div className="mb-1 !h-full w-full">
                             <input
                               type="text"
-                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.small.isValid && !isUUID(row.original.small.label) && 'border-red-500'}`}
+                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.small.isValid && row.original.small.errorMessage && 'border-red-500'}`}
                               placeholder="新しいカテゴリーを入力"
                               value={
                                 newCategory.type == HierarchyType.SMALL &&
@@ -2149,6 +2160,12 @@ const TableComponent = ({
                                     ? row.original.small.label
                                     : ''
                               }
+                              onBlur={() => {
+                                validateCategory({
+                                  name: newCategory.name,
+                                  uuid: newCategory.uuid,
+                                });
+                              }}
                               onChange={(e) =>
                                 setNewCategory({
                                   name: e.target.value,
@@ -2165,7 +2182,8 @@ const TableComponent = ({
                           </p>
                         </div>
                       ) : (
-                        row.original.small.showBy == AddCategoryHierarchyType.PULLDOWN && (
+                        row.original.small.showBy ==
+                          AddCategoryHierarchyType.PULLDOWN && (
                           <div className="w-full h-full">
                             <TableDropdown
                               key={JSON.stringify(row.original.small)}
@@ -2274,10 +2292,16 @@ const TableComponent = ({
                       <OptionsBoxToAddCategory
                         text={'小カテゴリーを追加'}
                         addCategoryUsingInput={() =>
-                          handleAddSmallCategory(AddCategoryHierarchyType.INPUT, row.original)
+                          handleAddSmallCategory(
+                            AddCategoryHierarchyType.INPUT,
+                            row.original,
+                          )
                         }
                         addCategoryUsingDropdown={() =>
-                          handleAddSmallCategory(AddCategoryHierarchyType.PULLDOWN, row.original)
+                          handleAddSmallCategory(
+                            AddCategoryHierarchyType.PULLDOWN,
+                            row.original,
+                          )
                         }
                       />
                     )}
@@ -2401,7 +2425,9 @@ const TableComponent = ({
             <td className="p-3 w-1/4 border-[1px] border-[#D2DBE1]">
               <OptionsBoxToAddCategory
                 text={'大カテゴリーを追加'}
-                addCategoryUsingInput={() => handleAddLargeCategory(AddCategoryHierarchyType.INPUT)}
+                addCategoryUsingInput={() =>
+                  handleAddLargeCategory(AddCategoryHierarchyType.INPUT)
+                }
                 addCategoryUsingDropdown={() =>
                   handleAddLargeCategory(AddCategoryHierarchyType.PULLDOWN)
                 }

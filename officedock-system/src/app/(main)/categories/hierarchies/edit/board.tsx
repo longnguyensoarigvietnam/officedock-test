@@ -248,9 +248,9 @@ const EditHierarchyForm = () => {
     return hierarchyList.some((org) =>
       org.statisticCategories.some(
         (category) =>
-          (!category.large.isValid && !isUUID(category.large.label)) ||
-          (!category.medium.isValid && !isUUID(category.medium.label)) ||
-          (!category.small.isValid && !isUUID(category.small.label)),
+          (!category.large.isValid && category.large.errorMessage && !isUUID(category.large.label)) ||
+          (!category.medium.isValid && category.medium.errorMessage && !isUUID(category.medium.label)) ||
+          (!category.small.isValid && category.small.errorMessage && !isUUID(category.small.label)),
       ),
     );
   };
