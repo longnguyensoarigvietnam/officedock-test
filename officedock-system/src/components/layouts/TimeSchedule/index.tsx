@@ -256,6 +256,7 @@ const TimeSchedule = memo(
     const actionType = searchParams.get('action');
 
     const typeDetail = searchParams.get('type');
+    const view = searchParams.get('type');
 
     const screenHeight = window.innerHeight;
 
@@ -1305,8 +1306,8 @@ const TimeSchedule = memo(
 
         const eStart = new Date(e.extendedProps.planStartDate);
         const eEnd = new Date(e.extendedProps.planEndDate);
-        const exStart = new Date(extendedProps.planStartDate);
-        const exEnd = new Date(extendedProps.planEndDate);
+        const exStart = new Date(extendedProps?.planStartDate);
+        const exEnd = new Date(extendedProps?.planEndDate);
 
         return (
           eStart.getTime() < exEnd!.getTime() &&
@@ -1342,7 +1343,7 @@ const TimeSchedule = memo(
         event._def &&
         event._def.resourceIds?.length &&
         event._def.resourceIds[0] === ItemScheduleType.PLANS;
-      const isSelect = selectedEvents.includes(extendedProps.uuid);
+      const isSelect = selectedEvents.includes(extendedProps?.uuid);
 
       return (
         <>
@@ -2901,22 +2902,18 @@ const TimeSchedule = memo(
     const [heightSkeleton, setHeighSkeleton] = useState<number>(4300);
 
     useEffect(() => {
-      const calendarElement = document.querySelector(
-        'fc-view-harness.fc-view-harness-passive',
-      );
-
+      const calendarElement = document.querySelector('.fc-media-screen ');
       if (calendarElement && calendarElement instanceof HTMLElement) {
         const calendarHeight = calendarElement.offsetHeight;
-
-        setHeighSkeleton(calendarHeight);
+        setHeighSkeleton(calendarHeight + 2000);
       }
-    }, [slotHeight, isLoadingSchedule, isExtendCalendar]);
+    }, [slotHeight, isLoadingSchedule, isExtendCalendar, view]);
 
     const dataDate = getDateInfo(displayHederDateStart);
 
     const calculateSlotHeight = (value: number): number => {
-      if (value < 40) {
-        return 93 - (40 - value);
+      if (value < 38) {
+        return 93 - (38 - value);
       } else if (value > 58 && value < 80) {
         return 0.732 * value - 8.17;
       } else if (value < 94) {
@@ -2925,7 +2922,7 @@ const TimeSchedule = memo(
       return 24 + (value - 94);
     };
     const calculateSlotDuration = (value: number): string => {
-      if (value < 40) {
+      if (value < 38) {
         return '01:00:00';
       } else if (value >= 94) {
         return '00:05:00';
@@ -2955,7 +2952,7 @@ const TimeSchedule = memo(
     });
     useEffect(() => {
       if (authenticatedUser) {
-        const value = authenticatedUser.setting?.scheduleZoom as number;
+        const value = 38 as number;
         setSliderValue(value);
         const calculatedHeight = calculateSlotHeight(value);
         const calculatedDuration = calculateSlotDuration(value);
@@ -3086,6 +3083,7 @@ const TimeSchedule = memo(
                         selected={displayHederDateStart}
                         tooltipMsg="カレンダーから日付を選択"
                         iconClassName="!static !w-8"
+                        disabled={isLoadingSchedule}
                         onChange={(e) => {
                           if (!isLoadingSchedule) {
                             handleChooseDay(e as Date);
@@ -3243,26 +3241,28 @@ const TimeSchedule = memo(
               </div>
             </div>
           </div>
-          <div
-            className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-md ${isExtendCalendar ? 'right-32 bottom-[13px]' : 'right-[10px] bottom-[5px]'} bg-white flex items-center `}>
-            <RangeSlider
-              min={18}
-              max={100}
-              initialValue={sliderValue}
-              resetTrigger={resetTrigger}
-              onChange={(value) => {
-                setSliderValue(value);
+          {!isLoadingSchedule && (
+            <div
+              className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-md ${isExtendCalendar ? 'right-32 bottom-[13px]' : 'right-[10px] bottom-[5px]'} bg-white flex items-center `}>
+              <RangeSlider
+                min={18}
+                max={100}
+                initialValue={sliderValue}
+                resetTrigger={resetTrigger}
+                onChange={(value) => {
+                  setSliderValue(value);
 
-                const calculatedHeight = calculateSlotHeight(value);
-                const calculatedDuration = calculateSlotDuration(value);
-                setSlotHeight(calculatedHeight);
-                setIsOptionZoomSchedule(calculatedDuration);
-                saveZoomSchedule({
-                  scheduleZoom: value,
-                });
-              }}
-            />
-          </div>
+                  const calculatedHeight = calculateSlotHeight(value);
+                  const calculatedDuration = calculateSlotDuration(value);
+                  setSlotHeight(calculatedHeight);
+                  setIsOptionZoomSchedule(calculatedDuration);
+                  saveZoomSchedule({
+                    scheduleZoom: value,
+                  });
+                }}
+              />
+            </div>
+          )}
           <div
             className={`${isLoadingSchedule && 'opacity-50'} p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer `}
             onClick={() => {

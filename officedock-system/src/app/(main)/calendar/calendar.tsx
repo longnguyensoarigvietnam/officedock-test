@@ -142,6 +142,8 @@ const EventCalendar = () => {
   const router = useRouter();
   const actionType = searchParams.get('action');
   const eventIdURL = searchParams.get('event');
+  const views = searchParams.get('view');
+
   const eventDetailId = eventIdURL?.replace('event', '');
   const containerRef = useRef(null);
   const [popoverInfo, setPopoverInfo] = useState<CalendarPopoverInfo | null>(
@@ -2126,6 +2128,28 @@ const EventCalendar = () => {
       });
     }
   }, [debouncedSearch]);
+
+  useEffect(() => {
+    const updateSlotLineColors = () => {
+      const slots = document.querySelectorAll(
+        '.fc-timegrid-slot.fc-timegrid-slot-lane',
+      );
+
+      slots.forEach((slot) => {
+        const time = slot.getAttribute('data-time');
+        if (time) {
+          const [_hour, minute] = time.split(':').map(Number);
+          if (minute === 0) {
+            slot.classList.add('hour-line');
+          } else if (minute === 30) {
+            slot.classList.add('half-hour-line');
+          }
+        }
+      });
+    };
+    // Call the function after FullCalendar renders
+    setTimeout(updateSlotLineColors, 100);
+  }, [views]);
 
   return (
     <Fragment>
