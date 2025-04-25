@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import OuterRef, Q, Subquery
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -692,16 +692,48 @@ class OrganizationCategoryHierarchySerializer(BaseOrganizationSerializer):
 
     def get_statistic_categories(self, obj):
         """
-        Get and organize statistic categories for the given organization
+        Get and organize statistic categories for the given organization.
+        Group by: large -> medium -> small categories
         """
-        statistic_categories = obj.organizations_statistic_categories.order_by(
-            "large_statistic_category_id",
-            "medium_statistic_category_id",
-            "small_statistic_category_id",
-        ).distinct()
-        return StatisticCategoryStructionSerializer(
-            statistic_categories, many=True
-        ).data
+
+        # Get all related records for the current organization
+        base_qs = obj.organizations_statistic_categories.all()
+
+        # Subquery to get the earliest created_at for each large category group
+        large_subquery = (
+            base_qs.filter(
+                large_statistic_category=OuterRef("large_statistic_category"),
+            )
+            .order_by("created_at")
+            .values("created_at")[:1]
+        )
+
+        # Subquery to get the earliest created_at for each large + medium category group
+        large_medium_subquery = (
+            base_qs.filter(
+                large_statistic_category=OuterRef("large_statistic_category"),
+                medium_statistic_category=OuterRef("medium_statistic_category"),
+            )
+            .order_by("created_at")
+            .values("created_at")[:1]
+        )
+
+        # Then sort the entire queryset by these timestamps to ensure chronological grouping
+        grouped_qs = (
+            base_qs.annotate(
+                large_created_at=Subquery(large_subquery),
+                large_medium_created_at=Subquery(large_medium_subquery),
+            )
+            .order_by(
+                "large_created_at",  # Primary sort: by earliest large category creation time
+                "large_medium_created_at",  # Secondary sort: by earliest large+medium category creation time
+                "created_at",  # Tertiary sort: individual record creation time
+            )
+            .distinct()
+        )
+
+        # Serialize and return the data
+        return StatisticCategoryStructionSerializer(grouped_qs, many=True).data
 
 
 class StatisticCategoryFieldSerializer(serializers.Serializer):
