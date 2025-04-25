@@ -1,15 +1,15 @@
 'use client';
 import { useSession } from 'next-auth/react';
-import Tippy from '@tippyjs/react';
 import { useMutation } from 'react-query';
 import { useEffect, useRef, useState } from 'react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import { ChatRoomType, MessageType, PermissionsSystem } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import { REACTION_LIST } from '@constants';
+
 import { ChatMessageResponse, ChatRoomDetail } from '@interfaces/chat';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
@@ -19,7 +19,7 @@ interface MessageHoverOptionsProps {
   chatRoomDetail: ChatRoomDetail;
   handleOpenEditForm: (id: string) => void;
   handleOpenDeleteMsgModal: (id: string) => void;
-  handleUpdateBookmark: (dataUuid: string) => void
+  handleUpdateBookmark: (dataUuid: string) => void;
   handleReactionClick: (icon: string) => void;
   handleRemoveReactionClick: (icon: string) => void;
 }
@@ -142,12 +142,7 @@ export const MessageHoverOptions = ({
       ref={optionRef}
       className={`bg-white ${isShowReaction ? '!flex' : ''}   group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-[70%] transform -translate-x-1/2 items-center gap-2`}>
       <div className="relative">
-        <Tippy
-          content={'返信'}
-          arrow={false}
-          delay={1000}
-          placement="top"
-          offset={[0, 5]}>
+        <DynamicTooltip content={'返信'} placement="top">
           <div className="bg-[#f0f1f1] relative  hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer">
             <ImageRound
               name="Reply"
@@ -155,7 +150,7 @@ export const MessageHoverOptions = ({
               className="w-[17px] h-[15px] hover:cursor-pointer"
             />
           </div>
-        </Tippy>
+        </DynamicTooltip>
         {isShowReaction && (
           <div
             style={{
@@ -193,12 +188,7 @@ export const MessageHoverOptions = ({
           </div>
         )}
       </div>
-      <Tippy
-        content={'リアクション'}
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 5]}>
+      <DynamicTooltip content={'リアクション'} placement="top">
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -211,14 +201,9 @@ export const MessageHoverOptions = ({
             className="w-[15px] h-[15px] hover:cursor-pointer"
           />
         </div>
-      </Tippy>
+      </DynamicTooltip>
 
-      <Tippy
-        content={'引用'}
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 5]}>
+      <DynamicTooltip content={'引用'} placement="top">
         <div className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full px-[7px] py-[9px] hover:cursor-pointer">
           <ImageRound
             name="Quotation"
@@ -226,13 +211,10 @@ export const MessageHoverOptions = ({
             className="w-[15px] h-[10px] hover:cursor-pointer"
           />
         </div>
-      </Tippy>
-      <Tippy
+      </DynamicTooltip>
+      <DynamicTooltip
         content={isBookmark ? 'ブックマークを外す' : 'ブックマーク'}
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 5]}>
+        placement="top">
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -245,7 +227,7 @@ export const MessageHoverOptions = ({
             className="w-[12px] h-[14px] hover:cursor-pointer"
           />
         </div>
-      </Tippy>
+      </DynamicTooltip>
 
       {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
         chatRoomDetail?.type === ChatRoomType.GROUP ||
@@ -269,12 +251,7 @@ export const MessageHoverOptions = ({
                 session?.user.permissions,
                 PermissionsSystem.CHAT_UPDATE,
               ) && (
-                <Tippy
-                  content={'編集'}
-                  arrow={false}
-                  delay={1000}
-                  placement="top"
-                  offset={[0, 5]}>
+                <DynamicTooltip content={'編集'} placement="top">
                   <div
                     className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
                     onClick={() => handleOpenEditForm(messageDetail.uuid)}>
@@ -284,19 +261,14 @@ export const MessageHoverOptions = ({
                       className="w-[14px] h-[14px] hover:cursor-pointer"
                     />
                   </div>
-                </Tippy>
+                </DynamicTooltip>
               )}
             {session?.user.permissions &&
               hasPermissionInArray(
                 session?.user.permissions,
                 PermissionsSystem.CHAT_DELETE,
               ) && (
-                <Tippy
-                  content={'削除'}
-                  arrow={false}
-                  delay={1000}
-                  placement="top"
-                  offset={[0, 5]}>
+                <DynamicTooltip content={'削除'} placement="top">
                   <div
                     className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full p-[7px] hover:cursor-pointer"
                     onClick={() => {
@@ -308,7 +280,7 @@ export const MessageHoverOptions = ({
                       className="w-[15px] h-[15px] hover:cursor-pointer"
                     />
                   </div>
-                </Tippy>
+                </DynamicTooltip>
               )}
           </>
         )}

@@ -6,8 +6,6 @@ import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
@@ -45,6 +43,7 @@ import {
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 interface ListViewItemProps {
   id: string;
@@ -378,7 +377,7 @@ const ListViewItem = ({
               <div className="flex items-center gap-4 w-3/5">
                 <div className="flex items-center w-3/4 gap-2">
                   {isShowSchedule ? (
-                    <div className="h-full">
+                    <div className="h-full min-w-4">
                       <ImageRound
                         src="/icons/clock.svg"
                         name="Clock icon"
@@ -386,7 +385,7 @@ const ListViewItem = ({
                       />
                     </div>
                   ) : (
-                    <div className="w-4"></div>
+                    <div className="w-4 min-w-4"></div>
                   )}
                   <p className="font-bold text-sm max-w-[calc(100%_-_16px)] truncate">
                     {content.title}
@@ -394,12 +393,9 @@ const ListViewItem = ({
                 </div>
 
                 <div className="w-1/4 flex items-center justify-evenly">
-                  <Tippy
+                  <DynamicTooltip
                     content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
+                    placement="top">
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
@@ -417,15 +413,12 @@ const ListViewItem = ({
                         className=" text-gray-400 cursor-pointer w-3 h-3"
                       />
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
 
                   {isPermissionAdd ? (
-                    <Tippy
+                    <DynamicTooltip
                       content="タスクを複製"
-                      arrow={false}
-                      delay={1000}
-                      placement="top"
-                      offset={[0, 5]}>
+                      placement="top">
                       <div
                         onClick={(e) => {
                           e.stopPropagation();
@@ -437,16 +430,13 @@ const ListViewItem = ({
                           className="text-gray-400 cursor-pointer w-4 h-4"
                         />
                       </div>
-                    </Tippy>
+                    </DynamicTooltip>
                   ) : (
                     <div className="w-4"></div>
                   )}
-                  <Tippy
+                  <DynamicTooltip
                     content={content.isStart ? '計測停止' : '計測開始'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
+                    placement="top">
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
@@ -466,7 +456,7 @@ const ListViewItem = ({
                         />
                       )}
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 </div>
               </div>
               <div className="flex items-center w-2/5">

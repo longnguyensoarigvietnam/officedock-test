@@ -23,8 +23,6 @@ import { Placeholder } from '@tiptap/extension-placeholder';
 
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Button from '@components/common/Button';
@@ -49,6 +47,7 @@ import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import ListTaskUserChat from '@components/chat/ListTaskUserChat';
 import { TaskQuote } from '@components/chat/CustomTaskQuote';
 import { CustomReaction } from '@components/chat/CustomIcon';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -2308,12 +2307,9 @@ const ChatDetail = ({
                           : chatRoomDetail?.participants?.length}
                         人
                       </p>
-                      <Tippy
+                      <DynamicTooltip
                         content={'グループのメンバーを見る'}
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 5]}>
+                        placement="top">
                         <div className="flex">
                           {chatRoomDetail &&
                           chatRoomParticipantsEditing.find(
@@ -2331,14 +2327,11 @@ const ChatDetail = ({
                                 false,
                               )}
                         </div>
-                      </Tippy>
+                      </DynamicTooltip>
 
-                      <Tippy
+                      <DynamicTooltip
                         content={'グループにメンバーを招待する'}
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 5]}>
+                        placement="top">
                         <div>
                           <Button
                             sz="sm"
@@ -2348,7 +2341,7 @@ const ChatDetail = ({
                             招待する
                           </Button>
                         </div>
-                      </Tippy>
+                      </DynamicTooltip>
                     </div>
                   )}
               </div>
@@ -2392,13 +2385,13 @@ const ChatDetail = ({
                       (type) =>
                         chatRoomDetail?.code == chatRoomCode &&
                         chatRoomDetail?.type == type && (
-                          <Tippy
+                          <DynamicTooltip
                             content={'設定'}
-                            arrow={false}
-                            delay={1000}
                             key={type}
-                            placement="top"
-                            offset={[0, 5]}>
+                            placement="left"
+                            customOffset={{
+                              left: -40
+                            }}>
                             <div>
                               <ImageRound
                                 className="w-[26px] h-[26px] hover:cursor-pointer"
@@ -2408,7 +2401,7 @@ const ChatDetail = ({
                                 onClick={() => setOpenSettingBox(true)}
                               />
                             </div>
-                          </Tippy>
+                          </DynamicTooltip>
                         ),
                     )}
                   </>
@@ -2590,12 +2583,9 @@ const ChatDetail = ({
                             }}
                           />
 
-                          <Tippy
+                          <DynamicTooltip
                             content={'ファイルを送信'}
-                            arrow={false}
-                            delay={1000}
-                            placement="top"
-                            offset={[0, 8]}>
+                            placement="top">
                             <div
                               className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer"
                               onClick={() => {
@@ -2607,16 +2597,13 @@ const ChatDetail = ({
                                 className="w-[16px] h-[16px]"
                               />
                             </div>
-                          </Tippy>
+                          </DynamicTooltip>
                           <div
                             onClick={() => setIsShowListIcon(!isShowListIcon)}
                             className="relative">
-                            <Tippy
+                            <DynamicTooltip
                               content={'リアクション'}
-                              arrow={false}
-                              delay={1000}
-                              placement="top"
-                              offset={[0, 8]}>
+                              placement="top">
                               <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
                                 <ImageRound
                                   name="Smile"
@@ -2624,7 +2611,7 @@ const ChatDetail = ({
                                   className="w-[16px] h-[16px]"
                                 />
                               </div>
-                            </Tippy>
+                            </DynamicTooltip>
                             {isShowListIcon && (
                               <div
                                 style={{
@@ -2662,18 +2649,15 @@ const ChatDetail = ({
                                 handleQuoteTaskUser={handleQuoteTaskUser}
                               />
                             )}
-                          <Tippy
+                          <DynamicTooltip
                             content={'書式設定'}
-                            arrow={false}
-                            delay={1000}
-                            placement="top"
-                            offset={[0, 8]}>
+                            placement="top">
                             <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
                               <span className="w-[20px] ml-1 mt-[-3px]">
                                 Aa
                               </span>
                             </p>
-                          </Tippy>
+                          </DynamicTooltip>
                         </div>
 
                         <div className="flex items-center gap-3">
@@ -2734,12 +2718,9 @@ const ChatDetail = ({
             <div className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
               <div className="flex justify-between items-center">
                 <div className="flex gap-1 items-center">
-                  <Tippy
+                  <DynamicTooltip
                     content={'メンション'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 8]}>
+                    placement="top">
                     <div className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer">
                       <ImageRound
                         name="Mention"
@@ -2747,13 +2728,10 @@ const ChatDetail = ({
                         className="w-[16px] h-[16px]"
                       />
                     </div>
-                  </Tippy>
-                  <Tippy
+                  </DynamicTooltip>
+                  <DynamicTooltip
                     content={'ファイルを送信'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 8]}>
+                    placement="top">
                     <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
                       <ImageRound
                         name="Add file"
@@ -2761,13 +2739,10 @@ const ChatDetail = ({
                         className="w-[16px] h-[16px]"
                       />
                     </div>
-                  </Tippy>
-                  <Tippy
+                  </DynamicTooltip>
+                  <DynamicTooltip
                     content={'リアクション'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 8]}>
+                    placement="top">
                     <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
                       <ImageRound
                         name="Smile"
@@ -2775,13 +2750,10 @@ const ChatDetail = ({
                         className="w-[16px] h-[16px]"
                       />
                     </div>
-                  </Tippy>
-                  <Tippy
+                  </DynamicTooltip>
+                  <DynamicTooltip
                     content={'タスクを引用'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 8]}>
+                    placement="top">
                     <div className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer">
                       <ImageRound
                         name="Quote checker"
@@ -2789,17 +2761,14 @@ const ChatDetail = ({
                         className="w-[18px] h-[18px]"
                       />
                     </div>
-                  </Tippy>
-                  <Tippy
+                  </DynamicTooltip>
+                  <DynamicTooltip
                     content={'書式設定'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 8]}>
+                    placement="top">
                     <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
                       <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
                     </p>
-                  </Tippy>
+                  </DynamicTooltip>
                 </div>
 
                 <div className="flex items-center gap-3">

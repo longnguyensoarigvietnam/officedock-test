@@ -1,13 +1,13 @@
 import React, { useContext, useState } from 'react';
-import Tippy from '@tippyjs/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import StatusColumn from './StatusColumn';
 
 import { TransformedStatuses, TransformedUser } from '@interfaces/task';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { ActionTask, ItemStartType } from '@constants/enums';
 
 type Props = {
@@ -113,12 +113,9 @@ const UserColumnTeam = ({
                 gap: `${(columnWidth / 247) * 10}px`,
               }}
               className="flex items-center">
-              <Tippy
+              <DynamicTooltip
                 content="タスクを新規作成"
-                arrow={false}
-                delay={1000}
-                placement="top"
-                offset={[0, 5]}>
+                placement="top">
                 <div
                   style={{
                     padding: '6.5px',
@@ -140,13 +137,10 @@ const UserColumnTeam = ({
                     }}
                   />
                 </div>
-              </Tippy>
-              <Tippy
+              </DynamicTooltip>
+              <DynamicTooltip
                 content="タブを縮小"
-                arrow={false}
-                delay={1000}
-                placement="top"
-                offset={[0, 5]}>
+                placement="top">
                 <div
                   className="flex items-center justify-center cursor-pointer hover:bg-white rounded-full w-[22px] h-[22px]"
                   onClick={() => setIsExtendUser(false)}>
@@ -160,7 +154,7 @@ const UserColumnTeam = ({
                     }}
                   />
                 </div>
-              </Tippy>
+              </DynamicTooltip>
             </div>
           </div>
           <div className="flex flex-col gap-6 mt-[14px]">
@@ -195,12 +189,9 @@ const UserColumnTeam = ({
           <div className="flex gap-[6px] items-center justify-center">
             <AvatarIconWithDynamicColor color={user.avatarColor} size={33} />
 
-            <Tippy
+            <DynamicTooltip
               content="タブを拡大"
-              arrow={false}
-              delay={1000}
-              placement="top"
-              offset={[0, 5]}>
+              placement="top">
               <div
                 className="flex items-center justify-center cursor-pointer hover:bg-white rounded-full w-[22px] h-[22px]"
                 onClick={() => setIsExtendUser(true)}
@@ -215,7 +206,7 @@ const UserColumnTeam = ({
                   }}
                 />
               </div>
-            </Tippy>
+            </DynamicTooltip>
           </div>
           <div
             style={{

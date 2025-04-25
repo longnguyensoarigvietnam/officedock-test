@@ -1,11 +1,11 @@
 import React, { MutableRefObject, useContext, useEffect } from 'react';
 import { isSameDay } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import Tippy from '@tippyjs/react';
 import { useSession } from 'next-auth/react';
 
 import ImageRound from '@components/common/ImageRound';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import { NO_SETTING } from '@constants';
 import { pageRouters } from '@constants/routers';
@@ -91,12 +91,9 @@ const DetailEventPlanModal = ({
                     session?.user.permissions,
                     PermissionsSystem.MY_TASK_UPDATE,
                   ) && (
-                    <Tippy
+                    <DynamicTooltip
                       content={'予定に移動'}
-                      arrow={false}
-                      delay={1000}
-                      placement="top"
-                      offset={[0, 5]}>
+                      placement="top">
                       <div
                         className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer"
                         onClick={() => {
@@ -113,19 +110,16 @@ const DetailEventPlanModal = ({
                           className="w-[16px] h-[16px] hover:cursor-pointer"
                         />
                       </div>
-                    </Tippy>
+                    </DynamicTooltip>
                   )}
                 {session?.user.permissions &&
                   hasPermissionInArray(
                     session?.user.permissions,
                     PermissionsSystem.CALENDAR_DELETE,
                   ) && (
-                    <Tippy
+                    <DynamicTooltip
                       content={'予定を削除'}
-                      arrow={false}
-                      delay={1000}
-                      placement="top"
-                      offset={[0, 5]}>
+                      placement="top">
                       <div
                         className="hover:bg-[#EBF1F4] px-2 py-1.5 hover:rounded-full hover:cursor-pointer"
                         onClick={() => {
@@ -138,7 +132,7 @@ const DetailEventPlanModal = ({
                           className="w-[13px] h-[16px] hover:cursor-pointer"
                         />
                       </div>
-                    </Tippy>
+                    </DynamicTooltip>
                   )}
                 <div
                   className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer"
@@ -203,12 +197,9 @@ const DetailEventPlanModal = ({
                   {dataEvent.participants &&
                   dataEvent.participants?.length == 1 ? (
                     <div className="flex gap-2 items-center">
-                      <Tippy
+                      <DynamicTooltip
                         content={`${dataEvent.participants[0].fullName}`}
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 5]}>
+                        placement="top">
                         <div
                           className={`border-[2px] border-white rounded-full w-[40px] h-[40px] ${checkShowDimmedUserAvatar(Number(dataEvent.participants[0].id)) && 'opacity-60'}`}>
                           {AvatarIconWithDynamicColor({
@@ -224,7 +215,7 @@ const DetailEventPlanModal = ({
                             customClassName: '!mt-0',
                           })}
                         </div>
-                      </Tippy>
+                      </DynamicTooltip>
                       <p className="text-[#000000] text-[14px] font-medium">
                         {dataEvent.participants[0].fullName}
                       </p>
@@ -250,13 +241,10 @@ const DetailEventPlanModal = ({
                           (member) => member.id == participant.id,
                         )?.avatarColor;
                         return (
-                          <Tippy
+                          <DynamicTooltip
                             content={`${participant.fullName}`}
-                            arrow={false}
-                            delay={1000}
                             key={index}
-                            placement="top"
-                            offset={[0, 5]}>
+                            placement="top">
                             <div className={`${index > 0 && 'ml-[-6px]'} mb-1`}>
                               {AvatarIconWithDynamicColor({
                                 color: avatarColor || '',
@@ -264,7 +252,7 @@ const DetailEventPlanModal = ({
                                 customClassName: '!mt-0',
                               })}
                             </div>
-                          </Tippy>
+                          </DynamicTooltip>
                         );
                       })
                   )}

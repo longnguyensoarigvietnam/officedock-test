@@ -12,8 +12,6 @@ import { Document } from '@tiptap/extension-document';
 import { Text } from '@tiptap/extension-text';
 import { Mention } from '@tiptap/extension-mention';
 import { Placeholder } from '@tiptap/extension-placeholder';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import Modal from '../common/Modal';
 import ImageRound from '@components/common/ImageRound';
@@ -28,6 +26,7 @@ import {
 
 import { trimUnnecessaryLineBreaks } from '@utils';
 import { ChatMentionMembersList } from './ChatMentionMembersModal';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 export type ChatUploadingFilesModalProps = {
   message: string;
@@ -159,12 +158,9 @@ const ChatUploadingFilesModal = memo(
                 />
               </>
             )}
-            <Tippy
+            <DynamicTooltip
               content={'リアクション'}
-              arrow={false}
-              delay={1000}
-              placement="top"
-              offset={[0, 8]}>
+              placement="top">
               <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
                 <ImageRound
                   name="Smile"
@@ -172,17 +168,14 @@ const ChatUploadingFilesModal = memo(
                   className="w-[16px] h-[16px]"
                 />
               </div>
-            </Tippy>
-            <Tippy
+            </DynamicTooltip>
+            <DynamicTooltip
               content={'書式設定'}
-              arrow={false}
-              delay={1000}
-              placement="top"
-              offset={[0, 8]}>
+              placement="top">
               <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
                 <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
               </p>
-            </Tippy>
+            </DynamicTooltip>
           </div>
           <div className="mb-3">
             <EditorContent editor={editor} />
@@ -202,12 +195,9 @@ const ChatUploadingFilesModal = memo(
                   <p className="text-black text-sm font-normal max-w-[500px] truncate">
                     {uploadFile.file.name}
                   </p>
-                  <Tippy
+                  <DynamicTooltip
                     content={'取り消し'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 3]}>
+                    placement="top">
                     <div>
                       <ImageRound
                         className={`mt-1 w-5 h-5 hover:cursor-pointer`}
@@ -229,7 +219,7 @@ const ChatUploadingFilesModal = memo(
                         }}
                       />
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 </div>
               );
             })}

@@ -1,13 +1,12 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Editor } from '@tiptap/react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import { MENTION_ALL_MEMBERS, NO_OPTIONS } from '@constants';
 import { ChatDashboardMember, ChatParticipant } from '@interfaces/chat';
@@ -67,12 +66,9 @@ export const ChatMentionMembersList = ({
 
   return (
     <div className="relative z-20">
-      <Tippy
+      <DynamicTooltip
         content={'メンション'}
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 8]}>
+        placement="top">
         <div
           className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer"
           onClick={() => {
@@ -84,7 +80,7 @@ export const ChatMentionMembersList = ({
             className="w-[16px] h-[16px]"
           />
         </div>
-      </Tippy>
+      </DynamicTooltip>
       {openMentionMembersModal && (
         <div
           ref={popoverRef}
