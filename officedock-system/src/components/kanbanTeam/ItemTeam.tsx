@@ -4,10 +4,9 @@ import { useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Dropdown from '@components/common/Dropdown';
 
 import {
@@ -325,27 +324,24 @@ const ItemTeam = ({
             <div className="relative w-[100%]   h-full">
               {isPermissionUpdate && (
                 <>
-                  <Tippy
-                    content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
-                    arrow={false}
-                    delay={1000}
-                    placement="right"
-                    offset={[0, 5]}>
-                    <div
-                      style={{
-                        top: `${(columnWidth / 247) * 12}px`,
-                        right: `${(columnWidth / 247) * 12}px`,
-                      }}
-                      onClick={() => {
-                        if (isPermissionUpdate) {
-                          if (content.pinAt) {
-                            handleUnPinItem(`${content.id}`);
-                          } else {
-                            handlePinItem(`${content.id}`);
-                          }
+                  <div
+                    style={{
+                      top: `${(columnWidth / 247) * 12}px`,
+                      right: `${(columnWidth / 247) * 12}px`,
+                    }}
+                    onClick={() => {
+                      if (isPermissionUpdate) {
+                        if (content.pinAt) {
+                          handleUnPinItem(`${content.id}`);
+                        } else {
+                          handlePinItem(`${content.id}`);
                         }
-                      }}
-                      className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
+                      }
+                    }}
+                    className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
+                    <DynamicTooltip
+                      content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
+                      placement="right">
                       <ImageRound
                         src={
                           content.pinAt
@@ -369,18 +365,15 @@ const ItemTeam = ({
                         }}
                         className=" text-gray-400 cursor-pointer"
                       />
-                    </div>
-                  </Tippy>
+                    </DynamicTooltip>
+                  </div>
                 </>
               )}
               {/* TODO: Action copy */}
               {/* {isPermissionAdd && (
-                <Tippy
+                <DynamicTooltip
                   content="タスクを複製"
-                  arrow={false}
-                  delay={1000}
-                  placement="right"
-                  offset={[0, 5]}>
+                  placement="right">
                   <div
                     style={{
                       top:
@@ -413,7 +406,7 @@ const ItemTeam = ({
                       }}
                     />
                   </div>
-                </Tippy>
+                </DynamicTooltip>
               )} */}
             </div>
             <div
@@ -524,12 +517,9 @@ const ItemTeam = ({
                     </p>
                   </div>
                   {selectedOptionZoom.value === 50 && (
-                    <Tippy
+                    <DynamicTooltip
                       content={content.isStart ? '計測停止' : '計測開始'}
-                      arrow={false}
-                      delay={1000}
-                      placement="top"
-                      offset={[0, 5]}>
+                      placement="top">
                       <div
                         className=""
                         onClick={(e) => {
@@ -564,18 +554,13 @@ const ItemTeam = ({
                           />
                         )}
                       </div>
-                    </Tippy>
+                    </DynamicTooltip>
                   )}
                 </div>
               )}
               {selectedOptionZoom.value !== 50 && (
                 <div className="flex justify-between items-center mt-[2px]">
-                  <Tippy
-                    content="ステータスを変更"
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
+                  <DynamicTooltip content="ステータスを変更" placement="top">
                     <div
                       className="w-20 max-w-20 h-[21px] rounded"
                       onClick={(e) => {
@@ -641,14 +626,11 @@ const ItemTeam = ({
                         )}
                       />
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
 
-                  <Tippy
+                  <DynamicTooltip
                     content={content.isStart ? '計測停止' : '計測開始'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
+                    placement="top">
                     <div
                       className=""
                       onClick={(e) => {
@@ -683,7 +665,7 @@ const ItemTeam = ({
                         />
                       )}
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 </div>
               )}
             </div>
@@ -738,12 +720,9 @@ const ItemTeam = ({
                   className={`!border-none break-words cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                   {content.title}
                 </p>
-                <Tippy
+                <DynamicTooltip
                   content={content.isStart ? '計測停止' : '計測開始'}
-                  arrow={false}
-                  delay={1000}
-                  placement="top"
-                  offset={[0, 5]}>
+                  placement="top">
                   <div
                     className=""
                     onClick={(e) => {
@@ -768,7 +747,7 @@ const ItemTeam = ({
                       />
                     )}
                   </div>
-                </Tippy>
+                </DynamicTooltip>
               </div>
             </div>
           </div>

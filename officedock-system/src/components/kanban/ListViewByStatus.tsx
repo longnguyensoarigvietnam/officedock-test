@@ -9,12 +9,11 @@ import {
 } from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { useInView } from 'react-intersection-observer';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ListViewItem from './ListViewItem';
 
 import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
 
 import {
@@ -249,16 +248,13 @@ const ListViewByStatus = ({
   return (
     <>
       <div className="flex items-center gap-3 mb-3">
-        <Tippy
+        <DynamicTooltip
           content={
             extendByStatus.find((list) => list.id == listId)?.status
               ? '閉じる'
               : '開く'
           }
-          arrow={false}
-          delay={1000}
-          placement="top"
-          offset={[3, 0]}>
+          placement="top">
           <div
             className="flex items-center justify-center cursor-pointer hover:bg-[#E3EAED] rounded-full w-[22px] h-[22px]"
             onClick={async () => {
@@ -290,7 +286,7 @@ const ListViewByStatus = ({
               }}
             />
           </div>
-        </Tippy>
+        </DynamicTooltip>
 
         {listId != StatusValueTask.MY_ROUTINE && (
           <div
@@ -302,12 +298,9 @@ const ListViewByStatus = ({
           <p className="text-[#77858F] text-[14px]">{count}</p>
         )}
 
-        <Tippy
+        <DynamicTooltip
           content="タスクを新規作成"
-          arrow={false}
-          delay={1000}
-          placement="top"
-          offset={[0, 5]}>
+          placement="top">
           <div
             className={`rounded-full cursor-pointer p-1.5 w-fit bg-[#E3EAED]`}
             onClick={() => addTask(String(listId))}
@@ -320,7 +313,7 @@ const ListViewByStatus = ({
               className="w-[9px] h-[9px]"
             />
           </div>
-        </Tippy>
+        </DynamicTooltip>
       </div>
       {extendByStatus.find((list) => list.id == listId)?.status &&
         listId == StatusValueTask.MY_ROUTINE && (

@@ -1,4 +1,3 @@
-import Tippy from '@tippyjs/react';
 import React, {
   Dispatch,
   SetStateAction,
@@ -13,6 +12,7 @@ import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
 import useTaskUserChat from '@hooks/useTaskUserChat';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import { TaskUserListChat } from '@interfaces/chat';
 import useDebounceText from '@hooks/useDebounceText';
@@ -195,12 +195,9 @@ const ListTaskUserChat = ({
   };
   return (
     <div className="relative z-20">
-      <Tippy
+      <DynamicTooltip
         content={'タスクを引用'}
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 8]}>
+        placement="top">
         <div
           className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer"
           onClick={() => {
@@ -212,7 +209,7 @@ const ListTaskUserChat = ({
             className="w-[18px] h-[18px]"
           />
         </div>
-      </Tippy>
+      </DynamicTooltip>
 
       <div
         ref={boxListRef}

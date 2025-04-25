@@ -11,8 +11,6 @@ import {
 } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useSession } from 'next-auth/react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import Item from './Item';
 import ImageRound from '@components/common/ImageRound';
@@ -38,6 +36,7 @@ import { hasPermissionInArray } from '@utils';
 import { TaskContext } from '@providers/TaskProvider';
 import { OptionDropdownType } from '@interfaces/common';
 import ItemRoutine from './ItemRoutine';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 interface ColumnProps {
   columnId: string;
   title: string;
@@ -358,12 +357,9 @@ const Column = ({
                 session?.user.permissions,
                 PermissionsSystem.MY_TASK_ADD,
               ) && (
-                <Tippy
+                <DynamicTooltip
                   content="タスクを新規作成"
-                  arrow={false}
-                  delay={1000}
-                  placement="top"
-                  offset={[0, 5]}>
+                  placement="top">
                   <div
                     style={{
                       padding: '6.5px',
@@ -381,14 +377,11 @@ const Column = ({
                       }}
                     />
                   </div>
-                </Tippy>
+                </DynamicTooltip>
               )}
-            <Tippy
+            <DynamicTooltip
               content="タブを縮小"
-              arrow={false}
-              delay={1000}
-              placement="top"
-              offset={[0, 5]}>
+              placement="top">
               <div
                 onClick={async () => {
                   const newList = extendByStatus.map((item) =>
@@ -423,7 +416,7 @@ const Column = ({
                   }}
                 />
               </div>
-            </Tippy>
+            </DynamicTooltip>
           </div>
         </div>
         <Droppable
@@ -515,12 +508,9 @@ const Column = ({
     <div className="w-[40px] pt-[6px]">
       <div className="flex gap-[6px] items-center justify-center">
         <div className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></div>
-        <Tippy
+        <DynamicTooltip
           content="タブを拡大"
-          arrow={false}
-          delay={1000}
-          placement="top"
-          offset={[0, 5]}>
+          placement="top">
           <div
             className={`flex items-center justify-center cursor-pointer ${Number(columnId) != StatusValueTask.MY_ROUTINE ? 'hover:bg-[#E3EAED]' : 'hover:bg-[#EBF2F7]'} rounded-full w-[22px] h-[22px]`}
             onClick={async () => {
@@ -555,7 +545,7 @@ const Column = ({
               }}
             />
           </div>
-        </Tippy>
+        </DynamicTooltip>
       </div>
       <div
         style={{

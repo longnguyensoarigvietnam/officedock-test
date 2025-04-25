@@ -17,8 +17,6 @@ import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import resourcePlugin from '@fullcalendar/resource';
 import scrollgridPlugin from '@fullcalendar/scrollgrid';
 import './styles/calendar.css';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
@@ -96,6 +94,7 @@ import {
 
 import api from '@base/api';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const EventCalendar = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -471,12 +470,9 @@ const EventCalendar = () => {
             (member) => member.id == participantList[0].id,
           )?.avatarColor || '';
         return (
-          <Tippy
+          <DynamicTooltip
             content={`${participantList[0].fullName}`}
-            arrow={false}
-            delay={1000}
-            placement="top"
-            offset={[0, 5]}>
+            placement="top">
             <div
               className={`border-[1px] border-white rounded-full ${borderClassName}`}>
               {AvatarIconWithDynamicColor({
@@ -485,7 +481,7 @@ const EventCalendar = () => {
                 isCalendarScreen: true,
               })}
             </div>
-          </Tippy>
+          </DynamicTooltip>
         );
       } else if (participantList.length === 2) {
         return (
@@ -497,13 +493,10 @@ const EventCalendar = () => {
                 )?.avatarColor || '';
 
               return (
-                <Tippy
+                <DynamicTooltip
                   content={`${participant.fullName}`}
-                  arrow={false}
-                  delay={1000}
                   placement="top"
-                  key={participant.id}
-                  offset={[0, 5]}>
+                  key={participant.id}>
                   <div
                     className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
                     {AvatarIconWithDynamicColor({
@@ -512,7 +505,7 @@ const EventCalendar = () => {
                       isCalendarScreen: true,
                     })}
                   </div>
-                </Tippy>
+                </DynamicTooltip>
               );
             })}
           </div>
@@ -529,13 +522,10 @@ const EventCalendar = () => {
                   )?.avatarColor || '';
 
                 return (
-                  <Tippy
+                  <DynamicTooltip
                     content={`${participant.fullName}`}
-                    arrow={false}
-                    delay={1000}
                     placement="top"
-                    key={participant.id}
-                    offset={[0, 5]}>
+                    key={participant.id}>
                     <div
                       className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
                       {AvatarIconWithDynamicColor({
@@ -544,37 +534,31 @@ const EventCalendar = () => {
                         isCalendarScreen: true,
                       })}
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 );
               })}
             {isWeekView
               ? participantList &&
                 participantList.length > 5 && (
-                  <Tippy
+                  <DynamicTooltip
                     content={`他に${participantList.length - 5}人の表示があります`}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
+                    placement="top">
                     <div
                       className={`text-[#77858F] text-[11px] font-medium ml-[-12px] ${isWeekView && 'border-[1px] !ml-[-12px] border-white text-white rounded-full shrink-0 !w-[33px] !h-[33px] bg-[#77858F] flex items-center justify-center'}`}>
                       +{participantList.length - 5}
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 )
               : participantList &&
                 participantList.length > 1 && (
-                  <Tippy
+                  <DynamicTooltip
                     content={`他に${participantList.length - 1}人の表示があります`}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
+                    placement="top">
                     <div
                       className={`text-[#77858F] text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white shrink-0 border-white rounded-full !w-[19px] !h-[19px] bg-[#77858F] flex items-center justify-center'} `}>
                       +{participantList.length - 1}
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 )}
           </div>
         );
@@ -2211,12 +2195,9 @@ const EventCalendar = () => {
                   }}
                 />
               </div>
-              <Tippy
+              <DynamicTooltip
                 content={`${showCurrentViewButtonContent()}に移動`}
-                arrow={false}
-                delay={1000}
-                placement="top"
-                offset={[0, 5]}>
+                placement="top">
                 <div>
                   <Button
                     type="button"
@@ -2225,7 +2206,7 @@ const EventCalendar = () => {
                     {showCurrentViewButtonContent()}
                   </Button>
                 </div>
-              </Tippy>
+              </DynamicTooltip>
             </div>
             <div
               className={`flex gap-5 items-center ${!showSidebar && 'mr-14'}`}>
@@ -2264,30 +2245,29 @@ const EventCalendar = () => {
                 />
               </div>
             </div>
-            {!showSidebar && (
-              <Tippy
-                content={'表示するメンバー'}
-                arrow={false}
-                delay={1000}
-                placement="left"
-                offset={[0, 5]}>
-                <div
-                  className="bg-white w-[60px] h-[46px] rounded-l-[30px] flex items-center shadow-md hover:cursor-pointer fixed top-[90px] right-0"
-                  onClick={() => setShowSidebar((prev) => !prev)}>
-                  <ImageRound
-                    className="w-8 h-8 ml-2"
-                    src="/icons/multi-users.svg"
-                    border="full"
-                    name="Avatar user"
-                  />
-                  <ImageRound
-                    className="w-4 h-4 -rotate-90 ml-1"
-                    src={'/icons/arrow-down.svg'}
-                    name="Arrow down"
-                  />
-                </div>
-              </Tippy>
-            )}
+            <div className="fixed top-[90px] right-0">
+              {!showSidebar && (
+                <DynamicTooltip content={'表示するメンバー'} placement="left" customOffset={{
+                  left: -125,
+                }}>
+                  <div
+                    className="bg-white w-[60px] h-[46px] rounded-l-[30px] flex items-center shadow-md hover:cursor-pointer"
+                    onClick={() => setShowSidebar((prev) => !prev)}>
+                    <ImageRound
+                      className="w-8 h-8 ml-2"
+                      src="/icons/multi-users.svg"
+                      border="full"
+                      name="Avatar user"
+                    />
+                    <ImageRound
+                      className="w-4 h-4 -rotate-90 ml-1"
+                      src={'/icons/arrow-down.svg'}
+                      name="Arrow down"
+                    />
+                  </div>
+                </DynamicTooltip>
+              )}
+            </div>
           </div>
 
           <div

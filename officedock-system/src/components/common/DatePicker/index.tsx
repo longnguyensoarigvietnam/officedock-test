@@ -6,14 +6,13 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { ja } from 'date-fns/locale';
 import { format, isSaturday, isSunday } from 'date-fns';
 import { isHoliday } from 'japanese-holidays';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '../ImageRound';
 import ErrorMessage from '../ErrorMessage';
 import { DATE_FORMAT } from '@constants';
 import './styles/datepicker.css';
 import { ComponentSize } from '@constants/enums';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   selected?: Date | null;
@@ -161,13 +160,13 @@ const DatePicker = ({
           {...props}
         />
 
-        <Tippy
+        <DynamicTooltip
           content={tooltipMsg}
-          arrow={false}
-          delay={1000}
           placement="top"
           disabled={!tooltipMsg}
-          offset={[0, 15]}>
+          customOffset={{
+            top: -13,
+          }}>
           <div>
             <ImageRound
               className={`w-4 h-4 absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 hover:cursor-pointer ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} ${className?.includes('hidden') && 'hidden'} ${iconClassName}`}
@@ -185,7 +184,7 @@ const DatePicker = ({
               }}
             />
           </div>
-        </Tippy>
+        </DynamicTooltip>
       </div>
       {error && <ErrorMessage error={error} className="mt-[6px]" />}
     </div>

@@ -1,14 +1,13 @@
 'use client';
 import { ReactNode, useEffect, useState } from 'react';
 import { Tab, TabGroup, TabList, TabPanels } from '@headlessui/react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import Switch from '../Switch';
 import { OptionTabType } from '@interfaces/common';
 import { showToggleButtonColorByTime } from '@utils';
 import { TabType } from '@constants/enums';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 type TabsProps = {
   defaultTab?: number;
@@ -55,7 +54,7 @@ const Tabs = ({
     setTabIdx(idx);
     setIsTeamDockMenu(idx == 1);
     onSelectedTab && onSelectedTab(idx);
-    if(idx){
+    if (idx) {
       const params = new URLSearchParams(searchParams.toString());
       params.set('tabId', String(idx));
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
@@ -107,11 +106,12 @@ const Tabs = ({
             ))
           ) : (
             <div className="flex flex-col justify-center items-center gap-2">
-              <Tippy
+              <DynamicTooltip
                 content={`${isTeamDockMenu ? 'マイドック' : 'チームドック'}`}
-                arrow={false}
-                delay={1000}
-                placement="top">
+                placement="right"
+                customOffset={{
+                  left: 10,
+                }}>
                 <div>
                   <Switch
                     className="!gap-0 ml-1"
@@ -122,7 +122,7 @@ const Tabs = ({
                     onChange={handleSwitchToggle}
                   />
                 </div>
-              </Tippy>
+              </DynamicTooltip>
               <div className="flex flex-col items-center text-white text-xs">
                 {!isTeamDockMenu ? (
                   <>

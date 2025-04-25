@@ -1,10 +1,9 @@
 'use client';
 import { Dispatch, SetStateAction, useContext } from 'react';
 import { UseMutateFunction } from 'react-query';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import {
   CreationDataTask,
@@ -111,12 +110,9 @@ const FrequentlyTask = ({
           <p className="text-gray-500 text-xs break-all min-w-[110px]">
             マイテンプレート
           </p>
-          <Tippy
+          <DynamicTooltip
             content={showFrequentlyTasks ? '閉じる' : '開く'}
-            arrow={false}
-            delay={1000}
-            placement="top"
-            offset={[3, 0]}>
+            placement="top">
             <div>
               <ImageRound
                 name="Filter extend icon"
@@ -125,7 +121,7 @@ const FrequentlyTask = ({
                 onClick={() => setShowFrequentlyTasks(!showFrequentlyTasks)}
               />
             </div>
-          </Tippy>
+          </DynamicTooltip>
         </div>
         <Transition
           show={showFrequentlyTasks}

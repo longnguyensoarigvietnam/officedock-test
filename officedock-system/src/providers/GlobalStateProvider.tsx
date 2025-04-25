@@ -33,6 +33,8 @@ interface ContextValue {
   cancelUploadChatFiles: () => void;
   organizationTeamList: OptionDropdownType[];
   setOrganizationTeamList: Dispatch<SetStateAction<OptionDropdownType[]>>;
+  getDelay: () => number;
+  recordHover: () => void
 }
 
 const defaultValue: ContextValue = {
@@ -55,6 +57,8 @@ const defaultValue: ContextValue = {
   cancelUploadChatFiles: () => {},
   organizationTeamList: [],
   setOrganizationTeamList: () => {},
+  getDelay: () => 100 | 1000,
+  recordHover: () => {}
 };
 
 export const GlobalStateContext = createContext<ContextValue>(defaultValue);
@@ -76,6 +80,24 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const abortChatSendingMessageControllerRef = useRef<AbortController | null>(
     null,
   );
+  const lastHoverTimeRef = useRef(0);
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const getDelay = () => {
+    const now = Date.now();
+    const diff = now - lastHoverTimeRef.current;
+    return diff < 3000 ? 100 : 1000; // 100ms if recent, otherwise 1000ms
+  };
+
+  const recordHover = () => {
+    lastHoverTimeRef.current = Date.now();
+
+    // reset reference after 3000ms
+    if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+    resetTimeoutRef.current = setTimeout(() => {
+      lastHoverTimeRef.current = 0;
+    }, 3000);
+  };
 
   const cancelUploadChatFiles = () => {
     abortChatSendingMessageControllerRef.current?.abort();
@@ -100,6 +122,8 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     setTotalNotifications,
     setIsChatFilesUploading,
     cancelUploadChatFiles,
+    getDelay,
+    recordHover
   };
 
   return (

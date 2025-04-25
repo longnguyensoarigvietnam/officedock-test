@@ -10,8 +10,6 @@ import {
 } from '@headlessui/react';
 import { useSession } from 'next-auth/react';
 import lodash from 'lodash';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import Tabs from '@components/common/Tabs';
@@ -42,6 +40,7 @@ import { showBackgroundColorByTime } from '@utils';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
 import useTeamList from '@hooks/useListTeam';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 type Props = {
   className?: string;
@@ -366,14 +365,10 @@ const Sidebar = ({ className }: Props) => {
                         item.href !== pageRouters.MEMBER_MANAGEMENT.href,
                     )
                     .map((item) => (
-                      <Tippy
+                      <DynamicTooltip
                         content={`${item.name}`}
                         disabled={expanded}
-                        arrow={false}
-                        delay={1000}
-                        key={item.name}
-                        placement="right"
-                        offset={[0, 0]}>
+                        key={item.name}>
                         <li key={item.name} className={`text-sm relative`}>
                           {!item.children ? (
                             <div
@@ -461,7 +456,7 @@ const Sidebar = ({ className }: Props) => {
                             </Disclosure>
                           )}
                         </li>
-                      </Tippy>
+                      </DynamicTooltip>
                     ))}
                 </ul>
               </li>
@@ -475,17 +470,12 @@ const Sidebar = ({ className }: Props) => {
                 className="flex max-h-20 flex-col gap-y-6 list-none">
                 <li className="flex-1">
                   <ul role="list" className="list-none pl-2">
-                    <Tippy
+                    <DynamicTooltip
                       content={`${memberOption.name}`}
                       disabled={expanded}
-                      arrow={false}
-                      delay={1000}
                       key={memberOption.name}
-                      placement="right"
-                      offset={[0, 0]}>
-                      <li
-                        key={memberOption.name}
-                        className={`text-sm relative`}>
+                      placement="right">
+                      <li className={`text-sm relative`}>
                         <div
                           className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#EBF1F7] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                           onClick={() => {
@@ -523,7 +513,7 @@ const Sidebar = ({ className }: Props) => {
                           )}
                         </div>
                       </li>
-                    </Tippy>
+                    </DynamicTooltip>
                   </ul>
                 </li>
               </ul>
@@ -585,14 +575,11 @@ const Sidebar = ({ className }: Props) => {
                         item.href !== pageRouters.MEMBER_MANAGEMENT.href,
                     )
                     .map((item) => (
-                      <Tippy
+                      <DynamicTooltip
                         content={`${item.name}`}
                         disabled={expanded}
-                        arrow={false}
-                        delay={1000}
                         key={item.name}
-                        placement="right"
-                        offset={[0, 0]}>
+                        placement="right">
                         <li key={item.name} className={`text-sm relative`}>
                           {!item.children ? (
                             <div
@@ -680,7 +667,7 @@ const Sidebar = ({ className }: Props) => {
                             </Disclosure>
                           )}
                         </li>
-                      </Tippy>
+                      </DynamicTooltip>
                     ))}
                 </ul>
               </li>
@@ -694,14 +681,11 @@ const Sidebar = ({ className }: Props) => {
                 className="flex max-h-20 flex-col gap-y-6 list-none">
                 <li className="flex-1">
                   <ul role="list" className="list-none pl-2">
-                    <Tippy
+                    <DynamicTooltip
                       content={`${memberOption.name}`}
                       disabled={expanded}
-                      arrow={false}
-                      delay={1000}
                       key={memberOption.name}
-                      placement="right"
-                      offset={[0, 0]}>
+                      placement="right">
                       <li
                         key={memberOption.name}
                         className={`text-sm relative`}>
@@ -742,29 +726,28 @@ const Sidebar = ({ className }: Props) => {
                           )}
                         </div>
                       </li>
-                    </Tippy>
+                    </DynamicTooltip>
                   </ul>
                 </li>
               </ul>
             </div>
           )}
         </TabPanel>
-        <Tippy
-          content={expanded ? 'メニューバーを縮小' : 'メニューバーを拡大'}
-          arrow={false}
-          delay={1000}
-          placement="right"
-          offset={[0, 19]}>
-          <div
-            className="shadow-lg absolute bottom-5 right-5 bg-white rounded-full w-[35px] h-[35px] flex items-center justify-center p-[8px] hover:cursor-pointer"
-            onClick={() => setExpanded((prevExpanded) => !prevExpanded)}>
-            <ImageRound
-              src="/icons/extend-calendar.svg"
-              name="Extend calendar"
-              className={`!w-3.5 !h-3.5 min-w-2 ${expanded ? 'rotate-180' : ''}`}
-            />
-          </div>
-        </Tippy>
+        <div
+          className="absolute bottom-5 right-5"
+          onClick={() => setExpanded((prevExpanded) => !prevExpanded)}>
+          <DynamicTooltip
+            content={expanded ? 'メニューバーを縮小' : 'メニューバーを拡大'}
+            placement="right">
+            <div className="shadow-lg bg-white rounded-full w-[35px] h-[35px] flex items-center justify-center p-[8px] hover:cursor-pointer">
+              <ImageRound
+                src="/icons/extend-calendar.svg"
+                name="Extend calendar"
+                className={`!w-3.5 !h-3.5 min-w-2 ${expanded ? 'rotate-180' : ''}`}
+              />
+            </div>
+          </DynamicTooltip>
+        </div>
       </Tabs>
 
       {showWarningChatUploadingModal && pendingPageChange && (

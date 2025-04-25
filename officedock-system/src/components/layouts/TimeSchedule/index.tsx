@@ -17,8 +17,6 @@ import moment from 'moment';
 import { useMutation, useQueryClient } from 'react-query';
 import { v4 as uuidv4 } from 'uuid';
 import { debounce, throttle } from 'lodash';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import {
   format,
@@ -149,6 +147,7 @@ import {
 } from '@utils';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { EventImpl } from '@fullcalendar/core/internal';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -3041,12 +3040,7 @@ const TimeSchedule = memo(
                   <div
                     className={`flex relative ${isLoadingSchedule && '!opacity-45'}`}>
                     <div className="w-[260px] ml-6 z-20 flex gap-[18px] items-center">
-                      <Tippy
-                        content="前日"
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 5]}>
+                      <DynamicTooltip content="前日" placement="top">
                         <div>
                           <ImageRound
                             onClick={() => {
@@ -3059,7 +3053,7 @@ const TimeSchedule = memo(
                             name="left"
                           />
                         </div>
-                      </Tippy>
+                      </DynamicTooltip>
 
                       <div className="flex items-end text-xl gap-1 text-[#5B6770] font-medium">
                         <p>{dataDate.month}月</p>
@@ -3069,12 +3063,7 @@ const TimeSchedule = memo(
                         </p>
                       </div>
 
-                      <Tippy
-                        content="翌日"
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 5]}>
+                      <DynamicTooltip content="翌日" placement="top">
                         <div>
                           <ImageRound
                             onClick={() => {
@@ -3087,7 +3076,7 @@ const TimeSchedule = memo(
                             name="right"
                           />
                         </div>
-                      </Tippy>
+                      </DynamicTooltip>
                     </div>
 
                     <div className="absolute w-7 z-50 right-[50px] top-[10px] time-schedule">
@@ -3109,12 +3098,7 @@ const TimeSchedule = memo(
                   <>
                     <div
                       className={`flex items-center ml-8 gap-3 ${isLoadingSchedule && '!opacity-45'}`}>
-                      <Tippy
-                        content="前日"
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 5]}>
+                      <DynamicTooltip content="前日" placement="top">
                         <div>
                           <ImageRound
                             src="/icons/chevron-left-calendar.svg"
@@ -3127,13 +3111,8 @@ const TimeSchedule = memo(
                             }}
                           />
                         </div>
-                      </Tippy>
-                      <Tippy
-                        content="翌日"
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 5]}>
+                      </DynamicTooltip>
+                      <DynamicTooltip content="翌日" placement="top">
                         <div>
                           <ImageRound
                             src="/icons/chevron-left-calendar.svg"
@@ -3146,7 +3125,7 @@ const TimeSchedule = memo(
                             }}
                           />
                         </div>
-                      </Tippy>
+                      </DynamicTooltip>
                     </div>
                     <Heading as="h4" className="text-sm font-medium">
                       {isExtendCalendar
@@ -3284,38 +3263,37 @@ const TimeSchedule = memo(
               }}
             />
           </div>
-          <Tippy
-            content={
-              isExtendCalendar ? 'スケジュールを日表示' : 'スケジュールを週表示'
-            }
-            arrow={false}
-            delay={1000}
-            placement="top"
-            offset={[0, 5]}>
-            <div
-              className={`${isLoadingSchedule && 'opacity-50'} p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer `}
-              onClick={() => {
-                if (isLoadingSchedule) return;
-                if (!isExtendCalendar) {
+          <div
+            className={`${isLoadingSchedule && 'opacity-50'} p-2 h-[30px] w-[30px] z-[20] flex items-center justify-center bg-white absolute right-6 top-5 rounded-full hover:cursor-pointer `}
+            onClick={() => {
+              if (isLoadingSchedule) return;
+              if (!isExtendCalendar) {
+                setIsScroll(true);
+                handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
+              } else {
+                if (calendarRef.current) {
+                  const calendarApi = calendarRef.current.getApi();
+                  calendarApi.gotoDate(new Date());
                   setIsScroll(true);
-                  handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-                } else {
-                  if (calendarRef.current) {
-                    const calendarApi = calendarRef.current.getApi();
-                    calendarApi.gotoDate(new Date());
-                    setIsScroll(true);
-                    handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
-                  }
+                  handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
                 }
-                setIsExtendCalendar(!isExtendCalendar);
-              }}>
+              }
+              setIsExtendCalendar(!isExtendCalendar);
+            }}>
+            <DynamicTooltip
+              content={
+                isExtendCalendar
+                  ? 'スケジュールを日表示'
+                  : 'スケジュールを週表示'
+              }
+              placement="top">
               <ImageRound
                 src="/icons/extend-calendar.svg"
                 name="Extend calendar"
-                className={`!w-2 !h-2 min-w-2 ${isExtendCalendar ? 'rotate-180' : ''}`}
+                className={`!w-2.5 !h-2.5 min-w-3 ${isExtendCalendar ? 'rotate-180' : ''}`}
               />
-            </div>
-          </Tippy>
+            </DynamicTooltip>
+          </div>
         </div>
         {openCreateEventModal && (
           <ActionsEventModal

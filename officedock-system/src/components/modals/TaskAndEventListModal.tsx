@@ -1,10 +1,9 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, MutableRefObject, SetStateAction, useContext } from 'react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
 
 import { EventCalendarType, PermissionsSystem } from '@constants/enums';
@@ -60,19 +59,16 @@ export const TaskAndEventListModal = ({
             (member) => member.id == session?.user.id,
           )?.avatarColor || '';
         return (
-          <Tippy
+          <DynamicTooltip
             content={`${session?.user.profile.fullName}`}
-            arrow={false}
-            delay={1000}
-            placement="top"
-            offset={[0, 5]}>
+            placement="top">
             <div className="border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] mt-[-7px] mr-1">
               {AvatarIconWithDynamicColor({
                 color: avatarColor,
                 size: 30,
               })}
             </div>
-          </Tippy>
+          </DynamicTooltip>
         );
       } else {
         if (participantList.length == 1) {
@@ -81,19 +77,16 @@ export const TaskAndEventListModal = ({
               (member) => member.id == participantList[0].id,
             )?.avatarColor || '';
           return (
-            <Tippy
+            <DynamicTooltip
               content={`${participantList[0].fullName}`}
-              arrow={false}
-              delay={1000}
-              placement="top"
-              offset={[0, 5]}>
+              placement="top">
               <div className="border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] mt-[-7px] mr-1">
                 {AvatarIconWithDynamicColor({
                   color: avatarColor,
                   size: 30,
                 })}
               </div>
-            </Tippy>
+            </DynamicTooltip>
           );
         } else if (participantList.length === 2) {
           return (
@@ -105,13 +98,10 @@ export const TaskAndEventListModal = ({
                   )?.avatarColor || '';
 
                 return (
-                  <Tippy
+                  <DynamicTooltip
                     content={`${participant.fullName}`}
-                    arrow={false}
-                    delay={1000}
                     placement="top"
-                    key={participant.id}
-                    offset={[0, 5]}>
+                    key={participant.id}>
                     <div
                       className={`border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] ${index != 0 && 'ml-[-7px]'}`}>
                       {AvatarIconWithDynamicColor({
@@ -119,7 +109,7 @@ export const TaskAndEventListModal = ({
                         size: 30,
                       })}
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 );
               })}
             </div>
@@ -134,13 +124,10 @@ export const TaskAndEventListModal = ({
                   )?.avatarColor || '';
 
                 return (
-                  <Tippy
+                  <DynamicTooltip
                     content={`${participant.fullName}`}
-                    arrow={false}
-                    delay={1000}
                     placement="top"
-                    key={participant.id}
-                    offset={[0, 5]}>
+                    key={participant.id}>
                     <div
                       className={`border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] ${index != 0 && 'ml-[-7px]'}`}>
                       {AvatarIconWithDynamicColor({
@@ -148,20 +135,17 @@ export const TaskAndEventListModal = ({
                         size: 30,
                       })}
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 );
               })}
               {participantList && participantList.length > 1 && (
-                <Tippy
+                <DynamicTooltip
                   content={`他に${participantList.length - 1}人の表示があります`}
-                  arrow={false}
-                  delay={1000}
-                  placement="top"
-                  offset={[0, 5]}>
+                  placement="top">
                   <div className="text-white border-[1px] ml-[-7px] border-white rounded-full w-[26.5px] h-[26.5px] text-[11px] font-medium bg-[#77858F] flex items-center justify-center">
                     +{participantList.length - 1}
                   </div>
-                </Tippy>
+                </DynamicTooltip>
               )}
             </div>
           );
@@ -298,12 +282,9 @@ export const TaskAndEventListModal = ({
               session?.user.permissions,
               PermissionsSystem.CALENDAR_ADD,
             ) && (
-              <Tippy
+              <DynamicTooltip
                 content={'予定を新規作成'}
-                arrow={false}
-                delay={1000}
-                placement="top"
-                offset={[0, 5]}>
+                placement="top">
                 <div
                   className={`mx-auto mt-3 w-fit hover:cursor-pointer hover:rounded-full p-[6px] hover:bg-gray-200 border-[1px] border-transparent`}
                   onClick={() => {
@@ -316,7 +297,7 @@ export const TaskAndEventListModal = ({
                     className="!w-4 !h-4 text-"
                   />
                 </div>
-              </Tippy>
+              </DynamicTooltip>
             )}
         </div>
       )}

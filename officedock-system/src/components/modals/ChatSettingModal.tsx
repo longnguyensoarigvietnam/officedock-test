@@ -4,8 +4,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { useMutation } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import Modal from '../common/Modal';
 import ImageRound from '@components/common/ImageRound';
@@ -13,6 +11,7 @@ import Button from '@components/common/Button';
 import InputSearch from '@components/common/InputSearch';
 import TableDropdown from '@components/common/Dropdown/TableDropdown';
 import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Input from '@components/common/Input';
 
 import { apiRouters } from '@constants/routers';
@@ -260,12 +259,9 @@ const ChatSettingModal = memo(
                         )}
                       />
                       {session?.user.id != member.id ? (
-                        <Tippy
+                        <DynamicTooltip
                           content={'このメンバーを退会させる'}
-                          arrow={false}
-                          delay={1000}
-                          placement="top"
-                          offset={[0, 5]}>
+                          placement="top">
                           <div>
                             <ImageRound
                               className="w-[18px] h-[18px] opacity-50 hover:cursor-pointer"
@@ -274,7 +270,7 @@ const ChatSettingModal = memo(
                               onClick={() => openConfirmRemoveModal(member.id)}
                             />
                           </div>
-                        </Tippy>
+                        </DynamicTooltip>
                       ) : (
                         <div className="w-[18px]"></div>
                       )}
