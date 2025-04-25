@@ -872,6 +872,7 @@ const TimeSchedule = memo(
       {
         onSuccess: async () => {
           queryClient.refetchQueries(['getDataTaskHeaderList']);
+          setSelectedEvents([]);
         },
         onError: (error: AxiosError<any>) => {
           showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -3256,9 +3257,11 @@ const TimeSchedule = memo(
                   const calculatedDuration = calculateSlotDuration(value);
                   setSlotHeight(calculatedHeight);
                   setIsOptionZoomSchedule(calculatedDuration);
-                  saveZoomSchedule({
-                    scheduleZoom: value,
-                  });
+                  if (sliderValue !== value) {
+                    saveZoomSchedule({
+                      scheduleZoom: value,
+                    });
+                  }
                 }}
               />
             </div>
