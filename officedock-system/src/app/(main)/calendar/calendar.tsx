@@ -2271,9 +2271,12 @@ const EventCalendar = () => {
             </div>
             <div className="fixed top-[90px] right-0">
               {!showSidebar && (
-                <DynamicTooltip content={'表示するメンバー'} placement="left" customOffset={{
-                  left: -125,
-                }}>
+                <DynamicTooltip
+                  content={'表示するメンバー'}
+                  placement="left"
+                  customOffset={{
+                    left: -125,
+                  }}>
                   <div
                     className="bg-white w-[60px] h-[46px] rounded-l-[30px] flex items-center shadow-md hover:cursor-pointer"
                     onClick={() => setShowSidebar((prev) => !prev)}>
@@ -2503,10 +2506,10 @@ const EventCalendar = () => {
             {watch('calendarView') &&
               watch('calendarView').value !=
                 CalendarViewOptions.VIEW_BY_MONTH &&
-              watch('calendarView').value !=
-                CalendarViewOptions.VIEW_BY_YEAR && (
+              watch('calendarView').value != CalendarViewOptions.VIEW_BY_YEAR &&
+              !isEventRendering && (
                 <div
-                  className={`w-[180px] px-3 z-[20] h-[38px] absolute  rounded-md right-[10px] bottom-[5px] bg-white flex items-center `}>
+                  className={`w-[180px] px-3 z-[20] h-[38px] absolute  rounded-md right-[50px] bottom-[5px] bg-white flex items-center `}>
                   <RangeSlider
                     min={18}
                     max={100}
