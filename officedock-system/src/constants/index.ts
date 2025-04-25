@@ -39,6 +39,7 @@ export const PAGINATION_PAGE_SIZE_HIGHT = 50;
 export const PAGINATION_PAGE_SIZE_KANBAN = 30;
 
 export const INITIAL_INDEX_VALUE = 0.01;
+export const INITIAL_INDEX_VALUE_STEP = 10000;
 
 export const COUNTDOWN_FOR_RESEND_OTP = 60;
 
@@ -84,92 +85,92 @@ export const SCREEN_LIST = [
   {
     name: 'マイタスク画面',
     value: 'myTask',
-    show: false
+    show: false,
   },
   {
     name: 'カレンダー画面',
     value: 'calendar',
-    show: false
+    show: false,
   },
   {
     name: 'チャット画面',
     value: 'chat',
-    show: false
+    show: false,
   },
   {
     name: 'ユーザー画面',
     value: 'user',
-    show: true
+    show: true,
   },
   {
     name: '組織画面',
     value: 'organization',
-    show: true
+    show: true,
   },
   {
     name: '集計カテゴリ画面',
     value: 'category',
-    show: true
+    show: true,
   },
   {
     name: 'スキル画面',
     value: 'skill',
-    show: false
+    show: false,
   },
   {
     name: 'スキルマップ画面',
     value: 'skillMap',
-    show: false
+    show: false,
   },
   {
     name: '組織_スキル画面',
     value: 'organizationSkill',
-    show: false
+    show: false,
   },
   {
     name: '集計タグ画面',
     value: 'tag',
-    show: true
+    show: true,
   },
   {
     name: '集計画面',
     value: 'statistic',
-    show: false
+    show: false,
   },
   {
     name: '日報画面',
     value: 'dailyReport',
-    show: false
+    show: false,
   },
   {
     name: 'レベルアップ申請確認画面',
     value: 'submitLevel',
-    show: false
+    show: false,
   },
   {
     name: 'ロール画面',
     value: 'role',
-    show: true
+    show: true,
   },
   {
     name: '実績管理画面',
     value: 'actualDuration',
-    show: false
+    show: false,
   },
   {
     name: 'メンバー一覧画面',
     value: 'listMember',
-    show: false
+    show: false,
   },
   {
     name: 'チームドック画面',
     value: 'teamdock',
-    show: true
+    show: true,
   },
   {
     name: '日報一覧画面',
     value: 'teamDailyReport',
-    show: true
+    show: true,
   },
 ];
 

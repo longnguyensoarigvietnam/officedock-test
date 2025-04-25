@@ -64,7 +64,7 @@ const ConfirmRemoveChatMemberModal = memo(
           このメンバーを本当に退会させますか？
         </p>
         <p className="text-[#77858F] font-normal text-[13px] text-center">
-          退会させるとチャットに表示されます。
+          退会したメンバーに通知されます。
         </p>
         <div className="flex justify-center gap-3 my-3 items-center">
           <Button variant="outline" onClick={onClose} className="w-[110px]">

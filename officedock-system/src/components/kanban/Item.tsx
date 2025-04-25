@@ -6,8 +6,6 @@ import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
@@ -42,6 +40,7 @@ import {
   formatShowDeadlineTask,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 interface ItemProps {
   id: string;
@@ -348,23 +347,20 @@ const Item = ({
               <div className="relative w-[100%]   h-full">
                 {isPermissionUpdate && (
                   <>
-                    <Tippy
-                      content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
-                      arrow={false}
-                      delay={1000}
-                      placement="right"
-                      offset={[0, 5]}>
-                      <div
-                        style={{
-                          top: `${(columnWidth / 247) * 12}px`,
-                          right: `${(columnWidth / 247) * 12}px`,
-                        }}
-                        onClick={() => {
-                          if (isPermissionUpdate) {
-                            handlePinItem(`${content.id}`);
-                          }
-                        }}
-                        className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
+                    <div
+                      className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}
+                      style={{
+                        top: `${(columnWidth / 247) * 12}px`,
+                        right: `${(columnWidth / 247) * 12}px`,
+                      }}
+                      onClick={() => {
+                        if (isPermissionUpdate) {
+                          handlePinItem(`${content.id}`);
+                        }
+                      }}>
+                      <DynamicTooltip
+                        content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
+                        placement="right">
                         <ImageRound
                           src={
                             content.pinAt
@@ -388,26 +384,21 @@ const Item = ({
                           }}
                           className=" text-gray-400 cursor-pointer"
                         />
-                      </div>
-                    </Tippy>
+                      </DynamicTooltip>
+                    </div>
                   </>
                 )}
                 {isPermissionAdd && (
-                  <Tippy
-                    content="タスクを複製"
-                    arrow={false}
-                    delay={1000}
-                    placement="right"
-                    offset={[0, 5]}>
-                    <div
-                      style={{
-                        top:
-                          (selectedOptionZoom.value as number) > 75
-                            ? `${(columnWidth / 247) * 32}px`
-                            : `${(columnWidth / 247) * 38}px`,
-                        right: `${(columnWidth / 247) * 12}px`,
-                      }}
-                      className="absolute opacity-0 group-hover:opacity-100">
+                  <div
+                    style={{
+                      top:
+                        (selectedOptionZoom.value as number) > 75
+                          ? `${(columnWidth / 247) * 32}px`
+                          : `${(columnWidth / 247) * 38}px`,
+                      right: `${(columnWidth / 247) * 12}px`,
+                    }}
+                    className="absolute opacity-0 group-hover:opacity-100">
+                    <DynamicTooltip content="タスクを複製" placement="right">
                       <ImageRound
                         src="/icons/copy.svg"
                         name="Copy icon"
@@ -430,8 +421,8 @@ const Item = ({
                           handleConfirmCopyTask(parseInt(`${content.id}`));
                         }}
                       />
-                    </div>
-                  </Tippy>
+                    </DynamicTooltip>
+                  </div>
                 )}
               </div>
               <div
@@ -453,7 +444,7 @@ const Item = ({
                       style={{
                         width: `${(columnWidth / 247) * 20}px`,
                       }}
-                      className="h-full flex items-center">
+                      className="h-full flex items-start mt-[3px]">
                       <ImageRound
                         src="/icons/clock.svg"
                         name="Clock icon"
@@ -481,9 +472,7 @@ const Item = ({
                           : '85px',
                       fontSize:
                         (selectedOptionZoom.value as number) > 75
-                          ? (selectedOptionZoom.value as number) == 90
-                            ? '15px'
-                            : '16px'
+                          ? '14px'
                           : '12px',
                       minHeight:
                         (selectedOptionZoom.value as number) > 75
@@ -491,7 +480,7 @@ const Item = ({
                           : '18px',
                       marginRight: `${(columnWidth / 247) * 12}px`,
                     }}
-                    className={`!border-none break-words leading-[1.5] cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                    className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                     {content.title}
                   </p>
                 </div>
@@ -544,12 +533,9 @@ const Item = ({
                       </p>
                     </div>
                     {selectedOptionZoom.value === 50 && (
-                      <Tippy
+                      <DynamicTooltip
                         content={content.isStart ? '計測停止' : '計測開始'}
-                        arrow={false}
-                        delay={1000}
-                        placement="top"
-                        offset={[0, 5]}>
+                        placement="top">
                         <div
                           className=""
                           onClick={(e) => {
@@ -584,18 +570,13 @@ const Item = ({
                             />
                           )}
                         </div>
-                      </Tippy>
+                      </DynamicTooltip>
                     )}
                   </div>
                 )}
                 {selectedOptionZoom.value !== 50 && (
                   <div className="flex justify-between items-center mt-[2px]">
-                    <Tippy
-                      content="ステータスを変更"
-                      arrow={false}
-                      delay={1000}
-                      placement="top"
-                      offset={[0, 5]}>
+                    <DynamicTooltip content="ステータスを変更" placement="top">
                       <div
                         className="w-20 max-w-20 h-[21px] rounded"
                         onClick={(e) => {
@@ -663,14 +644,11 @@ const Item = ({
                           )}
                         />
                       </div>
-                    </Tippy>
+                    </DynamicTooltip>
 
-                    <Tippy
+                    <DynamicTooltip
                       content={content.isStart ? '計測停止' : '計測開始'}
-                      arrow={false}
-                      delay={1000}
-                      placement="top"
-                      offset={[0, 5]}>
+                      placement="top">
                       <div
                         className=""
                         onClick={(e) => {
@@ -705,7 +683,7 @@ const Item = ({
                           />
                         )}
                       </div>
-                    </Tippy>
+                    </DynamicTooltip>
                   </div>
                 )}
               </div>
@@ -776,12 +754,9 @@ const Item = ({
                     className={`!border-none break-words cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                     {content.title}
                   </p>
-                  <Tippy
+                  <DynamicTooltip
                     content={content.isStart ? '計測停止' : '計測開始'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
+                    placement="top">
                     <div
                       className=""
                       onClick={(e) => {
@@ -806,7 +781,7 @@ const Item = ({
                         />
                       )}
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 </div>
               </div>
             </div>

@@ -8,7 +8,6 @@ const ScheduleDaySkeleton: React.FC<ScheduleDaySkeletonProps> = ({
   height,
 }) => {
   const numberOfRows = Math.floor(height / 60);
-
   return (
     <div
       style={{

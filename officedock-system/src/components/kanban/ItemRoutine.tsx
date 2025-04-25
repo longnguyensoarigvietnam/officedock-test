@@ -6,8 +6,6 @@ import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 
@@ -35,20 +33,21 @@ import { TaskContext } from '@providers/TaskProvider';
 
 import api from '@base/api';
 import {
-  addHoursToDate,
+  addMinutesToDate,
   convertToCurrentTimezone,
   convertToTimeString,
   getJapaneseWeekDay,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import { TASK_REPETITIVE_OPTIONS } from '@constants';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 interface ItemProps {
   id: string;
   index: number;
   content: Task;
   creationDataTaskData?: CreationDataTask;
-  handleActionEditTask: (id: number, type?: string) => void
+  handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTask: UseMutateFunction<
@@ -329,7 +328,14 @@ const ItemRoutine = ({
         break;
       case TaskRepetitiveValue.YEARLY:
         title =
-          '毎年' + item.month + '月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
+          '毎年' +
+          item.month +
+          '月' +
+          item.monthDay +
+          '日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
         break;
     }
     return title;
@@ -349,7 +355,7 @@ const ItemRoutine = ({
                 ...content,
                 title: content.title ? content.title : '',
                 start: formatISO(now),
-                end: formatISO(addHoursToDate(`${now}`)),
+                end: formatISO(addMinutesToDate(`${now}`)),
                 startEditable: true,
                 itemKanban: true,
                 largeColor: largeColor,
@@ -364,23 +370,20 @@ const ItemRoutine = ({
               <div className="relative w-[100%]   h-full">
                 {isPermissionUpdate && (
                   <>
-                    <Tippy
-                      content={content.pinAt ? 'ピン留めを外す' : 'ピン留め'}
-                      arrow={false}
-                      delay={1000}
-                      placement="right"
-                      offset={[0, 5]}>
-                      <div
-                        style={{
-                          top: `${(columnWidth / 247) * 12}px`,
-                          right: `${(columnWidth / 247) * 12}px`,
-                        }}
-                        onClick={() => {
-                          if (isPermissionUpdate) {
-                            handlePinItem(`${content.id}`);
-                          }
-                        }}
-                        className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
+                    <div
+                      style={{
+                        top: `${(columnWidth / 247) * 12}px`,
+                        right: `${(columnWidth / 247) * 12}px`,
+                      }}
+                      onClick={() => {
+                        if (isPermissionUpdate) {
+                          handlePinItem(`${content.id}`);
+                        }
+                      }}
+                      className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
+                      <DynamicTooltip
+                        content={content.pinAt ? 'ピン留めを外す' : 'ピン留め'}
+                        placement="right">
                         <ImageRound
                           src={
                             content.pinAt
@@ -404,26 +407,21 @@ const ItemRoutine = ({
                           }}
                           className=" text-gray-400 cursor-pointer"
                         />
-                      </div>
-                    </Tippy>
+                      </DynamicTooltip>
+                    </div>
                   </>
                 )}
                 {isPermissionAdd && (
-                  <Tippy
-                    content="タスクを複製"
-                    arrow={false}
-                    delay={1000}
-                    placement="right"
-                    offset={[0, 5]}>
-                    <div
-                      style={{
-                        top:
-                          (selectedOptionZoom.value as number) > 75
-                            ? `${(columnWidth / 247) * 32}px`
-                            : `${(columnWidth / 247) * 38}px`,
-                        right: `${(columnWidth / 247) * 12}px`,
-                      }}
-                      className="absolute opacity-0 group-hover:opacity-100">
+                  <div
+                    style={{
+                      top:
+                        (selectedOptionZoom.value as number) > 75
+                          ? `${(columnWidth / 247) * 32}px`
+                          : `${(columnWidth / 247) * 38}px`,
+                      right: `${(columnWidth / 247) * 12}px`,
+                    }}
+                    className="absolute opacity-0 group-hover:opacity-100">
+                    <DynamicTooltip content="タスクを複製" placement="right">
                       <ImageRound
                         src="/icons/copy.svg"
                         name="Copy icon"
@@ -443,11 +441,14 @@ const ItemRoutine = ({
                         }}
                         className="text-gray-400 cursor-pointer"
                         onClick={() => {
-                          handleConfirmCopyTask(parseInt(`${content.id}`), ItemStartType.FIXED_TASK);
+                          handleConfirmCopyTask(
+                            parseInt(`${content.id}`),
+                            ItemStartType.FIXED_TASK,
+                          );
                         }}
                       />
-                    </div>
-                  </Tippy>
+                    </DynamicTooltip>
+                  </div>
                 )}
               </div>
               <div
@@ -469,7 +470,7 @@ const ItemRoutine = ({
                       style={{
                         width: `${(columnWidth / 247) * 20}px`,
                       }}
-                      className="h-full flex items-center">
+                      className="h-full flex items-start mt-[3px]">
                       <ImageRound
                         src="/icons/clock.svg"
                         name="Clock icon"
@@ -494,11 +495,11 @@ const ItemRoutine = ({
                       width: `${(columnWidth / 247) * 186}px`,
                       fontSize:
                         (selectedOptionZoom.value as number) > 75
-                          ? '16px'
+                          ? '14px'
                           : '12px',
                       marginRight: `${(columnWidth / 247) * 12}px`,
                     }}
-                    className={`!border-none break-words leading-[1.5] cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                    className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                     {content.title}
                   </p>
                 </div>
@@ -516,12 +517,9 @@ const ItemRoutine = ({
                     className="font-normal ">
                     {displayRoutineTaskScheduleTitle(content)}
                   </div>
-                  <Tippy
+                  <DynamicTooltip
                     content={content.isStart ? '計測停止' : '計測開始'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
+                    placement="top">
                     <div
                       className=""
                       onClick={(e) => {
@@ -556,7 +554,7 @@ const ItemRoutine = ({
                         />
                       )}
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 </div>
               </div>
             </div>
@@ -574,7 +572,7 @@ const ItemRoutine = ({
                 ...content,
                 title: content.title ? content.title : '',
                 start: formatISO(now),
-                end: formatISO(addHoursToDate(`${now}`)),
+                end: formatISO(addMinutesToDate(`${now}`)),
                 startEditable: true,
                 itemKanban: true,
               })}
@@ -626,12 +624,9 @@ const ItemRoutine = ({
                     className={`!border-none break-words cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                     {content.title}
                   </p>
-                  <Tippy
+                  <DynamicTooltip
                     content={content.isStart ? '計測停止' : '計測開始'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
+                    placement="top">
                     <div
                       className=""
                       onClick={(e) => {
@@ -656,7 +651,7 @@ const ItemRoutine = ({
                         />
                       )}
                     </div>
-                  </Tippy>
+                  </DynamicTooltip>
                 </div>
               </div>
             </div>

@@ -2,14 +2,13 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { memo, useContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useMutation, useQueryClient } from 'react-query';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import {
   ActionTask,
@@ -536,19 +535,13 @@ const TaskPageDataHeader = () => {
                 />
               </div>
               {taskSelected.value && statusTaskSelected && (
-                <Tippy
+                <DynamicTooltip
                   content={
                     statusTaskSelected?.isStart && taskSelected.value
                       ? '計測停止'
                       : '計測開始'
                   }
-                  arrow={false}
-                  delay={1000}
-                  placement="right"
-                  offset={[
-                    0,
-                    statusTaskSelected?.isStart && taskSelected.value ? 27 : 5,
-                  ]}>
+                  placement="right">
                   <div
                     className={`flex justify-center items-center ${statusTaskSelected?.isStart && taskSelected.value && 'mx-5'}`}>
                     <div
@@ -594,7 +587,7 @@ const TaskPageDataHeader = () => {
                       </div>
                     </div>
                   </div>
-                </Tippy>
+                </DynamicTooltip>
               )}
 
               {taskSelected.value &&

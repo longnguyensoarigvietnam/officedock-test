@@ -1,30 +1,34 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { v4 as uuidv4, validate as isUUID } from 'uuid';
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { createPortal } from 'react-dom';
 import { useMutation } from 'react-query';
-import { Popover, PopoverButton } from '@headlessui/react';
 
 import { CircleColorPicker } from '@components/common/CircleColorPicker';
 import TableDropdown from '@components/common/Dropdown/TableDropdown';
 import ImageRound from '@components/common/ImageRound';
 import MultiSelect from '@components/common/MultiSelect';
 import { Table } from '@components/common/Table';
+import WarningChangeHierarchyCategoryModal from '@components/modals/WarningChangeHierarchyCategoryModal';
+import WarningDeleteHierarchyCategoryModal from '@components/modals/WarningDeleteHierarchyCategoryModal';
+import { OptionsBoxToAddCategory } from '@components/category/OptionsBoxToAddCategory';
 
 import { HIERARCHY_COLOR_LIST } from '@constants';
 import { apiRouters } from '@constants/routers';
-import { ServerStatusCode, StatisticCategoryType } from '@constants/enums';
-import { INVALID_CATEGORY_NAME } from '@constants/message';
+import {
+  AddCategoryHierarchyType,
+  HierarchyType,
+  ServerStatusCode,
+  StatisticCategoryType,
+} from '@constants/enums';
 
 import { OptionDropdownType } from '@interfaces/common';
 
 import api from '@base/api';
-import WarningChangeHierarchyCategoryModal from '@components/modals/WarningChangeHierarchyCategoryModal';
-import WarningDeleteHierarchyCategoryModal from '@components/modals/WarningDeleteHierarchyCategoryModal';
+import { INVALID_CATEGORY_NAME } from '@constants/message';
 
 interface rowDataType {
   id: number | string;
@@ -33,18 +37,21 @@ interface rowDataType {
     label: string;
     showBy: string;
     isValid: boolean;
+    errorMessage: string;
   };
   medium: {
     value: string | number;
     label: string;
     showBy: string;
     isValid: boolean;
+    errorMessage: string;
   };
   small: {
     value: string | number;
     label: string;
     showBy: string;
     isValid: boolean;
+    errorMessage: string;
   };
   skills: OptionDropdownType[];
   color: string;
@@ -55,122 +62,6 @@ interface HierarchyDetail {
   name: string;
   statisticCategories: rowDataType[];
 }
-
-const OptionsBoxToAddCategory = ({
-  text,
-  addCategoryUsingInput,
-  addCategoryUsingDropdown,
-}: {
-  text: string;
-  addCategoryUsingInput: (option: string) => void;
-  addCategoryUsingDropdown: (option: string) => void;
-}) => {
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const [position, setPosition] = useState<{ top: number; left: number }>({
-    top: -9999,
-    left: -9999,
-  });
-  const [isOpen, setIsOpen] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-
-  const handleToggle = () => {
-    if (!buttonRef.current) return;
-
-    const buttonRect = buttonRef.current.getBoundingClientRect();
-    setIsOpen((prev) => !prev);
-    setIsReady(false);
-
-    requestAnimationFrame(() => {
-      if (dropdownRef.current) {
-        const dropdownHeight = dropdownRef.current.offsetHeight;
-        const viewportHeight = window.innerHeight;
-
-        const shouldShowAbove =
-          buttonRect.bottom + dropdownHeight + 10 > viewportHeight;
-
-        setPosition({
-          top: shouldShowAbove
-            ? buttonRect.top - dropdownHeight - 10 + window.scrollY
-            : buttonRect.bottom + 10 + window.scrollY,
-          left: buttonRect.left + window.scrollX,
-        });
-
-        setIsReady(true);
-      }
-    });
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
-
-  return (
-    <>
-      <Popover className="relative">
-        <PopoverButton
-          ref={buttonRef}
-          className="focus:outline-none flex items-center gap-2 h-[34px] bg-[#ECF0F2] rounded-[6px] py-[4px] px-[10px]"
-          onClick={handleToggle}>
-          <ImageRound
-            className="w-[17px] h-[17px] hover:cursor-pointer"
-            src="/icons/add-category.svg"
-            name="Add category icon"
-          />
-          <p className="text-[#77858F] font-medium text-sm">{text}</p>
-        </PopoverButton>
-      </Popover>
-
-      {isOpen &&
-        createPortal(
-          <div
-            ref={dropdownRef}
-            className="fixed bg-[#5B6770] text-white rounded-[6px] w-[252px] py-[5px] text-sm font-medium shadow-lg z-50 transition-opacity duration-200"
-            style={{
-              top: `${position.top}px`,
-              left: `${position.left}px`,
-              opacity: isReady ? 1 : 0,
-              visibility: isReady ? 'visible' : 'hidden',
-            }}>
-            <button
-              className="py-[10px] px-[14px] text-left w-full hover:bg-[#7D8A94] transition-all duration-200 rounded-[6px]"
-              onClick={() => {
-                setIsOpen(false);
-                addCategoryUsingInput('input');
-              }}>
-              チームの業務カテゴリーを入力
-            </button>
-            <button
-              className="py-[10px] px-[14px] text-left w-full hover:bg-[#7D8A94] transition-all duration-200 rounded-[6px]"
-              onClick={() => {
-                setIsOpen(false);
-                addCategoryUsingDropdown('pulldown');
-              }}>
-              登録済みの業務カテゴリーから選択
-            </button>
-          </div>,
-          document.body,
-        )}
-    </>
-  );
-};
 
 const TableComponent = ({
   hierarchyList,
@@ -255,8 +146,6 @@ const TableComponent = ({
     type: string;
   } | null>(null);
 
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
   useEffect(() => {
     if (categoryList) {
       const categoryOptions = categoryList.filter(
@@ -266,7 +155,7 @@ const TableComponent = ({
       setCategoryDropdownOptions(categoryOptions);
     }
   }, [categoryList, hierarchyList.id]);
-  
+
   const findLastUniqueMediumIndexes = (data: rowDataType[]): number[] => {
     const lastIndexes: number[] = [];
     let currentLargeValue: number | string | null = null;
@@ -361,7 +250,7 @@ const TableComponent = ({
 
   const columns = [
     {
-      accessorKey: 'large',
+      accessorKey: HierarchyType.LARGE,
       header: () => (
         <div className="flex justify-between px-5">
           <p>大カテゴリー</p>
@@ -370,7 +259,7 @@ const TableComponent = ({
       ),
     },
     {
-      accessorKey: 'medium',
+      accessorKey: HierarchyType.MEDIUM,
       header: () => (
         <div className="flex justify-between px-5">
           <p>中カテゴリー</p>
@@ -379,7 +268,7 @@ const TableComponent = ({
       ),
     },
     {
-      accessorKey: 'small',
+      accessorKey: HierarchyType.SMALL,
       header: () => (
         <div className="flex justify-between px-5">
           <p>小カテゴリー</p>
@@ -406,7 +295,7 @@ const TableComponent = ({
 
   const processRowspan = (
     data: rowDataType[],
-    key: 'large' | 'medium',
+    key: HierarchyType.LARGE | HierarchyType.MEDIUM,
   ): Record<number, number> => {
     const rowspanMap: Record<number, number> = {};
     const countMap: Record<string, number> = {}; // Stores counts per (large, medium/small) group
@@ -438,11 +327,11 @@ const TableComponent = ({
 
   const largeRowspan = processRowspan(
     hierarchyList.statisticCategories,
-    'large',
+    HierarchyType.LARGE,
   );
   const mediumRowspan = processRowspan(
     hierarchyList.statisticCategories,
-    'medium',
+    HierarchyType.MEDIUM,
   );
 
   const handleAddSmallCategory = (option: string, rowInfo: rowDataType) => {
@@ -452,7 +341,13 @@ const TableComponent = ({
       color: rowInfo.color,
       large: rowInfo.large,
       medium: rowInfo.medium,
-      small: { label: newUuid, value: newUuid, showBy: option, isValid: false },
+      small: {
+        label: newUuid,
+        value: newUuid,
+        showBy: option,
+        isValid: false,
+        errorMessage: '',
+      },
       skills: rowInfo.skills,
     };
 
@@ -517,8 +412,15 @@ const TableComponent = ({
         value: newUuid,
         showBy: option,
         isValid: false,
+        errorMessage: '',
       },
-      small: { label: newUuid, value: newUuid, showBy: '', isValid: false },
+      small: {
+        label: newUuid,
+        value: newUuid,
+        showBy: '',
+        isValid: false,
+        errorMessage: '',
+      },
       skills: rowInfo.skills,
     };
     setHierarchyList((prev) => {
@@ -588,14 +490,22 @@ const TableComponent = ({
             value: newUuid,
             showBy: option,
             isValid: false,
+            errorMessage: '',
           },
           medium: {
             label: newUuid,
             value: newUuid,
             showBy: '',
             isValid: false,
+            errorMessage: '',
           },
-          small: { label: newUuid, value: newUuid, showBy: '', isValid: false },
+          small: {
+            label: newUuid,
+            value: newUuid,
+            showBy: '',
+            isValid: false,
+            errorMessage: '',
+          },
           skills: [],
         };
 
@@ -614,6 +524,30 @@ const TableComponent = ({
     });
   };
 
+  const checkIsValidRowInput = (newCategory: {
+    name: string;
+    uuid: string;
+    type: string;
+    rowInfo: rowDataType;
+  }) => {
+    if (newCategory.type == HierarchyType.LARGE) {
+      return (
+        newCategory.name != newCategory.rowInfo.medium.label &&
+        newCategory.name != newCategory.rowInfo.small.label
+      );
+    } else if (newCategory.type == HierarchyType.MEDIUM) {
+      return (
+        newCategory.name != newCategory.rowInfo.large.label &&
+        newCategory.name != newCategory.rowInfo.small.label
+      );
+    } else {
+      return (
+        newCategory.name != newCategory.rowInfo.medium.label &&
+        newCategory.name != newCategory.rowInfo.large.label
+      );
+    }
+  };
+
   // Validate category
   const handleValidateCategory = async (data: {
     uuid: string;
@@ -629,7 +563,7 @@ const TableComponent = ({
     'postValidateCategory',
     handleValidateCategory,
     {
-      onSettled: (data) => {
+      onSettled: (data, error: any) => {
         if (data?.status == ServerStatusCode.OK) {
           setSelectedHierarchiesToUpdate((prev) => {
             const updatedHierarchiesToUpdate = [...prev];
@@ -640,7 +574,7 @@ const TableComponent = ({
             );
 
             let newEntry: any = {};
-            if (newCategory.type == 'large') {
+            if (newCategory.type == HierarchyType.LARGE) {
               newEntry = {
                 organizationStatisticCategoryId: newCategory.rowInfo.id,
                 organizationId: hierarchyList.id as number,
@@ -669,7 +603,7 @@ const TableComponent = ({
                   Number(skill.value),
                 ),
               };
-            } else if (newCategory.type == 'medium') {
+            } else if (newCategory.type == HierarchyType.MEDIUM) {
               newEntry = {
                 organizationStatisticCategoryId: newCategory.rowInfo.id,
                 organizationId: hierarchyList.id as number,
@@ -754,7 +688,7 @@ const TableComponent = ({
 
           if (foundOrganizationHierarchyIndex !== -1) {
             let updatedCategories: rowDataType[] = [];
-            if (newCategory.type == 'large') {
+            if (newCategory.type == HierarchyType.LARGE) {
               updatedCategories = updatedHierarchyList[
                 foundOrganizationHierarchyIndex
               ].statisticCategories.map((hierarchy) =>
@@ -762,16 +696,25 @@ const TableComponent = ({
                   ? {
                       ...hierarchy,
                       large: {
-                        label: newCategory.name,
+                        label: newCategory.name || newCategory.uuid,
                         value: newCategory.uuid,
-                        showBy: 'input',
+                        showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
-                          data?.status == ServerStatusCode.OK ? true : false,
+                          data?.status == ServerStatusCode.OK
+                            ? checkIsValidRowInput(newCategory)
+                            : false,
+                        errorMessage: !checkIsValidRowInput(newCategory)
+                          ? INVALID_CATEGORY_NAME
+                          : newCategory.name == ''
+                            ? ''
+                            : error?.response?.data?.name?.[0] ||
+                              error?.response?.data?.detail?.[0] ||
+                              '',
                       },
                     }
                   : hierarchy,
               );
-            } else if (newCategory.type == 'medium') {
+            } else if (newCategory.type == HierarchyType.MEDIUM) {
               updatedCategories = updatedHierarchyList[
                 foundOrganizationHierarchyIndex
               ].statisticCategories.map((hierarchy) =>
@@ -781,11 +724,20 @@ const TableComponent = ({
                   ? {
                       ...hierarchy,
                       medium: {
-                        label: newCategory.name,
+                        label: newCategory.name || newCategory.uuid,
                         value: newCategory.uuid,
-                        showBy: 'input',
+                        showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
-                          data?.status == ServerStatusCode.OK ? true : false,
+                          data?.status == ServerStatusCode.OK
+                            ? checkIsValidRowInput(newCategory)
+                            : false,
+                        errorMessage: !checkIsValidRowInput(newCategory)
+                          ? INVALID_CATEGORY_NAME
+                          : newCategory.name == ''
+                            ? ''
+                            : error?.response?.data?.name?.[0] ||
+                              error?.response?.data?.detail?.[0] ||
+                              '',
                       },
                     }
                   : hierarchy,
@@ -801,11 +753,20 @@ const TableComponent = ({
                   ? {
                       ...hierarchy,
                       small: {
-                        label: newCategory.name,
+                        label: newCategory.name || newCategory.uuid,
                         value: newCategory.uuid,
-                        showBy: 'input',
+                        showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
-                          data?.status == ServerStatusCode.OK ? true : false,
+                          data?.status == ServerStatusCode.OK
+                            ? checkIsValidRowInput(newCategory)
+                            : false,
+                        errorMessage: !checkIsValidRowInput(newCategory)
+                          ? INVALID_CATEGORY_NAME
+                          : newCategory.name == ''
+                            ? ''
+                            : error?.response?.data?.name?.[0] ||
+                              error?.response?.data?.detail?.[0] ||
+                              '',
                       },
                     }
                   : hierarchy,
@@ -831,18 +792,21 @@ const TableComponent = ({
               label: '',
               showBy: '',
               isValid: false,
+              errorMessage: '',
             },
             medium: {
               value: '',
               label: '',
               showBy: '',
               isValid: false,
+              errorMessage: '',
             },
             small: {
               value: '',
               label: '',
               showBy: '',
               isValid: false,
+              errorMessage: '',
             },
             skills: [],
             color: '',
@@ -851,27 +815,6 @@ const TableComponent = ({
       },
     },
   );
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
-        validateCategory({
-          name: newCategory.name,
-          uuid: newCategory.uuid,
-        });
-      }
-    };
-
-    if (newCategory.name) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [newCategory.name, newCategory.uuid]);
 
   const getExcludedSmalls = (currentRow: rowDataType) => {
     return hierarchyList.statisticCategories
@@ -896,7 +839,7 @@ const TableComponent = ({
       const newLarge = {
         label: e.label,
         value: e.value,
-        showBy: 'pulldown',
+        showBy: AddCategoryHierarchyType.PULLDOWN,
         isValid: true,
       };
 
@@ -980,8 +923,9 @@ const TableComponent = ({
         const newLarge = {
           label: e.label,
           value: e.value,
-          showBy: 'pulldown',
+          showBy: AddCategoryHierarchyType.PULLDOWN,
           isValid: true,
+          errorMessage: '',
         };
 
         // Separate matching and non-matching rows
@@ -1052,7 +996,7 @@ const TableComponent = ({
       const newMedium = {
         label: e.label,
         value: e.value,
-        showBy: 'pulldown',
+        showBy: AddCategoryHierarchyType.PULLDOWN,
         isValid: true,
       };
       const matchedRows = statisticCategories
@@ -1129,8 +1073,9 @@ const TableComponent = ({
         const newMedium = {
           label: e.label,
           value: e.value,
-          showBy: 'pulldown',
+          showBy: AddCategoryHierarchyType.PULLDOWN,
           isValid: true,
+          errorMessage: '',
         };
 
         // Separate matching and non-matching rows
@@ -1276,8 +1221,9 @@ const TableComponent = ({
                 small: {
                   label: e.label,
                   value: e.value,
-                  showBy: 'pulldown',
+                  showBy: AddCategoryHierarchyType.PULLDOWN,
                   isValid: true,
+                  errorMessage: '',
                 },
               }
             : hierarchy,
@@ -1350,29 +1296,107 @@ const TableComponent = ({
     oldLargeValue: string | number,
     oldMediumValue: string | number,
   ) => {
+    const newUuid = uuidv4();
     setSelectedHierarchiesToDelete((prev) => {
+      const matchedRowsWithLargeValue =
+        hierarchyList.statisticCategories.filter(
+          (item) => item.large.value == oldLargeValue,
+        );
       const currentHierarchiesToDelete = [...(prev || [])];
+      if (matchedRowsWithLargeValue.length > 1) {
+        const matchingHierarchies = hierarchyList.statisticCategories
+          .filter(
+            (item) =>
+              item.large.value === oldLargeValue &&
+              item.medium.value === oldMediumValue,
+          )
+          .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
 
-      const matchingHierarchies = hierarchyList.statisticCategories
-        .filter(
-          (item) =>
-            item.large.value === oldLargeValue &&
-            item.medium.value === oldMediumValue,
-        )
-        .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
-
-      return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
+        return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
+      } else {
+        return currentHierarchiesToDelete;
+      }
     });
     setSelectedHierarchiesToUpdate((prev) => {
-      const currentHierarchiesToUpdate = [...(prev || [])];
+      const matchedRowsWithLargeValue =
+        hierarchyList.statisticCategories.filter(
+          (item) => item.large.value == oldLargeValue,
+        );
+      if (matchedRowsWithLargeValue.length > 1) {
+        const currentHierarchiesToUpdate = [...(prev || [])];
 
-      return currentHierarchiesToUpdate.filter(
-        (hierarchy) =>
-          !(
-            hierarchy.largeStatisticCategory?.uuid == oldLargeValue &&
-            hierarchy.mediumStatisticCategory?.uuid == oldMediumValue
-          ),
-      );
+        return currentHierarchiesToUpdate.filter(
+          (hierarchy) =>
+            !(
+              hierarchy.largeStatisticCategory?.uuid == oldLargeValue &&
+              hierarchy.mediumStatisticCategory?.uuid == oldMediumValue
+            ),
+        );
+      } else {
+        const updatedHierarchiesToUpdate = [...prev];
+        const statisticCategories = hierarchyList.statisticCategories;
+        const newMedium = {
+          label: newUuid,
+          value: newUuid,
+          showBy: AddCategoryHierarchyType.PULLDOWN,
+          isValid: true,
+        };
+        const matchedRows = statisticCategories
+          .filter(
+            (item) =>
+              item.medium.value === oldMediumValue &&
+              item.large.value === oldLargeValue,
+          )
+          .map((item) => ({
+            ...item,
+            medium: newMedium,
+          }));
+
+        const updatedHierarchies = matchedRows.map((row) => {
+          return {
+            organizationStatisticCategoryId: row.id,
+            organizationId: hierarchyList.id as number,
+            largeStatisticCategory:
+              row.large.label == '' || isUUID(row.large.label as string)
+                ? null
+                : {
+                    name: row.large.label as string,
+                    uuid: row.large.value as string,
+                  },
+            mediumStatisticCategory:
+              row.medium.label == '' || isUUID(row.medium.label as string)
+                ? null
+                : {
+                    name: row.medium.label as string,
+                    uuid: row.medium.value as string,
+                  },
+            smallStatisticCategory:
+              row.small.label == '' || isUUID(row.small.label as string)
+                ? null
+                : {
+                    name: row.small.label as string,
+                    uuid: row.small.value as string,
+                  },
+            color: row.color,
+            skillIds: row.skills.map((skill) => Number(skill.value)),
+          };
+        });
+
+        updatedHierarchies.forEach((updatedHierarchy) => {
+          const existingIndex = updatedHierarchiesToUpdate.findIndex(
+            (item) =>
+              item.organizationStatisticCategoryId ===
+              updatedHierarchy.organizationStatisticCategoryId,
+          );
+          if (existingIndex != -1) {
+            updatedHierarchiesToUpdate[existingIndex] = updatedHierarchy;
+          } else {
+            updatedHierarchiesToUpdate.push(updatedHierarchy);
+          }
+        });
+
+        return updatedHierarchiesToUpdate;
+      }
     });
     setHierarchyList((prev) => {
       const updatedHierarchyList = prev.map((org) => ({
@@ -1381,24 +1405,109 @@ const TableComponent = ({
       }));
 
       const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id === hierarchyList.id,
+        (hierarchy) => hierarchy.id == hierarchyList.id,
       );
 
       if (foundOrganizationHierarchyIndex !== -1) {
-        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
-          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
-          statisticCategories: [
-            ...updatedHierarchyList[
-              foundOrganizationHierarchyIndex
-            ].statisticCategories.filter(
-              (hierarchy) =>
-                !(
-                  hierarchy.large.value == oldLargeValue &&
-                  hierarchy.medium.value == oldMediumValue
-                ),
-            ),
-          ],
-        };
+        const statisticCategories =
+          updatedHierarchyList[foundOrganizationHierarchyIndex]
+            .statisticCategories;
+
+        const matchedRowsWithLargeValue = statisticCategories.filter(
+          (item) => item.large.value == oldLargeValue,
+        );
+        if (matchedRowsWithLargeValue.length == 1) {
+          const newMedium = {
+            label: newUuid as string,
+            value: newUuid,
+            showBy: AddCategoryHierarchyType.PULLDOWN,
+            isValid: true,
+            errorMessage: '',
+          };
+
+          // Separate matching and non-matching rows
+          const matchedRows = statisticCategories
+            .filter(
+              (item) =>
+                item.medium.value == oldMediumValue &&
+                item.large.value == oldLargeValue,
+            )
+            .map((item) => ({
+              ...item,
+              medium: newMedium,
+            }));
+
+          const remainingRows = statisticCategories.filter(
+            (item) =>
+              !(
+                item.medium.value == oldMediumValue &&
+                item.large.value == oldLargeValue
+              ),
+          );
+
+          // Find the last index where newMedium.value already exists
+          let lastIndex = -1;
+          remainingRows.forEach((item, index) => {
+            if (
+              item.large.value == oldLargeValue &&
+              item.medium.value === newMedium.value
+            )
+              lastIndex = index;
+          });
+
+          // Maintain position if lastIndex is -1
+          const newStatisticCategories = [...remainingRows];
+          if (lastIndex !== -1) {
+            newStatisticCategories.splice(lastIndex + 1, 0, ...matchedRows);
+          } else {
+            // Instead of pushing, find the **original** position of row.original.medium.value
+            const originalIndex = statisticCategories.findIndex(
+              (item) =>
+                item.medium.value == oldMediumValue &&
+                item.large.value == oldLargeValue,
+            );
+
+            if (originalIndex !== -1) {
+              // Insert in the same position as original row
+              newStatisticCategories.splice(originalIndex, 0, ...matchedRows);
+            } else {
+              // If no match found, append to the end
+              newStatisticCategories.push(...matchedRows);
+            }
+          }
+
+          // Remove duplicates
+          const uniqueMap = new Map();
+          const filteredStatisticCategories = newStatisticCategories.filter(
+            (item) => {
+              const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
+              if (uniqueMap.has(key)) return false;
+              uniqueMap.set(key, true);
+              return true;
+            },
+          );
+
+          // Update hierarchy list
+          updatedHierarchyList[foundOrganizationHierarchyIndex] = {
+            ...updatedHierarchyList[foundOrganizationHierarchyIndex],
+            statisticCategories: filteredStatisticCategories,
+          };
+        } else {
+          updatedHierarchyList[foundOrganizationHierarchyIndex] = {
+            ...updatedHierarchyList[foundOrganizationHierarchyIndex],
+            statisticCategories: [
+              ...updatedHierarchyList[
+                foundOrganizationHierarchyIndex
+              ].statisticCategories.filter(
+                (hierarchy) =>
+                  !(
+                    hierarchy.large.value == oldLargeValue &&
+                    hierarchy.medium.value == oldMediumValue
+                  ),
+              ),
+            ],
+          };
+        }
       }
 
       return updatedHierarchyList;
@@ -1406,35 +1515,97 @@ const TableComponent = ({
   };
 
   const handleDeleteSmallHierarchyCategory = (
-    oldLargeValue: string | number,
-    oldMediumValue: string | number,
-    oldSmallValue: string | number,
+    oldLargeOption: OptionDropdownType,
+    oldMediumOption: OptionDropdownType,
+    oldSmallOption: OptionDropdownType,
+    oldRowId: string | number,
+    oldRowSkill: OptionDropdownType[],
+    oldRowColor: string,
   ) => {
+    const newUuid = uuidv4();
     setSelectedHierarchiesToDelete((prev) => {
+      const matchedRowsWithLargeValue =
+        hierarchyList.statisticCategories.filter(
+          (item) =>
+            item.large.value == oldLargeOption.value &&
+            item.medium.value == oldMediumOption.value,
+        );
       const currentHierarchiesToDelete = [...(prev || [])];
 
-      const matchingHierarchies = hierarchyList.statisticCategories
-        .filter(
-          (item) =>
-            item.large.value == oldLargeValue &&
-            item.medium.value == oldMediumValue &&
-            item.small.value == oldSmallValue,
-        )
-        .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
+      if (matchedRowsWithLargeValue.length > 1) {
+        const matchingHierarchies = hierarchyList.statisticCategories
+          .filter(
+            (item) =>
+              item.large.value == oldLargeOption.value &&
+              item.medium.value == oldMediumOption.value &&
+              item.small.value == oldSmallOption.value,
+          )
+          .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
 
-      return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
+        return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
+      } else {
+        return currentHierarchiesToDelete;
+      }
     });
     setSelectedHierarchiesToUpdate((prev) => {
-      const currentHierarchiesToUpdate = [...(prev || [])];
+      const matchedRowsWithLargeValue =
+        hierarchyList.statisticCategories.filter(
+          (item) =>
+            item.large.value == oldLargeOption.value &&
+            item.medium.value == oldMediumOption.value,
+        );
+      if (matchedRowsWithLargeValue.length > 1) {
+        const currentHierarchiesToUpdate = [...(prev || [])];
 
-      return currentHierarchiesToUpdate.filter(
-        (hierarchy) =>
-          !(
-            hierarchy.largeStatisticCategory?.uuid == oldLargeValue &&
-            hierarchy.mediumStatisticCategory?.uuid == oldMediumValue &&
-            hierarchy.smallStatisticCategory?.uuid == oldSmallValue
-          ),
-      );
+        return currentHierarchiesToUpdate.filter(
+          (hierarchy) =>
+            !(
+              hierarchy.largeStatisticCategory?.uuid == oldLargeOption.value &&
+              hierarchy.mediumStatisticCategory?.uuid ==
+                oldMediumOption.value &&
+              hierarchy.smallStatisticCategory?.uuid == oldSmallOption.value
+            ),
+        );
+      } else {
+        const updatedHierarchiesToUpdate = [...prev];
+
+        const existingIndex = updatedHierarchiesToUpdate.findIndex(
+          (item) => item.organizationStatisticCategoryId === oldRowId,
+        );
+
+        const newEntry = {
+          organizationStatisticCategoryId: oldRowId,
+          organizationId: hierarchyList.id as number,
+          largeStatisticCategory:
+            oldLargeOption.label == '' || isUUID(oldLargeOption.label as string)
+              ? null
+              : {
+                  name: oldLargeOption.label as string,
+                  uuid: oldLargeOption.value as string,
+                },
+          mediumStatisticCategory:
+            oldMediumOption.label == '' ||
+            isUUID(oldMediumOption.label as string)
+              ? null
+              : {
+                  name: oldMediumOption.label as string,
+                  uuid: oldMediumOption.value as string,
+                },
+          smallStatisticCategory: null,
+          color: oldRowColor,
+          skillIds: oldRowSkill.map((skill) => Number(skill.value)),
+        };
+
+        if (existingIndex !== -1) {
+          // If it exists, replace it
+          updatedHierarchiesToUpdate[existingIndex] = newEntry;
+        } else {
+          // Otherwise, add it
+          updatedHierarchiesToUpdate.push(newEntry);
+        }
+
+        return updatedHierarchiesToUpdate;
+      }
     });
     setHierarchyList((prev) => {
       const updatedHierarchyList = prev.map((org) => ({
@@ -1447,21 +1618,61 @@ const TableComponent = ({
       );
 
       if (foundOrganizationHierarchyIndex !== -1) {
-        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
-          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
-          statisticCategories: [
-            ...updatedHierarchyList[
-              foundOrganizationHierarchyIndex
-            ].statisticCategories.filter(
-              (hierarchy) =>
-                !(
-                  hierarchy.large.value == oldLargeValue &&
-                  hierarchy.medium.value == oldMediumValue &&
-                  hierarchy.small.value == oldSmallValue
-                ),
-            ),
-          ],
-        };
+        const statisticCategories =
+          updatedHierarchyList[foundOrganizationHierarchyIndex]
+            .statisticCategories;
+
+        const matchedRowsWithLargeValue = statisticCategories.filter(
+          (item) =>
+            item.large.value == oldLargeOption.value &&
+            item.medium.value == oldMediumOption.value,
+        );
+        if (matchedRowsWithLargeValue.length == 1) {
+          const updatedCategories = updatedHierarchyList[
+            foundOrganizationHierarchyIndex
+          ].statisticCategories.map((hierarchy) =>
+            hierarchy.id === oldRowId
+              ? {
+                  ...hierarchy,
+                  small: {
+                    label: newUuid,
+                    value: newUuid,
+                    showBy: AddCategoryHierarchyType.PULLDOWN,
+                    isValid: true,
+                    errorMessage: '',
+                  },
+                }
+              : hierarchy,
+          );
+
+          const uniqueMap = new Map();
+          const filteredCategories = updatedCategories.filter((item) => {
+            const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
+            if (uniqueMap.has(key)) return false;
+            uniqueMap.set(key, true);
+            return true;
+          });
+
+          updatedHierarchyList[
+            foundOrganizationHierarchyIndex
+          ].statisticCategories = filteredCategories;
+        } else {
+          updatedHierarchyList[foundOrganizationHierarchyIndex] = {
+            ...updatedHierarchyList[foundOrganizationHierarchyIndex],
+            statisticCategories: [
+              ...updatedHierarchyList[
+                foundOrganizationHierarchyIndex
+              ].statisticCategories.filter(
+                (hierarchy) =>
+                  !(
+                    hierarchy.large.value == oldLargeOption.value &&
+                    hierarchy.medium.value == oldMediumOption.value &&
+                    hierarchy.small.value == oldSmallOption.value
+                  ),
+              ),
+            ],
+          };
+        }
       }
 
       return updatedHierarchyList;
@@ -1659,27 +1870,33 @@ const TableComponent = ({
                           </div>
                         )}
                       </div>
-                      {row.original.large.showBy == 'input' ? (
+                      {row.original.large.showBy ==
+                      AddCategoryHierarchyType.INPUT ? (
                         <div className="flex flex-col !h-full w-full">
-                          <div className="mb-1 !h-full w-full" ref={inputRef}>
+                          <div className="mb-1 !h-full w-full">
                             <input
                               type="text"
-                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.large.isValid && !isUUID(row.original.large.label) && 'border-red-500'}`}
+                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.large.isValid && row.original.large.errorMessage && 'border-red-500'}`}
                               placeholder="新しいカテゴリーを入力"
                               value={
-                                newCategory.name !== '' &&
-                                newCategory.type == 'large' &&
+                                newCategory.type == HierarchyType.LARGE &&
                                 newCategory.rowInfo.id == row.original.id
                                   ? newCategory.name
                                   : !isUUID(row.original.large.label)
                                     ? row.original.large.label
                                     : ''
                               }
+                              onBlur={() => {
+                                validateCategory({
+                                  name: newCategory.name,
+                                  uuid: newCategory.uuid,
+                                });
+                              }}
                               onChange={(e) =>
                                 setNewCategory({
                                   name: e.target.value,
                                   uuid: String(row.original.large.value) || '',
-                                  type: 'large',
+                                  type: HierarchyType.LARGE,
                                   rowInfo: row.original,
                                 })
                               }
@@ -1687,12 +1904,12 @@ const TableComponent = ({
                           </div>
                           <p className="text-xs text-error">
                             {!row.original.large.isValid &&
-                              !isUUID(row.original.large.label) &&
-                              INVALID_CATEGORY_NAME}
+                              (row.original.large.errorMessage || '')}
                           </p>
                         </div>
                       ) : (
-                        row.original.large.showBy == 'pulldown' && (
+                        row.original.large.showBy ==
+                          AddCategoryHierarchyType.PULLDOWN && (
                           <TableDropdown
                             key={JSON.stringify(row.original.large)}
                             options={[
@@ -1773,28 +1990,34 @@ const TableComponent = ({
                     <div className="p-3 flex flex-col !h-[100%]">
                       <div
                         className={`flex items-center ${lastMediumIndexes.includes(rowIndex) ? 'h-[calc(100%_-_46px)]' : 'h-[calc(100%)]'} mb-3 gap-3`}>
-                        {row.original.medium.showBy == 'input' ? (
+                        {row.original.medium.showBy ==
+                        AddCategoryHierarchyType.INPUT ? (
                           <div className="flex flex-col !h-full w-full">
-                            <div className="mb-1 !h-full w-full" ref={inputRef}>
+                            <div className="mb-1 !h-full w-full">
                               <input
                                 type="text"
-                                className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.medium.isValid && !isUUID(row.original.medium.label) && 'border-red-500'}`}
+                                className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.medium.isValid && row.original.medium.errorMessage && 'border-red-500'}`}
                                 placeholder="新しいカテゴリーを入力"
                                 value={
-                                  newCategory.name !== '' &&
-                                  newCategory.type == 'medium' &&
+                                  newCategory.type == HierarchyType.MEDIUM &&
                                   newCategory.rowInfo.id == row.original.id
                                     ? newCategory.name
                                     : !isUUID(row.original.medium.label)
                                       ? row.original.medium.label
                                       : ''
                                 }
+                                onBlur={() => {
+                                  validateCategory({
+                                    name: newCategory.name,
+                                    uuid: newCategory.uuid,
+                                  });
+                                }}
                                 onChange={(e) =>
                                   setNewCategory({
                                     name: e.target.value,
                                     uuid:
                                       String(row.original.medium.value) || '',
-                                    type: 'medium',
+                                    type: HierarchyType.MEDIUM,
                                     rowInfo: row.original,
                                   })
                                 }
@@ -1802,12 +2025,12 @@ const TableComponent = ({
                             </div>
                             <p className="text-xs text-error">
                               {!row.original.medium.isValid &&
-                                !isUUID(row.original.medium.label) &&
-                                INVALID_CATEGORY_NAME}
+                                (row.original.medium.errorMessage || '')}
                             </p>
                           </div>
                         ) : (
-                          row.original.medium.showBy == 'pulldown' && (
+                          row.original.medium.showBy ==
+                            AddCategoryHierarchyType.PULLDOWN && (
                             <div className={`w-full h-full`}>
                               <TableDropdown
                                 key={JSON.stringify(row.original.medium)}
@@ -1899,10 +2122,16 @@ const TableComponent = ({
                           <OptionsBoxToAddCategory
                             text={'中カテゴリーを追加'}
                             addCategoryUsingInput={() =>
-                              handleAddMediumCategory('input', row.original)
+                              handleAddMediumCategory(
+                                AddCategoryHierarchyType.INPUT,
+                                row.original,
+                              )
                             }
                             addCategoryUsingDropdown={() =>
-                              handleAddMediumCategory('pulldown', row.original)
+                              handleAddMediumCategory(
+                                AddCategoryHierarchyType.PULLDOWN,
+                                row.original,
+                              )
                             }
                           />
                         </>
@@ -1915,27 +2144,33 @@ const TableComponent = ({
                   style={{ height: 'inherit' }}>
                   <div className="p-3 flex flex-col !h-[100%]">
                     <div className={`flex items-center mb-3 gap-3`}>
-                      {row.original.small.showBy == 'input' ? (
+                      {row.original.small.showBy ==
+                      AddCategoryHierarchyType.INPUT ? (
                         <div className="flex flex-col !h-full w-full">
-                          <div className="mb-1 !h-full w-full" ref={inputRef}>
+                          <div className="mb-1 !h-full w-full">
                             <input
                               type="text"
-                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.small.isValid && !isUUID(row.original.small.label) && 'border-red-500'}`}
+                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.small.isValid && row.original.small.errorMessage && 'border-red-500'}`}
                               placeholder="新しいカテゴリーを入力"
                               value={
-                                newCategory.name !== '' &&
-                                newCategory.type == 'small' &&
+                                newCategory.type == HierarchyType.SMALL &&
                                 newCategory.rowInfo.id == row.original.id
                                   ? newCategory.name
                                   : !isUUID(row.original.small.label)
                                     ? row.original.small.label
                                     : ''
                               }
+                              onBlur={() => {
+                                validateCategory({
+                                  name: newCategory.name,
+                                  uuid: newCategory.uuid,
+                                });
+                              }}
                               onChange={(e) =>
                                 setNewCategory({
                                   name: e.target.value,
                                   uuid: String(row.original.small.value) || '',
-                                  type: 'small',
+                                  type: HierarchyType.SMALL,
                                   rowInfo: row.original,
                                 })
                               }
@@ -1943,12 +2178,12 @@ const TableComponent = ({
                           </div>
                           <p className="text-xs text-error">
                             {!row.original.small.isValid &&
-                              !isUUID(row.original.small.label) &&
-                              INVALID_CATEGORY_NAME}
+                              (row.original.small.errorMessage || '')}
                           </p>
                         </div>
                       ) : (
-                        row.original.small.showBy == 'pulldown' && (
+                        row.original.small.showBy ==
+                          AddCategoryHierarchyType.PULLDOWN && (
                           <div className="w-full h-full">
                             <TableDropdown
                               key={JSON.stringify(row.original.small)}
@@ -2013,16 +2248,20 @@ const TableComponent = ({
                           src={'/icons/delete-gray.svg'}
                           className="w-[15px] h-[17px] hover:cursor-pointer"
                           onClick={async () => {
-                            const oldLargeValue = row.original.large.value;
-                            const oldMediumValue = row.original.medium.value;
-                            const oldSmallValue = row.original.small.value;
+                            const oldLargeOption = row.original.large;
+                            const oldMediumOption = row.original.medium;
+                            const oldSmallOption = row.original.small;
+                            const oldRowId = row.original.id;
+                            const oldRowSkill = row.original.skills;
+                            const oldRowColor = row.original.color;
                             const matchingHierarchies =
                               hierarchyList.statisticCategories
                                 .filter(
                                   (item) =>
-                                    item.large.value == oldLargeValue &&
-                                    item.medium.value == oldMediumValue &&
-                                    item.small.value == oldSmallValue,
+                                    item.large.value == oldLargeOption.value &&
+                                    item.medium.value ==
+                                      oldMediumOption.value &&
+                                    item.small.value == oldSmallOption.value,
                                 )
                                 .filter(
                                   (hierarchy) => !isUUID(String(hierarchy.id)),
@@ -2034,9 +2273,12 @@ const TableComponent = ({
                               );
                             if (!data.hasActualDuration) {
                               handleDeleteSmallHierarchyCategory(
-                                oldLargeValue,
-                                oldMediumValue,
-                                oldSmallValue,
+                                oldLargeOption,
+                                oldMediumOption,
+                                oldSmallOption,
+                                oldRowId,
+                                oldRowSkill,
+                                oldRowColor,
                               );
                             } else {
                               setWarningDeleteCategoryModalOpen(true);
@@ -2050,10 +2292,16 @@ const TableComponent = ({
                       <OptionsBoxToAddCategory
                         text={'小カテゴリーを追加'}
                         addCategoryUsingInput={() =>
-                          handleAddSmallCategory('input', row.original)
+                          handleAddSmallCategory(
+                            AddCategoryHierarchyType.INPUT,
+                            row.original,
+                          )
                         }
                         addCategoryUsingDropdown={() =>
-                          handleAddSmallCategory('pulldown', row.original)
+                          handleAddSmallCategory(
+                            AddCategoryHierarchyType.PULLDOWN,
+                            row.original,
+                          )
                         }
                       />
                     )}
@@ -2177,9 +2425,11 @@ const TableComponent = ({
             <td className="p-3 w-1/4 border-[1px] border-[#D2DBE1]">
               <OptionsBoxToAddCategory
                 text={'大カテゴリーを追加'}
-                addCategoryUsingInput={() => handleAddLargeCategory('input')}
+                addCategoryUsingInput={() =>
+                  handleAddLargeCategory(AddCategoryHierarchyType.INPUT)
+                }
                 addCategoryUsingDropdown={() =>
-                  handleAddLargeCategory('pulldown')
+                  handleAddLargeCategory(AddCategoryHierarchyType.PULLDOWN)
                 }
               />
             </td>

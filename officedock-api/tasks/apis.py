@@ -98,6 +98,7 @@ from .serializers import (
     TaskTemplateSerializer,
     TeamTaskIndexSerializer,
     TodoListSerializer,
+    TaskScheduleForCreationMultipleSerializer,
 )
 from .filters import TaskBoardFilter, TaskCalendarFilter, TaskScheduleFilter
 
@@ -1563,20 +1564,17 @@ class TaskScheduleViewSet(
             is_send_sk, is_over_estimate = check_task_overtime(
                 task_schedule.task, task_duration
             )
-            if is_send_sk:
-                for user in task_schedule.task.people_in_charge.all():
-                    send_web_socket_event(
-                        {
-                            "id": task_schedule.task.id,
-                            "task_duration_running_uuid": str(
-                                task_duration.uuid
-                            ),
-                            "is_over_estimate": is_over_estimate,
-                            "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
-                            "type": CalendarTypes.TASK.value,
-                        },
-                        user=user,
-                    )
+            for user in task_schedule.task.people_in_charge.all():
+                send_web_socket_event(
+                    {
+                        "id": task_schedule.task.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": is_over_estimate,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.TASK.value,
+                    },
+                    user=user,
+                )
 
     def perform_create(self, serializer):
         """
@@ -1591,6 +1589,28 @@ class TaskScheduleViewSet(
         """
         task_schedule = serializer.save()
         self._check_overtime(task_schedule)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="multiple",
+        serializer_class=TaskScheduleForCreationMultipleSerializer,
+    )
+    @transaction.atomic()
+    def update_multiple_schedules(self, request):
+        """
+        Handle update multiple task schedules
+        """
+        task_schedules = request.data.get("task_schedules")
+        for data in task_schedules:
+            task_schedule = TaskSchedule.objects.filter(uuid=data["uuid"])
+            if task_schedule.exists():
+                task_schedule_updated = task_schedule.update(
+                    plan_start_date=data["plan_start_date"],
+                    plan_end_date=data["plan_end_date"],
+                )
+                self._check_overtime(task_schedule.get())
+        return self.response_ok()
 
 
 @extend_schema(tags=["System > Task"])
@@ -1901,6 +1921,19 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
     queryset = User.objects.all()
     serializer_class = TaskTeamdockSerializer
+    ordering_fields = [
+        "deadline",
+        "-deadline",
+        "is_important",
+        "-is_important",
+    ]
+
+    def get_serializer_context(self):
+        """Append context to serializer"""
+        context = super().get_serializer_context()
+        context["ordering_fields"] = self.ordering_fields
+        context["request"] = self.request
+        return context
 
     def get_queryset(self):
         """Filter queryset"""
@@ -1929,10 +1962,10 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter("organization_id", type=str, required=False),
+            OpenApiParameter("organization_id", type=str, required=True),
             OpenApiParameter("user_ids", type=str, required=False),
             OpenApiParameter("page_size", type=int),
-            OpenApiParameter("ordering", type=str),
+            OpenApiParameter("ordering", type=str, enum=ordering_fields),
             OpenApiParameter("tag_ids", type=str),
             OpenApiParameter("category_ids", type=str),
             OpenApiParameter("organization_ids", type=str),
@@ -1941,6 +1974,126 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("page", type=int),
+            OpenApiParameter("page_size", type=int),
+            OpenApiParameter("organization_id", type=str, required=True),
+            OpenApiParameter("user_ids", type=str, required=False),
+            OpenApiParameter("ordering", type=str, enum=ordering_fields),
+            OpenApiParameter("tag_ids", type=str),
+            OpenApiParameter("category_ids", type=str),
+            OpenApiParameter("organization_ids", type=str),
+            OpenApiParameter("search", type=str),
+        ]
+    )
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="not-setting-user",
+        serializer_class=TaskBoardSerializer,
+    )
+    def task_not_setting_user(self, request):
+        """
+        Get list task not setting user
+        """
+        user = request.user
+        organization_id = request.query_params.get("organization_id")
+        ordering = request.query_params.get("ordering")
+        tasks = (
+            Task.objects.filter(
+                organization_id=organization_id, people_in_charge__isnull=True
+            )
+            .exclude(
+                Q(type=TaskTypes.MY_TEMPLATE.value)
+                | Q(status__name=TaskStatus.MY_ROUTINE.value)
+            )
+            .all()
+        )
+
+        # Validate ordering before applying it
+        if ordering:
+            if ordering in self.ordering_fields:
+                tasks = tasks.annotate(
+                    coalesced_ordering_datetime=Coalesce(
+                        "deadline",
+                        Value(REPLACE_NULL_DATE, output_field=DateTimeField()),
+                    )
+                )
+
+                # Replace 'deadline' with 'coalesced_ordering_datetime' for sorting
+                field_name = ordering.replace(
+                    "deadline", "coalesced_ordering_datetime"
+                )
+                tasks = tasks.order_by(field_name, "-updated_at")
+
+                # Update team task index only if sorting by deadline or importance
+                for idx, task in enumerate(tasks):
+                    team_task_index = task.team_task_index.filter(
+                        team_id=organization_id
+                    ).first()
+                    if team_task_index:
+                        if team_task_index.pin_at:
+                            team_task_index.pin_at = timezone.now() - timedelta(
+                                minutes=INITIAL_INDEX_VALUE + idx
+                            )
+                        team_task_index.index = INITIAL_INDEX_VALUE - idx
+                        team_task_index.save()
+            else:
+                raise ValidationError(
+                    {
+                        "detail": ERROR_MESSAGES[
+                            "invalid_ordering_field"
+                        ].format(field_name=ordering)
+                    }
+                )
+
+        # Handle filter data
+        if tag_ids := request.query_params.get("tag_ids"):
+            if ids := split_id_from_string(tag_ids):
+                tasks = tasks.filter(tags__id__in=ids)
+
+        if category_ids := request.query_params.get("category_ids"):
+            if ids := split_id_from_string(category_ids):
+                tasks = tasks.filter(
+                    categories__large_statistic_category__in=ids
+                )
+
+        if organization_ids := request.query_params.get("organization_ids"):
+            if ids := split_id_from_string(organization_ids):
+                tasks = tasks.filter(organization_id__in=ids)
+
+        if search := request.query_params.get("search"):
+            tasks = tasks.filter(title__icontains=search)
+
+        # Fetch task index and pinned status for the user
+        task_pin = TeamTaskIndex.objects.filter(
+            task=OuterRef("pk"), team_id=organization_id
+        ).values("pin_at")[:1]
+        task_index = TeamTaskIndex.objects.filter(
+            task=OuterRef("pk"), team_id=organization_id
+        ).values("index")[:1]
+
+        # Annotate tasks with task index and pin timestamp
+        tasks = tasks.annotate(
+            index=Subquery(task_index),
+            coalesced_pin_at=Coalesce(
+                Subquery(task_pin),
+                Value(REPLACE_NULL_DATE),
+                output_field=DateTimeField(),
+            ),
+        ).order_by("-coalesced_pin_at", "-index")
+
+        return self.response_pagination(
+            request,
+            tasks,
+            TaskBoardSerializer,
+            extra_context={
+                "organization_id": organization_id,
+                "user_id": user.id,
+            },
+        )
 
 
 @extend_schema(tags=["System > Task > Todo List"])

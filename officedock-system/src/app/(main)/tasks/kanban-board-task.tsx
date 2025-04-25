@@ -21,8 +21,6 @@ import { useMutation, useQueryClient } from 'react-query';
 import { useSession } from 'next-auth/react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
@@ -114,6 +112,7 @@ import {
 import { compareItems } from '@utils';
 import api from '@base/api';
 import { OptionDropdownType } from '@interfaces/common';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -2894,7 +2893,7 @@ const KanbanBoardTask = () => {
           setDataItemChangeInline={setDataItemChangeInline}
           handleEditShowClockItem={handleEditShowClockItem}
         />
-        <div className="flex-1 pl-10">
+        <div className="flex-1 pl-10 ">
           <DragDropContext onDragStart={() => {}} onDragEnd={onDragEnd}>
             <div
               ref={exEvents}
@@ -3107,30 +3106,29 @@ const KanbanBoardTask = () => {
                       placeholder="タスク、キーワードを検索"
                     />
                   </div>
-
-                  <Tippy
-                    content={
-                      isListView ? 'タスクを看板表示' : 'タスクをリスト表示'
-                    }
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[3, 0]}>
-                    <div
-                      className={`hover:cursor-pointer fixed ${showFrequentlyTasks ? 'top-[200px]' : 'top-[125px]'} right-5 z-20`}>
+                  <div
+                    className={`fixed ${showFrequentlyTasks ? 'top-[200px]' : 'top-[125px]'} hover:cursor-pointer right-5 z-20`}>
+                    <DynamicTooltip
+                      content={
+                        isListView ? 'タスクを看板表示' : 'タスクをリスト表示'
+                      }
+                      placement="left"
+                      customOffset={{
+                        left: -135,
+                      }}>
                       <ImageRound
-                        src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
-                        name="List view icon"
-                        className="w-12 h-12 hover:cursor-pointer"
-                        onClick={() => {
-                          setIsListView(!isListView);
-                          saveZoomKanban({
-                            isShowListKanban: !isListView,
-                          });
-                        }}
-                      />
-                    </div>
-                  </Tippy>
+                          src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
+                          name="List view icon"
+                          className="w-12 h-12 hover:cursor-pointer"
+                          onClick={() => {
+                            setIsListView(!isListView);
+                            saveZoomKanban({
+                              isShowListKanban: !isListView,
+                            });
+                          }}
+                        />
+                    </DynamicTooltip>
+                  </div>
                 </div>
                 {!isListView ? (
                   <div

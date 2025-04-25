@@ -187,7 +187,7 @@
 .schedule-custom .fc .fc-timegrid-now-indicator-arrow {
   border-top: 5px solid transparent;
   border-bottom: 5px solid transparent;
-  border-left: 8px solid #C32E2E;
+  border-left: 8px solid #c32e2e;
   width: 0;
   height: 0;
   position: relative;
@@ -199,13 +199,13 @@
   left: 100%;
   top: 50%;
   transform: translateY(-50%);
-  width: 50px;
+  width: 70px;
   height: 2px;
-  background-color: #C32E2E;
+  background-color: #c32e2e;
   margin-left: -3px;
 }
 .schedule-custom .fc-timegrid-now-indicator-line {
-  border: 1.2px solid #C32E2E;
+  border: 1px solid #c32e2e !important;
 }
 .schedule-custom .fc-timeGridWeek-view .fc-timegrid-now-indicator-line {
   margin-top: -6px;
@@ -519,6 +519,7 @@
   background-color: #d2dbe1;
   transform: -translateX(50%);
   opacity: 0.7;
+  left: 20px;
 }
 
 .schedule-custom
@@ -570,7 +571,7 @@
   .fc-timeGridWeek-view
   .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
   position: relative;
-  top: -5px;
+  top: -4px;
 }
 .schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-col-frame {
   position: relative;
@@ -639,9 +640,24 @@
   position: absolute;
   bottom: -20px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-25%);
   background: url('/icons/resize-task.svg') no-repeat center;
   background-size: contain;
   cursor: pointer !important;
   opacity: 1;
+}
+.schedule-custom .fc-scroller-harness .fc-scroller-harness-liquid {
+  margin-left: -5px;
+}
+.schedule-custom .fc-timeGridWeek-view .fc-timegrid-slot-label {
+  padding-left: 22px;
+}
+.schedule-custom .fc-timegrid-slot-label {
+  padding-left: 12px;
+}
+.schedule-custom .fc-resourceTimeGridDay-view .fc-event-main {
+  left: 10px !important;
+}
+.fc-resource:nth-of-type(1) .fc-event {
+  left: 10px !important;
 }

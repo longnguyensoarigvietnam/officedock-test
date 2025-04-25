@@ -1,9 +1,8 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 import '../../common/RangeSlider/ranger.css';
 
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ImageRound from '../ImageRound';
 
 interface RangeSliderProps {
@@ -41,6 +40,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
       const delta = newX - dragStartX;
       const newValue = Math.min(Math.max(startValue + delta / 3, min), max);
       setValue(newValue);
+      if (onChange) onChange(newValue);
     }
   };
 
@@ -89,12 +89,9 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
 
   return (
     <div className="flex w-full items-center gap-2 justify-between">
-      <Tippy
+      <DynamicTooltip
         content="縮小"
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 3]}>
+        placement="top">
         <div>
           <button
             onClick={() => {
@@ -114,7 +111,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
             />
           </button>
         </div>
-      </Tippy>
+      </DynamicTooltip>
 
       <div
         ref={sliderRef}
@@ -157,12 +154,12 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
         />
       </div>
 
-      <Tippy
+      <DynamicTooltip
         content="拡大"
-        arrow={false}
-        delay={1000}
         placement="top"
-        offset={[0, 3]}>
+        customOffset={{
+          left: -5
+        }}>
         <div>
           <button
             onClick={() => {
@@ -180,7 +177,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
             />
           </button>
         </div>
-      </Tippy>
+      </DynamicTooltip>
     </div>
   );
 };

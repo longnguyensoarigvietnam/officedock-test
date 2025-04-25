@@ -703,6 +703,14 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
         }
 
 
+class TaskScheduleForCreationMultipleSerializer(serializers.Serializer):
+    """
+    Serializer for create task schedule multiple
+    """
+
+    task_schedules = TaskScheduleForCreationSerializer(many=True)
+
+
 class TaskIndexSerializer(serializers.ModelSerializer):
     """
     Serializer for task index
@@ -842,6 +850,7 @@ class TaskTeamdockSerializer(BaseUserSerializer):
         Retrieve the task status along with tasks assigned to the user.
         """
         request = self.context.get("request")
+        ordering_fields = self.context.get("ordering_fields")
         organization_id = request.query_params.get("organization_id")
         page_size = int(request.query_params.get("page_size", 5))
         ordering = request.query_params.get("ordering", None)
@@ -856,17 +865,9 @@ class TaskTeamdockSerializer(BaseUserSerializer):
             ).exclude(type=TaskTypes.MY_TEMPLATE.value)
             tasks_total = tasks.count()
 
-            # Define allowed ordering options
-            allowed_orderings = [
-                "deadline",
-                "-deadline",
-                "is_important",
-                "-is_important",
-            ]
-
             # Validate ordering before applying it
             if ordering:
-                if ordering in allowed_orderings:
+                if ordering in ordering_fields:
                     tasks = tasks.annotate(
                         coalesced_ordering_datetime=Coalesce(
                             "deadline",

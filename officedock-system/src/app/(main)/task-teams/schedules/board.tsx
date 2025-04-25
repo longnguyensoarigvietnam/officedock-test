@@ -836,7 +836,7 @@ const ScheduleTeamBoard = () => {
 
   return (
     <>
-      <div className="pt-[30px] pr-10  font-medium  w-full">
+      <div className="pt-[30px] px-10  font-medium  w-full">
         <div className="mb-[30px] flex items-center justify-between">
           <div className="flex items-center gap-5 ">
             <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">

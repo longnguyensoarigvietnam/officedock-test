@@ -13,7 +13,7 @@ const ScheduleTeamPage = () => {
     <MainLayout
       title={pageRouters.TASKS_TEAM_MANAGEMENT.name}
       permission={PermissionsSystem.TEAMDOCK_VIEW}
-      className="!py-0 pl-10 pr-0 !bg-[#EBF1F7]"
+      className="!py-0 px-0 !bg-[#EBF1F7]"
       showFooter={false}>
       <TaskTeamStateProvider>
         <ScheduleTeamBoard />

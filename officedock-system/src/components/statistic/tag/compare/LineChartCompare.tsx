@@ -31,7 +31,11 @@ import {
 } from '@interfaces/statistic';
 import { OptionDropdownType } from '@interfaces/common';
 
-import { StatisticChartType, StatisticViewLabels, StatisticViewOptions } from '@constants/enums';
+import {
+  StatisticChartType,
+  StatisticViewLabels,
+  StatisticViewOptions,
+} from '@constants/enums';
 
 import {
   convertTimeToDecimal,
@@ -661,6 +665,7 @@ const LineChartCompare = ({
                   )?.percent || 0
                 : 0;
             } else if (
+              !selectedSmall?.value &&
               statisticTagsList?.smallCategories &&
               statisticTagsList?.smallCategories.length > 0
             ) {
@@ -669,6 +674,16 @@ const LineChartCompare = ({
                     (category) => category.tagName == categoryDetail.tagName,
                   )?.percent || 0
                 : 0;
+            } else {
+              if (
+                statisticTagsList?.category &&
+                statisticTagsList?.category.length > 0
+              )
+                percent = statisticTagsList?.category
+                  ? statisticTagsList?.category.find(
+                      (category) => category.tagName == categoryDetail.tagName,
+                    )?.percent || 0
+                  : 0;
             }
 
             standardLabels = [
@@ -751,6 +766,7 @@ const LineChartCompare = ({
                   )?.percent || 0
                 : 0;
             } else if (
+              !selectedSmall?.value &&
               statisticTagsCompareList?.smallCategories &&
               statisticTagsCompareList?.smallCategories.length > 0
             ) {
@@ -759,6 +775,16 @@ const LineChartCompare = ({
                     (category) => category.tagName == categoryDetail.tagName,
                   )?.percent || 0
                 : 0;
+            } else {
+              if (
+                statisticTagsCompareList?.category &&
+                statisticTagsCompareList?.category.length > 0
+              )
+                percent = statisticTagsCompareList?.category
+                  ? statisticTagsCompareList?.category.find(
+                      (category) => category.tagName == categoryDetail.tagName,
+                    )?.percent || 0
+                  : 0;
             }
 
             comparedLabels = [

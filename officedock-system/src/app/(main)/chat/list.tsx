@@ -12,7 +12,6 @@ import {
 import { useMutation } from 'react-query';
 import { useInView } from 'react-intersection-observer';
 import { useSession } from 'next-auth/react';
-import Tippy from '@tippyjs/react';
 import {
   Popover,
   PopoverButton,
@@ -20,7 +19,6 @@ import {
   Transition,
 } from '@headlessui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
@@ -54,6 +52,7 @@ import {
 import { BasePagination } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
 import api from '@base/api';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 interface dataProps {
   dataChatList: ChatRoomItem[];
@@ -118,14 +117,16 @@ const ListChatUsers = ({
 
   const [showWarningChatUploadingModal, setShowWarningChatUploadingModal] =
     useState(false);
-  const [pendingRoomChange, setPendingRoomChange] = useState<ChatRoomItem | null>(null)
+  const [pendingRoomChange, setPendingRoomChange] =
+    useState<ChatRoomItem | null>(null);
   const {
     setChatList,
     chatRoomNameEditing,
     setIsReload,
     setChatRoomNotifications,
   } = useContext(ChatContext);
-  const { isChatFilesUploading, cancelUploadChatFiles } = useContext(GlobalStateContext);
+  const { isChatFilesUploading, cancelUploadChatFiles } =
+    useContext(GlobalStateContext);
   const socket = useWebSocket();
 
   // Handle get list and more data room chat
@@ -846,12 +847,12 @@ const ListChatUsers = ({
   };
 
   const handleRoomChange = (roomDetail: ChatRoomItem) => {
-    if(isChatFilesUploading){
-      setPendingRoomChange(roomDetail)
-      setShowWarningChatUploadingModal(true)
+    if (isChatFilesUploading) {
+      setPendingRoomChange(roomDetail);
+      setShowWarningChatUploadingModal(true);
       return;
     }
-    doRoomChange(roomDetail)
+    doRoomChange(roomDetail);
   };
 
   const doRoomChange = (roomDetail: ChatRoomItem) => {
@@ -861,7 +862,7 @@ const ListChatUsers = ({
     setSearchChatMsg('');
     setIsReload(false);
     setHasMoreDetailOnScrollDown(false);
-    setPendingRoomChange(null)
+    setPendingRoomChange(null);
   };
 
   return (
@@ -897,12 +898,9 @@ const ListChatUsers = ({
             {({ open }) => {
               return (
                 <>
-                  <Tippy
+                  <DynamicTooltip
                     content={'チャットルームの絞り込み'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
+                    placement="top">
                     <PopoverButton
                       className={`focus:outline-none ${open && 'rounded-full bg-white'} w-[36px] h-[36px] flex items-center justify-center`}>
                       <ImageRound
@@ -911,7 +909,7 @@ const ListChatUsers = ({
                         className="!w-4 !h-4 text-gray-400 cursor-pointer"
                       />
                     </PopoverButton>
-                  </Tippy>
+                  </DynamicTooltip>
                   <Transition
                     as={Fragment}
                     enter="transition ease-out duration-200"
@@ -963,12 +961,12 @@ const ListChatUsers = ({
               session?.user.permissions,
               PermissionsSystem.CHAT_ADD,
             ) && (
-              <Tippy
+              <DynamicTooltip
                 content={'チャットルームの新規作成'}
-                arrow={false}
-                delay={1000}
                 placement="top"
-                offset={[0, 5]}>
+                customOffset={{
+                  top: -8,
+                }}>
                 <div>
                   <ImageRound
                     src="/icons/add-chat.svg"
@@ -977,7 +975,7 @@ const ListChatUsers = ({
                     onClick={() => setIsModalOpen(true)}
                   />
                 </div>
-              </Tippy>
+              </DynamicTooltip>
             )}
         </div>
       </div>
@@ -992,29 +990,28 @@ const ListChatUsers = ({
                   key={item?.code}
                   className={`flex relative group items-center hover:cursor-pointer py-[12px] px-[10px] hover:bg-[#F8FAFC] rounded-md ${chatRoomCode === item.code && 'bg-[#FFFFFF]'}`}
                   onClick={() => handleRoomChange(item)}>
-                  <Tippy
-                    content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
-                    arrow={false}
-                    delay={1000}
-                    placement="top"
-                    offset={[0, 5]}>
-                    <div
-                      className={`absolute group-hover:block group-hover:opacity-60 top-1 left-0.5 ${item?.pinAt ? 'visible' : 'hidden'}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePinClick({
-                          code: item.code,
-                          isPin: item.pinAt !== null,
-                        });
-                      }}>
-                      <ImageRound
-                        className="w-[14px] h-[16px] hover:cursor-pointer"
-                        src="/icons/pin-chat.svg"
-                        border="full"
-                        name="Pin chat"
-                      />
-                    </div>
-                  </Tippy>
+                  <div className="absolute top-1 left-0.5">
+                    <DynamicTooltip
+                      content={item.pinAt ? 'ピンを外す' : 'ピン留め'}
+                      placement="top">
+                      <div
+                        className={`group-hover:block group-hover:opacity-60 ${item?.pinAt ? 'visible' : 'hidden'}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePinClick({
+                            code: item.code,
+                            isPin: item.pinAt !== null,
+                          });
+                        }}>
+                        <ImageRound
+                          className="w-[14px] h-[16px] hover:cursor-pointer"
+                          src="/icons/pin-chat.svg"
+                          border="full"
+                          name="Pin chat"
+                        />
+                      </div>
+                    </DynamicTooltip>
+                  </div>
 
                   <div className="relative">{renderAvatar(item)}</div>
                   <div className="ml-2 flex gap-1 items-center">
@@ -1142,12 +1139,12 @@ const ListChatUsers = ({
         <ChatWarningUploadingFilesModal
           open={showWarningChatUploadingModal}
           onClose={() => {
-            setShowWarningChatUploadingModal(false)
+            setShowWarningChatUploadingModal(false);
           }}
           onConfirm={() => {
-            setShowWarningChatUploadingModal(false)
-            cancelUploadChatFiles()
-            doRoomChange(pendingRoomChange)
+            setShowWarningChatUploadingModal(false);
+            cancelUploadChatFiles();
+            doRoomChange(pendingRoomChange);
           }}
         />
       )}

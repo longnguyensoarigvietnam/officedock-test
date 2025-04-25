@@ -1,9 +1,8 @@
 'use client';
 import { useMutation } from 'react-query';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
 
 import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
@@ -45,12 +44,9 @@ export const MessageHoverBookmark = ({
   return (
     <div
       className={`bg-white group-hover:flex hidden rounded-3xl px-3 py-1.5 shadow-md absolute left-1/2 transform -translate-x-1/2 items-center gap-2`}>
-      <Tippy
+      <DynamicTooltip
         content={'リアクション'}
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 5]}>
+        placement="top">
         <div
           onClick={onGotoMessage}
           className="bg-[#f0f1f1] hover:bg-[#dbdbdb] rounded-full w-[30px] h-[30px] flex items-center justify-center hover:cursor-pointer">
@@ -60,13 +56,10 @@ export const MessageHoverBookmark = ({
             className="w-[16px] h-[14px] hover:cursor-pointer"
           />
         </div>
-      </Tippy>
-      <Tippy
+      </DynamicTooltip>
+      <DynamicTooltip
         content={'ブックマークを外す'}
-        arrow={false}
-        delay={1000}
-        placement="top"
-        offset={[0, 5]}>
+        placement="top">
         <div
           onClick={() => {
             bookMarkMsg();
@@ -78,7 +71,7 @@ export const MessageHoverBookmark = ({
             className="w-[10px] h-[12px] hover:cursor-pointer"
           />
         </div>
-      </Tippy>
+      </DynamicTooltip>
     </div>
   );
 };

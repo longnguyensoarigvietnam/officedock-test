@@ -333,3 +333,8 @@
 .daily-custom .css-hlgwow {
   padding-top: 3px !important;
 }
+
+/* Now indicator */
+.daily-custom .fc-timegrid-now-indicator-line {
+  border: 1px solid #c32e2e !important;
+}
