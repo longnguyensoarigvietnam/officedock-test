@@ -40,7 +40,11 @@ import {
   StatusTask,
   StatusValueTask,
 } from '@constants/enums';
-import { INITIAL_INDEX_VALUE, NO_OPTION_CATEGORY } from '@constants';
+import {
+  INITIAL_INDEX_VALUE,
+  INITIAL_INDEX_VALUE_STEP,
+  NO_OPTION_CATEGORY,
+} from '@constants';
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
@@ -80,6 +84,7 @@ import { useToast } from '@providers/ToastProvider';
 import { ResponseError } from '@interfaces/response';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import NoSettingColumn from '@components/kanbanTeam/NoSettingColumn';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -474,12 +479,16 @@ const KanbanBoardTaskTeam = () => {
           prevItemIndex = INITIAL_INDEX_VALUE;
         }
         const nextItemIndex = aboveItem ? aboveItem.index : INITIAL_INDEX_VALUE;
+        if (!aboveItem && !belowItem) {
+          newIndex = INITIAL_INDEX_VALUE_STEP;
+        } else if (!aboveItem) {
+          newIndex = prevItemIndex + INITIAL_INDEX_VALUE;
+        } else if (!belowItem) {
+          newIndex = nextItemIndex - INITIAL_INDEX_VALUE;
+        } else {
+          newIndex = (prevItemIndex + nextItemIndex) / 2;
+        }
 
-        newIndex =
-          prevItemIndex === INITIAL_INDEX_VALUE ||
-          nextItemIndex === INITIAL_INDEX_VALUE
-            ? prevItemIndex + nextItemIndex
-            : (prevItemIndex + nextItemIndex) / 2;
         destTasks.splice(destination.index, 0, {
           ...movedTask,
           isMyTask:
@@ -1769,6 +1778,7 @@ const KanbanBoardTaskTeam = () => {
               }}
               onDragEnd={onDragEnd}>
               <div className="flex gap-4 overflow-x-auto w-[calc(100vw_-_270px)]">
+                <NoSettingColumn />
                 {listDataKanbanTeam.map((user) => (
                   <UserColumnTeam
                     key={user.id}
