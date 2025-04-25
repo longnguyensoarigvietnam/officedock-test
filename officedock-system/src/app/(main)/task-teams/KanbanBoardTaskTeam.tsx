@@ -84,7 +84,6 @@ import { useToast } from '@providers/ToastProvider';
 import { ResponseError } from '@interfaces/response';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import NoSettingColumn from '@components/kanbanTeam/NoSettingColumn';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -1778,7 +1777,6 @@ const KanbanBoardTaskTeam = () => {
               }}
               onDragEnd={onDragEnd}>
               <div className="flex gap-4 overflow-x-auto w-[calc(100vw_-_270px)]">
-                <NoSettingColumn />
                 {listDataKanbanTeam.map((user) => (
                   <UserColumnTeam
                     key={user.id}

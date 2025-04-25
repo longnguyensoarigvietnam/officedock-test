@@ -40,6 +40,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
       const delta = newX - dragStartX;
       const newValue = Math.min(Math.max(startValue + delta / 3, min), max);
       setValue(newValue);
+      if (onChange) onChange(newValue);
     }
   };
 
