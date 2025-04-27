@@ -399,7 +399,7 @@ export function adjustEndDate(
 }
 // Check mid night
 export function isMidnight(date: Date): boolean {
-  return date.getHours() === 0 && date.getMinutes() === 0;
+  return date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0;
 }
 
 // Get Japanese day name
@@ -486,11 +486,6 @@ export function formatShowDateJapanese(date: Date | string): string {
 
 export function formatShowDeadline(date: string | Date): string {
   const inputDate = new Date(date);
-  const today = new Date();
-
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
 
   inputDate.setHours(0, 0, 0, 0);
 
@@ -628,30 +623,17 @@ export function getDateInfo(date: Date) {
 
 // Remove time and compare between days
 export function removeTimeAndCompareDates(
-  firstDateStr: string,
-  secondDateStr: string,
-  targetDateStr: string,
+  firstDate: Date,
+  secondDate: Date,
+  targetDate: Date,
 ): boolean {
-  const firstDate = new Date(firstDateStr);
-  const secondDate = new Date(secondDateStr);
-  const targetDate = new Date(targetDateStr);
-  const firstDateOnly = new Date(
-    firstDate.getFullYear(),
-    firstDate.getMonth(),
-    firstDate.getDate(),
-  );
-  const secondDateOnly = new Date(
-    secondDate.getFullYear(),
-    secondDate.getMonth(),
-    secondDate.getDate(),
-  );
-  const targetDateOnly = new Date(
-    targetDate.getFullYear(),
-    targetDate.getMonth(),
-    targetDate.getDate(),
-  );
-  return firstDateOnly <= targetDateOnly && targetDateOnly <= secondDateOnly;
+  firstDate.setHours(0, 0, 0, 0);
+  secondDate.setHours(0, 0, 0, 0);
+  targetDate.setHours(0, 0, 0, 0);
+
+  return firstDate.getTime() <= targetDate.getTime() && targetDate.getTime() <= secondDate.getTime();
 }
+
 // Subtract one day from a specific day
 export function subtractOneDay(dateStr: string): Date {
   const date = new Date(dateStr);
@@ -1351,4 +1333,11 @@ export function isTimeEarlierToday(date: Date) {
   }
 
   return false;
+}
+export function formatLocalDate(dateInput: Date | string) {
+  const date = new Date(dateInput);
+
+  const pad = (value: number) => value.toString().padStart(2, '0');
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }

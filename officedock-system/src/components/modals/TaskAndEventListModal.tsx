@@ -153,7 +153,6 @@ export const TaskAndEventListModal = ({
       }
     }
   };
-
   return (
     <>
       {popoverInfo && (

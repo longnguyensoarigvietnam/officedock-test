@@ -68,8 +68,6 @@ const TableComponent = ({
   categoryList,
   organizationName,
   dataOptionsSkill,
-  newCategory,
-  setNewCategory,
   setHierarchyList,
   setSelectedHierarchiesToDelete,
   setSelectedHierarchiesToUpdate,
@@ -81,23 +79,9 @@ const TableComponent = ({
     value: number;
     label: string;
   }[];
-  newCategory: {
-    name: string;
-    uuid: string;
-    type: string;
-    rowInfo: rowDataType;
-  };
   setHierarchyList: Dispatch<SetStateAction<HierarchyDetail[]>>;
   setSelectedHierarchiesToDelete: Dispatch<
     SetStateAction<string[] | undefined>
-  >;
-  setNewCategory: Dispatch<
-    SetStateAction<{
-      name: string;
-      uuid: string;
-      type: string;
-      rowInfo: rowDataType;
-    }>
   >;
   setSelectedHierarchiesToUpdate: Dispatch<
     SetStateAction<
@@ -552,6 +536,8 @@ const TableComponent = ({
   const handleValidateCategory = async (data: {
     uuid: string;
     name: string;
+    type: string;
+    rowInfo: any;
   }) => {
     return await api.post(apiRouters.CATEGORY_VALIDATION, {
       uuid: data.uuid,
@@ -563,102 +549,111 @@ const TableComponent = ({
     'postValidateCategory',
     handleValidateCategory,
     {
-      onSettled: (data, error: any) => {
-        if (data?.status == ServerStatusCode.OK) {
+      onSettled: (data, error: any, variables) => {
+        if (data?.status == ServerStatusCode.OK || variables.name == '') {
           setSelectedHierarchiesToUpdate((prev) => {
             const updatedHierarchiesToUpdate = [...prev];
 
             const existingIndex = updatedHierarchiesToUpdate.findIndex(
               (item) =>
-                item.organizationStatisticCategoryId === newCategory.rowInfo.id,
+                item.organizationStatisticCategoryId === variables.rowInfo.id,
             );
 
             let newEntry: any = {};
-            if (newCategory.type == HierarchyType.LARGE) {
+            if (variables.type == HierarchyType.LARGE) {
               newEntry = {
-                organizationStatisticCategoryId: newCategory.rowInfo.id,
-                organizationId: hierarchyList.id as number,
-                largeStatisticCategory: {
-                  name: newCategory.name as string,
-                  uuid: newCategory.uuid as string,
-                },
-                mediumStatisticCategory:
-                  newCategory.rowInfo.medium.label == '' ||
-                  isUUID(newCategory.rowInfo.medium.label as string)
-                    ? null
-                    : {
-                        name: newCategory.rowInfo.medium.label as string,
-                        uuid: newCategory.rowInfo.medium.value as string,
-                      },
-                smallStatisticCategory:
-                  newCategory.rowInfo.small.label ||
-                  isUUID(newCategory.rowInfo.small.label as string)
-                    ? null
-                    : {
-                        name: newCategory.rowInfo.small.label as string,
-                        uuid: newCategory.rowInfo.small.value as string,
-                      },
-                color: newCategory.rowInfo.color,
-                skillIds: newCategory.rowInfo.skills.map((skill) =>
-                  Number(skill.value),
-                ),
-              };
-            } else if (newCategory.type == HierarchyType.MEDIUM) {
-              newEntry = {
-                organizationStatisticCategoryId: newCategory.rowInfo.id,
+                organizationStatisticCategoryId: variables.rowInfo.id,
                 organizationId: hierarchyList.id as number,
                 largeStatisticCategory:
-                  newCategory.rowInfo.large.label == '' ||
-                  isUUID(newCategory.rowInfo.large.label as string)
+                  variables.name == ''
                     ? null
                     : {
-                        name: newCategory.rowInfo.large.label as string,
-                        uuid: newCategory.rowInfo.large.value as string,
+                        name: variables.name as string,
+                        uuid: variables.uuid as string,
                       },
-                mediumStatisticCategory: {
-                  name: newCategory.name as string,
-                  uuid: newCategory.uuid as string,
-                },
+                mediumStatisticCategory:
+                  variables.rowInfo.medium.label == '' ||
+                  isUUID(variables.rowInfo.medium.label as string)
+                    ? null
+                    : {
+                        name: variables.rowInfo.medium.label as string,
+                        uuid: variables.rowInfo.medium.value as string,
+                      },
                 smallStatisticCategory:
-                  newCategory.rowInfo.small.label == '' ||
-                  isUUID(newCategory.rowInfo.small.label as string)
+                  variables.rowInfo.small.label == '' ||
+                  isUUID(variables.rowInfo.small.label as string)
                     ? null
                     : {
-                        name: newCategory.rowInfo.small.label as string,
-                        uuid: newCategory.rowInfo.small.value as string,
+                        name: variables.rowInfo.small.label as string,
+                        uuid: variables.rowInfo.small.value as string,
                       },
-                color: newCategory.rowInfo.color,
-                skillIds: newCategory.rowInfo.skills.map((skill) =>
-                  Number(skill.value),
+                color: variables.rowInfo.color,
+                skillIds: variables.rowInfo.skills.map(
+                  (skill: OptionDropdownType) => Number(skill.value),
+                ),
+              };
+            } else if (variables.type == HierarchyType.MEDIUM) {
+              newEntry = {
+                organizationStatisticCategoryId: variables.rowInfo.id,
+                organizationId: hierarchyList.id as number,
+                largeStatisticCategory:
+                  variables.rowInfo.large.label == '' ||
+                  isUUID(variables.rowInfo.large.label as string)
+                    ? null
+                    : {
+                        name: variables.rowInfo.large.label as string,
+                        uuid: variables.rowInfo.large.value as string,
+                      },
+                mediumStatisticCategory:
+                  variables.name == ''
+                    ? null
+                    : {
+                        name: variables.name as string,
+                        uuid: variables.uuid as string,
+                      },
+                smallStatisticCategory:
+                  variables.rowInfo.small.label == '' ||
+                  isUUID(variables.rowInfo.small.label as string)
+                    ? null
+                    : {
+                        name: variables.rowInfo.small.label as string,
+                        uuid: variables.rowInfo.small.value as string,
+                      },
+                color: variables.rowInfo.color,
+                skillIds: variables.rowInfo.skills.map(
+                  (skill: OptionDropdownType) => Number(skill.value),
                 ),
               };
             } else {
               newEntry = {
-                organizationStatisticCategoryId: newCategory.rowInfo.id,
+                organizationStatisticCategoryId: variables.rowInfo.id,
                 organizationId: hierarchyList.id as number,
                 largeStatisticCategory:
-                  newCategory.rowInfo.large.label == '' ||
-                  isUUID(newCategory.rowInfo.large.label as string)
+                  variables.rowInfo.large.label == '' ||
+                  isUUID(variables.rowInfo.large.label as string)
                     ? null
                     : {
-                        name: newCategory.rowInfo.large.label as string,
-                        uuid: newCategory.rowInfo.large.value as string,
+                        name: variables.rowInfo.large.label as string,
+                        uuid: variables.rowInfo.large.value as string,
                       },
                 mediumStatisticCategory:
-                  newCategory.rowInfo.medium.label == '' ||
-                  isUUID(newCategory.rowInfo.medium.label as string)
+                  variables.rowInfo.medium.label == '' ||
+                  isUUID(variables.rowInfo.medium.label as string)
                     ? null
                     : {
-                        name: newCategory.rowInfo.medium.label as string,
-                        uuid: newCategory.rowInfo.medium.value as string,
+                        name: variables.rowInfo.medium.label as string,
+                        uuid: variables.rowInfo.medium.value as string,
                       },
-                smallStatisticCategory: {
-                  name: newCategory.name as string,
-                  uuid: newCategory.uuid as string,
-                },
-                color: newCategory.rowInfo.color,
-                skillIds: newCategory.rowInfo.skills.map((skill) =>
-                  Number(skill.value),
+                smallStatisticCategory:
+                  variables.name == ''
+                    ? null
+                    : {
+                        name: variables.name as string,
+                        uuid: variables.uuid as string,
+                      },
+                color: variables.rowInfo.color,
+                skillIds: variables.rowInfo.skills.map(
+                  (skill: OptionDropdownType) => Number(skill.value),
                 ),
               };
             }
@@ -688,24 +683,24 @@ const TableComponent = ({
 
           if (foundOrganizationHierarchyIndex !== -1) {
             let updatedCategories: rowDataType[] = [];
-            if (newCategory.type == HierarchyType.LARGE) {
+            if (variables.type == HierarchyType.LARGE) {
               updatedCategories = updatedHierarchyList[
                 foundOrganizationHierarchyIndex
               ].statisticCategories.map((hierarchy) =>
-                hierarchy.id == newCategory.rowInfo.id
+                hierarchy.id == variables.rowInfo.id
                   ? {
                       ...hierarchy,
                       large: {
-                        label: newCategory.name || newCategory.uuid,
-                        value: newCategory.uuid,
+                        label: variables.name || variables.uuid,
+                        value: variables.uuid,
                         showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
                           data?.status == ServerStatusCode.OK
-                            ? checkIsValidRowInput(newCategory)
+                            ? checkIsValidRowInput(variables)
                             : false,
-                        errorMessage: !checkIsValidRowInput(newCategory)
+                        errorMessage: !checkIsValidRowInput(variables)
                           ? INVALID_CATEGORY_NAME
-                          : newCategory.name == ''
+                          : variables.name == ''
                             ? ''
                             : error?.response?.data?.name?.[0] ||
                               error?.response?.data?.detail?.[0] ||
@@ -714,26 +709,26 @@ const TableComponent = ({
                     }
                   : hierarchy,
               );
-            } else if (newCategory.type == HierarchyType.MEDIUM) {
+            } else if (variables.type == HierarchyType.MEDIUM) {
               updatedCategories = updatedHierarchyList[
                 foundOrganizationHierarchyIndex
               ].statisticCategories.map((hierarchy) =>
-                newCategory.rowInfo &&
-                hierarchy.id == newCategory.rowInfo.id &&
-                hierarchy.large.value === newCategory.rowInfo.large.value
+                variables.rowInfo &&
+                hierarchy.id == variables.rowInfo.id &&
+                hierarchy.large.value === variables.rowInfo.large.value
                   ? {
                       ...hierarchy,
                       medium: {
-                        label: newCategory.name || newCategory.uuid,
-                        value: newCategory.uuid,
+                        label: variables.name || variables.uuid,
+                        value: variables.uuid,
                         showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
                           data?.status == ServerStatusCode.OK
-                            ? checkIsValidRowInput(newCategory)
+                            ? checkIsValidRowInput(variables)
                             : false,
-                        errorMessage: !checkIsValidRowInput(newCategory)
+                        errorMessage: !checkIsValidRowInput(variables)
                           ? INVALID_CATEGORY_NAME
-                          : newCategory.name == ''
+                          : variables.name == ''
                             ? ''
                             : error?.response?.data?.name?.[0] ||
                               error?.response?.data?.detail?.[0] ||
@@ -746,23 +741,23 @@ const TableComponent = ({
               updatedCategories = updatedHierarchyList[
                 foundOrganizationHierarchyIndex
               ].statisticCategories.map((hierarchy) =>
-                newCategory.rowInfo &&
-                hierarchy.id == newCategory.rowInfo.id &&
-                hierarchy.large.value === newCategory.rowInfo.large.value &&
-                hierarchy.medium.value === newCategory.rowInfo.medium.value
+                variables.rowInfo &&
+                hierarchy.id == variables.rowInfo.id &&
+                hierarchy.large.value === variables.rowInfo.large.value &&
+                hierarchy.medium.value === variables.rowInfo.medium.value
                   ? {
                       ...hierarchy,
                       small: {
-                        label: newCategory.name || newCategory.uuid,
-                        value: newCategory.uuid,
+                        label: variables.name || variables.uuid,
+                        value: variables.uuid,
                         showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
                           data?.status == ServerStatusCode.OK
-                            ? checkIsValidRowInput(newCategory)
+                            ? checkIsValidRowInput(variables)
                             : false,
-                        errorMessage: !checkIsValidRowInput(newCategory)
+                        errorMessage: !checkIsValidRowInput(variables)
                           ? INVALID_CATEGORY_NAME
-                          : newCategory.name == ''
+                          : variables.name == ''
                             ? ''
                             : error?.response?.data?.name?.[0] ||
                               error?.response?.data?.detail?.[0] ||
@@ -779,38 +774,6 @@ const TableComponent = ({
           }
 
           return updatedHierarchyList;
-        });
-
-        setNewCategory({
-          name: '',
-          uuid: '',
-          type: '',
-          rowInfo: {
-            id: '',
-            large: {
-              value: '',
-              label: '',
-              showBy: '',
-              isValid: false,
-              errorMessage: '',
-            },
-            medium: {
-              value: '',
-              label: '',
-              showBy: '',
-              isValid: false,
-              errorMessage: '',
-            },
-            small: {
-              value: '',
-              label: '',
-              showBy: '',
-              isValid: false,
-              errorMessage: '',
-            },
-            skills: [],
-            color: '',
-          },
         });
       },
     },
@@ -1878,28 +1841,19 @@ const TableComponent = ({
                               type="text"
                               className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.large.isValid && row.original.large.errorMessage && 'border-red-500'}`}
                               placeholder="新しいカテゴリーを入力"
-                              value={
-                                newCategory.type == HierarchyType.LARGE &&
-                                newCategory.rowInfo.id == row.original.id
-                                  ? newCategory.name
-                                  : !isUUID(row.original.large.label)
-                                    ? row.original.large.label
-                                    : ''
+                              defaultValue={
+                                !isUUID(row.original.large.label)
+                                  ? row.original.large.label
+                                  : ''
                               }
-                              onBlur={() => {
+                              onBlur={(e) => {
                                 validateCategory({
-                                  name: newCategory.name,
-                                  uuid: newCategory.uuid,
-                                });
-                              }}
-                              onChange={(e) =>
-                                setNewCategory({
                                   name: e.target.value,
                                   uuid: String(row.original.large.value) || '',
                                   type: HierarchyType.LARGE,
                                   rowInfo: row.original,
-                                })
-                              }
+                                });
+                              }}
                             />
                           </div>
                           <p className="text-xs text-error">
@@ -1998,29 +1952,20 @@ const TableComponent = ({
                                 type="text"
                                 className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.medium.isValid && row.original.medium.errorMessage && 'border-red-500'}`}
                                 placeholder="新しいカテゴリーを入力"
-                                value={
-                                  newCategory.type == HierarchyType.MEDIUM &&
-                                  newCategory.rowInfo.id == row.original.id
-                                    ? newCategory.name
-                                    : !isUUID(row.original.medium.label)
-                                      ? row.original.medium.label
-                                      : ''
+                                defaultValue={
+                                  !isUUID(row.original.medium.label)
+                                    ? row.original.medium.label
+                                    : ''
                                 }
-                                onBlur={() => {
+                                onBlur={(e) => {
                                   validateCategory({
-                                    name: newCategory.name,
-                                    uuid: newCategory.uuid,
-                                  });
-                                }}
-                                onChange={(e) =>
-                                  setNewCategory({
                                     name: e.target.value,
                                     uuid:
                                       String(row.original.medium.value) || '',
                                     type: HierarchyType.MEDIUM,
                                     rowInfo: row.original,
-                                  })
-                                }
+                                  });
+                                }}
                               />
                             </div>
                             <p className="text-xs text-error">
@@ -2152,28 +2097,19 @@ const TableComponent = ({
                               type="text"
                               className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px] ${!row.original.small.isValid && row.original.small.errorMessage && 'border-red-500'}`}
                               placeholder="新しいカテゴリーを入力"
-                              value={
-                                newCategory.type == HierarchyType.SMALL &&
-                                newCategory.rowInfo.id == row.original.id
-                                  ? newCategory.name
-                                  : !isUUID(row.original.small.label)
-                                    ? row.original.small.label
-                                    : ''
+                              defaultValue={
+                                !isUUID(row.original.small.label)
+                                  ? row.original.small.label
+                                  : ''
                               }
-                              onBlur={() => {
+                              onBlur={(e) => {
                                 validateCategory({
-                                  name: newCategory.name,
-                                  uuid: newCategory.uuid,
-                                });
-                              }}
-                              onChange={(e) =>
-                                setNewCategory({
                                   name: e.target.value,
                                   uuid: String(row.original.small.value) || '',
                                   type: HierarchyType.SMALL,
                                   rowInfo: row.original,
-                                })
-                              }
+                                });
+                              }}
                             />
                           </div>
                           <p className="text-xs text-error">
