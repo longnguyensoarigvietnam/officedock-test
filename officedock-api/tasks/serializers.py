@@ -841,6 +841,7 @@ class TaskTeamdockSerializer(BaseUserSerializer):
         fields = [
             "id",
             "avatar_color",
+            "avatar",
             "profile",
             "status",
         ]

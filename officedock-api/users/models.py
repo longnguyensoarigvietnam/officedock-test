@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import Q
 
@@ -6,6 +7,7 @@ from rest_framework.exceptions import ValidationError
 from base.models import BaseModel
 from base.exceptions import LockedError
 from base.messages import ERROR_MESSAGES
+from common.constants import ALLOW_IMAGE_FORMATS, USER_AVATAR_FOLDER_UPLOAD
 from utils.jwt import JWTService
 
 from .constants import GenderTypes, LoginTypes, RoleTypes, AvatarColors
@@ -137,6 +139,14 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
         "ConfirmReport", related_name="users"
     )
     avatar_color = models.CharField(max_length=30, null=True, blank=True)
+    avatar = models.ImageField(
+        upload_to=USER_AVATAR_FOLDER_UPLOAD,
+        validators=[
+            FileExtensionValidator(allowed_extensions=ALLOW_IMAGE_FORMATS),
+        ],
+        null=True,
+        blank=True,
+    )
 
     def save(self, *args, **kwargs):
         """

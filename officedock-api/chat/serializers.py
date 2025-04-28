@@ -32,7 +32,7 @@ class CreationDataUserForChatSerializer(BaseUserSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "full_name", "avatar_color", "organizations"]
+        fields = ["id", "full_name", "avatar_color", "avatar", "organizations"]
 
     def get_full_name(self, obj):
         """
