@@ -14,10 +14,10 @@ import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import InputSearch from '@components/common/InputSearch';
 import ActionFilterTaskTeam from '@components/modals/ActionFilterTeamTask';
 import UserColumnTeam from '@components/kanbanTeam/UserColumnTeam';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Dropdown from '@components/common/Dropdown';
 import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
 import ActionsTaskModalTeam from '@components/modals/ActionsTaskModalTeam';
@@ -149,6 +149,7 @@ const KanbanBoardTaskTeam = () => {
       id: number;
       fullName: string;
       color: string;
+      avatarUrl: string;
     }[]
   >([]);
   const [selectedOrganization, setSelectedOrganization] =
@@ -174,6 +175,7 @@ const KanbanBoardTaskTeam = () => {
           id: member.id,
           fullName: member.fullName,
           color: member.avatarColor,
+          avatarUrl: member?.avatar || '',
         })),
       );
     },
@@ -243,6 +245,7 @@ const KanbanBoardTaskTeam = () => {
       id: number;
       fullName: string;
       color: string;
+      avatarUrl: string;
     }[],
   ) => {
     const slicedParticipants = participants.slice(0, 6);
@@ -260,11 +263,12 @@ const KanbanBoardTaskTeam = () => {
             <div
               className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
               key={item.id}>
-              {AvatarIconWithDynamicColor({
-                color: item.color,
-                size: 33,
-                customClassName: '!mt-0',
-              })}
+              <CustomUserAvatar
+                avatarUrl={item?.avatarUrl || ''}
+                avatarColor={item?.color || ''}
+                size={33}
+                customClassName={`${!item?.avatarUrl && '!mt-0'}`}
+              />
             </div>
           );
         })}

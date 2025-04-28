@@ -7,15 +7,16 @@ import React, {
 } from 'react';
 import { useSession } from 'next-auth/react';
 import { useMutation } from 'react-query';
+import { createPortal } from 'react-dom';
 
 import ImageRound from '@components/common/ImageRound';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { apiRouters } from '@constants/routers';
 import { REACTION_LIST_SMALL } from '@constants';
 import { ChatMessageResponse } from '@interfaces/chat';
 import api from '@base/api';
-import { createPortal } from 'react-dom';
 
 type Props = {
   dataMsgDetail: ChatMessageResponse;
@@ -233,20 +234,19 @@ const DetailReactionChat = ({
                   <div className="mt-[14px] flex flex-col overflow-y-auto h-[130px] gap-[10px]">
                     {selectedUsers.length > 0 &&
                       selectedUsers.map((id) => {
-                        const avatarColor =
-                          dashboardMembersWithAvatars.find(
-                            (member) => member.id == id,
-                          )?.avatarColor || '';
+                        const memberInfo = dashboardMembersWithAvatars.find(
+                          (member) => member.id == id,
+                        );
                         const name =
                           dashboardMembersWithAvatars.find(
                             (member) => member.id == id,
                           )?.fullName || '';
                         return (
                           <div key={id} className="flex items-center gap-2">
-                            <AvatarIconWithDynamicColor
-                              color={avatarColor}
+                            <CustomUserAvatar
+                              avatarUrl={memberInfo?.avatar || ''}
+                              avatarColor={memberInfo?.avatarColor || ''}
                               size={29}
-                              customClassName="w-6 h-6"
                             />
                             <span className="text-sm font-medium text-black relative top-[-1px]">
                               {name}

@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 import ImageRound from '@components/common/ImageRound';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { NO_SETTING } from '@constants';
 import { pageRouters } from '@constants/routers';
@@ -91,9 +91,7 @@ const DetailEventPlanModal = ({
                     session?.user.permissions,
                     PermissionsSystem.MY_TASK_UPDATE,
                   ) && (
-                    <DynamicTooltip
-                      content={'予定に移動'}
-                      placement="top">
+                    <DynamicTooltip content={'予定に移動'} placement="top">
                       <div
                         className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer"
                         onClick={() => {
@@ -117,9 +115,7 @@ const DetailEventPlanModal = ({
                     session?.user.permissions,
                     PermissionsSystem.CALENDAR_DELETE,
                   ) && (
-                    <DynamicTooltip
-                      content={'予定を削除'}
-                      placement="top">
+                    <DynamicTooltip content={'予定を削除'} placement="top">
                       <div
                         className="hover:bg-[#EBF1F4] px-2 py-1.5 hover:rounded-full hover:cursor-pointer"
                         onClick={() => {
@@ -202,18 +198,35 @@ const DetailEventPlanModal = ({
                         placement="top">
                         <div
                           className={`border-[2px] border-white rounded-full w-[40px] h-[40px] ${checkShowDimmedUserAvatar(Number(dataEvent.participants[0].id)) && 'opacity-60'}`}>
-                          {AvatarIconWithDynamicColor({
-                            color:
+                          <CustomUserAvatar
+                            avatarUrl={
+                              (dataEvent.participants?.[0] &&
+                                dashboardMembersWithAvatars?.find(
+                                  (member) =>
+                                    member.id ===
+                                    dataEvent.participants?.[0]?.id,
+                                )?.avatar) ||
+                              ''
+                            }
+                            avatarColor={
                               (dataEvent.participants?.[0] &&
                                 dashboardMembersWithAvatars?.find(
                                   (member) =>
                                     member.id ===
                                     dataEvent.participants?.[0]?.id,
                                 )?.avatarColor) ||
-                              '',
-                            size: 36,
-                            customClassName: '!mt-0',
-                          })}
+                              ''
+                            }
+                            size={36}
+                            customClassName={`${
+                              !dataEvent.participants?.[0] &&
+                              dashboardMembersWithAvatars?.find(
+                                (member) =>
+                                  member.id === dataEvent.participants?.[0]?.id,
+                              )?.avatar &&
+                              '!mt-0'
+                            }`}
+                          />
                         </div>
                       </DynamicTooltip>
                       <p className="text-[#000000] text-[14px] font-medium">
@@ -237,20 +250,21 @@ const DetailEventPlanModal = ({
                         return a.fullName.localeCompare(b.fullName);
                       })
                       ?.map((participant, index) => {
-                        const avatarColor = dashboardMembersWithAvatars?.find(
+                        const memberInfo = dashboardMembersWithAvatars?.find(
                           (member) => member.id == participant.id,
-                        )?.avatarColor;
+                        );
                         return (
                           <DynamicTooltip
                             content={`${participant.fullName}`}
                             key={index}
                             placement="top">
                             <div className={`${index > 0 && 'ml-[-6px]'} mb-1`}>
-                              {AvatarIconWithDynamicColor({
-                                color: avatarColor || '',
-                                size: 36,
-                                customClassName: '!mt-0',
-                              })}
+                              <CustomUserAvatar
+                                avatarUrl={memberInfo?.avatar || ''}
+                                avatarColor={memberInfo?.avatarColor || ''}
+                                size={36}
+                                customClassName={`${!memberInfo?.avatar && '!mt-0'}`}
+                              />
                             </div>
                           </DynamicTooltip>
                         );

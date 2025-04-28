@@ -247,6 +247,7 @@ export interface DataResponseStatisticCreationTeamType {
     id: number;
     fullName: string;
     avatarColor: string;
+    avatar: string
   }[];
 }
 export interface DataTaskModalStatisticType {

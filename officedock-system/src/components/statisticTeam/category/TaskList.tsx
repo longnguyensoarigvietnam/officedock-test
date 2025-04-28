@@ -4,9 +4,9 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import Checkbox from '@components/common/Checkbox';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import TableChart from './TableChart';
 
 import useStatisticTask from '@hooks/useStatisticTask';
@@ -291,9 +291,10 @@ const TaskListTeamStatistic = ({
                     />
                   </div>
                   <div className="relative top-[2px]">
-                    <AvatarIconWithDynamicColor
+                  <CustomUserAvatar
+                      avatarUrl={member?.avatarUrl || ''}
+                      avatarColor={member?.color || ''}
                       size={30}
-                      color={member.color}
                     />
                   </div>
                   <span className="break-all max-w-[800px] w-full truncate">

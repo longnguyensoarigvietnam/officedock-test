@@ -27,7 +27,6 @@ import './styles/index.css';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import InputSearch from '@components/common/InputSearch';
 import ActionFilterTaskTeam from '@components/modals/ActionFilterTeamTask';
 import DatePicker from '@components/common/DatePicker';
@@ -72,6 +71,7 @@ import {
   isMoreThanThirtyMinutes,
   isTodaySchedule,
 } from '@utils/date';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 const ScheduleTeamBoard = () => {
   // Context
@@ -130,6 +130,7 @@ const ScheduleTeamBoard = () => {
       id: number;
       fullName: string;
       color: string;
+      avatarUrl: string;
     }[]
   >([]);
 
@@ -158,6 +159,7 @@ const ScheduleTeamBoard = () => {
           id: member.id,
           fullName: member.fullName,
           color: member.avatarColor,
+          avatarUrl: member?.avatar || '',
         })),
       );
       setCurrentResources(
@@ -735,6 +737,7 @@ const ScheduleTeamBoard = () => {
       id: number;
       fullName: string;
       color: string;
+      avatarUrl: string;
     }[],
   ) => {
     const slicedParticipants = participants.slice(0, 6);
@@ -751,11 +754,12 @@ const ScheduleTeamBoard = () => {
             <div
               className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
               key={item.id}>
-              {AvatarIconWithDynamicColor({
-                color: item.color,
-                size: 33,
-                customClassName: '!mt-0',
-              })}
+              <CustomUserAvatar
+                avatarUrl={item?.avatarUrl || ''}
+                avatarColor={item?.color || ''}
+                size={33}
+                customClassName={`${!item?.avatarUrl && '!mt-0'}`}
+              />
             </div>
           );
         })}
@@ -1138,18 +1142,17 @@ const ScheduleTeamBoard = () => {
             return Number(a.id) - Number(b.id);
           }}
           resourceLabelContent={(resource) => {
-            const avatarColor = String(
-              listMemberTeam.find(
-                (member) => String(member.id) == String(resource.resource.id),
-              )?.color,
+            const memberInfo = listMemberTeam.find(
+              (member) => String(member.id) == String(resource.resource.id),
             );
             return (
               <div className="flex items-center justify-start gap-1">
-                {AvatarIconWithDynamicColor({
-                  color: avatarColor || '',
-                  size: 36,
-                })}
-                <p className="truncate  max-w-[100px] text-[15px] font-medium text-black">
+                <CustomUserAvatar
+                  avatarUrl={memberInfo?.avatarUrl || ''}
+                  avatarColor={memberInfo?.color || ''}
+                  size={36}
+                />
+                <p className="line-clamp-2 break-all max-w-[100px] text-[15px] font-medium text-black">
                   {resource.resource.title}
                 </p>
               </div>

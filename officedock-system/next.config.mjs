@@ -26,7 +26,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: process.env.API_INTERNAL_URL.replace(
+        hostname: process.env.NEXT_PUBLIC_API_URL.replace(
           /^https?:\/\/|:\d+$/g,
           '',
         ),

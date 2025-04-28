@@ -3,7 +3,6 @@ import { ChangeEvent, memo, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 import Modal from '@components/common/Modal';
-import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 import ErrorMessage from '@components/common/ErrorMessage';
 import Input from '@components/common/Input';
@@ -11,7 +10,7 @@ import Input from '@components/common/Input';
 import { User, UserProfileFormData } from '@interfaces/user';
 
 import { passwordRegisterRules } from '@utils/validators';
-import { getFileURL } from '@utils';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 export type EditProfileModalProps = {
   open: boolean;
@@ -97,14 +96,10 @@ const EditProfileModal = memo(
                   }}
                 />
                 <div className="w-[70px] h-[70px] relative">
-                  <ImageRound
-                    name="Avatar"
-                    src={
-                      previewAvatarUrl ? getFileURL(previewAvatarUrl) :
-                      '/images/avatar-default.svg'
-                    }
-                    className={`w-[70px] h-[70px] hover:cursor-pointer`}
-                    border="full"
+                  <CustomUserAvatar
+                    avatarUrl={previewAvatarUrl || ''}
+                    avatarColor={authenticatedUser?.avatarColor || ''}
+                    size={70}
                   />
                   <div
                     className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs bg-[#77858F] w-[36px] flex items-center justify-center py-1 rounded-[3px] hover:cursor-pointer"

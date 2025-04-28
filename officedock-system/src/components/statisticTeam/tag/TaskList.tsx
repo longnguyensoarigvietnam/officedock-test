@@ -4,7 +4,6 @@ import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Checkbox from '@components/common/Checkbox';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import TableChart from './TableChart';
 
@@ -20,6 +19,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import useStatisticTask from '@hooks/useStatisticTask';
 import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 type Props = {
   isCheckCompare: boolean;
@@ -315,9 +315,10 @@ const TaskListStatisticTeamTags = ({
                     />
                   </div>
                   <div className="relative top-[2px]">
-                    <AvatarIconWithDynamicColor
+                    <CustomUserAvatar
+                      avatarUrl={member?.avatarUrl || ''}
+                      avatarColor={member?.color || ''}
                       size={30}
-                      color={member.color}
                     />
                   </div>
                   <span className="break-all w-full max-w-[800px] truncate">
