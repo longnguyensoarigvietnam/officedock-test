@@ -3,7 +3,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
@@ -13,7 +12,6 @@ import {
   EventWorkCategory,
   ItemScheduleType,
   ItemStartType,
-  PermissionsSystem,
   StatusValueTask,
 } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
@@ -30,7 +28,6 @@ import {
   convertToCurrentTimezone,
   formatShowDeadlineTask,
 } from '@utils/date';
-import { hasPermissionInArray } from '@utils';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 
 interface ItemProps {
@@ -115,8 +112,6 @@ const ItemTeam = ({
   } = useForm<TaskFormData>({
     mode: 'onSubmit',
   });
-
-  const { data: session } = useSession();
 
   const searchParams = useSearchParams();
 
@@ -297,19 +292,6 @@ const ItemTeam = ({
     setTimeout(() => setIsClicked(false), 2000);
   };
 
-  const isPermissionUpdate =
-    session?.user.permissions &&
-    hasPermissionInArray(
-      session?.user.permissions,
-      PermissionsSystem.MY_TASK_UPDATE,
-    );
-
-  const _isPermissionAdd =
-    session?.user.permissions &&
-    hasPermissionInArray(
-      session?.user.permissions,
-      PermissionsSystem.MY_TASK_ADD,
-    );
   const largeColor =
     content.categories &&
     content.categories.find((item) => item.type === EventWorkCategory.LARGE)
@@ -320,55 +302,51 @@ const ItemTeam = ({
       {selectedOptionZoom.value !== 25 ? (
         <div>
           <div
-            className={`relative ${largeColor && !content.isStart && 'border border-l-2'} ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 `}>
+            className={`relative ${largeColor && !content.isStart && 'border border-l-2'} ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col  mb-2 `}>
             <div className="relative w-[100%]   h-full">
-              {isPermissionUpdate && (
-                <>
-                  <div
-                    style={{
-                      top: `${(columnWidth / 247) * 12}px`,
-                      right: `${(columnWidth / 247) * 12}px`,
-                    }}
-                    onClick={() => {
-                      if (isPermissionUpdate) {
-                        if (content.pinAt) {
-                          handleUnPinItem(`${content.id}`);
-                        } else {
-                          handlePinItem(`${content.id}`);
-                        }
+              <>
+                <div
+                  style={{
+                    top: `${(columnWidth / 247) * 12}px`,
+                    right: `${(columnWidth / 247) * 12}px`,
+                  }}
+                  onClick={() => {
+                    if (content.pinAt) {
+                      handleUnPinItem(`${content.id}`);
+                    } else {
+                      handlePinItem(`${content.id}`);
+                    }
+                  }}
+                  className={`absolute   ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
+                  <DynamicTooltip
+                    content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
+                    placement="right">
+                    <ImageRound
+                      src={
+                        content.pinAt
+                          ? `/icons/pin-task.svg`
+                          : `/icons/unpin-task.svg`
                       }
-                    }}
-                    className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
-                    <DynamicTooltip
-                      content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
-                      placement="right">
-                      <ImageRound
-                        src={
-                          content.pinAt
-                            ? `/icons/pin-task.svg`
-                            : `/icons/unpin-task.svg`
-                        }
-                        name="Pin icon"
-                        style={{
-                          width:
-                            (selectedOptionZoom.value as number) > 75
-                              ? '14px'
-                              : (selectedOptionZoom.value as number) === 75
-                                ? '12px'
-                                : `10px`,
-                          height:
-                            (selectedOptionZoom.value as number) > 75
-                              ? '14px'
-                              : (selectedOptionZoom.value as number) === 75
-                                ? '12px'
-                                : `10px`,
-                        }}
-                        className=" text-gray-400 cursor-pointer"
-                      />
-                    </DynamicTooltip>
-                  </div>
-                </>
-              )}
+                      name="Pin icon"
+                      style={{
+                        width:
+                          (selectedOptionZoom.value as number) > 75
+                            ? '14px'
+                            : (selectedOptionZoom.value as number) === 75
+                              ? '12px'
+                              : `10px`,
+                        height:
+                          (selectedOptionZoom.value as number) > 75
+                            ? '14px'
+                            : (selectedOptionZoom.value as number) === 75
+                              ? '12px'
+                              : `10px`,
+                      }}
+                      className=" text-gray-400 cursor-pointer"
+                    />
+                  </DynamicTooltip>
+                </div>
+              </>
               {/* TODO: Action copy */}
               {/* {isPermissionAdd && (
                 <DynamicTooltip
@@ -573,10 +551,6 @@ const ItemTeam = ({
                           <Dropdown
                             openByDefault
                             isStatusDropdown={true}
-                            disabled={
-                              !isPermissionUpdate ||
-                              content.status?.id === StatusValueTask.MY_ROUTINE
-                            }
                             className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
                             styleClass={{
                               fontSize:
@@ -674,7 +648,7 @@ const ItemTeam = ({
       ) : (
         <div>
           <div
-            className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 `}>
+            className={`relative ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 `}>
             <div
               style={{
                 paddingTop: `${(columnWidth / 247) * 12}px`,

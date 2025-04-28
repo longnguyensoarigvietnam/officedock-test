@@ -2,6 +2,7 @@
 import { OptionDropdownType } from '@interfaces/common';
 import {
   CreationDataTask,
+  Task,
   TransformedUser,
   UserTotalStatus,
 } from '@interfaces/task';
@@ -49,6 +50,8 @@ interface ContextValue {
   setListDataKanbanTeam: Dispatch<SetStateAction<TransformedUser[]>>;
   showWarningStartTaskModalTeam: boolean;
   setShowWarningStartTaskModalTeam: Dispatch<SetStateAction<boolean>>;
+  listTaskNoSetting: Task[];
+  setListTaskNoSetting: Dispatch<SetStateAction<Task[]>>;
 }
 
 const defaultValue: ContextValue = {
@@ -75,6 +78,8 @@ const defaultValue: ContextValue = {
   setOrderingOptions: () => {},
   showWarningStartTaskModalTeam: false,
   setShowWarningStartTaskModalTeam: () => {},
+  listTaskNoSetting: [],
+  setListTaskNoSetting: () => {},
 };
 
 export const TaskTeamStateContext = createContext<ContextValue>(defaultValue);
@@ -125,6 +130,7 @@ export const TaskTeamStateProvider = ({
     TransformedUser[]
   >([]);
 
+  const [listTaskNoSetting, setListTaskNoSetting] = useState<Task[]>([]);
   const [showWarningStartTaskModalTeam, setShowWarningStartTaskModalTeam] =
     useState(false);
 
@@ -149,6 +155,8 @@ export const TaskTeamStateProvider = ({
     setListDataKanbanTeam,
     showWarningStartTaskModalTeam,
     setShowWarningStartTaskModalTeam,
+    listTaskNoSetting,
+    setListTaskNoSetting,
   };
 
   return (
