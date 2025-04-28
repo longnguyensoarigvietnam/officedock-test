@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 import { MessageHoverBookmark } from './MessageHoverBookmark';
@@ -35,7 +35,7 @@ import {
 } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
-import { formatWithParagraphTags, getChatFileURL } from '@utils';
+import { formatWithParagraphTags, getFileURL } from '@utils';
 import {
   convertToCurrentTimezone,
   convertToTimeString,
@@ -79,16 +79,17 @@ export const MessageDetailBookmark = ({
   const router = useRouter();
 
   const renderAvatar = (senderId: number) => {
-    const avatarColor =
-      dashboardMembers.find((member) => member.id === senderId)?.avatarColor ||
-      '';
+    const memberInfo = dashboardMembers.find(
+      (member) => member.id === senderId,
+    );
 
     return (
       <div className="h-6">
-        {AvatarIconWithDynamicColor({
-          color: avatarColor,
-          size: 36,
-        })}
+        <CustomUserAvatar
+          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarColor={memberInfo?.avatarColor || ''}
+          size={36}
+        />
       </div>
     );
   };
@@ -282,7 +283,7 @@ export const MessageDetailBookmark = ({
                                               ) && (
                                                 <div>
                                                   <Image
-                                                    src={getChatFileURL(
+                                                    src={getFileURL(
                                                       file?.compressedFile ||
                                                         '',
                                                     )}

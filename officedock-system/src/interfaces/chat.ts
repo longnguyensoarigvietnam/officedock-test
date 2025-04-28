@@ -95,6 +95,7 @@ export interface ChatDashboardMember {
   fullName: string;
   id: number | string;
   avatarColor: string;
+  avatarUrl: string;
 }
 
 export interface OrganizationDetail {

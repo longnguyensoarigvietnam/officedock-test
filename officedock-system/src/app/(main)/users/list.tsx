@@ -3,15 +3,17 @@ import { Fragment, useContext, useEffect, useState } from 'react';
 import { useMutation } from 'react-query';
 import { signOut, useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
+import ActionsUserModal from '@components/modals/ActionsUserModal';
 import Pagination from '@components/common/Pagination';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import InputSearch from '@components/common/InputSearch';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
@@ -43,8 +45,8 @@ import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
+
 import { hasPermissionInArray } from '@utils';
-import api from '@base/api';
 import { OptionDropdownType } from '@interfaces/common';
 import {
   CreateUserFormData,
@@ -52,9 +54,8 @@ import {
   User,
   UserRoleType,
 } from '@interfaces/user';
-import ActionsUserModal from '@components/modals/ActionsUserModal';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { ResponseError } from '@interfaces/response';
+import api from '@base/api';
 
 const ListUsers = () => {
   const { data: session } = useSession();
@@ -642,8 +643,9 @@ const ListUsers = () => {
                     <div className=" flex items-start gap-2">
                       <div className="flex items-start flex-grow gap-[6px]">
                         <div className="w-[30px] h-[30px]">
-                          <AvatarIconWithDynamicColor
-                            color={element.avatarColor}
+                          <CustomUserAvatar
+                            avatarUrl={element?.avatar || ''}
+                            avatarColor={element?.avatarColor || ''}
                             size={30}
                             customClassName="relative top-[3px]"
                           />

@@ -12,7 +12,6 @@ import {
 } from 'react';
 import { Editor } from '@tiptap/react';
 
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 import { ProgressBar } from '@components/common/ProgressBar';
@@ -42,7 +41,7 @@ import {
   ChatRoomDetail,
 } from '@interfaces/chat';
 
-import { formatWithParagraphTags, getChatFileURL } from '@utils';
+import { formatWithParagraphTags, getFileURL } from '@utils';
 import {
   convertToCurrentTimezone,
   convertToTimeString,
@@ -55,6 +54,7 @@ import {
 
 import { MessageHoverOptions } from './MessageHoverOptions';
 import DetailReactionChat from './DetailReactionChat';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -218,16 +218,17 @@ export const MessageDetail = ({
   }
 
   const renderAvatar = (senderId: number) => {
-    const avatarColor =
-      dashboardMembers.find((member) => member.id === senderId)?.avatarColor ||
-      '';
+    const memberInfo = dashboardMembers.find(
+      (member) => member.id === senderId,
+    );
 
     return (
       <div className="h-6">
-        {AvatarIconWithDynamicColor({
-          color: avatarColor,
-          size: 36,
-        })}
+        <CustomUserAvatar
+          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarColor={memberInfo?.avatarColor || ''}
+          size={36}
+        />
       </div>
     );
   };
@@ -514,7 +515,7 @@ export const MessageDetail = ({
                                               ) && (
                                                 <div>
                                                   <Image
-                                                    src={getChatFileURL(
+                                                    src={getFileURL(
                                                       file?.compressedFile ||
                                                         '',
                                                     )}

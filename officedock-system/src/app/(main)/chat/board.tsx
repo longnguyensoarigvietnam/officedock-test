@@ -66,7 +66,8 @@ const BoardChat = () => {
         return {
           id: member.id,
           fullName: member.fullName,
-          avatarColor: member.avatarColor,
+          avatarColor: member?.avatarColor || '',
+          avatarUrl: member?.avatar || ''
         };
       });
       setDashboardMembers(membersWithAvatars);
