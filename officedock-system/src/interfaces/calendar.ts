@@ -120,6 +120,7 @@ export interface EventParticipant {
   userIds?: number[];
   mainOrganization?: string;
   color?: string;
+  avatarUrl?: string;
 }
 
 export interface CalendarDashboardMember {
@@ -127,6 +128,7 @@ export interface CalendarDashboardMember {
   id: number | string;
   avatarColor: string;
   mainOrganization: string;
+  avatar?: string;
 }
 
 export interface EventCalendarProps {

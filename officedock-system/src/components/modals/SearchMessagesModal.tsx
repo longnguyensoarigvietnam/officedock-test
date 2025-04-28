@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { format, isSameDay } from 'date-fns';
 import Image from 'next/image';
 
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
@@ -41,7 +41,7 @@ import {
   getFormattedDateTime,
   getJapaneseDayName,
 } from '@utils/date';
-import { formatWithParagraphTags, getChatFileURL } from '@utils';
+import { formatWithParagraphTags, getFileURL } from '@utils';
 
 interface SearchMessagesModalProps {
   open: boolean;
@@ -112,16 +112,17 @@ export const SearchMessagesModal = ({
   }, [searchMessageResults]);
 
   const renderAvatar = (senderId: number) => {
-    const avatarColor =
-      dashboardMembers.find((member) => member.id === senderId)?.avatarColor ||
-      '';
+    const memberInfo = dashboardMembers.find(
+      (member) => member.id === senderId,
+    );
 
     return (
       <div className="h-6">
-        {AvatarIconWithDynamicColor({
-          color: avatarColor,
-          size: 33,
-        })}
+        <CustomUserAvatar
+          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarColor={memberInfo?.avatarColor || ''}
+          size={33}
+        />
       </div>
     );
   };
@@ -419,7 +420,7 @@ export const SearchMessagesModal = ({
                                                 ) && (
                                                   <div>
                                                     <Image
-                                                      src={getChatFileURL(
+                                                      src={getFileURL(
                                                         file?.compressedFile ||
                                                           '',
                                                       )}

@@ -27,13 +27,13 @@ import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModa
 import DatePicker from '@components/common/DatePicker';
 import CalendarSkeleton from '@components/skeleton/CalendarSkeleton';
 import EventInfoModal from '@components/modals/EventInfoModal';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Button from '@components/common/Button';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { CalendarSidebar } from '@components/calendar/Sidebar';
 import { TaskAndEventListModal } from '@components/modals/TaskAndEventListModal';
 import RangeSlider from '@components/common/RangeSlider';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import useDebounceText from '@hooks/useDebounceText';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
@@ -468,21 +468,21 @@ const EventCalendar = () => {
   ) => {
     if (participantList && participantList.length > 0) {
       if (participantList.length == 1) {
-        const avatarColor =
-          dashboardMembersWithAvatars.find(
-            (member) => member.id == participantList[0].id,
-          )?.avatarColor || '';
+        const memberInfo = dashboardMembersWithAvatars.find(
+          (member) => member.id == participantList[0].id,
+        );
         return (
           <DynamicTooltip
             content={`${participantList[0].fullName}`}
             placement="top">
             <div
               className={`border-[1px] border-white rounded-full ${borderClassName}`}>
-              {AvatarIconWithDynamicColor({
-                color: avatarColor,
-                size: avatarSize,
-                isCalendarScreen: true,
-              })}
+              <CustomUserAvatar
+                avatarUrl={memberInfo?.avatar || ''}
+                avatarColor={memberInfo?.avatarColor || ''}
+                size={avatarSize}
+                isCalendarScreen={true}
+              />
             </div>
           </DynamicTooltip>
         );
@@ -490,10 +490,9 @@ const EventCalendar = () => {
         return (
           <div className="mr-1 flex items-center">
             {participantList.map((participant, index) => {
-              const avatarColor =
-                dashboardMembersWithAvatars.find(
-                  (member) => member.id === participant.id,
-                )?.avatarColor || '';
+              const memberInfo = dashboardMembersWithAvatars.find(
+                (member) => member.id === participant.id,
+              );
 
               return (
                 <DynamicTooltip
@@ -502,11 +501,12 @@ const EventCalendar = () => {
                   key={participant.id}>
                   <div
                     className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
-                    {AvatarIconWithDynamicColor({
-                      color: avatarColor,
-                      size: avatarSize,
-                      isCalendarScreen: true,
-                    })}
+                    <CustomUserAvatar
+                      avatarUrl={memberInfo?.avatar || ''}
+                      avatarColor={memberInfo?.avatarColor || ''}
+                      size={avatarSize}
+                      isCalendarScreen={true}
+                    />
                   </div>
                 </DynamicTooltip>
               );
@@ -519,10 +519,9 @@ const EventCalendar = () => {
             {participantList
               .slice(0, isWeekView ? 5 : 1)
               .map((participant, index) => {
-                const avatarColor =
-                  dashboardMembersWithAvatars.find(
-                    (member) => member.id === participant.id,
-                  )?.avatarColor || '';
+                const memberInfo = dashboardMembersWithAvatars.find(
+                  (member) => member.id === participant.id,
+                );
 
                 return (
                   <DynamicTooltip
@@ -531,11 +530,12 @@ const EventCalendar = () => {
                     key={participant.id}>
                     <div
                       className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
-                      {AvatarIconWithDynamicColor({
-                        color: avatarColor,
-                        size: avatarSize,
-                        isCalendarScreen: true,
-                      })}
+                      <CustomUserAvatar
+                        avatarUrl={memberInfo?.avatar || ''}
+                        avatarColor={memberInfo?.avatarColor || ''}
+                        size={avatarSize}
+                        isCalendarScreen={true}
+                      />
                     </div>
                   </DynamicTooltip>
                 );
@@ -2329,18 +2329,17 @@ const EventCalendar = () => {
                 return a.title.localeCompare(b.title);
               }}
               resourceLabelContent={(resource) => {
-                const avatarColor = String(
-                  dashboardMembersWithAvatars.find(
-                    (member) => member.id == resource.resource.id,
-                  )?.avatarColor,
+                const memberInfo = dashboardMembersWithAvatars.find(
+                  (member) => member.id == resource.resource.id,
                 );
                 return (
                   <div className="flex items-center justify-start gap-1">
-                    {AvatarIconWithDynamicColor({
-                      color: avatarColor || '',
-                      size: 36,
-                    })}
-                    <p className="truncate max-w-[100px] text-[15px] font-medium text-black">
+                    <CustomUserAvatar
+                      avatarUrl={memberInfo?.avatar || ''}
+                      avatarColor={memberInfo?.avatarColor || ''}
+                      size={36}
+                    />
+                    <p className="max-w-[100px] break-all line-clamp-2 text-[15px] font-medium text-black">
                       {resource.resource.title}
                     </p>
                   </div>

@@ -3,7 +3,7 @@ import { memo } from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 import { ChatDashboardMember } from '@interfaces/chat';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import useChatRoomDetail from '@hooks/useChatRoomDetail';
 
 export type ConfirmDeleteModalProps = {
@@ -29,17 +29,17 @@ const ConfirmRemoveChatMemberModal = memo(
     });
 
     const renderAvatar = (memberId: number) => {
-      const avatarColor =
-        dashboardMembers.find((member) => {
-          return member.id == memberId;
-        })?.avatarColor || '';
+      const memberInfo = dashboardMembers.find((member) => {
+        return member.id == memberId;
+      });
 
       return (
         <div className="flex justify-center">
-          {AvatarIconWithDynamicColor({
-            color: avatarColor,
-            size: 36,
-          })}
+          <CustomUserAvatar
+            avatarUrl={memberInfo?.avatarUrl || ''}
+            avatarColor={memberInfo?.avatarColor || ''}
+            size={36}
+          />
         </div>
       );
     };

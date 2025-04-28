@@ -8,10 +8,10 @@ import {
   useState,
 } from 'react';
 
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -120,6 +120,8 @@ export const CalendarSidebar = ({
         fullName: member.fullName,
         type: EventParticipantType.USER,
         mainOrganization: member.mainOrganization || '',
+        color: member?.avatarColor || '',
+        avatarUrl: member?.avatar || '',
       }));
       const eventOrganizations = dataOptionsOrganizations
         ? dataOptionsOrganizations.map((org) => ({
@@ -172,6 +174,22 @@ export const CalendarSidebar = ({
           ),
       );
     }
+  };
+
+  const renderAvatar = (memberId: number) => {
+    const memberInfo = dashboardMembersWithAvatars.find(
+      (memberWithAvatar) => memberWithAvatar.id === memberId,
+    );
+
+    return (
+      <div className="h-6 min-w-[33px] min-h-[33px]">
+        <CustomUserAvatar
+          avatarUrl={memberInfo?.avatar || ''}
+          avatarColor={memberInfo?.avatarColor || ''}
+          size={33}
+        />
+      </div>
+    );
   };
 
   return (
@@ -278,32 +296,11 @@ export const CalendarSidebar = ({
                     </div>
                     <div
                       className={`flex flex-1 gap-3 items-center p-1.5 hover:cursor-pointer`}>
-                      {member.type == EventParticipantType.USER &&
-                        (dashboardMembersWithAvatars &&
-                        dashboardMembersWithAvatars.find(
-                          (memberWithAvatar) =>
-                            memberWithAvatar.id == member.id,
-                        ) ? (
-                          <>
-                            {AvatarIconWithDynamicColor({
-                              color:
-                                dashboardMembersWithAvatars?.find(
-                                  (memberWithAvatar) =>
-                                    memberWithAvatar.id == member.id,
-                                )?.avatarColor || '#0068B6',
-                              size: 33,
-                            })}
-                          </>
-                        ) : (
-                          <ImageRound
-                            className="w-9 h-9"
-                            src="/images/avatar-default.svg"
-                            border="full"
-                            name="Avatar user"
-                          />
-                        ))}
+                      {member.type == EventParticipantType.USER && (
+                        <>{renderAvatar(member.id as number)}</>
+                      )}
                       {member.type == EventParticipantType.ORGANIZATION && (
-                        <div className="scale-110">
+                        <div className="scale-110 min-w-[33px]">
                           <GroupIconWithDynamicColor
                             color={member.color || '#0068B6'}
                           />
@@ -312,7 +309,7 @@ export const CalendarSidebar = ({
                       <div className="!w-full">
                         <p
                           style={{
-                            maxWidth: `calc(${Math.max(viewportWidth, 1280) / 8 - 10}px )`,
+                            maxWidth: `calc(${Math.max(viewportWidth, 1280) / 8 - 20}px )`,
                           }}
                           className={`truncate font-medium text-[15px] text-black`}>
                           <span>{member.fullName}</span>

@@ -5,6 +5,7 @@ import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import Input from '@components/common/Input';
@@ -15,7 +16,6 @@ import ErrorMessage from '@components/common/ErrorMessage';
 import InputSearch from '@components/common/InputSearch';
 import Checkbox from '@components/common/Checkbox';
 import Drawer from '@components/common/Drawers';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -674,6 +674,22 @@ const ActionsEventModal = ({
       setValue('selectOrganizations', updatedOrganizationList);
       setValue('participantIds', updatedParticipantList);
     }
+  };
+
+  const renderAvatar = (memberId: number) => {
+    const memberInfo = dashboardMembersWithAvatars.find(
+      (memberWithAvatar) => memberWithAvatar.id === memberId,
+    );
+
+    return (
+      <div className="h-6 min-w-[33px] min-h-[33px]">
+        <CustomUserAvatar
+          avatarUrl={memberInfo?.avatar || ''}
+          avatarColor={memberInfo?.avatarColor || ''}
+          size={33}
+        />
+      </div>
+    );
   };
 
   return (
@@ -1477,30 +1493,9 @@ const ActionsEventModal = ({
                               }}
                             />
                           </div>
-                          {member.type == EventParticipantType.USER &&
-                            (dashboardMembersWithAvatars &&
-                            dashboardMembersWithAvatars.find(
-                              (memberWithAvatar) =>
-                                memberWithAvatar.id == member.id,
-                            ) ? (
-                              <>
-                                {AvatarIconWithDynamicColor({
-                                  color:
-                                    dashboardMembersWithAvatars?.find(
-                                      (memberWithAvatar) =>
-                                        memberWithAvatar.id == member.id,
-                                    )?.avatarColor || '#0068B6',
-                                  size: 33,
-                                })}
-                              </>
-                            ) : (
-                              <ImageRound
-                                className="w-8 h-8"
-                                src="/images/avatar-default.svg"
-                                border="full"
-                                name="Avatar user"
-                              />
-                            ))}
+                          {member.type == EventParticipantType.USER && (
+                            <>{renderAvatar(member.id as number)}</>
+                          )}
                           {member.type == EventParticipantType.ORGANIZATION && (
                             <div className="scale-110">
                               <GroupIconWithDynamicColor

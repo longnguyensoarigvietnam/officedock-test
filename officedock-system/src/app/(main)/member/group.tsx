@@ -1,8 +1,8 @@
 import React, { useContext, useMemo, useState } from 'react';
 
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import ImageRound from '@components/common/ImageRound';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { UserOrganization } from '@interfaces/user';
@@ -23,11 +23,17 @@ const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
   const [isExpandedGroup, setIsExpandedGroup] = useState(true);
 
   const renderBoxUser = (userId: string) => {
-    const avatarColor =
-      dashboardMembersWithAvatars.find((member) => member.id == userId)
-        ?.avatarColor || '';
+    const memberInfo = dashboardMembersWithAvatars.find(
+      (member) => member.id == userId,
+    );
 
-    return <AvatarIconWithDynamicColor color={avatarColor} size={36} />;
+    return (
+      <CustomUserAvatar
+        avatarUrl={memberInfo?.avatar || ''}
+        avatarColor={memberInfo?.avatarColor || ''}
+        size={36}
+      />
+    );
   };
   const getRandomColor = () => {
     const hue = Math.floor(Math.random() * 360);
