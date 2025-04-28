@@ -1,8 +1,8 @@
 import { useRouter } from 'next/navigation';
 import React, { useContext, useEffect, useState } from 'react';
 
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Button from '@components/common/Button';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Checkbox from '@components/common/Checkbox';
 import { pageRouters } from '@constants/routers';
 import {
@@ -34,9 +34,9 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
 
   const router = useRouter();
 
-  const avatarColor =
-    dashboardMembersWithAvatars.find((member) => member.id == userData.id)
-      ?.avatarColor || '';
+  const memberInfo = dashboardMembersWithAvatars.find(
+    (member) => member.id == userData.id,
+  );
 
   return (
     <div
@@ -69,7 +69,11 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
         </div>
 
         <div className="flex items-center gap-[10px]">
-          <AvatarIconWithDynamicColor color={avatarColor} size={33} />
+          <CustomUserAvatar
+            avatarUrl={memberInfo?.avatar || ''}
+            avatarColor={memberInfo?.avatarColor || ''}
+            size={33}
+          />
           <span className="text-black break-all line-clamp-2 ">
             {userData.fullName}
           </span>

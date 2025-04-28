@@ -10,7 +10,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { NO_DATA_AVAILABLE } from '@constants';
 import Checkbox from '../Checkbox';
 import ImageRound from '../ImageRound';
-import AvatarIconWithDynamicColor from '../AvatarIcon';
+import CustomUserAvatar from '../AvatarIcon/CustomUserAvatar';
 
 type Props = {
   isShowIconFilter?: boolean;
@@ -129,11 +129,14 @@ const MultiSelectUserDropdown = ({
                     }
                   />
                 </div>
-                <AvatarIconWithDynamicColor
-                  color={option.imgUrl as string}
-                  size={30}
-                  customClassName="mt-[2px]"
-                />
+                <div className="min-w-[30px]">
+                  <CustomUserAvatar
+                    avatarUrl={option?.imgUrl || ''}
+                    avatarColor={option?.iconColor || ''}
+                    size={30}
+                    customClassName={`${!option?.imgUrl && 'mt-[2px]'}`}
+                  />
+                </div>
                 <span className={` text-sm font-medium ${labelOptionClass}`}>
                   {option.label}
                 </span>

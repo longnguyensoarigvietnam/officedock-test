@@ -107,9 +107,9 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import api from '@base/api';
 import Checkbox from '@components/common/Checkbox';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import Link from 'next/link';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 const DailyReportDetailBoard = () => {
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
@@ -177,9 +177,9 @@ const DailyReportDetailBoard = () => {
     dataTaskDailyTable[]
   >([]);
 
-  const avatarColor =
-    dashboardMembersWithAvatars.find((member) => member.id == userId)
-      ?.avatarColor || '';
+  const memberInfo = dashboardMembersWithAvatars.find(
+    (member) => member.id == userId,
+  );
 
   const handleShowEventsInModal = (data: {
     uuid: string;
@@ -2085,7 +2085,11 @@ const DailyReportDetailBoard = () => {
               </div>
 
               <div className="flex items-center gap-[10px]">
-                <AvatarIconWithDynamicColor color={avatarColor} size={33} />
+                <CustomUserAvatar
+                  avatarUrl={memberInfo?.avatar || ''}
+                  avatarColor={memberInfo?.avatarColor || ''}
+                  size={33}
+                />
                 <span className="text-black max-w-[300px] line-clamp-3 break-all">
                   {dataDetailUser && dataDetailUser?.fullName}
                 </span>

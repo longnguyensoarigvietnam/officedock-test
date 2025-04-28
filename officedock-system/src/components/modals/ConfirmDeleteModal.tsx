@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import Modal from '../common/Modal';
 import Button from '../common/Button';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 export type ConfirmDeleteModalProps = {
   open: boolean;
@@ -10,6 +10,7 @@ export type ConfirmDeleteModalProps = {
   type: string;
   message?: string;
   userColor?: string;
+  userAvatarUrl?: string | undefined
   onConfirm: () => void;
   onClose: () => void;
 };
@@ -20,6 +21,7 @@ const ConfirmDeleteModal = memo(
     name,
     type,
     userColor,
+    userAvatarUrl,
     message,
     onConfirm,
     onClose,
@@ -33,11 +35,12 @@ const ConfirmDeleteModal = memo(
         {name && (
           <div className="flex items-center justify-center gap-[5px] mb-7">
             {userColor && (
-              <div className="w-[34px] h-[34px]">
-                <AvatarIconWithDynamicColor
-                  color={userColor}
+              <div className="w-[34px] h-[34px] min-w-[34px]">
+                <CustomUserAvatar
+                  avatarUrl={userAvatarUrl || ''}
+                  avatarColor={userColor || ''}
                   size={34}
-                  customClassName="relative top-[0px]"
+                  customClassName={`${!userAvatarUrl && 'relative top-[0px]'}`}
                 />
               </div>
             )}

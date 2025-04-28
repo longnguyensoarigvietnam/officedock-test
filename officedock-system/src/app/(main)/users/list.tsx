@@ -642,11 +642,11 @@ const ListUsers = () => {
                   <td className="w-[220px]">
                     <div className=" flex items-start gap-2">
                       <div className="flex items-start flex-grow gap-[6px]">
-                        <div className="w-[30px] h-[30px]">
+                        <div className="w-[27px] h-[27px]">
                           <CustomUserAvatar
                             avatarUrl={element?.avatar || ''}
                             avatarColor={element?.avatarColor || ''}
-                            size={30}
+                            size={27}
                             customClassName="relative top-[3px]"
                           />
                         </div>
@@ -761,6 +761,7 @@ const ListUsers = () => {
         message="紐づいている要素からも削除されます。"
         name={selectedUserToDelete?.profile.fullName}
         userColor={selectedUserToDelete?.avatarColor}
+        userAvatarUrl={selectedUserToDelete?.avatar}
         onConfirm={handleConfirmDeleteUser}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />

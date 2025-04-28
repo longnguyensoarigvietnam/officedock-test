@@ -388,6 +388,7 @@ export interface ResultTeam {
   avatarColor: string;
   profile: ProfileTeam;
   status: StatusTeam[];
+  avatar: string;
 }
 export interface KanbanDataTeamResponse {
   count: number;
@@ -409,6 +410,7 @@ export interface TransformedUser {
   id: string;
   name: string;
   avatarColor: string;
+  avatar: string;
   statuses: TransformedStatuses;
 }
 

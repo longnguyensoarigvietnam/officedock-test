@@ -1,9 +1,9 @@
 import React, { useContext, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import StatusColumn from './StatusColumn';
 
 import { TransformedStatuses, TransformedUser } from '@interfaces/task';
@@ -84,9 +84,10 @@ const UserColumnTeam = ({
                 fontSize: `${(247 / 247) * 15}px`,
               }}
               className="flex items-center gap-[10px] font-medium text-[15px] ">
-              <AvatarIconWithDynamicColor
-                color={user.avatarColor}
-                size={(247 / 247) * 33}
+              <CustomUserAvatar
+                avatarUrl={user?.avatar || ''}
+                avatarColor={user?.avatarColor || ''}
+                size={33}
               />
               <p
                 style={{
@@ -113,9 +114,7 @@ const UserColumnTeam = ({
                 gap: `${(columnWidth / 247) * 10}px`,
               }}
               className="flex items-center">
-              <DynamicTooltip
-                content="タスクを新規作成"
-                placement="top">
+              <DynamicTooltip content="タスクを新規作成" placement="top">
                 <div
                   style={{
                     padding: '6.5px',
@@ -138,9 +137,7 @@ const UserColumnTeam = ({
                   />
                 </div>
               </DynamicTooltip>
-              <DynamicTooltip
-                content="タブを縮小"
-                placement="top">
+              <DynamicTooltip content="タブを縮小" placement="top">
                 <div
                   className="flex items-center justify-center cursor-pointer hover:bg-white rounded-full w-[22px] h-[22px]"
                   onClick={() => setIsExtendUser(false)}>
@@ -187,15 +184,16 @@ const UserColumnTeam = ({
       ) : (
         <div className="w-[80px]">
           <div className="flex gap-[6px] items-center justify-center">
-            <AvatarIconWithDynamicColor color={user.avatarColor} size={33} />
+            <CustomUserAvatar
+              avatarUrl={user?.avatar || ''}
+              avatarColor={user?.avatarColor || ''}
+              size={33}
+            />
 
-            <DynamicTooltip
-              content="タブを拡大"
-              placement="top">
+            <DynamicTooltip content="タブを拡大" placement="top">
               <div
                 className="flex items-center justify-center cursor-pointer hover:bg-white rounded-full w-[22px] h-[22px]"
-                onClick={() => setIsExtendUser(true)}
-                >
+                onClick={() => setIsExtendUser(true)}>
                 <ImageRound
                   src={`/icons/extend-column.svg`}
                   className={`${isExtendUser ? 'rotate-0' : 'rotate-180'} cursor-pointer`}

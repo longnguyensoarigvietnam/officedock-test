@@ -656,6 +656,7 @@ export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
   return result.map((user) => ({
     id: `user_${user.id}`,
     avatarColor: user.avatarColor,
+    avatar: user?.avatar || '',
     name: user.profile.fullName,
     statuses: {
       NOT_STARTED:

@@ -14,6 +14,7 @@ type ActionTaskFilterProp = {
     id: number;
     fullName: string;
     color: string;
+    avatarUrl: string;
   }[];
   handleClose: () => void;
   handleReadyToFetch: () => void;
@@ -105,7 +106,8 @@ const ActionFilterTaskTeam = ({
         listMemberTeam.map((org) => ({
           label: String(org.fullName),
           value: String(org.id),
-          imgUrl: org.color,
+          imgUrl: org.avatarUrl,
+          iconColor: org.color
         })),
       );
     }
