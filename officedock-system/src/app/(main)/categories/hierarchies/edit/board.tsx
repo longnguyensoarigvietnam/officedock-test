@@ -22,7 +22,7 @@ import { CreationDataSkill, Skill } from '@interfaces/skills';
 
 import { AddCategoryHierarchyType, ScreenName } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { INVALID_CATEGORY_NAME } from '@constants/message';
+import { ERROR_SAVE_MESSAGE } from '@constants/message';
 import { ALL_TEAMS_OPTION } from '@constants';
 
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -116,42 +116,6 @@ const EditHierarchyForm = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
   const { showToast } = useToast();
-  const [newCategory, setNewCategory] = useState<{
-    name: string;
-    uuid: string;
-    type: string;
-    rowInfo: rowDataType;
-  }>({
-    name: '',
-    uuid: '',
-    type: '',
-    rowInfo: {
-      id: '',
-      large: {
-        value: '',
-        label: '',
-        showBy: '',
-        isValid: false,
-        errorMessage: '',
-      },
-      medium: {
-        value: '',
-        label: '',
-        showBy: '',
-        isValid: false,
-        errorMessage: '',
-      },
-      small: {
-        value: '',
-        label: '',
-        showBy: '',
-        isValid: false,
-        errorMessage: '',
-      },
-      skills: [],
-      color: '',
-    },
-  });
 
   useEffect(() => {
     if (creationDataCategoryData && creationDataCategoryData?.length > 0) {
@@ -256,9 +220,6 @@ const EditHierarchyForm = () => {
   };
 
   const handleConfirmUpdateOrganizationCategoryHierarchy = () => {
-    if (newCategory.uuid || newCategory.name) {
-      return;
-    }
     if (!hasInvalidCategory(hierarchyList)) {
       const tempSelectedHierarchiesToUpdate = selectedHierarchiesToUpdate.map(
         (hierarchy) => {
@@ -285,7 +246,7 @@ const EditHierarchyForm = () => {
     } else {
       showToast({
         variant: 'error',
-        description: INVALID_CATEGORY_NAME,
+        description: ERROR_SAVE_MESSAGE,
       });
     }
   };
@@ -528,8 +489,6 @@ const EditHierarchyForm = () => {
                   )?.skills || []
                 }
                 organizationName={data.name}
-                newCategory={newCategory}
-                setNewCategory={setNewCategory}
                 setHierarchyList={setHierarchyList}
                 setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
                 setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
@@ -546,8 +505,6 @@ const EditHierarchyForm = () => {
                 (options) => options.organizationId == hierarchyList[0].id,
               )?.skills || []
             }
-            newCategory={newCategory}
-            setNewCategory={setNewCategory}
             setHierarchyList={setHierarchyList}
             setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
             setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}

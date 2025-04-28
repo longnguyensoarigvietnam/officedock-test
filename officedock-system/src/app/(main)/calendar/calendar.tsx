@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, Fragment, useContext } from 'react';
 import { AxiosError } from 'axios';
 import { debounce } from 'lodash';
+import { isSameDay } from 'date-fns';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -32,8 +33,10 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { CalendarSidebar } from '@components/calendar/Sidebar';
 import { TaskAndEventListModal } from '@components/modals/TaskAndEventListModal';
 import RangeSlider from '@components/common/RangeSlider';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import useDebounceText from '@hooks/useDebounceText';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
@@ -93,8 +96,6 @@ import {
 } from '@constants';
 
 import api from '@base/api';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const EventCalendar = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -794,25 +795,19 @@ const EventCalendar = () => {
             const eventStart = new Date(event.start);
             const eventEnd = new Date(event.end);
             const clickDate = new Date(clickInfo.date);
+            const shouldAdjustEnd =
+              !isSameDay(eventStart, eventEnd) &&
+              !isMidnight(eventEnd) &&
+              event.allDay;
 
-            const isDifferentDate =
-              eventStart.toDateString() !== eventEnd.toDateString();
-            const isEndNotMidnight =
-              eventEnd.getHours() !== 0 ||
-              eventEnd.getMinutes() !== 0 ||
-              eventEnd.getSeconds() !== 0;
-            const adjustedEnd =
-              isDifferentDate && isEndNotMidnight
-                ? subtractOneDay(event.end)
-                : event.end;
+            const adjustedEnd = shouldAdjustEnd
+              ? subtractOneDay(event.end)
+              : eventEnd;
+            const adjustedEndISOString = shouldAdjustEnd
+              ? subtractOneDay(event.end).toISOString()
+              : event.end;
 
-            if (
-              removeTimeAndCompareDates(
-                eventStart.toLocaleString(),
-                new Date(adjustedEnd).toLocaleString(),
-                clickDate.toLocaleString(),
-              )
-            ) {
+            if (removeTimeAndCompareDates(eventStart, adjustedEnd, clickDate)) {
               if (
                 searchParams.get('view') == ViewOptions.WEEK ||
                 searchParams.get('view') == ViewOptions.DAY
@@ -821,8 +816,8 @@ const EventCalendar = () => {
                   filterEvents.push({
                     id: `${event.id}`,
                     title: event.title,
-                    start: eventStart.toLocaleString(),
-                    end: new Date(adjustedEnd).toLocaleString(),
+                    start: event.start,
+                    end: adjustedEndISOString,
                     type: event.type,
                     participants: event.participants || [],
                     address: event.address || '',
@@ -832,8 +827,8 @@ const EventCalendar = () => {
                 filterEvents.push({
                   id: `${event.id}`,
                   title: event.title,
-                  start: eventStart.toLocaleString(),
-                  end: new Date(adjustedEnd).toLocaleString(),
+                  start: event.start,
+                  end: adjustedEndISOString,
                   type: event.type,
                   participants: event.participants || [],
                   address: event.address || '',
@@ -945,30 +940,23 @@ const EventCalendar = () => {
         const eventStart = new Date(event.start);
         const eventEnd = new Date(event.end);
         const clickDate = new Date(date as Date);
+        const shouldAdjustEnd =
+          !isSameDay(eventStart, eventEnd) &&
+          !isMidnight(eventEnd) &&
+          event.allDay;
 
-        const isDifferentDate =
-          eventStart.toDateString() !== eventEnd.toDateString();
-        const isEndNotMidnight =
-          eventEnd.getHours() !== 0 ||
-          eventEnd.getMinutes() !== 0 ||
-          eventEnd.getSeconds() !== 0;
-        const adjustedEnd =
-          isDifferentDate && isEndNotMidnight && event.allDay
-            ? subtractOneDay(event.end)
-            : event.end;
-
-        if (
-          removeTimeAndCompareDates(
-            eventStart.toLocaleString(),
-            new Date(adjustedEnd).toLocaleString(),
-            clickDate.toLocaleString(),
-          )
-        ) {
+        const adjustedEnd = shouldAdjustEnd
+          ? subtractOneDay(event.end)
+          : eventEnd;
+        const adjustedEndISOString = shouldAdjustEnd
+          ? subtractOneDay(event.end).toISOString()
+          : event.end;
+        if (removeTimeAndCompareDates(eventStart, adjustedEnd, clickDate)) {
           filterEvents.push({
             id: `${event.id}`,
             title: event.title,
-            start: eventStart.toLocaleString(),
-            end: new Date(adjustedEnd).toLocaleString(),
+            start: event.start,
+            end: adjustedEndISOString,
             type: event.type,
             participants: event.participants || [],
             address: event.address || '',
@@ -2155,7 +2143,7 @@ const EventCalendar = () => {
     <Fragment>
       <div className="flex mb-3 overflow-y-hidden pt-5" ref={containerRef}>
         <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'}`}>
-          <div className="flex items-center justify-between mb-7 pl-10">
+          <div className="flex items-center justify-between mb-3 pl-10">
             <div className="flex items-center ml-[-1rem] gap-4">
               <ImageRound
                 name="Chevron left"
