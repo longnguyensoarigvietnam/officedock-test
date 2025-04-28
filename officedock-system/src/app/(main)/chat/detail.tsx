@@ -41,13 +41,13 @@ import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMe
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import ChatUploadingFilesModal from '@components/modals/ChatUploadingFilesModal';
 import ChatDroppingFileModal from '@components/modals/ChatDroppingFileModal';
-import ErrorChatUploadFileValidationModal from '@components/modals/ErrorChatUploadFileValidationModal';
 import { MessageDetail } from '@components/chat/MessageDetail';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import ListTaskUserChat from '@components/chat/ListTaskUserChat';
 import { TaskQuote } from '@components/chat/CustomTaskQuote';
 import { CustomReaction } from '@components/chat/CustomIcon';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -81,7 +81,7 @@ import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
-  UPLOAD_FILE_MAXIMUM_SZIE,
+  UPLOAD_CHAT_FILE_MAXIMUM_SIZE,
 } from '@constants/message';
 
 import useChatRoomDetail from '@hooks/useChatRoomDetail';
@@ -2774,9 +2774,9 @@ const ChatDetail = ({
         </div>
       )}
       {openErrorUploadFileModal && (
-        <ErrorChatUploadFileValidationModal
+        <ErrorUploadFileValidationModal
           open={true}
-          message={UPLOAD_FILE_MAXIMUM_SZIE}
+          message={UPLOAD_CHAT_FILE_MAXIMUM_SIZE}
           onClose={() => {
             setOpenErrorUploadFileModal(false);
           }}

@@ -18,15 +18,16 @@ const CustomUserAvatar = ({
   return (
     <div className={`${customClassName}`}>
       {avatarUrl ? (
-        <Image
-          src={getFileURL(avatarUrl)}
-          className={`hover:cursor-pointer object-cover object-center rounded-full`}
-          width={size}
-          height={size}
-          sizes="100vw"
-          alt="avatar"
-          quality={100}
-        />
+        <div
+          className="relative rounded-full overflow-hidden"
+          style={{ width: size, height: size }}>
+          <Image
+            src={getFileURL(avatarUrl)}
+            className="hover:cursor-pointer object-cover object-center"
+            fill 
+            alt="avatar"
+          />
+        </div>
       ) : (
         <svg
           width={size}

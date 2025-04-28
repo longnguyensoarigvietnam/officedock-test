@@ -542,6 +542,7 @@ const TableComponent = ({
     return await api.post(apiRouters.CATEGORY_VALIDATION, {
       uuid: data.uuid,
       name: data.name,
+      team: hierarchyList.id
     });
   };
 
@@ -680,8 +681,14 @@ const TableComponent = ({
             updatedHierarchyList.findIndex(
               (hierarchy) => hierarchy.id == hierarchyList.id,
             );
+          let updatedRowInfo: rowDataType | undefined;
 
           if (foundOrganizationHierarchyIndex !== -1) {
+            updatedRowInfo = updatedHierarchyList[
+              foundOrganizationHierarchyIndex
+            ].statisticCategories.find(
+              (hierarchy) => hierarchy.id == variables.rowInfo.id,
+            );
             let updatedCategories: rowDataType[] = [];
             if (variables.type == HierarchyType.LARGE) {
               updatedCategories = updatedHierarchyList[
@@ -696,9 +703,15 @@ const TableComponent = ({
                         showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
                           data?.status == ServerStatusCode.OK
-                            ? checkIsValidRowInput(variables)
+                            ? checkIsValidRowInput({
+                                ...variables,
+                                rowInfo: updatedRowInfo || variables.rowInfo, // use fresh if possible
+                              })
                             : false,
-                        errorMessage: !checkIsValidRowInput(variables)
+                        errorMessage: !checkIsValidRowInput({
+                          ...variables,
+                          rowInfo: updatedRowInfo || variables.rowInfo, // use fresh if possible
+                        })
                           ? INVALID_CATEGORY_NAME
                           : variables.name == ''
                             ? ''
@@ -724,9 +737,15 @@ const TableComponent = ({
                         showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
                           data?.status == ServerStatusCode.OK
-                            ? checkIsValidRowInput(variables)
+                            ? checkIsValidRowInput({
+                                ...variables,
+                                rowInfo: updatedRowInfo || variables.rowInfo, // use fresh if possible
+                              })
                             : false,
-                        errorMessage: !checkIsValidRowInput(variables)
+                        errorMessage: !checkIsValidRowInput({
+                          ...variables,
+                          rowInfo: updatedRowInfo || variables.rowInfo, // use fresh if possible
+                        })
                           ? INVALID_CATEGORY_NAME
                           : variables.name == ''
                             ? ''
@@ -753,9 +772,15 @@ const TableComponent = ({
                         showBy: AddCategoryHierarchyType.INPUT,
                         isValid:
                           data?.status == ServerStatusCode.OK
-                            ? checkIsValidRowInput(variables)
+                            ? checkIsValidRowInput({
+                                ...variables,
+                                rowInfo: updatedRowInfo || variables.rowInfo, // use fresh if possible
+                              })
                             : false,
-                        errorMessage: !checkIsValidRowInput(variables)
+                        errorMessage: !checkIsValidRowInput({
+                          ...variables,
+                          rowInfo: updatedRowInfo || variables.rowInfo, // use fresh if possible
+                        })
                           ? INVALID_CATEGORY_NAME
                           : variables.name == ''
                             ? ''

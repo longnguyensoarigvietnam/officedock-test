@@ -257,26 +257,27 @@ const KanbanBoardTaskTeam = () => {
         <p className="mr-8 text-[#77858F] font-medium text-[13px]">
           メンバー{participants.length}人
         </p>
-
-        {slicedParticipants.map((item) => {
-          return (
-            <div
-              className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
-              key={item.id}>
-              <CustomUserAvatar
-                avatarUrl={item?.avatarUrl || ''}
-                avatarColor={item?.color || ''}
-                size={33}
-                customClassName={`${!item?.avatarUrl && '!mt-0'}`}
-              />
+        <div className="flex items-center">
+          {slicedParticipants.map((item) => {
+            return (
+              <div
+                className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
+                key={item.id}>
+                <CustomUserAvatar
+                  avatarUrl={item?.avatarUrl || ''}
+                  avatarColor={item?.color || ''}
+                  size={32}
+                  customClassName={`${!item?.avatarUrl && '!mt-0'}`}
+                />
+              </div>
+            );
+          })}
+          {remainingCount > 0 && (
+            <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
+              +{remainingCount}
             </div>
-          );
-        })}
-        {remainingCount > 0 && (
-          <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
-            +{remainingCount}
-          </div>
-        )}
+          )}
+        </div>
       </>
     );
   };

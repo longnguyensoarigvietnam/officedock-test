@@ -42,6 +42,8 @@ import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
 import ViewProfileModal from '@components/modals/ViewProfileModal';
 import EditProfileModal from '@components/modals/EditProfileModal';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
 
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
@@ -58,6 +60,7 @@ import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
+  UPLOAD_AVATAR_FILE_MAXIMUM_SIZE,
 } from '@constants/message';
 import {
   DEFAULT_END_TIME,
@@ -70,7 +73,6 @@ import { UserProfileFormData, UserProfileFormRequest } from '@interfaces/user';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 type HeaderProps = {
   className?: string;
 };
@@ -174,6 +176,8 @@ const Header = ({ className }: HeaderProps) => {
     useState<boolean>(false);
   const [openEditProfileModal, setOpenEditProfileModal] =
     useState<boolean>(false);
+  const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
+    useState(false);
 
   const { showToast } = useToast();
   const { authenticatedUser } = useAuthenticatedUser({});
@@ -844,6 +848,9 @@ const Header = ({ className }: HeaderProps) => {
           queryClient.invalidateQueries({ queryKey: ['getUserList'] }),
         ]);
       },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
       onSettled: () => {
         setIsLoading(false);
       },
@@ -1035,7 +1042,17 @@ const Header = ({ className }: HeaderProps) => {
             setOpenEditProfileModal(false);
           }}
           onEdit={handleConfirmEditProfile}
+          setOpenErrorUploadFileModal={setOpenErrorUploadFileModal}
           authenticatedUser={authenticatedUser}
+        />
+      )}
+      {openErrorUploadFileModal && (
+        <ErrorUploadFileValidationModal
+          open={true}
+          message={UPLOAD_AVATAR_FILE_MAXIMUM_SIZE}
+          onClose={() => {
+            setOpenErrorUploadFileModal(false);
+          }}
         />
       )}
       {isShowModalTask && (

@@ -61,11 +61,11 @@ export const TaskAndEventListModal = ({
           <DynamicTooltip
             content={`${session?.user.profile.fullName}`}
             placement="top">
-            <div className="border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] mt-[-7px] mr-1">
+            <div className="border-[1px] border-white rounded-full mt-[-7px] mr-1">
               <CustomUserAvatar
                 avatarUrl={memberInfo?.avatar || ''}
                 avatarColor={memberInfo?.avatarColor || ''}
-                size={30}
+                size={27}
               />
             </div>
           </DynamicTooltip>
@@ -79,11 +79,11 @@ export const TaskAndEventListModal = ({
             <DynamicTooltip
               content={`${participantList[0].fullName}`}
               placement="top">
-              <div className="border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] mt-[-7px] mr-1">
+              <div className="border-[1px] border-white rounded-full mt-[-7px] mr-1">
                 <CustomUserAvatar
                   avatarUrl={memberInfo?.avatar || ''}
                   avatarColor={memberInfo?.avatarColor || ''}
-                  size={30}
+                  size={27}
                 />
               </div>
             </DynamicTooltip>
@@ -102,11 +102,11 @@ export const TaskAndEventListModal = ({
                     placement="top"
                     key={participant.id}>
                     <div
-                      className={`border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] ${index != 0 && 'ml-[-7px]'}`}>
+                      className={`border-[1px] border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
                       <CustomUserAvatar
                         avatarUrl={memberInfo?.avatar || ''}
                         avatarColor={memberInfo?.avatarColor || ''}
-                        size={30}
+                        size={27}
                       />
                     </div>
                   </DynamicTooltip>
@@ -128,11 +128,11 @@ export const TaskAndEventListModal = ({
                     placement="top"
                     key={participant.id}>
                     <div
-                      className={`border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] ${index != 0 && 'ml-[-7px]'}`}>
+                      className={`border-[1px] border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
                       <CustomUserAvatar
                         avatarUrl={memberInfo?.avatar || ''}
                         avatarColor={memberInfo?.avatarColor || ''}
-                        size={30}
+                        size={27}
                       />
                     </div>
                   </DynamicTooltip>
@@ -142,7 +142,7 @@ export const TaskAndEventListModal = ({
                 <DynamicTooltip
                   content={`他に${participantList.length - 1}人の表示があります`}
                   placement="top">
-                  <div className="text-white border-[1px] ml-[-7px] border-white rounded-full w-[26.5px] h-[26.5px] text-[11px] font-medium bg-[#77858F] flex items-center justify-center">
+                  <div className="text-white border-[1px] ml-[-7px] border-white rounded-full text-[11px] font-medium bg-[#77858F] flex items-center justify-center">
                     +{participantList.length - 1}
                   </div>
                 </DynamicTooltip>

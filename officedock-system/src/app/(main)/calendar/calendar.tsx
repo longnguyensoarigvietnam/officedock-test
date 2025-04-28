@@ -590,8 +590,8 @@ const EventCalendar = () => {
                   <div className="flex items-center gap-1">
                     {showUserAvatars(
                       eventContent.event.extendedProps.participants,
-                      25,
-                      '!w-[19px] !h-[19px]',
+                      21,
+                      '!w-[21px] !h-[21px]',
                       false,
                       true,
                     )}
@@ -620,7 +620,7 @@ const EventCalendar = () => {
             ) &&
               showUserAvatars(
                 eventContent.event.extendedProps.participants,
-                33,
+                32,
                 '!w-[32px] !h-[32px]',
                 true,
                 false,
@@ -737,8 +737,8 @@ const EventCalendar = () => {
                   <div className="flex items-center gap-1">
                     {showUserAvatars(
                       eventContent.event.extendedProps.participants,
-                      25,
-                      '!w-[19px] !h-[19px]',
+                      21,
+                      '!w-[21px] !h-[21px]',
                       false,
                       false,
                     )}
@@ -2250,7 +2250,7 @@ const EventCalendar = () => {
                         onChange(e);
                         handleViewChange(e.value as string);
                         setIsCalendarLoading(true);
-                        setTimeout(() => setIsCalendarLoading(false), 600);
+                        setTimeout(() => setIsCalendarLoading(false), 1500);
                       }}
                     />
                   )}
@@ -2496,7 +2496,7 @@ const EventCalendar = () => {
               watch('calendarView').value != CalendarViewOptions.VIEW_BY_YEAR &&
               !isEventRendering && (
                 <div
-                  className={`w-[180px] px-3 z-[20] h-[38px] absolute  rounded-md right-[50px] bottom-[5px] bg-white flex items-center `}>
+                  className={`w-[180px] px-3 z-[20] h-[38px] absolute  rounded-md right-[50px] bottom-[30px] bg-white flex items-center `}>
                   <RangeSlider
                     min={18}
                     max={100}

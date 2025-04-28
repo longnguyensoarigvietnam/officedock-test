@@ -1,26 +1,28 @@
 'use client';
-import { ChangeEvent, memo, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, Dispatch, memo, SetStateAction, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 import Modal from '@components/common/Modal';
 import Button from '@components/common/Button';
 import ErrorMessage from '@components/common/ErrorMessage';
 import Input from '@components/common/Input';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { User, UserProfileFormData } from '@interfaces/user';
 
 import { passwordRegisterRules } from '@utils/validators';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import { MAX_AVATAR_IMAGE_FILE_SIZE } from '@constants';
 
 export type EditProfileModalProps = {
   open: boolean;
   onClose: () => void;
   authenticatedUser: User | undefined;
   onEdit: (data: UserProfileFormData) => void;
+  setOpenErrorUploadFileModal: Dispatch<SetStateAction<boolean>>
 };
 
 const EditProfileModal = memo(
-  ({ open, onClose, authenticatedUser, onEdit }: EditProfileModalProps) => {
+  ({ open, onClose, authenticatedUser, onEdit, setOpenErrorUploadFileModal }: EditProfileModalProps) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const {
       reset,
@@ -49,6 +51,10 @@ const EditProfileModal = memo(
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
+      if(file.size > MAX_AVATAR_IMAGE_FILE_SIZE){
+        setOpenErrorUploadFileModal(true);
+        return;
+      }
 
       const newFile = new File([file], file.name, {
         type: file.type,
@@ -81,7 +87,7 @@ const EditProfileModal = memo(
         onClose={() => {
           onClose();
         }}
-        title="プロフィール">
+        title="プロフィール 編集">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mx-8 mb-5">
             <div className="flex items-center mb-5">
