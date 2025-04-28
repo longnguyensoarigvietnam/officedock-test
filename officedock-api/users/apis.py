@@ -79,6 +79,7 @@ from utils.jwt import JWTService
 from common.filters import CustomOrderFilter
 from roles.constants import Screens
 from base.filters import FilterByPermission
+from tasks.models import TeamTaskIndex
 
 
 def _login(self, request, is_admin=True):
@@ -977,6 +978,12 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     ).delete()
                     # Remove all skill map in organization of user
                     skill_maps.delete()
+
+                # Remove team task index
+                TeamTaskIndex.objects.filter(
+                    user=instance, team__in=delete_organizations
+                ).all().delete()
+
             user.organizations.clear()
             for data_org in organizations_data:
                 user.organizations.add(

@@ -244,9 +244,9 @@ def get_task_index(instance, request, user_id=None, team_id=None):
     )
 
     task_index = None
-    if team_id:
+    if team_id and user_id:
         task_index = TeamTaskIndex.objects.filter(
-            task=instance, team_id=team_id
+            task=instance, team_id=team_id, user_id=user_id
         ).last()
     elif user_id:
         task_index = TaskIndex.objects.filter(
@@ -851,6 +851,7 @@ class TaskTeamdockSerializer(BaseUserSerializer):
         Retrieve the task status along with tasks assigned to the user.
         """
         request = self.context.get("request")
+        user = request.user
         ordering_fields = self.context.get("ordering_fields")
         organization_id = request.query_params.get("organization_id")
         page_size = int(request.query_params.get("page_size", 5))
@@ -870,7 +871,7 @@ class TaskTeamdockSerializer(BaseUserSerializer):
             if ordering:
                 if ordering in ordering_fields:
                     tasks = tasks.annotate(
-                        coalesced_ordering_datetime=Coalesce(
+                        coalesced_deadline=Coalesce(
                             "deadline",
                             Value(
                                 REPLACE_NULL_DATE, output_field=DateTimeField()
@@ -878,16 +879,16 @@ class TaskTeamdockSerializer(BaseUserSerializer):
                         )
                     )
 
-                    # Replace 'deadline' with 'coalesced_ordering_datetime' for sorting
+                    # Replace 'deadline' with 'coalesced_deadline' for sorting
                     field_name = ordering.replace(
-                        "deadline", "coalesced_ordering_datetime"
+                        "deadline", "coalesced_deadline"
                     )
                     tasks = tasks.order_by(field_name, "-updated_at")
 
                     # Update team task index only if sorting by deadline or importance
                     for idx, task in enumerate(tasks):
                         team_task_index = task.team_task_index.filter(
-                            team_id=organization_id
+                            team_id=organization_id, user=user
                         ).first()
                         if team_task_index:
                             if team_task_index.pin_at:
@@ -925,23 +926,48 @@ class TaskTeamdockSerializer(BaseUserSerializer):
             if search := request.query_params.get("search"):
                 tasks = tasks.filter(title__icontains=search)
 
-            # Fetch task index and pinned status for the user
-            task_pin = TeamTaskIndex.objects.filter(
-                task=OuterRef("pk"), team_id=organization_id
-            ).values("pin_at")[:1]
-            task_index = TeamTaskIndex.objects.filter(
-                task=OuterRef("pk"), team_id=organization_id
-            ).values("index")[:1]
+            # If the current user has no team task index, reindex tasks
+            if (
+                not TeamTaskIndex.objects.filter(
+                    team_id=organization_id,
+                    user=user,
+                    task__status=status,
+                    task__people_in_charge=obj,
+                ).exists()
+                and not ordering
+            ):
+                tasks = tasks.annotate(
+                    coalesced_deadline=Coalesce(
+                        "deadline",
+                        Value(REPLACE_NULL_DATE, output_field=DateTimeField()),
+                    )
+                ).order_by("-coalesced_deadline", "-updated_at")
 
-            # Annotate tasks with task index and pin timestamp
-            tasks = tasks.annotate(
-                index=Subquery(task_index),
-                coalesced_pin_at=Coalesce(
-                    Subquery(task_pin),
-                    Value(REPLACE_NULL_DATE),
-                    output_field=DateTimeField(),
-                ),
-            ).order_by("-coalesced_pin_at", "-index")[:page_size]
+                # Update team task index only if sorting by deadline or importance
+                for idx, task in enumerate(tasks):
+                    TeamTaskIndex.objects.create(
+                        task=task,
+                        team_id=organization_id,
+                        user=user,
+                        index=INITIAL_INDEX_VALUE - idx,
+                    )
+            else:
+                # Fetch task index and pinned status for the user
+                team_task_index_obj = TeamTaskIndex.objects.filter(
+                    task=OuterRef("pk"), team_id=organization_id, user=user
+                )
+                task_pin = team_task_index_obj.values("pin_at")[:1]
+                task_index = team_task_index_obj.values("index")[:1]
+
+                # Annotate tasks with task index and pin timestamp
+                tasks = tasks.annotate(
+                    index=Subquery(task_index),
+                    coalesced_pin_at=Coalesce(
+                        Subquery(task_pin),
+                        Value(REPLACE_NULL_DATE),
+                        output_field=DateTimeField(),
+                    ),
+                ).order_by("-coalesced_pin_at", "-index")
 
             # Append formatted status data
             results.append(
@@ -951,11 +977,11 @@ class TaskTeamdockSerializer(BaseUserSerializer):
                     "total": tasks_total,
                     "has_next": tasks_total > page_size,
                     "tasks": TaskBoardSerializer(
-                        tasks,
+                        tasks[:page_size],
                         many=True,
                         context={
                             "request": request,
-                            "user_id": obj.id,
+                            "user_id": user.id,
                             "organization_id": organization_id,
                         },
                     ).data,
