@@ -48,6 +48,7 @@ import {
   STATUS_REQUIRED_MESSAGE,
 } from '@constants/message';
 import {
+  COLUMN_ID_TASK,
   COPY_MESSAGE,
   DAY_OPTIONS,
   MONTH_OPTIONS,
@@ -105,6 +106,7 @@ export type ActionTaskModalProps = {
   }[];
   organizationId: string | null;
   creationDataTaskData: CreationDataTask | undefined;
+  organizationTeamList: OptionDropdownType[];
   disableDeleteAction?: boolean;
   onDelete?: () => void;
   onClose: () => void;
@@ -124,6 +126,7 @@ const ActionsTaskModalTeam = ({
   peopleDefaultId,
   listMemberTeam,
   creationDataTaskData,
+  organizationTeamList,
   disableDeleteAction = false,
   onEdit,
   onSubmit,
@@ -490,6 +493,11 @@ const ActionsTaskModalTeam = ({
           label: dataTask.peopleInCharge[0].fullName,
           value: dataTask.peopleInCharge[0].id,
         };
+      } else {
+        value.peopleInChart = {
+          label: '安藤 優希',
+          value: '',
+        };
       }
 
       if (dataTask.categories) {
@@ -543,7 +551,6 @@ const ActionsTaskModalTeam = ({
       const valueOrganization = dataOptionsOrganizations.find(
         (element) => String(element.value) == organizationId,
       );
-
       if (valueOrganization && !dataTask) {
         setValue('organization', valueOrganization);
       }
@@ -667,13 +674,17 @@ const ActionsTaskModalTeam = ({
 
   useEffect(() => {
     if (listMemberTeam) {
-      setDataOptionsPeopleInCharge(
-        listMemberTeam.map((org) => ({
+      setDataOptionsPeopleInCharge([
+        {
+          label: '安藤 優希',
+          value: '',
+        },
+        ...listMemberTeam.map((org) => ({
           label: org.fullName,
           value: org.id,
           imgUrl: org.color,
         })),
-      );
+      ]);
     }
   }, [listMemberTeam]);
 
@@ -685,6 +696,12 @@ const ActionsTaskModalTeam = ({
       );
       if (newPeople) {
         setValue('peopleInChart', newPeople);
+      }
+      if (peopleDefaultId === COLUMN_ID_TASK) {
+        setValue('peopleInChart', {
+          label: '安藤 優希',
+          value: '',
+        });
       }
     }
   }, [peopleDefaultId, dataOptionsPeopleInCharge, setValue]);
@@ -712,6 +729,16 @@ const ActionsTaskModalTeam = ({
       );
     }
   }, [creationDataTaskData]);
+  useEffect(() => {
+    if (organizationTeamList) {
+      setDataOptionsOrganizations(
+        organizationTeamList.map((item) => ({
+          label: item.label,
+          value: item.value,
+        })),
+      );
+    }
+  }, [organizationTeamList]);
 
   const selectedOrganization = watch('organization');
 
@@ -1078,7 +1105,7 @@ const ActionsTaskModalTeam = ({
           const filteredTagIds = (getValues('tagIds') || []).filter(
             (item): item is OptionDropdownType => item !== undefined,
           );
-          let taskData = {...data};
+          let taskData = { ...data };
           if (action === ActionTask.EDIT) {
             taskData = {
               ...data,

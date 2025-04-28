@@ -41,6 +41,7 @@ import {
   StatusValueTask,
 } from '@constants/enums';
 import {
+  COLUMN_ID_TASK,
   INITIAL_INDEX_VALUE,
   INITIAL_INDEX_VALUE_STEP,
   NO_OPTION_CATEGORY,
@@ -63,6 +64,7 @@ import {
 } from '@utils';
 import { OptionDropdownType } from '@interfaces/common';
 import {
+  NoSettingTotalType,
   Task,
   TaskErrorPerson,
   TaskFormData,
@@ -84,6 +86,8 @@ import { useToast } from '@providers/ToastProvider';
 import { ResponseError } from '@interfaces/response';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import NoSettingColumn from '@components/kanbanTeam/NoSettingColumn';
+import useTaskNoSettingTeam from '@hooks/useTaskNoSettingTeam';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -100,6 +104,8 @@ const KanbanBoardTaskTeam = () => {
     setListDataKanbanTeam,
     showWarningStartTaskModalTeam,
     setShowWarningStartTaskModalTeam,
+    listTaskNoSetting,
+    setListTaskNoSetting,
   } = useContext(TaskTeamStateContext);
 
   const { setIsLoading } = useContext(LoadingContext);
@@ -141,6 +147,7 @@ const KanbanBoardTaskTeam = () => {
   }>({});
   const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
   const [closeAction, setCloseAction] = useState<ActionTask | null>();
+  const [totalNoSetting, setTotalNoSetting] = useState<NoSettingTotalType>();
 
   // State
   // Member
@@ -187,6 +194,7 @@ const KanbanBoardTaskTeam = () => {
   };
 
   const { creationDataTaskData } = useCreationDataTask({
+    organizationId: organizationId as string,
     onSuccess: (data) => {
       setCreationDataTaskData(data);
     },
@@ -220,6 +228,21 @@ const KanbanBoardTaskTeam = () => {
       if (organizationTeamList.length > 0) {
         handleSetParamTeam(String(organizationTeamList[0].value));
       }
+    },
+  });
+  useTaskNoSettingTeam({
+    organization_id: organizationId as string,
+    filter: {
+      userId: orderingOptions?.user_ids,
+    },
+    isReadyToFetch: isReadyToFetch,
+    ordering: dataOrderRing,
+    onSuccess: (data) => {
+      setListTaskNoSetting(data.results);
+      setTotalNoSetting({
+        count: data.count,
+        hasNext: data.hasNext,
+      });
     },
   });
   // Handle remove option filter
@@ -358,101 +381,512 @@ const KanbanBoardTaskTeam = () => {
     const [sourceUserId, sourceStatus] = source.droppableId.split('-');
     const [destUserId, destStatus] = destination.droppableId.split('-');
 
-    if (!sourceUserId || !sourceStatus || !destUserId || !destStatus) return;
+    // Drag no setting --> drop no setting
+    if (sourceUserId === COLUMN_ID_TASK && destUserId === COLUMN_ID_TASK) {
+      if (source.index === destination.index) return;
 
-    const newUsers = listDataKanbanTeam.map((user) => ({
-      ...user,
-      statuses: { ...user.statuses },
-    }));
+      const movedItem = listTaskNoSetting[source.index];
 
-    const sourceUser = newUsers.find((user) => user.id === sourceUserId);
-    const destUser = newUsers.find((user) => user.id === destUserId);
-    if (!sourceUser || !destUser) return;
+      const newItems = Array.from(listTaskNoSetting).filter(
+        (item) => item.id !== movedItem.id,
+      );
+      const prevItem = newItems[destination.index - 1];
+      const nextItem = newItems[destination.index];
 
-    const sourceTasks = [
-      ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
-    ];
-    const destTasks = [
-      ...destUser.statuses[destStatus as keyof TransformedStatuses],
-    ];
+      const listPinAt = newItems.filter(
+        (item) => item.pinAt && item.id !== movedItem.id,
+      );
+      const listNoPin = newItems.filter(
+        (item) => !item.pinAt && item.id !== movedItem.id,
+      );
 
-    const [movedTask] = sourceTasks.splice(source.index, 1);
-    if (!movedTask) return;
-
-    if (sourceUserId !== destUserId || sourceStatus !== destStatus) {
+      let newIndex = movedItem.index;
       setIsReadyToFetch(false);
       setDataOrderRing('');
-    }
-    const existingTaskIndex = destTasks.findIndex(
-      (task) => task.id === movedTask.id,
-    );
-    if (existingTaskIndex !== -1) {
-      destTasks.splice(existingTaskIndex, 1);
-    }
 
-    // Return if task is running
-    if (sourceUserId !== destUserId && movedTask.isStart) {
-      return;
+      if (movedItem.pinAt) {
+        const isPrevItemNotPinned = !prevItem || !prevItem.pinAt;
+        const isNextItemNotPinned = !nextItem || !nextItem.pinAt;
+
+        // If both previous and next items are not pinned, move the item to the top of the column
+        if (isPrevItemNotPinned && isNextItemNotPinned) {
+          movedItem.pinAt = convertDateStringFull(new Date());
+
+          setListTaskNoSetting([movedItem, ...listPinAt, ...listNoPin]);
+
+          updateTaskIndex({
+            tasks: [
+              {
+                task: movedItem.id as number,
+                index: newIndex,
+                status:
+                  StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                pinAt: movedItem.pinAt,
+                team: organizationId as string,
+              },
+            ],
+          });
+        } else {
+          // If not dropped at the top, calculate the `index` as before
+          const dateAtPrev = prevItem ? prevItem.pinAt : null;
+          const dateAtNext = nextItem ? nextItem.pinAt : null;
+
+          const newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
+          movedItem.pinAt = newPinAt;
+
+          const sortedPinned = [...listPinAt, movedItem].sort(compareItems);
+
+          setListTaskNoSetting([...sortedPinned, ...listNoPin]);
+          updateTaskIndex({
+            tasks: [
+              {
+                task: movedItem.id as number,
+                index: movedItem.index,
+                status:
+                  StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                pinAt: movedItem.pinAt,
+                team: organizationId as string,
+              },
+            ],
+          });
+        }
+      } else {
+        if (nextItem?.pinAt) {
+          const firstNormalItem = listNoPin[0];
+
+          newIndex = firstNormalItem.index + INITIAL_INDEX_VALUE;
+        } else {
+          let prevItemIndex = prevItem ? prevItem.index : INITIAL_INDEX_VALUE;
+          if (prevItem && prevItem.pinAt) {
+            prevItemIndex = INITIAL_INDEX_VALUE;
+          }
+          const nextItemIndex = nextItem ? nextItem.index : INITIAL_INDEX_VALUE;
+
+          if (!prevItem && !nextItem) {
+            newIndex = INITIAL_INDEX_VALUE_STEP;
+          } else if (!prevItem || prevItem.pinAt) {
+            newIndex = nextItemIndex + INITIAL_INDEX_VALUE;
+          } else if (!nextItem) {
+            newIndex = prevItemIndex - INITIAL_INDEX_VALUE;
+          } else {
+            newIndex = (prevItemIndex + nextItemIndex) / 2;
+          }
+        }
+        movedItem.index = newIndex;
+
+        const sortedPinned = [...listPinAt].sort(compareItems);
+        const sortedNormal = [movedItem, ...listNoPin].sort(compareItems);
+
+        setListTaskNoSetting([...sortedPinned, ...sortedNormal]);
+      }
     }
-    // Update total
-    if (destUserId === sourceUserId && destStatus === sourceStatus) {
-      // handle logic
-    } else {
-      updateTaskStatusTotalWhenDrop({
-        newUserId: destUserId,
-        oldUserId: sourceUserId,
-        newStatusName: StatusTask[destStatus as keyof typeof StatusTask],
-        oldStatusName: StatusTask[sourceStatus as keyof typeof StatusTask],
+    // Drag user --> drop no setting
+    if (sourceUserId !== COLUMN_ID_TASK && destUserId === COLUMN_ID_TASK) {
+      const newUsers = listDataKanbanTeam.map((user) => ({
+        ...user,
+        statuses: { ...user.statuses },
+      }));
+      const sourceUser = newUsers.find((user) => user.id === sourceUserId);
+      if (!sourceUser) return;
+
+      const sourceTasks = [
+        ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
+      ];
+
+      const [movedTask] = sourceTasks.splice(source.index, 1);
+      if (!movedTask) return;
+      // Return if task is running
+      if (sourceUserId !== destUserId && movedTask.isStart) {
+        return;
+      }
+
+      const newItems = Array.from(listTaskNoSetting);
+      const prevItem = newItems[destination.index - 1];
+      const nextItem = newItems[destination.index];
+
+      const listPinAt = newItems.filter((item) => item.pinAt);
+      const listNoPin = newItems.filter((item) => !item.pinAt);
+
+      let newIndex = movedTask.index;
+
+      updateTotalStatusSubtract({
+        userId: sourceUserId,
+        statusName: movedTask?.status?.name || '',
+      });
+      removeTaskById({
+        statusId: movedTask?.status?.id as number,
+        taskId: movedTask?.id as number,
+        userId: sourceUserId,
+      });
+      setIsReadyToFetch(false);
+      setDataOrderRing('');
+      if (movedTask.pinAt) {
+        const isPrevItemNotPinned = !prevItem || !prevItem.pinAt;
+        const isNextItemNotPinned = !nextItem || !nextItem.pinAt;
+
+        // If both previous and next items are not pinned, move the item to the top of the column
+        if (isPrevItemNotPinned && isNextItemNotPinned) {
+          movedTask.pinAt = convertDateStringFull(new Date());
+
+          setListTaskNoSetting([movedTask, ...listPinAt, ...listNoPin]);
+          updateTaskIndex({
+            tasks: [
+              {
+                task: movedTask.id as number,
+                index: movedTask.index,
+                peopleInCharge: null,
+                status:
+                  StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                pinAt: movedTask.pinAt,
+                team: organizationId as string,
+              },
+            ],
+          });
+        } else {
+          // If not dropped at the top, calculate the `index` as before
+          const dateAtPrev = prevItem ? prevItem.pinAt : null;
+          const dateAtNext = nextItem ? nextItem.pinAt : null;
+
+          const newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
+          movedTask.pinAt = newPinAt;
+
+          const sortedPinned = [...listPinAt, movedTask].sort(compareItems);
+
+          setListTaskNoSetting([...sortedPinned, ...listNoPin]);
+          updateTaskIndex({
+            tasks: [
+              {
+                task: movedTask.id as number,
+                index: movedTask.index,
+                peopleInCharge: null,
+                status:
+                  StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                pinAt: movedTask.pinAt,
+                team: organizationId as string,
+              },
+            ],
+          });
+        }
+      } else {
+        if (nextItem?.pinAt) {
+          const firstNormalItem = listNoPin[0];
+
+          newIndex = firstNormalItem.index + INITIAL_INDEX_VALUE;
+        } else {
+          let prevItemIndex = prevItem ? prevItem.index : INITIAL_INDEX_VALUE;
+          if (prevItem && prevItem.pinAt) {
+            prevItemIndex = INITIAL_INDEX_VALUE;
+          }
+          const nextItemIndex = nextItem ? nextItem.index : INITIAL_INDEX_VALUE;
+
+          if (!prevItem && !nextItem) {
+            newIndex = INITIAL_INDEX_VALUE_STEP;
+          } else if (!prevItem || prevItem.pinAt) {
+            newIndex = nextItemIndex + INITIAL_INDEX_VALUE;
+          } else if (!nextItem) {
+            newIndex = prevItemIndex - INITIAL_INDEX_VALUE;
+          } else {
+            newIndex = (prevItemIndex + nextItemIndex) / 2;
+          }
+        }
+        movedTask.index = newIndex;
+
+        const sortedPinned = [...listPinAt].sort(compareItems);
+        const sortedNormal = [movedTask, ...listNoPin].sort(compareItems);
+
+        setListTaskNoSetting([...sortedPinned, ...sortedNormal]);
+        updateTaskIndex({
+          tasks: [
+            {
+              task: movedTask.id as number,
+              index: movedTask.index,
+              peopleInCharge: null,
+              status:
+                StatusValueTask[destStatus as keyof typeof StatusValueTask],
+              pinAt: movedTask.pinAt,
+              team: organizationId as string,
+            },
+          ],
+        });
+      }
+    }
+    // Drag no setting --> drop user
+    if (sourceUserId === COLUMN_ID_TASK && destUserId !== COLUMN_ID_TASK) {
+      const newUsers = listDataKanbanTeam.map((user) => ({
+        ...user,
+        statuses: { ...user.statuses },
+      }));
+      const destUser = newUsers.find((user) => user.id === destUserId);
+      if (!destUser) return;
+
+      const destTasks = [
+        ...destUser.statuses[destStatus as keyof TransformedStatuses],
+      ];
+      const movedItem = listTaskNoSetting[source.index];
+
+      // Item
+      const belowItem = destTasks[destination.index];
+      const aboveItem = destTasks[destination.index - 1]; // Item above drop position
+
+      let newPinAt = movedItem.pinAt;
+      let newIndex = movedItem.index;
+      setListTaskNoSetting(
+        listTaskNoSetting.filter((item) => item.id !== movedItem.id),
+      );
+
+      updateTotalStatusAdd({
+        userId: destUserId,
+        statusName: StatusTask[destStatus as keyof typeof StatusTask],
+      });
+      setIsReadyToFetch(false);
+      setDataOrderRing('');
+      if (movedItem.pinAt) {
+        if (!belowItem?.pinAt && !aboveItem?.pinAt) {
+          // If neither top nor bottom has pinAt -> Move item to top of list
+          newPinAt = convertDateStringFull(new Date());
+          destTasks.unshift({
+            ...movedItem,
+            isMyTask:
+              String(session?.user.id) === destUserId.replace('user_', ''),
+            pinAt: newPinAt,
+            status: {
+              id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+              name: StatusTask[destStatus as keyof typeof StatusTask],
+            },
+          });
+        } else {
+          const dateAtPrev = aboveItem ? aboveItem.pinAt : null;
+          const dateAtNext = belowItem ? belowItem.pinAt : null;
+          newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
+          destTasks.splice(destination.index, 0, {
+            ...movedItem,
+            isMyTask:
+              String(session?.user.id) === destUserId.replace('user_', ''),
+            pinAt: newPinAt,
+            status: {
+              id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+              name: StatusTask[destStatus as keyof typeof StatusTask],
+            },
+          });
+        }
+      } else {
+        if (belowItem?.pinAt) {
+          // If the item behind has pinAt -> Move all items with pinAt down
+          const indexBelowPinnedItems = destTasks.findIndex(
+            (task) => !task.pinAt,
+          );
+
+          if (indexBelowPinnedItems !== -1) {
+            const firstNonPinnedItem = destTasks[indexBelowPinnedItems];
+            newIndex = firstNonPinnedItem.index + INITIAL_INDEX_VALUE;
+            destTasks.splice(indexBelowPinnedItems, 0, {
+              ...movedItem,
+              isMyTask:
+                String(session?.user.id) === destUserId.replace('user_', ''),
+              index: newIndex,
+              status: {
+                id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                name: StatusTask[destStatus as keyof typeof StatusTask],
+              },
+            });
+          } else {
+            newIndex = INITIAL_INDEX_VALUE * 1000;
+            destTasks.push({
+              ...movedItem,
+              isMyTask:
+                String(session?.user.id) === destUserId.replace('user_', ''),
+              index: newIndex,
+              status: {
+                id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                name: StatusTask[destStatus as keyof typeof StatusTask],
+              },
+            });
+          }
+        } else {
+          // If there is no pinAt behind -> Insert into the correct drop position
+          let prevItemIndex = belowItem ? belowItem.index : INITIAL_INDEX_VALUE;
+          if (belowItem && belowItem.pinAt) {
+            prevItemIndex = INITIAL_INDEX_VALUE;
+          }
+          const nextItemIndex = aboveItem
+            ? aboveItem.index
+            : INITIAL_INDEX_VALUE;
+          if (!aboveItem && !belowItem) {
+            newIndex = INITIAL_INDEX_VALUE_STEP;
+          } else if (!aboveItem || aboveItem.pinAt) {
+            newIndex = prevItemIndex + INITIAL_INDEX_VALUE;
+          } else if (!belowItem) {
+            newIndex = nextItemIndex - INITIAL_INDEX_VALUE;
+          } else {
+            newIndex = (prevItemIndex + nextItemIndex) / 2;
+          }
+
+          destTasks.splice(destination.index, 0, {
+            ...movedItem,
+            isMyTask:
+              String(session?.user.id) === destUserId.replace('user_', ''),
+            index: newIndex,
+            status: {
+              id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+              name: StatusTask[destStatus as keyof typeof StatusTask],
+            },
+          });
+        }
+      }
+      destUser.statuses[destStatus as keyof TransformedStatuses] = destTasks;
+      setListDataKanbanTeam(newUsers);
+      updateTaskIndex({
+        tasks: [
+          {
+            task: movedItem.id as number,
+            peopleInCharge: destUserId.replace('user_', ''),
+            index: newIndex,
+            status: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+            pinAt: newPinAt,
+            team: organizationId as string,
+          },
+        ],
       });
     }
+    // Drag user --> drop user
+    if (sourceUserId !== COLUMN_ID_TASK && destUserId !== COLUMN_ID_TASK) {
+      if (!sourceUserId || !sourceStatus || !destUserId || !destStatus) return;
 
-    // Item
-    const belowItem = destTasks[destination.index];
-    const aboveItem = destTasks[destination.index - 1]; // Item above drop position
+      const newUsers = listDataKanbanTeam.map((user) => ({
+        ...user,
+        statuses: { ...user.statuses },
+      }));
 
-    let newPinAt = movedTask.pinAt;
-    let newIndex = movedTask.index;
+      const sourceUser = newUsers.find((user) => user.id === sourceUserId);
+      const destUser = newUsers.find((user) => user.id === destUserId);
+      if (!sourceUser || !destUser) return;
 
-    if (movedTask.pinAt) {
-      if (!belowItem?.pinAt && !aboveItem?.pinAt) {
-        // If neither top nor bottom has pinAt -> Move item to top of list
-        newPinAt = convertDateStringFull(new Date());
-        destTasks.unshift({
-          ...movedTask,
-          isMyTask:
-            String(session?.user.id) === destUserId.replace('user_', ''),
-          pinAt: newPinAt,
-          status: {
-            id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
-            name: StatusTask[destStatus as keyof typeof StatusTask],
-          },
-        });
+      const sourceTasks = [
+        ...sourceUser.statuses[sourceStatus as keyof TransformedStatuses],
+      ];
+      const destTasks = [
+        ...destUser.statuses[destStatus as keyof TransformedStatuses],
+      ];
+
+      const [movedTask] = sourceTasks.splice(source.index, 1);
+      if (!movedTask) return;
+
+      if (sourceUserId !== destUserId || sourceStatus !== destStatus) {
+        setIsReadyToFetch(false);
+        setDataOrderRing('');
+      }
+      const existingTaskIndex = destTasks.findIndex(
+        (task) => task.id === movedTask.id,
+      );
+      if (existingTaskIndex !== -1) {
+        destTasks.splice(existingTaskIndex, 1);
+      }
+
+      // Return if task is running
+      if (sourceUserId !== destUserId && movedTask.isStart) {
+        return;
+      }
+      // Update total
+      if (destUserId === sourceUserId && destStatus === sourceStatus) {
+        // handle logic
       } else {
-        const dateAtPrev = aboveItem ? aboveItem.pinAt : null;
-        const dateAtNext = belowItem ? belowItem.pinAt : null;
-        newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
-        destTasks.splice(destination.index, 0, {
-          ...movedTask,
-          isMyTask:
-            String(session?.user.id) === destUserId.replace('user_', ''),
-          pinAt: newPinAt,
-          status: {
-            id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
-            name: StatusTask[destStatus as keyof typeof StatusTask],
-          },
+        updateTaskStatusTotalWhenDrop({
+          newUserId: destUserId,
+          oldUserId: sourceUserId,
+          newStatusName: StatusTask[destStatus as keyof typeof StatusTask],
+          oldStatusName: StatusTask[sourceStatus as keyof typeof StatusTask],
         });
       }
-    } else {
-      if (belowItem?.pinAt) {
-        // If the item behind has pinAt -> Move all items with pinAt down
-        const indexBelowPinnedItems = destTasks.findIndex(
-          (task) => !task.pinAt,
-        );
 
-        if (indexBelowPinnedItems !== -1) {
-          const firstNonPinnedItem = destTasks[indexBelowPinnedItems];
-          newIndex = firstNonPinnedItem.index + INITIAL_INDEX_VALUE;
-          destTasks.splice(indexBelowPinnedItems, 0, {
+      // Item
+      const belowItem = destTasks[destination.index];
+      const aboveItem = destTasks[destination.index - 1]; // Item above drop position
+
+      let newPinAt = movedTask.pinAt;
+      let newIndex = movedTask.index;
+
+      if (movedTask.pinAt) {
+        if (!belowItem?.pinAt && !aboveItem?.pinAt) {
+          // If neither top nor bottom has pinAt -> Move item to top of list
+          newPinAt = convertDateStringFull(new Date());
+          destTasks.unshift({
+            ...movedTask,
+            isMyTask:
+              String(session?.user.id) === destUserId.replace('user_', ''),
+            pinAt: newPinAt,
+            status: {
+              id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+              name: StatusTask[destStatus as keyof typeof StatusTask],
+            },
+          });
+        } else {
+          const dateAtPrev = aboveItem ? aboveItem.pinAt : null;
+          const dateAtNext = belowItem ? belowItem.pinAt : null;
+          newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
+          destTasks.splice(destination.index, 0, {
+            ...movedTask,
+            isMyTask:
+              String(session?.user.id) === destUserId.replace('user_', ''),
+            pinAt: newPinAt,
+            status: {
+              id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+              name: StatusTask[destStatus as keyof typeof StatusTask],
+            },
+          });
+        }
+      } else {
+        if (belowItem?.pinAt) {
+          // If the item behind has pinAt -> Move all items with pinAt down
+          const indexBelowPinnedItems = destTasks.findIndex(
+            (task) => !task.pinAt,
+          );
+
+          if (indexBelowPinnedItems !== -1) {
+            const firstNonPinnedItem = destTasks[indexBelowPinnedItems];
+            newIndex = firstNonPinnedItem.index + INITIAL_INDEX_VALUE;
+            destTasks.splice(indexBelowPinnedItems, 0, {
+              ...movedTask,
+              isMyTask:
+                String(session?.user.id) === destUserId.replace('user_', ''),
+              index: newIndex,
+              status: {
+                id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                name: StatusTask[destStatus as keyof typeof StatusTask],
+              },
+            });
+          } else {
+            newIndex = INITIAL_INDEX_VALUE * 1000;
+            destTasks.push({
+              ...movedTask,
+              isMyTask:
+                String(session?.user.id) === destUserId.replace('user_', ''),
+              index: newIndex,
+              status: {
+                id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+                name: StatusTask[destStatus as keyof typeof StatusTask],
+              },
+            });
+          }
+        } else {
+          // If there is no pinAt behind -> Insert into the correct drop position
+          let prevItemIndex = belowItem ? belowItem.index : INITIAL_INDEX_VALUE;
+          if (belowItem && belowItem.pinAt) {
+            prevItemIndex = INITIAL_INDEX_VALUE;
+          }
+          const nextItemIndex = aboveItem
+            ? aboveItem.index
+            : INITIAL_INDEX_VALUE;
+          if (!aboveItem && !belowItem) {
+            newIndex = INITIAL_INDEX_VALUE_STEP;
+          } else if (!aboveItem || aboveItem.pinAt) {
+            newIndex = prevItemIndex + INITIAL_INDEX_VALUE;
+          } else if (!belowItem) {
+            newIndex = nextItemIndex - INITIAL_INDEX_VALUE;
+          } else {
+            newIndex = (prevItemIndex + nextItemIndex) / 2;
+          }
+
+          destTasks.splice(destination.index, 0, {
             ...movedTask,
             isMyTask:
               String(session?.user.id) === destUserId.replace('user_', ''),
@@ -462,66 +896,27 @@ const KanbanBoardTaskTeam = () => {
               name: StatusTask[destStatus as keyof typeof StatusTask],
             },
           });
-        } else {
-          newIndex = INITIAL_INDEX_VALUE * 1000;
-          destTasks.push({
-            ...movedTask,
-            isMyTask:
-              String(session?.user.id) === destUserId.replace('user_', ''),
-            index: newIndex,
-            status: {
-              id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
-              name: StatusTask[destStatus as keyof typeof StatusTask],
-            },
-          });
         }
-      } else {
-        // If there is no pinAt behind -> Insert into the correct drop position
-        let prevItemIndex = belowItem ? belowItem.index : INITIAL_INDEX_VALUE;
-        if (belowItem && belowItem.pinAt) {
-          prevItemIndex = INITIAL_INDEX_VALUE;
-        }
-        const nextItemIndex = aboveItem ? aboveItem.index : INITIAL_INDEX_VALUE;
-        if (!aboveItem && !belowItem) {
-          newIndex = INITIAL_INDEX_VALUE_STEP;
-        } else if (!aboveItem) {
-          newIndex = prevItemIndex + INITIAL_INDEX_VALUE;
-        } else if (!belowItem) {
-          newIndex = nextItemIndex - INITIAL_INDEX_VALUE;
-        } else {
-          newIndex = (prevItemIndex + nextItemIndex) / 2;
-        }
-
-        destTasks.splice(destination.index, 0, {
-          ...movedTask,
-          isMyTask:
-            String(session?.user.id) === destUserId.replace('user_', ''),
-          index: newIndex,
-          status: {
-            id: StatusValueTask[destStatus as keyof typeof StatusValueTask],
-            name: StatusTask[destStatus as keyof typeof StatusTask],
-          },
-        });
       }
+
+      sourceUser.statuses[sourceStatus as keyof TransformedStatuses] =
+        sourceTasks;
+      destUser.statuses[destStatus as keyof TransformedStatuses] = destTasks;
+      setListDataKanbanTeam(newUsers);
+
+      updateTaskIndex({
+        tasks: [
+          {
+            task: movedTask.id as number,
+            peopleInCharge: destUserId.replace('user_', ''),
+            index: newIndex,
+            status: StatusValueTask[destStatus as keyof typeof StatusValueTask],
+            pinAt: newPinAt,
+            team: organizationId as string,
+          },
+        ],
+      });
     }
-
-    sourceUser.statuses[sourceStatus as keyof TransformedStatuses] =
-      sourceTasks;
-    destUser.statuses[destStatus as keyof TransformedStatuses] = destTasks;
-    setListDataKanbanTeam(newUsers);
-
-    updateTaskIndex({
-      tasks: [
-        {
-          task: movedTask.id as number,
-          peopleInCharge: destUserId.replace('user_', ''),
-          index: newIndex,
-          status: StatusValueTask[destStatus as keyof typeof StatusValueTask],
-          pinAt: newPinAt,
-          team: organizationId as string,
-        },
-      ],
-    });
   };
 
   // Calculate width kanban
@@ -720,9 +1115,10 @@ const KanbanBoardTaskTeam = () => {
             : null
           : null,
       // DATA PEOPLE CHOOSE
-      peopleInChargeIds: data.peopleInChart
-        ? [{ peopleInChargeId: data.peopleInChart.value }]
-        : [],
+      peopleInChargeIds:
+        data.peopleInChart && data.peopleInChart.value !== ''
+          ? [{ peopleInChargeId: data.peopleInChart.value }]
+          : [],
       isTeamTask: true,
       showDeadlineTime: data.showDeadlineTime,
     });
@@ -739,21 +1135,35 @@ const KanbanBoardTaskTeam = () => {
     {
       onSuccess: async ({ data }: { data: Task }) => {
         // queryClient.refetchQueries(['getDataTaskHeaderList']);
-        if (actionType && actionType === ActionTask.COPY) {
-          copyTaskInKanban({
-            dataTask: data,
-            taskCopyId: `${taskDetailId}`,
+        if (data.peopleInCharge.length > 0) {
+          if (actionType && actionType === ActionTask.COPY) {
+            copyTaskInKanban({
+              dataTask: data,
+              taskCopyId: `${taskDetailId}`,
+            });
+          } else {
+            addTaskToKanban(data);
+          }
+          updateTotalStatusAdd({
+            userId:
+              data.peopleInCharge && data.peopleInCharge.length > 0
+                ? `user_${data.peopleInCharge[0].id}`
+                : '',
+            statusName: data.status?.name || '',
           });
         } else {
-          addTaskToKanban(data);
+          const listPinAt = listTaskNoSetting.filter(
+            (item) => item.pinAt && item.id !== data.id,
+          );
+          const listNoPin = listTaskNoSetting.filter(
+            (item) => !item.pinAt && item.id !== data.id,
+          );
+          setListTaskNoSetting([...listPinAt, data, ...listNoPin]);
+          setTotalNoSetting({
+            count: totalNoSetting ? totalNoSetting.count + 1 : 0,
+            hasNext: totalNoSetting ? totalNoSetting.hasNext : false,
+          });
         }
-        updateTotalStatusAdd({
-          userId:
-            data.peopleInCharge && data.peopleInCharge.length > 0
-              ? `user_${data.peopleInCharge[0].id}`
-              : '',
-          statusName: data.status?.name || '',
-        });
 
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
@@ -918,9 +1328,10 @@ const KanbanBoardTaskTeam = () => {
             : null
           : null,
       // DATA PEOPLE CHOOSE
-      peopleInChargeIds: data.peopleInChart
-        ? [{ peopleInChargeId: data.peopleInChart.value }]
-        : [],
+      peopleInChargeIds:
+        data.peopleInChart && data.peopleInChart.value !== ''
+          ? [{ peopleInChargeId: data.peopleInChart.value }]
+          : [],
       isTeamTask: true,
       showDeadlineTime: data.showDeadlineTime,
     });
@@ -931,17 +1342,55 @@ const KanbanBoardTaskTeam = () => {
     return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
   };
   const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
-    onSuccess: async ({ data }, variant) => {
-      editTaskInKanban({
-        taskData: data,
-        oldIdStatus: parseInt(`${variant.oldIdStatus}`),
-        oldUserId: `user_${variant.oldIdPeople}`,
-      });
-      updateTaskStatusTotal({
-        taskData: data,
-        oldUserId: `user_${variant.oldIdPeople}`,
-        oldStatusName: variant.oldNameStatus || '',
-      });
+    onSuccess: async ({ data }: { data: Task }, variant) => {
+      if (data.peopleInCharge.length > 0) {
+        editTaskInKanban({
+          taskData: data,
+          oldIdStatus: parseInt(`${variant.oldIdStatus}`),
+          oldUserId: `user_${variant.oldIdPeople}`,
+        });
+        updateTaskStatusTotal({
+          taskData: data,
+          oldUserId: `user_${variant.oldIdPeople}`,
+          oldStatusName: variant.oldNameStatus || '',
+        });
+        const itemChange = listTaskNoSetting.find(
+          (item) => item.id === data.id,
+        );
+        if (itemChange) {
+          setListTaskNoSetting(
+            listTaskNoSetting.filter((item) => item.id !== data.id),
+          );
+          setTotalNoSetting({
+            count: (totalNoSetting?.count || 0) - 1,
+            hasNext: totalNoSetting?.hasNext || false,
+          });
+        }
+      } else {
+        updateTotalStatusSubtract({
+          userId:
+            dataTaskEdit?.peopleInCharge &&
+            dataTaskEdit.peopleInCharge.length > 0
+              ? `user_${dataTaskEdit.peopleInCharge[0].id}`
+              : '',
+          statusName: dataTaskEdit?.status?.name || '',
+        });
+        removeTaskById({
+          statusId: dataTaskEdit?.status?.id as number,
+          taskId: dataTaskEdit?.id as number,
+          userId:
+            dataTaskEdit?.peopleInCharge &&
+            dataTaskEdit.peopleInCharge.length > 0
+              ? `user_${dataTaskEdit.peopleInCharge[0].id}`
+              : '',
+        });
+        setTotalNoSetting({
+          count: (totalNoSetting?.count || 0) + 1,
+          hasNext: totalNoSetting?.hasNext || false,
+        });
+        setListTaskNoSetting([data, ...listTaskNoSetting]);
+      }
+
       handleRemoveParam();
       setPendingTaskData(null);
       setCloseAction(null);
@@ -989,21 +1438,37 @@ const KanbanBoardTaskTeam = () => {
     onSuccess: async () => {
       setIsShowModalEditTeam(false);
       handleRemoveParam();
-      updateTotalStatusSubtract({
-        userId:
-          dataTaskEdit?.peopleInCharge && dataTaskEdit.peopleInCharge.length > 0
-            ? `user_${dataTaskEdit.peopleInCharge[0].id}`
-            : '',
-        statusName: dataTaskEdit?.status?.name || '',
-      });
-      removeTaskById({
-        statusId: dataTaskEdit?.status?.id as number,
-        taskId: dataTaskEdit?.id as number,
-        userId:
-          dataTaskEdit?.peopleInCharge && dataTaskEdit.peopleInCharge.length > 0
-            ? `user_${dataTaskEdit.peopleInCharge[0].id}`
-            : '',
-      });
+
+      if (
+        dataTaskEdit?.peopleInCharge &&
+        dataTaskEdit.peopleInCharge.length > 0
+      ) {
+        updateTotalStatusSubtract({
+          userId:
+            dataTaskEdit?.peopleInCharge &&
+            dataTaskEdit.peopleInCharge.length > 0
+              ? `user_${dataTaskEdit.peopleInCharge[0].id}`
+              : '',
+          statusName: dataTaskEdit?.status?.name || '',
+        });
+        removeTaskById({
+          statusId: dataTaskEdit?.status?.id as number,
+          taskId: dataTaskEdit?.id as number,
+          userId:
+            dataTaskEdit?.peopleInCharge &&
+            dataTaskEdit.peopleInCharge.length > 0
+              ? `user_${dataTaskEdit.peopleInCharge[0].id}`
+              : '',
+        });
+      } else {
+        setListTaskNoSetting(
+          listTaskNoSetting.filter((item) => item.id !== dataTaskEdit?.id),
+        );
+        setTotalNoSetting({
+          count: totalNoSetting ? totalNoSetting.count - 1 : 0,
+          hasNext: totalNoSetting ? totalNoSetting.hasNext : false,
+        });
+      }
 
       showToast({
         description: SUCCESS_DELETE_MESSAGE,
@@ -1208,7 +1673,7 @@ const KanbanBoardTaskTeam = () => {
   const handlePinTask = async (data: {
     id: string;
     pinAt?: string;
-    userId: string;
+    userId?: string;
   }) => {
     const { data: response } = await api.put(
       apiRouters.TASK_PIN(`${data.id}`),
@@ -1222,15 +1687,19 @@ const KanbanBoardTaskTeam = () => {
 
   const { mutate: pinTask } = useMutation('pinTask', handlePinTask, {
     onSuccess: async (data: TaskPinResponse, variant) => {
-      const newData = {
-        ...data,
-        user: parseInt(variant.userId),
-      };
+      if (variant.userId) {
+        const newData = {
+          ...data,
+          user: parseInt(variant.userId),
+        };
 
-      if (data.pinAt !== null) {
-        pinTaskInKanban(newData);
+        if (data.pinAt !== null) {
+          pinTaskInKanban(newData);
+        } else {
+          unpinTaskInKanban(newData);
+        }
       } else {
-        unpinTaskInKanban(newData);
+        pinTaskNoSetting(data);
       }
     },
     onError: (error: AxiosError<any>) => {
@@ -1299,6 +1768,15 @@ const KanbanBoardTaskTeam = () => {
       });
     });
   };
+  const pinTaskNoSetting = (task: TaskPinResponse) => {
+    const listFilter = listTaskNoSetting.filter(
+      (item) => item.id !== task.task,
+    );
+    const itemPin = listTaskNoSetting.find((item) => item.id === task.task);
+    if (itemPin) {
+      setListTaskNoSetting([{ ...itemPin, pinAt: task.pinAt }, ...listFilter]);
+    }
+  };
 
   // Handle call api pin / unpin
   const pinItemToTop = (itemId: string | number, userId: string) => {
@@ -1306,6 +1784,12 @@ const KanbanBoardTaskTeam = () => {
       id: `${itemId}`,
       pinAt: convertDateStringFull(new Date()),
       userId: userId,
+    });
+  };
+  const pinItemToTopNoSetting = (itemId: string | number) => {
+    pinTask({
+      id: `${itemId}`,
+      pinAt: convertDateStringFull(new Date()),
     });
   };
 
@@ -1594,7 +2078,7 @@ const KanbanBoardTaskTeam = () => {
                 name="Multi users"
               />
             </div>
-            <span className="text-[26px] font-medium relative top-[-2px] line-clamp-3 max-w-[350px] ">
+            <span className="text-[26px] font-medium relative top-[0px] line-clamp-3 max-w-[350px] ">
               {selectedOrganization?.label}
             </span>
             <div className="flex justify-center items-center gap-2 ">
@@ -1780,7 +2264,15 @@ const KanbanBoardTaskTeam = () => {
                 setDragging(true);
               }}
               onDragEnd={onDragEnd}>
-              <div className="flex gap-4 overflow-x-auto w-[calc(100vw_-_270px)]">
+              <div className="flex gap-4 h-fit overflow-x-auto items-stretch w-[calc(100vw_-_270px)]">
+                <NoSettingColumn
+                  totalNoSetting={totalNoSetting}
+                  setTotalNoSetting={setTotalNoSetting}
+                  onAdd={(id: string) => {
+                    setPeopleDefaultId(id);
+                  }}
+                  pinItemToTopNoSetting={pinItemToTopNoSetting}
+                />
                 {listDataKanbanTeam.map((user) => (
                   <UserColumnTeam
                     key={user.id}
@@ -1875,6 +2367,7 @@ const KanbanBoardTaskTeam = () => {
           setDataErrorTask={setDataErrorTask}
           errorPerson={dataErrorTask}
           listMemberTeam={listMemberTeam}
+          organizationTeamList={organizationTeamList}
           creationDataTaskData={creationDataTaskData}
           onClose={() => {
             setIsShowModalEditTeam(false);

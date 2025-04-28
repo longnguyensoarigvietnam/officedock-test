@@ -69,6 +69,7 @@ const UserColumnTeam = ({
     <>
       {isExtendUser ? (
         <div
+          // className="h-auto"
           style={{
             width: `${(columnWidth / 247) * 247}px`,
           }}>

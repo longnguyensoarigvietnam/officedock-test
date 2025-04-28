@@ -462,7 +462,7 @@
   border: 1px solid #c32e2e !important;
 }
 .calendar-custom .fc-timeGridWeek-view .fc-timegrid-now-indicator-line {
-  margin-top: -6px;
+  margin-top: -2px;
 }
 .calendar-custom .fc-resourceTimeGridDay-view .fc-timegrid-now-indicator-line {
   margin-top: -1px;
@@ -481,4 +481,24 @@
 
 .calendar-custom .half-hour-line::after {
   background-color: #d2dbe1 !important;
+}
+.fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  position: relative;
+  top: -9px;
+}
+/* RESOURCE */
+.calendar-custom
+  .fc-resourceTimeGridDay-view
+  .fc-timegrid-slot.fc-timegrid-slot-lane {
+  top: 0 !important;
+}
+.calendar-custom
+  .fc-timeGridWeek-view
+  .fc-timegrid-slot.fc-timegrid-slot-lane::after {
+  top: 4px;
+}
+.calendar-custom
+  .fc-timeGridWeek-view
+  .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  top: 0 !important;
 }

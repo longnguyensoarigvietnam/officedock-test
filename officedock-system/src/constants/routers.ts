@@ -385,6 +385,7 @@ export const apiRouters = {
 
   // TASK TEAM
   TASK_TEAM_LIST: '/tasks/teamdock/',
+  TASK_TEAM_NO_SETTING: '/tasks/teamdock/not-setting-user/',
 
   // TEAM SCHEDULE
   PLAN_TEAM_SCHEDULE_LIST: '/teamdock/schedules/plan/',
