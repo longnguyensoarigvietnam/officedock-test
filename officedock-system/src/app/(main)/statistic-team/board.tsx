@@ -396,7 +396,7 @@ const StatisticTeamBoard = () => {
       participants.length > 3 ? participants.length - 6 : 0;
 
     return (
-      <>
+      <div className="flex items-center">
         {slicedParticipants.map((item) => {
           return (
             <div
@@ -405,7 +405,7 @@ const StatisticTeamBoard = () => {
               <CustomUserAvatar
                 avatarUrl={item?.avatarUrl || ''}
                 avatarColor={item?.color || ''}
-                size={33}
+                size={32}
                 customClassName={`${!item?.avatarUrl && '!mt-0'}`}
               />
             </div>
@@ -416,7 +416,7 @@ const StatisticTeamBoard = () => {
             +{remainingCount}
           </div>
         )}
-      </>
+      </div>
     );
   };
 

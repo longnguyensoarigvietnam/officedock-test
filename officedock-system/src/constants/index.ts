@@ -232,6 +232,8 @@ export const BOOKMARK_ROUTER_NAME = 'bookmark';
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024;
 
+export const MAX_AVATAR_IMAGE_FILE_SIZE = 30 * 1024 * 1024;
+
 export const BATCH_FILE_SIZE = 15; // Maximum number of concurrent API calls
 
 export const COLUMN_ID_TASK = 'no_setting';

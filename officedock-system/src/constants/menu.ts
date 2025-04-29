@@ -4,12 +4,12 @@ import { PermissionsSystem } from './enums';
 
 export const SETTING_MENU: SettingMenuItem[] = [
   {
-    name: 'パスワード変更',
-    href: pageRouters.CHANGE_PASSWORD.href,
-  },
-  {
     name: 'プロフィール',
     showModal: true
+  },
+  {
+    name: '設定',
+    href: pageRouters.SETTING.href,
   },
   {
     name: 'ログアウト',
