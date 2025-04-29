@@ -1780,7 +1780,7 @@ const ChatDetail = ({
           );
           return (
             <div
-              className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
+              className="ml-[-10px] border-[1px] border-white rounded-full h-[35px] w-[35px]"
               key={index}>
               <CustomUserAvatar
                 avatarUrl={memberInfo?.avatarUrl || ''}
@@ -1792,7 +1792,7 @@ const ChatDetail = ({
           );
         })}
         {remainingCount > 0 && (
-          <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
+          <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[35px] h-[35px]">
             +{remainingCount}
           </div>
         )}

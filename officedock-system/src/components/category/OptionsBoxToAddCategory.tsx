@@ -70,15 +70,18 @@ export const OptionsBoxToAddCategory = ({
   }, [isOpen]);
 
   const renderOptions = () => {
+    const buttonWidth = buttonRef.current?.offsetWidth || 252;
+
     return (
       <div
         ref={dropdownRef}
-        className="fixed bg-[#5B6770] text-white rounded-[6px] w-[252px] py-[5px] text-sm font-medium shadow-lg z-50 transition-opacity duration-200"
+        className="fixed bg-[#5B6770] text-white rounded-[6px] py-[5px] text-sm font-medium shadow-lg z-50 transition-opacity duration-200"
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`,
           opacity: isReady ? 1 : 0,
           visibility: isReady ? 'visible' : 'hidden',
+          width: `${buttonWidth}px`,
         }}>
         <button
           className="py-[10px] px-[14px] text-left w-full hover:bg-[#7D8A94] transition-all duration-200 rounded-[6px]"
@@ -105,7 +108,7 @@ export const OptionsBoxToAddCategory = ({
       <Popover className="relative">
         <PopoverButton
           ref={buttonRef}
-          className="focus:outline-none flex items-center gap-2 h-[34px] bg-[#ECF0F2] rounded-[6px] py-[4px] px-[10px]"
+          className="focus:outline-none flex items-center gap-2 h-[34px] bg-[#ECF0F2] w-full rounded-[6px] py-[4px] px-[10px]"
           onClick={handleToggle}>
           <ImageRound
             className="w-[17px] h-[17px] hover:cursor-pointer"
