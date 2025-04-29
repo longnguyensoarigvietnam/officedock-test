@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, Fragment, useContext } from 'react';
 import { AxiosError } from 'axios';
 import { debounce } from 'lodash';
+import { isSameDay } from 'date-fns';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -26,14 +27,16 @@ import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModa
 import DatePicker from '@components/common/DatePicker';
 import CalendarSkeleton from '@components/skeleton/CalendarSkeleton';
 import EventInfoModal from '@components/modals/EventInfoModal';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Button from '@components/common/Button';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { CalendarSidebar } from '@components/calendar/Sidebar';
 import { TaskAndEventListModal } from '@components/modals/TaskAndEventListModal';
 import RangeSlider from '@components/common/RangeSlider';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import useDebounceText from '@hooks/useDebounceText';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
@@ -93,8 +96,6 @@ import {
 } from '@constants';
 
 import api from '@base/api';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const EventCalendar = () => {
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -151,7 +152,39 @@ const EventCalendar = () => {
   );
   const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
-  const { authenticatedUser } = useAuthenticatedUser({});
+  const { authenticatedUser } = useAuthenticatedUser({
+    onSuccess: (data) => {
+      setCurrentResources((prevCurrentResources) => {
+        const existedResource = prevCurrentResources.find(
+          (resource) => resource.id == String(data.id),
+        );
+        if (!existedResource) {
+          return [
+            ...prevCurrentResources,
+            {
+              id: String(data.id),
+              title: String(data.profile.fullName),
+            },
+          ];
+        }
+        return [...prevCurrentResources];
+      });
+      const currentView = searchParams.get('view');
+      switch (currentView) {
+        case ViewOptions.WEEK:
+          handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
+          break;
+        case ViewOptions.DAY:
+          handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
+          break;
+        case ViewOptions.YEAR:
+          handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
+          break;
+        default:
+          handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
+      }
+    },
+  });
 
   const [infoModalPosition, setInfoModalPosition] = useState<{
     top: number;
@@ -467,21 +500,21 @@ const EventCalendar = () => {
   ) => {
     if (participantList && participantList.length > 0) {
       if (participantList.length == 1) {
-        const avatarColor =
-          dashboardMembersWithAvatars.find(
-            (member) => member.id == participantList[0].id,
-          )?.avatarColor || '';
+        const memberInfo = dashboardMembersWithAvatars.find(
+          (member) => member.id == participantList[0].id,
+        );
         return (
           <DynamicTooltip
             content={`${participantList[0].fullName}`}
             placement="top">
             <div
               className={`border-[1px] border-white rounded-full ${borderClassName}`}>
-              {AvatarIconWithDynamicColor({
-                color: avatarColor,
-                size: avatarSize,
-                isCalendarScreen: true,
-              })}
+              <CustomUserAvatar
+                avatarUrl={memberInfo?.avatar || ''}
+                avatarColor={memberInfo?.avatarColor || ''}
+                size={avatarSize}
+                isCalendarScreen={true}
+              />
             </div>
           </DynamicTooltip>
         );
@@ -489,10 +522,9 @@ const EventCalendar = () => {
         return (
           <div className="mr-1 flex items-center">
             {participantList.map((participant, index) => {
-              const avatarColor =
-                dashboardMembersWithAvatars.find(
-                  (member) => member.id === participant.id,
-                )?.avatarColor || '';
+              const memberInfo = dashboardMembersWithAvatars.find(
+                (member) => member.id === participant.id,
+              );
 
               return (
                 <DynamicTooltip
@@ -501,11 +533,12 @@ const EventCalendar = () => {
                   key={participant.id}>
                   <div
                     className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
-                    {AvatarIconWithDynamicColor({
-                      color: avatarColor,
-                      size: avatarSize,
-                      isCalendarScreen: true,
-                    })}
+                    <CustomUserAvatar
+                      avatarUrl={memberInfo?.avatar || ''}
+                      avatarColor={memberInfo?.avatarColor || ''}
+                      size={avatarSize}
+                      isCalendarScreen={true}
+                    />
                   </div>
                 </DynamicTooltip>
               );
@@ -518,10 +551,9 @@ const EventCalendar = () => {
             {participantList
               .slice(0, isWeekView ? 5 : 1)
               .map((participant, index) => {
-                const avatarColor =
-                  dashboardMembersWithAvatars.find(
-                    (member) => member.id === participant.id,
-                  )?.avatarColor || '';
+                const memberInfo = dashboardMembersWithAvatars.find(
+                  (member) => member.id === participant.id,
+                );
 
                 return (
                   <DynamicTooltip
@@ -530,11 +562,12 @@ const EventCalendar = () => {
                     key={participant.id}>
                     <div
                       className={`border-[1px] border-white rounded-full ${borderClassName} ${index != 0 && 'ml-[-7px]'}`}>
-                      {AvatarIconWithDynamicColor({
-                        color: avatarColor,
-                        size: avatarSize,
-                        isCalendarScreen: true,
-                      })}
+                      <CustomUserAvatar
+                        avatarUrl={memberInfo?.avatar || ''}
+                        avatarColor={memberInfo?.avatarColor || ''}
+                        size={avatarSize}
+                        isCalendarScreen={true}
+                      />
                     </div>
                   </DynamicTooltip>
                 );
@@ -589,8 +622,8 @@ const EventCalendar = () => {
                   <div className="flex items-center gap-1">
                     {showUserAvatars(
                       eventContent.event.extendedProps.participants,
-                      25,
-                      '!w-[19px] !h-[19px]',
+                      21,
+                      '!w-[21px] !h-[21px]',
                       false,
                       true,
                     )}
@@ -619,7 +652,7 @@ const EventCalendar = () => {
             ) &&
               showUserAvatars(
                 eventContent.event.extendedProps.participants,
-                33,
+                32,
                 '!w-[32px] !h-[32px]',
                 true,
                 false,
@@ -736,8 +769,8 @@ const EventCalendar = () => {
                   <div className="flex items-center gap-1">
                     {showUserAvatars(
                       eventContent.event.extendedProps.participants,
-                      25,
-                      '!w-[19px] !h-[19px]',
+                      21,
+                      '!w-[21px] !h-[21px]',
                       false,
                       false,
                     )}
@@ -794,25 +827,19 @@ const EventCalendar = () => {
             const eventStart = new Date(event.start);
             const eventEnd = new Date(event.end);
             const clickDate = new Date(clickInfo.date);
+            const shouldAdjustEnd =
+              !isSameDay(eventStart, eventEnd) &&
+              !isMidnight(eventEnd) &&
+              event.allDay;
 
-            const isDifferentDate =
-              eventStart.toDateString() !== eventEnd.toDateString();
-            const isEndNotMidnight =
-              eventEnd.getHours() !== 0 ||
-              eventEnd.getMinutes() !== 0 ||
-              eventEnd.getSeconds() !== 0;
-            const adjustedEnd =
-              isDifferentDate && isEndNotMidnight
-                ? subtractOneDay(event.end)
-                : event.end;
+            const adjustedEnd = shouldAdjustEnd
+              ? subtractOneDay(event.end)
+              : eventEnd;
+            const adjustedEndISOString = shouldAdjustEnd
+              ? subtractOneDay(event.end).toISOString()
+              : event.end;
 
-            if (
-              removeTimeAndCompareDates(
-                eventStart.toLocaleString(),
-                new Date(adjustedEnd).toLocaleString(),
-                clickDate.toLocaleString(),
-              )
-            ) {
+            if (removeTimeAndCompareDates(eventStart, adjustedEnd, clickDate)) {
               if (
                 searchParams.get('view') == ViewOptions.WEEK ||
                 searchParams.get('view') == ViewOptions.DAY
@@ -821,8 +848,8 @@ const EventCalendar = () => {
                   filterEvents.push({
                     id: `${event.id}`,
                     title: event.title,
-                    start: eventStart.toLocaleString(),
-                    end: new Date(adjustedEnd).toLocaleString(),
+                    start: event.start,
+                    end: adjustedEndISOString,
                     type: event.type,
                     participants: event.participants || [],
                     address: event.address || '',
@@ -832,8 +859,8 @@ const EventCalendar = () => {
                 filterEvents.push({
                   id: `${event.id}`,
                   title: event.title,
-                  start: eventStart.toLocaleString(),
-                  end: new Date(adjustedEnd).toLocaleString(),
+                  start: event.start,
+                  end: adjustedEndISOString,
                   type: event.type,
                   participants: event.participants || [],
                   address: event.address || '',
@@ -884,43 +911,6 @@ const EventCalendar = () => {
     setPopoverInfo(null);
   };
 
-  useEffect(() => {
-    if (authenticatedUser) {
-      setCurrentResources((prevCurrentResources) => {
-        const existedResource = prevCurrentResources.find(
-          (resource) => resource.id == String(authenticatedUser.id),
-        );
-        if (!existedResource) {
-          return [
-            ...prevCurrentResources,
-            {
-              id: String(authenticatedUser.id),
-              title: String(authenticatedUser.profile.fullName),
-            },
-          ];
-        }
-        return [...prevCurrentResources];
-      });
-    }
-  }, [authenticatedUser]);
-
-  useEffect(() => {
-    const currentView = searchParams.get('view');
-    switch (currentView) {
-      case ViewOptions.WEEK:
-        handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-        break;
-      case ViewOptions.DAY:
-        handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
-        break;
-      case ViewOptions.YEAR:
-        handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
-        break;
-      default:
-        handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
-    }
-  }, [searchParams]);
-
   const handleDatesSet = (arg: any) => {
     const startDate = new Date(arg.startStr);
 
@@ -945,30 +935,23 @@ const EventCalendar = () => {
         const eventStart = new Date(event.start);
         const eventEnd = new Date(event.end);
         const clickDate = new Date(date as Date);
+        const shouldAdjustEnd =
+          !isSameDay(eventStart, eventEnd) &&
+          !isMidnight(eventEnd) &&
+          event.allDay;
 
-        const isDifferentDate =
-          eventStart.toDateString() !== eventEnd.toDateString();
-        const isEndNotMidnight =
-          eventEnd.getHours() !== 0 ||
-          eventEnd.getMinutes() !== 0 ||
-          eventEnd.getSeconds() !== 0;
-        const adjustedEnd =
-          isDifferentDate && isEndNotMidnight && event.allDay
-            ? subtractOneDay(event.end)
-            : event.end;
-
-        if (
-          removeTimeAndCompareDates(
-            eventStart.toLocaleString(),
-            new Date(adjustedEnd).toLocaleString(),
-            clickDate.toLocaleString(),
-          )
-        ) {
+        const adjustedEnd = shouldAdjustEnd
+          ? subtractOneDay(event.end)
+          : eventEnd;
+        const adjustedEndISOString = shouldAdjustEnd
+          ? subtractOneDay(event.end).toISOString()
+          : event.end;
+        if (removeTimeAndCompareDates(eventStart, adjustedEnd, clickDate)) {
           filterEvents.push({
             id: `${event.id}`,
             title: event.title,
-            start: eventStart.toLocaleString(),
-            end: new Date(adjustedEnd).toLocaleString(),
+            start: event.start,
+            end: adjustedEndISOString,
             type: event.type,
             participants: event.participants || [],
             address: event.address || '',
@@ -1476,6 +1459,22 @@ const EventCalendar = () => {
       label: '年',
     },
   ];
+
+  const getCalendarInitialView = () => {
+    const currentView = searchParams.get('view');
+    if (currentView) {
+      switch (currentView) {
+        case ViewOptions.WEEK:
+          return CalendarViewOptions.VIEW_BY_WEEK;
+        case ViewOptions.DAY:
+          return CalendarViewOptions.VIEW_BY_DAY;
+        case ViewOptions.YEAR:
+          return CalendarViewOptions.VIEW_BY_YEAR;
+        default:
+          return CalendarViewOptions.VIEW_BY_MONTH;
+      }
+    }
+  };
 
   const handleDateClick = (clickInfo?: any) => {
     setDefaultCreateStartDate(clickInfo.date);
@@ -2155,7 +2154,7 @@ const EventCalendar = () => {
     <Fragment>
       <div className="flex mb-3 overflow-y-hidden pt-5" ref={containerRef}>
         <div className={`${showSidebar ? 'w-[76%] mr-3' : 'w-full'}`}>
-          <div className="flex items-center justify-between mb-7 pl-10">
+          <div className="flex items-center justify-between mb-3 pl-10">
             <div className="flex items-center ml-[-1rem] gap-4">
               <ImageRound
                 name="Chevron left"
@@ -2262,7 +2261,7 @@ const EventCalendar = () => {
                         onChange(e);
                         handleViewChange(e.value as string);
                         setIsCalendarLoading(true);
-                        setTimeout(() => setIsCalendarLoading(false), 600);
+                        setTimeout(() => setIsCalendarLoading(false), 1500);
                       }}
                     />
                   )}
@@ -2271,9 +2270,12 @@ const EventCalendar = () => {
             </div>
             <div className="fixed top-[90px] right-0">
               {!showSidebar && (
-                <DynamicTooltip content={'表示するメンバー'} placement="left" customOffset={{
-                  left: -125,
-                }}>
+                <DynamicTooltip
+                  content={'表示するメンバー'}
+                  placement="left"
+                  customOffset={{
+                    left: -125,
+                  }}>
                   <div
                     className="bg-white w-[60px] h-[46px] rounded-l-[30px] flex items-center shadow-md hover:cursor-pointer"
                     onClick={() => setShowSidebar((prev) => !prev)}>
@@ -2309,7 +2311,15 @@ const EventCalendar = () => {
                       numberOfResources={
                         searchParams.get('view') == ViewOptions.WEEK ? 7 : 2
                       }
-                      className={`${searchParams.get('view') == ViewOptions.WEEK ? 'pt-[20px]' : `${authenticatedUser ? 'mt-[50px] pt-[10px]' : 'mt-[20px] pt-[40px]'} pl-[15px]`}`}
+                      className={`${
+                        searchParams.get('view') == ViewOptions.WEEK
+                          ? 'pt-[20px]'
+                          : `${
+                              authenticatedUser
+                                ? 'mt-[50px] pt-[10px]'
+                                : 'mt-[-20px] pt-[30px]'
+                            } pl-[15px]`
+                      }`}
                     />
                   </div>
                 )}
@@ -2326,11 +2336,7 @@ const EventCalendar = () => {
                 resourcePlugin,
                 scrollgridPlugin,
               ]}
-              initialView={
-                searchParams.get('view') == ViewOptions.DAY
-                  ? CalendarViewOptions.VIEW_BY_DAY
-                  : CalendarViewOptions.VIEW_BY_MONTH
-              }
+              initialView={getCalendarInitialView()}
               resources={currentResources}
               resourceOrder={(a: any, b: any) => {
                 if (a.id === String(session?.user.id)) return -1;
@@ -2338,18 +2344,17 @@ const EventCalendar = () => {
                 return a.title.localeCompare(b.title);
               }}
               resourceLabelContent={(resource) => {
-                const avatarColor = String(
-                  dashboardMembersWithAvatars.find(
-                    (member) => member.id == resource.resource.id,
-                  )?.avatarColor,
+                const memberInfo = dashboardMembersWithAvatars.find(
+                  (member) => member.id == resource.resource.id,
                 );
                 return (
-                  <div className="flex items-center justify-start gap-1">
-                    {AvatarIconWithDynamicColor({
-                      color: avatarColor || '',
-                      size: 36,
-                    })}
-                    <p className="truncate max-w-[100px] text-[15px] font-medium text-black">
+                  <div className="flex items-center justify-start gap-2">
+                    <CustomUserAvatar
+                      avatarUrl={memberInfo?.avatar || ''}
+                      avatarColor={memberInfo?.avatarColor || ''}
+                      size={36}
+                    />
+                    <p className="max-w-[100%] break-all text-left line-clamp-2 text-[15px] font-medium text-black">
                       {resource.resource.title}
                     </p>
                   </div>
@@ -2503,10 +2508,10 @@ const EventCalendar = () => {
             {watch('calendarView') &&
               watch('calendarView').value !=
                 CalendarViewOptions.VIEW_BY_MONTH &&
-              watch('calendarView').value !=
-                CalendarViewOptions.VIEW_BY_YEAR && (
+              watch('calendarView').value != CalendarViewOptions.VIEW_BY_YEAR &&
+              !isEventRendering && (
                 <div
-                  className={`w-[180px] px-3 z-[20] h-[38px] absolute  rounded-md right-[10px] bottom-[5px] bg-white flex items-center `}>
+                  className={`w-[180px] px-3 z-[20] h-[38px] absolute  rounded-md right-[50px] bottom-[30px] bg-white flex items-center `}>
                   <RangeSlider
                     min={18}
                     max={100}

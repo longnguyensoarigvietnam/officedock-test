@@ -16,7 +16,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { NO_DATA_AVAILABLE } from '@constants';
 import { PriorityTask, StatusTask } from '@constants/enums';
 import Spinner from '../Spinner';
-import AvatarIconWithDynamicColor from '../AvatarIcon';
+import CustomUserAvatar from '../AvatarIcon/CustomUserAvatar';
 
 type Props = {
   label?: ReactNode;
@@ -252,8 +252,16 @@ const PeopleDropdown = ({
                               <div
                                 className={`flex  items-center w-full ${classTextOption}`}>
                                 {option.imgUrl && (
-                                  <AvatarIconWithDynamicColor
-                                    color={option.imgUrl}
+                                  <CustomUserAvatar
+                                    avatarUrl={option?.imgUrl || ''}
+                                    avatarColor={option?.iconColor || ''}
+                                    size={30}
+                                  />
+                                )}
+                                {!option.imgUrl && option.iconColor && (
+                                  <CustomUserAvatar
+                                    avatarUrl={option?.imgUrl || ''}
+                                    avatarColor={option?.iconColor || ''}
                                     size={30}
                                   />
                                 )}

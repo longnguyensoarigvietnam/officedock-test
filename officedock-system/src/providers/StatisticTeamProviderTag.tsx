@@ -38,6 +38,7 @@ interface ContextValue {
     id: number;
     fullName: string;
     color: string;
+    avatarUrl: string;
   }[];
   tagsOptions: OptionDropdownType[];
   selectedTags: OptionDropdownType[];
@@ -71,6 +72,7 @@ interface ContextValue {
         id: number;
         fullName: string;
         color: string;
+        avatarUrl: string;
       }[]
     >
   >;
@@ -273,6 +275,7 @@ export const StatisticTeamTagsStateProvider = ({
       id: number;
       fullName: string;
       color: string;
+      avatarUrl: string;
     }[]
   >([]);
 

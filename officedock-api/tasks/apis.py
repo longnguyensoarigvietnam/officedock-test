@@ -46,6 +46,7 @@ from chat.serializers import (
 from common.constants import DATE_REGEX, BASE_DATE_FORMAT, BASE_DATETIME_FORMAT
 from common.filters import CustomOrderFilter
 from common.utils import (
+    filter_task_index_team,
     send_web_socket_event,
     create_categories_by_model,
     check_task_overtime,
@@ -53,7 +54,6 @@ from common.utils import (
 )
 from tasks.constants import (
     DEFAULT_PAGE_SIZE,
-    INDEX_INCREMENT,
     INITIAL_INDEX_VALUE,
     TaskTypes,
     TaskStatus,
@@ -264,57 +264,16 @@ class TaskViewSet(
                             user=user, task=task, is_update=False
                         )
 
-                    # Handle index for team task
-                    current_team_task_index = copy_task.team_task_index.filter(
-                        team=organization
-                    ).first()
-
-                    if (
-                        current_team_task_index
-                        and current_team_task_index.pin_at is None
-                    ):
-                        task_index_bellow_current_task = (
-                            TeamTaskIndex.objects.filter(
-                                task__status=task.status,
-                                team=organization,
-                                index__lt=current_team_task_index.index,
-                                pin_at__isnull=True,
-                            )
-                            .order_by("-index")
-                            .first()
-                        )
-                        if task_index_bellow_current_task:
-                            new_index = (
-                                current_team_task_index.index
-                                + task_index_bellow_current_task.index
-                            ) / 2
-                        else:
-                            new_index = (
-                                current_team_task_index.index - INDEX_INCREMENT
-                            )
-                        # Add index of new user of new task
-                        TeamTaskIndex.update_index_for_user(
-                            user=user,
-                            team=organization,
-                            task=task,
-                            is_update=False,
-                            index=new_index,
-                        )
-                    else:
-                        TeamTaskIndex.update_max_index_for_user(
-                            team=organization,
-                            user=user,
-                            task=task,
-                            is_update=False,
-                        )
                 elif organization:
                     # Create new index for task created with user
                     TaskIndex.objects.create(task=task, user=user)
 
-                    # Create new index for team task created with user
-                    TeamTaskIndex.objects.create(
-                        task=task, user=user, team=organization
-                    )
+        if organization:
+            for user in company.users.all():
+                # Create new index for team task created with user
+                TeamTaskIndex.objects.create(
+                    task=task, user=user, team=organization
+                )
 
         # Handle send to chat
         if send_to_chat:
@@ -1002,8 +961,10 @@ class TaskViewSet(
             todo_list_to_delete = old_todo_list_ids - new_todo_list_ids
             delete_todo_list_for_task(todo_list_to_delete)
 
-        # Define variable to check change data
+        # Define variable to check change data (handling TeamTaskIndex)
         change_people_in_charge = set()
+        current_people_in_charge = set(current_task.people_in_charge.all())
+        is_change_status = False
 
         # Update to last index if change status
         if (
@@ -1011,8 +972,8 @@ class TaskViewSet(
             and task_status is not None
             and current_task_status != task_status
         ):
-            for user in current_task.people_in_charge.all():
-                change_people_in_charge.add(user)
+            is_change_status = True
+            for user in current_people_in_charge:
                 send_web_socket_event(
                     {
                         "action": WebSocketEventType.CHANGE_TASK_STATUS.value,
@@ -1036,9 +997,6 @@ class TaskViewSet(
 
         # Update people in charge task
         if people_in_charge_ids is not None:
-            # Set null change people
-            change_people_in_charge = set()
-
             # Delete index for task if remove user
             TaskIndex.objects.filter(task=task).exclude(
                 user__id__in=[
@@ -1094,11 +1052,23 @@ class TaskViewSet(
             task.people_in_charge.clear()
             TaskIndex.objects.filter(task=task).delete()
 
-        # Remove index when change organization
-        if current_org != organization:
-            TeamTaskIndex.objects.filter(team=current_org, task=task).delete()
-        if organization:
-            for user in change_people_in_charge:
+        """
+        Update the highest index for the task being edited for all users
+        in the team (task is at the top).
+        """
+        if (
+            current_org != organization
+            or is_change_status
+            or current_people_in_charge != change_people_in_charge
+        ):
+            # If the team is changed, then delete all indexes of the old team.
+            if current_org != organization:
+                TeamTaskIndex.objects.filter(
+                    team=current_org, task=task
+                ).delete()
+
+            # Update the max index for the task for all usersx
+            for user in self.request.user.company.users.all():
                 # Update last index team task if add new user
                 TeamTaskIndex.update_max_index_for_user(
                     team=organization, user=user, task=task, is_update=False
@@ -1106,7 +1076,6 @@ class TaskViewSet(
                 team_task_index = TeamTaskIndex.objects.filter(
                     team=organization, user=user, task=task
                 ).first()
-                # reset_sort_task(user) # TODO: Handle sort team task
                 # Reset pin at to now
                 if team_task_index and team_task_index.pin_at:
                     team_task_index.pin_at = timezone.now()
@@ -1294,7 +1263,7 @@ class TaskViewSet(
             task = item.get("task")
             user = item.get("user")
             team = item.get("team")
-            people_in_charge = item.pop("people_in_charge", None)
+            people_in_charge = item.pop("people_in_charge", [])
             task_status = item.pop("status", None)
             is_begin_unpin = item.pop("is_begin_unpin")
 
@@ -1317,9 +1286,14 @@ class TaskViewSet(
                 reset_sort_task(user)
             elif team:
                 if is_begin_unpin:
-                    max_task_index = TeamTaskIndex.objects.filter(
-                        team=team, task__status=task.status, pin_at__isnull=True
-                    ).aggregate(Max("index"))["index__max"]
+                    task_filter = filter_task_index_team(task)
+                    max_task_index = (
+                        TeamTaskIndex.objects.filter(
+                            user=request.user, team=team, pin_at__isnull=True
+                        )
+                        .filter(task_filter)
+                        .aggregate(Max("index"))["index__max"]
+                    )
                     item["index"] = (
                         (max_task_index + INITIAL_INDEX_VALUE)
                         if max_task_index
@@ -1327,14 +1301,17 @@ class TaskViewSet(
                     )
 
                 item.pop("user", None)
-                item["user"] = request.user
                 TeamTaskIndex.objects.update_or_create(
-                    task=task, team=team, defaults=item
+                    user=request.user, task=task, team=team, defaults=item
                 )
             else:
                 return self.response(status_code=status.HTTP_400_BAD_REQUEST)
 
-            if people_in_charge:
+            if people_in_charge is None:
+                task.people_in_charge.clear()
+                # Delete index for task if change people in charge
+                TaskIndex.objects.filter(task=task).delete()
+            elif people_in_charge:
                 task.people_in_charge.set(
                     [people_in_charge],
                     through_defaults={"company": task.company},
@@ -1375,6 +1352,26 @@ class TaskViewSet(
                         user,
                     )
 
+            """
+            Update the max index for the task that was dragged and dropped
+            by other users in the team.
+            """
+            if team:
+                for user in team.company.users.exclude(
+                    id=request.user.id
+                ).all():
+                    # Update last index team task if add new user
+                    TeamTaskIndex.update_max_index_for_user(
+                        team=team, user=user, task=task, is_update=False
+                    )
+                    team_task_index = TeamTaskIndex.objects.filter(
+                        team=team, user=user, task=task
+                    ).first()
+                    # Reset pin at to now
+                    if team_task_index and team_task_index.pin_at:
+                        team_task_index.pin_at = timezone.now()
+                        team_task_index.save()
+
         return self.response_ok()
 
     @action(
@@ -1400,7 +1397,7 @@ class TaskViewSet(
 
         if team:
             task_index = TeamTaskIndex.objects.filter(
-                task=task, team=team
+                task=task, team=team, user=user
             ).first()
         else:
             task_index = TaskIndex.objects.filter(task=task, user=user).first()
@@ -1414,9 +1411,14 @@ class TaskViewSet(
             task_index.pin_at = None
 
             if team:
-                max_task_index = TeamTaskIndex.objects.filter(
-                    team=team, task__status=task.status, pin_at__isnull=True
-                ).aggregate(Max("index"))["index__max"]
+                task_filter = filter_task_index_team(task)
+                max_task_index = (
+                    TeamTaskIndex.objects.filter(
+                        user=request.user, team=team, pin_at__isnull=True
+                    )
+                    .filter(task_filter)
+                    .aggregate(Max("index"))["index__max"]
+                )
                 task_index.index = (
                     (max_task_index + INITIAL_INDEX_VALUE)
                     if max_task_index
@@ -2016,22 +2018,27 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if ordering:
             if ordering in self.ordering_fields:
                 tasks = tasks.annotate(
-                    coalesced_ordering_datetime=Coalesce(
+                    coalesced_deadline=Coalesce(
                         "deadline",
-                        Value(REPLACE_NULL_DATE, output_field=DateTimeField()),
+                        Value(
+                            REPLACE_NULL_DATE_WITH_FUTURE,
+                            output_field=DateTimeField(),
+                        ),
                     )
                 )
 
-                # Replace 'deadline' with 'coalesced_ordering_datetime' for sorting
-                field_name = ordering.replace(
-                    "deadline", "coalesced_ordering_datetime"
-                )
-                tasks = tasks.order_by(field_name, "-updated_at")
+                if "deadline" in ordering:
+                    tasks = tasks.order_by("coalesced_deadline", "-updated_at")
+
+                if "is_important" in ordering:
+                    tasks = tasks.order_by(
+                        "-is_important", "coalesced_deadline", "-updated_at"
+                    )
 
                 # Update team task index only if sorting by deadline or importance
                 for idx, task in enumerate(tasks):
                     team_task_index = task.team_task_index.filter(
-                        team_id=organization_id
+                        team_id=organization_id, user=user
                     ).first()
                     if team_task_index:
                         if team_task_index.pin_at:
@@ -2067,23 +2074,47 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if search := request.query_params.get("search"):
             tasks = tasks.filter(title__icontains=search)
 
-        # Fetch task index and pinned status for the user
-        task_pin = TeamTaskIndex.objects.filter(
-            task=OuterRef("pk"), team_id=organization_id
-        ).values("pin_at")[:1]
-        task_index = TeamTaskIndex.objects.filter(
-            task=OuterRef("pk"), team_id=organization_id
-        ).values("index")[:1]
+        # If the current user has no team task index, reindex tasks
+        if (
+            not TeamTaskIndex.objects.filter(
+                team_id=organization_id,
+                user=user,
+                task__people_in_charge__isnull=True,
+            ).exists()
+            and not ordering
+        ):
+            tasks = tasks.annotate(
+                coalesced_deadline=Coalesce(
+                    "deadline",
+                    Value(REPLACE_NULL_DATE, output_field=DateTimeField()),
+                )
+            ).order_by("-coalesced_deadline", "-updated_at")
 
-        # Annotate tasks with task index and pin timestamp
-        tasks = tasks.annotate(
-            index=Subquery(task_index),
-            coalesced_pin_at=Coalesce(
-                Subquery(task_pin),
-                Value(REPLACE_NULL_DATE),
-                output_field=DateTimeField(),
-            ),
-        ).order_by("-coalesced_pin_at", "-index")
+            # Update team task index only if sorting by deadline or importance
+            for idx, task in enumerate(tasks):
+                TeamTaskIndex.objects.create(
+                    task=task,
+                    team_id=organization_id,
+                    user=user,
+                    index=INITIAL_INDEX_VALUE - idx,
+                )
+        else:
+            # Fetch task index and pinned status for the user
+            team_task_index_obj = TeamTaskIndex.objects.filter(
+                task=OuterRef("pk"), team_id=organization_id, user=user
+            )
+            task_pin = team_task_index_obj.values("pin_at")[:1]
+            task_index = team_task_index_obj.values("index")[:1]
+
+            # Annotate tasks with task index and pin timestamp
+            tasks = tasks.annotate(
+                index=Subquery(task_index),
+                coalesced_pin_at=Coalesce(
+                    Subquery(task_pin),
+                    Value(REPLACE_NULL_DATE),
+                    output_field=DateTimeField(),
+                ),
+            ).order_by("-coalesced_pin_at", "-index")
 
         return self.response_pagination(
             request,

@@ -50,6 +50,7 @@ export interface DataPercentCompareType {
     label: string;
     percent?: number;
     avatarColor?: string;
+    avatarUrl?: string
   }[];
   mergedItems: StatisticCategoryInfo[];
 }

@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@components/common/Button';
 import StatisticTeamCalendar from '@components/statisticTeam/tag/StatisticTeamCalendar';
 import ImageRound from '@components/common/ImageRound';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import PercentageTeamTags from '@components/statisticTeam/tag/PercentageTeamTags';
 import PercentageTeamTagsCompare from '@components/statisticTeam/tag/compare/PercentageTeamTagsCompare';
@@ -24,6 +23,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 const StatisticTeamTagBoard = () => {
   const {
@@ -106,7 +106,8 @@ const StatisticTeamTagBoard = () => {
         data.members.map((member) => ({
           id: member.id,
           fullName: member.fullName,
-          color: member.avatarColor,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
         })),
       );
       const optionsTagList = data.tags.map((item) => ({
@@ -307,6 +308,7 @@ const StatisticTeamTagBoard = () => {
       id: number;
       fullName: string;
       color: string;
+      avatarUrl: string;
     }[],
   ) => {
     const slicedParticipants = participants.slice(0, 6);
@@ -314,17 +316,18 @@ const StatisticTeamTagBoard = () => {
       participants.length > 3 ? participants.length - 6 : 0;
 
     return (
-      <>
+      <div className="flex items-center">
         {slicedParticipants.map((item) => {
           return (
             <div
               className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
               key={item.id}>
-              {AvatarIconWithDynamicColor({
-                color: item.color,
-                size: 33,
-                customClassName: '!mt-0',
-              })}
+              <CustomUserAvatar
+                avatarUrl={item?.avatarUrl || ''}
+                avatarColor={item?.color || ''}
+                size={32}
+                customClassName={`${!item?.avatarUrl && '!mt-0'}`}
+              />
             </div>
           );
         })}
@@ -333,7 +336,7 @@ const StatisticTeamTagBoard = () => {
             +{remainingCount}
           </div>
         )}
-      </>
+      </div>
     );
   };
 

@@ -387,7 +387,7 @@ export enum PermissionType {
   TEAM_AND_SUB_VIEW = '自チームと下位チームのみ閲覧可',
   NOT_ALLOWED = '不可',
   ALL_TEAMS = '全チーム参加',
-  TEAM_AND_SUB = '自チームと下位チームのみ参加'
+  TEAM_AND_SUB = '自チームと下位チームのみ参加',
 }
 
 export enum CurrentScreen {
@@ -450,7 +450,7 @@ export enum OrderingDataType {
 }
 export enum StatisticChartType {
   COMPARE = 'compare',
-  STANDARD = 'standard'
+  STANDARD = 'standard',
 }
 export enum TimeOptionsType {
   WEEK = '1週間',
@@ -492,16 +492,16 @@ export enum PendingNavigationType {
   TEAM_DOCK = 'TEAM_DOCK',
   MEMBER = 'MEMBER',
 }
-export enum EventParticipantType{
+export enum EventParticipantType {
   USER = 'USER',
-  ORGANIZATION = 'ORGANIZATION'
+  ORGANIZATION = 'ORGANIZATION',
 }
 export enum HierarchyType {
   LARGE = 'large',
   MEDIUM = 'medium',
-  SMALL = 'small'
+  SMALL = 'small',
 }
 export enum AddCategoryHierarchyType {
   INPUT = 'input',
-  PULLDOWN = 'pulldown'
+  PULLDOWN = 'pulldown',
 }

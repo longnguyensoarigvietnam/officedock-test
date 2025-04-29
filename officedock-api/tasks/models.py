@@ -10,6 +10,7 @@ from tasks.constants import (
 )
 from users.models import User
 from organizations.models import Organization
+from common.utils import filter_task_index_team
 
 
 class Task(BaseModel):
@@ -316,10 +317,12 @@ class TeamTaskIndex(BaseModel):
         Set default company
         """
         if self.index is None:
-            last_task_index = TeamTaskIndex.objects.filter(
-                team=self.team, user=self.user, task__status=self.task.status
-            ).aggregate(Max("index"))
-
+            task_filter = filter_task_index_team(self.task)
+            last_task_index = (
+                TeamTaskIndex.objects.filter(team=self.team, user=self.user)
+                .filter(task_filter)
+                .aggregate(Max("index"))
+            )
             self.index = (
                 last_task_index["index__max"] + INDEX_INCREMENT
                 if last_task_index["index__max"] is not None
@@ -336,9 +339,12 @@ class TeamTaskIndex(BaseModel):
         Update last index if add new user
         """
         # Calculate the maximum index for the given user
-        max_index = TeamTaskIndex.objects.filter(
-            user=user, team=team, task__status=task.status
-        ).aggregate(Max("index"))["index__max"]
+        task_filter = filter_task_index_team(task)
+        max_index = (
+            TeamTaskIndex.objects.filter(user=user, team=team)
+            .filter(task_filter)
+            .aggregate(Max("index"))["index__max"]
+        )
 
         # Determine the new index value
         new_index = (
@@ -348,7 +354,9 @@ class TeamTaskIndex(BaseModel):
         )
 
         # Create the TeamTaskIndex entry if it doesn't already exist
-        if not TeamTaskIndex.objects.filter(task=task, team=team).exists():
+        if not TeamTaskIndex.objects.filter(
+            task=task, team=team, user=user
+        ).exists():
             TeamTaskIndex.objects.create(
                 task=task,
                 user=user,
@@ -358,9 +366,9 @@ class TeamTaskIndex(BaseModel):
             )
         else:
             # Update the index if the TeamTaskIndex entry exists
-            TeamTaskIndex.objects.filter(task=task, team=team).update(
-                index=new_index, user=user
-            )
+            TeamTaskIndex.objects.filter(
+                task=task, team=team, user=user
+            ).update(index=new_index)
 
     def update_index_for_user(
         user: User, task: Task, team: Organization, is_update=True, index=None
@@ -371,12 +379,14 @@ class TeamTaskIndex(BaseModel):
 
         if is_update:
             # Update the index if the TeamTaskIndex entry exists
-            TeamTaskIndex.objects.filter(task=task, team=team).update(
-                index=index, user=user
-            )
+            TeamTaskIndex.objects.filter(
+                task=task, team=team, user=user
+            ).update(index=index)
         else:
             # Create the TeamTaskIndex entry if it doesn't already exist
-            if not TeamTaskIndex.objects.filter(task=task, team=team).exists():
+            if not TeamTaskIndex.objects.filter(
+                task=task, team=team, user=user
+            ).exists():
                 TeamTaskIndex.objects.create(
                     task=task,
                     user=user,

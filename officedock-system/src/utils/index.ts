@@ -582,7 +582,7 @@ export function hasRole(roles: UserRoleType[], roleName: string): boolean {
   return roles.some((role) => role.name === roleName);
 }
 
-export const getChatFileURL = (url: string) => {
+export const getFileURL = (url: string) => {
   if (url && typeof url === 'string') {
     if (url.includes('https://') || url.includes('http://')) {
       return url;
@@ -656,6 +656,7 @@ export function transformDataTeamTask(result: ResultTeam[]): TransformedUser[] {
   return result.map((user) => ({
     id: `user_${user.id}`,
     avatarColor: user.avatarColor,
+    avatar: user?.avatar || '',
     name: user.profile.fullName,
     statuses: {
       NOT_STARTED:

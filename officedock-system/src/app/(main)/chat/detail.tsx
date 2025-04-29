@@ -35,19 +35,19 @@ import ActionsTaskModal from '@components/modals/ActionsTaskModal';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import ActionsEventModal from '@components/modals/ActionsEventModal';
 import { ChatMentionMembersList } from '@components/modals/ChatMentionMembersModal';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ConfirmActionsEventModal from '@components/modals/ConfirmActionsEventModal';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ConfirmRemoveChatMemberModal from '@components/modals/ConfirmRemoveChatMemberModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import ChatUploadingFilesModal from '@components/modals/ChatUploadingFilesModal';
 import ChatDroppingFileModal from '@components/modals/ChatDroppingFileModal';
-import ErrorChatUploadFileValidationModal from '@components/modals/ErrorChatUploadFileValidationModal';
 import { MessageDetail } from '@components/chat/MessageDetail';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
 import ListTaskUserChat from '@components/chat/ListTaskUserChat';
 import { TaskQuote } from '@components/chat/CustomTaskQuote';
 import { CustomReaction } from '@components/chat/CustomIcon';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -81,7 +81,7 @@ import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
-  UPLOAD_FILE_MAXIMUM_SZIE,
+  UPLOAD_CHAT_FILE_MAXIMUM_SIZE,
 } from '@constants/message';
 
 import useChatRoomDetail from '@hooks/useChatRoomDetail';
@@ -90,7 +90,7 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { addTimeToDate, getCurrentTimeInJapan } from '@utils/date';
 import {
-  getChatFileURL,
+  getFileURL,
   getChunkSize,
   hasPermissionInArray,
   trimUnnecessaryLineBreaks,
@@ -743,7 +743,7 @@ const ChatDetail = ({
       const chatFileList = data.chatMessage.chatFiles.map((file) => {
         return {
           ...file,
-          compressedFile: getChatFileURL(file.compressedFile || ''),
+          compressedFile: getFileURL(file.compressedFile || ''),
         };
       });
       setDataMessageDetail((prevDataMessageDetail) => {
@@ -888,7 +888,7 @@ const ChatDetail = ({
               const chatFileList = data.chatMessage.chatFiles.map((file) => {
                 return {
                   ...file,
-                  compressedFile: getChatFileURL(file.compressedFile || ''),
+                  compressedFile: getFileURL(file.compressedFile || ''),
                 };
               });
               setDataMessageDetail([
@@ -1740,27 +1740,27 @@ const ChatDetail = ({
         );
     }
 
-    const avatarColor =
-      dashboardMembers.find((member) => {
-        if (type === ChatRoomType.PRIVATE) {
-          return (
-            member.id ===
-            participants.find(
-              (participant) => participant.id !== session?.user.id,
-            )?.id
-          );
-        }
-        return member.id === session?.user.id;
-      })?.avatarColor || '';
+    const memberInfo = dashboardMembers.find((member) => {
+      if (type === ChatRoomType.PRIVATE) {
+        return (
+          member.id ===
+          participants.find(
+            (participant) => participant.id !== session?.user.id,
+          )?.id
+        );
+      }
+      return member.id === session?.user.id;
+    });
 
     return (
       <div className="rounded-full w-[48px] h-[48px] border-[2px] border-white flex items-center justify-center overflow-hidden">
         <div className="scale-150">
-          {AvatarIconWithDynamicColor({
-            color: avatarColor,
-            size: 33,
-            customClassName: 'mt-0.5 ml-0.5',
-          })}
+          <CustomUserAvatar
+            avatarUrl={memberInfo?.avatarUrl || ''}
+            avatarColor={memberInfo?.avatarColor || ''}
+            size={33}
+            customClassName={`${!memberInfo?.avatarUrl && 'mt-0.5 ml-0.5'}`}
+          />
         </div>
       </div>
     );
@@ -1775,18 +1775,19 @@ const ChatDetail = ({
       <>
         {slicedParticipants.map((participant: any, index: number) => {
           const participantId = isEditing ? participant : participant.id;
-          const avatarColor =
-            dashboardMembers.find((member) => member.id == participantId)
-              ?.avatarColor || '';
+          const memberInfo = dashboardMembers.find(
+            (member) => member.id == participantId,
+          );
           return (
             <div
               className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
               key={index}>
-              {AvatarIconWithDynamicColor({
-                color: avatarColor,
-                size: 33,
-                customClassName: '!mt-0',
-              })}
+              <CustomUserAvatar
+                avatarUrl={memberInfo?.avatarUrl || ''}
+                avatarColor={memberInfo?.avatarColor || ''}
+                size={33}
+                customClassName={`${!memberInfo?.avatarUrl && '!mt-0'}`}
+              />
             </div>
           );
         })}
@@ -2390,7 +2391,7 @@ const ChatDetail = ({
                             key={type}
                             placement="left"
                             customOffset={{
-                              left: -40
+                              left: -40,
                             }}>
                             <div>
                               <ImageRound
@@ -2649,9 +2650,7 @@ const ChatDetail = ({
                                 handleQuoteTaskUser={handleQuoteTaskUser}
                               />
                             )}
-                          <DynamicTooltip
-                            content={'書式設定'}
-                            placement="top">
+                          <DynamicTooltip content={'書式設定'} placement="top">
                             <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
                               <span className="w-[20px] ml-1 mt-[-3px]">
                                 Aa
@@ -2718,9 +2717,7 @@ const ChatDetail = ({
             <div className="px-8 py-1 !box-border max-w-[100%] border-t-[#D2DBE1] border-t-[1px]">
               <div className="flex justify-between items-center">
                 <div className="flex gap-1 items-center">
-                  <DynamicTooltip
-                    content={'メンション'}
-                    placement="top">
+                  <DynamicTooltip content={'メンション'} placement="top">
                     <div className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer">
                       <ImageRound
                         name="Mention"
@@ -2729,9 +2726,7 @@ const ChatDetail = ({
                       />
                     </div>
                   </DynamicTooltip>
-                  <DynamicTooltip
-                    content={'ファイルを送信'}
-                    placement="top">
+                  <DynamicTooltip content={'ファイルを送信'} placement="top">
                     <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
                       <ImageRound
                         name="Add file"
@@ -2740,9 +2735,7 @@ const ChatDetail = ({
                       />
                     </div>
                   </DynamicTooltip>
-                  <DynamicTooltip
-                    content={'リアクション'}
-                    placement="top">
+                  <DynamicTooltip content={'リアクション'} placement="top">
                     <div className="hover:bg-[#77858F26] rounded-full p-[7px] hover:cursor-pointer">
                       <ImageRound
                         name="Smile"
@@ -2751,9 +2744,7 @@ const ChatDetail = ({
                       />
                     </div>
                   </DynamicTooltip>
-                  <DynamicTooltip
-                    content={'タスクを引用'}
-                    placement="top">
+                  <DynamicTooltip content={'タスクを引用'} placement="top">
                     <div className="hover:bg-[#77858F26] relative rounded-full p-[7px] hover:cursor-pointer">
                       <ImageRound
                         name="Quote checker"
@@ -2762,9 +2753,7 @@ const ChatDetail = ({
                       />
                     </div>
                   </DynamicTooltip>
-                  <DynamicTooltip
-                    content={'書式設定'}
-                    placement="top">
+                  <DynamicTooltip content={'書式設定'} placement="top">
                     <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
                       <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
                     </p>
@@ -2785,9 +2774,9 @@ const ChatDetail = ({
         </div>
       )}
       {openErrorUploadFileModal && (
-        <ErrorChatUploadFileValidationModal
+        <ErrorUploadFileValidationModal
           open={true}
-          message={UPLOAD_FILE_MAXIMUM_SZIE}
+          message={UPLOAD_CHAT_FILE_MAXIMUM_SIZE}
           onClose={() => {
             setOpenErrorUploadFileModal(false);
           }}

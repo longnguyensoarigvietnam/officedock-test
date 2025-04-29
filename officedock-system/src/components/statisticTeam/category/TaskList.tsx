@@ -4,9 +4,9 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import Checkbox from '@components/common/Checkbox';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import TableChart from './TableChart';
 
 import useStatisticTask from '@hooks/useStatisticTask';
@@ -291,9 +291,10 @@ const TaskListTeamStatistic = ({
                     />
                   </div>
                   <div className="relative top-[2px]">
-                    <AvatarIconWithDynamicColor
+                  <CustomUserAvatar
+                      avatarUrl={member?.avatarUrl || ''}
+                      avatarColor={member?.color || ''}
                       size={30}
-                      color={member.color}
                     />
                   </div>
                   <span className="break-all max-w-[800px] w-full truncate">
@@ -340,7 +341,7 @@ const TaskListTeamStatistic = ({
                     label="大カテゴリー選択"
                     placeholder="-"
                     placeholderClass="!text-black text-sm font-normal"
-                    className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
+                    className="!h-[34px] !py-0 !rounded-md text-sm !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     classNameOption="!text-sm"
                     options={largeOptions}
@@ -372,8 +373,9 @@ const TaskListTeamStatistic = ({
                     label="中カテゴリー選択"
                     placeholder="-"
                     placeholderClass="!text-black text-sm font-normal"
-                    className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
+                    className="!h-[34px] !py-0 !rounded-md text-sm !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                    classNameOption="!text-sm"
                     options={mediumOptions}
                     selectedOption={selectedMedium || undefined}
                     onChange={(data) => handleSelectMedium(data)}
@@ -403,7 +405,7 @@ const TaskListTeamStatistic = ({
                     label="小カテゴリー選択"
                     placeholder="-"
                     placeholderClass="!text-black text-sm font-normal"
-                    className="!h-[34px] !py-0 !rounded-md !border !border-[#77858F]"
+                    className="!h-[34px] !py-0 !rounded-md text-sm !border !border-[#77858F]"
                     labelTextClass="!text-[#77858F] !text-xs !font-medium"
                     classNameOption="!text-sm"
                     options={smallOptions}

@@ -40,11 +40,16 @@ import socketEventEmitter from '@components/socket/socketEventEmitter';
 import ActionsTaskModal from '@components/modals/ActionsTaskModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
+import ViewProfileModal from '@components/modals/ViewProfileModal';
+import EditProfileModal from '@components/modals/EditProfileModal';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
 
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { SETTING_MENU, SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -55,6 +60,7 @@ import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
+  UPLOAD_AVATAR_FILE_MAXIMUM_SIZE,
 } from '@constants/message';
 import {
   DEFAULT_END_TIME,
@@ -63,6 +69,7 @@ import {
 } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { WebSocketMessageData } from '@interfaces/chat';
+import { UserProfileFormData, UserProfileFormRequest } from '@interfaces/user';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
@@ -165,8 +172,15 @@ const Header = ({ className }: HeaderProps) => {
   }>({});
   const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
   const [closeAction, setCloseAction] = useState<ActionTask | null>();
+  const [openViewProfileModal, setOpenViewProfileModal] =
+    useState<boolean>(false);
+  const [openEditProfileModal, setOpenEditProfileModal] =
+    useState<boolean>(false);
+  const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
+    useState(false);
 
   const { showToast } = useToast();
+  const { authenticatedUser } = useAuthenticatedUser({});
 
   const COMPANY_SETTING_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
     if (menu.requiredPermission === PermissionsSystem.VIEW_ALL) {
@@ -185,7 +199,8 @@ const Header = ({ className }: HeaderProps) => {
         return {
           id: member.id,
           fullName: member.fullName,
-          avatarColor: member.avatarColor,
+          avatarColor: member?.avatarColor || '',
+          avatar: member?.avatar || '',
           mainOrganization: member.organizations?.name || '',
         };
       });
@@ -798,6 +813,50 @@ const Header = ({ className }: HeaderProps) => {
     setPendingPageChange(null);
   };
 
+  // Handle edit profile
+  const handleConfirmEditProfile = (data: UserProfileFormData) => {
+    editProfile({
+      profile: {
+        fullName: data.fullName,
+      },
+      password: data.password !== '' ? data.password : null,
+      id: data.id,
+      avatar: data.avatar,
+    });
+  };
+
+  const handleEditProfile = async (data: UserProfileFormRequest) => {
+    setIsLoading(true);
+    const formData = new FormData();
+    if (data.password) formData.append('password', data.password);
+    if (data.avatar) formData.append('avatar', data.avatar);
+    formData.append('profile.fullName', data.profile.fullName);
+    return await api.patch(apiRouters.USER_DETAIL(String(data.id)), formData);
+  };
+
+  const { mutate: editProfile } = useMutation(
+    'postEditProfile',
+    handleEditProfile,
+    {
+      onSuccess: async () => {
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
+        setOpenEditProfileModal(false);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['getAuthenticatedUser'] }),
+          queryClient.invalidateQueries({ queryKey: ['getUserList'] }),
+        ]);
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
   return (
     <>
       <header
@@ -821,12 +880,20 @@ const Header = ({ className }: HeaderProps) => {
                       className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
                 ${open ? 'text-primary ' : ''}
                 `}>
-                      <ImageRound
-                        className="w-10 h-10 hover:opacity-70"
-                        src="/images/avatar-default.svg"
-                        border="full"
-                        name="Avatar user"
-                      />
+                      {authenticatedUser ? (
+                        <CustomUserAvatar
+                          avatarUrl={authenticatedUser?.avatar || ''}
+                          avatarColor={authenticatedUser?.avatarColor || ''}
+                          size={40}
+                        />
+                      ) : (
+                        <ImageRound
+                          className="w-10 h-10 hover:opacity-70"
+                          src="/images/avatar-default.svg"
+                          border="full"
+                          name="Avatar user"
+                        />
+                      )}
                     </PopoverButton>
                   </div>
 
@@ -856,6 +923,16 @@ const Header = ({ className }: HeaderProps) => {
                                   handleNavigateToNewPage(item.href as string);
                                   close();
                                 }}>
+                                <p>{item.name}</p>
+                              </div>
+                            ) : item.showModal ? (
+                              <div
+                                key={item.name}
+                                onClick={() => {
+                                  setOpenViewProfileModal(true);
+                                  close();
+                                }}
+                                className="flex items-center justify-between px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer">
                                 <p>{item.name}</p>
                               </div>
                             ) : (
@@ -945,6 +1022,39 @@ const Header = ({ className }: HeaderProps) => {
           </div>
         </div>
       </header>
+      {openViewProfileModal && (
+        <ViewProfileModal
+          open={openViewProfileModal}
+          onClose={() => {
+            setOpenViewProfileModal(false);
+          }}
+          openEditModal={() => {
+            setOpenViewProfileModal(false);
+            setOpenEditProfileModal(true);
+          }}
+          authenticatedUser={authenticatedUser}
+        />
+      )}
+      {openEditProfileModal && (
+        <EditProfileModal
+          open={openEditProfileModal}
+          onClose={() => {
+            setOpenEditProfileModal(false);
+          }}
+          onEdit={handleConfirmEditProfile}
+          setOpenErrorUploadFileModal={setOpenErrorUploadFileModal}
+          authenticatedUser={authenticatedUser}
+        />
+      )}
+      {openErrorUploadFileModal && (
+        <ErrorUploadFileValidationModal
+          open={true}
+          message={UPLOAD_AVATAR_FILE_MAXIMUM_SIZE}
+          onClose={() => {
+            setOpenErrorUploadFileModal(false);
+          }}
+        />
+      )}
       {isShowModalTask && (
         <ActionsTaskModal
           open={isShowModalTask}

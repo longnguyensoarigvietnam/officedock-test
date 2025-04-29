@@ -34,6 +34,7 @@ interface ContextValue {
     id: number;
     fullName: string;
     color: string;
+    avatarUrl: string;
   }[];
   totalDurationCategory: string;
   totalDurationCategoryCompare: string;
@@ -69,6 +70,7 @@ interface ContextValue {
         id: number;
         fullName: string;
         color: string;
+        avatarUrl: string;
       }[]
     >
   >;
@@ -268,6 +270,7 @@ export const StatisticTeamStateProvider = ({
       id: number;
       fullName: string;
       color: string;
+      avatarUrl: string;
     }[]
   >([]);
 

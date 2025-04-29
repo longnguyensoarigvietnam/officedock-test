@@ -89,9 +89,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
 
   return (
     <div className="flex w-full items-center gap-2 justify-between">
-      <DynamicTooltip
-        content="縮小"
-        placement="top">
+      <DynamicTooltip content="縮小" placement="top">
         <div>
           <button
             onClick={() => {
@@ -158,7 +156,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
         content="拡大"
         placement="top"
         customOffset={{
-          left: -5
+          left: -5,
         }}>
         <div>
           <button

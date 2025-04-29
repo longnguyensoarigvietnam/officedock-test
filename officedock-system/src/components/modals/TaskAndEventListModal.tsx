@@ -1,10 +1,10 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, MutableRefObject, SetStateAction, useContext } from 'react';
 
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { EventCalendarType, PermissionsSystem } from '@constants/enums';
 import { CalendarPopoverInfo, EventParticipant } from '@interfaces/calendar';
@@ -54,37 +54,37 @@ export const TaskAndEventListModal = ({
   ) => {
     if (participantList && participantList.length > 0) {
       if (type == EventCalendarType.TASK) {
-        const avatarColor =
-          dashboardMembersWithAvatars.find(
-            (member) => member.id == session?.user.id,
-          )?.avatarColor || '';
+        const memberInfo = dashboardMembersWithAvatars.find(
+          (member) => member.id == session?.user.id,
+        );
         return (
           <DynamicTooltip
             content={`${session?.user.profile.fullName}`}
             placement="top">
-            <div className="border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] mt-[-7px] mr-1">
-              {AvatarIconWithDynamicColor({
-                color: avatarColor,
-                size: 30,
-              })}
+            <div className="border-[1px] border-white rounded-full mt-[-7px] mr-1">
+              <CustomUserAvatar
+                avatarUrl={memberInfo?.avatar || ''}
+                avatarColor={memberInfo?.avatarColor || ''}
+                size={27}
+              />
             </div>
           </DynamicTooltip>
         );
       } else {
         if (participantList.length == 1) {
-          const avatarColor =
-            dashboardMembersWithAvatars.find(
-              (member) => member.id == participantList[0].id,
-            )?.avatarColor || '';
+          const memberInfo = dashboardMembersWithAvatars.find(
+            (member) => member.id == participantList[0].id,
+          );
           return (
             <DynamicTooltip
               content={`${participantList[0].fullName}`}
               placement="top">
-              <div className="border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] mt-[-7px] mr-1">
-                {AvatarIconWithDynamicColor({
-                  color: avatarColor,
-                  size: 30,
-                })}
+              <div className="border-[1px] border-white rounded-full mt-[-7px] mr-1">
+                <CustomUserAvatar
+                  avatarUrl={memberInfo?.avatar || ''}
+                  avatarColor={memberInfo?.avatarColor || ''}
+                  size={27}
+                />
               </div>
             </DynamicTooltip>
           );
@@ -92,10 +92,9 @@ export const TaskAndEventListModal = ({
           return (
             <div className="mt-[-7px] mr-1 flex items-center">
               {participantList.map((participant, index) => {
-                const avatarColor =
-                  dashboardMembersWithAvatars.find(
-                    (member) => member.id === participant.id,
-                  )?.avatarColor || '';
+                const memberInfo = dashboardMembersWithAvatars.find(
+                  (member) => member.id === participant.id,
+                );
 
                 return (
                   <DynamicTooltip
@@ -103,11 +102,12 @@ export const TaskAndEventListModal = ({
                     placement="top"
                     key={participant.id}>
                     <div
-                      className={`border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] ${index != 0 && 'ml-[-7px]'}`}>
-                      {AvatarIconWithDynamicColor({
-                        color: avatarColor,
-                        size: 30,
-                      })}
+                      className={`border-[1px] border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
+                      <CustomUserAvatar
+                        avatarUrl={memberInfo?.avatar || ''}
+                        avatarColor={memberInfo?.avatarColor || ''}
+                        size={27}
+                      />
                     </div>
                   </DynamicTooltip>
                 );
@@ -118,10 +118,9 @@ export const TaskAndEventListModal = ({
           return (
             <div className="mt-[-7px] mr-1 flex items-center">
               {participantList.slice(0, 1).map((participant, index) => {
-                const avatarColor =
-                  dashboardMembersWithAvatars.find(
-                    (member) => member.id === participant.id,
-                  )?.avatarColor || '';
+                const memberInfo = dashboardMembersWithAvatars.find(
+                  (member) => member.id === participant.id,
+                );
 
                 return (
                   <DynamicTooltip
@@ -129,11 +128,12 @@ export const TaskAndEventListModal = ({
                     placement="top"
                     key={participant.id}>
                     <div
-                      className={`border-[1px] border-white rounded-full w-[26.5px] h-[26.5px] ${index != 0 && 'ml-[-7px]'}`}>
-                      {AvatarIconWithDynamicColor({
-                        color: avatarColor,
-                        size: 30,
-                      })}
+                      className={`border-[1px] border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
+                      <CustomUserAvatar
+                        avatarUrl={memberInfo?.avatar || ''}
+                        avatarColor={memberInfo?.avatarColor || ''}
+                        size={27}
+                      />
                     </div>
                   </DynamicTooltip>
                 );
@@ -142,7 +142,7 @@ export const TaskAndEventListModal = ({
                 <DynamicTooltip
                   content={`他に${participantList.length - 1}人の表示があります`}
                   placement="top">
-                  <div className="text-white border-[1px] ml-[-7px] border-white rounded-full w-[26.5px] h-[26.5px] text-[11px] font-medium bg-[#77858F] flex items-center justify-center">
+                  <div className="text-white border-[1px] w-[27px] h-[27px] ml-[-7px] border-white rounded-full text-[11px] font-medium bg-[#77858F] flex items-center justify-center">
                     +{participantList.length - 1}
                   </div>
                 </DynamicTooltip>
@@ -153,7 +153,6 @@ export const TaskAndEventListModal = ({
       }
     }
   };
-
   return (
     <>
       {popoverInfo && (
@@ -282,9 +281,7 @@ export const TaskAndEventListModal = ({
               session?.user.permissions,
               PermissionsSystem.CALENDAR_ADD,
             ) && (
-              <DynamicTooltip
-                content={'予定を新規作成'}
-                placement="top">
+              <DynamicTooltip content={'予定を新規作成'} placement="top">
                 <div
                   className={`mx-auto mt-3 w-fit hover:cursor-pointer hover:rounded-full p-[6px] hover:bg-gray-200 border-[1px] border-transparent`}
                   onClick={() => {

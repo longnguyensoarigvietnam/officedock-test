@@ -25,8 +25,9 @@ import InputSearch from '@components/common/InputSearch';
 import ActionsAddMembersModal from '@components/modals/ActionsAddMembersModal';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import useDebounceText from '@hooks/useDebounceText';
 
@@ -52,7 +53,6 @@ import {
 import { BasePagination } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
 import api from '@base/api';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 interface dataProps {
   dataChatList: ChatRoomItem[];
@@ -816,7 +816,7 @@ const ListChatUsers = ({
       );
     }
 
-    const avatarColor =
+    const memberInfo =
       dashboardMembers.find((member) => {
         if (item.type === AvatarChat.PRIVATE) {
           return (
@@ -827,14 +827,15 @@ const ListChatUsers = ({
           );
         }
         return member.id === item.participants[0].id;
-      })?.avatarColor || '';
+      });
 
     return (
       <div className="h-6">
-        {AvatarIconWithDynamicColor({
-          color: avatarColor,
-          size: 33,
-        })}
+        <CustomUserAvatar
+          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarColor={memberInfo?.avatarColor || ''}
+          size={33}
+        />
       </div>
     );
   };

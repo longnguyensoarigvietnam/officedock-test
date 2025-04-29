@@ -38,7 +38,7 @@ export const PAGINATION_PAGE_SIZE_HIGHT = 50;
 
 export const PAGINATION_PAGE_SIZE_KANBAN = 30;
 
-export const INITIAL_INDEX_VALUE = 0.01;
+export const INITIAL_INDEX_VALUE = 100;
 export const INITIAL_INDEX_VALUE_STEP = 10000;
 
 export const COUNTDOWN_FOR_RESEND_OTP = 60;
@@ -232,7 +232,11 @@ export const BOOKMARK_ROUTER_NAME = 'bookmark';
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024;
 
+export const MAX_AVATAR_IMAGE_FILE_SIZE = 30 * 1024 * 1024;
+
 export const BATCH_FILE_SIZE = 15; // Maximum number of concurrent API calls
+
+export const COLUMN_ID_TASK = 'no_setting';
 
 export const REACTION_LIST = [
   {

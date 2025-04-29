@@ -3,18 +3,18 @@ import { memo } from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 
-export type ErrorChatUploadFileValidationModalProps = {
+export type ErrorUploadFileValidationModalProps = {
   open: boolean;
   message: string;
   onClose: () => void;
 };
 
-const ErrorChatUploadFileValidationModal = memo(
+const ErrorUploadFileValidationModal = memo(
   ({
     open,
     message,
     onClose,
-  }: ErrorChatUploadFileValidationModalProps) => {
+  }: ErrorUploadFileValidationModalProps) => {
     return (
       <Modal
       open={open}
@@ -37,4 +37,4 @@ const ErrorChatUploadFileValidationModal = memo(
   },
 );
 
-export default ErrorChatUploadFileValidationModal;
+export default ErrorUploadFileValidationModal;

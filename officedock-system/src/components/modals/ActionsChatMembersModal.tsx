@@ -9,7 +9,7 @@ import Modal from '../common/Modal';
 import InputSearch from '@components/common/InputSearch';
 import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { apiRouters } from '@constants/routers';
 import { NO_OPTIONS } from '@constants';
@@ -97,17 +97,17 @@ const ActionsChatMembersModal = memo(
     };
 
     const renderAvatar = (memberId: number) => {
-      const avatarColor =
-        dashboardMembers.find((member) => {
-          return member.id == memberId;
-        })?.avatarColor || '';
+      const memberInfo = dashboardMembers.find((member) => {
+        return member.id == memberId;
+      });
 
       return (
         <div>
-          {AvatarIconWithDynamicColor({
-            color: avatarColor,
-            size: 33,
-          })}
+          <CustomUserAvatar
+            avatarUrl={memberInfo?.avatarUrl || ''}
+            avatarColor={memberInfo?.avatarColor || ''}
+            size={33}
+          />
         </div>
       );
     };

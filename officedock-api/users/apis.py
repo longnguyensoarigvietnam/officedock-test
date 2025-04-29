@@ -27,7 +27,11 @@ from base.permissions import ActionPermission, IsOperationAdminOnly
 from chat.constants import ChatRoomTypes, WebSocketEventType
 from chat.models import ChatRoom
 from common.serializers import EmptySerializer
-from common.utils import get_username_alias, send_web_socket_event
+from common.utils import (
+    generate_file_name,
+    get_username_alias,
+    send_web_socket_event,
+)
 from companies.models import Company, Contract
 from submit_levels.models import SubmitLevelHistory
 from users.constants import (
@@ -75,6 +79,7 @@ from utils.jwt import JWTService
 from common.filters import CustomOrderFilter
 from roles.constants import Screens
 from base.filters import FilterByPermission
+from tasks.models import TeamTaskIndex
 
 
 def _login(self, request, is_admin=True):
@@ -936,6 +941,15 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     user=instance,
                 )
 
+        # Update avatar user
+        if avatar := serializer_data.get("avatar", None):
+            # Remove old avatar
+            instance.avatar.delete()
+
+            # Gen new file name
+            file_name = avatar.name
+            avatar.name = generate_file_name(file_name)
+
         # Update data to User and Profile
         user = serializer.save()
         if profile_data is not None:
@@ -964,6 +978,12 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     ).delete()
                     # Remove all skill map in organization of user
                     skill_maps.delete()
+
+                # Remove team task index
+                TeamTaskIndex.objects.filter(
+                    user=instance, team__in=delete_organizations
+                ).all().delete()
+
             user.organizations.clear()
             for data_org in organizations_data:
                 user.organizations.add(
@@ -1018,6 +1038,11 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             },
             user=instance,
         )
+
+        if instance.avatar:
+            # Remove old avatar
+            instance.avatar.delete()
+
         instance.delete()
 
     @action(

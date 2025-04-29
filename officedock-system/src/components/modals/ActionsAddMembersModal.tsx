@@ -1,6 +1,7 @@
 'use client';
 
 import { memo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { UseMutationResult } from 'react-query';
 import { useSession } from 'next-auth/react';
 
@@ -8,14 +9,14 @@ import Modal from '../common/Modal';
 import InputSearch from '@components/common/InputSearch';
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import Checkbox from '@components/common/Checkbox';
 import Input from '@components/common/Input';
 
 import { NO_OPTIONS } from '@constants';
+
 import { Profile } from '@interfaces/user';
 import { ChatDashboardMember, ChatRoomItem } from '@interfaces/chat';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
-import { Controller, useForm } from 'react-hook-form';
-import Checkbox from '@components/common/Checkbox';
 
 export type ActionsAddMembersModalProps = {
   open: boolean;
@@ -102,17 +103,17 @@ const ActionsAddMembersModal = memo(
         !watch('groupName'));
 
     const renderAvatar = (memberId: number) => {
-      const avatarColor =
-        dashboardMembers.find((member) => {
-          return member.id == memberId;
-        })?.avatarColor || '';
+      const memberInfo = dashboardMembers.find((member) => {
+        return member.id == memberId;
+      });
 
       return (
         <div>
-          {AvatarIconWithDynamicColor({
-            color: avatarColor,
-            size: 33,
-          })}
+          <CustomUserAvatar
+            avatarUrl={memberInfo?.avatarUrl || ''}
+            avatarColor={memberInfo?.avatarColor || ''}
+            size={33}
+          />
         </div>
       );
     };

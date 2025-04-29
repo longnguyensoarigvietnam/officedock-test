@@ -1,7 +1,7 @@
 import React from 'react';
 
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import ImageRound from '@components/common/ImageRound';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { StatisticCategoryInfo } from '@interfaces/statistic';
 import { convertToJapaneseTime } from '@utils/date';
@@ -20,6 +20,7 @@ type Props = {
     label: string;
     percent?: number;
     avatarColor?: string;
+    avatarUrl?: string;
     mergedItems?: StatisticCategoryInfo[];
   }[][];
   data: number[];
@@ -79,12 +80,14 @@ const ModalCustomTooltip = ({
                         return (
                           <li
                             key={user.user.id}
-                            className="flex items-center justify-between">
-                            <div className="flex items-center">
+                            className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
                               <div>
-                                <AvatarIconWithDynamicColor
-                                  color={user.user.avatarColor}
+                                <CustomUserAvatar
+                                  avatarUrl={user.user?.avatar || ''}
+                                  avatarColor={user.user?.avatarColor || ''}
                                   size={30}
+                                  customClassName={`${!user.user?.avatar && '!mt-0'}`}
                                 />
                               </div>
                               <span className="inline-block w-[170px] overflow-hidden whitespace-nowrap text-ellipsis">
@@ -149,11 +152,12 @@ const ModalCustomTooltip = ({
                     return (
                       <li
                         key={opt.label}
-                        className="flex items-center justify-between">
-                        <div className="flex items-center">
+                        className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
                           <div>
-                            <AvatarIconWithDynamicColor
-                              color={opt.avatarColor || ''}
+                            <CustomUserAvatar
+                              avatarUrl={opt?.avatarUrl || ''}
+                              avatarColor={opt?.avatarColor || ''}
                               size={30}
                             />
                           </div>

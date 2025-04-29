@@ -283,7 +283,7 @@ const HierarchyTable = ({
                           <div
                             key={skill.value}
                             className="flex items-center justify-center bg-[#77858F] px-[10px] !py-[5px] rounded-[20px]">
-                            <p className="text-white text-xs font-medium truncate max-w-[calc(300px)]">
+                            <p className="text-white text-xs font-medium">
                               {skill.label}
                             </p>
                           </div>

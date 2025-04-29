@@ -251,7 +251,7 @@ export interface UpdateTaskKanbanRequest {
   tag?: number | string | null;
   user?: number | string | null;
   pinAt?: string | null;
-  peopleInCharge?: string;
+  peopleInCharge?: string | null;
   isBeginUnpin?: boolean;
   team?: string;
 }
@@ -388,6 +388,7 @@ export interface ResultTeam {
   avatarColor: string;
   profile: ProfileTeam;
   status: StatusTeam[];
+  avatar: string;
 }
 export interface KanbanDataTeamResponse {
   count: number;
@@ -409,6 +410,7 @@ export interface TransformedUser {
   id: string;
   name: string;
   avatarColor: string;
+  avatar: string;
   statuses: TransformedStatuses;
 }
 
@@ -423,4 +425,8 @@ export interface UserTotalStatus {
   id: string;
   fullName: string;
   statuses: StatusSummary[];
+}
+export interface NoSettingTotalType {
+  count: number;
+  hasNext: boolean;
 }

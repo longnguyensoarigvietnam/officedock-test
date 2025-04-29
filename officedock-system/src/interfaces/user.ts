@@ -52,6 +52,7 @@ export interface User {
   organizations: Organizations[];
   isTwoFactorAuth: boolean;
   isEnterSendMessage?: boolean;
+  avatar?: string
   setting?: {
     isCheckSelfTask?: boolean;
     isCheckSelfSchedule?: boolean;
@@ -85,6 +86,7 @@ export interface Profile {
   fullName: string;
   birthday: string;
   avatarColor: string;
+  avatar?: string;
   gender: string;
   organizations?: {
     id: number;
@@ -141,5 +143,22 @@ export interface UserOrganization {
     id: number;
     fullName: string;
     avatarColor: string;
+    avatar: string
   }[];
+}
+export interface UserProfileFormData {
+  id?: number;
+  avatar: File | null;
+  email: string;
+  password: string | null;
+  fullName: string;
+  avatarUrl?: string
+}
+export interface UserProfileFormRequest {
+  id?: number;
+  avatar: File | null;
+  password: string | null;
+  profile: {
+    fullName: string,
+  }
 }

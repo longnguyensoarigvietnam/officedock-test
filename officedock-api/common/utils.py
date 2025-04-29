@@ -7,7 +7,7 @@ from channels.layers import get_channel_layer
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.files.storage import default_storage, FileSystemStorage
-from django.db.models import Sum, Func
+from django.db.models import Sum, Func, Q
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
@@ -560,3 +560,17 @@ def split_id_from_string(string_ids):
         except ValueError:
             continue
     return ids
+
+
+def filter_task_index_team(task):
+    """Common filter team task index"""
+    if not task.people_in_charge.exists():
+        task_filter = Q(task__people_in_charge__isnull=True)
+    else:
+        people_in_charge_ids = task.people_in_charge.all().values_list(
+            "id", flat=True
+        )
+        task_filter = Q(task__status=task.status) & Q(
+            task__people_in_charge__in=people_in_charge_ids
+        )
+    return task_filter

@@ -9,8 +9,8 @@ import StatisticTeamCalendar from '@components/statisticTeam/category/StatisticT
 import PercentageTeamCategory from '@components/statisticTeam/category/PercentageTeamCategory';
 import PercentageTeamCategoryCompare from '@components/statisticTeam/category/compare/PercentageCategoryCompare';
 import TaskListTeamStatistic from '@components/statisticTeam/category/TaskList';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
@@ -244,7 +244,8 @@ const StatisticTeamBoard = () => {
         data.members.map((member) => ({
           id: member.id,
           fullName: member.fullName,
-          color: member.avatarColor,
+          color: member?.avatarColor || '',
+          avatarUrl: member?.avatar || '',
         })),
       );
     },
@@ -387,6 +388,7 @@ const StatisticTeamBoard = () => {
       id: number;
       fullName: string;
       color: string;
+      avatarUrl: string;
     }[],
   ) => {
     const slicedParticipants = participants.slice(0, 6);
@@ -394,17 +396,18 @@ const StatisticTeamBoard = () => {
       participants.length > 3 ? participants.length - 6 : 0;
 
     return (
-      <>
+      <div className="flex items-center">
         {slicedParticipants.map((item) => {
           return (
             <div
               className="ml-[-10px] border-[1px] border-white rounded-full h-[32px] w-[32px]"
               key={item.id}>
-              {AvatarIconWithDynamicColor({
-                color: item.color,
-                size: 33,
-                customClassName: '!mt-0',
-              })}
+              <CustomUserAvatar
+                avatarUrl={item?.avatarUrl || ''}
+                avatarColor={item?.color || ''}
+                size={32}
+                customClassName={`${!item?.avatarUrl && '!mt-0'}`}
+              />
             </div>
           );
         })}
@@ -413,7 +416,7 @@ const StatisticTeamBoard = () => {
             +{remainingCount}
           </div>
         )}
-      </>
+      </div>
     );
   };
 

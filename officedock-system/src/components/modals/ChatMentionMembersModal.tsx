@@ -2,11 +2,11 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Editor } from '@tiptap/react';
 
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { MENTION_ALL_MEMBERS, NO_OPTIONS } from '@constants';
 import { ChatDashboardMember, ChatParticipant } from '@interfaces/chat';
@@ -64,11 +64,25 @@ export const ChatMentionMembersList = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleClosePopover]);
 
+  const renderAvatar = (participantId: number) => {
+    const memberInfo = dashboardMembers.find(
+      (memberWithAvatar) => memberWithAvatar.id === participantId,
+    );
+
+    return (
+      <div className="h-6">
+        <CustomUserAvatar
+          avatarUrl={memberInfo?.avatarUrl || ''}
+          avatarColor={memberInfo?.avatarColor || ''}
+          size={33}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="relative z-20">
-      <DynamicTooltip
-        content={'メンション'}
-        placement="top">
+      <DynamicTooltip content={'メンション'} placement="top">
         <div
           className="hover:bg-[#77858F26] rounded-full p-[7px] flex items-center justify-center hover:cursor-pointer"
           onClick={() => {
@@ -174,16 +188,7 @@ export const ChatMentionMembersList = ({
                           (memberWithAvatar) =>
                             memberWithAvatar.id === participant.id,
                         ) ? (
-                        <>
-                          {AvatarIconWithDynamicColor({
-                            color:
-                              dashboardMembers?.find(
-                                (memberWithAvatar) =>
-                                  memberWithAvatar.id === participant.id,
-                              )?.avatarColor || '#0068B6',
-                            size: 33,
-                          })}
-                        </>
+                        <>{renderAvatar(participant.id as number)}</>
                       ) : (
                         <ImageRound
                           className="w-8 h-8"
@@ -192,7 +197,7 @@ export const ChatMentionMembersList = ({
                           name="Avatar user"
                         />
                       )}
-                      <p className="font-medium text-[14px] text-black !break-words max-w-[160px]">
+                      <p className="font-medium text-[14px] text-black !break-all max-w-[145px]">
                         {participant.fullName}
                       </p>
                     </div>

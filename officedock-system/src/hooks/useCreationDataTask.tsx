@@ -9,6 +9,7 @@ import { CreationDataTask } from '@interfaces/task';
 
 interface useCreationDataTaskHooksProps {
   condition?: boolean[];
+  organizationId?: string;
   onSuccess?: (success: CreationDataTask) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -16,6 +17,7 @@ interface useCreationDataTaskHooksProps {
 
 const useCreationDataTask = ({
   condition,
+  organizationId,
   onSuccess,
   onError,
   onSettled,
@@ -25,7 +27,7 @@ const useCreationDataTask = ({
 
   // Handle call API get creation task data
   const getCreationDataTask = async () => {
-    const apiUrl = apiRouters.TASK_CREATION;
+    const apiUrl = `${apiRouters.TASK_CREATION}${organizationId ? `?organization_id=${organizationId}` : ''}`;
 
     const { data } = await api.get<CreationDataTask>(apiUrl);
     return data;
@@ -37,7 +39,7 @@ const useCreationDataTask = ({
     refetch: refetchCreationDataTask,
     isFetched: isFetchedCreationDataTask,
   } = useQuery({
-    queryKey: ['getCreationDataTask'],
+    queryKey: ['getCreationDataTask', organizationId],
     queryFn: getCreationDataTask,
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
