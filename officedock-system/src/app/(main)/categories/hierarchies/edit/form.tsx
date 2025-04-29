@@ -68,6 +68,7 @@ const TableComponent = ({
   categoryList,
   organizationName,
   dataOptionsSkill,
+  setIsTyping,
   setHierarchyList,
   setSelectedHierarchiesToDelete,
   setSelectedHierarchiesToUpdate,
@@ -79,6 +80,7 @@ const TableComponent = ({
     value: number;
     label: string;
   }[];
+  setIsTyping: Dispatch<SetStateAction<boolean>>
   setHierarchyList: Dispatch<SetStateAction<HierarchyDetail[]>>;
   setSelectedHierarchiesToDelete: Dispatch<
     SetStateAction<string[] | undefined>
@@ -670,7 +672,6 @@ const TableComponent = ({
             return updatedHierarchiesToUpdate;
           });
         }
-
         setHierarchyList((prev) => {
           const updatedHierarchyList = prev.map((org) => ({
             ...org,
@@ -800,6 +801,7 @@ const TableComponent = ({
 
           return updatedHierarchyList;
         });
+        setIsTyping(false)
       },
     },
   );
@@ -1879,6 +1881,9 @@ const TableComponent = ({
                                   rowInfo: row.original,
                                 });
                               }}
+                              onChange={() => {
+                                setIsTyping(true)
+                              }}
                             />
                           </div>
                           <p className="text-xs text-error">
@@ -1990,6 +1995,9 @@ const TableComponent = ({
                                     type: HierarchyType.MEDIUM,
                                     rowInfo: row.original,
                                   });
+                                }}
+                                onChange={() => {
+                                  setIsTyping(true)
                                 }}
                               />
                             </div>
@@ -2134,6 +2142,9 @@ const TableComponent = ({
                                   type: HierarchyType.SMALL,
                                   rowInfo: row.original,
                                 });
+                              }}
+                              onChange={() => {
+                                setIsTyping(true)
                               }}
                             />
                           </div>

@@ -112,10 +112,13 @@ const EditHierarchyForm = () => {
     organizationId: String(selectedOrganizationOption.value),
     current_screen: ScreenName.CATEGORY_HIERARCHY,
   });
-  const { teamList } = useTeamList({screenName: ScreenName.CATEGORY_HIERARCHY});
+  const { teamList } = useTeamList({
+    screenName: ScreenName.CATEGORY_HIERARCHY,
+  });
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
   const { showToast } = useToast();
+  const [isTyping, setIsTyping] = useState<boolean>(false);
 
   useEffect(() => {
     if (creationDataCategoryData && creationDataCategoryData?.length > 0) {
@@ -123,7 +126,7 @@ const EditHierarchyForm = () => {
         return {
           value: category.uuid,
           label: category.name,
-          teamId: category.team
+          teamId: category.team,
         };
       });
       setCategoryList([...options]);
@@ -212,9 +215,15 @@ const EditHierarchyForm = () => {
     return hierarchyList.some((org) =>
       org.statisticCategories.some(
         (category) =>
-          (!category.large.isValid && category.large.errorMessage && !isUUID(category.large.label)) ||
-          (!category.medium.isValid && category.medium.errorMessage && !isUUID(category.medium.label)) ||
-          (!category.small.isValid && category.small.errorMessage && !isUUID(category.small.label)),
+          (!category.large.isValid &&
+            category.large.errorMessage &&
+            !isUUID(category.large.label)) ||
+          (!category.medium.isValid &&
+            category.medium.errorMessage &&
+            !isUUID(category.medium.label)) ||
+          (!category.small.isValid &&
+            category.small.errorMessage &&
+            !isUUID(category.small.label)),
       ),
     );
   };
@@ -469,6 +478,7 @@ const EditHierarchyForm = () => {
             <Button
               variant="primary"
               className="w-[100px] !p-0 !h-[34px]"
+              disabled={isTyping}
               onClick={handleConfirmUpdateOrganizationCategoryHierarchy}>
               保存
             </Button>
@@ -489,6 +499,7 @@ const EditHierarchyForm = () => {
                   )?.skills || []
                 }
                 organizationName={data.name}
+                setIsTyping={setIsTyping}
                 setHierarchyList={setHierarchyList}
                 setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
                 setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
@@ -505,6 +516,7 @@ const EditHierarchyForm = () => {
                 (options) => options.organizationId == hierarchyList[0].id,
               )?.skills || []
             }
+            setIsTyping={setIsTyping}
             setHierarchyList={setHierarchyList}
             setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
             setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
