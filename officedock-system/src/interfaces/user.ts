@@ -143,6 +143,7 @@ export interface UserOrganization {
     id: number;
     fullName: string;
     avatarColor: string;
+    avatar: string
   }[];
 }
 export interface UserProfileFormData {

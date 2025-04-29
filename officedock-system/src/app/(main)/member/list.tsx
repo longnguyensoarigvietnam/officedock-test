@@ -27,6 +27,7 @@ const ListMember = () => {
     id: string;
     fullName?: string;
     avatarColor: string;
+    avatarUrl: string
   }>();
   const [organizationId, setOrganizationId] = useState<string>('');
 
@@ -79,10 +80,12 @@ const ListMember = () => {
                   id: string,
                   avatarColor: string,
                   organizationId: string,
+                  avatarUrl: string
                 ) => {
                   setUserClick({
                     id: id,
                     avatarColor: avatarColor,
+                    avatarUrl: avatarUrl
                   });
                   setIsShowModalDetail(true);
                   setOrganizationId(organizationId);
@@ -96,6 +99,7 @@ const ListMember = () => {
           open={isShowModalDetail}
           userId={userClick?.id || ''}
           avatarColor={userClick?.avatarColor || ''}
+          avatarUrl={userClick?.avatarUrl || ''}
           organizationId={organizationId}
           type={''}
           onConfirm={function (): void {

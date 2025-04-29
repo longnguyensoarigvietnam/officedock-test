@@ -103,6 +103,7 @@ export type ActionTaskModalProps = {
     id: number;
     fullName: string;
     color: string;
+    avatarUrl: string;
   }[];
   organizationId: string | null;
   creationDataTaskData: CreationDataTask | undefined;
@@ -682,7 +683,8 @@ const ActionsTaskModalTeam = ({
         ...listMemberTeam.map((org) => ({
           label: org.fullName,
           value: org.id,
-          imgUrl: org.color,
+          imgUrl: org.avatarUrl,
+          iconColor: org.color
         })),
       ]);
     }

@@ -158,6 +158,7 @@ const PercentageCategoryTeam = ({
           label: user.user.fullName,
           avatarColor: user.user.avatarColor,
           percent: user.percent,
+          avatarUrl: user.user?.avatar || ''
         })) || [],
     );
     // Get list id

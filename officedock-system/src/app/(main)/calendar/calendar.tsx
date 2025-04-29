@@ -152,7 +152,39 @@ const EventCalendar = () => {
   );
   const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
-  const { authenticatedUser } = useAuthenticatedUser({});
+  const { authenticatedUser } = useAuthenticatedUser({
+    onSuccess: (data) => {
+      setCurrentResources((prevCurrentResources) => {
+        const existedResource = prevCurrentResources.find(
+          (resource) => resource.id == String(data.id),
+        );
+        if (!existedResource) {
+          return [
+            ...prevCurrentResources,
+            {
+              id: String(data.id),
+              title: String(data.profile.fullName),
+            },
+          ];
+        }
+        return [...prevCurrentResources];
+      });
+      const currentView = searchParams.get('view');
+      switch (currentView) {
+        case ViewOptions.WEEK:
+          handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
+          break;
+        case ViewOptions.DAY:
+          handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
+          break;
+        case ViewOptions.YEAR:
+          handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
+          break;
+        default:
+          handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
+      }
+    },
+  });
 
   const [infoModalPosition, setInfoModalPosition] = useState<{
     top: number;
@@ -879,43 +911,6 @@ const EventCalendar = () => {
     setPopoverInfo(null);
   };
 
-  useEffect(() => {
-    if (authenticatedUser) {
-      setCurrentResources((prevCurrentResources) => {
-        const existedResource = prevCurrentResources.find(
-          (resource) => resource.id == String(authenticatedUser.id),
-        );
-        if (!existedResource) {
-          return [
-            ...prevCurrentResources,
-            {
-              id: String(authenticatedUser.id),
-              title: String(authenticatedUser.profile.fullName),
-            },
-          ];
-        }
-        return [...prevCurrentResources];
-      });
-    }
-  }, [authenticatedUser]);
-
-  useEffect(() => {
-    const currentView = searchParams.get('view');
-    switch (currentView) {
-      case ViewOptions.WEEK:
-        handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-        break;
-      case ViewOptions.DAY:
-        handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
-        break;
-      case ViewOptions.YEAR:
-        handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
-        break;
-      default:
-        handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
-    }
-  }, [searchParams]);
-
   const handleDatesSet = (arg: any) => {
     const startDate = new Date(arg.startStr);
 
@@ -1464,6 +1459,22 @@ const EventCalendar = () => {
       label: '年',
     },
   ];
+
+  const getCalendarInitialView = () => {
+    const currentView = searchParams.get('view');
+    if (currentView) {
+      switch (currentView) {
+        case ViewOptions.WEEK:
+          return CalendarViewOptions.VIEW_BY_WEEK;
+        case ViewOptions.DAY:
+          return CalendarViewOptions.VIEW_BY_DAY;
+        case ViewOptions.YEAR:
+          return CalendarViewOptions.VIEW_BY_YEAR;
+        default:
+          return CalendarViewOptions.VIEW_BY_MONTH;
+      }
+    }
+  };
 
   const handleDateClick = (clickInfo?: any) => {
     setDefaultCreateStartDate(clickInfo.date);
@@ -2300,7 +2311,15 @@ const EventCalendar = () => {
                       numberOfResources={
                         searchParams.get('view') == ViewOptions.WEEK ? 7 : 2
                       }
-                      className={`${searchParams.get('view') == ViewOptions.WEEK ? 'pt-[20px]' : `${authenticatedUser ? 'mt-[50px] pt-[10px]' : 'mt-[20px] pt-[40px]'} pl-[15px]`}`}
+                      className={`${
+                        searchParams.get('view') == ViewOptions.WEEK
+                          ? 'pt-[20px]'
+                          : `${
+                              authenticatedUser
+                                ? 'mt-[50px] pt-[10px]'
+                                : 'mt-[-20px] pt-[30px]'
+                            } pl-[15px]`
+                      }`}
                     />
                   </div>
                 )}
@@ -2317,11 +2336,7 @@ const EventCalendar = () => {
                 resourcePlugin,
                 scrollgridPlugin,
               ]}
-              initialView={
-                searchParams.get('view') == ViewOptions.DAY
-                  ? CalendarViewOptions.VIEW_BY_DAY
-                  : CalendarViewOptions.VIEW_BY_MONTH
-              }
+              initialView={getCalendarInitialView()}
               resources={currentResources}
               resourceOrder={(a: any, b: any) => {
                 if (a.id === String(session?.user.id)) return -1;
@@ -2333,13 +2348,13 @@ const EventCalendar = () => {
                   (member) => member.id == resource.resource.id,
                 );
                 return (
-                  <div className="flex items-center justify-start gap-1">
+                  <div className="flex items-center justify-start gap-2">
                     <CustomUserAvatar
                       avatarUrl={memberInfo?.avatar || ''}
                       avatarColor={memberInfo?.avatarColor || ''}
                       size={36}
                     />
-                    <p className="max-w-[100px] break-all line-clamp-2 text-[15px] font-medium text-black">
+                    <p className="max-w-[100%] break-all text-left line-clamp-2 text-[15px] font-medium text-black">
                       {resource.resource.title}
                     </p>
                   </div>

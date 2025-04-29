@@ -4,8 +4,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import Modal from '../common/Modal';
-import AvatarIconWithDynamicColor from '@components/common/AvatarIcon';
 import Button from '@components/common/Button';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
 import {
   SkeletonContainer,
@@ -24,6 +24,7 @@ import { hasPermissionInArray } from '@utils';
 export type DetailProfileMemberProps = {
   userId: string;
   avatarColor: string;
+  avatarUrl: string
   open: boolean;
   type: string;
   organizationId: string;
@@ -48,6 +49,7 @@ const DetailProfileMemberModal = memo(
   ({
     userId,
     avatarColor,
+    avatarUrl,
     organizationId,
     onClose,
   }: DetailProfileMemberProps) => {
@@ -143,10 +145,11 @@ const DetailProfileMemberModal = memo(
               />
             </div>
             <div className="flex items-start gap-[10px]">
-              {AvatarIconWithDynamicColor({
-                color: avatarColor || '#0068B6',
-                size: 36,
-              })}
+              <CustomUserAvatar
+                avatarUrl={avatarUrl || ''}
+                avatarColor={avatarColor || ''}
+                size={36}
+              />
               <p className="text-black font-medium text-[18px] line-clamp-3 break-all pt-1">
                 {userDetail?.profile.fullName}
               </p>

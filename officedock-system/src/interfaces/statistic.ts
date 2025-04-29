@@ -18,6 +18,7 @@ export interface UserListStatisticType {
     id: number;
     fullName: string;
     avatarColor: string;
+    avatar: string
   };
 }
 
