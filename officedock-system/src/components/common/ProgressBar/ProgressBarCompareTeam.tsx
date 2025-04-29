@@ -6,8 +6,7 @@ import {
   getJapaneseDayName,
 } from '@utils/date';
 import { DataPercentCompareType } from '@interfaces/common';
-import { getRandomColor } from '@utils';
-import AvatarIconWithDynamicColor from '../AvatarIcon';
+import CustomUserAvatar from '../AvatarIcon/CustomUserAvatar';
 import StatisticCompareLoading from '../SkeletonLoading/StatisticCompareLoading';
 
 interface Props {
@@ -130,15 +129,19 @@ const PercentageBarCompareTeam = ({
                               <ul className="mt-2">
                                 {mergeItem.users &&
                                   mergeItem.users.map((item, index) => {
-                                    const colorRandom = getRandomColor();
                                     return (
                                       <li
                                         key={index}
-                                        className="flex items-center justify-between">
-                                        <div className="flex items-center">
+                                        className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
                                           <div>
-                                            <AvatarIconWithDynamicColor
-                                              color={colorRandom}
+                                            <CustomUserAvatar
+                                              avatarUrl={
+                                                item.user?.avatar || ''
+                                              }
+                                              avatarColor={
+                                                item.user?.avatarColor || ''
+                                              }
                                               size={30}
                                             />
                                           </div>
@@ -197,9 +200,10 @@ const PercentageBarCompareTeam = ({
                           {item.optionData.map((item, index) => (
                             <li
                               key={index}
-                              className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal]">
-                              <AvatarIconWithDynamicColor
-                                color={getRandomColor()}
+                              className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal mb-2">
+                              <CustomUserAvatar
+                                avatarUrl={item?.avatarUrl || ''}
+                                avatarColor={item?.avatarColor || ''}
                                 size={30}
                               />
                               <span className="relative top-[-3px]">
@@ -289,15 +293,19 @@ const PercentageBarCompareTeam = ({
                               <ul className="mt-2">
                                 {mergeItem.users &&
                                   mergeItem.users.map((item, index) => {
-                                    const colorRandom = getRandomColor();
                                     return (
                                       <li
                                         key={index}
-                                        className="flex items-center justify-between">
-                                        <div className="flex items-center">
+                                        className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
                                           <div>
-                                            <AvatarIconWithDynamicColor
-                                              color={colorRandom}
+                                            <CustomUserAvatar
+                                              avatarUrl={
+                                                item.user?.avatar || ''
+                                              }
+                                              avatarColor={
+                                                item?.user.avatarColor || ''
+                                              }
                                               size={30}
                                             />
                                           </div>
@@ -358,9 +366,10 @@ const PercentageBarCompareTeam = ({
                           {item.optionData.map((item, index) => (
                             <li
                               key={index}
-                              className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal]">
-                              <AvatarIconWithDynamicColor
-                                color={getRandomColor()}
+                              className="break-all text-start flex items-center gap-2 line-clamp-3 text-[#77858F] text-sm font-normal">
+                              <CustomUserAvatar
+                                avatarUrl={item?.avatarUrl || ''}
+                                avatarColor={item?.avatarColor || ''}
                                 size={30}
                               />
                               <span className="relative top-[-3px]">

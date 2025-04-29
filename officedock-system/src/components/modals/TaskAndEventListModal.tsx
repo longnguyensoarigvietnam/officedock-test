@@ -142,7 +142,7 @@ export const TaskAndEventListModal = ({
                 <DynamicTooltip
                   content={`他に${participantList.length - 1}人の表示があります`}
                   placement="top">
-                  <div className="text-white border-[1px] ml-[-7px] border-white rounded-full text-[11px] font-medium bg-[#77858F] flex items-center justify-center">
+                  <div className="text-white border-[1px] w-[27px] h-[27px] ml-[-7px] border-white rounded-full text-[11px] font-medium bg-[#77858F] flex items-center justify-center">
                     +{participantList.length - 1}
                   </div>
                 </DynamicTooltip>

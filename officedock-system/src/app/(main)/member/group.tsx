@@ -13,6 +13,7 @@ type DataGroupMemberProps = {
     id: string,
     avatarColor: string,
     organizationId: string,
+    avatarUrl: string
   ) => void;
 };
 
@@ -83,6 +84,7 @@ const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
                   String(user.id),
                   user.avatarColor,
                   String(item.id),
+                  user.avatar
                 );
               }}
               className=" h-[76px] bg-white flex items-center gap-[10px]  p-5 justify-start cursor-pointer  rounded-lg">

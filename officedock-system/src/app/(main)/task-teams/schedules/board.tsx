@@ -1148,13 +1148,13 @@ const ScheduleTeamBoard = () => {
               (member) => String(member.id) == String(resource.resource.id),
             );
             return (
-              <div className="flex items-center justify-start gap-1">
+              <div className="flex items-center justify-start gap-2">
                 <CustomUserAvatar
                   avatarUrl={memberInfo?.avatarUrl || ''}
                   avatarColor={memberInfo?.color || ''}
                   size={36}
                 />
-                <p className="line-clamp-2 break-all max-w-[100px] text-[15px] font-medium text-black">
+                <p className="line-clamp-2 break-all max-w-[100%] text-[15px] font-medium text-black">
                   {resource.resource.title}
                 </p>
               </div>
