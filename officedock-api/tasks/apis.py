@@ -2020,13 +2020,20 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 tasks = tasks.annotate(
                     coalesced_deadline=Coalesce(
                         "deadline",
-                        Value(REPLACE_NULL_DATE, output_field=DateTimeField()),
+                        Value(
+                            REPLACE_NULL_DATE_WITH_FUTURE,
+                            output_field=DateTimeField(),
+                        ),
                     )
                 )
 
-                # Replace 'deadline' with 'coalesced_deadline' for sorting
-                field_name = ordering.replace("deadline", "coalesced_deadline")
-                tasks = tasks.order_by(field_name, "-updated_at")
+                if "deadline" in ordering:
+                    tasks = tasks.order_by("coalesced_deadline", "-updated_at")
+
+                if "is_important" in ordering:
+                    tasks = tasks.order_by(
+                        "-is_important", "coalesced_deadline", "-updated_at"
+                    )
 
                 # Update team task index only if sorting by deadline or importance
                 for idx, task in enumerate(tasks):
