@@ -50,7 +50,6 @@ const StatusColumn = ({
 
   // State
   const [isExtendData, setIsExtendData] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
   const [pinAtLast, setPinAtLast] = useState<string | null>(null);
   const [isShowMore, setShowMore] = useState(false);
@@ -138,7 +137,6 @@ const StatusColumn = ({
 
   // API  get more task team
   const handleGetDataTaskMore = async () => {
-    setIsLoadingMore(true);
     let apiUrl = `${apiRouters.TASK_BOARD_LIST}?status_id=${statusValue}&is_team_task=true&user_id=${user.id.replace('user_', '')}`;
 
     if (pinAtLast) {
@@ -187,7 +185,6 @@ const StatusColumn = ({
       onError: () => {},
       onSettled: () => {
         setIsFetching(false);
-        setIsLoadingMore(false);
       },
     },
   );
@@ -225,6 +222,7 @@ const StatusColumn = ({
       getDataListTaskMore();
     }
   }, [result, status, user]);
+
   const listTaskRef = useRef<HTMLDivElement | null>(null);
   const [isFetching, setIsFetching] = useState(false);
 
@@ -349,16 +347,14 @@ const StatusColumn = ({
                     </Draggable>
                   ))}
                   {provided.placeholder}
-                  {items.length > 5 && (
+                  {items.length > 5 && result?.hasNext && (
                     <div ref={listTaskRef}>
-                      {isLoadingMore && (
-                        <div className="h-7">
-                          <Spinner
-                            className="!h-fit py-3"
-                            iconClassName="h-6 w-6"
-                          />
-                        </div>
-                      )}
+                      <div className="h-7">
+                        <Spinner
+                          className="!h-fit py-3"
+                          iconClassName="h-6 w-6"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>

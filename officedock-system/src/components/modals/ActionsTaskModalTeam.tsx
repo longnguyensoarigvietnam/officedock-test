@@ -495,7 +495,7 @@ const ActionsTaskModalTeam = ({
         };
       } else {
         value.peopleInChart = {
-          label: '安藤 優希',
+          label: '担当者なし',
           value: '',
         };
       }
@@ -676,7 +676,7 @@ const ActionsTaskModalTeam = ({
     if (listMemberTeam) {
       setDataOptionsPeopleInCharge([
         {
-          label: '安藤 優希',
+          label: '担当者なし',
           value: '',
         },
         ...listMemberTeam.map((org) => ({
@@ -687,6 +687,11 @@ const ActionsTaskModalTeam = ({
       ]);
     }
   }, [listMemberTeam]);
+  useEffect(() => {
+    if (dataOptionsStatus && !dataTask) {
+      setValue('statusId', dataOptionsStatus[0]);
+    }
+  }, [dataOptionsStatus, dataTask, setValue]);
 
   // Default people
   useEffect(() => {
@@ -699,7 +704,7 @@ const ActionsTaskModalTeam = ({
       }
       if (peopleDefaultId === COLUMN_ID_TASK) {
         setValue('peopleInChart', {
-          label: '安藤 優希',
+          label: '担当者なし',
           value: '',
         });
       }
