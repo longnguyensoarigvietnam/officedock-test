@@ -114,7 +114,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         is_with_skill = request.query_params.get("is_with_skill")
         screen = request.query_params.get("current_screen")
         organizations = request.user.company.organizations.order_by(
-            "created_at"
+            "-created_at"
         )
 
         # Filter organizations by role permissions
@@ -248,7 +248,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         status = TaskStatus.objects.order_by("created_at").all()
         organizations = Organization.objects.filter(
             Q(users=user) | Q(id=organization_id)
-        ).order_by("created_at")
+        ).order_by("-created_at")
         list_cats = []
         for organization in organizations:
             organization_categories = OrganizationDetailSerializer(
@@ -362,7 +362,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         users = request.user.company.users.order_by("created_at").all()
         organizations = request.user.company.organizations.order_by(
-            "created_at"
+            "-created_at"
         )
 
         tags = (
