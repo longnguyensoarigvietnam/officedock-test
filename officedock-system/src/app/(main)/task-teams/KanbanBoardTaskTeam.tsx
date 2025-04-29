@@ -479,6 +479,18 @@ const KanbanBoardTaskTeam = () => {
         const sortedNormal = [movedItem, ...listNoPin].sort(compareItems);
 
         setListTaskNoSetting([...sortedPinned, ...sortedNormal]);
+        updateTaskIndex({
+          tasks: [
+            {
+              task: movedItem.id as number,
+              index: movedItem.index,
+              status:
+                StatusValueTask[destStatus as keyof typeof StatusValueTask],
+              pinAt: movedItem.pinAt,
+              team: organizationId as string,
+            },
+          ],
+        });
       }
     }
     // Drag user --> drop no setting
@@ -521,6 +533,7 @@ const KanbanBoardTaskTeam = () => {
       });
       setIsReadyToFetch(false);
       setDataOrderRing('');
+      movedTask.isMyTask = false;
       if (movedTask.pinAt) {
         const isPrevItemNotPinned = !prevItem || !prevItem.pinAt;
         const isNextItemNotPinned = !nextItem || !nextItem.pinAt;

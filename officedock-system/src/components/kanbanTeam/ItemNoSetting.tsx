@@ -41,6 +41,7 @@ import {
   formatShowDeadlineTask,
   getJapaneseWeekDay,
 } from '@utils/date';
+import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 
 interface ItemProps {
   id: string;
@@ -73,8 +74,6 @@ const ItemNoSetting = ({
   const queryClient = useQueryClient();
 
   const {
-    columnWidth,
-    selectedOptionZoom,
     setDataClickTask,
     setDataRunning,
     setIdTaskStarting,
@@ -82,6 +81,7 @@ const ItemNoSetting = ({
     setShowWarningStartTaskModal,
     setDataActualAddSchedule,
   } = useContext(TaskContext);
+  const { columnWidth, selectedOptionZoom } = useContext(TaskTeamStateContext);
 
   const { reset } = useForm<TaskFormData>({
     mode: 'onSubmit',

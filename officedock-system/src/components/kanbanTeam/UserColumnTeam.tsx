@@ -69,7 +69,6 @@ const UserColumnTeam = ({
     <>
       {isExtendUser ? (
         <div
-          // className="h-auto"
           style={{
             width: `${(columnWidth / 247) * 247}px`,
           }}>
@@ -93,9 +92,11 @@ const UserColumnTeam = ({
               <p
                 style={{
                   maxWidth:
-                    (selectedOptionZoom.value as number) > 50
-                      ? `${(columnWidth / 247) * 108}px`
-                      : `${(columnWidth / 247) * 40}px`,
+                    (selectedOptionZoom.value as number) > 75
+                      ? `${(columnWidth / 247) * 88}px`
+                      : (selectedOptionZoom.value as number) > 50
+                        ? `${(columnWidth / 247) * 50}px`
+                        : `${(columnWidth / 247) * 20}px`,
                 }}
                 className="truncate  ">
                 {user.name}
@@ -103,7 +104,10 @@ const UserColumnTeam = ({
               {user.id && (
                 <p
                   style={{
-                    maxWidth: `${(columnWidth / 247) * 40}px`,
+                    maxWidth:
+                      (selectedOptionZoom.value as number) > 50
+                        ? `${(columnWidth / 247) * 10}px`
+                        : 0,
                   }}
                   className="truncate  text-sm font-medium text-[#77858F] ">
                   {getTotalByUserId(user.id)}

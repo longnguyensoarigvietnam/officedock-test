@@ -148,85 +148,169 @@ const NoSettingColumn = ({
   }, [totalNoSetting, isFetching]);
 
   return (
-    <div
-      style={{
-        width: `${(columnWidth / 247) * 261}px`,
-        minWidth: '154px',
-        maxWidth: `${(columnWidth / 247) * 261}px`,
-        paddingLeft: 0,
-        paddingRight: 0,
-      }}
-      className={`h-auto flex-col min-h-0 mt-1 px-2 flex-shrink-0 `}>
-      <div
-        style={{
-          width: `${(columnWidth / 247) * 261}px`,
-          minWidth: '154px',
-          maxWidth: `${(columnWidth / 247) * 261}px`,
-          paddingLeft: 0,
-          paddingRight: 0,
-        }}
-        className="h-full">
+    <>
+      {isExtendUser ? (
         <div
           style={{
-            width: `${(columnWidth / 247) * 247}px`,
+            width: `${(columnWidth / 247) * 261}px`,
+            minWidth: '154px',
+            maxWidth: `${(columnWidth / 247) * 261}px`,
+            paddingLeft: 0,
+            paddingRight: 0,
           }}
-          className="flex justify-between ">
+          className={`h-auto flex-col min-h-0 mt-1 px-2 flex-shrink-0 `}>
           <div
             style={{
-              gap: `${(247 / 247) * 10}px`,
-              fontSize: `${(247 / 247) * 15}px`,
+              width: `${(columnWidth / 247) * 261}px`,
+              minWidth: '154px',
+              maxWidth: `${(columnWidth / 247) * 261}px`,
+              paddingLeft: 0,
+              paddingRight: 0,
             }}
-            className="flex items-center gap-[10px] font-medium text-[15px] ">
-            <p
+            className="h-full">
+            <div
               style={{
-                maxWidth:
-                  (selectedOptionZoom.value as number) > 50
-                    ? `${(columnWidth / 247) * 108}px`
-                    : `${(columnWidth / 247) * 40}px`,
+                width: `${(columnWidth / 247) * 247}px`,
               }}
-              className="truncate  ">
-              固定タスク
-            </p>
-            <p
-              style={{
-                maxWidth: `${(columnWidth / 247) * 40}px`,
-              }}
-              className="truncate  text-sm font-medium text-[#77858F] ">
-              {totalNoSetting?.count}
-            </p>
-          </div>
-          <div
-            style={{
-              gap: `${(columnWidth / 247) * 10}px`,
-            }}
-            className="flex items-center">
-            <DynamicTooltip content="タスクを新規作成" placement="top">
+              className="flex justify-between ">
               <div
                 style={{
-                  padding: '6.5px',
+                  gap: `${(247 / 247) * 10}px`,
+                  fontSize: `${(247 / 247) * 15}px`,
                 }}
-                className={`rounded-full cursor-pointer w-fit bg-white `}
-                onClick={() => {
-                  onAdd(COLUMN_ID_TASK);
-                  handleSetParam({
-                    id: null,
-                    action: ActionTask.CREATE,
-                  });
-                }}>
-                <ImageRound
-                  src={`/icons/add.svg`}
-                  name="Add"
+                className="flex items-center gap-[10px] font-medium text-[15px] ">
+                <p
                   style={{
-                    width: `${(247 / 247) * 9}px`,
-                    height: `${(247 / 247) * 9}px`,
+                    maxWidth:
+                      (selectedOptionZoom.value as number) > 50
+                        ? `${(columnWidth / 247) * 108}px`
+                        : `${(columnWidth / 247) * 40}px`,
                   }}
-                />
+                  className="truncate  ">
+                  担当者未定
+                </p>
+                <p
+                  style={{
+                    maxWidth: `${(columnWidth / 247) * 40}px`,
+                  }}
+                  className="truncate  text-sm font-medium text-[#77858F] ">
+                  {totalNoSetting?.count}
+                </p>
               </div>
-            </DynamicTooltip>
-            <DynamicTooltip content="タブを縮小" placement="top">
+              <div
+                style={{
+                  gap: `${(columnWidth / 247) * 10}px`,
+                }}
+                className="flex items-center">
+                <DynamicTooltip content="タスクを新規作成" placement="top">
+                  <div
+                    style={{
+                      padding: '6.5px',
+                    }}
+                    className={`rounded-full cursor-pointer w-fit bg-white `}
+                    onClick={() => {
+                      onAdd(COLUMN_ID_TASK);
+                      handleSetParam({
+                        id: null,
+                        action: ActionTask.CREATE,
+                      });
+                    }}>
+                    <ImageRound
+                      src={`/icons/add.svg`}
+                      name="Add"
+                      style={{
+                        width: `${(247 / 247) * 9}px`,
+                        height: `${(247 / 247) * 9}px`,
+                      }}
+                    />
+                  </div>
+                </DynamicTooltip>
+                <DynamicTooltip content="タブを縮小" placement="top">
+                  <div
+                    className="flex items-center justify-center cursor-pointer hover:bg-white rounded-full w-[22px] h-[22px]"
+                    onClick={() => setIsExtendUser(false)}>
+                    <ImageRound
+                      src={`/icons/extend-column.svg`}
+                      className={`${isExtendUser ? 'rotate-0' : 'rotate-180'} cursor-pointer`}
+                      name="extend"
+                      style={{
+                        width: `8px`,
+                        height: `12px`,
+                      }}
+                    />
+                  </div>
+                </DynamicTooltip>
+              </div>
+            </div>
+            <Droppable droppableId={COLUMN_ID_TASK}>
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  style={{
+                    paddingTop: `${(columnWidth / 247) * 22}px`,
+                    marginRight: `-${(columnWidth / 247) * 16}px`,
+                    paddingRight: paddingRight,
+                    boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 '#EBF1F7'`,
+                    minHeight: 'calc(100% - 36px)',
+                    maxHeight: '2000px',
+                  }}
+                  className={`flex-grow overflow-y-auto w-[100%]
+               
+                 overflow-x-hidden grid scrollbar-gutter-stable `}>
+                  <div
+                    style={{
+                      paddingLeft: `${(columnWidth / 247) * 14}px`,
+                      paddingRight: `${(columnWidth / 247) * 14}px`,
+                      minHeight: '100%',
+                    }}
+                    className={`flex flex-col  h-full pt-[14px] bg-[#DAE2EB] rounded-lg`}>
+                    {listTaskNoSetting.map((item, index) => (
+                      <>
+                        <ItemNoSetting
+                          key={item.id}
+                          id={`${item.id}`}
+                          index={index}
+                          content={item}
+                          editTask={() => {}}
+                          handlePinItem={pinItemToTopNoSetting}
+                          handleActionEditTask={(id: number) => {
+                            handleSetParam({
+                              id: `${id}`,
+                              action: ActionTask.EDIT,
+                            });
+                          }}
+                          handleConfirmCopyTask={() => {}}
+                          handleUpdateItemInline={() => {}}
+                        />
+                      </>
+                    ))}
+                    {/* Make sure the placeholder is rendered here */}
+                    {provided.placeholder}
+                    {/* Loading spinner logic */}
+                    <div ref={listTaskRef}>
+                      {isLoadingMore && (
+                        <div className="h-7">
+                          <Spinner
+                            className="!h-fit py-3"
+                            iconClassName="h-6 w-6"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </Droppable>
+          </div>
+        </div>
+      ) : (
+        <div className="w-[80px]">
+          <div className="flex gap-[6px] h-[33px] items-center justify-center">
+            <DynamicTooltip content="タブを拡大" placement="top">
               <div
                 className="flex items-center justify-center cursor-pointer hover:bg-white rounded-full w-[22px] h-[22px]"
-                onClick={() => setIsExtendUser(false)}>
+                onClick={() => setIsExtendUser(true)}>
                 <ImageRound
                   src={`/icons/extend-column.svg`}
                   className={`${isExtendUser ? 'rotate-0' : 'rotate-180'} cursor-pointer`}
@@ -239,69 +323,25 @@ const NoSettingColumn = ({
               </div>
             </DynamicTooltip>
           </div>
-        </div>
-        <Droppable droppableId={COLUMN_ID_TASK}>
-          {(provided) => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
+          <div
+            style={{
+              marginBottom: `${(247 / 247) * 14}px`,
+              marginTop: `${(247 / 247) * 14}px`,
+            }}>
+            <p
               style={{
-                paddingTop: `${(columnWidth / 247) * 22}px`,
-                marginRight: `-${(columnWidth / 247) * 16}px`,
-                paddingRight: paddingRight,
-                boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 '#EBF1F7'`,
-                minHeight: 'calc(100% - 36px)',
-                maxHeight: '2000px',
+                fontSize: `14px`,
               }}
-              className={`flex-grow overflow-y-auto w-[100%]
-               
-                 overflow-x-hidden grid scrollbar-gutter-stable `}>
-              <div
-                style={{
-                  paddingLeft: `${(columnWidth / 247) * 14}px`,
-                  paddingRight: `${(columnWidth / 247) * 14}px`,
-                  minHeight: '100%',
-                }}
-                className={`flex flex-col  h-full pt-[14px] bg-[#DAE2EB] rounded-lg`}>
-                {listTaskNoSetting.map((item, index) => (
-                  <>
-                    <ItemNoSetting
-                      key={item.id}
-                      id={`${item.id}`}
-                      index={index}
-                      content={item}
-                      editTask={() => {}}
-                      handlePinItem={pinItemToTopNoSetting}
-                      handleActionEditTask={(id: number) => {
-                        handleSetParam({
-                          id: `${id}`,
-                          action: ActionTask.EDIT,
-                        });
-                      }}
-                      handleConfirmCopyTask={() => {}}
-                      handleUpdateItemInline={() => {}}
-                    />
-                  </>
-                ))}
-                {/* Make sure the placeholder is rendered here */}
-                {provided.placeholder}
-                {/* Loading spinner logic */}
-                <div ref={listTaskRef}>
-                  {isLoadingMore && (
-                    <div className="h-7">
-                      <Spinner
-                        className="!h-fit py-3"
-                        iconClassName="h-6 w-6"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </Droppable>
-      </div>
-    </div>
+              className="text-[#77858F] w-full text-center text-sm">
+              {totalNoSetting?.count}
+            </p>
+          </div>
+          <div className="w-full flex justify-center">
+            <div className={`w-2 h-[600px] bg-[#DEE8EE]`}></div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
