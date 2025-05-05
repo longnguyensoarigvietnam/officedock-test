@@ -505,3 +505,13 @@ export enum AddCategoryHierarchyType {
   INPUT = 'input',
   PULLDOWN = 'pulldown',
 }
+export enum LevelUpConditionBy {
+  NUMBER_OF_TIMES = 'NUMBER_OF_TIMES',
+  MEASUREMENT_TIME = 'MEASUREMENT_TIME',
+  PERIOD = 'PERIOD'
+}
+export enum SkillMapStep {
+  STEP_1 = 'ステップ1',
+  STEP_2 = 'ステップ2',
+  STEP_3 = 'ステップ3',
+}

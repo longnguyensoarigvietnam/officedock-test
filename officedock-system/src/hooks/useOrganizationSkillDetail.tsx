@@ -6,53 +6,50 @@ import { AxiosError } from 'axios';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
-import { OrganizationSkillDetail } from '@interfaces/skills';
+import { OrganizationSkillMapDetail } from '@interfaces/skills';
 import { LoadingContext } from '@providers/LoadingProvider';
 
-interface UseOrganizationSkillDetailHooksProps {
-  organizationId: string;
-  current_screen?: string;
-  conditions?: boolean[];
-  onSuccess?: (success: OrganizationSkillDetail[]) => void;
+interface UseOrganizationSkillMapDetailHooksProps {
+  skillId: number;
+  onSuccess?: (success: OrganizationSkillMapDetail[]) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
 }
 
-const useOrganizationSkillDetail = ({
-  organizationId,
-  current_screen,
-  conditions,
+const useOrganizationSkillMapDetail = ({
+  skillId,
   onSuccess,
   onError,
   onSettled,
-}: UseOrganizationSkillDetailHooksProps) => {
+}: UseOrganizationSkillMapDetailHooksProps) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
 
   const { setIsLoading } = useContext(LoadingContext);
 
   // Handle call API get organization skill detail
-  const getOrganizationSkillDetail = async () => {
+  const getOrganizationSkillMapDetail = async () => {
+    if(!skillId) return;
     setIsLoading(true);
-    const apiUrl = `${apiRouters.ORGANIZATION_SKILL_DETAIL(organizationId)}${current_screen ? `?current_screen=${current_screen}` : ''}`;
+    const apiUrl = `${apiRouters.ORGANIZATION_SKILL_DETAIL(skillId)}`;
 
-    const { data } = await api.get<OrganizationSkillDetail[]>(apiUrl);
+    const { data } = await api.get<OrganizationSkillMapDetail[]>(apiUrl);
     return data;
   };
 
   // Handle API get organization skill detail
   const {
-    data: organizationSkillDetail,
-    refetch: refetchOrganizationSkillDetail,
-    isFetched: isFetchedOrganizationSkillDetail,
+    data: OrganizationSkillMapDetail,
+    refetch: refetchOrganizationSkillMapDetail,
+    isFetched: isFetchedOrganizationSkillMapDetail,
   } = useQuery({
-    queryKey: ['getOrganizationSkillDetail', organizationId],
-    queryFn: getOrganizationSkillDetail,
+    queryKey: ['getOrganizationSkillMapDetail', skillId],
+    queryFn: getOrganizationSkillMapDetail,
     retry: 0,
-    enabled: !!token && conditions?.every(Boolean),
+    enabled: !!token && !!skillId,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: OrganizationSkillDetail[]) => {
+    onSuccess: (response: OrganizationSkillMapDetail[]) => {
       onSuccess && onSuccess(response);
     },
     onError: (error: AxiosError) => {
@@ -65,10 +62,10 @@ const useOrganizationSkillDetail = ({
   });
 
   return {
-    organizationSkillDetail,
-    refetchOrganizationSkillDetail,
-    isFetchedOrganizationSkillDetail,
+    OrganizationSkillMapDetail,
+    refetchOrganizationSkillMapDetail,
+    isFetchedOrganizationSkillMapDetail,
   };
 };
 
-export default useOrganizationSkillDetail;
+export default useOrganizationSkillMapDetail;

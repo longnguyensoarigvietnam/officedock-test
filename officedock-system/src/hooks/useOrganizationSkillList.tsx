@@ -8,28 +8,21 @@ import { useRouter } from 'next/navigation';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { apiRouters, pageRouters } from '@constants/routers';
-import { PAGINATION_PAGE_SIZE_DEFAULT } from '@constants';
-import { ServerStatusCode } from '@constants/enums';
+import { ScreenName, ServerStatusCode } from '@constants/enums';
 
-import { BasePagination } from '@interfaces/common';
 import { ResponseError } from '@interfaces/response';
+import { OrganizationSkill, SkillMapSkill } from '@interfaces/skills';
 
 import api from '@base/api';
-import { OrganizationSkill } from '@interfaces/skills';
 
 interface FilterProps {
-  name?: string;
+  filterOrganizationIds?: number;
+  filterSteps?: string;
+  organizationId?: number;
+  screen?: string;
 }
 
-interface PaginationProps {
-  page?: number;
-  pageSize?: number;
-}
-
-const useOrganizationSkillList = (
-  pagination?: PaginationProps,
-  filter?: FilterProps,
-) => {
+const useOrganizationSkillList = (filter?: FilterProps) => {
   const { data: session } = useSession();
   const router = useRouter();
   const token = session?.accessToken;
@@ -39,16 +32,36 @@ const useOrganizationSkillList = (
   // Handle call API get organization skill list
   const getOrganizationSkillList = async () => {
     setIsLoading(true);
+    const queryParams = [];
+
+    if (filter?.filterOrganizationIds) {
+      queryParams.push(
+        `filter_organization_ids=${filter.filterOrganizationIds}`,
+      );
+    }
+    if (filter?.filterSteps) {
+      queryParams.push(`filter_steps=${filter.filterSteps}`);
+    }
+    if (filter?.organizationId) {
+      queryParams.push(`organization_id=${filter.organizationId}`);
+    }
+    if (filter?.screen) {
+      queryParams.push(`screen=${filter.screen}`);
+    }
+
+    const queryString =
+      queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
 
     // TODO: Confirm with BE about how many and how to use param
-    const apiUrl = pagination?.page
-      ? `${apiRouters.ORGANIZATION_SKILLS}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${
-          filter?.name ? `&name=${filter.name}` : ''
-        }`
-      : `${apiRouters.ORGANIZATION_SKILLS}`;
+    const apiUrl = `${apiRouters.SKILL_LIST}${queryString}`;
 
-    const { data } = await api.get<BasePagination<OrganizationSkill[]>>(apiUrl);
-    return data;
+    if (filter?.screen && filter.screen == ScreenName.SKILL_MAP) {
+      const { data } = await api.get<SkillMapSkill[]>(apiUrl);
+      return data;
+    } else {
+      const { data } = await api.get<OrganizationSkill[]>(apiUrl);
+      return data;
+    }
   };
 
   // Handle API get organization skill list
@@ -57,7 +70,7 @@ const useOrganizationSkillList = (
     refetch: refetchOrganizationSkillList,
     isFetched: isFetchedOrganizationSkill,
   } = useQuery({
-    queryKey: ['getOrganizationSkillList', [pagination, filter]],
+    queryKey: ['getOrganizationSkillList', [filter]],
     queryFn: getOrganizationSkillList,
     retry: 0,
     enabled: !!token,
