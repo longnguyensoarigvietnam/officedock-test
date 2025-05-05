@@ -469,12 +469,15 @@ const EventCalendar = () => {
     setTimeout(() => {
       const nowIndicator = document.querySelector('.fc-timegrid-now-indicator-arrow');
       const scroller = nowIndicator?.closest('.fc-scroller');
-    
+  
       if (nowIndicator && scroller) {
         const targetTop = (nowIndicator as HTMLElement).offsetTop;
-    
-        scroller.scrollTo({
-          top: targetTop - 50, // offset for visibility
+        const scrollerEl = scroller as HTMLElement;
+  
+        const centerOffset = targetTop - (scrollerEl.clientHeight / 2);
+  
+        scrollerEl.scrollTo({
+          top: centerOffset,
           behavior: 'smooth'
         });
       }
@@ -2327,7 +2330,7 @@ const EventCalendar = () => {
                           : `${
                               authenticatedUser
                                 ? 'mt-[50px] pt-[10px]'
-                                : 'mt-[-30px] pt-[30px]'
+                                : 'mt-[-30px] pt-[20px]'
                             } pl-[15px]`
                       }`}
                     />
