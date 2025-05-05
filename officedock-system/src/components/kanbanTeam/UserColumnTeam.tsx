@@ -105,9 +105,11 @@ const UserColumnTeam = ({
                 <p
                   style={{
                     maxWidth:
-                      (selectedOptionZoom.value as number) > 50
-                        ? `${(columnWidth / 247) * 10}px`
-                        : 0,
+                      (selectedOptionZoom.value as number) > 75
+                        ? `${(columnWidth / 247) * 42}px`
+                        : (selectedOptionZoom.value as number) > 50
+                          ? `${(columnWidth / 247) * 10}px`
+                          : 0,
                   }}
                   className="truncate  text-sm font-medium text-[#77858F] ">
                   {getTotalByUserId(user.id)}

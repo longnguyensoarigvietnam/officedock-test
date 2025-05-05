@@ -1,10 +1,16 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, Fragment } from 'react';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 
 import PieChart from '@components/common/Chart/PieChartCustom';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import { SkeletonElement } from '@components/common/SkeletonLoading';
+import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
 
 import { DataChartType, OptionDropdownType } from '@interfaces/common';
 import {
@@ -28,6 +34,7 @@ type Props = {
   handleSelectLarge: (data: OptionDropdownType) => void;
   handleSelectMedium: (data: OptionDropdownType) => void;
   removeTag: (selected: OptionDropdownType) => void;
+  removeUser: (selected: OptionDropdownType) => void;
 };
 
 const PercentageCategoryTeam = ({
@@ -36,6 +43,7 @@ const PercentageCategoryTeam = ({
   handleSelectMedium,
   handleSelectOrganization,
   removeTag,
+  removeUser,
   handleSelectOrganizationCustom,
 }: Props) => {
   const {
@@ -48,16 +56,23 @@ const PercentageCategoryTeam = ({
     totalDurationLarge,
     totalDurationMedium,
     totalDurationSmall,
-    selectedTags,
     tagsOptions,
     isLoadingLarge,
     isLoadingMedium,
+    remainingCountUser,
+    remainingCountTag,
+    firstThreeUser,
+    allLabelUer,
+    allLabelTag,
+    firstThreeTag,
+    listMemberTeam,
     isLoadingOrganization,
-    setSelectedTags,
   } = useContext(StatisticTeamStateContext);
   const { setIsLoading } = useContext(LoadingContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
+
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   const [dataChartLarge, setDataChartLarge] = useState<DataChartType>({
     actualValue: [],
@@ -254,7 +269,7 @@ const PercentageCategoryTeam = ({
         className="p-[30px] bg-[#F8FAFC] rounded-[14px]">
         {/* Header & sort */}
         <div className="flex justify-between">
-          <div className="flex items-center gap-x-5">
+          <div className="flex items-center gap-x-0">
             <div className="flex items-center gap-[10px] ">
               <ImageRound
                 className={`w-5 h-5  hover:cursor-pointer relative top-[2px]`}
@@ -266,56 +281,117 @@ const PercentageCategoryTeam = ({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-[240px] flex-shrink-0  relative">
-                <MultiSelectDropdown
-                  isShowIconFilter
-                  options={tagsOptions}
-                  placeholder="集計対象のタグを選択"
-                  labelOptionClass="break-all w-[190px]"
-                  optionClassName="!top-6"
-                  className="!h-[14px] !py-0 text-sm font-normal !rounded-md"
-                  selectedOptions={selectedTags || []}
-                  onChange={(selected) => {
-                    let updatedTagIds = [];
-                    const currentTagIds = selectedTags || [];
-                    const foundItemIndex = currentTagIds.findIndex(
-                      (tag) => tag.value == selected.value,
-                    );
-                    if (foundItemIndex == -1) {
-                      updatedTagIds = [...currentTagIds, selected];
-                    } else {
-                      updatedTagIds = currentTagIds.filter(
-                        (tag) => tag.value != selected.value,
-                      );
-                    }
-                    setSelectedTags(updatedTagIds);
-                  }}
-                />
-                {selectedTags.length === 0 && (
-                  <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
-                    タグの絞り込み
-                  </span>
-                )}
-              </div>
-              <div className="relative flex-grow right-[224px] top-0">
-                <div className="flex gap-2 flex-wrap w-full flex-shrink-0  ">
-                  {selectedTags.map((item) => {
-                    return (
-                      <div
-                        key={item.value}
-                        className="min-w-[66px] max-w-[400px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                        <span className=" truncate">{item.label}</span>
-                        <ImageRound
-                          onClick={() => {
-                            removeTag(item);
-                          }}
-                          src={`/icons/close-white.svg`}
-                          name="close"
-                          className="w-fit h-fit cursor-pointer"
-                        />
+              <div className="flex-shrink-0 h-6 relative">
+                {/* Filter option modal */}
+                <Popover className="relative">
+                  {() => (
+                    <>
+                      <div className="flex items-center gap-2 relative top-[5px]">
+                        <PopoverButton
+                          onClick={() =>
+                            setIsOpenModalFilter(!isOpenModalFilter)
+                          }
+                          className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                          <ImageRound
+                            src="/icons/filter.svg"
+                            name="Filter icon"
+                            className="w-[14px] h-[14px]"
+                          />
+                        </PopoverButton>
                       </div>
-                    );
-                  })}
+                      <Transition
+                        as={Fragment}
+                        show={isOpenModalFilter}
+                        enter="transition ease-out duration-200"
+                        enterFrom="opacity-0 translate-y-1"
+                        enterTo="opacity-100 translate-y-0"
+                        leave="transition ease-in duration-150"
+                        leaveFrom="opacity-100 translate-y-0"
+                        leaveTo="opacity-0 translate-y-1">
+                        <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
+                          <ActionFilterStatisticTeam
+                            tagsOptions={tagsOptions}
+                            handleClose={() => setIsOpenModalFilter(false)}
+                            listMemberTeam={listMemberTeam}
+                          />
+                        </PopoverPanel>
+                      </Transition>
+                    </>
+                  )}
+                </Popover>
+              </div>
+              <div className=" flex-grow flex-shrink-0">
+                <div className="flex gap-2 flex-wrap  flex-shrink-0 ">
+                  <>
+                    {firstThreeUser.map((item, index) => {
+                      return (
+                        <div
+                          key={item.value}
+                          className="flex gap-[6px] items-center">
+                          {index === 0 && (
+                            <ImageRound
+                              src={`/icons/user-white.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          )}
+                          <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                            <span className="min-w-[32px] max-w-[118px]  truncate">
+                              {item.label}
+                            </span>
+                            <ImageRound
+                              onClick={() => {
+                                removeUser(item);
+                              }}
+                              src={`/icons/close-white.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {allLabelUer.length > 3 && (
+                      <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                        +{remainingCountUser}
+                      </p>
+                    )}
+                  </>
+                  <>
+                    {firstThreeTag.map((item, index) => {
+                      return (
+                        <div
+                          key={item.value}
+                          className="flex gap-[6px] items-center">
+                          {index === 0 && (
+                            <ImageRound
+                              src={`/icons/tag-white.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          )}
+                          <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                            <span className="min-w-[32px] max-w-[118px]  truncate">
+                              {item.label}
+                            </span>
+                            <ImageRound
+                              onClick={() => {
+                                removeTag(item);
+                              }}
+                              src={`/icons/close-white.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {allLabelTag.length > 3 && (
+                      <p className="pr-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                        +{remainingCountTag}
+                      </p>
+                    )}
+                  </>
                 </div>
               </div>
             </div>

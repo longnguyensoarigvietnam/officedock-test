@@ -296,7 +296,7 @@ const KanbanBoardTaskTeam = () => {
             );
           })}
           {remainingCount > 0 && (
-            <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
+            <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[36px] h-[36px]">
               +{remainingCount}
             </div>
           )}
@@ -2105,7 +2105,7 @@ const KanbanBoardTaskTeam = () => {
               <Button
                 onClick={() => {
                   router.push(
-                    `${pageRouters.SCHEDULE_TEAM_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
+                    `${pageRouters.SCHEDULE_TEAM_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
                   );
                 }}
                 variant={'outline'}

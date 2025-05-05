@@ -765,7 +765,7 @@ const ScheduleTeamBoard = () => {
             );
           })}
           {remainingCount > 0 && (
-            <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
+            <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[36px] h-[36px]">
               +{remainingCount}
             </div>
           )}
@@ -862,7 +862,7 @@ const ScheduleTeamBoard = () => {
                 className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}
                 onClick={() => {
                   router.push(
-                    `${pageRouters.TASKS_TEAM_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
+                    `${pageRouters.TASKS_TEAM_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
                   );
                 }}>
                 タスク
@@ -1248,7 +1248,7 @@ const ScheduleTeamBoard = () => {
 
       {/* Option select value zoom */}
       <div
-        className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-md right-[10px] bottom-[5px] bg-white flex items-center `}>
+        className={`w-[180px] px-3 z-20 h-[38px] absolute  rounded-md right-[70px] bottom-[5px] bg-white flex items-center `}>
         <RangeSlider
           min={18}
           max={100}

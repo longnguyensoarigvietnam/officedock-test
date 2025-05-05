@@ -1831,9 +1831,7 @@ const KanbanBoardTask = () => {
       detail: TaskErrorPerson;
       taskSchedules: string[];
     }>) => {
-      if (response?.data.detail) {
-        setDataErrorTask(response?.data.detail);
-      } else if (response?.data.taskSchedules) {
+      if (response?.data.taskSchedules) {
         showToast({
           variant: 'error',
           description: response?.data.taskSchedules.length
@@ -3117,16 +3115,16 @@ const KanbanBoardTask = () => {
                         left: -135,
                       }}>
                       <ImageRound
-                          src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
-                          name="List view icon"
-                          className="w-12 h-12 hover:cursor-pointer"
-                          onClick={() => {
-                            setIsListView(!isListView);
-                            saveZoomKanban({
-                              isShowListKanban: !isListView,
-                            });
-                          }}
-                        />
+                        src={`${!isListView ? '/icons/list-view.svg' : '/icons/card-view.svg'}`}
+                        name="List view icon"
+                        className="w-12 h-12 hover:cursor-pointer"
+                        onClick={() => {
+                          setIsListView(!isListView);
+                          saveZoomKanban({
+                            isShowListKanban: !isListView,
+                          });
+                        }}
+                      />
                     </DynamicTooltip>
                   </div>
                 </div>

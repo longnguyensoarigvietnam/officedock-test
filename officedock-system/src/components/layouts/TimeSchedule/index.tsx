@@ -577,7 +577,10 @@ const TimeSchedule = memo(
             });
           }
         },
-        onSettled: () => {},
+        onSettled: () => {
+          scrollToNowIndicator();
+          scrollToDate();
+        },
       },
     );
 
@@ -686,8 +689,6 @@ const TimeSchedule = memo(
         onSettled: () => {
           setIsLoading(false);
           setIsLoadingSchedule(false);
-          scrollToNowIndicator();
-          scrollToDate();
         },
       },
     );

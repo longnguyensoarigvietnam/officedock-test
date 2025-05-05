@@ -152,18 +152,18 @@ const NoSettingColumn = ({
       {isExtendUser ? (
         <div
           style={{
-            width: `${(columnWidth / 247) * 261}px`,
+            width: `${(columnWidth / 247) * 247}px`,
             minWidth: '154px',
-            maxWidth: `${(columnWidth / 247) * 261}px`,
+            maxWidth: `${(columnWidth / 247) * 247}px`,
             paddingLeft: 0,
             paddingRight: 0,
           }}
           className={`h-auto flex-col min-h-0 mt-1 px-2 flex-shrink-0 `}>
           <div
             style={{
-              width: `${(columnWidth / 247) * 261}px`,
+              width: `${(columnWidth / 247) * 247}px`,
               minWidth: '154px',
-              maxWidth: `${(columnWidth / 247) * 261}px`,
+              maxWidth: `${(columnWidth / 247) * 247}px`,
               paddingLeft: 0,
               paddingRight: 0,
             }}
