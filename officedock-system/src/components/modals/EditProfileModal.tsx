@@ -11,7 +11,7 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { User, UserProfileFormData } from '@interfaces/user';
 
 import { passwordRegisterRules } from '@utils/validators';
-import { MAX_AVATAR_IMAGE_FILE_SIZE } from '@constants';
+import { ALLOWED_IMAGE_TYPES, MAX_AVATAR_IMAGE_FILE_SIZE } from '@constants';
 
 export type EditProfileModalProps = {
   open: boolean;
@@ -51,6 +51,12 @@ const EditProfileModal = memo(
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
+
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        e.target.value = '';
+        return;
+      }
+
       if(file.size > MAX_AVATAR_IMAGE_FILE_SIZE){
         setOpenErrorUploadFileModal(true);
         return;
@@ -94,7 +100,7 @@ const EditProfileModal = memo(
               <div className="w-[150px]">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept={ALLOWED_IMAGE_TYPES.join(',')}
                   ref={fileInputRef}
                   className="hidden"
                   onChange={(e) => {
