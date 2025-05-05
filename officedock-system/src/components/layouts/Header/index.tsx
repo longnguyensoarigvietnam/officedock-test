@@ -846,6 +846,9 @@ const Header = ({ className }: HeaderProps) => {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['getAuthenticatedUser'] }),
           queryClient.invalidateQueries({ queryKey: ['getUserList'] }),
+          queryClient.invalidateQueries({ queryKey: ['getDashboardMemberList'] }),
+          queryClient.invalidateQueries({ queryKey: ['getCreationDataStatistic'] }),
+          queryClient.invalidateQueries({ queryKey: ['getTaskTeamList'] }),
         ]);
       },
       onError: (error: AxiosError<any>) => {
