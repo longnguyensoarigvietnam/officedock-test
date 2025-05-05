@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext } from 'react';
+import React, { Fragment, useContext, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
@@ -9,7 +9,6 @@ import StatisticTeamCalendar from '@components/statisticTeam/category/StatisticT
 import PercentageTeamCategory from '@components/statisticTeam/category/PercentageTeamCategory';
 import PercentageTeamCategoryCompare from '@components/statisticTeam/category/compare/PercentageCategoryCompare';
 import TaskListTeamStatistic from '@components/statisticTeam/category/TaskList';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
@@ -25,6 +24,13 @@ import { formatDateToYMD, sumDurations } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
+import ActionFilterStatisticTeam from '@components/modals/ActionFilterTeamStatistic';
 
 const StatisticTeamBoard = () => {
   const {
@@ -41,11 +47,17 @@ const StatisticTeamBoard = () => {
     selectedMedium,
     selectedSmall,
     selectedOrganization,
-    selectedTags,
     tagsOptions,
+    orderingOptions,
+    remainingCountUser,
+    remainingCountTag,
+    firstThreeUser,
+    allLabelUer,
+    allLabelTag,
+    firstThreeTag,
+    setOrderingOptions,
     setTotalDurationTask,
     setTotalDurationTaskCompare,
-    setSelectedTags,
     setTagsOptions,
     setSelectedLarge,
     setSelectedMedium,
@@ -76,6 +88,8 @@ const StatisticTeamBoard = () => {
 
   const params = new URLSearchParams(searchParams);
 
+  const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
+
   const { showToast } = useToast();
 
   const handleSetParam = (id: string) => {
@@ -93,7 +107,7 @@ const StatisticTeamBoard = () => {
       largeCategoryId: selectedLarge?.value as number,
       mediumCategoryId: selectedMedium?.value as number,
       smallCategoryId: selectedSmall?.value as number,
-      tagIds: selectedTags,
+      orderingOptions: orderingOptions,
     },
     onSuccess: (data) => {
       const organization = creationDataStatisticData?.organization;
@@ -163,7 +177,7 @@ const StatisticTeamBoard = () => {
         mediumCategoryId: selectedMedium?.value as number,
         smallCategoryId: selectedSmall?.value as number,
         isCompare: isCheckCompare,
-        tagIds: selectedTags,
+        orderingOptions: orderingOptions,
       },
       onSuccess: (data) => {
         setTotalDurationLargeCompare(sumDurations(data.largeCategories ?? []));
@@ -375,14 +389,29 @@ const StatisticTeamBoard = () => {
 
   // Remove tags
   const removeTag = (selected: OptionDropdownType) => {
-    const currentTagIds = selectedTags || [];
+    const currentTagIds = orderingOptions?.tag_ids || [];
     const updatedTagIds = currentTagIds.filter(
       (tag) => tag.value !== selected.value,
     );
     setCurrentPage(1);
-
-    setSelectedTags(updatedTagIds);
+    setOrderingOptions((prev) => ({
+      tag_ids: updatedTagIds,
+      user_ids: prev?.user_ids || [],
+    }));
   };
+  // Remove user
+  const removeUser = (selected: OptionDropdownType) => {
+    const currentUserIds = orderingOptions?.user_ids || [];
+    const updatedUserIds = currentUserIds.filter(
+      (tag) => tag.value !== selected.value,
+    );
+    setCurrentPage(1);
+    setOrderingOptions((prev) => ({
+      tag_ids: prev?.tag_ids || [],
+      user_ids: updatedUserIds,
+    }));
+  };
+
   const getParticipantAvatars = (
     participants: {
       id: number;
@@ -524,56 +553,115 @@ const StatisticTeamBoard = () => {
           </div>
         </div>
         <div className="flex items-center gap-2 mb-[14px] mt-6">
-          <div className="w-[240px] flex-shrink-0 relative">
-            <MultiSelectDropdown
-              isShowIconFilter
-              options={tagsOptions}
-              placeholder="集計対象のタグを選択"
-              labelOptionClass="break-all w-[190px]"
-              optionClassName="!top-6"
-              className="!h-[34px] !py-0 text-sm font-normal !rounded-md"
-              selectedOptions={selectedTags || []}
-              onChange={(selected) => {
-                let updatedTagIds = [];
-                const currentTagIds = selectedTags || [];
-                const foundItemIndex = currentTagIds.findIndex(
-                  (tag) => tag.value == selected.value,
-                );
-                if (foundItemIndex == -1) {
-                  updatedTagIds = [...currentTagIds, selected];
-                } else {
-                  updatedTagIds = currentTagIds.filter(
-                    (tag) => tag.value != selected.value,
-                  );
-                }
-                setSelectedTags(updatedTagIds);
-              }}
-            />
-            {selectedTags.length === 0 && (
-              <span className="text-xs absolute text-[#77858F] top-[2px] right-[135px]">
-                タグの絞り込み
-              </span>
-            )}
-          </div>
-          <div className="relative flex-grow flex-shrink-0 right-[224px] top-[-8px]">
-            <div className="flex gap-2 flex-wrap w-[80%] flex-shrink-0 ">
-              {selectedTags.map((item) => {
-                return (
-                  <div
-                    key={item.value}
-                    className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                    <span className="min-w-[32px]  truncate">{item.label}</span>
-                    <ImageRound
-                      onClick={() => {
-                        removeTag(item);
-                      }}
-                      src={`/icons/close-white.svg`}
-                      name="close"
-                      className="w-fit h-fit cursor-pointer"
-                    />
+          <div className="flex-shrink-0 h-6 relative">
+            {/* Filter option modal */}
+            <Popover className="relative">
+              {() => (
+                <>
+                  <div className="flex items-center gap-2 relative top-[5px]">
+                    <PopoverButton
+                      onClick={() => setIsOpenModalFilter(!isOpenModalFilter)}
+                      className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                      <ImageRound
+                        src="/icons/filter.svg"
+                        name="Filter icon"
+                        className="w-[14px] h-[14px] ml-2"
+                      />
+                    </PopoverButton>
                   </div>
-                );
-              })}
+                  <Transition
+                    as={Fragment}
+                    show={isOpenModalFilter}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1">
+                    <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
+                      <ActionFilterStatisticTeam
+                        tagsOptions={tagsOptions}
+                        handleClose={() => setIsOpenModalFilter(false)}
+                        listMemberTeam={listMemberTeam}
+                      />
+                    </PopoverPanel>
+                  </Transition>
+                </>
+              )}
+            </Popover>
+          </div>
+          <div className=" flex-grow flex-shrink-0">
+            <div className="flex gap-2 flex-wrap w-[80%] flex-shrink-0 ">
+              <>
+                {firstThreeUser.map((item, index) => {
+                  return (
+                    <div
+                      key={item.value}
+                      className="flex gap-[6px] items-center">
+                      {index === 0 && (
+                        <ImageRound
+                          src={`/icons/user-white.svg`}
+                          name="close"
+                          className="w-fit h-fit cursor-pointer"
+                        />
+                      )}
+                      <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                        <span className="min-w-[32px] max-w-[118px]  truncate">
+                          {item.label}
+                        </span>
+                        <ImageRound
+                          onClick={() => {
+                            removeUser(item);
+                          }}
+                          src={`/icons/close-white.svg`}
+                          name="close"
+                          className="w-fit h-fit cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+                {allLabelUer.length > 3 && (
+                  <p className=" h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                    +{remainingCountUser}
+                  </p>
+                )}
+              </>
+              <>
+                {firstThreeTag.map((item, index) => {
+                  return (
+                    <div
+                      key={item.value}
+                      className="flex gap-[6px] items-center">
+                      {index === 0 && (
+                        <ImageRound
+                          src={`/icons/tag-white.svg`}
+                          name="close"
+                          className="w-fit h-fit cursor-pointer"
+                        />
+                      )}
+                      <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                        <span className="min-w-[32px] max-w-[118px]  truncate">
+                          {item.label}
+                        </span>
+                        <ImageRound
+                          onClick={() => {
+                            removeTag(item);
+                          }}
+                          src={`/icons/close-white.svg`}
+                          name="close"
+                          className="w-fit h-fit cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+                {allLabelTag.length > 3 && (
+                  <p className="pr-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                    +{remainingCountTag}
+                  </p>
+                )}
+              </>
             </div>
           </div>
         </div>
@@ -592,6 +680,7 @@ const StatisticTeamBoard = () => {
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           removeTag={removeTag}
+          removeUser={removeUser}
           handleSelectSmall={handleSelectSmall}
         />
       ) : (
@@ -604,6 +693,7 @@ const StatisticTeamBoard = () => {
           handleSelectLarge={handleSelectLarge}
           handleSelectMedium={handleSelectMedium}
           removeTag={removeTag}
+          removeUser={removeUser}
         />
       )}
       {/* Task list */}
@@ -620,6 +710,7 @@ const StatisticTeamBoard = () => {
           handleSelectMedium={handleSelectMedium}
           handleSelectSmall={handleSelectSmall}
           removeTag={removeTag}
+          removeUser={removeUser}
           creationDataStatisticData={creationDataStatisticData?.organization}
         />
       )}
