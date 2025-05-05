@@ -462,10 +462,7 @@
 .calendar-custom .fc-timegrid-now-indicator-line {
   border: 1px solid #c32e2e !important;
 }
-.calendar-custom .fc-timeGridWeek-view .fc-timegrid-now-indicator-line {
-  margin-top: -2px;
-}
-.calendar-custom .fc-resourceTimeGridDay-view .fc-timegrid-now-indicator-line {
+.calendar-custom .fc-timegrid-now-indicator-line {
   margin-top: -1px;
 }
 .calendar-custom .fc-scroller-harness .fc-scroller-harness-liquid {
