@@ -1,5 +1,8 @@
+from django.shortcuts import get_object_or_404
+
 from tasks.models import TaskDuration
 from tasks.utils import split_date_range
+from users.models import User
 
 
 def separate_duration(
@@ -8,6 +11,9 @@ def separate_duration(
     """
     Handle update and create duration by intervals
     """
+    if not isinstance(user, User):
+        user = get_object_or_404(User, id=user)
+
     durations = []
     intervals = split_date_range(duration.started_at, end_date)
     _, first_end_time = intervals.pop(0)
