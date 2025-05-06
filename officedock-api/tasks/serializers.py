@@ -665,6 +665,7 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
     Serializer for the Task model.
     """
 
+    uuid = serializers.UUIDField(required=False, allow_null=True)
     task = serializers.SerializerMethodField()
     task_id = serializers.PrimaryKeyRelatedField(
         source="task", queryset=Task.objects.all(), write_only=True

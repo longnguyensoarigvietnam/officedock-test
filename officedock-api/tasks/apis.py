@@ -1603,15 +1603,21 @@ class TaskScheduleViewSet(
         """
         Handle update multiple task schedules
         """
-        task_schedules = request.data.get("task_schedules")
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        task_schedules = serializer_data.get("task_schedules")
         for data in task_schedules:
-            task_schedule = TaskSchedule.objects.filter(uuid=data["uuid"])
-            if task_schedule.exists():
-                task_schedule_updated = task_schedule.update(
-                    plan_start_date=data["plan_start_date"],
-                    plan_end_date=data["plan_end_date"],
+            if uuid := data.get("uuid"):
+                task_schedule, _ = TaskSchedule.objects.update_or_create(
+                    uuid=uuid,
+                    defaults={
+                        "task": data.get("task"),
+                        "plan_start_date": data.get("plan_start_date"),
+                        "plan_end_date": data.get("plan_end_date"),
+                    },
                 )
-                self._check_overtime(task_schedule.get())
+                self._check_overtime(task_schedule)
         return self.response_ok()
 
 
