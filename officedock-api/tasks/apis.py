@@ -270,10 +270,13 @@ class TaskViewSet(
 
         if organization:
             for user in company.users.all():
-                # Create new index for team task created with user
-                TeamTaskIndex.objects.create(
-                    task=task, user=user, team=organization
-                )
+                if TeamTaskIndex.objects.filter(
+                    team=organization, user=user
+                ).exists():
+                    # Create new index for team task created with user
+                    TeamTaskIndex.objects.create(
+                        task=task, user=user, team=organization
+                    )
 
         # Handle send to chat
         if send_to_chat:
@@ -1069,17 +1072,20 @@ class TaskViewSet(
 
             # Update the max index for the task for all usersx
             for user in self.request.user.company.users.all():
-                # Update last index team task if add new user
-                TeamTaskIndex.update_max_index_for_user(
-                    team=organization, user=user, task=task, is_update=False
-                )
-                team_task_index = TeamTaskIndex.objects.filter(
-                    team=organization, user=user, task=task
-                ).first()
-                # Reset pin at to now
-                if team_task_index and team_task_index.pin_at:
-                    team_task_index.pin_at = timezone.now()
-                    team_task_index.save()
+                if TeamTaskIndex.objects.filter(
+                    team=organization, user=user
+                ).exists():
+                    # Update last index team task if add new user
+                    TeamTaskIndex.update_max_index_for_user(
+                        team=organization, user=user, task=task, is_update=False
+                    )
+                    team_task_index = TeamTaskIndex.objects.filter(
+                        team=organization, user=user, task=task
+                    ).first()
+                    # Reset pin at to now
+                    if team_task_index and team_task_index.pin_at:
+                        team_task_index.pin_at = timezone.now()
+                        team_task_index.save()
 
         # Update tags in task
         if tag_ids is not None:
@@ -1360,17 +1366,20 @@ class TaskViewSet(
                 for user in team.company.users.exclude(
                     id=request.user.id
                 ).all():
-                    # Update last index team task if add new user
-                    TeamTaskIndex.update_max_index_for_user(
-                        team=team, user=user, task=task, is_update=False
-                    )
-                    team_task_index = TeamTaskIndex.objects.filter(
-                        team=team, user=user, task=task
-                    ).first()
-                    # Reset pin at to now
-                    if team_task_index and team_task_index.pin_at:
-                        team_task_index.pin_at = timezone.now()
-                        team_task_index.save()
+                    if TeamTaskIndex.objects.filter(
+                        team=team, user=user
+                    ).exists():
+                        # Update last index team task if add new user
+                        TeamTaskIndex.update_max_index_for_user(
+                            team=team, user=user, task=task, is_update=False
+                        )
+                        team_task_index = TeamTaskIndex.objects.filter(
+                            team=team, user=user, task=task
+                        ).first()
+                        # Reset pin at to now
+                        if team_task_index and team_task_index.pin_at:
+                            team_task_index.pin_at = timezone.now()
+                            team_task_index.save()
 
         return self.response_ok()
 
@@ -2087,9 +2096,12 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             tasks = tasks.annotate(
                 coalesced_deadline=Coalesce(
                     "deadline",
-                    Value(REPLACE_NULL_DATE, output_field=DateTimeField()),
+                    Value(
+                        REPLACE_NULL_DATE_WITH_FUTURE,
+                        output_field=DateTimeField(),
+                    ),
                 )
-            ).order_by("-coalesced_deadline", "-updated_at")
+            ).order_by("coalesced_deadline", "-updated_at")
 
             # Update team task index only if sorting by deadline or importance
             for idx, task in enumerate(tasks):
