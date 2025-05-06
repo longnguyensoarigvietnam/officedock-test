@@ -1505,7 +1505,7 @@ const ActionsTaskModal = ({
                       classNameError="!text-xs"
                       disabled={isCheckActionPermission}
                       options={
-                        !columnId
+                        (!columnId && action == ActionTask.CREATE)
                           ? dataOptionsStatus
                           : dataOptionsStatus.filter(
                               (item) =>
