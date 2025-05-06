@@ -1207,6 +1207,7 @@ const DailyReportBoard = () => {
                       type="text"
                       onBlur={(e) => {
                         if (e.target.value === rowData.pausedAt) return;
+                        if (row.original.isRunning) return;
                         const data = isTimeEarlier(
                           formatTimeInput(
                             `${convertToMinutesNumber(e.target.value)}`,
@@ -2178,7 +2179,7 @@ const DailyReportBoard = () => {
                               <td
                                 key={cell.id}
                                 rowSpan={2}
-                                className={`p-2 !pl-2 border-l  ${!isParent && cellIndex === 1 && 'border-l-0'} border-b !pr-0 border-[#D2DBE1]`}>
+                                className={`p-2 !pl-2 border-l  ${!isParent && cellIndex === 1 && 'border-l-0'} bg-transparent border-b !pr-0 border-[#D2DBE1]`}>
                                 {flexRender(
                                   cell.column.columnDef.cell,
                                   cell.getContext(),
@@ -2188,10 +2189,10 @@ const DailyReportBoard = () => {
                         </tr>
                         {/* The sub row with the title cell takes up 4 columns */}
                         <tr
-                          className={`${row.depth > 0 ? 'bg-[#F8FAFC]' : 'bg-white'}  !border-none !pr-0`}>
+                          className={`${row.depth > 0 ? 'bg-[#F8FAFC] ' : 'bg-white'}  !border-none !pr-0`}>
                           <td
                             colSpan={3}
-                            className={`text-left !pt-0 !pl-0  !pr-0  border-b border-[#D2DBE1]`}>
+                            className={`text-left !pt-0 !pl-0 overflow-hidden  !pr-0  border-b border-[#D2DBE1]`}>
                             <div
                               className={`flex items-center justify-between  ${isHasChild ? 'pb-[19px]' : 'relative top-[-8px]'} ${!isParent && 'relative top-[-4px]'}`}>
                               <div className=" w-full break-all text-base font-medium text-black flex items-start gap-[6px]">
@@ -2211,7 +2212,7 @@ const DailyReportBoard = () => {
                                   <div className=" rounded-full w-6 h-6 text-sm text-[#0068B6] font-normal"></div>
                                 )}
                                 <p
-                                  className={`flex-1 ${row.depth > 0 && 'bg-[#F8FAFC]'}`}>
+                                  className={`flex-1 ${row.depth > 0 && 'bg-transparent pt-2'} line-clamp-2`}>
                                   {row.original.title || '-'}
                                 </p>
                               </div>
@@ -2443,7 +2444,7 @@ const DailyReportBoard = () => {
                           <td
                             colSpan={4}
                             className="text-left border-b !pt-0 !pl-0">
-                            <div className="text-xl w-full break-all">
+                            <div className="text-xl w-full bg-transparent break-all">
                               {row.original.title || '-'}
                             </div>
                           </td>

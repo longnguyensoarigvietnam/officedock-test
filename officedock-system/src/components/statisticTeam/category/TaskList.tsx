@@ -173,10 +173,14 @@ const TaskListTeamStatistic = ({
   });
 
   useEffect(() => {
-    if (listMemberTeam && listMemberTeam.length > 0) {
-      setSelectedMember(listMemberTeam[0].id);
+    if (orderingOptions?.user_ids && orderingOptions.user_ids.length > 0) {
+      setSelectedMember(orderingOptions.user_ids[0].value as number);
+    } else {
+      if (listMemberTeam && listMemberTeam.length > 0) {
+        setSelectedMember(listMemberTeam[0].id);
+      }
     }
-  }, [listMemberTeam]);
+  }, [listMemberTeam, orderingOptions]);
 
   const optionList = [
     {
