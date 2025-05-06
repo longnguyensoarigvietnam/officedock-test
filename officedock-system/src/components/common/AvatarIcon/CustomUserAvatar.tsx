@@ -13,7 +13,6 @@ const CustomUserAvatar = ({
   avatarColor,
   size,
   customClassName,
-  isCalendarScreen = false,
 }: CustomUserAvatarProps) => {
   return (
     <div className={`${customClassName}`}>
@@ -37,7 +36,7 @@ const CustomUserAvatar = ({
           xmlns="http://www.w3.org/2000/svg">
           <rect width={size} height={size} rx={size / 2} fill={avatarColor} />
           <mask
-            id={`mask0_528_5${size}${isCalendarScreen && Math.random()}`}
+            id={`${Math.random()}`}
             style={{ 'mask-type': 'alpha' } as React.CSSProperties}
             maskUnits="userSpaceOnUse"
             x="0"
@@ -47,7 +46,7 @@ const CustomUserAvatar = ({
             <rect width={size} height={size} rx={size / 2} fill={avatarColor} />
           </mask>
           <g
-            mask={`url(#mask0_528_5${size}${isCalendarScreen && Math.random()})`}>
+            mask={`${Math.random()}`}>
             <rect
               x={size * 0.19}
               y={size * 0.57}

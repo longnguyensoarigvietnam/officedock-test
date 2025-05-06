@@ -72,6 +72,8 @@ const ActionFilterStatisticTeam = ({
           return {
             value: tag.value,
             label: tag.label,
+            avatarUrl: tag?.avatarUrl || '',
+            color: tag?.color || ''
           };
         });
       }
