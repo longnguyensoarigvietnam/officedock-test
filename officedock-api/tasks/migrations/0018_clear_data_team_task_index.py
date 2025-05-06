@@ -3,23 +3,10 @@
 from django.db import migrations
 
 
-def clear_data_team_task_index(apps, schema_editor):
-    """
-    Clean data team task index
-    """
-    TeamTaskIndex = apps.get_model("tasks", "TeamTaskIndex")
-
-    TeamTaskIndex.objects.all().delete()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
         ("tasks", "0017_seed_user_to_task_durations"),
     ]
 
-    operations = [
-        migrations.RunPython(
-            clear_data_team_task_index, migrations.RunPython.noop
-        )
-    ]
+    operations = []
