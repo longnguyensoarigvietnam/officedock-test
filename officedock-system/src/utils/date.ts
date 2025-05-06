@@ -1,4 +1,13 @@
-import { format, formatISO, isSameDay, parseISO, startOfDay } from 'date-fns';
+import {
+  addDays,
+  endOfDay,
+  format,
+  formatISO,
+  isSameDay,
+  parseISO,
+  startOfDay,
+} from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   DATE_FORMAT_SERVER,
@@ -8,6 +17,7 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
 import { StatisticViewOptions, TimeOptionsType } from '@constants/enums';
+import { TaskTimeSchedule } from '@interfaces/task';
 
 export const getFormattedDateTime = (dateInput?: string | Date): string => {
   const date: Date = dateInput ? new Date(dateInput) : new Date();
@@ -399,7 +409,9 @@ export function adjustEndDate(
 }
 // Check mid night
 export function isMidnight(date: Date): boolean {
-  return date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0;
+  return (
+    date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0
+  );
 }
 
 // Get Japanese day name
@@ -631,7 +643,10 @@ export function removeTimeAndCompareDates(
   secondDate.setHours(0, 0, 0, 0);
   targetDate.setHours(0, 0, 0, 0);
 
-  return firstDate.getTime() <= targetDate.getTime() && targetDate.getTime() <= secondDate.getTime();
+  return (
+    firstDate.getTime() <= targetDate.getTime() &&
+    targetDate.getTime() <= secondDate.getTime()
+  );
 }
 
 // Subtract one day from a specific day
@@ -1340,4 +1355,57 @@ export function formatLocalDate(dateInput: Date | string) {
   const pad = (value: number) => value.toString().padStart(2, '0');
 
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+function splitEvent(event: TaskTimeSchedule): TaskTimeSchedule[] {
+  const results: TaskTimeSchedule[] = [];
+
+  let currentStart = event.start;
+  const endTime = event.end;
+  let index = 0;
+
+  while (!isSameDay(currentStart, endTime)) {
+    const endOfCurrentDay = endOfDay(currentStart);
+
+    results.push({
+      ...event,
+      uuid: index === 0 ? event.uuid : uuidv4(),
+      id: index === 0 ? event.id : uuidv4(),
+      start: currentStart,
+      end: endOfCurrentDay,
+    });
+
+    currentStart = startOfDay(addDays(currentStart, 1));
+    index++;
+  }
+
+  results.push({
+    ...event,
+    uuid: index === 0 ? event.uuid : uuidv4(),
+    id: index === 0 ? event.id : uuidv4(),
+    start: currentStart,
+    end: endTime,
+  });
+
+  return results;
+}
+// Split multi event all day
+export function splitMultiDayEventsArray(events: TaskTimeSchedule[]): {
+  allEvents: TaskTimeSchedule[];
+  splittedEvents: TaskTimeSchedule[];
+} {
+  const allEvents: TaskTimeSchedule[] = [];
+  const splittedEvents: TaskTimeSchedule[] = [];
+
+  for (const event of events) {
+    if (isSameDay(event.start, event.end)) {
+      allEvents.push(event);
+    } else {
+      const parts = splitEvent(event);
+      allEvents.push(...parts);
+      splittedEvents.push(...parts);
+    }
+  }
+
+  return { allEvents, splittedEvents };
 }

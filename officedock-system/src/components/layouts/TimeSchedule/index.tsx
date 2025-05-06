@@ -44,6 +44,7 @@ import jaLocale from '@fullcalendar/core/locales/ja';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import scrollGridPlugin from '@fullcalendar/scrollgrid';
+import { EventImpl } from '@fullcalendar/core/internal';
 
 import {
   DateSpanApi,
@@ -64,6 +65,7 @@ import ScheduleDaySkeleton from '@components/skeleton/ScheduleDaySkeleton';
 import RangeSlider from '@components/common/RangeSlider';
 import DetailPlanItemModal from '@components/modals/DetailPlanItemModal';
 import DetailEventPlanModal from '@components/modals/DetailEventPlanModal';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import TaskCard from './TaskCard';
 
@@ -104,6 +106,7 @@ import {
 
 import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import api from '@base/api';
 import {
@@ -136,6 +139,7 @@ import {
   isDateLessThanToday,
   isMidnight,
   isTodaySchedule,
+  splitMultiDayEventsArray,
 } from '@utils/date';
 
 import './styles/schedule.css';
@@ -145,9 +149,6 @@ import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
 } from '@utils';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
-import { EventImpl } from '@fullcalendar/core/internal';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -577,10 +578,7 @@ const TimeSchedule = memo(
             });
           }
         },
-        onSettled: () => {
-          scrollToNowIndicator();
-          scrollToDate();
-        },
+        onSettled: () => {},
       },
     );
 
@@ -2083,10 +2081,17 @@ const TimeSchedule = memo(
         }
         return e;
       });
-      setTaskTimeScheduleList(updatedEvents);
+      const { allEvents, splittedEvents } =
+        splitMultiDayEventsArray(updatedEvents);
+
+      setTaskTimeScheduleList(allEvents);
+      const filteredChangeEvent = changedEvents.filter(
+        (item) => !splittedEvents.some((split) => split.id === item.id),
+      );
+      const updatedChangeEvent = [...filteredChangeEvent, ...splittedEvents];
 
       updateMultiPlanTime({
-        taskSchedules: changedEvents.map((item) => ({
+        taskSchedules: updatedChangeEvent.map((item) => ({
           uuid: item.uuid as string,
           taskId: item.taskId as number,
           planStartDate: convertDateString(item.start),

@@ -526,6 +526,10 @@ const KanbanBoardTaskTeam = () => {
         userId: sourceUserId,
         statusName: movedTask?.status?.name || '',
       });
+      setTotalNoSetting({
+        count: totalNoSetting ? totalNoSetting.count + 1 : 0,
+        hasNext: totalNoSetting ? totalNoSetting.hasNext : false,
+      });
       removeTaskById({
         statusId: movedTask?.status?.id as number,
         taskId: movedTask?.id as number,
@@ -654,6 +658,10 @@ const KanbanBoardTaskTeam = () => {
       });
       setIsReadyToFetch(false);
       setDataOrderRing('');
+      setTotalNoSetting({
+        count: totalNoSetting ? totalNoSetting.count - 1 : 0,
+        hasNext: totalNoSetting ? totalNoSetting.hasNext : false,
+      });
       if (movedItem.pinAt) {
         if (!belowItem?.pinAt && !aboveItem?.pinAt) {
           // If neither top nor bottom has pinAt -> Move item to top of list
@@ -1402,7 +1410,14 @@ const KanbanBoardTaskTeam = () => {
           count: (totalNoSetting?.count || 0) + 1,
           hasNext: totalNoSetting?.hasNext || false,
         });
-        setListTaskNoSetting([data, ...listTaskNoSetting]);
+        setListTaskNoSetting(
+          listTaskNoSetting.map((item) => {
+            if (item.id === data.id) {
+              return data;
+            }
+            return item;
+          }),
+        );
       }
 
       handleRemoveParam();
