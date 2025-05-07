@@ -1505,7 +1505,7 @@ const ActionsTaskModal = ({
                       classNameError="!text-xs"
                       disabled={isCheckActionPermission}
                       options={
-                        action === ActionTask.CREATE
+                        (!columnId && action == ActionTask.CREATE)
                           ? dataOptionsStatus
                           : dataOptionsStatus.filter(
                               (item) =>
@@ -1557,7 +1557,7 @@ const ActionsTaskModal = ({
             </div>
           </div>
           {/* Deadline */}
-          {!isRoutineTaskModal && (
+          {!isRoutineTaskModal && Number(watch('statusId')?.value) != StatusValueTask.MY_ROUTINE && (
             <div
               style={{ zIndex: planFields.length + 1 }}
               className="flex  relative gap-[10px] items-center">

@@ -684,7 +684,7 @@ const ActionsTaskModalTeam = ({
           label: org.fullName,
           value: org.id,
           imgUrl: org.avatarUrl,
-          iconColor: org.color
+          iconColor: org.color,
         })),
       ]);
     }
@@ -1307,7 +1307,7 @@ const ActionsTaskModalTeam = ({
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     classNameError="!text-xs"
-                    disabled={dataTask?.hasActualDuration}
+                    disabled={dataTask?.isStart}
                     options={dataOptionsPeopleInCharge}
                     selectedOption={dataOptionsPeopleInCharge.find(
                       (element) => element.value === value?.value,

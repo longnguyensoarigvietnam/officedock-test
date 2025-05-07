@@ -277,6 +277,7 @@ const EventCalendar = () => {
         selectedScheduleUserIds: selectedScheduleUserIds,
         keySearch: keySearch,
       });
+      if (isDayOrWeekView()) scrollToCurrentTime();
     }
   };
 
@@ -300,6 +301,7 @@ const EventCalendar = () => {
         selectedScheduleUserIds: selectedScheduleUserIds,
         keySearch: keySearch,
       });
+      if (isDayOrWeekView()) scrollToCurrentTime();
     }
   };
 
@@ -321,7 +323,7 @@ const EventCalendar = () => {
         selectedScheduleUserIds: selectedScheduleUserIds,
         keySearch: keySearch,
       });
-      if (isDayOrWeekView()) scrollToStartOfDay();
+      if (isDayOrWeekView()) scrollToCurrentTime();
     }
   };
 
@@ -344,7 +346,7 @@ const EventCalendar = () => {
         selectedScheduleUserIds: selectedScheduleUserIds,
         keySearch: keySearch,
       });
-      if (isDayOrWeekView()) scrollToStartOfDay();
+      if (isDayOrWeekView()) scrollToCurrentTime();
     }
   };
 
@@ -444,7 +446,7 @@ const EventCalendar = () => {
       }
 
       setIsEventRendering(false);
-      if (isDayOrWeekView()) scrollToStartOfDay();
+      if (isDayOrWeekView()) scrollToCurrentTime();
     }
   };
 
@@ -463,12 +465,23 @@ const EventCalendar = () => {
     return () => resizeObserver.disconnect();
   }, [calendarRef, containerRef]);
 
-  const scrollToStartOfDay = () => {
-    if (calendarRef.current === null) {
-      return;
-    }
-    const calendarApi = calendarRef.current.getApi();
-    calendarApi.scrollToTime('00:00:00');
+  const scrollToCurrentTime = () => {
+    setTimeout(() => {
+      const nowIndicator = document.querySelector('.fc-timegrid-now-indicator-arrow');
+      const scroller = nowIndicator?.closest('.fc-scroller');
+  
+      if (nowIndicator && scroller) {
+        const targetTop = (nowIndicator as HTMLElement).offsetTop;
+        const scrollerEl = scroller as HTMLElement;
+  
+        const centerOffset = targetTop - (scrollerEl.clientHeight / 2);
+  
+        scrollerEl.scrollTo({
+          top: centerOffset,
+          behavior: 'smooth'
+        });
+      }
+    }, 500);
   };
 
   const checkShowUserAvatar = (
@@ -2317,7 +2330,7 @@ const EventCalendar = () => {
                           : `${
                               authenticatedUser
                                 ? 'mt-[50px] pt-[10px]'
-                                : 'mt-[-20px] pt-[30px]'
+                                : 'mt-[-30px] pt-[20px]'
                             } pl-[15px]`
                       }`}
                     />

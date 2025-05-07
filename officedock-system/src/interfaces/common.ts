@@ -12,6 +12,8 @@ export interface OptionDropdownType {
   isMyRoutine?: boolean;
   userIds?: number[];
   iconColor?: string;
+  avatarUrl?: string;
+  color?: string;
 }
 
 export interface BasePagination<T> {

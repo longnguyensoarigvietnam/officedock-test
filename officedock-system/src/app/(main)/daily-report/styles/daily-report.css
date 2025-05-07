@@ -293,6 +293,7 @@
 .daily-custom .css-19bb58m input {
   margin: 0 !important;
   box-shadow: none !important;
+  caret-color: transparent;
 }
 .daily-custom .css-1nmdiq5-menu {
   width: fit-content;

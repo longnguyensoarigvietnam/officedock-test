@@ -296,7 +296,7 @@ const KanbanBoardTaskTeam = () => {
             );
           })}
           {remainingCount > 0 && (
-            <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[32px] h-[32px]">
+            <div className="ml-[-10px] flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[36px] h-[36px]">
               +{remainingCount}
             </div>
           )}
@@ -526,6 +526,10 @@ const KanbanBoardTaskTeam = () => {
         userId: sourceUserId,
         statusName: movedTask?.status?.name || '',
       });
+      setTotalNoSetting({
+        count: totalNoSetting ? totalNoSetting.count + 1 : 0,
+        hasNext: totalNoSetting ? totalNoSetting.hasNext : false,
+      });
       removeTaskById({
         statusId: movedTask?.status?.id as number,
         taskId: movedTask?.id as number,
@@ -654,6 +658,10 @@ const KanbanBoardTaskTeam = () => {
       });
       setIsReadyToFetch(false);
       setDataOrderRing('');
+      setTotalNoSetting({
+        count: totalNoSetting ? totalNoSetting.count - 1 : 0,
+        hasNext: totalNoSetting ? totalNoSetting.hasNext : false,
+      });
       if (movedItem.pinAt) {
         if (!belowItem?.pinAt && !aboveItem?.pinAt) {
           // If neither top nor bottom has pinAt -> Move item to top of list
@@ -1402,7 +1410,14 @@ const KanbanBoardTaskTeam = () => {
           count: (totalNoSetting?.count || 0) + 1,
           hasNext: totalNoSetting?.hasNext || false,
         });
-        setListTaskNoSetting([data, ...listTaskNoSetting]);
+        setListTaskNoSetting(
+          listTaskNoSetting.map((item) => {
+            if (item.id === data.id) {
+              return data;
+            }
+            return item;
+          }),
+        );
       }
 
       handleRemoveParam();
@@ -2105,7 +2120,7 @@ const KanbanBoardTaskTeam = () => {
               <Button
                 onClick={() => {
                   router.push(
-                    `${pageRouters.SCHEDULE_TEAM_MANAGEMENT.href}?organization=${selectedOrganization?.value}&tabId=1`,
+                    `${pageRouters.SCHEDULE_TEAM_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
                   );
                 }}
                 variant={'outline'}

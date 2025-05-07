@@ -40,8 +40,16 @@ interface ContextValue {
   totalDurationCategoryCompare: string;
   // Tag
   tagsOptions: OptionDropdownType[];
-  selectedTags: OptionDropdownType[];
-  setSelectedTags: Dispatch<SetStateAction<OptionDropdownType[]>>;
+  orderingOptions: {
+    tag_ids: OptionDropdownType[];
+    user_ids: OptionDropdownType[];
+  } | null;
+  setOrderingOptions: Dispatch<
+    SetStateAction<{
+      tag_ids: OptionDropdownType[];
+      user_ids: OptionDropdownType[];
+    } | null>
+  >;
   setTagsOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setSmallOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setMediumOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
@@ -100,6 +108,13 @@ interface ContextValue {
   setTotalDurationTaskCompare: Dispatch<SetStateAction<string>>;
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
+  // Value data
+  remainingCountUser: number;
+  remainingCountTag: number;
+  firstThreeUser: OptionDropdownType[];
+  allLabelUer: OptionDropdownType[];
+  allLabelTag: OptionDropdownType[];
+  firstThreeTag: OptionDropdownType[];
 }
 
 const defaultValue: ContextValue = {
@@ -148,8 +163,6 @@ const defaultValue: ContextValue = {
   listMemberTeam: [],
   setListMemberTeam: () => {},
   tagsOptions: [],
-  selectedTags: [],
-  setSelectedTags: () => {},
   setTagsOptions: () => {},
   isSkeletonCategoryTeamTask: false,
   setIsSkeletonCategoryTeamTask: () => {},
@@ -175,6 +188,14 @@ const defaultValue: ContextValue = {
   setTotalDurationTaskCompare: () => {},
   currentPage: 1,
   setCurrentPage: () => {},
+  orderingOptions: null,
+  setOrderingOptions: () => {},
+  remainingCountUser: 0,
+  remainingCountTag: 0,
+  firstThreeUser: [],
+  allLabelUer: [],
+  allLabelTag: [],
+  firstThreeTag: [],
 };
 
 export const StatisticTeamStateContext =
@@ -256,7 +277,10 @@ export const StatisticTeamStateProvider = ({
   );
   // Tag
   const [tagsOptions, setTagsOptions] = useState<OptionDropdownType[]>([]);
-  const [selectedTags, setSelectedTags] = useState<OptionDropdownType[]>([]);
+  const [orderingOptions, setOrderingOptions] = useState<{
+    tag_ids: OptionDropdownType[];
+    user_ids: OptionDropdownType[];
+  } | null>(null);
 
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
@@ -273,6 +297,21 @@ export const StatisticTeamStateProvider = ({
       avatarUrl: string;
     }[]
   >([]);
+
+  // Value data
+  const allLabelUer =
+    orderingOptions && orderingOptions.user_ids ? orderingOptions.user_ids : [];
+
+  const firstThreeUser = allLabelUer.slice(0, 3);
+
+  const remainingCountUser = allLabelUer.length - firstThreeUser.length;
+
+  const allLabelTag =
+    orderingOptions && orderingOptions.tag_ids ? orderingOptions.tag_ids : [];
+
+  const firstThreeTag = allLabelTag.slice(0, 3);
+
+  const remainingCountTag = allLabelTag.length - firstThreeTag.length;
 
   const contextValue: ContextValue = {
     smallOptions,
@@ -320,9 +359,9 @@ export const StatisticTeamStateProvider = ({
     listMemberTeam,
     setListMemberTeam,
     tagsOptions,
-    selectedTags,
-    setSelectedTags,
     setTagsOptions,
+    orderingOptions,
+    setOrderingOptions,
 
     totalDurationTask,
     setTotalDurationTask,
@@ -349,6 +388,12 @@ export const StatisticTeamStateProvider = ({
     setIsLoadingOrganizationCompare,
     currentPage,
     setCurrentPage,
+    remainingCountUser,
+    remainingCountTag,
+    firstThreeUser,
+    allLabelUer,
+    allLabelTag,
+    firstThreeTag,
   };
 
   return (

@@ -270,10 +270,13 @@ class TaskViewSet(
 
         if organization:
             for user in company.users.all():
-                # Create new index for team task created with user
-                TeamTaskIndex.objects.create(
-                    task=task, user=user, team=organization
-                )
+                if TeamTaskIndex.objects.filter(
+                    team=organization, user=user
+                ).exists():
+                    # Create new index for team task created with user
+                    TeamTaskIndex.objects.create(
+                        task=task, user=user, team=organization
+                    )
 
         # Handle send to chat
         if send_to_chat:
@@ -1069,17 +1072,20 @@ class TaskViewSet(
 
             # Update the max index for the task for all usersx
             for user in self.request.user.company.users.all():
-                # Update last index team task if add new user
-                TeamTaskIndex.update_max_index_for_user(
-                    team=organization, user=user, task=task, is_update=False
-                )
-                team_task_index = TeamTaskIndex.objects.filter(
-                    team=organization, user=user, task=task
-                ).first()
-                # Reset pin at to now
-                if team_task_index and team_task_index.pin_at:
-                    team_task_index.pin_at = timezone.now()
-                    team_task_index.save()
+                if TeamTaskIndex.objects.filter(
+                    team=organization, user=user
+                ).exists():
+                    # Update last index team task if add new user
+                    TeamTaskIndex.update_max_index_for_user(
+                        team=organization, user=user, task=task, is_update=False
+                    )
+                    team_task_index = TeamTaskIndex.objects.filter(
+                        team=organization, user=user, task=task
+                    ).first()
+                    # Reset pin at to now
+                    if team_task_index and team_task_index.pin_at:
+                        team_task_index.pin_at = timezone.now()
+                        team_task_index.save()
 
         # Update tags in task
         if tag_ids is not None:
@@ -1360,17 +1366,20 @@ class TaskViewSet(
                 for user in team.company.users.exclude(
                     id=request.user.id
                 ).all():
-                    # Update last index team task if add new user
-                    TeamTaskIndex.update_max_index_for_user(
-                        team=team, user=user, task=task, is_update=False
-                    )
-                    team_task_index = TeamTaskIndex.objects.filter(
-                        team=team, user=user, task=task
-                    ).first()
-                    # Reset pin at to now
-                    if team_task_index and team_task_index.pin_at:
-                        team_task_index.pin_at = timezone.now()
-                        team_task_index.save()
+                    if TeamTaskIndex.objects.filter(
+                        team=team, user=user
+                    ).exists():
+                        # Update last index team task if add new user
+                        TeamTaskIndex.update_max_index_for_user(
+                            team=team, user=user, task=task, is_update=False
+                        )
+                        team_task_index = TeamTaskIndex.objects.filter(
+                            team=team, user=user, task=task
+                        ).first()
+                        # Reset pin at to now
+                        if team_task_index and team_task_index.pin_at:
+                            team_task_index.pin_at = timezone.now()
+                            team_task_index.save()
 
         return self.response_ok()
 
@@ -1603,15 +1612,21 @@ class TaskScheduleViewSet(
         """
         Handle update multiple task schedules
         """
-        task_schedules = request.data.get("task_schedules")
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        task_schedules = serializer_data.get("task_schedules")
         for data in task_schedules:
-            task_schedule = TaskSchedule.objects.filter(uuid=data["uuid"])
-            if task_schedule.exists():
-                task_schedule_updated = task_schedule.update(
-                    plan_start_date=data["plan_start_date"],
-                    plan_end_date=data["plan_end_date"],
+            if uuid := data.get("uuid"):
+                task_schedule, _ = TaskSchedule.objects.update_or_create(
+                    uuid=uuid,
+                    defaults={
+                        "task": data.get("task"),
+                        "plan_start_date": data.get("plan_start_date"),
+                        "plan_end_date": data.get("plan_end_date"),
+                    },
                 )
-                self._check_overtime(task_schedule.get())
+                self._check_overtime(task_schedule)
         return self.response_ok()
 
 
@@ -1709,13 +1724,8 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     {"organization_id": ERROR_MESSAGES["field_required"]}
                 )
 
-            if not user_id:
-                raise ValidationError(
-                    {"user_id": ERROR_MESSAGES["field_required"]}
-                )
-
             task_pin = TeamTaskIndex.objects.filter(
-                task=OuterRef("pk"), team_id=organization_id, user_id=user_id
+                task=OuterRef("pk"), team_id=organization_id, user_id=user.id
             ).values("pin_at")[:1]
         else:
             task_pin = TaskIndex.objects.filter(
@@ -1733,7 +1743,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 task_index = TeamTaskIndex.objects.filter(
                     task=OuterRef("pk"),
                     team_id=organization_id,
-                    user_id=user_id,
+                    user_id=user.id,
                 ).values("index")[:1]
                 # Annotate the queryset with the index from TaskIndex
                 queryset = queryset.annotate(
@@ -1908,7 +1918,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             context["organization_id"] = self.request.query_params.get(
                 "organization_id"
             )
-            context["user_id"] = self.request.query_params.get("user_id")
+            context["user_id"] = user.id
 
         return self.response_pagination(
             request, queryset, TaskBoardSerializer, extra_context=context
@@ -2086,9 +2096,12 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             tasks = tasks.annotate(
                 coalesced_deadline=Coalesce(
                     "deadline",
-                    Value(REPLACE_NULL_DATE, output_field=DateTimeField()),
+                    Value(
+                        REPLACE_NULL_DATE_WITH_FUTURE,
+                        output_field=DateTimeField(),
+                    ),
                 )
-            ).order_by("-coalesced_deadline", "-updated_at")
+            ).order_by("coalesced_deadline", "-updated_at")
 
             # Update team task index only if sorting by deadline or importance
             for idx, task in enumerate(tasks):

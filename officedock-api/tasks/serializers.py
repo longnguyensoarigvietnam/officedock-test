@@ -665,6 +665,7 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
     Serializer for the Task model.
     """
 
+    uuid = serializers.UUIDField(required=False, allow_null=True)
     task = serializers.SerializerMethodField()
     task_id = serializers.PrimaryKeyRelatedField(
         source="task", queryset=Task.objects.all(), write_only=True
@@ -944,9 +945,12 @@ class TaskTeamdockSerializer(BaseUserSerializer):
                 tasks = tasks.annotate(
                     coalesced_deadline=Coalesce(
                         "deadline",
-                        Value(REPLACE_NULL_DATE, output_field=DateTimeField()),
+                        Value(
+                            REPLACE_NULL_DATE_WITH_FUTURE,
+                            output_field=DateTimeField(),
+                        ),
                     )
-                ).order_by("-coalesced_deadline", "-updated_at")
+                ).order_by("coalesced_deadline", "-updated_at")
 
                 # Update team task index only if sorting by deadline or importance
                 for idx, task in enumerate(tasks):

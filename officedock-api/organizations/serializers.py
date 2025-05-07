@@ -88,7 +88,7 @@ class StatisticCategorySerializer(BaseStatisticCategorySerializer):
             queryset = queryset.exclude(id=instance.id)
 
         if team:
-            queryset = queryset.filter(team=team)
+            queryset = queryset.filter(Q(team=team) | Q(team__isnull=True))
 
         if queryset.exists():
             raise ValidationError(

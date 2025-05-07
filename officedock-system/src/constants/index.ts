@@ -376,3 +376,10 @@ export const REPEAT_INTERVAL_OPTIONS: { label: string; value: number }[] =
     label: `${i + 1}`,
     value: i + 1,
   }));
+
+export const ALLOWED_IMAGE_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/jpg',
+];

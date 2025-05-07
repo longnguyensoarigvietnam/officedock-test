@@ -44,6 +44,7 @@ import jaLocale from '@fullcalendar/core/locales/ja';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import scrollGridPlugin from '@fullcalendar/scrollgrid';
+import { EventImpl } from '@fullcalendar/core/internal';
 
 import {
   DateSpanApi,
@@ -64,6 +65,7 @@ import ScheduleDaySkeleton from '@components/skeleton/ScheduleDaySkeleton';
 import RangeSlider from '@components/common/RangeSlider';
 import DetailPlanItemModal from '@components/modals/DetailPlanItemModal';
 import DetailEventPlanModal from '@components/modals/DetailEventPlanModal';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import TaskCard from './TaskCard';
 
@@ -104,6 +106,7 @@ import {
 
 import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import api from '@base/api';
 import {
@@ -136,6 +139,7 @@ import {
   isDateLessThanToday,
   isMidnight,
   isTodaySchedule,
+  splitMultiDayEventsArray,
 } from '@utils/date';
 
 import './styles/schedule.css';
@@ -145,9 +149,6 @@ import {
   adjustPositionForViewportSchedule,
   hasPermissionInArray,
 } from '@utils';
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
-import { EventImpl } from '@fullcalendar/core/internal';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -686,8 +687,6 @@ const TimeSchedule = memo(
         onSettled: () => {
           setIsLoading(false);
           setIsLoadingSchedule(false);
-          scrollToNowIndicator();
-          scrollToDate();
         },
       },
     );
@@ -2042,7 +2041,6 @@ const TimeSchedule = memo(
       const movedDelta =
         event.start.getTime() - new Date(draggedEvent.start).getTime();
       const changedEvents: TaskTimeSchedule[] = [];
-
       const updatedEvents = taskTimeScheduleList.map((e) => {
         if (selectedEvents.includes(e.uuid as string)) {
           const newStart = addMilliseconds(
@@ -2082,10 +2080,36 @@ const TimeSchedule = memo(
         }
         return e;
       });
-      setTaskTimeScheduleList(updatedEvents);
+      const { allEvents, splittedEvents } =
+        splitMultiDayEventsArray(updatedEvents);
+      const updatedAllEvents = allEvents.map((event) => {
+        if(isMidnight(event.start) && isMidnight(event.end)){
+          return {
+            ...event,
+            end: new Date(new Date(event.end.getTime() + 1000 * 60).getTime())
+          }
+        }
+        return event
+      })
+
+      const updatedSplittedEvents = splittedEvents.map((event) => {
+        if(isMidnight(event.start) && isMidnight(event.end)){
+          return {
+            ...event,
+            end: new Date(new Date(event.end.getTime() + 1000 * 60).getTime())
+          }
+        }
+        return event
+      })
+
+      setTaskTimeScheduleList(updatedAllEvents);
+      const filteredChangeEvent = changedEvents.filter(
+        (item) => !updatedSplittedEvents.some((split) => split.id === item.id),
+      );
+      const updatedChangeEvent = [...filteredChangeEvent, ...updatedSplittedEvents];
 
       updateMultiPlanTime({
-        taskSchedules: changedEvents.map((item) => ({
+        taskSchedules: updatedChangeEvent.map((item) => ({
           uuid: item.uuid as string,
           taskId: item.taskId as number,
           planStartDate: convertDateString(item.start),
@@ -2219,6 +2243,7 @@ const TimeSchedule = memo(
         clickInfo.event._def &&
         clickInfo.event._def.resourceIds?.length &&
         clickInfo.event._def.resourceIds[0] === ItemScheduleType.PLANS;
+        
       if (
         isShiftPressed &&
         resourcePlan &&
