@@ -16,7 +16,7 @@ import {
 } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
-import { StatisticViewOptions, TimeOptionsType } from '@constants/enums';
+import { ItemStartType, StatisticViewOptions, TimeOptionsType } from '@constants/enums';
 import { TaskTimeSchedule } from '@interfaces/task';
 
 export const getFormattedDateTime = (dateInput?: string | Date): string => {
@@ -1398,7 +1398,7 @@ export function splitMultiDayEventsArray(events: TaskTimeSchedule[]): {
   const splittedEvents: TaskTimeSchedule[] = [];
 
   for (const event of events) {
-    if (isSameDay(event.start, event.end)) {
+    if (isSameDay(event.start, event.end) || event.type == ItemStartType.SCHEDULE) {
       allEvents.push(event);
     } else {
       const parts = splitEvent(event);
