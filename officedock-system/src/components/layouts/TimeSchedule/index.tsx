@@ -2041,7 +2041,6 @@ const TimeSchedule = memo(
       const movedDelta =
         event.start.getTime() - new Date(draggedEvent.start).getTime();
       const changedEvents: TaskTimeSchedule[] = [];
-
       const updatedEvents = taskTimeScheduleList.map((e) => {
         if (selectedEvents.includes(e.uuid as string)) {
           const newStart = addMilliseconds(
@@ -2083,12 +2082,31 @@ const TimeSchedule = memo(
       });
       const { allEvents, splittedEvents } =
         splitMultiDayEventsArray(updatedEvents);
+      const updatedAllEvents = allEvents.map((event) => {
+        if(isMidnight(event.start) && isMidnight(event.end)){
+          return {
+            ...event,
+            end: new Date(new Date(event.end.getTime() + 1000 * 60).getTime())
+          }
+        }
+        return event
+      })
 
-      setTaskTimeScheduleList(allEvents);
+      const updatedSplittedEvents = splittedEvents.map((event) => {
+        if(isMidnight(event.start) && isMidnight(event.end)){
+          return {
+            ...event,
+            end: new Date(new Date(event.end.getTime() + 1000 * 60).getTime())
+          }
+        }
+        return event
+      })
+
+      setTaskTimeScheduleList(updatedAllEvents);
       const filteredChangeEvent = changedEvents.filter(
-        (item) => !splittedEvents.some((split) => split.id === item.id),
+        (item) => !updatedSplittedEvents.some((split) => split.id === item.id),
       );
-      const updatedChangeEvent = [...filteredChangeEvent, ...splittedEvents];
+      const updatedChangeEvent = [...filteredChangeEvent, ...updatedSplittedEvents];
 
       updateMultiPlanTime({
         taskSchedules: updatedChangeEvent.map((item) => ({
@@ -2225,6 +2243,7 @@ const TimeSchedule = memo(
         clickInfo.event._def &&
         clickInfo.event._def.resourceIds?.length &&
         clickInfo.event._def.resourceIds[0] === ItemScheduleType.PLANS;
+        
       if (
         isShiftPressed &&
         resourcePlan &&
