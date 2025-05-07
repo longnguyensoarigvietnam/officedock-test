@@ -18,7 +18,7 @@ const CustomUserAvatar = ({
     <div className={`${customClassName}`}>
       {avatarUrl ? (
         <div
-          className="relative rounded-full overflow-hidden"
+          className="relative rounded-full overflow-hidden bg-white"
           style={{ width: size, height: size }}>
           <Image
             src={getFileURL(avatarUrl)}
