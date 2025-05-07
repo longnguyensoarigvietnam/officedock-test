@@ -16,7 +16,11 @@ import {
 } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
-import { ItemStartType, StatisticViewOptions, TimeOptionsType } from '@constants/enums';
+import {
+  ItemStartType,
+  StatisticViewOptions,
+  TimeOptionsType,
+} from '@constants/enums';
 import { TaskTimeSchedule } from '@interfaces/task';
 
 export const getFormattedDateTime = (dateInput?: string | Date): string => {
@@ -1373,6 +1377,8 @@ function splitEvent(event: TaskTimeSchedule): TaskTimeSchedule[] {
       id: index === 0 ? event.id : uuidv4(),
       start: currentStart,
       end: endOfCurrentDay,
+      planStartDate: String(currentStart),
+      planEndDate: String(endOfCurrentDay),
     });
 
     currentStart = startOfDay(addDays(currentStart, 1));
@@ -1385,6 +1391,8 @@ function splitEvent(event: TaskTimeSchedule): TaskTimeSchedule[] {
     id: index === 0 ? event.id : uuidv4(),
     start: currentStart,
     end: endTime,
+    planStartDate: String(currentStart),
+    planEndDate: String(endTime),
   });
 
   return results;
@@ -1398,7 +1406,10 @@ export function splitMultiDayEventsArray(events: TaskTimeSchedule[]): {
   const splittedEvents: TaskTimeSchedule[] = [];
 
   for (const event of events) {
-    if (isSameDay(event.start, event.end) || event.type == ItemStartType.SCHEDULE) {
+    if (
+      isSameDay(event.start, event.end) ||
+      event.type == ItemStartType.SCHEDULE
+    ) {
       allEvents.push(event);
     } else {
       const parts = splitEvent(event);
