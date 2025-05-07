@@ -269,7 +269,7 @@ const ScheduleTeamBoard = () => {
                     ? largeColor
                     : '#A7B9C2',
             }}
-            className={`h-full ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-tr-md rounded-br-md rounded-tl-sm rounded-bl-sm `}>
+            className={`h-full mx-1 ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-tr-md rounded-br-md rounded-tl-md rounded-bl-md `}>
             <div className="overflow-hidden">
               <div className={`  font-medium px-1 pt-1 text-[14px]`}>
                 <p

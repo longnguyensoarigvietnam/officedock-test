@@ -1287,88 +1287,17 @@ const TimeSchedule = memo(
 
     const handleRenderEvent = (eventInfo: EventContentArg) => {
       const event = eventInfo?.event as any;
-      const calendarEvents = eventInfo.view.calendar.getEvents();
       if (isErrorObject(event)) {
         return null;
       }
       const extendedProps = event?.extendedProps;
       if (!extendedProps) null;
       if (!event.start || !event.end) return null;
-      const overlappingEvents = calendarEvents.filter((e: any) => {
-        if (!e.start || !e.end || e.id === event.id) return false;
 
-        const eResourceId =
-          e._def &&
-          e._def.resourceIds?.length &&
-          e._def.resourceIds[0] === ItemScheduleType.PLANS;
-
-        if (!eResourceId) return false;
-
-        const eStart = new Date(e.extendedProps.planStartDate);
-        const eEnd = new Date(e.extendedProps.planEndDate);
-        const exStart = new Date(extendedProps?.planStartDate);
-        const exEnd = new Date(extendedProps?.planEndDate);
-
-        return (
-          eStart.getTime() < exEnd!.getTime() &&
-          eEnd.getTime() > exStart!.getTime()
-        );
-      });
-
-      const allOverlappingEvents = [...overlappingEvents, event];
-
-      const areAllStartAndEndEqual: boolean = allOverlappingEvents.every(
-        (e) =>
-          e.start &&
-          e.end &&
-          allOverlappingEvents &&
-          allOverlappingEvents.length > 0 &&
-          e.start.getTime() === allOverlappingEvents[0].start.getTime() &&
-          e.end.getTime() === allOverlappingEvents[0].end.getTime(),
-      );
-
-      const eventWithMaxDuration = allOverlappingEvents.reduce(
-        (maxEvent, e) => {
-          return e.end!.getTime() - e.start!.getTime() >
-            maxEvent.end!.getTime() - maxEvent.start!.getTime()
-            ? e
-            : maxEvent;
-        },
-        event,
-      );
-      const isMaxDurationEvent =
-        allOverlappingEvents.length > 1 && eventWithMaxDuration.id === event.id;
-
-      const resourcePlan =
-        event._def &&
-        event._def.resourceIds?.length &&
-        event._def.resourceIds[0] === ItemScheduleType.PLANS;
       const isSelect = selectedEvents.includes(extendedProps?.uuid);
 
       return (
         <>
-          {areAllStartAndEndEqual &&
-          isMaxDurationEvent &&
-          !isLoadingSchedule &&
-          resourcePlan &&
-          extendedProps.type === EventCalendarType.TASK ? (
-            <ImageRound
-              src={`/icons/overlap-task.svg`}
-              name="icon lock"
-              className="absolute custom-resize-handle fc-resizer z-50  left-[-19px] top-1/2 -translate-y-1/2 w-[18px] h-[18px]"
-            />
-          ) : (
-            !areAllStartAndEndEqual &&
-            isMaxDurationEvent &&
-            resourcePlan &&
-            !isLoadingSchedule && (
-              <ImageRound
-                src={`/icons/overlap-task.svg`}
-                name="icon lock"
-                className="absolute custom-resize-handle fc-resizer z-50  left-[-19px] top-1/2 -translate-y-1/2 w-[18px] h-[18px]"
-              />
-            )
-          )}
           {!isLoadingSchedule && (
             <TaskCard
               event={eventInfo}

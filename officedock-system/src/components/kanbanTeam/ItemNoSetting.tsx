@@ -453,7 +453,7 @@ const ItemNoSetting = ({
                           : '12px',
                       marginRight: `${(columnWidth / 247) * 12}px`,
                     }}
-                    className={`!border-none break-words leading-[1.5] cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                    className={`!border-none leading-[1.4] break-all line-clamp-1 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                     {content.title}
                   </p>
                 </div>
@@ -595,7 +595,7 @@ const ItemNoSetting = ({
                       fontSize: '12px',
                       marginRight: `${(columnWidth / 247) * 12}px`,
                     }}
-                    className={`!border-none break-words cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                    className={`!border-none leading-[1.4] break-all line-clamp-1 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
                     {content.title}
                   </p>
                   <Tippy
