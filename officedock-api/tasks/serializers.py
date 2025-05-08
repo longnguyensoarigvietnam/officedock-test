@@ -883,7 +883,7 @@ class TaskTeamdockSerializer(BaseUserSerializer):
 
                     if "deadline" in ordering:
                         tasks = tasks.order_by(
-                            "coalesced_deadline", "-updated_at"
+                            "coalesced_deadline", "-is_important", "-updated_at"
                         )
 
                     if "is_important" in ordering:
