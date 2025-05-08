@@ -836,7 +836,8 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                 "participants": CreationDataUserSerializer(
                     users, many=True
                 ).data,
-                "is_start": model.is_start,
+                "is_start": duration.paused_at is None
+                or not duration.paused_at,
                 "event_type": model.type,
                 "categories": []
                 if not model.categories.exists()
