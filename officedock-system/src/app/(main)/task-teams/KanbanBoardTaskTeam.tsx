@@ -1439,8 +1439,16 @@ const KanbanBoardTaskTeam = () => {
             dataTaskEdit?.deadline != null &&
             new Date(data.deadline).getTime() ===
               new Date(dataTaskEdit.deadline).getTime();
-      const firstId = data.peopleInCharge?.[0]?.id;
-      const editFirstId = dataTaskEdit?.peopleInCharge?.[0]?.id;
+      const firstId =
+        data.peopleInCharge && data.peopleInCharge.length
+          ? data.peopleInCharge?.[0]?.id
+          : null;
+      const editFirstId =
+        dataTaskEdit &&
+        dataTaskEdit.peopleInCharge &&
+        dataTaskEdit.peopleInCharge.length
+          ? dataTaskEdit?.peopleInCharge?.[0]?.id
+          : null;
 
       const isPeopleChanged = firstId !== editFirstId;
       if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
