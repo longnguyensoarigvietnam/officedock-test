@@ -2296,7 +2296,7 @@ const ChatDetail = ({
                 {chatRoomDetail &&
                   chatRoomDetail.type === ChatRoomType.GROUP && (
                     <div className="flex gap-2 items-center">
-                      <p className="text-[13px] mr-3 text-[#FFFFFFB2]">
+                      <p className="text-[13px] mr-3 text-[#FFFFFFB2] text-nowrap">
                         メンバー
                         {chatRoomDetail &&
                         chatRoomParticipantsEditing.find(

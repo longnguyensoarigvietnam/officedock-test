@@ -2038,7 +2038,9 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 )
 
                 if "deadline" in ordering:
-                    tasks = tasks.order_by("coalesced_deadline", "-updated_at")
+                    tasks = tasks.order_by(
+                        "coalesced_deadline", "-is_important", "-updated_at"
+                    )
 
                 if "is_important" in ordering:
                     tasks = tasks.order_by(

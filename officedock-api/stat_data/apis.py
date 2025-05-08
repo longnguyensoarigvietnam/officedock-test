@@ -446,7 +446,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     user_serializer["total_duration"] = format_duration(
                         total_duration
                     )
-                    user_serializer["confirm_report"] = (
+                    user_serializer["is_confirmed"] = (
                         confirm_report.is_confirmed if confirm_report else False
                     )
                     user_list.append(user_serializer)

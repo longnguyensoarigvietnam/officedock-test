@@ -196,6 +196,7 @@ const KanbanBoardTask = () => {
     setColumnWidth,
     setOrderingOptions,
     setDataTaskEditKanban,
+    setIsInteracting,
   } = useContext(TaskContext);
   const { isExtendCalendar, expanded } = useContext(GlobalStateContext);
 
@@ -1620,6 +1621,8 @@ const KanbanBoardTask = () => {
           );
 
           setDataItemDrop(result);
+          setIsInteracting(false);
+
           isDragEndExecuteRef.current = true;
           return;
         }
@@ -2892,7 +2895,11 @@ const KanbanBoardTask = () => {
           handleEditShowClockItem={handleEditShowClockItem}
         />
         <div className="flex-1 pl-10 ">
-          <DragDropContext onDragStart={() => {}} onDragEnd={onDragEnd}>
+          <DragDropContext
+            onDragStart={() => {
+              setIsInteracting(true);
+            }}
+            onDragEnd={onDragEnd}>
             <div
               ref={exEvents}
               style={{
@@ -3184,6 +3191,10 @@ const KanbanBoardTask = () => {
                       handleSetParam({
                         id: null,
                         action: ActionTask.CREATE,
+                        type:
+                          id == String(StatusValueTask.MY_ROUTINE)
+                            ? ItemStartType.FIXED_TASK
+                            : ItemStartType.TASK,
                       });
                     }}
                   />

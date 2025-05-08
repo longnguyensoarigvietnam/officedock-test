@@ -18,6 +18,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
 import {
   ItemStartType,
+  ItemScheduleType,
   StatisticViewOptions,
   TimeOptionsType,
 } from '@constants/enums';
@@ -1420,3 +1421,82 @@ export function splitMultiDayEventsArray(events: TaskTimeSchedule[]): {
 
   return { allEvents, splittedEvents };
 }
+export const convertTimeToTodayDate = (time: string): Date => {
+  const cleanedTime = time.replace(/\s*:\s*/g, ':').trim();
+  const [hourStr = '0', minuteStr = '0'] = cleanedTime.split(':');
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const day = now.getDate();
+
+  const hour = parseInt(hourStr, 10);
+  const minute = parseInt(minuteStr, 10);
+
+  return new Date(year, month, day, hour, minute);
+};
+
+// Check startTime  < endTime  < now
+
+export const isEndTimeValidNow = (
+  startTime: string,
+  endTime: string,
+  now: Date = new Date(),
+): boolean => {
+  const parseTime = (time: string): number => {
+    const cleanedTime = time
+      .replace(/\s*:\s*/g, ':')
+      .replace(/\s*(AM|PM)\s*/i, ' $1')
+      .trim();
+
+    const [timePart, meridiem = ''] = cleanedTime.split(' ');
+    const [hourStr, minuteStr = '0'] = timePart.split(':');
+
+    let hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+
+    if (isNaN(hour) || isNaN(minute)) {
+      throw new Error('Invalid time format');
+    }
+
+    const upperMeridiem = meridiem.toUpperCase();
+    if (upperMeridiem === 'PM' && hour !== 12) hour += 12;
+    if (upperMeridiem === 'AM' && hour === 12) hour = 0;
+
+    return hour * 60 + minute;
+  };
+
+  const minuteStart = parseTime(startTime);
+  const minuteEnd = parseTime(endTime);
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  // ✅ endTime  > startTime  < now
+  return minuteEnd > minuteStart && minuteEnd < nowMinutes;
+};
+
+export const isOverlappingWithOthers = ({
+  itemCompare,
+  items,
+}: {
+  itemCompare: {
+    uuid: string;
+    taskId: number;
+    start: Date;
+    end: Date;
+  };
+  items: TaskTimeSchedule[];
+}): boolean => {
+  return items.some((item) => {
+    if (
+      item.uuid === itemCompare.uuid ||
+      item.taskId !== itemCompare.taskId ||
+      item.resourceId !== ItemScheduleType.ACTUAL
+    ) {
+      return false;
+    }
+    return (
+      itemCompare.start < new Date(item.planEndDate as string) &&
+      itemCompare.end > new Date(item.planStartDate as string)
+    );
+  });
+};

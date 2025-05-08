@@ -87,7 +87,18 @@ const ListData = () => {
     'postConfirmUserDaily',
     handleActionConfirmUserDaily,
     {
-      onSuccess: async () => {},
+      onSuccess: async (data, variant) => {
+        setDataListDailyReport((prevData) =>
+          prevData.map((item) => ({
+            ...item,
+            users: item.users.map((user) =>
+              user.id === variant.id
+                ? { ...user, isConfirmed: variant.isConfirmed }
+                : user,
+            ),
+          })),
+        );
+      },
       onError: () => {},
       onSettled: () => {},
     },

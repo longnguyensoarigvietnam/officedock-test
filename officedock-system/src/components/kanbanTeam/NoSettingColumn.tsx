@@ -56,21 +56,6 @@ const NoSettingColumn = ({
     router.push(`?${params.toString()}`);
   };
 
-  let paddingRight;
-  switch (selectedOptionZoom.value) {
-    case 25:
-    case 50:
-      paddingRight = `${(columnWidth / 247) * 4}px`;
-      break;
-    case 75:
-    case 90:
-    case 100:
-      paddingRight = `${(columnWidth / 247) * 12}px`;
-      break;
-    default:
-      paddingRight = `${(columnWidth / 247) * 15}px`;
-  }
-
   const listTaskRef = useRef<HTMLDivElement | null>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -88,15 +73,6 @@ const NoSettingColumn = ({
     if (orderingOptions?.user_ids?.length) {
       apiUrl += `&user_ids=${orderingOptions.user_ids.map((item) => item.value).join(',')}`;
     }
-
-    // if (orderingOptions?.category_ids?.length) {
-    //   apiUrl += `&category_ids=${orderingOptions.category_ids.map((item) => item.value).join(',')}`;
-    // }
-
-    // if (orderingOptions?.tag_ids?.length) {
-    //   apiUrl += `&tag_ids=${orderingOptions.tag_ids.map((item) => item.value).join(',')}`;
-    // }
-
     return await api.get<KanbanDataResponse>(apiUrl);
   };
   // Handle call API get more team
@@ -152,18 +128,18 @@ const NoSettingColumn = ({
       {isExtendUser ? (
         <div
           style={{
-            width: `${(columnWidth / 247) * 247}px`,
+            width: `${(columnWidth / 247) * 257}px`,
             minWidth: '154px',
-            maxWidth: `${(columnWidth / 247) * 247}px`,
+            maxWidth: `${(columnWidth / 247) * 257}px`,
             paddingLeft: 0,
             paddingRight: 0,
           }}
           className={`h-auto flex-col min-h-0 mt-1 px-2 flex-shrink-0 `}>
           <div
             style={{
-              width: `${(columnWidth / 247) * 247}px`,
+              width: `${(columnWidth / 247) * 257}px`,
               minWidth: '154px',
-              maxWidth: `${(columnWidth / 247) * 247}px`,
+              maxWidth: `${(columnWidth / 247) * 257}px`,
               paddingLeft: 0,
               paddingRight: 0,
             }}
@@ -250,21 +226,20 @@ const NoSettingColumn = ({
                   style={{
                     paddingTop: `${(columnWidth / 247) * 22}px`,
                     marginRight: `-${(columnWidth / 247) * 16}px`,
-                    paddingRight: paddingRight,
                     boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 '#EBF1F7'`,
                     minHeight: 'calc(100% - 36px)',
                     maxHeight: '2000px',
                   }}
                   className={`flex-grow overflow-y-auto w-[100%]
-               
-                 overflow-x-hidden grid scrollbar-gutter-stable `}>
+                 overflow-x-hidden scrollbar-gutter-stable `}>
                   <div
                     style={{
                       paddingLeft: `${(columnWidth / 247) * 14}px`,
                       paddingRight: `${(columnWidth / 247) * 14}px`,
+                      marginRight: `${(columnWidth / 247) * 9}px`,
                       minHeight: '100%',
                     }}
-                    className={`flex flex-col  h-full pt-[14px] bg-[#DAE2EB] rounded-lg`}>
+                    className={`flex flex-col overflow-x-hidden  h-full pt-[14px] bg-[#DAE2EB] rounded-lg`}>
                     {listTaskNoSetting.map((item, index) => (
                       <>
                         <ItemNoSetting

@@ -1,34 +1,31 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
-import { useContext, useState } from 'react';
+import { ChangeEvent, useContext, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
 import { EventContentArg } from '@fullcalendar/core/index.js';
 
 import ImageRound from '@components/common/ImageRound';
 import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
-import ActionActualSchedule from '@components/modals/ActionActualSchedule';
 
 import { apiRouters } from '@constants/routers';
 import { NO_SETTING } from '@constants';
-import {
-  EventWorkCategory,
-  ItemScheduleType,
-  ItemStartType,
-  ViewOptions,
-} from '@constants/enums';
+import { ItemScheduleType, ItemStartType, ViewOptions } from '@constants/enums';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
 import {
-  adjustEndDate,
+  compareWithCurrentDate,
   convertToCurrentTimezone,
   convertToTimeString,
   getMinuteDifference,
-  getNext30MinuteSlot,
   isMoreThanFifteenMinutes,
   isMoreThanThirtyMinutes,
 } from '@utils/date';
-import { TaskActualType, TaskTimeSchedule } from '@interfaces/task';
+import { createPortal } from 'react-dom';
+import PopupDetail from './PopupDetail';
+import PopupDetailEvent from './PopupDetailEvent';
+import { TaskTimeSchedule } from '@interfaces/task';
+import { EventEditFormData } from '@interfaces/calendar';
 
 interface TaskCardProps {
   event: EventContentArg;
@@ -37,6 +34,7 @@ interface TaskCardProps {
   contentSize: number;
   isOptionZoomSchedule: string;
   isSelect: boolean;
+  taskTimeScheduleList: TaskTimeSchedule[];
   handleSetEventParam: ({
     id,
     action,
@@ -49,21 +47,40 @@ interface TaskCardProps {
     isStart: boolean;
     type: string;
   }) => void;
-  setTaskTimeScheduleList: React.Dispatch<
-    React.SetStateAction<TaskTimeSchedule[]>
-  >;
+  deletePlanTask: (uuid: string, taskId: number) => void;
+  deleteActualTask: (uuid: string) => void;
+  handleChangeStartTime: (
+    e: ChangeEvent<HTMLInputElement>,
+    endDate: string,
+    uuid: string,
+    resourcePlan: boolean,
+  ) => void;
+  handleChangeEndTime: (
+    e: ChangeEvent<HTMLInputElement>,
+    startDate: string,
+    uuid: string,
+    resourcePlan: boolean,
+  ) => void;
+  onDeleteEvent?: (values: EventEditFormData) => void;
 }
 const TaskCard = ({
   event,
   isSelect,
   slotHeight,
   isOptionZoomSchedule,
+  taskTimeScheduleList,
+  onDeleteEvent,
+  deletePlanTask,
+  deleteActualTask,
   handleUpdateItemStart,
-  setTaskTimeScheduleList,
+  handleChangeStartTime,
+  handleChangeEndTime,
 }: TaskCardProps) => {
   const {
+    isInteracting,
     idTaskStarting,
     taskSelectedToStart,
+    setIdTaskEditSelected,
     setDataRunning,
     setDataClickTask,
     setIdTaskStarting,
@@ -74,9 +91,8 @@ const TaskCard = ({
   } = useContext(TaskContext);
 
   const searchParams = useSearchParams();
-  const view = searchParams.get('view');
 
-  const [isShowEditActual, setIsShowEditActual] = useState(false);
+  const view = searchParams.get('view');
 
   const resourcePlan =
     event.event._def &&
@@ -287,79 +303,6 @@ const TaskCard = ({
     });
   };
 
-  const handleUpdateSchedule = (data: TaskActualType[], uuid: string) => {
-    const tasksActualSchedule = data
-      .filter((task) => task.planStartDate)
-      .map((task) => {
-        const startDateActual = new Date(
-          convertToCurrentTimezone(`${task.planStartDate}`),
-        );
-        const endDateActual = new Date(
-          convertToCurrentTimezone(`${task.planEndDate}`),
-        );
-        const endTimeCustom = task.planEndDate
-          ? endDateActual
-          : getNext30MinuteSlot(startDateActual);
-        const largeColor =
-          task.categories &&
-          task.categories.find((item) => item.type === EventWorkCategory.LARGE)
-            ?.color;
-        if (task.type === ItemStartType.TASK) {
-          return {
-            title: task.title,
-            start: startDateActual,
-            end: task.planEndDate
-              ? adjustEndDate(startDateActual, endDateActual, 5)
-              : adjustEndDate(startDateActual, endTimeCustom as Date),
-            id: task.id.toString(),
-            taskId: task.taskId,
-            uuid: task.uuid,
-            planStartDate: task.planStartDate,
-            planEndDate: task.planEndDate
-              ? task.planEndDate
-              : `${endTimeCustom}`,
-            startEditable: task.planEndDate ? true : false,
-            resourceId: ItemScheduleType.ACTUAL,
-            type: ItemStartType.TASK,
-            isMyTask: false,
-            isStart: false,
-            largeColor: largeColor,
-            isCalculation: task.planEndDate ? false : true,
-          };
-        } else {
-          return {
-            title: task.title,
-            start: startDateActual,
-            end: task.planEndDate
-              ? adjustEndDate(startDateActual, endDateActual)
-              : adjustEndDate(startDateActual, endTimeCustom as Date),
-            id: task.id.toString(),
-            taskId: task.taskId,
-            uuid: task.uuid,
-            planStartDate: task.planStartDate,
-            planEndDate: task.planEndDate
-              ? task.planEndDate
-              : `${endTimeCustom}`,
-            startEditable: task.planEndDate ? true : false,
-            resourceId: ItemScheduleType.ACTUAL,
-            type: ItemStartType.SCHEDULE_ACTUAL,
-            eventId: task.scheduleId,
-            isMyTask: false,
-            isStart: false,
-            largeColor: largeColor,
-            isCalculation: task.planEndDate ? false : true,
-          };
-        }
-      });
-    setTaskTimeScheduleList((prevEvents) => {
-      return [
-        ...prevEvents.filter((item) => item.uuid !== uuid),
-        ...tasksActualSchedule,
-      ];
-    });
-    setIsShowEditActual(false);
-  };
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const baseHeight =
@@ -368,6 +311,121 @@ const TaskCard = ({
       : isOptionZoomSchedule === '01:00:00'
         ? 90
         : 46;
+
+  const [isShowAction, setIsShowAction] = useState(false);
+
+  const checkDeadline =
+    event.event?.extendedProps.deadline &&
+    compareWithCurrentDate(event.event?.extendedProps.deadline);
+
+  const [local, setLocal] = useState({
+    clientX: 0,
+    clientY: 0,
+  });
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [isHovering, setIsHovering] = useState(false);
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = (e: any) => {
+    setLocal({
+      clientX: e.clientX,
+      clientY: e.clientY,
+    });
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = () => {
+    setTimeout(() => {
+      if (!popupRef.current?.matches(':hover')) {
+        setIsHovering(false);
+        setIsShowAction(false);
+      }
+    }, 100);
+  };
+
+  const handlePopupLeave = () => {
+    setTimeout(() => {
+      if (!popupRef.current?.matches(':hover')) {
+        setIsHovering(false);
+        setIsShowAction(false);
+      }
+    }, 100);
+  };
+
+  const renderModal = () => {
+    return (
+      <div
+        className={`w-[250px]    fixed top-0 left-0 z-[999]  h-fit rounded-md pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}
+        ref={popupRef}
+        onMouseLeave={handlePopupLeave}
+        onMouseEnter={() => setIsHovering(true)}
+        style={{
+          top: local.clientY,
+          left: local.clientX - 100,
+          boxShadow: '0px 2px 8px 0px #0000001A',
+        }}>
+        {isEvent ? (
+          <PopupDetailEvent
+            dataEvent={{
+              title: event.event?.title,
+              id: event.event?.extendedProps.scheduleId,
+              start: event.event?.extendedProps.planStartDate,
+              end: event.event?.extendedProps.isAllDay
+                ? event.event?.extendedProps.endDate
+                : event.event?.extendedProps.planEndDate,
+              left: 0,
+              top: 0,
+              address: event.event?.extendedProps.address,
+              participants: event.event?.extendedProps.participants,
+              isAllDay: event.event?.extendedProps.isAllDay,
+              type: {
+                label: event.event?.extendedProps.eventType,
+                value: event.event?.extendedProps.eventType,
+              },
+            }}
+            onDelete={onDeleteEvent}
+          />
+        ) : (
+          <PopupDetail
+            title={event?.event?.title}
+            isCalculation={isCalculation}
+            largeColor={largeColor}
+            resourcePlan={resourcePlan}
+            isShowAction={isShowAction}
+            planStartDate={event.event?.extendedProps.planStartDate}
+            planEndDate={event.event?.extendedProps.planEndDate}
+            checkDeadline={checkDeadline}
+            isStart={isStart}
+            uuid={event.event?.extendedProps?.uuid}
+            taskTimeScheduleList={taskTimeScheduleList}
+            setIsShowAction={(show: boolean) => {
+              setIsShowAction(show);
+            }}
+            handleChangeStartTime={handleChangeStartTime}
+            handleChangeEndTime={handleChangeEndTime}
+            deletePlanTask={deletePlanTask}
+            deleteActualTask={deleteActualTask}
+            setIdTaskEditSelected={setIdTaskEditSelected}
+            handleStartStopTask={handleStartStopTask}
+            deadline={event.event?.extendedProps.deadline}
+            isImportant={event.event?.extendedProps.isImportant}
+            setIsHovering={(show: boolean) => {
+              setIsHovering(show);
+            }}
+            statusId={
+              resourcePlan
+                ? event.event?.extendedProps.statusId ||
+                  event.event?.extendedProps.status.id
+                : 0
+            }
+            taskId={event.event.extendedProps.taskId}
+          />
+        )}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -382,64 +440,93 @@ const TaskCard = ({
               ? largeColor
               : '#A7B9C2',
         }}
-        className={`h-full ${isSelect && '!opacity-30'} ${largeColor && resourcePlan && 'border border-l-2'}  group flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}>
-        <div className="flex w-full relative h-full justify-between overflow-hidden">
-          <div className="flex overflow-hidden flex-col gap-2 w-[95%]">
-            <p
-              style={{
-                width: event.event?.extendedProps.isAllDay
-                  ? view === ViewOptions.WEEK
-                    ? '100%'
-                    : '100px'
-                  : '100%',
-                paddingRight: event.event?.extendedProps.isAllDay
-                  ? view === ViewOptions.WEEK
-                    ? '44px'
-                    : '0'
-                  : '0',
-              }}
-              className="font-bold min-h-[20px] text-sm truncate block w-full  ">
-              {event?.event instanceof Error
-                ? ''
-                : event?.event?.title
-                  ? event.event.title
-                  : NO_SETTING}
-            </p>
-            <div className="text-[11px] flex gap-2">
+        ref={containerRef}
+        className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${largeColor && resourcePlan && 'border border-l-2'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}>
+        <div className="flex w-full relative z-[9999] h-full justify-between ">
+          <div
+            onMouseEnter={(e) => {
+              if (isInteracting) return;
+              handleMouseEnter(e);
+              const fcEvent = containerRef.current?.closest(
+                '.fc-event',
+              ) as HTMLElement;
+              const resizer = fcEvent?.querySelector(
+                '.fc-event-resizer-end',
+              ) as HTMLElement;
+              if (resizer) {
+                resizer.style.setProperty('opacity', '0', 'important');
+              }
+            }}
+            onMouseLeave={() => {
+              handleMouseLeave();
+              const fcEvent = containerRef.current?.closest(
+                '.fc-event',
+              ) as HTMLElement;
+              const resizer = fcEvent?.querySelector(
+                '.fc-event-resizer-end',
+              ) as HTMLElement;
+              if (resizer) {
+                resizer.style.setProperty('opacity', '1', 'important');
+              }
+            }}
+            className={`group overflow-hidden bg-transparent z-[999] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'}`}>
+            <div className="flex overflow-hidden flex-col gap-2 w-[95%]">
               <p
                 style={{
-                  width: resourcePlan ? '100%' : 'fit-content',
+                  width: event.event?.extendedProps.isAllDay
+                    ? view === ViewOptions.WEEK
+                      ? '100%'
+                      : '100px'
+                    : '100%',
+                  paddingRight: event.event?.extendedProps.isAllDay
+                    ? view === ViewOptions.WEEK
+                      ? '44px'
+                      : '0'
+                    : '0',
                 }}
-                className=" h-full w-fit">
-                {!isCalculation ? (
-                  event.timeText && isEvent ? (
-                    <p className="w-[80%] break-all">
-                      {event.event?.extendedProps &&
-                        convertToTimeString(
-                          event.event?.extendedProps.planStartDate,
-                        )}
-                      ~
-                      {event.event?.extendedProps &&
-                        convertToTimeString(
-                          event.event?.extendedProps.planEndDate,
-                        )}{' '}
-                    </p>
-                  ) : (
-                    event.timeText &&
-                    differentTime &&
-                    event.timeText.replace(' - ', ' ~')
-                  )
-                ) : (
-                  <>{convertToTimeString(`${event.event.start}`)} ~ 計測中</>
-                )}
+                className="font-bold min-h-[20px] text-sm truncate block w-full  ">
+                {event?.event instanceof Error
+                  ? ''
+                  : event?.event?.title
+                    ? event.event.title
+                    : NO_SETTING}
               </p>
-              {!resourcePlan && !isCalculation && (
-                <p>{getMinuteDifference(event.timeText)}分</p>
-              )}
+              <div className="text-[11px] flex gap-2">
+                <p
+                  style={{
+                    width: resourcePlan ? '100%' : 'fit-content',
+                  }}
+                  className=" h-full w-fit">
+                  {!isCalculation ? (
+                    event.timeText && isEvent ? (
+                      <p className="w-[80%] break-all">
+                        {event.event?.extendedProps &&
+                          convertToTimeString(
+                            event.event?.extendedProps.planStartDate,
+                          )}
+                        ~
+                        {event.event?.extendedProps &&
+                          convertToTimeString(
+                            event.event?.extendedProps.planEndDate,
+                          )}{' '}
+                      </p>
+                    ) : (
+                      event.timeText &&
+                      differentTime &&
+                      event.timeText.replace(' - ', ' ~')
+                    )
+                  ) : (
+                    <>{convertToTimeString(`${event.event.start}`)} ~ 計測中</>
+                  )}
+                </p>
+                {!resourcePlan && !isCalculation && (
+                  <p>{getMinuteDifference(event.timeText)}分</p>
+                )}
+              </div>
             </div>
           </div>
-          {resourcePlan ? (
-            <s>
+          {resourcePlan && (
+            <>
               {isEvent && (
                 <ImageRound
                   src={`/icons/lock.svg`}
@@ -462,26 +549,17 @@ const TaskCard = ({
                     `${event.event.end}`,
                   ) && isOptionZoomSchedule === '01:00:00'
                 }
-                className="absolute  w-[20px] h-[20px] bottom-2 right-2  hover:cursor-pointer"
+                className="absolute   w-[20px] h-[20px] bottom-2 right-2  hover:cursor-pointer"
                 onClick={handleStartStopTask}
               />
-            </s>
-          ) : (
-            <ImageRound
-              src={`/icons/edit.svg`}
-              name="Start task"
-              style={{
-                top: `${(slotHeight / baseHeight) * 8}px`,
-              }}
-              className={`absolute resize-icon w-[14px] h-[14px]  right-2 hover:cursor-pointer ${isCalculation && 'hidden'}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsShowEditActual(true);
-              }}
-            />
+            </>
           )}
         </div>
       </div>
+      {isHovering &&
+        !isInteracting &&
+        createPortal(renderModal(), document.body)}
+
       {showWarningStartModal && (
         <WarningStartTaskModal
           open={showWarningStartModal}
@@ -490,20 +568,6 @@ const TaskCard = ({
             setShowWarningStartModal(false);
           }}
           onConfirm={handleConfirmStartNewTask}
-        />
-      )}
-      {isShowEditActual && (
-        <ActionActualSchedule
-          open={isShowEditActual}
-          title={event.event.title ? event.event.title : ''}
-          data={{
-            uuid:
-              event.event?.extendedProps && event.event?.extendedProps?.uuid,
-            start: event.event.start?.toISOString() || '',
-            end: event.event.end?.toISOString() || '',
-          }}
-          onSubmit={handleUpdateSchedule}
-          onClose={() => setIsShowEditActual(false)}
         />
       )}
     </>

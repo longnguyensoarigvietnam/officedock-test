@@ -29,6 +29,7 @@ export type CalendarSidebarProps = {
   setShowSidebar: Dispatch<SetStateAction<boolean>>;
   setSearchName: Dispatch<SetStateAction<string>>;
   setSelectedScheduleUserIds: Dispatch<SetStateAction<string>>;
+  setSelectedScheduleOrgIds: Dispatch<SetStateAction<string>>
   setRemoveMyselfOption: Dispatch<SetStateAction<boolean>>;
   setCurrentResources: Dispatch<
     SetStateAction<
@@ -77,6 +78,7 @@ export const CalendarSidebar = ({
   setShowSidebar,
   setRemoveMyselfOption,
   setSelectedScheduleUserIds,
+  setSelectedScheduleOrgIds,
   setCurrentResources,
   handleGetAllMemberSchedules,
   handleRemoveAllMemberSchedules,
@@ -330,33 +332,71 @@ export const CalendarSidebar = ({
           classLabel="text-[15px] text-black"
           onChange={(state) => {
             setRemoveMyselfOption(state);
-            setCurrentResources((prevCurrentResources) => {
-              if (
-                prevCurrentResources.find(
-                  (resource) => resource.id == String(session?.user.id),
-                )
-              ) {
-                return prevCurrentResources.filter(
-                  (resource) => resource.id !== String(session?.user.id),
-                );
-              }
-              return [...prevCurrentResources];
-            });
+
+            let updatedUserIds: string[] = selectedScheduleUserIds
+              ? selectedScheduleUserIds.split(',').filter(Boolean)
+              : [];
+            let updatedOrgIds: number[] = selectedScheduleOrgIds
+              ? selectedScheduleOrgIds
+                  .split(',')
+                  .filter(Boolean)
+                  .map((id) => Number(id))
+              : [];
             if (state) {
-              let updatedUserIds: string[] = selectedScheduleUserIds
-                ? selectedScheduleUserIds.split(',').filter(Boolean)
-                : [];
+              // Remove user from selectedScheduleUserIds
               const userIdStr = String(session?.user.id);
               updatedUserIds = updatedUserIds.filter((id) => id !== userIdStr);
-              setSelectedScheduleUserIds(updatedUserIds.join(','));
-              getEventCalendarByUsers({
-                userId:
-                  `${updatedUserIds.join(',')}`.length > 0
-                    ? `${updatedUserIds.join(',')}`
-                    : ``,
-                keySearch: keySearch,
-              });
+
+              // Remove any org that includes the removed user
+              const belongedOrganizations = dataOptionsParticipants
+                .filter(
+                  (participant) =>
+                    participant.type == EventParticipantType.ORGANIZATION &&
+                    participant.userIds?.includes(Number(session?.user.id)),
+                )
+                .map((org) => org.id as number);
+              updatedOrgIds = updatedOrgIds.filter(
+                (org) => !belongedOrganizations.includes(org),
+              );
+            } else {
+              // Add user to selectedScheduleUserIds if user belongs to selectedScheduleOrgIds
+              const updatedOrgIds: string[] = selectedScheduleOrgIds
+                ? selectedScheduleOrgIds.split(',').filter(Boolean)
+                : [];
+              for (const orgId of updatedOrgIds) {
+                const org = dataOptionsOrganizations.find(
+                  (organization) => organization.id == orgId,
+                );
+                if (org) {
+                  const orgMembers = org.userIds || [];
+                  if (orgMembers.includes(Number(session?.user.id))) {
+                    updatedUserIds.push(String(session?.user.id));
+                    break;
+                  }
+                }
+              }
             }
+            setSelectedScheduleOrgIds(updatedOrgIds.join(','));
+            setSelectedScheduleUserIds(updatedUserIds.join(','));
+            getEventCalendarByUsers({
+              userId:
+                `${updatedUserIds.join(',')}`.length > 0
+                  ? `${updatedUserIds.join(',')}`
+                  : ``,
+              keySearch: keySearch,
+            });
+
+            setCurrentResources(() => {
+              return updatedUserIds.map((userId) => {
+                return {
+                  id: String(userId),
+                  title:
+                    dashboardMembersWithAvatars?.find(
+                      (member) => String(member.id) == String(userId),
+                    )?.fullName || '',
+                };
+              });
+            });
           }}
         />
       </div>

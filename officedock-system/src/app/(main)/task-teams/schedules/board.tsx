@@ -43,7 +43,6 @@ import {
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 
-import { OptionDropdownType } from '@interfaces/common';
 import {
   EventCalendarDayRange,
   EventCalendarDetail,
@@ -81,7 +80,8 @@ const ScheduleTeamBoard = () => {
     orderingOptions,
     setOrderingOptions,
   } = useContext(TaskTeamStateContext);
-  const { organizationTeamList } = useContext(GlobalStateContext);
+  const { organizationTeamList, selectedOrganization } =
+    useContext(GlobalStateContext);
 
   // State
   const searchParams = useSearchParams();
@@ -134,11 +134,6 @@ const ScheduleTeamBoard = () => {
     }[]
   >([]);
 
-  const [selectedOrganization, setSelectedOrganization] =
-    useState<OptionDropdownType | null>({
-      label: '',
-      value: '',
-    });
   const handleSetParamTeam = (id: string) => {
     params.set('organization', id);
     router.push(`?${params.toString()}`);
@@ -148,12 +143,6 @@ const ScheduleTeamBoard = () => {
     isTeam: true,
     onSuccess: (data) => {
       if (!data) return;
-      if (data.organization) {
-        setSelectedOrganization({
-          label: data.organization.name,
-          value: data.organization.id,
-        });
-      }
       setListMemberTeam(
         data.members.map((member) => ({
           id: member.id,
@@ -845,17 +834,16 @@ const ScheduleTeamBoard = () => {
       <div className="pt-[30px] px-10  font-medium  w-full">
         <div className="mb-[30px] flex items-center justify-between">
           <div className="flex items-center gap-5 ">
-            <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
-              <ImageRound
-                className="w-[34px] h-[34px] rounded-full"
-                src="/icons/statistic-team.svg"
-                border="full"
-                name="Multi users"
-              />
+            <div className="flex gap-1 items-center">
+              {selectedOrganization?.imgComponent && (
+                <div className="w-[34px] h-[34px] flex justify-center items-center">
+                  {selectedOrganization.imgComponent}
+                </div>
+              )}
+              <p className="text-[26px] font-medium relative top-[0px] line-clamp-3 max-w-[350px] ">
+                {selectedOrganization?.label}
+              </p>
             </div>
-            <p className="text-[26px] font-medium relative top-[-2px] line-clamp-3 max-w-[350px] ">
-              {selectedOrganization?.label}
-            </p>
             <div className="flex justify-center items-center gap-2 ">
               <Button
                 variant={'outline'}
