@@ -1198,7 +1198,11 @@ const DailyReportBoard = () => {
                 <div className="bg-transparent p-1">
                   <div className="w-12">
                     <Input
-                      disabled={!isPermissionAction || isRowParent}
+                      disabled={
+                        !isPermissionAction ||
+                        isRowParent ||
+                        row.original.isRunning
+                      }
                       defaultValue={
                         isRowParent
                           ? resultParentDuration?.pausedAt

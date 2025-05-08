@@ -292,7 +292,7 @@ const PopupDetail = ({
                         items: taskTimeScheduleList,
                       });
 
-                      if (data && !isCheck) {
+                      if (!data && !isCheck) {
                         setValueEnd(
                           formatTimeInput(
                             `${convertToMinutesNumber(e.target.value)}`,

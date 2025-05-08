@@ -350,6 +350,8 @@ const KanbanBoardTaskTeam = () => {
           oldUserId: userTask,
           oldStatusName: variant.oldNameStatus || '',
         });
+        setIsReadyToFetch(false);
+        setDataOrderRing('');
       },
       onError: () => {},
       onSettled: () => {},
@@ -1176,7 +1178,6 @@ const KanbanBoardTaskTeam = () => {
             hasNext: totalNoSetting ? totalNoSetting.hasNext : false,
           });
         }
-
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
         });
@@ -1184,6 +1185,8 @@ const KanbanBoardTaskTeam = () => {
         setCloseAction(null);
         handleRemoveParam();
         setDataTaskEdit(null);
+        setIsReadyToFetch(false);
+        setDataOrderRing('');
         setIsShowModalEditTeam(false);
       },
       onError: (error: AxiosError<any>) => {
@@ -1400,14 +1403,8 @@ const KanbanBoardTaskTeam = () => {
           count: (totalNoSetting?.count || 0) + 1,
           hasNext: totalNoSetting?.hasNext || false,
         });
-        setListTaskNoSetting(
-          listTaskNoSetting.map((item) => {
-            if (item.id === data.id) {
-              return data;
-            }
-            return item;
-          }),
-        );
+        const newList = [data, ...listTaskNoSetting].sort(compareItems);
+        setListTaskNoSetting(newList);
       }
 
       handleRemoveParam();
@@ -1416,6 +1413,8 @@ const KanbanBoardTaskTeam = () => {
       showToast({
         description: SUCCESS_UPDATE_MESSAGE,
       });
+      setIsReadyToFetch(false);
+      setDataOrderRing('');
       setDataTaskEdit(null);
     },
     onError: ({
@@ -1718,7 +1717,11 @@ const KanbanBoardTaskTeam = () => {
           unpinTaskInKanban(newData);
         }
       } else {
-        pinTaskNoSetting(data);
+        if (data.pinAt !== null) {
+          pinTaskNoSetting(data);
+        } else {
+          unPinTaskNoSetting(data);
+        }
       }
     },
     onError: (error: AxiosError<any>) => {
@@ -1796,6 +1799,17 @@ const KanbanBoardTaskTeam = () => {
       setListTaskNoSetting([{ ...itemPin, pinAt: task.pinAt }, ...listFilter]);
     }
   };
+  const unPinTaskNoSetting = (task: TaskPinResponse) => {
+    const listFilter = listTaskNoSetting.filter(
+      (item) => item.id !== task.task,
+    );
+    const itemPin = listTaskNoSetting.find((item) => item.id === task.task);
+    if (itemPin) {
+      setListTaskNoSetting(
+        [{ ...itemPin, pinAt: null }, ...listFilter].sort(compareItems),
+      );
+    }
+  };
 
   // Handle call api pin / unpin
   const pinItemToTop = (itemId: string | number, userId: string) => {
@@ -1804,12 +1818,16 @@ const KanbanBoardTaskTeam = () => {
       pinAt: convertDateStringFull(new Date()),
       userId: userId,
     });
+    setIsReadyToFetch(false);
+    setDataOrderRing('');
   };
   const pinItemToTopNoSetting = (itemId: string | number) => {
     pinTask({
       id: `${itemId}`,
       pinAt: convertDateStringFull(new Date()),
     });
+    setIsReadyToFetch(false);
+    setDataOrderRing('');
   };
 
   // Action update total
@@ -1871,6 +1889,11 @@ const KanbanBoardTaskTeam = () => {
     setDataTotalStatus((prevData) => {
       return prevData.map((user) => {
         if (user.id === oldUserId) {
+          if (oldStatusName === taskData.status?.name) {
+            return {
+              ...user,
+            };
+          }
           return {
             ...user,
             statuses: user.statuses.map((status) => {
@@ -2088,7 +2111,7 @@ const KanbanBoardTaskTeam = () => {
         className={`pt-[30px] pr-10 h-[calc(100vh_-_76px)] ${isDragging ? 'overflow-hidden' : 'overflow-y-auto'}   font-medium  w-full pb-10`}>
         <div className="mb-[30px] flex items-center justify-between">
           <div className="flex items-center gap-5 ">
-            <div className='flex gap-1 items-center'>
+            <div className="flex gap-1 items-center">
               {selectedOrganization?.imgComponent && (
                 <div className="w-[34px] h-[34px] flex justify-center items-center">
                   {selectedOrganization.imgComponent}
