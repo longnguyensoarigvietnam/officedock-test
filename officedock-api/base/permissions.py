@@ -59,6 +59,13 @@ class ActionPermission(BasePermission):
         ):
             return True
 
+        # Allow request if action in teamdock but my task API
+        if (
+            screen_name == Screens.MY_TASK.value
+            and current_screen == Screens.TEAMDOCK.value
+        ):
+            return True
+
         # Allow `PATCH` requests to update MY_TASK from the STATISTIC screen
         if (
             current_screen
