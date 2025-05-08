@@ -1324,7 +1324,7 @@ const TimeSchedule = memo(
               new Date(endDate),
               `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
             ),
-            pausedAt: endDate,
+            pausedAt: convertDateString(endDate),
           },
         });
       } else {
@@ -1335,7 +1335,7 @@ const TimeSchedule = memo(
               new Date(endDate),
               `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
             ),
-            planEndDate: endDate,
+            planEndDate: convertDateString(endDate),
           },
         });
       }
@@ -1373,7 +1373,7 @@ const TimeSchedule = memo(
         updateActualTime({
           uuid: uuid,
           data: {
-            startedAt: startDate,
+            startedAt: convertDateString(startDate),
             pausedAt: combineDateAndTime(
               new Date(startDate),
               `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
@@ -1384,7 +1384,7 @@ const TimeSchedule = memo(
         updatePlanTime({
           uuid: uuid,
           data: {
-            planStartDate: startDate,
+            planStartDate: convertDateString(startDate),
             planEndDate: combineDateAndTime(
               new Date(startDate),
               `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
@@ -1448,6 +1448,12 @@ const TimeSchedule = memo(
               handleUpdateItemStart={handleUpdateItemStart}
               handleChangeStartTime={handleChangeStartTime}
               handleChangeEndTime={handleChangeEndTime}
+              onDeleteEvent={(data) => {
+                setDataEventEditLocal(data);
+                setConfirmEventDataToEdit(data);
+                setOpenCreateEventModal(false);
+                setOpenConfirmDeleteEventModal(true);
+              }}
             />
           )}
           <div></div>

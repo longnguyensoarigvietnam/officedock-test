@@ -717,6 +717,16 @@ const TaskPageDataHeader = () => {
             </div>
           )}
       </div>
+      {showWarningStartTaskModal && isTaskTeamPage && (
+        <WarningStartTaskModal
+          open={showWarningStartTaskModal}
+          type={idTaskStarting.type === ItemStartType.TASK ? 'タスク' : '予定'}
+          onClose={() => {
+            setShowWarningStartTaskModal(false);
+          }}
+          onConfirm={handleConfirmStartNewTask}
+        />
+      )}
       {showWarningStartTaskModal && !isTaskPage && (
         <WarningStartTaskModal
           open={showWarningStartTaskModal}

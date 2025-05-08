@@ -25,6 +25,7 @@ import { createPortal } from 'react-dom';
 import PopupDetail from './PopupDetail';
 import PopupDetailEvent from './PopupDetailEvent';
 import { TaskTimeSchedule } from '@interfaces/task';
+import { EventEditFormData } from '@interfaces/calendar';
 
 interface TaskCardProps {
   event: EventContentArg;
@@ -60,6 +61,7 @@ interface TaskCardProps {
     uuid: string,
     resourcePlan: boolean,
   ) => void;
+  onDeleteEvent?: (values: EventEditFormData) => void;
 }
 const TaskCard = ({
   event,
@@ -67,6 +69,7 @@ const TaskCard = ({
   slotHeight,
   isOptionZoomSchedule,
   taskTimeScheduleList,
+  onDeleteEvent,
   deletePlanTask,
   deleteActualTask,
   handleUpdateItemStart,
@@ -382,6 +385,7 @@ const TaskCard = ({
                 value: event.event?.extendedProps.eventType,
               },
             }}
+            onDelete={onDeleteEvent}
           />
         ) : (
           <PopupDetail

@@ -8,7 +8,7 @@ import {
   PermissionsSystem,
 } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
-import { EventParticipant } from '@interfaces/calendar';
+import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
 import { DataDetailEventType } from '@interfaces/task';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { hasPermissionInArray } from '@utils';
@@ -23,9 +23,10 @@ import React, { useContext } from 'react';
 
 type Props = {
   dataEvent: DataDetailEventType;
+  onDelete?: (values: EventEditFormData) => void;
 };
 
-const PopupDetailEvent = ({ dataEvent }: Props) => {
+const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -68,7 +69,7 @@ const PopupDetailEvent = ({ dataEvent }: Props) => {
                   <ImageRound
                     name="go to"
                     src={'/icons/go.svg'}
-                    className="w-[16px] h-[16px] hover:cursor-pointer"
+                    className="w-[18px] h-[16px] hover:cursor-pointer"
                   />
                 </div>
               </DynamicTooltip>
@@ -82,8 +83,7 @@ const PopupDetailEvent = ({ dataEvent }: Props) => {
                 <div
                   className="hover:bg-[#EBF1F4] px-2 py-1.5 hover:rounded-full hover:cursor-pointer"
                   onClick={() => {
-                    // onClose();
-                    // onDelete && onDelete(dataEvent);
+                    onDelete && onDelete(dataEvent);
                   }}>
                   <ImageRound
                     name="Delete"

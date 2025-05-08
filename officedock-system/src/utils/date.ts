@@ -1494,10 +1494,9 @@ export const isOverlappingWithOthers = ({
     ) {
       return false;
     }
-
     return (
-      itemCompare.start < new Date(item.planStartDate as string) &&
-      new Date(item.end as Date) > itemCompare.start
+      itemCompare.start < new Date(item.planEndDate as string) &&
+      itemCompare.end > new Date(item.planStartDate as string)
     );
   });
 };

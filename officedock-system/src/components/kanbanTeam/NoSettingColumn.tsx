@@ -73,15 +73,6 @@ const NoSettingColumn = ({
     if (orderingOptions?.user_ids?.length) {
       apiUrl += `&user_ids=${orderingOptions.user_ids.map((item) => item.value).join(',')}`;
     }
-
-    // if (orderingOptions?.category_ids?.length) {
-    //   apiUrl += `&category_ids=${orderingOptions.category_ids.map((item) => item.value).join(',')}`;
-    // }
-
-    // if (orderingOptions?.tag_ids?.length) {
-    //   apiUrl += `&tag_ids=${orderingOptions.tag_ids.map((item) => item.value).join(',')}`;
-    // }
-
     return await api.get<KanbanDataResponse>(apiUrl);
   };
   // Handle call API get more team
