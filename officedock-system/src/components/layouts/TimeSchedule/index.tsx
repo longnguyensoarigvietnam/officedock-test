@@ -1453,6 +1453,7 @@ const TimeSchedule = memo(
                 setConfirmEventDataToEdit(data);
                 setOpenCreateEventModal(false);
                 setOpenConfirmDeleteEventModal(true);
+                setIdBackToEvent(data.id as string);
               }}
             />
           )}

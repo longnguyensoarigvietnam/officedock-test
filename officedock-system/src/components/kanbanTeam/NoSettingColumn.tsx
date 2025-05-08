@@ -1,17 +1,19 @@
-import ImageRound from '@components/common/ImageRound';
+import { useMutation } from 'react-query';
 import { Droppable } from '@hello-pangea/dnd';
-import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import ItemNoSetting from './ItemNoSetting';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+import ImageRound from '@components/common/ImageRound';
+import Spinner from '@components/common/Spinner';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
+import ItemNoSetting from './ItemNoSetting';
+
 import { COLUMN_ID_TASK } from '@constants';
 import { ActionTask, ItemStartType } from '@constants/enums';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { KanbanDataResponse, NoSettingTotalType } from '@interfaces/task';
-import Spinner from '@components/common/Spinner';
 import { apiRouters } from '@constants/routers';
+import { KanbanDataResponse, NoSettingTotalType } from '@interfaces/task';
 import api from '@base/api';
-import { useMutation } from 'react-query';
 
 type Props = {
   totalNoSetting: NoSettingTotalType | undefined;
@@ -134,7 +136,7 @@ const NoSettingColumn = ({
             paddingLeft: 0,
             paddingRight: 0,
           }}
-          className={`h-auto flex-col min-h-0 mt-1 px-2 flex-shrink-0 `}>
+          className={`h-auto min-h-[500px] flex-col  mt-1 px-2 flex-shrink-0 `}>
           <div
             style={{
               width: `${(columnWidth / 247) * 257}px`,
@@ -227,7 +229,7 @@ const NoSettingColumn = ({
                     paddingTop: `${(columnWidth / 247) * 22}px`,
                     marginRight: `-${(columnWidth / 247) * 16}px`,
                     boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 '#EBF1F7'`,
-                    minHeight: 'calc(100% - 36px)',
+                    minHeight: '500px',
                     maxHeight: '2000px',
                   }}
                   className={`flex-grow overflow-y-auto w-[100%]
@@ -237,7 +239,7 @@ const NoSettingColumn = ({
                       paddingLeft: `${(columnWidth / 247) * 14}px`,
                       paddingRight: `${(columnWidth / 247) * 14}px`,
                       marginRight: `${(columnWidth / 247) * 9}px`,
-                      minHeight: '100%',
+                      minHeight: '500px',
                     }}
                     className={`flex flex-col overflow-x-hidden  h-full pt-[14px] bg-[#DAE2EB] rounded-lg`}>
                     {listTaskNoSetting.map((item, index) => (
