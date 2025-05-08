@@ -56,21 +56,6 @@ const NoSettingColumn = ({
     router.push(`?${params.toString()}`);
   };
 
-  let paddingRight;
-  switch (selectedOptionZoom.value) {
-    case 25:
-    case 50:
-      paddingRight = `${(columnWidth / 247) * 4}px`;
-      break;
-    case 75:
-    case 90:
-    case 100:
-      paddingRight = `${(columnWidth / 247) * 6}px`;
-      break;
-    default:
-      paddingRight = `${(columnWidth / 247) * 15}px`;
-  }
-
   const listTaskRef = useRef<HTMLDivElement | null>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -250,18 +235,17 @@ const NoSettingColumn = ({
                   style={{
                     paddingTop: `${(columnWidth / 247) * 22}px`,
                     marginRight: `-${(columnWidth / 247) * 16}px`,
-                    paddingRight: paddingRight,
                     boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 '#EBF1F7'`,
                     minHeight: 'calc(100% - 36px)',
                     maxHeight: '2000px',
                   }}
                   className={`flex-grow overflow-y-auto w-[100%]
-               
-                 overflow-x-hidden grid scrollbar-gutter-stable `}>
+                 overflow-x-hidden scrollbar-gutter-stable `}>
                   <div
                     style={{
                       paddingLeft: `${(columnWidth / 247) * 14}px`,
                       paddingRight: `${(columnWidth / 247) * 14}px`,
+                      marginRight: `${(columnWidth / 247) * 9}px`,
                       minHeight: '100%',
                     }}
                     className={`flex flex-col overflow-x-hidden  h-full pt-[14px] bg-[#DAE2EB] rounded-lg`}>

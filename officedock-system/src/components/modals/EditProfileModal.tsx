@@ -138,7 +138,7 @@ const EditProfileModal = memo(
                 メールアドレス
               </p>
               <Input
-                className="shadow-none text-sm leading-[56px] font-normal !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
+                className="shadow-none text-sm leading-[56px] font-normal !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md !opacity-100 hover:cursor-not-allowed"
                 register={register('email', {
                   required: true,
                 })}

@@ -363,10 +363,14 @@ const ItemRoutine = ({
               {...provided.draggableProps}
               {...provided.dragHandleProps}
               style={{
-                borderLeftColor: largeColor,
                 ...provided.draggableProps.style,
               }}
-              className={`relative ${largeColor && !content.isStart && 'border border-l-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-[#0068B6]'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              {!content.isStart && (
+                <div
+                  className={`absolute left-[-1px] h-[98.5%] top-1/2 -translate-y-1/2 w-[2.5px] overflow-hidden rounded-l-md`}
+                  style={{ backgroundColor: largeColor }}></div>
+              )}
               <div className="relative w-[100%]   h-full">
                 {isPermissionUpdate && (
                   <>

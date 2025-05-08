@@ -467,18 +467,20 @@ const EventCalendar = () => {
 
   const scrollToCurrentTime = () => {
     setTimeout(() => {
-      const nowIndicator = document.querySelector('.fc-timegrid-now-indicator-arrow');
+      const nowIndicator = document.querySelector(
+        '.fc-timegrid-now-indicator-arrow',
+      );
       const scroller = nowIndicator?.closest('.fc-scroller');
-  
+
       if (nowIndicator && scroller) {
         const targetTop = (nowIndicator as HTMLElement).offsetTop;
         const scrollerEl = scroller as HTMLElement;
-  
-        const centerOffset = targetTop - (scrollerEl.clientHeight / 2);
-  
+
+        const centerOffset = targetTop - scrollerEl.clientHeight / 2;
+
         scrollerEl.scrollTo({
           top: centerOffset,
-          behavior: 'smooth'
+          behavior: 'smooth',
         });
       }
     }, 500);
@@ -1167,9 +1169,23 @@ const EventCalendar = () => {
         );
       } else {
         updatedOrgIds.push(memberId);
-        updatedUserIds = Array.from(
-          new Set([...updatedUserIds, ...organizationMembers]),
-        );
+        if (
+          removeMyselfOption &&
+          organizationMembers.includes(Number(session?.user.id))
+        ) {
+          updatedUserIds = Array.from(
+            new Set([
+              ...updatedUserIds,
+              ...organizationMembers.filter(
+                (memberId) => memberId != Number(session?.user.id),
+              ),
+            ]),
+          );
+        } else {
+          updatedUserIds = Array.from(
+            new Set([...updatedUserIds, ...organizationMembers]),
+          );
+        }
       }
     }
 
@@ -2268,7 +2284,7 @@ const EventCalendar = () => {
                       className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
                       classNameTextData="!text-xs"
                       classActive="!text-sm"
-                      classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100"
+                      classNameOption="!text-sm"
                       labelOptionClass="!text-sm font-medium"
                       onChange={(e) => {
                         onChange(e);
@@ -2572,6 +2588,7 @@ const EventCalendar = () => {
             setRemoveMyselfOption={setRemoveMyselfOption}
             setSearchName={setSearchName}
             setSelectedScheduleUserIds={setSelectedScheduleUserIds}
+            setSelectedScheduleOrgIds={setSelectedScheduleOrgIds}
             setShowSidebar={setShowSidebar}
           />
         </div>

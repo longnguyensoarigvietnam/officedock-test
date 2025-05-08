@@ -114,7 +114,7 @@ const TableDropdown = ({
   );
   const renderOptions = () => (
     <div
-      className={`absolute mt-1 z-50 max-h-60 overflow-auto rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}
+      className={`absolute mt-1 z-50 max-h-60 overflow-auto rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 !border-[1px] !border-[#77858F] ${optionClassName}`}
       style={{
         top: position.top,
         transform: isAbove ? 'translateY(-103%)' : '',

@@ -1,13 +1,7 @@
 import { Row } from '@tanstack/react-table';
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useMutation } from 'react-query';
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
 import {
   DragDropContext,
   Draggable,
@@ -20,14 +14,15 @@ import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
 
 import { apiRouters } from '@constants/routers';
+import { PermissionsSystem } from '@constants/enums';
 
 import { dataTaskDailyTable } from '@interfaces/statistic';
 import { TodoItem } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
-import api from '@base/api';
 import { TagId } from '@interfaces/tag';
+
+import api from '@base/api';
 import { hasPermissionInArray } from '@utils';
-import { PermissionsSystem } from '@constants/enums';
 
 interface DataActionType {
   row: Row<dataTaskDailyTable>;
@@ -45,6 +40,30 @@ const ActionDetailDaily = ({
   const { data: session } = useSession();
 
   const [todoList, setTodoList] = useState<TodoItem[]>([]);
+
+  // Display tag options list
+  const tagIconRef = useRef<HTMLDivElement | null>(null);
+  const tagOptionListRef = useRef<HTMLDivElement | null>(null);
+  const [tagOptionsPosition, setTagOptionsPosition] = useState<{
+    top: number;
+    left: number;
+  }>({
+    top: -9999,
+    left: -9999,
+  });
+  const [isTagOptionsReady, setIsTagOptionsReady] = useState(false);
+
+  // Display todo options list
+  const todoIconRef = useRef<HTMLDivElement | null>(null);
+  const todoOptionListRef = useRef<HTMLDivElement | null>(null);
+  const [todoOptionsPosition, setTodoOptionsPosition] = useState<{
+    top: number;
+    left: number;
+  }>({
+    top: -9999,
+    left: -9999,
+  });
+  const [isTodoOptionsReady, setIsTodoOptionsReady] = useState(false);
 
   const [selectedItemsTag, setSelectedItemsTag] = useState<
     {
@@ -193,160 +212,215 @@ const ActionDetailDaily = ({
     setPrevOpenStateTag(isOpenTag);
   }, [handleUpdateDataTags, isOpenTag, prevOpenStateTag]);
 
+  const handleToggleTag = () => {
+    if (!tagIconRef.current) return;
+
+    const buttonRect = tagIconRef.current.getBoundingClientRect();
+    setIsOpenTodoTag((prev) => !prev);
+    setIsTagOptionsReady(false);
+
+    requestAnimationFrame(() => {
+      if (tagOptionListRef.current) {
+        const dropdownHeight = tagOptionListRef.current.offsetHeight;
+        const viewportHeight = window.innerHeight;
+
+        const shouldShowAbove =
+          buttonRect.bottom + dropdownHeight + 10 > viewportHeight;
+
+        setTagOptionsPosition({
+          top: shouldShowAbove
+            ? buttonRect.top - dropdownHeight - 10 + window.scrollY
+            : buttonRect.bottom + 10 + window.scrollY,
+          left: buttonRect.left + window.scrollX,
+        });
+
+        setIsTagOptionsReady(true);
+      }
+    });
+  };
+
+  const handleToggleTodo = () => {
+    if (!todoIconRef.current || !todoList.length) return;
+
+    const buttonRect = todoIconRef.current.getBoundingClientRect();
+    setIsOpenTodo((prev) => !prev);
+    setIsTodoOptionsReady(false);
+
+    requestAnimationFrame(() => {
+      if (todoOptionListRef.current) {
+        const dropdownHeight = todoOptionListRef.current.offsetHeight;
+        const viewportHeight = window.innerHeight;
+
+        const shouldShowAbove =
+          buttonRect.bottom + dropdownHeight + 10 > viewportHeight;
+
+        setTodoOptionsPosition({
+          top: shouldShowAbove
+            ? buttonRect.top - dropdownHeight - 10 + window.scrollY
+            : buttonRect.bottom + 10 + window.scrollY,
+          left: buttonRect.left + window.scrollX,
+        });
+
+        setIsTodoOptionsReady(true);
+      }
+    });
+  };
+
+  const renderTagPopoverPanel = () => {
+    return (
+      <div
+        ref={tagOptionListRef}
+        className="w-[144px] transform fixed z-50 bg-white rounded-lg shadow-common"
+        style={{
+          top: tagOptionsPosition.top,
+          left: tagOptionsPosition.left,
+          opacity: isTagOptionsReady ? 1 : 0,
+          visibility: isTagOptionsReady ? 'visible' : 'hidden',
+        }}>
+        <div className="relative flex w-[144px] rounded-md overflow-y-auto min-h-[144px] max-h-[144px] flex-col p-[14px]  gap-[10px] text-gray-700">
+          <p className="text-xs font-medium text-[#77858F]">タグ</p>
+          <div className="flex flex-col gap-4 max-h-[200px] overflow-y-auto">
+            {dataTagsList.map((item) => (
+              <div key={item.value} className="flex gap-2 items-start">
+                <div className="break-all text-left w-fit px-[10px] py-2 bg-[#EBF2F7] rounded-[20px]">
+                  {item.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTodoPopoverPanel = () => {
+    return (
+      <div
+        ref={todoOptionListRef}
+        className="w-[144px] transform fixed z-50 bg-white rounded-lg shadow-common"
+        style={{
+          top: todoOptionsPosition.top,
+          left: todoOptionsPosition.left,
+          opacity: isTodoOptionsReady ? 1 : 0,
+          visibility: isTodoOptionsReady ? 'visible' : 'hidden',
+        }}>
+        <div className="relative flex w-[144px] rounded-md overflow-y-auto min-h-[144px] max-h-[144px] flex-col p-[14px]  gap-[10px] text-gray-700">
+          <DragDropContext onDragEnd={handleOnDragEnd}>
+            <Droppable droppableId="todo-list">
+              {(provided) => (
+                <div>
+                  <p className="text-xs font-medium text-[#77858F] mb-2">
+                    To Do リスト
+                  </p>
+                  <ul
+                    className="flex flex-col gap-4 max-h-[200px] overflow-y-auto"
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}>
+                    {todoList.map((todo, index) => (
+                      <Draggable
+                        key={todo.id || todo.customId}
+                        draggableId={`${todo.id || todo.customId}`}
+                        index={index}>
+                        {(provided, snapshot) => {
+                          const draggableElement = (
+                            <div
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              ref={provided.innerRef}
+                              className="flex gap-[6px] items-start">
+                              <div className="w-4 h-6">
+                                <Checkbox
+                                  disable={
+                                    session?.user.permissions &&
+                                    !hasPermissionInArray(
+                                      session?.user.permissions,
+                                      PermissionsSystem.STATISTIC_UPDATE,
+                                    )
+                                  }
+                                  isChecked={todo.isChecked}
+                                  onChange={() => handleCheck(index)}
+                                  className="!rounded-full"
+                                  classSize="!rounded-full"
+                                />
+                              </div>
+                              <div className="break-all text-left w-fit max-w-[100px]">
+                                {todo.content}
+                              </div>
+                            </div>
+                          );
+                          return snapshot.isDragging
+                            ? createPortal(draggableElement, document.body)
+                            : draggableElement;
+                        }}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </ul>
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex gap-[10px] w-[52px] ">
+      {/* Todo icon */}
       <div>
-        <Popover className="relative">
-          {({ open }) => {
-            setIsOpenTodo(open);
-            return (
-              <>
-                <div className="flex gap-2 items-center">
-                  <PopoverButton
-                    disabled={todoList.length > 0 ? false : true}
-                    className={`flex w-full  items-center rounded-full focus:outline-none
-                ${open ? 'text-primary ' : ''}
+        <div
+          ref={todoIconRef}
+          onClick={handleToggleTodo}
+          className={`flex w-full  items-center rounded-full focus:outline-none
+                ${isOpenTodo ? 'text-primary ' : ''} ${!todoList.length && 'hover:cursor-not-allowed'}
                 `}>
-                    <ImageRound
-                      className={`w-4 h-4   ${todoList.length > 0 ? (isAnyChecked(todoList) ? ' cursor-pointer' : '') : ' cursor-not-allowed'} `}
-                      src={`/icons/${todoList.length > 0 ? (isAnyChecked(todoList) ? 'checked-active.svg' : 'checked-no-active.svg') : 'checked-no-active.svg'}`}
-                      name="icon tag"
-                    />
-                  </PopoverButton>
-                </div>
-                <Transition
-                  as={Fragment}
-                  enter="transition ease-out duration-200"
-                  enterFrom="opacity-0 translate-y-1"
-                  enterTo="opacity-100 translate-y-0"
-                  leave="transition ease-in duration-150"
-                  leaveFrom="opacity-100 translate-y-0"
-                  leaveTo="opacity-0 translate-y-1">
-                  <PopoverPanel className="absolute left-0 z-10 min-w-[120px] max-w-120px] transform">
-                    <div className="overflow-hidden bg-white  rounded-md  shadow-common">
-                      <div className="relative flex min-w-[120px]   flex-col p-[14px]  gap-[10px] text-gray-700">
-                        <DragDropContext onDragEnd={handleOnDragEnd}>
-                          <Droppable droppableId="todo-list">
-                            {(provided) => (
-                              <div>
-                                <p className="text-xs font-medium text-[#77858F] mb-2">
-                                  To Do リスト
-                                </p>
-                                <ul
-                                  className="flex flex-col gap-4 max-h-[200px] overflow-y-auto"
-                                  {...provided.droppableProps}
-                                  ref={provided.innerRef}>
-                                  {todoList.map((todo, index) => (
-                                    <Draggable
-                                      key={todo.id || todo.customId}
-                                      draggableId={`${todo.id || todo.customId}`}
-                                      index={index}>
-                                      {(provided, snapshot) => {
-                                        const draggableElement = (
-                                          <div
-                                            {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                            ref={provided.innerRef}
-                                            className="flex gap-[6px] items-start">
-                                            <div className="w-4 h-6">
-                                              <Checkbox
-                                                disable={
-                                                  session?.user.permissions &&
-                                                  !hasPermissionInArray(
-                                                    session?.user.permissions,
-                                                    PermissionsSystem.STATISTIC_UPDATE,
-                                                  )
-                                                }
-                                                isChecked={todo.isChecked}
-                                                onChange={() =>
-                                                  handleCheck(index)
-                                                }
-                                                className="!rounded-full"
-                                                classSize="!rounded-full"
-                                              />
-                                            </div>
-                                            <div className="break-all text-left w-fit max-w-[100px]">
-                                              {todo.content}
-                                            </div>
-                                          </div>
-                                        );
-                                        return snapshot.isDragging
-                                          ? ReactDOM.createPortal(
-                                              draggableElement,
-                                              document.body,
-                                            )
-                                          : draggableElement;
-                                      }}
-                                    </Draggable>
-                                  ))}
-                                  {provided.placeholder}
-                                </ul>
-                              </div>
-                            )}
-                          </Droppable>
-                        </DragDropContext>
-                      </div>
-                    </div>
-                  </PopoverPanel>
-                </Transition>
-              </>
-            );
-          }}
-        </Popover>
+          <ImageRound
+            className={`w-4 h-4   ${todoList.length > 0 ? (isAnyChecked(todoList) ? ' cursor-pointer' : '') : ' cursor-not-allowed'} `}
+            src={`/icons/${todoList.length > 0 ? (isAnyChecked(todoList) ? 'checked-active.svg' : 'checked-no-active.svg') : 'checked-no-active.svg'}`}
+            name="icon tag"
+          />
+        </div>
+
+        {isOpenTodo &&
+          createPortal(
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsOpenTodo(false)}
+              />
+              {renderTodoPopoverPanel()}
+            </>,
+            document.body,
+          )}
       </div>
+
+      {/* Tag icon */}
       <div>
-        <Popover className="relative">
-          {({ open }) => {
-            setIsOpenTodoTag(open);
-            return (
-              <>
-                <div className="flex gap-2 items-center">
-                  <PopoverButton
-                    className={`flex w-full  items-center rounded-full focus:outline-none
-                ${open ? 'text-primary ' : ''}
-                `}>
-                    <ImageRound
-                      className={`w-4 h-4    `}
-                      src={`/icons/${row.original.tags.length > 0 ? 'ticket-active.svg' : 'ticket-no-active.svg'}`}
-                      name="icon tag"
-                    />
-                  </PopoverButton>
-                </div>
-                <Transition
-                  as={Fragment}
-                  enter="transition ease-out duration-200"
-                  enterFrom="opacity-0 translate-y-1"
-                  enterTo="opacity-100 translate-y-0"
-                  leave="transition ease-in duration-150"
-                  leaveFrom="opacity-100 translate-y-0"
-                  leaveTo="opacity-0 translate-y-1">
-                  <PopoverPanel className="absolute left-0 z-10 w-[144px] transform shadow-common">
-                    <div className="overflow-hidden bg-white rounded-lg shadow-common">
-                      <div className="relative flex w-[144px] rounded-md overflow-y-auto min-h-[144px] max-h-[144px] flex-col p-[14px]  gap-[10px] text-gray-700">
-                        <p className="text-xs font-medium text-[#77858F]">
-                          タグ
-                        </p>
-                        <div className="flex flex-col gap-4 max-h-[200px] overflow-y-auto">
-                          {dataTagsList.map((item) => {
-                            return (
-                              <div
-                                key={item.value}
-                                className="flex gap-2 items-start">
-                                <div className="break-all text-left w-fit px-[10px] py-2 bg-[#EBF2F7] rounded-[20px]">
-                                  {item.label}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </PopoverPanel>
-                </Transition>
-              </>
-            );
-          }}
-        </Popover>
+        <div
+          ref={tagIconRef}
+          onClick={handleToggleTag}
+          className={`flex w-full items-center rounded-full focus:outline-none
+            ${isOpenTag ? 'text-primary ' : ''}
+          `}>
+          <ImageRound
+            className="w-4 h-4"
+            src={`/icons/${row.original.tags.length > 0 ? 'ticket-active.svg' : 'ticket-no-active.svg'}`}
+            name="icon tag"
+          />
+        </div>
+
+        {isOpenTag &&
+          createPortal(
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsOpenTodoTag(false)}
+              />
+              {renderTagPopoverPanel()}
+            </>,
+            document.body,
+          )}
       </div>
     </div>
   );
