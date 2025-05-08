@@ -18,8 +18,8 @@ export interface EventCalendarDetail {
   isStart?: boolean;
   planStartDate?: string;
   planEndDate?: string;
-  scheduleId: number | null;
-  taskId: number | null;
+  scheduleId?: number | null;
+  taskId?: number | null;
 }
 
 export interface EventCalendarDayRange {
