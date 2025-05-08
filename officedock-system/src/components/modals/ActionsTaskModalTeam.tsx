@@ -1057,18 +1057,8 @@ const ActionsTaskModalTeam = ({
     setIsSubmit(false);
   };
 
-  const isPermissionAdd =
-    session?.user.permissions &&
-    hasPermissionInArray(
-      session?.user.permissions,
-      PermissionsSystem.MY_TASK_ADD,
-    );
-  const isPermissionUpdate =
-    session?.user.permissions &&
-    hasPermissionInArray(
-      session?.user.permissions,
-      PermissionsSystem.MY_TASK_UPDATE,
-    );
+  const isPermissionAdd = session?.user.permissions;
+  const isPermissionUpdate = session?.user.permissions;
 
   const isCheckActionPermission =
     (action === ActionTask.EDIT && !isPermissionUpdate) ||

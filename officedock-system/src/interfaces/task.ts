@@ -331,6 +331,14 @@ export interface TaskActualCalculationType {
   title: string;
   uuid: string;
   type: string;
+  startedAt?: string;
+  pausedAt?: string | null;
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+    color: string;
+  }[];
 }
 export interface DataDetailTaskType {
   id: string;

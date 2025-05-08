@@ -848,10 +848,10 @@ const EventCalendar = () => {
               event.allDay;
 
             const adjustedEnd = shouldAdjustEnd
-              ? subtractOneDay(event.end)
+              ? subtractOneDay(String(event.end))
               : eventEnd;
             const adjustedEndISOString = shouldAdjustEnd
-              ? subtractOneDay(event.end).toISOString()
+              ? subtractOneDay(String(event.end)).toISOString()
               : event.end;
 
             if (removeTimeAndCompareDates(eventStart, adjustedEnd, clickDate)) {
@@ -1074,7 +1074,7 @@ const EventCalendar = () => {
                 isMidnight(new Date(event.end))
               ) {
                 end.setDate(end.getDate() + 1);
-                event.end = end.toISOString();
+                event.end = end;
               }
             }
             return event;
@@ -1686,8 +1686,8 @@ const EventCalendar = () => {
             const newEventData = {
               id: `${data.id}`,
               title: data.title,
-              start: data.startDate,
-              end: dataEndDate,
+              start: data.startDate as Date,
+              end: dataEndDate as Date,
               allDay: data.isAllDay,
               type: EventCalendarType.SCHEDULE,
               isMyEvent: isMyEvent,

@@ -360,15 +360,13 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         data["remark"] = DailyReportSerializer(
             user.daily_reports.filter(date=date).first()
         ).data
-        confirm_report = False
-        if request.user != user:
-            confirm_report = (
-                user.reported_confirmations.filter(
-                    date=date, confirm_by=request.user
-                )
-                .values_list("is_confirmed", flat=True)
-                .first()
-            ) or False
+        confirm_report = (
+            user.reported_confirmations.filter(
+                date=date, confirm_by=request.user
+            )
+            .values_list("is_confirmed", flat=True)
+            .first()
+        ) or False
 
         data["remark"].update(
             {

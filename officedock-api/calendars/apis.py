@@ -33,7 +33,7 @@ from common.utils import (
     get_common_categories,
     split_id_from_string,
 )
-from tasks.models import TaskSchedule, TaskDuration
+from tasks.models import TaskSchedule, TaskDuration, Task
 from base.permissions import ActionPermission
 from roles.constants import Screens
 from common.serializers import CreationDataUserSerializer
@@ -827,6 +827,10 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             )
             item = {
                 "id": duration.id,
+                "task_id": model.id if isinstance(model, Task) else None,
+                "schedule_id": model.id
+                if isinstance(model, Schedule)
+                else None,
                 "title": model.title,
                 "start_date": duration.started_at,
                 "end_date": duration.paused_at,

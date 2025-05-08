@@ -71,6 +71,7 @@ import {
   isTodaySchedule,
 } from '@utils/date';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import { TaskContext } from '@providers/TaskProvider';
 
 const ScheduleTeamBoard = () => {
   // Context
@@ -82,6 +83,7 @@ const ScheduleTeamBoard = () => {
   } = useContext(TaskTeamStateContext);
   const { organizationTeamList, selectedOrganization } =
     useContext(GlobalStateContext);
+  const { dataActualAddSchedule } = useContext(TaskContext);
 
   // State
   const searchParams = useSearchParams();
@@ -195,6 +197,70 @@ const ScheduleTeamBoard = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId]);
+  useEffect(() => {
+    if (
+      dataActualAddSchedule &&
+      selectedOptionShow === ItemScheduleTitleType.ACTUAL
+    ) {
+      if (dataActualAddSchedule.isStart) {
+        const largeColor =
+          dataActualAddSchedule.categories &&
+          dataActualAddSchedule.categories.find(
+            (item) => item.type === EventWorkCategory.LARGE,
+          )?.color;
+        const startDateActual = new Date(
+          `${dataActualAddSchedule.planStartDate}`,
+        );
+
+        const endDateActual = new Date(`${dataActualAddSchedule.planEndDate}`);
+        const endTimeCustom = dataActualAddSchedule.planEndDate
+          ? endDateActual
+          : getNext30MinuteSlot(startDateActual);
+
+        const newItem = {
+          title: dataActualAddSchedule.title,
+          taskId: dataActualAddSchedule.taskId,
+          scheduleId: dataActualAddSchedule.scheduleId,
+          start: new Date(dataActualAddSchedule.planStartDate as string),
+          end: dataActualAddSchedule.planEndDate
+            ? adjustEndDate(startDateActual, endDateActual, 5)
+            : adjustEndDate(startDateActual, endTimeCustom as Date),
+          allDay: false,
+          id: `${dataActualAddSchedule.id}`,
+          isStart: dataActualAddSchedule.isStart,
+          type: dataActualAddSchedule.type,
+          participants: [],
+          address: '',
+          largeColor: largeColor,
+          planStartDate: `${dataActualAddSchedule.planStartDate}`,
+          planEndDate: dataActualAddSchedule.planEndDate
+            ? String(adjustEndDate(startDateActual, endDateActual, 0))
+            : String(adjustEndDate(startDateActual, endTimeCustom as Date)),
+          resourceIds: [`${session?.user.id}`],
+        };
+        setEvents([...events, newItem]);
+      } else {
+        const itemUpdate = events.map((item) => {
+          if (
+            item.taskId === dataActualAddSchedule.taskId &&
+            `${item.id}` === `${dataActualAddSchedule.id}`
+          ) {
+            return {
+              ...item,
+              isStart: false,
+              end: new Date(
+                convertToCurrentTimezone(
+                  `${dataActualAddSchedule.planEndDate}`,
+                ),
+              ),
+            };
+          }
+          return item;
+        });
+        setEvents(itemUpdate);
+      }
+    }
+  }, [dataActualAddSchedule]);
 
   const handleEventContent = (eventContent: any) => {
     const calendarApi = eventContent.view.calendar;
@@ -515,6 +581,8 @@ const ScheduleTeamBoard = () => {
 
               return {
                 title: event.title,
+                taskId: event.taskId,
+                scheduleId: event.scheduleId,
                 start: `${event.startDate}`,
                 end: event.endDate
                   ? adjustEndDate(startDateActual, endDateActual, 5)
@@ -548,7 +616,7 @@ const ScheduleTeamBoard = () => {
                 isMidnight(new Date(event.end))
               ) {
                 end.setDate(end.getDate() + 1);
-                event.end = end.toISOString();
+                event.end = end;
               }
             }
             return event;
@@ -636,7 +704,7 @@ const ScheduleTeamBoard = () => {
                 isMidnight(new Date(event.end))
               ) {
                 end.setDate(end.getDate() + 1);
-                event.end = end.toISOString();
+                event.end = end;
               }
             }
             return event;

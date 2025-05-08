@@ -29,6 +29,7 @@ from common.utils import (
     format_duration,
     create_categories_by_model,
     check_task_overtime,
+    get_common_categories,
 )
 from dashboard.filters import ActualDurationFilter
 from dashboard.serializers import (
@@ -688,8 +689,17 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                         and task_running.is_cancel_alert is False
                     ):
                         is_over_estimate = True
+
+            categories = None
+            if current_duration_start.categories.exists():
+                categories = get_common_categories(
+                    current_duration_start.categories.first(),
+                    current_duration_start,
+                )
+
             data = {
                 "id": current_duration_start.id,
+                "categories": categories,
                 "task_duration_running_uuid": task_running.uuid
                 if isinstance(task_running, TaskDuration)
                 else None,
