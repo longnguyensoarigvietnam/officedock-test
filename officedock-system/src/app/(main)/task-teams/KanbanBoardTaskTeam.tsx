@@ -197,6 +197,7 @@ const KanbanBoardTaskTeam = () => {
 
   // get list data team
   useTaskBoardTeam({
+    current_screen: 'teamdock',
     organization_id: organizationId as string,
     filter: {
       userId: orderingOptions?.user_ids,
@@ -298,9 +299,12 @@ const KanbanBoardTaskTeam = () => {
   const handleUpdateTaskIndex = async (data: {
     tasks: UpdateTaskKanbanRequest[];
   }) => {
-    return await api.put(apiRouters.UPDATE_TASK_INDEX, {
-      ...data,
-    });
+    return await api.put(
+      `${apiRouters.UPDATE_TASK_INDEX}?current_screen=teamdock`,
+      {
+        ...data,
+      },
+    );
   };
 
   // Handle update index task and response
@@ -308,7 +312,10 @@ const KanbanBoardTaskTeam = () => {
     'postUpdateTaskIndex',
     handleUpdateTaskIndex,
     {
-      onSuccess: async () => {},
+      onSuccess: async () => {
+        setIsReadyToFetch(false);
+        setDataOrderRing('');
+      },
       onError: () => {},
       onSettled: () => {},
     },
@@ -321,13 +328,16 @@ const KanbanBoardTaskTeam = () => {
     oldIdStatus: string;
     oldNameStatus: string;
   }) => {
-    return await api.patch(apiRouters.TASK_DETAIL(`${data.task}`), {
-      peopleInChargeIds: data.peopleInCharge
-        ? [{ peopleInChargeId: data.peopleInCharge }]
-        : null,
-      statusId: data.statusId,
-      isTeamTask: true,
-    });
+    return await api.patch(
+      `${apiRouters.TASK_DETAIL(`${data.task}`)}?current_screen=teamdock`,
+      {
+        peopleInChargeIds: data.peopleInCharge
+          ? [{ peopleInChargeId: data.peopleInCharge }]
+          : null,
+        statusId: data.statusId,
+        isTeamTask: true,
+      },
+    );
   };
 
   // Handle update people index task and response
@@ -968,7 +978,10 @@ const KanbanBoardTaskTeam = () => {
   // Get detail task
   const handleGetDataDetailTask = async (id: number) => {
     setIsLoading(true);
-    const { data: response } = await api.get(apiRouters.TASK_DETAIL(`${id}`));
+    const { data: response } = await api.get(
+      `${apiRouters.TASK_DETAIL(`${id}`)}?current_screen=teamdock
+`,
+    );
     return response;
   };
   // Handle Call API get detail task
@@ -1140,7 +1153,10 @@ const KanbanBoardTaskTeam = () => {
   //  Handle call api create task
   const handleCreateTask = async (data: TaskRequest) => {
     setIsLoading(true);
-    return await api.post(apiRouters.CREATE_TASK, data);
+    return await api.post(
+      `${apiRouters.CREATE_TASK}?current_screen=teamdock`,
+      data,
+    );
   };
   // Handle create task and response
   const { mutate: createTask } = useMutation(
@@ -1354,7 +1370,10 @@ const KanbanBoardTaskTeam = () => {
   //  Handle call api edit task
   const handleEditTask = async (data: TaskRequest) => {
     setIsLoading(true);
-    return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
+    return await api.patch(
+      `${apiRouters.TASK_DETAIL(`${data.id}`)}?current_screen=teamdock`,
+      data,
+    );
   };
   const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
     onSuccess: async ({ data }: { data: Task }, variant) => {
@@ -1399,12 +1418,52 @@ const KanbanBoardTaskTeam = () => {
               ? `user_${dataTaskEdit.peopleInCharge[0].id}`
               : '',
         });
-        setTotalNoSetting({
-          count: (totalNoSetting?.count || 0) + 1,
-          hasNext: totalNoSetting?.hasNext || false,
+        if (dataTaskEdit?.peopleInCharge.length !== 0) {
+          setTotalNoSetting({
+            count: (totalNoSetting?.count || 0) + 1,
+            hasNext: totalNoSetting?.hasNext || false,
+          });
+        }
+        const newList = listTaskNoSetting.map((item) => {
+          if (item.id === data.id) {
+            return data;
+          }
+          return item;
         });
-        const newList = [data, ...listTaskNoSetting].sort(compareItems);
         setListTaskNoSetting(newList);
+      }
+      const isSameDeadline =
+        data.deadline == null && dataTaskEdit?.deadline == null
+          ? true
+          : data.deadline != null &&
+            dataTaskEdit?.deadline != null &&
+            new Date(data.deadline).getTime() ===
+              new Date(dataTaskEdit.deadline).getTime();
+      const firstId = data.peopleInCharge?.[0]?.id;
+      const editFirstId = dataTaskEdit?.peopleInCharge?.[0]?.id;
+
+      const isPeopleChanged = firstId !== editFirstId;
+      if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+        if (
+          !isSameDeadline ||
+          data.isImportant !== dataTaskEdit?.isImportant ||
+          data.peopleInCharge.length !== dataTaskEdit?.peopleInCharge.length ||
+          isPeopleChanged ||
+          data.status?.id !== dataTaskEdit.status?.id
+        ) {
+          setIsReadyToFetch(false);
+          setDataOrderRing('');
+        }
+      } else {
+        if (
+          !isSameDeadline ||
+          data.peopleInCharge.length !== dataTaskEdit?.peopleInCharge.length ||
+          isPeopleChanged ||
+          data.status?.id !== dataTaskEdit.status?.id
+        ) {
+          setIsReadyToFetch(false);
+          setDataOrderRing('');
+        }
       }
 
       handleRemoveParam();
@@ -1413,8 +1472,6 @@ const KanbanBoardTaskTeam = () => {
       showToast({
         description: SUCCESS_UPDATE_MESSAGE,
       });
-      setIsReadyToFetch(false);
-      setDataOrderRing('');
       setDataTaskEdit(null);
     },
     onError: ({
@@ -1447,7 +1504,7 @@ const KanbanBoardTaskTeam = () => {
   // Handle delete task
   const handleDeleteTask = async (id: string) => {
     const { data: response } = await api.delete(
-      apiRouters.TASK_DETAIL(`${id}`),
+      `${apiRouters.TASK_DETAIL(`${id}`)}?current_screen=teamdock`,
     );
     return response;
   };
@@ -1694,7 +1751,7 @@ const KanbanBoardTaskTeam = () => {
     userId?: string;
   }) => {
     const { data: response } = await api.put(
-      apiRouters.TASK_PIN(`${data.id}`),
+      `${apiRouters.TASK_PIN(`${data.id}`)}?current_screen=teamdock`,
       {
         pinAt: data.pinAt,
         team: organizationId,

@@ -5,12 +5,11 @@ import { EventCalendarType, EventParticipantType } from '@constants/enums';
 
 export interface EventCalendarDetail {
   id?: string;
-  taskId?: string;
   title: string;
-  start: string;
-  end?: string;
+  start: Date;
+  end?: Date;
   allDay?: boolean;
-  type?: EventCalendarType;
+  type?: string;
   isMyEvent?: boolean;
   participants?: EventParticipant[];
   resourceIds?: string[];
@@ -19,6 +18,8 @@ export interface EventCalendarDetail {
   isStart?: boolean;
   planStartDate?: string;
   planEndDate?: string;
+  scheduleId: number | null;
+  taskId: number | null;
 }
 
 export interface EventCalendarDayRange {
@@ -148,6 +149,8 @@ export interface EventCalendarProps {
     id: number;
     color: string;
   }[];
+  taskId: number | null;
+  scheduleId: number | null;
 }
 
 export interface TaskCalendarProps {

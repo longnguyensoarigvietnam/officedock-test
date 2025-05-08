@@ -21,12 +21,14 @@ interface FilterProps {
 
 const useTaskBoardTeam = ({
   organization_id,
+  current_screen,
   filter,
   ordering,
   isReadyToFetch,
   onSuccess,
   onError,
 }: {
+  current_screen?: string;
   organization_id?: string;
   filter?: FilterProps;
   ordering?: string;
@@ -55,6 +57,7 @@ const useTaskBoardTeam = ({
       }),
       ...(filter?.tagId && { tag_id: String(filter.tagId) }),
       ...(filter?.search && { search: filter.search }),
+      ...(current_screen && { current_screen: current_screen }),
     });
 
     const apiUrl = `${apiRouters.TASK_TEAM_LIST}?${params.toString()}`;

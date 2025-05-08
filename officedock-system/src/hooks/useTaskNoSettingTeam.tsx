@@ -54,7 +54,7 @@ const useTaskNoSettingTeam = ({
       ...(filter?.search && { search: filter.search }),
     });
 
-    const apiUrl = `${apiRouters.TASK_TEAM_NO_SETTING}?${params.toString()}`;
+    const apiUrl = `${apiRouters.TASK_TEAM_NO_SETTING}?${params.toString()}&curren_screen=teamdock`;
 
     const { data } = await api.get<KanbanDataResponse>(apiUrl);
     return data;

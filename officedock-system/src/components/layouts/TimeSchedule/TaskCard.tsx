@@ -103,6 +103,7 @@ const TaskCard = ({
   let isEvent = false;
   let isCalculation = false;
   let largeColor = '';
+  let checkDeadline = false;
 
   try {
     const extendedProps = event?.event?.extendedProps;
@@ -110,6 +111,8 @@ const TaskCard = ({
     isEvent = extendedProps?.type === ItemStartType.SCHEDULE;
     isCalculation = extendedProps?.isCalculation ?? false;
     largeColor = extendedProps.largeColor;
+    checkDeadline =
+      extendedProps && compareWithCurrentDate(extendedProps.deadline);
   } catch (error) {
     // Handle Error
   }
@@ -314,10 +317,6 @@ const TaskCard = ({
 
   const [isShowAction, setIsShowAction] = useState(false);
 
-  const checkDeadline =
-    event.event?.extendedProps.deadline &&
-    compareWithCurrentDate(event.event?.extendedProps.deadline);
-
   const [local, setLocal] = useState({
     clientX: 0,
     clientY: 0,
@@ -420,7 +419,7 @@ const TaskCard = ({
                   event.event?.extendedProps.status.id
                 : 0
             }
-            taskId={event.event.extendedProps.taskId}
+            taskId={event.event?.extendedProps.taskId}
           />
         )}
       </div>
@@ -442,7 +441,7 @@ const TaskCard = ({
         }}
         ref={containerRef}
         className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${largeColor && resourcePlan && 'border border-l-2'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}>
-        <div className="flex w-full relative z-[9999] h-full justify-between ">
+        <div className="flex w-full relative  h-full justify-between ">
           <div
             onMouseEnter={(e) => {
               if (isInteracting) return;
@@ -469,7 +468,7 @@ const TaskCard = ({
                 resizer.style.setProperty('opacity', '1', 'important');
               }
             }}
-            className={`group overflow-hidden bg-transparent z-[999] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'}`}>
+            className={`group overflow-hidden bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'}`}>
             <div className="flex overflow-hidden flex-col gap-2 w-[95%]">
               <p
                 style={{
@@ -549,7 +548,7 @@ const TaskCard = ({
                     `${event.event.end}`,
                   ) && isOptionZoomSchedule === '01:00:00'
                 }
-                className="absolute   w-[20px] h-[20px] bottom-2 right-2  hover:cursor-pointer"
+                className="absolute   w-[20px] h-[20px] bottom-2 z-[30] right-2  hover:cursor-pointer"
                 onClick={handleStartStopTask}
               />
             </>
