@@ -129,6 +129,8 @@ interface ContextValue {
   displayHederDateEnd: Date;
   setDisplayHeaderDayStart: Dispatch<SetStateAction<Date>>;
   setDisplayHeaderDayEnd: Dispatch<SetStateAction<Date>>;
+  isInteracting: boolean;
+  setIsInteracting: Dispatch<SetStateAction<boolean>>;
 }
 
 const defaultValue: ContextValue = {
@@ -241,6 +243,8 @@ const defaultValue: ContextValue = {
   displayHederDateEnd: new Date(),
   setDisplayHeaderDayStart: () => {},
   setDisplayHeaderDayEnd: () => {},
+  isInteracting: false,
+  setIsInteracting: () => {},
 };
 
 export const TaskContext = createContext<ContextValue>(defaultValue);
@@ -310,6 +314,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     taskDuration: '',
     isStart: false,
   });
+
+  const [isInteracting, setIsInteracting] = useState(false);
 
   const [idEventDelete, setIdEventDelete] = useState<string>('');
   const [idTaskDelete, setIdTaskDelete] = useState<string>('');
@@ -451,6 +457,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     displayHederDateEnd,
     setDisplayHeaderDayStart,
     setDisplayHeaderDayEnd,
+    isInteracting,
+    setIsInteracting,
   };
 
   return (

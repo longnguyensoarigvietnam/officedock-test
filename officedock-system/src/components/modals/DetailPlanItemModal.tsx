@@ -270,7 +270,7 @@ const DetailPlanItemModal = ({
       {popoverInfo && (
         <div
           className={`w-[250px] z-[10] relative h-fit rounded-md pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}
-          ref={popoverRef}
+          // ref={popoverRef}
           style={{
             position: 'absolute',
             top: `${popoverInfo ? popoverInfo.top : 0}px`,

@@ -65,7 +65,7 @@ const NoSettingColumn = ({
     case 75:
     case 90:
     case 100:
-      paddingRight = `${(columnWidth / 247) * 12}px`;
+      paddingRight = `${(columnWidth / 247) * 6}px`;
       break;
     default:
       paddingRight = `${(columnWidth / 247) * 15}px`;
@@ -152,18 +152,18 @@ const NoSettingColumn = ({
       {isExtendUser ? (
         <div
           style={{
-            width: `${(columnWidth / 247) * 247}px`,
+            width: `${(columnWidth / 247) * 257}px`,
             minWidth: '154px',
-            maxWidth: `${(columnWidth / 247) * 247}px`,
+            maxWidth: `${(columnWidth / 247) * 257}px`,
             paddingLeft: 0,
             paddingRight: 0,
           }}
           className={`h-auto flex-col min-h-0 mt-1 px-2 flex-shrink-0 `}>
           <div
             style={{
-              width: `${(columnWidth / 247) * 247}px`,
+              width: `${(columnWidth / 247) * 257}px`,
               minWidth: '154px',
-              maxWidth: `${(columnWidth / 247) * 247}px`,
+              maxWidth: `${(columnWidth / 247) * 257}px`,
               paddingLeft: 0,
               paddingRight: 0,
             }}
@@ -264,7 +264,7 @@ const NoSettingColumn = ({
                       paddingRight: `${(columnWidth / 247) * 14}px`,
                       minHeight: '100%',
                     }}
-                    className={`flex flex-col  h-full pt-[14px] bg-[#DAE2EB] rounded-lg`}>
+                    className={`flex flex-col overflow-x-hidden  h-full pt-[14px] bg-[#DAE2EB] rounded-lg`}>
                     {listTaskNoSetting.map((item, index) => (
                       <>
                         <ItemNoSetting
