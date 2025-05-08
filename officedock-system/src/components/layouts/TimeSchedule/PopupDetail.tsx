@@ -171,6 +171,10 @@ const PopupDetail = ({
                     setValueStart(formatTime24h(planStartDate));
                   }
                 } else {
+                  if (isCalculation) {
+                    setValueStart(formatTime24h(planStartDate));
+                    return;
+                  }
                   const data = isTimeEarlier(
                     formatTimeInput(
                       `${convertToMinutesNumber(e.target.value)}`,
@@ -231,8 +235,11 @@ const PopupDetail = ({
                   setValueEnd(e.target.value);
                 }}
                 onBlur={(e) => {
-                  if (isCalculation) return;
                   if (!resourcePlan) {
+                    if (isCalculation) {
+                      setValueEnd(formatTime24h(planEndDate));
+                      return;
+                    }
                     if (isToday) {
                       const data = isEndTimeValidNow(
                         formatTime24h(planStartDate),

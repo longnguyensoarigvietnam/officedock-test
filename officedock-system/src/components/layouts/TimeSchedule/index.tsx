@@ -482,6 +482,7 @@ const TimeSchedule = memo(
                     name: '',
                     id: null,
                   },
+                  taskId: event.taskId as number,
                   scheduleId: parseInt(`${event.id}`),
                   uuid: uuidv4(),
                   planStartDate: `${event.startDate}`,
