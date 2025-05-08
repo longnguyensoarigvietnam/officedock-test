@@ -3191,6 +3191,10 @@ const KanbanBoardTask = () => {
                       handleSetParam({
                         id: null,
                         action: ActionTask.CREATE,
+                        type:
+                          id == String(StatusValueTask.MY_ROUTINE)
+                            ? ItemStartType.FIXED_TASK
+                            : ItemStartType.TASK,
                       });
                     }}
                   />

@@ -62,7 +62,6 @@ import {
   transformDataTeamTask,
   transformDataTotalStatus,
 } from '@utils';
-import { OptionDropdownType } from '@interfaces/common';
 import {
   NoSettingTotalType,
   Task,
@@ -159,23 +158,14 @@ const KanbanBoardTaskTeam = () => {
       avatarUrl: string;
     }[]
   >([]);
-  const [selectedOrganization, setSelectedOrganization] =
-    useState<OptionDropdownType | null>({
-      label: '',
-      value: '',
-    });
+
+  const { selectedOrganization } = useContext(GlobalStateContext);
 
   useCreationDataStatisticTeam({
     organization_id: organizationId || '',
     isTeam: true,
     onSuccess: (data) => {
       if (!data) return;
-      if (data.organization) {
-        setSelectedOrganization({
-          label: data.organization.name,
-          value: data.organization.id,
-        });
-      }
 
       setListMemberTeam(
         data.members.map((member) => ({
@@ -2092,24 +2082,22 @@ const KanbanBoardTaskTeam = () => {
       }
     }
   }, [statusTaskSelected, taskSelected]);
-
   return (
     <>
       <div
         className={`pt-[30px] pr-10 h-[calc(100vh_-_76px)] ${isDragging ? 'overflow-hidden' : 'overflow-y-auto'}   font-medium  w-full pb-10`}>
         <div className="mb-[30px] flex items-center justify-between">
           <div className="flex items-center gap-5 ">
-            <div className="rounded-full w-[34px] h-[34px]  flex items-center justify-center overflow-hidden">
-              <ImageRound
-                className="w-[34px] h-[34px] rounded-full"
-                src="/icons/statistic-team.svg"
-                border="full"
-                name="Multi users"
-              />
+            <div className='flex gap-1 items-center'>
+              {selectedOrganization?.imgComponent && (
+                <div className="w-[34px] h-[34px] flex justify-center items-center">
+                  {selectedOrganization.imgComponent}
+                </div>
+              )}
+              <p className="text-[26px] font-medium relative top-[0px] line-clamp-3 max-w-[350px] ">
+                {selectedOrganization?.label}
+              </p>
             </div>
-            <span className="text-[26px] font-medium relative top-[0px] line-clamp-3 max-w-[350px] ">
-              {selectedOrganization?.label}
-            </span>
             <div className="flex justify-center items-center gap-2 ">
               <Button
                 variant={'primary'}

@@ -2194,7 +2194,7 @@ const DailyReportBoard = () => {
                             colSpan={3}
                             className={`text-left !pt-0 !pl-0 overflow-hidden  !pr-0  border-b border-[#D2DBE1]`}>
                             <div
-                              className={`flex items-center justify-between  ${isHasChild ? 'pb-[19px]' : 'relative top-[-8px]'} ${!isParent && 'relative top-[-4px]'}`}>
+                              className={`flex items-center justify-between  ${isHasChild && 'pb-[19px]'} ${!isParent && 'relative top-[-4px]'}`}>
                               <div className=" w-full break-all text-base font-medium text-black flex items-start gap-[6px]">
                                 {row.getCanExpand() && row.depth === 0 && (
                                   <button

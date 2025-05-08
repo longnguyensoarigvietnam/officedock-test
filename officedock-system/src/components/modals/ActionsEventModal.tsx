@@ -117,6 +117,7 @@ const ActionsEventModal = ({
   const [searchName, setSearchName] = useState<string>('');
   const [time, setTime] = useState<string>('');
   const [minDatePlan, setMinDatePlan] = useState<Date | null>();
+  const [removeMyselfOption, setRemoveMyselfOption] = useState(false);
   const { data: session } = useSession();
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const currentDate = new Date();
@@ -666,9 +667,23 @@ const ActionsEventModal = ({
         );
       } else {
         updatedOrganizationList.push(memberId);
-        updatedParticipantList = Array.from(
-          new Set([...updatedParticipantList, ...organizationMembers]),
-        );
+        if (
+          removeMyselfOption &&
+          organizationMembers.includes(Number(session?.user.id))
+        ) {
+          updatedParticipantList = Array.from(
+            new Set([
+              ...updatedParticipantList,
+              ...organizationMembers.filter(
+                (memberId) => memberId != Number(session?.user.id),
+              ),
+            ]),
+          );
+        } else {
+          updatedParticipantList = Array.from(
+            new Set([...updatedParticipantList, ...organizationMembers]),
+          );
+        }
       }
 
       setValue('selectOrganizations', updatedOrganizationList);
@@ -1515,15 +1530,56 @@ const ActionsEventModal = ({
                   label="自分をメンバーから外す"
                   className="px-3 mt-5"
                   onChange={(state) => {
+                    setRemoveMyselfOption(state);
+                    const currentParticipantList =
+                      watch('participantIds') || [];
                     if (state) {
-                      const currentParticipantList =
-                        watch('participantIds') || [];
-
+                      // Remove user from currentParticipantList
                       const filterParticipantList =
                         currentParticipantList.filter(
                           (participant) => participant != session?.user.id,
                         );
                       setValue('participantIds', filterParticipantList);
+
+                      // Remove any org that includes the removed user
+                      const currentOrganizationList =
+                        watch('selectOrganizations') || [];
+                      let updatedOrganizationList = [
+                        ...currentOrganizationList,
+                      ];
+                      const belongedOrganizations = dataOptionsParticipants
+                        .filter(
+                          (participant) =>
+                            participant.type ==
+                              EventParticipantType.ORGANIZATION &&
+                            participant.userIds?.includes(
+                              Number(session?.user.id),
+                            ),
+                        )
+                        .map((org) => org.id as number);
+                      updatedOrganizationList = updatedOrganizationList.filter(
+                        (org) => !belongedOrganizations.includes(org),
+                      );
+                      setValue('selectOrganizations', updatedOrganizationList);
+                    } else {
+                      // Add user to currentParticipantList if user belongs to currentOrganizationList
+                      const currentOrganizationList =
+                        watch('selectOrganizations') || [];
+                      for (const orgId of currentOrganizationList) {
+                        const org = dataOptionsOrganizations.find(
+                          (organization) => organization.value == orgId,
+                        );
+                        if (org) {
+                          const orgMembers = org.userIds || [];
+                          if (orgMembers.includes(Number(session?.user.id))) {
+                            setValue('participantIds', [
+                              ...currentParticipantList,
+                              Number(session?.user.id),
+                            ]);
+                            break;
+                          }
+                        }
+                      }
                     }
                   }}
                 />

@@ -1,5 +1,6 @@
 import { getFileURL } from '@utils';
 import Image from 'next/image';
+import { useMemo } from 'react';
 
 export type CustomUserAvatarProps = {
   avatarUrl: string;
@@ -14,6 +15,8 @@ const CustomUserAvatar = ({
   size,
   customClassName,
 }: CustomUserAvatarProps) => {
+  const clipId = useMemo(() => `clip-${Math.random()}`, []);
+
   return (
     <div className={`${customClassName}`}>
       {avatarUrl ? (
@@ -23,7 +26,7 @@ const CustomUserAvatar = ({
           <Image
             src={getFileURL(avatarUrl)}
             className="hover:cursor-pointer object-cover object-center"
-            fill 
+            fill
             alt="avatar"
           />
         </div>
@@ -34,19 +37,19 @@ const CustomUserAvatar = ({
           viewBox={`0 0 ${size} ${size}`}
           fill="none"
           xmlns="http://www.w3.org/2000/svg">
+          {/* Circle background */}
           <rect width={size} height={size} rx={size / 2} fill={avatarColor} />
-          <mask
-            id={`${Math.random()}`}
-            style={{ 'mask-type': 'alpha' } as React.CSSProperties}
-            maskUnits="userSpaceOnUse"
-            x="0"
-            y="0"
-            width={size}
-            height={size}>
-            <rect width={size} height={size} rx={size / 2} fill={avatarColor} />
-          </mask>
-          <g
-            mask={`${Math.random()}`}>
+
+          {/* Define a circular clipPath */}
+          <defs>
+            <clipPath id={clipId}>
+              <rect width={size} height={size} rx={size / 2} />
+            </clipPath>
+          </defs>
+
+          {/* Group clipped by the circular path */}
+          <g clipPath={`url(#${clipId})`}>
+            {/* Bottom rectangle (mouth?) */}
             <rect
               x={size * 0.19}
               y={size * 0.57}
@@ -55,15 +58,17 @@ const CustomUserAvatar = ({
               rx={size * 0.31}
               fill="#F3F3F3"
             />
+
+            {/* Top rectangle */}
+            <rect
+              x={size * 0.33}
+              y={size * 0.17}
+              width={size * 0.33}
+              height={size * 0.33}
+              rx={size * 0.17}
+              fill="#F3F3F3"
+            />
           </g>
-          <rect
-            x={size * 0.33}
-            y={size * 0.17}
-            width={size * 0.33}
-            height={size * 0.33}
-            rx={size * 0.17}
-            fill="#F3F3F3"
-          />
         </svg>
       )}
     </div>

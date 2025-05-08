@@ -202,7 +202,7 @@ const PeopleDropdown = ({
                   leaveFrom="opacity-100"
                   leaveTo="opacity-0">
                   <ListboxOptions
-                    className={`absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${classNameOption}`}>
+                    className={`absolute z-20 mt-1 max-h-56 border-[1px] border-[#77858F] w-full overflow-auto rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${classNameOption}`}>
                     {searchOption && (
                       <div className="flex gap-2 items-center ">
                         <div className="w-full">
