@@ -364,7 +364,7 @@
 .calendar-custom .fc-multimonth-title {
   color: #0068b7 !important;
   text-align: left;
-  margin-left: 10px
+  margin-left: 10px;
 }
 .calendar-custom .fc-multimonth-month {
   background-color: #f6f9fa !important;
@@ -480,7 +480,7 @@
 .calendar-custom .half-hour-line::after {
   background-color: #d2dbe1 !important;
 }
-.fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+.calendar-custom .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
   position: relative;
   top: -9px;
 }

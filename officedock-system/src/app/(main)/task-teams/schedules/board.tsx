@@ -874,8 +874,10 @@ const ScheduleTeamBoard = () => {
   }, [slotHeight, searchParams]);
 
   const calculateSlotHeight = (value: number): number => {
-    if (value < 40) {
-      return 93 - (40 - value);
+    if (value < 38) {
+      return 93 - (38 - value);
+    } else if (value > 58 && value < 80) {
+      return 0.732 * value - 8.17;
     } else if (value < 94) {
       return value;
     }

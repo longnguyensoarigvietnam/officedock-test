@@ -12,6 +12,7 @@ import {
   formatShowDeadlineTask,
   formatTime24h,
   formatTimeInput,
+  isEndTimeLater,
   isEndTimeValidNow,
   isOverlappingWithOthers,
   isTimeEarlier,
@@ -278,11 +279,11 @@ const PopupDetail = ({
                         setValueEnd(formatTime24h(planEndDate));
                       }
                     } else {
-                      const data = isTimeEarlier(
+                      const data = isEndTimeLater(
+                        formatTime24h(planStartDate),
                         formatTimeInput(
                           `${convertToMinutesNumber(e.target.value)}`,
                         ),
-                        formatTime24h(planStartDate),
                       );
                       const isCheck = isOverlappingWithOthers({
                         itemCompare: {
@@ -299,7 +300,7 @@ const PopupDetail = ({
                         items: taskTimeScheduleList,
                       });
 
-                      if (!data && !isCheck) {
+                      if (data && !isCheck) {
                         setValueEnd(
                           formatTimeInput(
                             `${convertToMinutesNumber(e.target.value)}`,
@@ -316,14 +317,14 @@ const PopupDetail = ({
                       }
                     }
                   } else {
-                    const data = isTimeEarlier(
+                    const data = isEndTimeLater(
+                      formatTime24h(planStartDate),
                       formatTimeInput(
                         `${convertToMinutesNumber(e.target.value)}`,
                       ),
-                      formatTime24h(planStartDate),
                     );
 
-                    if (!data) {
+                    if (data) {
                       setValueEnd(
                         formatTimeInput(
                           `${convertToMinutesNumber(e.target.value)}`,

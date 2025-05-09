@@ -91,6 +91,7 @@ import {
   formatDateServer,
   formatShowDateJapanese,
   formatTimeInput,
+  isEndTimeLater,
   isTimeEarlier,
   isTodaySchedule,
   isYesterdaySchedule,
@@ -1212,14 +1213,14 @@ const DailyReportBoard = () => {
                       onBlur={(e) => {
                         if (e.target.value === rowData.pausedAt) return;
                         if (row.original.isRunning) return;
-                        const data = isTimeEarlier(
+                        const data = isEndTimeLater(
+                          row.original.startedAt as string,
                           formatTimeInput(
                             `${convertToMinutesNumber(e.target.value)}`,
                           ),
-                          row.original.startedAt as string,
                         );
 
-                        if (!data) {
+                        if (data) {
                           handleChangeEndTime(
                             e,
                             row.original.idEdit as string,
