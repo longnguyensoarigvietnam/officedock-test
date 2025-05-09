@@ -457,7 +457,10 @@ const KanbanBoardTaskTeam = () => {
         if (nextItem?.pinAt) {
           const firstNormalItem = listNoPin[0];
 
-          newIndex = firstNormalItem.index + INITIAL_INDEX_VALUE;
+          newIndex =
+            listNoPin.length > 0
+              ? firstNormalItem.index + INITIAL_INDEX_VALUE
+              : INITIAL_INDEX_VALUE_STEP;
         } else {
           let prevItemIndex = prevItem ? prevItem.index : INITIAL_INDEX_VALUE;
           if (prevItem && prevItem.pinAt) {
@@ -591,7 +594,10 @@ const KanbanBoardTaskTeam = () => {
         if (nextItem?.pinAt) {
           const firstNormalItem = listNoPin[0];
 
-          newIndex = firstNormalItem.index + INITIAL_INDEX_VALUE;
+          newIndex =
+            listNoPin.length > 0
+              ? firstNormalItem.index + INITIAL_INDEX_VALUE
+              : INITIAL_INDEX_VALUE_STEP;
         } else {
           let prevItemIndex = prevItem ? prevItem.index : INITIAL_INDEX_VALUE;
           if (prevItem && prevItem.pinAt) {
@@ -1451,7 +1457,7 @@ const KanbanBoardTaskTeam = () => {
           : null;
 
       const isPeopleChanged = firstId !== editFirstId;
-      if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+      if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
         if (
           !isSameDeadline ||
           data.isImportant !== dataTaskEdit?.isImportant ||
@@ -1467,7 +1473,7 @@ const KanbanBoardTaskTeam = () => {
           !isSameDeadline ||
           data.peopleInCharge.length !== dataTaskEdit?.peopleInCharge.length ||
           isPeopleChanged ||
-          data.status?.id !== dataTaskEdit.status?.id
+          data.status?.id !== dataTaskEdit?.status?.id
         ) {
           setIsReadyToFetch(false);
           setDataOrderRing('');

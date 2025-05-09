@@ -735,6 +735,35 @@ export const isTimeEarlier = (startTime: string, EndTime: string): boolean => {
 
   return minuteStart < minutesEnd;
 };
+
+// Handle check EndTime > StartTime
+export const isEndTimeLater = (startTime: string, endTime: string): boolean => {
+  const parseTime = (time: string): number => {
+    const cleanedTime = time
+      .replace(/\s*:\s*/g, ':')
+      .replace(/\s*(AM|PM)\s*/i, ' $1')
+      .trim();
+
+    const [timePart, meridiem = ''] = cleanedTime.split(' ');
+    const [hourStr, minuteStr = '0'] = timePart.split(':');
+
+    let hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+
+    if (isNaN(hour) || isNaN(minute)) {
+      throw new Error(`Invalid time format: ${time}`);
+    }
+
+    const upperMeridiem = meridiem.toUpperCase();
+    if (upperMeridiem === 'PM' && hour !== 12) hour += 12;
+    if (upperMeridiem === 'AM' && hour === 12) hour = 0;
+
+    return hour * 60 + minute;
+  };
+
+  return parseTime(endTime) > parseTime(startTime);
+};
+
 export function formatCurrentDay() {
   const currentDay = new Date();
 

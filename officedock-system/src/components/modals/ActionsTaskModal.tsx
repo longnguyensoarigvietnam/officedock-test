@@ -3210,7 +3210,7 @@ const ActionsTaskModal = ({
                 )}
               </div>
               {/* Todo list */}
-              {!isRoutineTaskModal && (
+              {!isRoutineTaskModal && Number(watch('statusId')?.value) != StatusValueTask.MY_ROUTINE && (
                 <div className="mb-3">
                   {showTodoSection ? (
                     <>

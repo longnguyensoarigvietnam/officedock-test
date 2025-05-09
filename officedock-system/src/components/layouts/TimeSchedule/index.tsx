@@ -1279,7 +1279,6 @@ const TimeSchedule = memo(
         );
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
-        setSlotHeight(baseHeight);
         setResetTrigger((prev) => prev + 1);
         setTimeout(() => {
           calendarApi.refetchEvents();
@@ -1449,6 +1448,7 @@ const TimeSchedule = memo(
               handleUpdateItemStart={handleUpdateItemStart}
               handleChangeStartTime={handleChangeStartTime}
               handleChangeEndTime={handleChangeEndTime}
+              isModalShow={openConfirmDeleteEventModal}
               onDeleteEvent={(data) => {
                 setDataEventEditLocal(data);
                 setConfirmEventDataToEdit(data);
@@ -3061,13 +3061,14 @@ const TimeSchedule = memo(
 
     // ZOOM IN / ZOOM OUT SCHEDULE
     useEffect(() => {
-      const slots = document.querySelectorAll('.fc-timegrid-slot');
+      const slots = document.querySelectorAll(
+        '.schedule-custom .fc-timegrid-slot',
+      );
       slots.forEach((slot) => {
         const slotElement = slot as HTMLElement;
         slotElement.style.height = `${slotHeight}px`;
         slotElement.style.minHeight = `${slotHeight}px`;
       });
-
       if (calendarRef.current) {
         const calendarApi = calendarRef.current.getApi();
         if (calendarApi) {
@@ -3133,7 +3134,6 @@ const TimeSchedule = memo(
         setSliderValue(value);
         const calculatedHeight = calculateSlotHeight(value);
         const calculatedDuration = calculateSlotDuration(value);
-
         setSlotHeight(calculatedHeight);
         setIsOptionZoomSchedule(calculatedDuration);
       }

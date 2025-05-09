@@ -110,6 +110,7 @@ import Checkbox from '@components/common/Checkbox';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import Link from 'next/link';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import { TeamDailyStateContext } from '@providers/TeamDailyReportProvider';
 
 const DailyReportDetailBoard = () => {
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
@@ -134,9 +135,10 @@ const DailyReportDetailBoard = () => {
   const { showToast } = useToast();
 
   const { setIsLoading } = useContext(LoadingContext);
+  const { dataDatePicker, setDataDatePicker } = useContext(
+    TeamDailyStateContext,
+  );
   const showErrorToast = useErrorToast();
-
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
   const [dataDetailUser, setDataDetailUser] =
     useState<DataUserDetailDailyType | null>(null);
@@ -144,7 +146,7 @@ const DailyReportDetailBoard = () => {
   const [remarkData, setRemarkData] = useState<string>('');
 
   const { dataStatistic, refetchDataStatistic } = useDataStatistic({
-    date: formatDateServer(currentDate),
+    date: formatDateServer(dataDatePicker),
     userId: `${userId}`,
     organizationId: `${organization}`,
     onError: () => {
@@ -233,7 +235,9 @@ const DailyReportDetailBoard = () => {
         startedAt: duration.startedAt
           ? new Date(duration.startedAt)
           : new Date(),
-        pausedAt: duration.pausedAt ? new Date(duration.pausedAt) : currentDate,
+        pausedAt: duration.pausedAt
+          ? new Date(duration.pausedAt)
+          : dataDatePicker,
         start: new Date(duration.startedAt),
         end: duration.pausedAt ? new Date(duration.pausedAt) : new Date(),
         largeColor:
@@ -461,7 +465,7 @@ const DailyReportDetailBoard = () => {
       `${apiRouters.CONFIRM_USER_DAILY(dataUser.id)}`,
       {
         isConfirmed: dataUser.isConfirmed,
-        date: formatDateServer(currentDate),
+        date: formatDateServer(dataDatePicker),
       },
     );
     return data;
@@ -574,7 +578,7 @@ const DailyReportDetailBoard = () => {
         id: id,
         taskId: taskId,
         startedAt: combineDateAndTime(
-          currentDate,
+          dataDatePicker,
           `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
         ),
         oldStartAt: `${startedAt}`,
@@ -584,7 +588,7 @@ const DailyReportDetailBoard = () => {
         id: id,
         scheduleId: taskId,
         startedAt: combineDateAndTime(
-          currentDate,
+          dataDatePicker,
           `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
         ),
         oldStartAt: `${startedAt}`,
@@ -631,7 +635,7 @@ const DailyReportDetailBoard = () => {
       editDurationTask({
         id: id,
         pausedAt: combineDateAndTime(
-          currentDate,
+          dataDatePicker,
           `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
         ),
         taskId: taskId,
@@ -641,7 +645,7 @@ const DailyReportDetailBoard = () => {
       editDurationTask({
         id: id,
         pausedAt: combineDateAndTime(
-          currentDate,
+          dataDatePicker,
           `${formatTimeInput(`${convertToMinutesNumber(value)}`)}`,
         ),
         scheduleId: taskId,
@@ -1226,8 +1230,6 @@ const DailyReportDetailBoard = () => {
                       disabled={!isPermissionAction || isRowParent}
                       onBlur={(e) => {
                         if (e.target.value === rowData.startedAt) return;
-                        if (row.original.isRunning) return;
-
                         const data = isTimeEarlier(
                           formatTimeInput(
                             `${convertToMinutesNumber(e.target.value)}`,
@@ -1271,6 +1273,7 @@ const DailyReportDetailBoard = () => {
                       type="text"
                       onBlur={(e) => {
                         if (e.target.value === rowData.pausedAt) return;
+                        if (row.original.isRunning) return;
 
                         const data = isTimeEarlier(
                           formatTimeInput(
@@ -1780,10 +1783,10 @@ const DailyReportDetailBoard = () => {
     setIsLoading(true);
     const newDate = new Date();
     newDate.setDate(new Date().getDate() - 1); // Move forward by one day
-    if (!isSameDate(newDate, currentDate)) {
+    if (!isSameDate(newDate, dataDatePicker)) {
       setIsLoading(true);
     }
-    setCurrentDate(newDate);
+    setDataDatePicker(newDate);
     // Programmatically navigate the calendar
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
@@ -1802,10 +1805,10 @@ const DailyReportDetailBoard = () => {
     const newDate = new Date();
     newDate.setDate(new Date().getDate());
 
-    if (!isSameDate(newDate, currentDate)) {
+    if (!isSameDate(newDate, dataDatePicker)) {
       setIsLoading(true);
     }
-    setCurrentDate(newDate);
+    setDataDatePicker(newDate);
 
     // Programmatically navigate the calendar
     if (calendarRef.current) {
@@ -1822,10 +1825,10 @@ const DailyReportDetailBoard = () => {
   const handleChooseDay = (date?: Date) => {
     if (date) {
       const newDate = new Date(date);
-      if (!isSameDate(newDate, currentDate)) {
+      if (!isSameDate(newDate, dataDatePicker)) {
         setIsLoading(true);
       }
-      setCurrentDate(newDate);
+      setDataDatePicker(newDate);
 
       if (calendarRef.current) {
         const calendarApi = calendarRef.current.getApi();
@@ -1841,9 +1844,9 @@ const DailyReportDetailBoard = () => {
   const handlePrevDay = () => {
     setIsLoading(true);
 
-    const newDate = new Date(currentDate);
+    const newDate = new Date(dataDatePicker);
     newDate.setDate(newDate.getDate() - 1);
-    setCurrentDate(newDate);
+    setDataDatePicker(newDate);
 
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
@@ -1856,12 +1859,12 @@ const DailyReportDetailBoard = () => {
   };
   // Handle next day
   const handleNextDay = () => {
-    const newDate = new Date(currentDate);
+    const newDate = new Date(dataDatePicker);
     newDate.setDate(newDate.getDate() + 1);
-    if (!isSameDate(newDate, currentDate)) {
+    if (!isSameDate(newDate, dataDatePicker)) {
       setIsLoading(true);
     }
-    setCurrentDate(newDate);
+    setDataDatePicker(newDate);
 
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
@@ -2010,7 +2013,7 @@ const DailyReportDetailBoard = () => {
               <div className="w-[159px]">
                 <DatePicker
                   className="h-[34px] border text-sm font-normal !py-1 !border-[#77858F]"
-                  selected={currentDate}
+                  selected={dataDatePicker}
                   maxDate={new Date()}
                   dateFormat={DATE_TEXT_FORMAT}
                   minDate={getMinDateOfYear(2023)}
@@ -2019,7 +2022,7 @@ const DailyReportDetailBoard = () => {
                   }}
                 />
               </div>
-              {!isTodaySchedule(currentDate) && (
+              {!isTodaySchedule(dataDatePicker) && (
                 <ImageRound
                   onClick={() => handleNextDay()}
                   className=" h-fit w-fit cursor-pointer"
@@ -2033,7 +2036,7 @@ const DailyReportDetailBoard = () => {
                 variant="outline"
                 className="border-none h-[34px] w-[48px] !px-0 !py-0"
                 onClick={() => {
-                  if (!isYesterdaySchedule(currentDate)) {
+                  if (!isYesterdaySchedule(dataDatePicker)) {
                     handleYesterDay();
                   }
                 }}>
@@ -2043,7 +2046,7 @@ const DailyReportDetailBoard = () => {
                 variant="outline"
                 className="border-none h-[34px] w-[48px] !px-0 !py-0"
                 onClick={() => {
-                  if (!isTodaySchedule(currentDate)) {
+                  if (!isTodaySchedule(dataDatePicker)) {
                     handleCurrentDay();
                   }
                 }}>
@@ -2172,7 +2175,7 @@ const DailyReportDetailBoard = () => {
                 calculateSlotTimes(modifyEvents(taskTimeStatisticList))
                   .slotMaxTime
               }
-              initialDate={currentDate}
+              initialDate={dataDatePicker}
               eventOverlap={true}
               slotEventOverlap={true}
               selectMirror={true}
@@ -2369,7 +2372,7 @@ const DailyReportDetailBoard = () => {
             <div className="mt-[30px] pb-14">
               <p>備考</p>
               <ResizeTextArea
-                currentDate={currentDate}
+                currentDate={dataDatePicker}
                 defaultData={
                   dataStatistic?.remark.remark
                     ? dataStatistic?.remark.remark
@@ -2406,7 +2409,7 @@ const DailyReportDetailBoard = () => {
                 eventContent={handleRenderEventDownLoad}
                 events={taskTimeStatisticList}
                 headerToolbar={false}
-                initialDate={currentDate}
+                initialDate={dataDatePicker}
                 slotLabelFormat={{
                   hour: 'numeric',
                   minute: '2-digit',
@@ -2424,7 +2427,7 @@ const DailyReportDetailBoard = () => {
             </div>
             <div className="w-[calc(100%_-_260px)]  overflow-y-auto ">
               <div className="w-full text-center text-[36px]">
-                {formatShowDateJapanese(`${currentDate}`)}
+                {formatShowDateJapanese(`${dataDatePicker}`)}
               </div>
               <div className="h-[371px] overflow-y-auto">
                 <p>カテゴリーの割合</p>

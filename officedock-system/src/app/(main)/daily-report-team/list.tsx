@@ -16,6 +16,7 @@ import {
   dataRequestConfirmType,
 } from '@interfaces/statistic';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { TeamDailyStateContext } from '@providers/TeamDailyReportProvider';
 import {
   formatDateServer,
   isTodaySchedule,
@@ -27,8 +28,9 @@ import useTeamList from '@hooks/useListTeam';
 
 const ListData = () => {
   const { setIsLoading } = useContext(LoadingContext);
-
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const { dataDatePicker, setDataDatePicker } = useContext(
+    TeamDailyStateContext,
+  );
 
   const [dataListDailyReport, setDataListDailyReport] = useState<
     DataListDailyType[]
@@ -57,7 +59,7 @@ const ListData = () => {
   });
 
   const { listDailyReport } = useListDailyReport({
-    date: formatDateServer(currentDate),
+    date: formatDateServer(dataDatePicker),
     organization_ids:
       selectedOrganization.value !== 'ALL'
         ? [selectedOrganization]
@@ -107,17 +109,17 @@ const ListData = () => {
   const handlePrevDay = () => {
     setIsLoading(true);
 
-    const newDate = new Date(currentDate);
+    const newDate = new Date(dataDatePicker);
     newDate.setDate(newDate.getDate() - 1);
-    setCurrentDate(newDate);
+    setDataDatePicker(newDate);
   };
   const handleNextDay = () => {
-    const newDate = new Date(currentDate);
+    const newDate = new Date(dataDatePicker);
     newDate.setDate(newDate.getDate() + 1);
-    if (!isSameDate(newDate, currentDate)) {
+    if (!isSameDate(newDate, dataDatePicker)) {
       setIsLoading(true);
     }
-    setCurrentDate(newDate);
+    setDataDatePicker(newDate);
   };
 
   // Check current day with now
@@ -131,16 +133,16 @@ const ListData = () => {
   const handleChooseDay = (date?: Date) => {
     if (date) {
       const newDate = new Date(date);
-      if (!isSameDate(newDate, currentDate)) {
+      if (!isSameDate(newDate, dataDatePicker)) {
         setIsLoading(true);
       }
-      setCurrentDate(newDate);
+      setDataDatePicker(newDate);
       if (date) {
         const newDate = new Date(date);
-        if (!isSameDate(newDate, currentDate)) {
+        if (!isSameDate(newDate, dataDatePicker)) {
           setIsLoading(true);
         }
-        setCurrentDate(newDate);
+        setDataDatePicker(newDate);
       }
     }
   };
@@ -150,19 +152,19 @@ const ListData = () => {
   const handleYesterDay = () => {
     const newDate = new Date();
     newDate.setDate(new Date().getDate() - 1);
-    if (!isSameDate(newDate, currentDate)) {
+    if (!isSameDate(newDate, dataDatePicker)) {
       setIsLoading(true);
     }
-    setCurrentDate(newDate);
+    setDataDatePicker(newDate);
   };
   const handleCurrentDay = () => {
     const newDate = new Date();
     newDate.setDate(new Date().getDate());
 
-    if (!isSameDate(newDate, currentDate)) {
+    if (!isSameDate(newDate, dataDatePicker)) {
       setIsLoading(true);
     }
-    setCurrentDate(newDate);
+    setDataDatePicker(newDate);
   };
 
   return (
@@ -180,7 +182,7 @@ const ListData = () => {
             <div className="w-[159px]">
               <DatePicker
                 className="h-[34px] border text-sm font-normal !py-1 !border-[#77858F]"
-                selected={currentDate}
+                selected={dataDatePicker}
                 maxDate={new Date()}
                 dateFormat={DATE_TEXT_FORMAT}
                 minDate={getMinDateOfYear(2023)}
@@ -189,7 +191,7 @@ const ListData = () => {
                 }}
               />
             </div>
-            {!isTodaySchedule(currentDate) && (
+            {!isTodaySchedule(dataDatePicker) && (
               <ImageRound
                 onClick={() => handleNextDay()}
                 className=" h-fit w-fit cursor-pointer"
@@ -203,7 +205,7 @@ const ListData = () => {
               variant="outline"
               className="border-none h-[34px] !rounded-md w-[48px] !px-0 !py-0"
               onClick={() => {
-                if (!isYesterdaySchedule(currentDate)) {
+                if (!isYesterdaySchedule(dataDatePicker)) {
                   handleYesterDay();
                 }
               }}>
@@ -213,7 +215,7 @@ const ListData = () => {
               variant="outline"
               className="border-none h-[34px] w-[48px] !rounded-md !px-0 !py-0"
               onClick={() => {
-                if (!isTodaySchedule(currentDate)) {
+                if (!isTodaySchedule(dataDatePicker)) {
                   handleCurrentDay();
                 }
               }}>
