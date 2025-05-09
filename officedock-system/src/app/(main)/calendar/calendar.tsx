@@ -2102,7 +2102,7 @@ const EventCalendar = () => {
     return 24 + (value - 94);
   };
   const calculateSlotDuration = (value: number): string => {
-    if (value < 40) {
+    if (value < 38) {
       return '01:00:00';
     } else if (value >= 94) {
       return '00:05:00';
