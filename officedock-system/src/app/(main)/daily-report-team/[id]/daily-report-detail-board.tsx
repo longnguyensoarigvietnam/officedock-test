@@ -1226,8 +1226,6 @@ const DailyReportDetailBoard = () => {
                       disabled={!isPermissionAction || isRowParent}
                       onBlur={(e) => {
                         if (e.target.value === rowData.startedAt) return;
-                        if (row.original.isRunning) return;
-
                         const data = isTimeEarlier(
                           formatTimeInput(
                             `${convertToMinutesNumber(e.target.value)}`,
@@ -1271,6 +1269,7 @@ const DailyReportDetailBoard = () => {
                       type="text"
                       onBlur={(e) => {
                         if (e.target.value === rowData.pausedAt) return;
+                        if (row.original.isRunning) return;
 
                         const data = isTimeEarlier(
                           formatTimeInput(

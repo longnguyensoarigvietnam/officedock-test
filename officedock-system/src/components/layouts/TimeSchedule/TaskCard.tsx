@@ -1,6 +1,6 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
-import { ChangeEvent, useContext, useRef, useState } from 'react';
+import { ChangeEvent, useContext, useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
 import { EventContentArg } from '@fullcalendar/core/index.js';
 
@@ -35,6 +35,7 @@ interface TaskCardProps {
   isOptionZoomSchedule: string;
   isSelect: boolean;
   taskTimeScheduleList: TaskTimeSchedule[];
+  isModalShow: boolean;
   handleSetEventParam: ({
     id,
     action,
@@ -65,6 +66,7 @@ interface TaskCardProps {
 }
 const TaskCard = ({
   event,
+  isModalShow,
   isSelect,
   slotHeight,
   isOptionZoomSchedule,
@@ -352,6 +354,11 @@ const TaskCard = ({
       }
     }, 100);
   };
+  useEffect(() => {
+    if (isModalShow) {
+      setIsHovering(false);
+    }
+  }, [isModalShow]);
 
   const renderModal = () => {
     return (
@@ -426,6 +433,19 @@ const TaskCard = ({
     );
   };
 
+  const [isSmallItem, setIsSmallItem] = useState(false);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const height = containerRef.current.offsetHeight;
+      if (height > 40) {
+        setIsSmallItem(false);
+      } else {
+        setIsSmallItem(true);
+      }
+    }
+  }, [isOptionZoomSchedule, slotHeight]);
+
   return (
     <>
       <div
@@ -468,7 +488,7 @@ const TaskCard = ({
                 resizer.style.setProperty('opacity', '1', 'important');
               }
             }}
-            className={`group overflow-hidden bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'}`}>
+            className={`group overflow-hidden bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full'}`}>
             <div className="flex overflow-hidden flex-col gap-2 w-[95%]">
               <p
                 style={{
