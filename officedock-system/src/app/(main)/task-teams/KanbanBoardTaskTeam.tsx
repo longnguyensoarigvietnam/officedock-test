@@ -1457,7 +1457,7 @@ const KanbanBoardTaskTeam = () => {
           : null;
 
       const isPeopleChanged = firstId !== editFirstId;
-      if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+      if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
         if (
           !isSameDeadline ||
           data.isImportant !== dataTaskEdit?.isImportant ||
@@ -1473,7 +1473,7 @@ const KanbanBoardTaskTeam = () => {
           !isSameDeadline ||
           data.peopleInCharge.length !== dataTaskEdit?.peopleInCharge.length ||
           isPeopleChanged ||
-          data.status?.id !== dataTaskEdit.status?.id
+          data.status?.id !== dataTaskEdit?.status?.id
         ) {
           setIsReadyToFetch(false);
           setDataOrderRing('');
