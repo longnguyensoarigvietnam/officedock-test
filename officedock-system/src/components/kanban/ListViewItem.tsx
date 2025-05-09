@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react';
 
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import {
   ItemScheduleType,
@@ -34,7 +35,7 @@ import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
 
 import {
-  addHoursToDate,
+  addMinutesToDate,
   compareWithCurrentDate,
   convertToCurrentTimezone,
   convertToTimeString,
@@ -43,14 +44,13 @@ import {
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 interface ListViewItemProps {
   id: string;
   index: number;
   content: Task;
   creationDataTaskData?: CreationDataTask;
-  handleActionEditTask: (id: number, type?: string) => void
+  handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;
   editTask: UseMutateFunction<
@@ -292,7 +292,12 @@ const ListViewItem = ({
     if (isClicked) return;
 
     setIsClicked(true);
-    handleActionEditTask(parseInt(`${content.id}`), (content.status && content.status.id == StatusValueTask.MY_ROUTINE) ? ItemStartType.FIXED_TASK : ItemStartType.TASK);
+    handleActionEditTask(
+      parseInt(`${content.id}`),
+      content.status && content.status.id == StatusValueTask.MY_ROUTINE
+        ? ItemStartType.FIXED_TASK
+        : ItemStartType.TASK,
+    );
 
     setTimeout(() => setIsClicked(false), 2000);
   };
@@ -341,7 +346,14 @@ const ListViewItem = ({
         break;
       case TaskRepetitiveValue.YEARLY:
         title =
-          '毎年' + item.month + '月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
+          '毎年' +
+          item.month +
+          '月' +
+          item.monthDay +
+          '日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
         break;
     }
     return title;
@@ -360,7 +372,7 @@ const ListViewItem = ({
               ...content,
               title: content.title ? content.title : '',
               start: formatISO(now),
-              end: formatISO(addHoursToDate(`${now}`)),
+              end: formatISO(addMinutesToDate(`${now}`)),
               startEditable: true,
               itemKanban: true,
             })}
@@ -416,13 +428,16 @@ const ListViewItem = ({
                   </DynamicTooltip>
 
                   {isPermissionAdd ? (
-                    <DynamicTooltip
-                      content="タスクを複製"
-                      placement="top">
+                    <DynamicTooltip content="タスクを複製" placement="top">
                       <div
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleConfirmCopyTask(parseInt(`${content.id}`), content.status?.id == StatusValueTask.MY_ROUTINE ? ItemStartType.FIXED_TASK : ItemStartType.TASK);
+                          handleConfirmCopyTask(
+                            parseInt(`${content.id}`),
+                            content.status?.id == StatusValueTask.MY_ROUTINE
+                              ? ItemStartType.FIXED_TASK
+                              : ItemStartType.TASK,
+                          );
                         }}>
                         <ImageRound
                           src="/icons/copy.svg"
