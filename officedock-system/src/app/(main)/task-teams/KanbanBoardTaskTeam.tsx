@@ -1430,13 +1430,18 @@ const KanbanBoardTaskTeam = () => {
             hasNext: totalNoSetting?.hasNext || false,
           });
         }
-        const newList = listTaskNoSetting.map((item) => {
-          if (item.id === data.id) {
-            return data;
-          }
-          return item;
-        });
-        setListTaskNoSetting(newList);
+        const itemFind = listTaskNoSetting.find((item) => item.id === data.id);
+        if (itemFind) {
+          const newList = listTaskNoSetting.map((item) => {
+            if (item.id === data.id) {
+              return data;
+            }
+            return item;
+          });
+          setListTaskNoSetting(newList);
+        } else {
+          setListTaskNoSetting([data, ...listTaskNoSetting].sort(compareItems));
+        }
       }
       const isSameDeadline =
         data.deadline == null && dataTaskEdit?.deadline == null
@@ -1457,26 +1462,38 @@ const KanbanBoardTaskTeam = () => {
           : null;
 
       const isPeopleChanged = firstId !== editFirstId;
-      if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
-        if (
-          !isSameDeadline ||
-          data.isImportant !== dataTaskEdit?.isImportant ||
-          data.peopleInCharge.length !== dataTaskEdit?.peopleInCharge.length ||
-          isPeopleChanged ||
-          data.status?.id !== dataTaskEdit.status?.id
-        ) {
-          setIsReadyToFetch(false);
-          setDataOrderRing('');
-        }
+      if (
+        isSameDeadline &&
+        data.isImportant === dataTaskEdit?.isImportant &&
+        data.peopleInCharge.length === 0 &&
+        dataTaskEdit?.peopleInCharge.length === 0 &&
+        data.status?.id !== dataTaskEdit?.status?.id
+      ) {
+        // handle data
       } else {
-        if (
-          !isSameDeadline ||
-          data.peopleInCharge.length !== dataTaskEdit?.peopleInCharge.length ||
-          isPeopleChanged ||
-          data.status?.id !== dataTaskEdit?.status?.id
-        ) {
-          setIsReadyToFetch(false);
-          setDataOrderRing('');
+        if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
+          if (
+            !isSameDeadline ||
+            data.isImportant !== dataTaskEdit?.isImportant ||
+            data.peopleInCharge.length !==
+              dataTaskEdit?.peopleInCharge.length ||
+            isPeopleChanged ||
+            data.status?.id !== dataTaskEdit.status?.id
+          ) {
+            setIsReadyToFetch(false);
+            setDataOrderRing('');
+          }
+        } else {
+          if (
+            !isSameDeadline ||
+            data.peopleInCharge.length !==
+              dataTaskEdit?.peopleInCharge.length ||
+            isPeopleChanged ||
+            data.status?.id !== dataTaskEdit?.status?.id
+          ) {
+            setIsReadyToFetch(false);
+            setDataOrderRing('');
+          }
         }
       }
 
