@@ -2480,7 +2480,7 @@ const KanbanBoardTask = () => {
         handleRemoveParam();
         setDataTaskEdit(null);
         setShowEditTaskModal(false);
-        setColumnId(`${StatusValueTask.NOT_STARTED}`);
+        setColumnId('');
       },
       onError: (error: AxiosError<any>) => {
         if (error.response?.data.taskSchedules) {
