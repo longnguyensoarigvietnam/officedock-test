@@ -26,6 +26,7 @@
   border-top: none !important;
   border-bottom: none !important;
 }
+
 .calendar-custom .fc-event-title {
   font-size: 12px;
 }
@@ -489,6 +490,7 @@
   .fc-resourceTimeGridDay-view
   .fc-timegrid-slot.fc-timegrid-slot-lane {
   top: 0 !important;
+  border: none !important;
 }
 .calendar-custom
   .fc-timeGridWeek-view
@@ -499,4 +501,18 @@
   .fc-timeGridWeek-view
   .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
   top: 0 !important;
+}
+.calendar-custom .fc-resourceTimeGridDay-view td {
+  border: none !important;
+}
+.calendar-custom .fc-resourceTimeGridDay-view .fc-timegrid-col-frame {
+  border-left: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border: 1.5px solid #d2dbe1;
+}
+.calendar-custom
+  .fc-resourceTimeGridDay-view
+  .fc-timegrid-slot.fc-timegrid-slot-lane::after {
+  top: 3px;
 }
