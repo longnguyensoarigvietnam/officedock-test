@@ -1439,6 +1439,7 @@ const TimeSchedule = memo(
               }}
               deleteActualTask={(uuid: string) => deleteActualTask(uuid)}
               isSelect={isSelect}
+              isShiftPressed={isShiftPressed}
               slotHeight={slotHeight}
               isOptionZoomSchedule={isOptionZoomSchedule}
               taskTimeScheduleList={taskTimeScheduleList}
@@ -1855,330 +1856,337 @@ const TimeSchedule = memo(
         selectedEvents.includes(droppedEvent.extendedProps.uuid as string)
       ) {
         moveMultipleEvents(droppedEvent);
-        return;
-      }
-
-      if (
-        draggedResourceId &&
-        dropResourceId &&
-        draggedResourceId !== dropResourceId
-      ) {
-        const oldStart = info.oldEvent.start;
-        const oldEnd = info.oldEvent.end;
-
-        const oldResource = info.oldEvent.getResources()?.[0];
-
-        info.event.setStart(oldStart as Date);
-        info.event.setEnd(oldEnd as Date);
-
-        if (oldResource) {
-          info.event.setResources([oldResource.id]);
-        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        setTimeout(() => setIsInteracting(false), 200);
       } else {
-        if (info.event.extendedProps.type === EventCalendarType.SCHEDULE) {
+        if (
+          draggedResourceId &&
+          dropResourceId &&
+          draggedResourceId !== dropResourceId
+        ) {
           const oldStart = info.oldEvent.start;
           const oldEnd = info.oldEvent.end;
-          info.event.setDates(oldStart as Date, oldEnd);
-        }
-        if (!startDrop && !endDrop) {
-          const oldStart = info.oldEvent.start;
-          const oldEnd = info.oldEvent.end;
-          info.event.setDates(oldStart as Date, oldEnd);
-        }
-        if (areDatesDifferent(`${startDrop}`, `${endDrop}`)) {
-          const oldStart = info.oldEvent.start;
-          const oldEnd = info.oldEvent.end;
-          info.event.setDates(oldStart as Date, oldEnd);
-        }
-        // GET ITEM DRAG & DROP
-        const matchData = taskTimeScheduleList.find(
-          (item) => item.uuid === droppedEvent.extendedProps.uuid,
-        );
 
-        /// WEEK
-        if (searchParams.get('view') === ViewOptions.WEEK) {
-          /// if item actual && col plan
-          if (
-            matchData &&
-            matchData.resourceId === ItemScheduleType.ACTUAL &&
-            resourcePlanWeek
-          ) {
+          const oldResource = info.oldEvent.getResources()?.[0];
+
+          info.event.setStart(oldStart as Date);
+          info.event.setEnd(oldEnd as Date);
+
+          if (oldResource) {
+            info.event.setResources([oldResource.id]);
+          }
+        } else {
+          if (info.event.extendedProps.type === EventCalendarType.SCHEDULE) {
             const oldStart = info.oldEvent.start;
             const oldEnd = info.oldEvent.end;
-
             info.event.setDates(oldStart as Date, oldEnd);
           }
-          if (
-            matchData &&
-            matchData.resourceId === ItemScheduleType.PLANS &&
-            !resourcePlanWeek
-          ) {
+          if (!startDrop && !endDrop) {
             const oldStart = info.oldEvent.start;
             const oldEnd = info.oldEvent.end;
-
             info.event.setDates(oldStart as Date, oldEnd);
           }
-
-          const isCheckWeek = resourcePlanWeek
-            ? ItemScheduleType.PLANS
-            : ItemScheduleType.ACTUAL;
-          const hasOverlapWeek = taskTimeScheduleList.some((item) => {
-            if (item.uuid === droppedEvent.extendedProps.uuid) {
-              return false;
-            }
-            return (
-              startDrop < item.end &&
-              endDrop > item.start &&
-              item.resourceId === isCheckWeek &&
-              !resourcePlanWeek &&
-              item.taskId === droppedEvent.extendedProps.taskId
-            );
-          });
-          // Check overlap actual week
-
-          if (hasOverlapWeek) {
+          if (areDatesDifferent(`${startDrop}`, `${endDrop}`)) {
             const oldStart = info.oldEvent.start;
             const oldEnd = info.oldEvent.end;
-
             info.event.setDates(oldStart as Date, oldEnd);
           }
-          if (matchData && matchData.uuid !== droppedEvent.extendedProps.uuid) {
-            info.view.calendar.refetchEvents();
-          }
+          // GET ITEM DRAG & DROP
+          const matchData = taskTimeScheduleList.find(
+            (item) => item.uuid === droppedEvent.extendedProps.uuid,
+          );
 
-          const newDataTimeList = taskTimeScheduleList.map((event) => {
-            if (event.uuid === droppedEvent.extendedProps.uuid) {
-              const newData = {
-                ...event,
-                resourceId: isCheckWeek,
-                start: droppedEvent.start || new Date(),
-                end: droppedEvent.end || new Date(),
-                planStartDate: String(droppedEvent.start) || '',
-                planEndDate: String(droppedEvent.end) || '',
-              };
-              return newData;
-            } else {
-              return event;
-            }
-          });
-          // Set data schedule
-          setTaskTimeScheduleList(newDataTimeList);
-          if (isTodaySchedule(startDrop)) {
-            handleEditShowClockItem(
-              parseInt(droppedEvent.extendedProps.taskId),
-            );
-          } else {
-            const hasMatchingItem = newDataTimeList.some(
-              (item) =>
-                item.taskId === droppedEvent.extendedProps.taskId &&
-                item.resourceId === ItemScheduleType.PLANS &&
-                item.start &&
-                isTodaySchedule(item.start),
-            );
-            if (!hasMatchingItem) {
-              handleEditShowClockItem(
-                parseInt(droppedEvent.extendedProps.taskId),
-                false,
-              );
-            }
-          }
-
-          // Check item plan and col actual
-          if (
-            matchData &&
-            matchData.resourceId === ItemScheduleType.PLANS &&
-            !resourcePlanWeek
-          ) {
-            createActualDuration({
-              taskId: droppedEvent.extendedProps.taskId,
-              uuid: droppedEvent.extendedProps.uuid,
-              startedAt: convertDateString(`${startDrop}`),
-              pausedAt: convertDateString(`${endDrop}`),
-            });
-            deletePlanTask(droppedEvent.extendedProps.uuid);
-          } else {
-            if (
-              matchData &&
-              matchData.resourceId === ItemScheduleType.PLANS &&
-              resourcePlanWeek
-            ) {
-              updatePlanTime({
-                uuid: droppedEvent.extendedProps.uuid,
-                data: {
-                  planStartDate: convertDateString(`${droppedEvent.start}`),
-                  planEndDate: convertDateString(
-                    addTimeDifference(
-                      `${droppedEvent.extendedProps.planStartDate}`,
-                      `${droppedEvent.extendedProps.planEndDate}`,
-                      droppedEvent.start as Date,
-                      0,
-                    ),
-                  ),
-                },
-              });
-            }
+          /// WEEK
+          if (searchParams.get('view') === ViewOptions.WEEK) {
+            /// if item actual && col plan
             if (
               matchData &&
               matchData.resourceId === ItemScheduleType.ACTUAL &&
-              !resourcePlanWeek
+              resourcePlanWeek
             ) {
-              updateActualTime({
-                uuid: droppedEvent.extendedProps.uuid,
-                data: {
-                  startedAt: convertDateString(`${droppedEvent.start}`),
-                  pausedAt: convertDateString(
-                    addTimeDifference(
-                      `${droppedEvent.extendedProps.planStartDate}`,
-                      `${droppedEvent.extendedProps.planEndDate}`,
-                      droppedEvent.start as Date,
-                      0,
-                    ),
-                  ),
-                },
-              });
-            }
-          }
-        } else {
-          if (
-            isDateInFutureOrToday(`${droppedEvent.end}`) &&
-            !resourcePlanDay
-          ) {
-            // if item actual or plan  with col actual with date in feature
-            const oldStart = info.oldEvent.start;
-            const oldEnd = info.oldEvent.end;
-
-            info.event.setDates(oldStart as Date, oldEnd);
-          }
-          if (
-            matchData &&
-            matchData.resourceId === ItemScheduleType.ACTUAL &&
-            resourcePlanDay
-          ) {
-            const oldStart = info.oldEvent.start;
-            const oldEnd = info.oldEvent.end;
-
-            info.event.setDates(oldStart as Date, oldEnd);
-          }
-          if (
-            matchData &&
-            matchData.resourceId === ItemScheduleType.PLANS &&
-            !resourcePlanDay
-          ) {
-            const oldStart = info.oldEvent.start;
-            const oldEnd = info.oldEvent.end;
-
-            info.event.setDates(oldStart as Date, oldEnd);
-          }
-          if (matchData && matchData.uuid !== droppedEvent.extendedProps.uuid) {
-            info.view.calendar.refetchEvents();
-          }
-          const isCheckDay = resourcePlanDay
-            ? ItemScheduleType.PLANS
-            : ItemScheduleType.ACTUAL;
-          if (!resourcePlanDay) {
-            // Check overlap actual
-
-            const hasOverlap = taskTimeScheduleList.some((item) => {
-              if (item.uuid === droppedEvent.extendedProps.uuid) {
-                return false;
-              }
-
-              return (
-                startDrop < item.end &&
-                endDrop > item.start &&
-                item.resourceId === isCheckDay &&
-                !resourcePlanDay &&
-                item.taskId === droppedEvent.extendedProps.taskId
-              );
-            });
-
-            if (hasOverlap) {
               const oldStart = info.oldEvent.start;
               const oldEnd = info.oldEvent.end;
 
               info.event.setDates(oldStart as Date, oldEnd);
             }
-          }
-          const newDataTimeList = taskTimeScheduleList.map((event) => {
-            if (event.uuid === droppedEvent.extendedProps.uuid) {
-              const newData = {
-                ...event,
-                resourceId: isCheckDay,
-                start: droppedEvent.start || new Date(),
-                end: droppedEvent.end || new Date(),
-                planStartDate: String(droppedEvent.start) || '',
-                planEndDate: String(droppedEvent.end) || '',
-              };
-              return newData;
-            } else {
-              return event;
-            }
-          });
-          // Set data schedule
-          setTaskTimeScheduleList(newDataTimeList);
-
-          await new Promise((resolve) => setTimeout(resolve, 100));
-
-          if (
-            matchData &&
-            matchData.resourceId === ItemScheduleType.PLANS &&
-            !resourcePlanDay &&
-            droppedEvent.extendedProps.taskId
-          ) {
-            createActualDuration({
-              taskId: droppedEvent.extendedProps.taskId,
-              uuid: droppedEvent.extendedProps.uuid,
-              startedAt: convertDateString(`${startDrop}`),
-              pausedAt: convertDateString(`${endDrop}`),
-            });
-            deletePlanTask(droppedEvent.extendedProps.uuid);
-          } else {
             if (
               matchData &&
               matchData.resourceId === ItemScheduleType.PLANS &&
-              resourcePlanDay
+              !resourcePlanWeek
             ) {
-              updatePlanTime({
+              const oldStart = info.oldEvent.start;
+              const oldEnd = info.oldEvent.end;
+
+              info.event.setDates(oldStart as Date, oldEnd);
+            }
+
+            const isCheckWeek = resourcePlanWeek
+              ? ItemScheduleType.PLANS
+              : ItemScheduleType.ACTUAL;
+            const hasOverlapWeek = taskTimeScheduleList.some((item) => {
+              if (item.uuid === droppedEvent.extendedProps.uuid) {
+                return false;
+              }
+              return (
+                startDrop < item.end &&
+                endDrop > item.start &&
+                item.resourceId === isCheckWeek &&
+                !resourcePlanWeek &&
+                item.taskId === droppedEvent.extendedProps.taskId
+              );
+            });
+            // Check overlap actual week
+
+            if (hasOverlapWeek) {
+              const oldStart = info.oldEvent.start;
+              const oldEnd = info.oldEvent.end;
+
+              info.event.setDates(oldStart as Date, oldEnd);
+            }
+            if (
+              matchData &&
+              matchData.uuid !== droppedEvent.extendedProps.uuid
+            ) {
+              info.view.calendar.refetchEvents();
+            }
+
+            const newDataTimeList = taskTimeScheduleList.map((event) => {
+              if (event.uuid === droppedEvent.extendedProps.uuid) {
+                const newData = {
+                  ...event,
+                  resourceId: isCheckWeek,
+                  start: droppedEvent.start || new Date(),
+                  end: droppedEvent.end || new Date(),
+                  planStartDate: String(droppedEvent.start) || '',
+                  planEndDate: String(droppedEvent.end) || '',
+                };
+                return newData;
+              } else {
+                return event;
+              }
+            });
+            // Set data schedule
+            setTaskTimeScheduleList(newDataTimeList);
+            if (isTodaySchedule(startDrop)) {
+              handleEditShowClockItem(
+                parseInt(droppedEvent.extendedProps.taskId),
+              );
+            } else {
+              const hasMatchingItem = newDataTimeList.some(
+                (item) =>
+                  item.taskId === droppedEvent.extendedProps.taskId &&
+                  item.resourceId === ItemScheduleType.PLANS &&
+                  item.start &&
+                  isTodaySchedule(item.start),
+              );
+              if (!hasMatchingItem) {
+                handleEditShowClockItem(
+                  parseInt(droppedEvent.extendedProps.taskId),
+                  false,
+                );
+              }
+            }
+
+            // Check item plan and col actual
+            if (
+              matchData &&
+              matchData.resourceId === ItemScheduleType.PLANS &&
+              !resourcePlanWeek
+            ) {
+              createActualDuration({
+                taskId: droppedEvent.extendedProps.taskId,
                 uuid: droppedEvent.extendedProps.uuid,
-                data: {
-                  planStartDate: convertDateString(`${droppedEvent.start}`),
-                  planEndDate: convertDateString(
-                    addTimeDifference(
-                      `${droppedEvent.extendedProps.planStartDate}`,
-                      `${droppedEvent.extendedProps.planEndDate}`,
-                      droppedEvent.start as Date,
-                      0,
-                    ),
-                  ),
-                },
+                startedAt: convertDateString(`${startDrop}`),
+                pausedAt: convertDateString(`${endDrop}`),
               });
+              deletePlanTask(droppedEvent.extendedProps.uuid);
+            } else {
+              if (
+                matchData &&
+                matchData.resourceId === ItemScheduleType.PLANS &&
+                resourcePlanWeek
+              ) {
+                updatePlanTime({
+                  uuid: droppedEvent.extendedProps.uuid,
+                  data: {
+                    planStartDate: convertDateString(`${droppedEvent.start}`),
+                    planEndDate: convertDateString(
+                      addTimeDifference(
+                        `${droppedEvent.extendedProps.planStartDate}`,
+                        `${droppedEvent.extendedProps.planEndDate}`,
+                        droppedEvent.start as Date,
+                        0,
+                      ),
+                    ),
+                  },
+                });
+              }
+              if (
+                matchData &&
+                matchData.resourceId === ItemScheduleType.ACTUAL &&
+                !resourcePlanWeek
+              ) {
+                updateActualTime({
+                  uuid: droppedEvent.extendedProps.uuid,
+                  data: {
+                    startedAt: convertDateString(`${droppedEvent.start}`),
+                    pausedAt: convertDateString(
+                      addTimeDifference(
+                        `${droppedEvent.extendedProps.planStartDate}`,
+                        `${droppedEvent.extendedProps.planEndDate}`,
+                        droppedEvent.start as Date,
+                        0,
+                      ),
+                    ),
+                  },
+                });
+              }
+            }
+          } else {
+            if (
+              isDateInFutureOrToday(`${droppedEvent.end}`) &&
+              !resourcePlanDay
+            ) {
+              // if item actual or plan  with col actual with date in feature
+              const oldStart = info.oldEvent.start;
+              const oldEnd = info.oldEvent.end;
+
+              info.event.setDates(oldStart as Date, oldEnd);
             }
             if (
               matchData &&
               matchData.resourceId === ItemScheduleType.ACTUAL &&
+              resourcePlanDay
+            ) {
+              const oldStart = info.oldEvent.start;
+              const oldEnd = info.oldEvent.end;
+
+              info.event.setDates(oldStart as Date, oldEnd);
+            }
+            if (
+              matchData &&
+              matchData.resourceId === ItemScheduleType.PLANS &&
               !resourcePlanDay
             ) {
-              updateActualTime({
-                uuid: droppedEvent.extendedProps.uuid,
-                data: {
-                  startedAt: convertDateString(`${droppedEvent.start}`),
-                  pausedAt: convertDateString(
-                    addTimeDifference(
-                      `${droppedEvent.extendedProps.planStartDate}`,
-                      `${droppedEvent.extendedProps.planEndDate}`,
-                      droppedEvent.start as Date,
-                      0,
-                    ),
-                  ),
-                },
+              const oldStart = info.oldEvent.start;
+              const oldEnd = info.oldEvent.end;
+
+              info.event.setDates(oldStart as Date, oldEnd);
+            }
+            if (
+              matchData &&
+              matchData.uuid !== droppedEvent.extendedProps.uuid
+            ) {
+              info.view.calendar.refetchEvents();
+            }
+            const isCheckDay = resourcePlanDay
+              ? ItemScheduleType.PLANS
+              : ItemScheduleType.ACTUAL;
+            if (!resourcePlanDay) {
+              // Check overlap actual
+
+              const hasOverlap = taskTimeScheduleList.some((item) => {
+                if (item.uuid === droppedEvent.extendedProps.uuid) {
+                  return false;
+                }
+
+                return (
+                  startDrop < item.end &&
+                  endDrop > item.start &&
+                  item.resourceId === isCheckDay &&
+                  !resourcePlanDay &&
+                  item.taskId === droppedEvent.extendedProps.taskId
+                );
               });
+
+              if (hasOverlap) {
+                const oldStart = info.oldEvent.start;
+                const oldEnd = info.oldEvent.end;
+
+                info.event.setDates(oldStart as Date, oldEnd);
+              }
+            }
+            const newDataTimeList = taskTimeScheduleList.map((event) => {
+              if (event.uuid === droppedEvent.extendedProps.uuid) {
+                const newData = {
+                  ...event,
+                  resourceId: isCheckDay,
+                  start: droppedEvent.start || new Date(),
+                  end: droppedEvent.end || new Date(),
+                  planStartDate: String(droppedEvent.start) || '',
+                  planEndDate: String(droppedEvent.end) || '',
+                };
+                return newData;
+              } else {
+                return event;
+              }
+            });
+            // Set data schedule
+            setTaskTimeScheduleList(newDataTimeList);
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            if (
+              matchData &&
+              matchData.resourceId === ItemScheduleType.PLANS &&
+              !resourcePlanDay &&
+              droppedEvent.extendedProps.taskId
+            ) {
+              createActualDuration({
+                taskId: droppedEvent.extendedProps.taskId,
+                uuid: droppedEvent.extendedProps.uuid,
+                startedAt: convertDateString(`${startDrop}`),
+                pausedAt: convertDateString(`${endDrop}`),
+              });
+              deletePlanTask(droppedEvent.extendedProps.uuid);
+            } else {
+              if (
+                matchData &&
+                matchData.resourceId === ItemScheduleType.PLANS &&
+                resourcePlanDay
+              ) {
+                updatePlanTime({
+                  uuid: droppedEvent.extendedProps.uuid,
+                  data: {
+                    planStartDate: convertDateString(`${droppedEvent.start}`),
+                    planEndDate: convertDateString(
+                      addTimeDifference(
+                        `${droppedEvent.extendedProps.planStartDate}`,
+                        `${droppedEvent.extendedProps.planEndDate}`,
+                        droppedEvent.start as Date,
+                        0,
+                      ),
+                    ),
+                  },
+                });
+              }
+              if (
+                matchData &&
+                matchData.resourceId === ItemScheduleType.ACTUAL &&
+                !resourcePlanDay
+              ) {
+                updateActualTime({
+                  uuid: droppedEvent.extendedProps.uuid,
+                  data: {
+                    startedAt: convertDateString(`${droppedEvent.start}`),
+                    pausedAt: convertDateString(
+                      addTimeDifference(
+                        `${droppedEvent.extendedProps.planStartDate}`,
+                        `${droppedEvent.extendedProps.planEndDate}`,
+                        droppedEvent.start as Date,
+                        0,
+                      ),
+                    ),
+                  },
+                });
+              }
             }
           }
         }
-      }
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      setTimeout(() => setIsInteracting(false), 200);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        setTimeout(() => setIsInteracting(false), 200);
+      }
     };
 
     const moveMultipleEvents = (event: EventImpl) => {
@@ -2316,7 +2324,7 @@ const TimeSchedule = memo(
       return true;
     };
 
-    const handleShowTaskInModal = (data: {
+    const _handleShowTaskInModal = (data: {
       id: string;
       taskId: string | number;
       uuid: string;
@@ -2356,7 +2364,7 @@ const TimeSchedule = memo(
         }).top,
       });
     };
-    const handleShowEventInModal = (data: {
+    const _handleShowEventInModal = (data: {
       id: string;
       start: string;
       end: string;
@@ -2389,7 +2397,7 @@ const TimeSchedule = memo(
     };
 
     // Event click card
-    const _handleEventClick = (clickInfo?: any) => {
+    const handleEventClick = (clickInfo?: any) => {
       const resourcePlan =
         clickInfo.event._def &&
         clickInfo.event._def.resourceIds?.length &&
@@ -2406,57 +2414,59 @@ const TimeSchedule = memo(
             ? prev.filter((eventId) => eventId !== uuid)
             : [...prev, uuid],
         );
-      } else {
-        setIsStartPopupDetail(clickInfo.event.extendedProps.isStart);
-        if (
-          clickInfo.event.extendedProps.type === ItemStartType.TASK ||
-          !resourcePlan
-        ) {
-          handleShowTaskInModal({
-            title: clickInfo.event.title,
-            id: clickInfo.event.id,
-            taskId: clickInfo.event.extendedProps.taskId,
-            isImportant: clickInfo.event.extendedProps.isImportant,
-            isRunning: clickInfo.event.extendedProps.isCalculation,
-            deadline: clickInfo.event.extendedProps.deadline,
-            uuid: clickInfo.event.extendedProps.uuid,
-            resource: resourcePlan
-              ? ItemScheduleType.PLANS
-              : ItemScheduleType.ACTUAL,
-            largeColor: clickInfo.event.extendedProps.largeColor
-              ? clickInfo.event.extendedProps.largeColor
-              : '',
-            start: clickInfo.event.extendedProps.planStartDate,
-            end: clickInfo.event.extendedProps.planEndDate,
-            eventList: taskTimeScheduleList,
-            statusId: resourcePlan
-              ? clickInfo.event.extendedProps.statusId ||
-                clickInfo.event.extendedProps.status.id
-              : 0,
-            clientX: clickInfo.jsEvent.clientX,
-            clientY: clickInfo.jsEvent.clientY,
-          });
-        } else {
-          setIdBackToEvent(clickInfo.event.extendedProps.scheduleId);
-          handleShowEventInModal({
-            title: clickInfo.event.title,
-            id: clickInfo.event.extendedProps.scheduleId,
-            start: clickInfo.event.extendedProps.planStartDate,
-            end: clickInfo.event.extendedProps.isAllDay
-              ? clickInfo.event.extendedProps.endDate
-              : clickInfo.event.extendedProps.planEndDate,
-            clientX: clickInfo.jsEvent.clientX,
-            clientY: clickInfo.jsEvent.clientY,
-            isAllDay: clickInfo.event.extendedProps.isAllDay,
-            address: clickInfo.event.extendedProps.address,
-            participants: clickInfo.event.extendedProps.participants,
-            type: {
-              label: clickInfo.event.extendedProps.eventType,
-              value: clickInfo.event.extendedProps.eventType,
-            },
-          });
-        }
       }
+      // TODO: Click event  schedule
+      // else {
+      //   setIsStartPopupDetail(clickInfo.event.extendedProps.isStart);
+      //   if (
+      //     clickInfo.event.extendedProps.type === ItemStartType.TASK ||
+      //     !resourcePlan
+      //   ) {
+      //     handleShowTaskInModal({
+      //       title: clickInfo.event.title,
+      //       id: clickInfo.event.id,
+      //       taskId: clickInfo.event.extendedProps.taskId,
+      //       isImportant: clickInfo.event.extendedProps.isImportant,
+      //       isRunning: clickInfo.event.extendedProps.isCalculation,
+      //       deadline: clickInfo.event.extendedProps.deadline,
+      //       uuid: clickInfo.event.extendedProps.uuid,
+      //       resource: resourcePlan
+      //         ? ItemScheduleType.PLANS
+      //         : ItemScheduleType.ACTUAL,
+      //       largeColor: clickInfo.event.extendedProps.largeColor
+      //         ? clickInfo.event.extendedProps.largeColor
+      //         : '',
+      //       start: clickInfo.event.extendedProps.planStartDate,
+      //       end: clickInfo.event.extendedProps.planEndDate,
+      //       eventList: taskTimeScheduleList,
+      //       statusId: resourcePlan
+      //         ? clickInfo.event.extendedProps.statusId ||
+      //           clickInfo.event.extendedProps.status.id
+      //         : 0,
+      //       clientX: clickInfo.jsEvent.clientX,
+      //       clientY: clickInfo.jsEvent.clientY,
+      //     });
+      //   } else {
+      //     setIdBackToEvent(clickInfo.event.extendedProps.scheduleId);
+      //     handleShowEventInModal({
+      //       title: clickInfo.event.title,
+      //       id: clickInfo.event.extendedProps.scheduleId,
+      //       start: clickInfo.event.extendedProps.planStartDate,
+      //       end: clickInfo.event.extendedProps.isAllDay
+      //         ? clickInfo.event.extendedProps.endDate
+      //         : clickInfo.event.extendedProps.planEndDate,
+      //       clientX: clickInfo.jsEvent.clientX,
+      //       clientY: clickInfo.jsEvent.clientY,
+      //       isAllDay: clickInfo.event.extendedProps.isAllDay,
+      //       address: clickInfo.event.extendedProps.address,
+      //       participants: clickInfo.event.extendedProps.participants,
+      //       type: {
+      //         label: clickInfo.event.extendedProps.eventType,
+      //         value: clickInfo.event.extendedProps.eventType,
+      //       },
+      //     });
+      //   }
+      // }
     };
 
     // Event action
@@ -3412,7 +3422,7 @@ const TimeSchedule = memo(
                   }}
                   eventDragStop={handleEventDragStop}
                   // TODO: Update hover event
-                  // eventClick={handleEventClick}
+                  eventClick={handleEventClick}
                   eventOverlap={true}
                   slotEventOverlap={true}
                   selectMirror={true}
