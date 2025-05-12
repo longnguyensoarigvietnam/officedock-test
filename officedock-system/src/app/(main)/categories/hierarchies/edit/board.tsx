@@ -22,11 +22,9 @@ import { CreationDataSkill, Skill } from '@interfaces/skills';
 
 import { AddCategoryHierarchyType, ScreenName } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { ERROR_SAVE_MESSAGE } from '@constants/message';
 import { ALL_TEAMS_OPTION } from '@constants';
 
 import { LoadingContext } from '@providers/LoadingProvider';
-import { useToast } from '@providers/ToastProvider';
 
 import TableComponent from './form';
 import api from '@base/api';
@@ -37,22 +35,16 @@ interface rowDataType {
     value: string | number;
     label: string;
     showBy: string;
-    isValid: boolean;
-    errorMessage: string;
   };
   medium: {
     value: string | number;
     label: string;
     showBy: string;
-    isValid: boolean;
-    errorMessage: string;
   };
   small: {
     value: string | number;
     label: string;
     showBy: string;
-    isValid: boolean;
-    errorMessage: string;
   };
   skills: OptionDropdownType[];
   color: string;
@@ -68,7 +60,7 @@ const EditHierarchyForm = () => {
   const [hierarchyList, setHierarchyList] = useState<HierarchyDetail[]>([]);
   const [categoryList, setCategoryList] = useState<OptionDropdownType[]>([]);
   const [selectedHierarchiesToDelete, setSelectedHierarchiesToDelete] =
-    useState<string[]>();
+    useState<string[]>([]);
   const [selectedHierarchiesToUpdate, setSelectedHierarchiesToUpdate] =
     useState<
       {
@@ -117,7 +109,6 @@ const EditHierarchyForm = () => {
   });
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
-  const { showToast } = useToast();
   const [isTyping, setIsTyping] = useState<boolean>(false);
 
   useEffect(() => {
@@ -211,37 +202,22 @@ const EditHierarchyForm = () => {
     },
   );
 
-  const hasInvalidCategory = (hierarchyList: HierarchyDetail[]): boolean => {
-    return hierarchyList.some((org) =>
-      org.statisticCategories.some(
-        (category) =>
-          (!category.large.isValid &&
-            category.large.errorMessage &&
-            !isUUID(category.large.label)) ||
-          (!category.medium.isValid &&
-            category.medium.errorMessage &&
-            !isUUID(category.medium.label)) ||
-          (!category.small.isValid &&
-            category.small.errorMessage &&
-            !isUUID(category.small.label)),
-      ),
-    );
-  };
-
   const handleConfirmUpdateOrganizationCategoryHierarchy = () => {
-    if (!hasInvalidCategory(hierarchyList)) {
-      const tempSelectedHierarchiesToUpdate = selectedHierarchiesToUpdate.map(
-        (hierarchy) => {
-          return {
-            ...hierarchy,
-            organizationStatisticCategoryId: isUUID(
-              hierarchy.organizationStatisticCategoryId as string,
-            )
-              ? null
-              : hierarchy.organizationStatisticCategoryId,
-          };
-        },
-      );
+    const tempSelectedHierarchiesToUpdate = selectedHierarchiesToUpdate.map(
+      (hierarchy) => {
+        return {
+          ...hierarchy,
+          organizationStatisticCategoryId: isUUID(
+            hierarchy.organizationStatisticCategoryId as string,
+          )
+            ? null
+            : hierarchy.organizationStatisticCategoryId,
+        };
+      },
+    );
+    if(selectedHierarchiesToDelete.length == 0 && tempSelectedHierarchiesToUpdate.length == 0){
+      router.push(pageRouters.HIERARCHY_MANAGEMENT.href);
+    } else{
       updateOrganizationCategoryHierarchy({
         ids: selectedHierarchiesToDelete
           ? selectedHierarchiesToDelete
@@ -251,11 +227,6 @@ const EditHierarchyForm = () => {
               .filter((id): id is string => id !== undefined)
           : [],
         items: tempSelectedHierarchiesToUpdate,
-      });
-    } else {
-      showToast({
-        variant: 'error',
-        description: ERROR_SAVE_MESSAGE,
       });
     }
   };
@@ -318,22 +289,16 @@ const EditHierarchyForm = () => {
         label: org.largeStatisticCategory?.name || '',
         value: org.largeStatisticCategory?.uuid || '',
         showBy: AddCategoryHierarchyType.PULLDOWN,
-        isValid: true,
-        errorMessage: '',
       },
       medium: {
         label: org.mediumStatisticCategory?.name || '',
         value: org.mediumStatisticCategory?.uuid || '',
         showBy: AddCategoryHierarchyType.PULLDOWN,
-        isValid: true,
-        errorMessage: '',
       },
       small: {
         label: org.smallStatisticCategory?.name || '',
         value: org.smallStatisticCategory?.uuid || '',
         showBy: AddCategoryHierarchyType.PULLDOWN,
-        isValid: true,
-        errorMessage: '',
       },
       skills: org.skills.map((skill) => {
         return {
@@ -366,22 +331,16 @@ const EditHierarchyForm = () => {
             label: org.largeStatisticCategory?.name || '',
             value: org.largeStatisticCategory?.uuid || '',
             showBy: AddCategoryHierarchyType.PULLDOWN,
-            isValid: true,
-            errorMessage: '',
           },
           medium: {
             label: org.mediumStatisticCategory?.name || '',
             value: org.mediumStatisticCategory?.uuid || '',
             showBy: AddCategoryHierarchyType.PULLDOWN,
-            isValid: true,
-            errorMessage: '',
           },
           small: {
             label: org.smallStatisticCategory?.name || '',
             value: org.smallStatisticCategory?.uuid || '',
             showBy: AddCategoryHierarchyType.PULLDOWN,
-            isValid: true,
-            errorMessage: '',
           },
           skills: org.skills.map((skill) => {
             return {
