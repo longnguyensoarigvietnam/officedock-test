@@ -467,6 +467,36 @@ const TaskCard = ({
               : '#A7B9C2',
         }}
         ref={containerRef}
+        onMouseEnter={(e) => {
+          if (isSmallItem) {
+            if (isShiftPressed) return;
+            if (isInteracting) return;
+            handleMouseEnter(e);
+            const fcEvent = containerRef.current?.closest(
+              '.fc-event',
+            ) as HTMLElement;
+            const resizer = fcEvent?.querySelector(
+              '.fc-event-resizer-end',
+            ) as HTMLElement;
+            if (resizer) {
+              resizer.style.setProperty('opacity', '0', 'important');
+            }
+          }
+        }}
+        onMouseLeave={() => {
+          if (isSmallItem) {
+            handleMouseLeave();
+            const fcEvent = containerRef.current?.closest(
+              '.fc-event',
+            ) as HTMLElement;
+            const resizer = fcEvent?.querySelector(
+              '.fc-event-resizer-end',
+            ) as HTMLElement;
+            if (resizer) {
+              resizer.style.setProperty('opacity', '1', 'important');
+            }
+          }
+        }}
         className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${largeColor && resourcePlan && 'border border-l-2'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-[#0068B6]'}    text-black rounded-md   justify-between   px-2 border`}>
         <div className="flex w-full relative  h-full justify-between ">
           <div
@@ -496,8 +526,8 @@ const TaskCard = ({
                 resizer.style.setProperty('opacity', '1', 'important');
               }
             }}
-            className={`group overflow-hidden bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full'}`}>
-            <div className="flex overflow-hidden flex-col gap-2 w-[95%]">
+            className={`group  bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
+            <div className="flex overflow-hidden flex-col gap-1 w-[95%]">
               <p
                 style={{
                   width: event.event?.extendedProps.isAllDay

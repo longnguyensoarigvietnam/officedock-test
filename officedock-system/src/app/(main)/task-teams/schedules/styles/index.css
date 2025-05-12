@@ -514,7 +514,9 @@
 .calendar-team-custom .fc-timeGridWeek-view .fc-timegrid-now-indicator-line {
   margin-top: -6px;
 }
-.calendar-team-custom .fc-resourceTimeGridDay-view .fc-timegrid-now-indicator-line {
+.calendar-team-custom
+  .fc-resourceTimeGridDay-view
+  .fc-timegrid-now-indicator-line {
   margin-top: -1px;
 }
 .calendar-team-custom .fc-scroller-harness .fc-scroller-harness-liquid {
@@ -522,4 +524,13 @@
 }
 .calendar-team-custom .fc .fc-timegrid-slot-label {
   padding-left: 20px;
+}
+.calendar-team-custom .fc-resourceTimeGridDay-view td {
+  border: none !important;
+}
+.calendar-team-custom .fc-resourceTimeGridDay-view .fc-timegrid-col-frame {
+  border-left: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border: 1.5px solid #d2dbe1;
 }
