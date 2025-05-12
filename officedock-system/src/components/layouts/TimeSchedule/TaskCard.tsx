@@ -34,6 +34,7 @@ interface TaskCardProps {
   contentSize: number;
   isOptionZoomSchedule: string;
   isSelect: boolean;
+  isShiftPressed: boolean;
   taskTimeScheduleList: TaskTimeSchedule[];
   isModalShow: boolean;
   handleSetEventParam: ({
@@ -68,6 +69,7 @@ const TaskCard = ({
   event,
   isModalShow,
   isSelect,
+  isShiftPressed,
   slotHeight,
   isOptionZoomSchedule,
   taskTimeScheduleList,
@@ -445,6 +447,11 @@ const TaskCard = ({
       }
     }
   }, [isOptionZoomSchedule, slotHeight]);
+  useEffect(() => {
+    if (isShiftPressed) {
+      setIsHovering(false);
+    }
+  }, [isShiftPressed]);
 
   return (
     <>
@@ -464,6 +471,7 @@ const TaskCard = ({
         <div className="flex w-full relative  h-full justify-between ">
           <div
             onMouseEnter={(e) => {
+              if (isShiftPressed) return;
               if (isInteracting) return;
               handleMouseEnter(e);
               const fcEvent = containerRef.current?.closest(
