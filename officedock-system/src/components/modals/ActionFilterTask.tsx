@@ -287,7 +287,7 @@ const ActionFilterTask = ({
               </div>
             </div>
             {isOpen && (
-              <div className="w-[370px] h-fit max-h-[400px] overflow-y-auto absolute top-10 z-20 right-0 rounded-md p-1  border border-[#77858F] bg-white">
+              <div className="w-[370px] h-fit max-h-[calc(100vh_-_400px)] overflow-y-auto absolute top-10 z-20 right-0 rounded-md p-1  border border-[#77858F] bg-white">
                 {dataOptionsOrganizationsCategory.map((team) => (
                   <div
                     key={team.organization.id}

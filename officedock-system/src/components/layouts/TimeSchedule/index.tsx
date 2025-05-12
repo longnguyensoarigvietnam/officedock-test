@@ -1553,10 +1553,11 @@ const TimeSchedule = memo(
           const externalEvents = document.getElementById('external-events');
           const eventEl = document.createElement('div');
           eventEl.className = 'fc-event';
-          eventEl.innerText = '1234';
-          eventEl.setAttribute('data-id', '11111');
+          eventEl.innerText = 'event';
+          eventEl.setAttribute('data-id', 'event');
 
           externalEvents?.appendChild(eventEl);
+          info.event.remove();
         } else {
           info.view.calendar.refetchEvents();
 
@@ -3217,7 +3218,7 @@ const TimeSchedule = memo(
             onMouseDown={handleMouseDown}
           />
           <div
-            className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6 pr-4 `}>
+            className={` overflow-x-hidden h-full overflow-y-auto flex flex-col gap-8 bg-[#EBF1F7] pt-1 pb-6`}>
             <div className="overflow-y-hidden flex flex-col gap-4 mt-[6px] h-full">
               <div className={`items-center gap-4 flex h-12 sticky z-20`}>
                 {!isExtendCalendar ? (

@@ -1279,7 +1279,7 @@ const ActionsEventModal = ({
             <div className="w-full max-w-32 font-medium text-[14px]">タグ</div>
             <div className="w-full max-w-[518px]">
               <div className="flex gap-2 max-w-[518px]">
-                <div className="w-[461px]">
+                <div className="w-[457px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
                     disabled={isDisabled}
