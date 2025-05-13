@@ -31,22 +31,16 @@ interface rowDataType {
     value: string | number;
     label: string;
     showBy: string;
-    isValid: boolean;
-    errorMessage: string;
   };
   medium: {
     value: string | number;
     label: string;
     showBy: string;
-    isValid: boolean;
-    errorMessage: string;
   };
   small: {
     value: string | number;
     label: string;
     showBy: string;
-    isValid: boolean;
-    errorMessage: string;
   };
   skills: OptionDropdownType[];
   color: string;
@@ -129,22 +123,16 @@ const ListHierarchy = () => {
         label: org.largeStatisticCategory?.name || '',
         value: org.largeStatisticCategory?.uuid || '',
         showBy: AddCategoryHierarchyType.PULLDOWN,
-        isValid: true,
-        errorMessage: '',
       },
       medium: {
         label: org.mediumStatisticCategory?.name || '',
         value: org.mediumStatisticCategory?.uuid || '',
         showBy: AddCategoryHierarchyType.PULLDOWN,
-        isValid: true,
-        errorMessage: '',
       },
       small: {
         label: org.smallStatisticCategory?.name || '',
         value: org.smallStatisticCategory?.uuid || '',
         showBy: AddCategoryHierarchyType.PULLDOWN,
-        isValid: true,
-        errorMessage: '',
       },
       skills: org.skills.map((skill) => {
         return {
@@ -177,22 +165,16 @@ const ListHierarchy = () => {
             label: org.largeStatisticCategory?.name || '',
             value: org.largeStatisticCategory?.uuid || '',
             showBy: AddCategoryHierarchyType.PULLDOWN,
-            isValid: true,
-            errorMessage: '',
           },
           medium: {
             label: org.mediumStatisticCategory?.name || '',
             value: org.mediumStatisticCategory?.uuid || '',
             showBy: AddCategoryHierarchyType.PULLDOWN,
-            isValid: true,
-            errorMessage: '',
           },
           small: {
             label: org.smallStatisticCategory?.name || '',
             value: org.smallStatisticCategory?.uuid || '',
             showBy: AddCategoryHierarchyType.PULLDOWN,
-            isValid: true,
-            errorMessage: '',
           },
           skills: org.skills.map((skill) => {
             return {

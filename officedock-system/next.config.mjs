@@ -33,6 +33,15 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'http',
+        hostname: process.env.NEXT_PUBLIC_API_URL.replace(
+          /^http?:\/\/|:\d+$/g,
+          '',
+        ),
+        port: '8000',
+        pathname: '/**',
+      },
     ],
   },
 };
