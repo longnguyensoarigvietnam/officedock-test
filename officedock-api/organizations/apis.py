@@ -1059,7 +1059,7 @@ class OrganizationCategoryHierarchyViewSet(
             ) = StatisticCategory.objects.get_or_create(
                 company=company,
                 name=obj.get("name"),
-                defaults={"uuid": obj.get("uuid")},
+                uuid=obj.get("uuid"),
             )
 
             if created:
