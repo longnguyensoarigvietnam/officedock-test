@@ -815,12 +815,12 @@ class OrganizationCategoryHierarchyForCreateSerializer(serializers.Serializer):
         if not category_data:
             return
 
-        category_name = category_data.get("name")
-        if not category_name:
+        category_uuid = category_data.get("uuid")
+        if not category_uuid:
             return
 
         category = StatisticCategory.objects.filter(
-            company=company, name=category_name
+            company=company, uuid=category_uuid
         ).first()
 
         if category and category.team and category.team != organization:
