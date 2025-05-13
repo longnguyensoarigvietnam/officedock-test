@@ -213,6 +213,57 @@ export interface SkillMapSkill {
   }[];
 }
 
+export interface SkillMapInfo {
+  user: {
+    id: number;
+    fullName: string;
+    avatarColor: string;
+    avatar: string | null;
+    organizations: Organizations;
+  };
+  organizations: SkillMapByOrganization[];
+}
+
+export interface SkillMapByOrganization {
+  organizationName: string;
+  skillMaps: SkillMapByOrganizationInfo[][];
+  steps: {
+    step1: string;
+    step2: string;
+    step3: string;
+  };
+}
+
+export interface SkillMapByOrganizationInfo {
+  id: number | null;
+  skill: {
+    id: number | null;
+    name: string | null;
+    description: string | null;
+    step: string | null;
+  };
+  isComplete: boolean | null;
+  step: string | null;
+  isLocked: boolean | null;
+  isHaveComment: boolean | null;
+  progressPercent?: number | null;
+  level: {
+    id: number | null;
+    skillMap: number | null;
+    level: string | null;
+    measureCount: number | null;
+    actualMeasureCount: number | null;
+    measureTime: number | null;
+    actualMeasureTime: number | null;
+    startLookbackAt: Date | string | null;
+    nextSubmitAt: Date | string | null;
+    lookBackInterval: number | null;
+    lookBackType: string | null;
+    items: string[];
+    isComplete: boolean | null;
+  };
+}
+
 export interface OrganizationSkillFormData {
   organizationSkills: {
     id?: number;

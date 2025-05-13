@@ -469,13 +469,13 @@ export const OrganizationSkillDetail = ({
         <tbody>
           {table.getRowModel().rows.map((row, rowIndex) => {
             const skillLevel1Detail = row.original.skillLevels.find(
-              (level) => level.level == 'レベル0',
-            );
-            const skillLevel2Detail = row.original.skillLevels.find(
               (level) => level.level == 'レベル1',
             );
-            const skillLevel3Detail = row.original.skillLevels.find(
+            const skillLevel2Detail = row.original.skillLevels.find(
               (level) => level.level == 'レベル2',
+            );
+            const skillLevel3Detail = row.original.skillLevels.find(
+              (level) => level.level == 'レベル3',
             );
             return (
               <tr

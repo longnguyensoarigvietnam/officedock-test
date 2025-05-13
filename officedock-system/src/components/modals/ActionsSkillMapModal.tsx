@@ -63,7 +63,7 @@ const ActionsSkillMapModal = ({
 }: ActionsSkillMapModalProps) => {
   const { data: session } = useSession();
 
-  const [currentStep, setCurrentStep] = useState<number>(ActionsModal.EDIT ? Number(step) : 1);
+  const [currentStep, setCurrentStep] = useState<number>(action == ActionsModal.EDIT ? Number(step) : 1);
 
   const {
     register,
@@ -99,9 +99,9 @@ const ActionsSkillMapModal = ({
         if (!detail) return null;
 
         const skillLevels: SkillLevelDetail[] = [
-          'レベル0',
           'レベル1',
           'レベル2',
+          'レベル3',
         ]
           .map((levelKey) => {
             const levelDetail = detail.skillLevels.find(
@@ -166,12 +166,12 @@ const ActionsSkillMapModal = ({
   //   ((action === ActionsEvent.EDIT &&
   //     !hasPermissionInArray(
   //       session?.user.permissions,
-  //       PermissionsSystem.TAG_UPDATE,
+  //       PermissionsSystem.SKILL_MAP_UPDATE,
   //     )) ||
   //     (action === ActionsEvent.CREATE &&
   //       !hasPermissionInArray(
   //         session?.user.permissions,
-  //         PermissionsSystem.TAG_ADD,
+  //         PermissionsSystem.SKILL_MAP_ADD,
   //       )));
 
   type StepField = keyof StepFormDataDetail;
@@ -185,22 +185,22 @@ const ActionsSkillMapModal = ({
 
   function getItemListFieldArrayPath(
     step: 1 | 2 | 3,
-    level: 0 | 1 | 2,
-  ): `step${1 | 2 | 3}.skillLevels.${0 | 1 | 2}.items` {
+    level: 1 | 2 | 3,
+  ): `step${1 | 2 | 3}.skillLevels.${1 | 2 | 3}.items` {
     return `step${step}.skillLevels.${level}.items` as any;
   }
 
   function getSkillLevelField<K extends keyof SkillLevelDetail>(
     step: 1 | 2 | 3,
-    level: 0 | 1 | 2,
+    level: 1 | 2 | 3,
     field: K,
-  ): `step${1 | 2 | 3}.skillLevels.${0 | 1 | 2}.${K}` {
+  ): `step${1 | 2 | 3}.skillLevels.${1 | 2 | 3}.${K}` {
     return `step${step}.skillLevels.${level}.${field}` as const;
   }
 
   function getItemFieldArrayPath(
     step: 1 | 2 | 3,
-    level: 0 | 1 | 2,
+    level: 1 | 2 | 3,
     index: number,
   ) {
     return `step${step}.skillLevels.${level}.items.${index}.value` as any;
@@ -213,7 +213,7 @@ const ActionsSkillMapModal = ({
     setValue(
       getSkillLevelField(
         currentStep as 1 | 2 | 3,
-        levelKey as 0 | 1 | 2,
+        levelKey as 1 | 2 | 3,
         'measureCount',
       ),
       null,
@@ -221,7 +221,7 @@ const ActionsSkillMapModal = ({
     setValue(
       getSkillLevelField(
         currentStep as 1 | 2 | 3,
-        levelKey as 0 | 1 | 2,
+        levelKey as 1 | 2 | 3,
         'measureTime',
       ),
       null,
@@ -229,7 +229,7 @@ const ActionsSkillMapModal = ({
     setValue(
       getSkillLevelField(
         currentStep as 1 | 2 | 3,
-        levelKey as 0 | 1 | 2,
+        levelKey as 1 | 2 | 3,
         'lookBackInterval',
       ),
       null,
@@ -237,7 +237,7 @@ const ActionsSkillMapModal = ({
     setValue(
       getSkillLevelField(
         currentStep as 1 | 2 | 3,
-        levelKey as 0 | 1 | 2,
+        levelKey as 1 | 2 | 3,
         'lookBackType',
       ),
       null,
@@ -261,7 +261,7 @@ const ActionsSkillMapModal = ({
                     errors,
                     getSkillLevelField(
                       currentStep as 1 | 2 | 3,
-                      levelKey as 0 | 1 | 2,
+                      levelKey as 1 | 2 | 3,
                       'measureCount',
                     ),
                   )
@@ -274,7 +274,7 @@ const ActionsSkillMapModal = ({
                 register={register(
                   getSkillLevelField(
                     currentStep as 1 | 2 | 3,
-                    levelKey as 0 | 1 | 2,
+                    levelKey as 1 | 2 | 3,
                     'measureCount',
                   ),
                   {
@@ -302,7 +302,7 @@ const ActionsSkillMapModal = ({
                       errors,
                       getSkillLevelField(
                         currentStep as 1 | 2 | 3,
-                        levelKey as 0 | 1 | 2,
+                        levelKey as 1 | 2 | 3,
                         'measureTime',
                       ),
                     )
@@ -315,7 +315,7 @@ const ActionsSkillMapModal = ({
                 register={register(
                   getSkillLevelField(
                     currentStep as 1 | 2 | 3,
-                    levelKey as 0 | 1 | 2,
+                    levelKey as 1 | 2 | 3,
                     'measureTime',
                   ),
                   {
@@ -343,7 +343,7 @@ const ActionsSkillMapModal = ({
                       errors,
                       getSkillLevelField(
                         currentStep as 1 | 2 | 3,
-                        levelKey as 0 | 1 | 2,
+                        levelKey as 1 | 2 | 3,
                         'lookBackInterval',
                       ),
                     )
@@ -356,7 +356,7 @@ const ActionsSkillMapModal = ({
                 register={register(
                   getSkillLevelField(
                     currentStep as 1 | 2 | 3,
-                    levelKey as 0 | 1 | 2,
+                    levelKey as 1 | 2 | 3,
                     'lookBackInterval',
                   ),
                   {
@@ -374,7 +374,7 @@ const ActionsSkillMapModal = ({
                 control={control}
                 name={getSkillLevelField(
                   currentStep as 1 | 2 | 3,
-                  levelKey as 0 | 1 | 2,
+                  levelKey as 1 | 2 | 3,
                   'lookBackType',
                 )}
                 rules={{
@@ -387,7 +387,7 @@ const ActionsSkillMapModal = ({
                         errors,
                         getSkillLevelField(
                           currentStep as 1 | 2 | 3,
-                          levelKey as 0 | 1 | 2,
+                          levelKey as 1 | 2 | 3,
                           'lookBackType',
                         ),
                       )
@@ -405,7 +405,7 @@ const ActionsSkillMapModal = ({
                         watch(
                           getSkillLevelField(
                             currentStep as 1 | 2 | 3,
-                            levelKey as 0 | 1 | 2,
+                            levelKey as 1 | 2 | 3,
                             'lookBackType',
                           ),
                         )?.value,
@@ -440,7 +440,7 @@ const ActionsSkillMapModal = ({
       control,
       name: getItemListFieldArrayPath(
         currentStep as 1 | 2 | 3,
-        levelKey as 0 | 1 | 2,
+        levelKey as 1 | 2 | 3,
       ),
     });
 
@@ -506,7 +506,7 @@ const ActionsSkillMapModal = ({
                     register={register(
                       getItemFieldArrayPath(
                         currentStep as 1 | 2 | 3,
-                        levelKey as 0 | 1 | 2,
+                        levelKey as 1 | 2 | 3,
                         index,
                       ),
                     )}

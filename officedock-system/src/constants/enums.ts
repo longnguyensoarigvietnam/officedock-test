@@ -227,7 +227,6 @@ export enum NestedFieldKey {
 }
 
 export enum LevelName {
-  LEVEL0 = 'レベル0',
   LEVEL1 = 'レベル1',
   LEVEL2 = 'レベル2',
   LEVEL3 = 'レベル3',

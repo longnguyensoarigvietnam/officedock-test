@@ -272,3 +272,15 @@ input[type='checkbox']:checked {
 input[type='checkbox']:focus {
   box-shadow: none;
 }
+
+.clip-left {
+  clip-path: polygon(0% 0%, 97% 0%, 100% 50%, 97% 100%, 0 100%)
+}
+
+.clip-middle {
+  clip-path:  polygon(97% 0%, 100% 50%, 97% 100%, 0% 100%, 3% 50%, 0% 0%)
+}
+
+.clip-right {
+  clip-path: polygon(100% 0%, 100% 50%, 100% 100%, 0% 100%, 3.2% 50%, 0% 0%)
+}

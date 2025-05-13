@@ -178,7 +178,7 @@ const ListSkillsMap = () => {
       skillLevels:
         step?.skillLevels && step?.skillLevels.length > 0
           ? step.skillLevels.map((level, index) => ({
-              level: `レベル${index}`,
+              level: `レベル${index + 1}`,
               items:
                 level.items.length > 0
                   ? level.items
@@ -229,7 +229,7 @@ const ListSkillsMap = () => {
       skillLevels:
         step?.skillLevels && step?.skillLevels.length > 0
           ? step.skillLevels.map((level, index) => ({
-              level: `レベル${index}`,
+              level: `レベル${index + 1}`,
               items:
                 level.items.length > 0
                   ? level.items
@@ -360,11 +360,11 @@ const ListSkillsMap = () => {
   const handleSetParam = ({
     id,
     action,
-    step
+    step,
   }: {
     id?: string | null;
     action?: string | null;
-    step?: number | null
+    step?: number | null;
   }) => {
     if (id) {
       params.set('skillId', id);
