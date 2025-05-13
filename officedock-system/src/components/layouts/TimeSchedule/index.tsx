@@ -1207,13 +1207,18 @@ const TimeSchedule = memo(
       const handleKeyUp = (e: any) => {
         if (e.key === 'Shift') setIsShiftPressed(false);
       };
+      const handleBlur = () => {
+        setIsShiftPressed(false);
+      };
 
       window.addEventListener('keydown', handleKeyDown);
       window.addEventListener('keyup', handleKeyUp);
+      window.addEventListener('blur', handleBlur);
 
       return () => {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
+        window.removeEventListener('blur', handleBlur);
       };
     }, []);
 
@@ -3139,6 +3144,7 @@ const TimeSchedule = memo(
         }
       },
     });
+
     useEffect(() => {
       if (authenticatedUser) {
         const value = authenticatedUser.setting?.scheduleZoom as number;
@@ -3327,7 +3333,7 @@ const TimeSchedule = memo(
                 )}
               </div>
               <div
-                className={`schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll  `}>
+                className={`schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll`}>
                 <FullCalendar
                   ref={calendarRef}
                   plugins={[
