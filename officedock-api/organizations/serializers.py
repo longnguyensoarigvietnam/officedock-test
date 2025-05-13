@@ -80,20 +80,19 @@ class StatisticCategorySerializer(BaseStatisticCategorySerializer):
             else instance.company
         )
         name = attrs.get("name")
-        team = attrs.get("team")
 
-        queryset = StatisticCategory.objects.filter(company=company, name=name)
-
-        if instance:
-            queryset = queryset.exclude(id=instance.id)
-
-        if team:
-            queryset = queryset.filter(Q(team=team) | Q(team__isnull=True))
-
-        if queryset.exists():
-            raise ValidationError(
-                {"detail": ERROR_MESSAGES["unique_category_name"]}
+        if not attrs.get("team", None):
+            queryset = StatisticCategory.objects.filter(
+                company=company, name=name, team__isnull=True
             )
+
+            if instance:
+                queryset = queryset.exclude(id=instance.id)
+
+            if queryset.exists():
+                raise ValidationError(
+                    {"detail": ERROR_MESSAGES["unique_category_name"]}
+                )
 
         return attrs
 
