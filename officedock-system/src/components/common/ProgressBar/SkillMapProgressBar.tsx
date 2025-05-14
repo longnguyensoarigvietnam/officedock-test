@@ -11,8 +11,8 @@ export const SkillMapProgressBar = ({ value, strokeColor }: SkillMapProgressBarP
       <Line
         percent={value}
         strokeColor={strokeColor}
-        strokeWidth={2.5}
-        trailWidth={2.5}
+        strokeWidth={3}
+        trailWidth={3}
         trailColor="#D2DBE1" 
       />
     </div>
