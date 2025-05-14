@@ -251,6 +251,15 @@ export const pageRouters = {
     name: '組織_スキル詳細',
     href: (organizationId: string) => `/organization-skills/${organizationId}`,
   },
+  SKILL_MAPS_MEMBERS_MANAGEMENT: {
+    name: 'スキル設定_対応メンバー編集',
+    href: '/skill-maps/members',
+  },
+  EDIT_SKILL_MAPS_MEMBERS: {
+    name: 'スキル設定_対応メンバー編集',
+    href: '/skill-maps/members/edit',
+  },
+
   // LEVEL_UP
   SUBMIT_LEVELS: {
     name: 'レベルアップ申請確認',
@@ -330,8 +339,9 @@ export const apiRouters = {
     `/organizations/${id}/statistic-categories/reset-index/`,
   ORGANIZATION_SKILLS: '/organization-skills',
   ORGANIZATION_SKILL_DELETE: (id: string) => `/organization-skills/${id}/`,
-  ORGANIZATION_SKILL_DETAIL: (id: string) => `/organizations/${id}/skills/`,
+  ORGANIZATION_SKILL_DETAIL: (id: number) => `/skills/${id}/group-steps/`,
   ORGANIZATION_HIERARCHY: '/organizations/hierarchy/',
+  ORGANIZATION_DEFINE_STEPS: (id: number) => `/organizations/${id}/define-steps/`,
 
   // CREATE DATA
   ORGANIZATION_CREATION: '/creation-data/organization/',
@@ -441,6 +451,7 @@ export const apiRouters = {
   SKILL_MAPS_DETAIL: (id: string) => `/skill-maps/${id}/`,
   SKILL_MAPS_DETAIL_CATEGORIES: '/skill-maps/detail',
   SKILL_MAPS_RESET_INDEX: '/skill-maps/reset-index/',
+  MANAGE_SKILL_MAPS: '/manage-skill-maps/',
 
   // SUBMIT LEVELS
   SUBMIT_LEVELS_LIST: '/submit-levels/',

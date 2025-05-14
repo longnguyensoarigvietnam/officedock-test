@@ -1,431 +1,480 @@
 'use client';
 import { useMutation } from 'react-query';
-import Link from 'next/link';
 import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
-import { Transition } from '@headlessui/react';
-import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
-import Button from '@components/common/Button';
-import ImageRound from '@components/common/ImageRound';
-import Input from '@components/common/Input';
-import { Table, TableBody, TableHeader } from '@components/common/Table';
-import Pagination from '@components/common/Pagination';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import ActionsSkillMapModal from '@components/modals/ActionsSkillMapModal';
+import { OrganizationSkillDetail } from './organization-skill-detail';
 import Dropdown from '@components/common/Dropdown';
 
-import { apiRouters, pageRouters } from '@constants/routers';
-import { NO_DATA_AVAILABLE } from '@constants';
+import { apiRouters } from '@constants/routers';
 import {
-  ERROR_DELETE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
+  ERROR_COMMON_MESSAGE,
+  ERROR_CREATE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  PLEASE_FILL_IN_STEP_2,
+  SUCCESS_CREATE_MESSAGE,
+  SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
-import { CurrentScreen, PermissionsSystem } from '@constants/enums';
+import {
+  ActionsModal,
+  PermissionsSystem,
+  ScreenName,
+  ServerStatusCode,
+} from '@constants/enums';
+import { ALL_TEAMS_OPTION } from '@constants';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { SkillMapStateContext } from '@providers/SkillMapProvider';
 
-import useOrganizationOptions from '@hooks/useFullOrganizationList';
-import useSkillMapList from '@hooks/useSkillMapList';
-import useDashboardMemberList from '@hooks/useDashBoardMemberList';
-
+import {
+  OrganizationSkill,
+  OrganizationSkillMapDetail,
+  SkillMapFormData,
+  SkillMapRequestData,
+  StepFormDataDetail,
+  StepRequestDataDetail,
+} from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
-import { SkillMap } from '@interfaces/skills';
-import { hasPermissionInArray } from '@utils';
-import api from '@base/api';
+
 import { useErrorToast } from '@hooks/useErrorToast';
+import useOrganizationSkillList from '@hooks/useOrganizationSkillList';
+import useOrganizationSkillMapDetail from '@hooks/useOrganizationSkillDetail';
+import useOrganizationOptions from '@hooks/useFullOrganizationList';
+
+import { hasPermissionInArray } from '@utils';
+
+import api from '@base/api';
 
 const ListSkillsMap = () => {
   const { setIsLoading } = useContext(LoadingContext);
-  const { data: session } = useSession();
   const showErrorToast = useErrorToast();
-
+  const { data: session } = useSession();
   const { showToast } = useToast();
 
-  const [showFilter, setShowFilter] = useState(true);
-  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
-  const [skillMapChosen, setSkillMapChosen] = useState<{
-    organizationId: number | null;
-    staffId: number | null;
+  // Router
+  const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
+  const router = useRouter();
+  const [skillIdParam, setSkillIdParam] = useState<string | null>(
+    searchParams.get('skillId'),
+  );
+  const [actionTypeParam, setActionTypeParam] = useState<string | null>(
+    searchParams.get('action'),
+  );
+  const [currentStepParam, setCurrentStepParam] = useState<string | null>(
+    searchParams.get('step'),
+  );
+
+  const [dataOrganizationSkillList, setDataOrganizationSkillList] = useState<
+    OrganizationSkill[]
+  >([]);
+
+  const [selectedOrganizationOption, setSelectedOrganizationOption] =
+    useState<OptionDropdownType>({
+      label: ALL_TEAMS_OPTION,
+      value: '',
+    });
+
+  const [selectedFilterStepDetail, setSelectedFilterStepDetail] = useState<{
+    filterStep: string;
+    filterOrganizationId: number;
   }>();
 
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-
-  const [dataSkillMapList, setDataSkillMapList] = useState<SkillMap[]>([]);
-  const [selectedOrganizationId, setSelectedOrganizationId] = useState<
-    number | undefined
-  >();
-  const [dataOptionsStaff, setDataOptionsStaff] = useState<
+  const [organizationList, setOrganizationList] = useState<
     OptionDropdownType[]
   >([]);
-  const [selectedStaffId, setSelectedStaffId] = useState<number | undefined>();
-  const { setDataSkillMapDetail } = useContext(SkillMapStateContext);
-  const { dashboardMemberList } = useDashboardMemberList();
 
-  // TODO: Update logic sort for multi column
-  const { register, control, handleSubmit } = useForm<{
-    organizationName: string;
-    staff: OptionDropdownType;
-  }>({
-    mode: 'onSubmit',
+  const { organizationOptions } = useOrganizationOptions({
+    current_screen: ScreenName.SKILL_MAP,
   });
-  const [filterRequest, setFilterRequest] = useState({
-    organizationName: '',
-    staff: '',
-  });
-  const { organizationOptions, refetchOrganizationOptions } =
-    useOrganizationOptions({
-      is_with_staff: true,
-      current_screen: CurrentScreen.SKILL_MAP,
+
+  // Skill map actions
+  const [openSkillMapActionsModal, setOpenSkillMapActionsModal] =
+    useState(false);
+  const [selectedSkillMapToUpdate, setSelectedSkillMapToUpdate] = useState<
+    number | null
+  >();
+  const [skillMapEditDetail, setSkillMapEditDetail] = useState<
+    OrganizationSkillMapDetail[] | null
+  >([]);
+  const [
+    selectedOrganizationInActionsModal,
+    setSelectedOrganizationInActionsModal,
+  ] = useState<number | null>(null);
+
+  // Fetch organization skills
+  const { organizationSkillList, refetchOrganizationSkillList } =
+    useOrganizationSkillList({
+      organizationId: Number(selectedOrganizationOption.value),
+      filterSteps: selectedFilterStepDetail
+        ? String(selectedFilterStepDetail.filterStep)
+        : undefined,
+      filterOrganizationIds: selectedFilterStepDetail
+        ? Number(selectedFilterStepDetail.filterOrganizationId)
+        : undefined,
     });
-  const { skillMapList, refetchSkillMapList } = useSkillMapList(
-    { page: currentPage },
-    {
-      organizationName: filterRequest.organizationName,
-      staffId: filterRequest.staff,
+
+  useOrganizationSkillMapDetail({
+    skillId: Number(selectedSkillMapToUpdate),
+    onError: (error: AxiosError) => {
+      if (error.response?.status === ServerStatusCode.NOT_FOUND) {
+        showToast({
+          variant: 'error',
+          description: ERROR_COMMON_MESSAGE,
+        });
+      }
     },
-  );
-  const [initialMemberListOptions, setInitialMemberListOptions] =
-    useState<OptionDropdownType[]>();
-  const [initialOrganizationListOptions, setInitialOrganizationListOptions] =
-    useState<OptionDropdownType[]>();
+    onSuccess: (data) => {
+      setSkillMapEditDetail(data);
+      setOpenSkillMapActionsModal(true);
+    },
+  });
+
   useEffect(() => {
-    if (skillMapList) {
-      setDataSkillMapList(skillMapList.results);
-      setTotalPages(skillMapList.numPages);
+    if (organizationSkillList) {
+      setDataOrganizationSkillList(
+        organizationSkillList as OrganizationSkill[],
+      );
     }
-  }, [skillMapList]);
+  }, [organizationSkillList]);
+
   useEffect(() => {
     if (organizationOptions) {
-      const organizations = organizationOptions.map((organization) => {
+      const organizationList = organizationOptions.map((org) => {
         return {
-          label: organization.name,
-          value: Number(organization.id),
+          value: Number(org.id),
+          label: org.name,
         };
       });
-      setInitialOrganizationListOptions(organizations);
+      setOrganizationList([
+        {
+          label: ALL_TEAMS_OPTION,
+          value: '',
+        },
+        ...organizationList,
+      ]);
     }
   }, [organizationOptions]);
-  useEffect(() => {
-    if (dashboardMemberList?.length) {
-      const memberList = dashboardMemberList.map((member) => {
-        return {
-          label: member.fullName,
-          value: member.id,
-        };
-      });
-      setDataOptionsStaff(memberList);
-    }
-  }, [dashboardMemberList]);
 
-  // Delete skills map
-  const handleOpenDeleteSkillsMapModal = (
-    organizationId: number,
-    staffId: number,
-  ) => {
-    setOpenConfirmDeleteModal(true);
-    setSkillMapChosen({ organizationId, staffId });
+  const convertFormDataToCreationRequestData = (
+    formData: Partial<SkillMapFormData>,
+  ): SkillMapRequestData => {
+    const convertStep = (
+      key: string,
+      step: StepFormDataDetail,
+    ): StepRequestDataDetail => ({
+      name: step?.name || '',
+      organizationId: selectedOrganizationInActionsModal || 0,
+      description: step?.description || '',
+      step:
+        key === 'step1'
+          ? 'ステップ1'
+          : key === 'step2'
+            ? 'ステップ2'
+            : 'ステップ3',
+      skillLevels:
+        step?.skillLevels && step?.skillLevels.length > 0
+          ? step.skillLevels.map((level, index) => ({
+              level: `レベル${index + 1}`,
+              items:
+                level.items.length > 0
+                  ? level.items
+                      .filter((item) => item.value)
+                      .map((item) => item.value)
+                  : [],
+              lookBackType: level?.lookBackType
+                ? String(level?.lookBackType.value)
+                : null,
+              lookBackInterval: level?.lookBackInterval
+                ? Number(level?.lookBackInterval)
+                : null,
+              measureCount: level?.measureCount
+                ? Number(level?.measureCount)
+                : null,
+              measureTime: level?.measureTime
+                ? Number(level?.measureTime)
+                : null,
+            }))
+          : [],
+    });
+
+    return Object.fromEntries(
+      Object.entries(formData).map(([key, step]) => [
+        key,
+        convertStep(key, step as StepFormDataDetail),
+      ]),
+    ) as SkillMapRequestData;
   };
-  const handleConfirmDeleteSkillsMap = () => {
-    if (
-      skillMapChosen &&
-      (skillMapChosen.organizationId || skillMapChosen.staffId)
-    ) {
-      setIsLoading(true);
-      deleteSkillsMap({
-        organizationId: skillMapChosen.organizationId || null,
-        staffId: skillMapChosen.staffId || null,
+
+  const convertFormDataToEditionRequestData = (
+    formData: Partial<SkillMapFormData>,
+  ): SkillMapRequestData => {
+    const convertStep = (
+      key: string,
+      step: StepFormDataDetail,
+    ): StepRequestDataDetail => ({
+      name: step?.name || '',
+      skillId: step?.skillId ? Number(step.skillId) : null,
+      organizationId: step?.organizationId ? Number(step.organizationId) : 0,
+      description: step?.description || '',
+      step:
+        key === 'step1'
+          ? 'ステップ1'
+          : key === 'step2'
+            ? 'ステップ2'
+            : 'ステップ3',
+      skillLevels:
+        step?.skillLevels && step?.skillLevels.length > 0
+          ? step.skillLevels.map((level, index) => ({
+              level: `レベル${index + 1}`,
+              items:
+                level.items.length > 0
+                  ? level.items
+                      .filter((item) => item.value)
+                      .map((item) => item.value)
+                  : [],
+              lookBackType: level?.lookBackType
+                ? String(level?.lookBackType.value)
+                : null,
+              lookBackInterval: level?.lookBackInterval
+                ? Number(level?.lookBackInterval)
+                : null,
+              measureCount: level?.measureCount
+                ? Number(level?.measureCount)
+                : null,
+              measureTime: level?.measureTime
+                ? Number(level?.measureTime)
+                : null,
+              skillLevelId: level?.skillLevelId
+                ? Number(level.skillLevelId)
+                : null,
+            }))
+          : [],
+    });
+
+    return Object.fromEntries(
+      Object.entries(formData).map(([key, step]) => [
+        key,
+        convertStep(key, step as StepFormDataDetail),
+      ]),
+    ) as SkillMapRequestData;
+  };
+
+  const handleConfirmCreateSkillMap = (data: SkillMapFormData) => {
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([_, step]) => step != null && step.name),
+    ) as Partial<SkillMapFormData>;
+
+    const keys = Object.keys(filteredData);
+
+    if (keys.length === 2 && keys.includes('step1') && keys.includes('step3')) {
+      showToast({
+        variant: 'error',
+        description: PLEASE_FILL_IN_STEP_2,
       });
       return;
     }
-  };
-  const postDeleteSkillsMap = async (skillMapChosen: {
-    organizationId: number | null;
-    staffId: number | null;
-  }) => {
-    const { data: response } = await api.delete(
-      `${apiRouters.SKILL_MAPS_DESTROY}${skillMapChosen.organizationId ? `?organization_id=${skillMapChosen.organizationId}` : ''}${skillMapChosen.organizationId ? '&' : '?'}${skillMapChosen.staffId ? `staff_id=${skillMapChosen.staffId}` : ''}`,
-    );
-    return response;
+    const requestData = convertFormDataToCreationRequestData(filteredData);
+    createSkillMap(requestData);
   };
 
-  const { mutate: deleteSkillsMap } = useMutation(postDeleteSkillsMap, {
-    onSuccess: async () => {
+  const handleCreateSkillMap = async (data: SkillMapRequestData) => {
+    setIsLoading(true);
+    return await api.post(apiRouters.SKILL_LIST, data);
+  };
+
+  const { mutate: createSkillMap } = useMutation(
+    'createSkillMap',
+    handleCreateSkillMap,
+    {
+      onSuccess: async () => {
+        showToast({
+          description: SUCCESS_CREATE_MESSAGE,
+        });
+        setOpenSkillMapActionsModal(false);
+        handleRemoveParam();
+        setSelectedOrganizationInActionsModal(null);
+        refetchOrganizationSkillList();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  const handleConfirmEditSkillMap = (data: SkillMapFormData) => {
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(
+        ([_, step]) => step != null && step.skillId != null,
+      ),
+    ) as Partial<SkillMapFormData>;
+
+    const keys = Object.keys(filteredData);
+
+    if (keys.length === 2 && keys.includes('step1') && keys.includes('step3')) {
       showToast({
-        description: SUCCESS_DELETE_MESSAGE,
+        variant: 'error',
+        description: PLEASE_FILL_IN_STEP_2,
       });
-      if (skillMapList?.results.length === 1 && currentPage > 1) {
-        // If change current page, useCategoryList auto recall, just don't need using refetchCategoryList
-        setCurrentPage(currentPage - 1);
-      } else {
-        refetchSkillMapList();
-      }
-      refetchOrganizationOptions();
-      setOpenConfirmDeleteModal(false);
-    },
-    onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
-      setOpenConfirmDeleteModal(false);
-      setIsLoading(false);
-    },
-  });
-
-  const onSubmit: SubmitHandler<{
-    organizationName: string;
-    staff: OptionDropdownType;
-  }> = (data) => {
-    setCurrentPage(1);
-    setFilterRequest({
-      staff: data.staff ? encodeURIComponent(`${data.staff.value}`) : '',
-      organizationName: encodeURIComponent(`${data.organizationName}`) || '',
-    });
+      return;
+    }
+    const requestData = convertFormDataToEditionRequestData(filteredData);
+    editSkillMap(requestData);
   };
+
+  const handleEditSkillMap = async (data: SkillMapRequestData) => {
+    setIsLoading(true);
+    return await api.post(apiRouters.SKILL_LIST, data);
+  };
+
+  const { mutate: editSkillMap } = useMutation(
+    'editSkillMap',
+    handleEditSkillMap,
+    {
+      onSuccess: async () => {
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
+        setOpenSkillMapActionsModal(false);
+        setSelectedOrganizationInActionsModal(null);
+        setSelectedSkillMapToUpdate(null);
+        setSkillMapEditDetail(null);
+        handleRemoveParam();
+        refetchOrganizationSkillList();
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  const handleSetParam = ({
+    id,
+    action,
+    step,
+  }: {
+    id?: string | null;
+    action?: string | null;
+    step?: number | null;
+  }) => {
+    if (id) {
+      params.set('skillId', id);
+      setSkillIdParam(id);
+    }
+    if (action) {
+      params.set('action', action);
+      setActionTypeParam(action);
+    }
+    if (step) {
+      params.set('step', String(step));
+      setCurrentStepParam(String(step));
+    }
+    router.push(`?${params.toString()}`);
+  };
+
+  useEffect(() => {
+    if (
+      skillIdParam &&
+      skillMapEditDetail?.length == 0 &&
+      actionTypeParam === ActionsModal.EDIT
+    ) {
+      setSelectedSkillMapToUpdate(Number(skillIdParam));
+    }
+
+    if (actionTypeParam === ActionsModal.CREATE && !openSkillMapActionsModal) {
+      setOpenSkillMapActionsModal(true);
+    }
+  }, [
+    skillIdParam,
+    actionTypeParam,
+    skillMapEditDetail,
+    openSkillMapActionsModal,
+  ]);
+
+  const handleRemoveParam = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('skillId');
+    params.delete('action');
+    params.delete('step');
+    setSkillIdParam(null);
+    setActionTypeParam(null);
+    setCurrentStepParam(null);
+    router.replace(`?${params.toString()}`);
+  };
+
+  const hasAddPermission =
+    session?.user.permissions &&
+    hasPermissionInArray(
+      session?.user.permissions,
+      PermissionsSystem.SKILL_MAP_ADD,
+    );
+  const hasUpdatePermission =
+    session?.user.permissions &&
+    hasPermissionInArray(
+      session?.user.permissions,
+      PermissionsSystem.SKILL_MAP_UPDATE,
+    );
 
   return (
     <Fragment>
-      <div className="flex flex-col border rounded-lg">
-        <div
-          className={`flex justify-between px-3 py-4 rounded-t-lg ${showFilter && 'border-b'} bg-gray-100`}>
-          <span className="text-gray-700 text-base font-medium">検索</span>
-          <ImageRound
-            name="Filter extend icon"
-            src={'/icons/arrow-down.svg'}
-            className={`w-4 h-4 hover:cursor-pointer ${!showFilter && 'rotate-180'}`}
-            onClick={() => setShowFilter(!showFilter)}
-          />
-        </div>
-        <Transition
-          show={showFilter}
-          enter="transition-transform duration-300 ease-out"
-          enterFrom="transform -translate-y-[10%]"
-          enterTo="transform translate-y-0"
-          leave="transition-transform duration-150 ease-in"
-          leaveFrom="transform translate-y-0"
-          leaveTo="transform -translate-y-[10%]">
-          <form
-            className={`flex flex-col gap-4 p-4 bg-white`}
-            onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex gap-4">
-              <div className="w-1/2 flex gap-2">
-                <div className="w-1/2 flex items-end gap-4">
-                  <div className="w-full">
-                    <Input
-                      label="組織"
-                      placeholder="入力してください"
-                      register={register('organizationName')}
-                    />
-                  </div>
-                </div>
-                <div className="w-1/2 flex items-end gap-4">
-                  <div className="w-full max-w-[310px]">
-                    <Controller
-                      control={control}
-                      name={'staff'}
-                      render={({ field: { onChange } }) => (
-                        <Dropdown
-                          label="従業員"
-                          options={[
-                            { label: '選択', value: '' },
-                            ...dataOptionsStaff,
-                          ]}
-                          placeholder="選択してください"
-                          className=""
-                          onChange={onChange}
-                        />
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                variant="secondary"
-                type="submit"
-                className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
-                絞り込み
-              </Button>
-            </div>
-          </form>
-        </Transition>
-      </div>
-      {session?.user.permissions &&
-        hasPermissionInArray(
-          session?.user.permissions,
-          PermissionsSystem.SKILL_MAP_ADD,
-        ) && (
-          <div className="flex justify-end gap-10">
-            <div className="w-48">
-              <Dropdown
-                labelClass="truncate max-w-[130px]"
-                options={initialOrganizationListOptions as OptionDropdownType[]}
-                placeholder="組織"
-                className="h-10 flex items-center"
-                onChange={(e) => {
-                  if (organizationOptions) {
-                    const selectedOrganization = organizationOptions?.find(
-                      (option) => option.id == e.value,
-                    );
-                    const memberList = selectedOrganization
-                      ? selectedOrganization.users
-                      : [];
-                    const memberOptions = memberList
-                      ? memberList.map((member) => {
-                          return {
-                            label: member.fullName,
-                            value: member.id,
-                          };
-                        })
-                      : [];
-                    setInitialMemberListOptions(memberOptions);
-                    setSelectedOrganizationId(Number(e.value));
-                    setSelectedStaffId(undefined);
-                  }
-                }}
-              />
-            </div>
-            <div className="w-56 ">
-              <Dropdown
-                labelClass="truncate max-w-[160px]"
-                className="h-10 flex items-center"
-                options={initialMemberListOptions as OptionDropdownType[]}
-                selectedOption={
-                  initialMemberListOptions &&
-                  initialMemberListOptions.find(
-                    (element) => element.value === selectedStaffId,
-                  )
-                }
-                placeholder="従業員"
-                onChange={(e) => {
-                  setSelectedStaffId(Number(e.value));
-                }}
-              />
-            </div>
-            <Link
-              href={pageRouters.CREATE_SKILL_MAPS.href(
-                `${selectedOrganizationId}`,
-                `${selectedStaffId}`,
-              )}>
-              <Button
-                disabled={!selectedOrganizationId || !selectedStaffId}
-                className="w-44">
-                新規登録
-              </Button>
-            </Link>
-          </div>
+      <Dropdown
+        options={organizationList}
+        className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
+        classNameOption="!w-[220px]"
+        selectedOption={organizationList.find(
+          (element) => element.value == selectedOrganizationOption.value,
         )}
-      <div className="w-full">
-        <Table className="bg-white !rounded-lg relative">
-          <TableHeader>
-            <th className="w-3">
-              <span>ID</span>
-            </th>
-            <th className="text-left w-[228px] max-w-[228px]">
-              <span>組織</span>
-            </th>
-            <th className="text-left w-[228px] max-w-[228px]">
-              <span>従業員</span>
-            </th>
-            <th className="w-20">操作</th>
-          </TableHeader>
-          <TableBody>
-            {dataSkillMapList && dataSkillMapList.length ? (
-              dataSkillMapList.map((element, index) => (
-                <tr key={index}>
-                  <td className="w-3">{element.id}</td>
-
-                  <td className="text-left w-[350px] max-w-[350px] truncate">
-                    {element.organization.name}
-                  </td>
-                  <td className="text-left w-[350px] max-w-[350px] truncate">
-                    {element.staff?.fullName}
-                  </td>
-
-                  <td className="w-20">
-                    <div className="flex w-full gap-2 justify-center items-center">
-                      <Link
-                        href={pageRouters.DETAIL_SKILL_MAPS.href(
-                          `${element.id}`,
-                          `${element.organization.id}`,
-                          `${element.staff.id}`,
-                        )}
-                        onClick={() => {
-                          setDataSkillMapDetail(element);
-                        }}>
-                        <ImageRound
-                          name="Detail"
-                          src={'/icons/detail.svg'}
-                          className="w-5 h-5 hover:cursor-pointer"
-                        />
-                      </Link>
-
-                      {element.actions?.update ? (
-                        <Link
-                          href={pageRouters.EDIT_SKILL_MAPS.href(
-                            `${element.id}`,
-                            `${element.organization.id}`,
-                            `${element.staff.id}`,
-                          )}
-                          onClick={() => {
-                            setDataSkillMapDetail(element);
-                          }}>
-                          <ImageRound
-                            name="Edit"
-                            src={'/icons/edit.svg'}
-                            className="w-3.5 h-3.5 hover:cursor-pointer"
-                          />
-                        </Link>
-                      ) : (
-                        <div className="w-3.5 h-3.5"></div>
-                      )}
-                      {element.actions?.delete ? (
-                        <ImageRound
-                          name="Delete"
-                          src={'/icons/delete.svg'}
-                          className={`w-[13px] h-[15px] hover:cursor-pointer`}
-                          onClick={() =>
-                            handleOpenDeleteSkillsMapModal(
-                              element.organization.id,
-                              element.staff.id,
-                            )
-                          }
-                        />
-                      ) : (
-                        <div className="w-[13px]"></div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr className="py-5 text-center text-sm leading-6">
-                <td className="h-16" />
-                <td className="absolute whitespace-nowrap top-[54px] left-1/2 transform -translate-x-1/2  py-5 text-center">
-                  {NO_DATA_AVAILABLE}
-                </td>
-              </tr>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex justify-center">
-        {dataSkillMapList && dataSkillMapList.length ? (
-          <Pagination
-            onChange={(pageNumber) => setCurrentPage(pageNumber)}
-            currentPage={currentPage}
-            totalPages={totalPages}
-          />
-        ) : null}
-      </div>
-      <ConfirmDeleteModal
-        open={openConfirmDeleteModal}
-        type="スキルマップ"
-        onConfirm={handleConfirmDeleteSkillsMap}
-        onClose={() => setOpenConfirmDeleteModal(false)}
+        onChange={(e) => {
+          setSelectedOrganizationOption({
+            label: e.label,
+            value: e.value,
+          });
+        }}
       />
+      {dataOrganizationSkillList.length > 0 &&
+        dataOrganizationSkillList.map((orgSkill) => {
+          return (
+            <OrganizationSkillDetail
+              key={orgSkill.id}
+              orgSkillDetail={orgSkill}
+              setSelectedOrganizationInActionsModal={
+                setSelectedOrganizationInActionsModal
+              }
+              setOpenSkillMapActionsModal={setOpenSkillMapActionsModal}
+              setSelectedFilterStepDetail={setSelectedFilterStepDetail}
+              setSelectedSkillMapToUpdate={setSelectedSkillMapToUpdate}
+              handleSetParam={handleSetParam}
+              refetchOrganizationSkillList={refetchOrganizationSkillList}
+            />
+          );
+        })}
+      {openSkillMapActionsModal &&
+        actionTypeParam &&
+        (hasAddPermission || hasUpdatePermission) && (
+          <ActionsSkillMapModal
+            action={actionTypeParam}
+            step={Number(currentStepParam)}
+            open={openSkillMapActionsModal}
+            skillMapEditDetail={skillMapEditDetail}
+            onClose={() => {
+              setOpenSkillMapActionsModal(false);
+              setSelectedSkillMapToUpdate(null);
+              setSkillMapEditDetail(null);
+              handleRemoveParam();
+            }}
+            onCreate={handleConfirmCreateSkillMap}
+            onEdit={handleConfirmEditSkillMap}
+          />
+        )}
     </Fragment>
   );
 };

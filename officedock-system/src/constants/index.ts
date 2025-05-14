@@ -383,3 +383,32 @@ export const ALLOWED_IMAGE_TYPES = [
   'image/webp',
   'image/jpg',
 ];
+
+export const LEVEL_UP_PERIOD_OPTIONS = [
+  {
+    label: '日',
+    value: 'DAY'
+  },
+  {
+    label: '週間',
+    value: 'WEEK'
+  },
+  {
+    label: 'ヶ月',
+    value: 'MONTH'
+  },
+  {
+    label: '年',
+    value: 'YEAR'
+  },
+]
+
+export const SKILL_MAP_STEP_COUNT = 3;
+
+export const SKILL_MAP_LEVEL_COUNT = 3;
+
+export const SKILL_MAP_STEPS = [
+  { label: 'STEP 1', color: '#36ACDE' },
+  { label: 'STEP 2', color: '#0068B6' },
+  { label: 'STEP 3', color: '#424EC1' },
+];
