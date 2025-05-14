@@ -31,6 +31,7 @@ import InputSearch from '@components/common/InputSearch';
 import ActionFilterTaskTeam from '@components/modals/ActionFilterTeamTask';
 import DatePicker from '@components/common/DatePicker';
 import RangeSlider from '@components/common/RangeSlider';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
@@ -54,6 +55,7 @@ import api from '@base/api';
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+import { TaskContext } from '@providers/TaskProvider';
 
 import {
   adjustEndDate,
@@ -70,8 +72,6 @@ import {
   isMoreThanThirtyMinutes,
   isTodaySchedule,
 } from '@utils/date';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
-import { TaskContext } from '@providers/TaskProvider';
 
 const ScheduleTeamBoard = () => {
   // Context

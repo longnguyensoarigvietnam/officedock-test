@@ -1,3 +1,8 @@
+import { isSameDay } from 'date-fns';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import React, { useContext } from 'react';
+
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
@@ -8,6 +13,7 @@ import {
   PermissionsSystem,
 } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
+
 import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
 import { DataDetailEventType } from '@interfaces/task';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -16,10 +22,6 @@ import {
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
 } from '@utils/date';
-import { isSameDay } from 'date-fns';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import React, { useContext } from 'react';
 
 type Props = {
   dataEvent: DataDetailEventType;
