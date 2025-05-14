@@ -240,7 +240,9 @@ const ListOrganizations = () => {
       if (
         organizationNameInputRef.current &&
         !organizationNameInputRef.current.contains(event.target) &&
-        !event.target.closest('.toast-container')
+        !event.target.closest('.toast-container') &&
+        !event.target.closest('.delete-icon') &&
+        !event.target.closest('.edit-icon')
       ) {
         if (selectedOrganizationToUpdate.action == ActionsModal.EDIT) {
           if (isEditingRef.current) return;
@@ -404,13 +406,18 @@ const ListOrganizations = () => {
                           <ImageRound
                             name="Edit"
                             src={'/icons/edit-gray.svg'}
-                            className={`w-3.5 h-3.5 hover:cursor-pointer ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
+                            className={`w-3.5 h-3.5 edit-icon ${
+                              selectedOrganizationToUpdate.uuid !=
+                                element.uuid &&
+                              selectedOrganizationToUpdate.status
+                                ? 'hover:cursor-not-allowed'
+                                : 'hover:cursor-pointer'
+                            } ${!(selectedOrganizationToUpdate.uuid == element.uuid) && 'opacity-45'}`}
                             onClick={() => {
                               if (
-                                selectedOrganizationToUpdate.action ==
-                                  ActionsModal.CREATE &&
-                                selectedOrganizationToUpdate.uuid ==
-                                  element.uuid
+                                selectedOrganizationToUpdate.uuid !=
+                                  element.uuid &&
+                                selectedOrganizationToUpdate.status
                               )
                                 return;
                               if (
@@ -441,11 +448,6 @@ const ListOrganizations = () => {
                         <div className="w-3.5"></div>
                       )}
                       {session?.user.permissions &&
-                      !(
-                        selectedOrganizationToUpdate.action ==
-                          ActionsModal.CREATE &&
-                        selectedOrganizationToUpdate.uuid == element.uuid
-                      ) &&
                       hasPermissionInArray(
                         session?.user.permissions,
                         PermissionsSystem.ORGANIZATION_DELETE,
@@ -453,45 +455,42 @@ const ListOrganizations = () => {
                         <ImageRound
                           name="Delete"
                           src={'/icons/delete-gray.svg'}
-                          className="w-[13px] h-[15px] hover:cursor-pointer"
+                          className={`w-[13px] h-[15px] delete-icon ${
+                            selectedOrganizationToUpdate.uuid != element.uuid &&
+                            selectedOrganizationToUpdate.status
+                              ? 'hover:cursor-not-allowed'
+                              : 'hover:cursor-pointer'
+                          }`}
                           onClick={() => {
                             if (
-                              selectedOrganizationToUpdate.uuid != element.uuid
-                            ) {
-                              setDataOrganizations((prev) => {
-                                let updatedCategories = [...prev];
-                                updatedCategories = updatedCategories.filter(
-                                  (category) =>
-                                    category.uuid !=
-                                    selectedOrganizationToUpdate.uuid,
-                                );
-                                return updatedCategories;
-                              });
-                            }
-                            if (
-                              selectedOrganizationToUpdate.uuid ==
+                              selectedOrganizationToUpdate.uuid !=
                                 element.uuid &&
+                              selectedOrganizationToUpdate.status
+                            )
+                              return;
+                            if (
                               selectedOrganizationToUpdate.status &&
                               selectedOrganizationToUpdate.action ==
                                 ActionsModal.CREATE
                             ) {
                               setDataOrganizations((prev) => {
-                                let updatedCategories = [...prev];
-                                updatedCategories = updatedCategories.filter(
-                                  (category) => category.uuid != element.uuid,
-                                );
-                                return updatedCategories;
-                              });
-                              setSelectedOrganizationToUpdate({
-                                uuid: '',
-                                name: '',
-                                status: false,
-                                action: '',
-                                showError: false,
+                                let updatedOrganizations = [...prev];
+                                updatedOrganizations =
+                                  updatedOrganizations.filter(
+                                    (org) => org.uuid != element.uuid,
+                                  );
+                                return updatedOrganizations;
                               });
                             } else {
                               handleOpenDeleteOrganizationModal(element);
                             }
+                            setSelectedOrganizationToUpdate({
+                              uuid: '',
+                              name: '',
+                              status: false,
+                              action: '',
+                              showError: false,
+                            });
                           }}
                         />
                       ) : (
@@ -552,14 +551,16 @@ const ListOrganizations = () => {
         </div>
       </div>
 
-      <ConfirmDeleteModal
-        open={openConfirmDeleteModal}
-        name={selectedOrganizationToDelete?.name || ''}
-        type="チーム"
-        message="紐づいている階層からも削除されます。"
-        onConfirm={handleConfirmDeleteOrganization}
-        onClose={() => setOpenConfirmDeleteModal(false)}
-      />
+      {openConfirmDeleteModal && (
+        <ConfirmDeleteModal
+          open={openConfirmDeleteModal}
+          name={selectedOrganizationToDelete?.name || ''}
+          type="チーム"
+          message="紐づいている階層からも削除されます。"
+          onConfirm={handleConfirmDeleteOrganization}
+          onClose={() => setOpenConfirmDeleteModal(false)}
+        />
+      )}
     </Fragment>
   );
 };

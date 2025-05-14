@@ -255,7 +255,9 @@ const ListCategory = () => {
       if (
         categoryNameInputRef.current &&
         !categoryNameInputRef.current.contains(event.target) &&
-        !(event.target.closest('.toast-container'))
+        !event.target.closest('.toast-container') &&
+        !event.target.closest('.delete-icon') &&
+        !event.target.closest('.edit-icon')
       ) {
         if (selectedCategoryToUpdate.action == ActionsModal.EDIT) {
           if (isEditingRef.current) return;
@@ -428,12 +430,17 @@ const ListCategory = () => {
                             <ImageRound
                               name="Edit"
                               src={'/icons/edit-gray.svg'}
-                              className={`w-3.5 h-3.5 hover:cursor-pointer ${(!(selectedCategoryToUpdate.uuid == element.uuid) || selectedCategoryToUpdate.action == ActionsModal.CREATE) && 'opacity-45'}`}
+                              className={`w-3.5 h-3.5 edit-icon ${
+                                selectedCategoryToUpdate.uuid != element.uuid &&
+                                selectedCategoryToUpdate.status
+                                  ? 'hover:cursor-not-allowed'
+                                  : 'hover:cursor-pointer'
+                              } ${(!(selectedCategoryToUpdate.uuid == element.uuid) || selectedCategoryToUpdate.action == ActionsModal.CREATE) && 'opacity-45'}`}
                               onClick={() => {
                                 if (
-                                  selectedCategoryToUpdate.action ==
-                                    ActionsModal.CREATE &&
-                                  selectedCategoryToUpdate.uuid == element.uuid
+                                  selectedCategoryToUpdate.uuid !=
+                                    element.uuid &&
+                                  selectedCategoryToUpdate.status
                                 )
                                   return;
                                 if (
@@ -464,11 +471,6 @@ const ListCategory = () => {
                           <div className="w-3.5"></div>
                         )}
                         {session?.user.permissions &&
-                        !(
-                          selectedCategoryToUpdate.action ==
-                            ActionsModal.CREATE &&
-                          selectedCategoryToUpdate.uuid == element.uuid
-                        ) &&
                         hasPermissionInArray(
                           session?.user.permissions,
                           PermissionsSystem.CATEGORY_DELETE,
@@ -476,24 +478,19 @@ const ListCategory = () => {
                           <ImageRound
                             name="Delete"
                             src={'/icons/delete-gray.svg'}
-                            className="w-[13px] h-[15px] hover:cursor-pointer"
+                            className={`w-[13px] h-[15px] delete-icon ${
+                              selectedCategoryToUpdate.uuid != element.uuid &&
+                              selectedCategoryToUpdate.status
+                                ? 'hover:cursor-not-allowed'
+                                : 'hover:cursor-pointer'
+                            }`}
                             onClick={() => {
                               if (
-                                selectedCategoryToUpdate.uuid != element.uuid
-                              ) {
-                                setDataCategories((prev) => {
-                                  let updatedCategories = [...prev];
-                                  updatedCategories =
-                                    updatedCategories.filter(
-                                      (category) =>
-                                        category.uuid !=
-                                        selectedCategoryToUpdate.uuid,
-                                    );
-                                  return updatedCategories;
-                                });
-                              }
+                                selectedCategoryToUpdate.uuid != element.uuid &&
+                                selectedCategoryToUpdate.status
+                              )
+                                return;
                               if (
-                                selectedCategoryToUpdate.uuid == element.uuid &&
                                 selectedCategoryToUpdate.status &&
                                 selectedCategoryToUpdate.action ==
                                   ActionsModal.CREATE
@@ -501,20 +498,22 @@ const ListCategory = () => {
                                 setDataCategories((prev) => {
                                   let updatedCategories = [...prev];
                                   updatedCategories = updatedCategories.filter(
-                                    (category) => category.uuid != element.uuid,
+                                    (category) =>
+                                      category.uuid !=
+                                      selectedCategoryToUpdate.uuid,
                                   );
                                   return updatedCategories;
-                                });
-                                setSelectedCategoryToUpdate({
-                                  uuid: '',
-                                  name: '',
-                                  status: false,
-                                  action: '',
-                                  showError: false,
                                 });
                               } else {
                                 handleOpenDeleteCategoryModal(element);
                               }
+                              setSelectedCategoryToUpdate({
+                                uuid: '',
+                                name: '',
+                                status: false,
+                                action: '',
+                                showError: false,
+                              });
                             }}
                           />
                         ) : (
@@ -596,14 +595,19 @@ const ListCategory = () => {
           </div>
         </div>
       </div>
-      <ConfirmDeleteModal
-        open={openConfirmDeleteModal}
-        name={selectedCategoryToDelete?.name || ''}
-        type="業務カテゴリー"
-        message="紐づいている階層からも削除されます。"
-        onConfirm={handleConfirmDeleteCategory}
-        onClose={() => setOpenConfirmDeleteModal(false)}
-      />
+      {openConfirmDeleteModal && (
+        <ConfirmDeleteModal
+          open={openConfirmDeleteModal}
+          name={selectedCategoryToDelete?.name || ''}
+          type="業務カテゴリー"
+          message="紐づいている階層からも削除されます。"
+          onConfirm={handleConfirmDeleteCategory}
+          onClose={() => {
+            setOpenConfirmDeleteModal(false);
+            setSelectedCategoryToDelete(null);
+          }}
+        />
+      )}
       {warningChangeCategoryModalOpen && (
         <WarningChangeHierarchyCategoryModal
           open={warningChangeCategoryModalOpen}
