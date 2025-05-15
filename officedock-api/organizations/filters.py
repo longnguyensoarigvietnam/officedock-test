@@ -1,5 +1,5 @@
 import django_filters
-from organizations.models import Organization, OrganizationsSkills
+from organizations.models import Organization
 
 
 class OrganizationFilter(django_filters.FilterSet):
@@ -34,18 +34,3 @@ class OrganizationFilter(django_filters.FilterSet):
             )
 
         return queryset
-
-
-class OrganizationSkillFilter(django_filters.FilterSet):
-    """
-    Custom Organization skill filter
-    """
-
-    id = django_filters.NumberFilter(field_name="id", lookup_expr="icontains")
-    name = django_filters.CharFilter(
-        field_name="organization__name", lookup_expr="icontains"
-    )
-
-    class Meta:
-        model = OrganizationsSkills
-        fields = ["id", "name"]

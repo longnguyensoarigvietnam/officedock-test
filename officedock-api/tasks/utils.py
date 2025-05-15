@@ -144,3 +144,11 @@ def calculate_new_time(start_time, delta_value, delta_unit):
 
     # Calculate new time
     return start_time - delta
+
+
+def calculate_progress_skill_map(task):
+    """
+    Handle calculate progress skill map by task
+    """
+    task.categories.first()
+    # TODO: Wait QA 99

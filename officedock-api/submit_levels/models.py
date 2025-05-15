@@ -1,7 +1,7 @@
 from base.models import BaseModel
 from django.db import models
 
-from skills.constants import SkillLevel
+from skills.constants import SkillLevel, SkillStep
 from submit_levels.constants import SubmitLevelStatus
 
 
@@ -27,10 +27,16 @@ class SubmitLevelHistory(BaseModel):
     )
     skill = models.ForeignKey(
         "skills.Skill",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="submit_level_histories",
+    )
+    step_before_submit = models.CharField(
+        max_length=25, null=True, blank=True, choices=SkillStep.choices()
+    )
+    step_after_submit = models.CharField(
+        max_length=25, null=True, blank=True, choices=SkillStep.choices()
     )
     level_before_submit = models.CharField(
         max_length=50,
@@ -50,6 +56,14 @@ class SubmitLevelHistory(BaseModel):
         choices=SubmitLevelStatus.choices(),
     )
     comment = models.TextField(null=True, blank=True)
+    approver = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        related_name="accepted_submit_levels",
+        null=True,
+        blank=True,
+    )
+    items = models.JSONField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         """

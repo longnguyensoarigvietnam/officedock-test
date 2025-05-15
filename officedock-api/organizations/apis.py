@@ -21,17 +21,16 @@ from common.models import Category
 from common.utils import (
     to_camel_case,
     to_snake_case,
-    transform_statistic_categories,
     generate_file_name,
 )
-from skills.models import StatisticCategory, SkillMap
-from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens
 from organizations.utils import get_high_level_organizations
 from organizations.constants import OrganizationTypes
 from tasks.models import TaskDuration
 from users.serializers import OrganizationForUserSerializer
-from .filters import OrganizationFilter, OrganizationSkillFilter
+from common.utils import transform_statistic_categories
+from skills.models import StatisticCategory
+from .filters import OrganizationFilter
 from .serializers import (
     CheckActualDurationSerializer,
     OrganizationCategoryHierarchyForCreateSerializer,
@@ -42,12 +41,10 @@ from .serializers import (
     OrganizationSerializer,
     OrganizationDetailSerializer,
     ListOrganizationStatisticSerializer,
-    ListOrganizationSkillSerializer,
-    OrganizationSkillForGetListSerializer,
+    StepSerializer,
 )
 from .models import (
     Organization,
-    OrganizationsSkills,
     OrganizationsStatisticCategories,
 )
 
@@ -460,20 +457,6 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
                     continue
                 skills = data.get("skills", None)
 
-                # Validate that the skills belong to the specified organization
-                if skills:
-                    valid_skill_ids = set(
-                        OrganizationsSkills.objects.filter(
-                            organization=instance
-                        ).values_list("skill", flat=True)
-                    )
-
-                    # Iterate through each skill in the provided list
-                    for skill in skills:
-                        invalid_skill_names.append(
-                            skill.name
-                        ) if skill.id not in valid_skill_ids and skill.name not in invalid_skill_names else None
-
                 # Check against all subsequent elements in organization_statistic_categories
                 for next_data in organization_statistic_categories[i + 1 :]:
                     # Extract UUIDs for comparison from the next elements
@@ -632,122 +615,25 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
         return self.response_ok()
 
     @action(
-        methods=["GET", "POST", "DELETE"],
+        methods=["POST"],
         detail=True,
-        url_path="skills",
-        serializer_class=ListOrganizationSkillSerializer,
-        screen_name=Screens.ORGANIZATION_SKILL.value,
+        url_path="define-steps",
+        serializer_class=StepSerializer,
     )
     @transaction.atomic
-    def skills(self, request, pk=None):
+    def define_steps(self, request, pk=None):
         """
-        Handle skills to each organization by method
+        Define step by organization
         """
-
         instance = self.get_object()
-        if request.method == "GET":
-            return self.response_ok(
-                OrganizationDetailSerializer(instance).data["skills"]
-            )
-        elif request.method == "DELETE":
-            instance.organizations_skills.all().delete()
-
-            return self.response(status_code=HTTP_204_NO_CONTENT)
-        else:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            validated_data = serializer.validated_data
-            organization_skills = validated_data.get(
-                "organization_skills", None
-            )
-
-            for data in organization_skills:
-                organization_skill = data.pop("organization_skill", None)
-                skill = data.get("skill", None)
-
-                # Check if change skill has submitted level
-                if (
-                    organization_skill
-                    and (organization_skill.skill != skill or skill is None)
-                    and SubmitLevelHistory.objects.filter(
-                        organization=organization_skill.organization,
-                        skill=organization_skill.skill,
-                    ).exists()
-                ):
-                    raise ValidationError(
-                        {
-                            "detail": ERROR_MESSAGES["cannot_updated"],
-                        }
-                    )
-
-                if skill is None and organization_skill:
-                    organization_skill.delete()
-                elif skill:
-                    organization_skill_id = (
-                        organization_skill.id if organization_skill else None
-                    )
-                    data["skill"] = skill
-                    instance.organizations_skills.update_or_create(
-                        id=organization_skill_id, defaults=data
-                    )
+        serializer = StepSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        instance.steps.update_or_create(
+            defaults=validated_data,
+        )
 
         return self.response_ok()
-
-
-@extend_schema(tags=["System > Organization > Skill"])
-class OrganizationSkillViewSet(
-    BaseAPIViewSet,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-):
-    """
-    API for organization skill
-    """
-
-    queryset = OrganizationsSkills.objects.all()
-    serializer_class = OrganizationSkillForGetListSerializer
-    permission_classes = [ActionPermission]
-    filter_backends = [
-        FilterByPermission,
-        DjangoFilterBackend,
-        CustomOrderFilter,
-    ]
-    ordering_fields = {"id": "id", "name": "name"}
-    filterset_class = OrganizationSkillFilter
-    screen_name = Screens.ORGANIZATION_SKILL.value
-
-    def get_queryset(self):
-        """
-        Filtering users by company.
-        """
-
-        user = self.request.user
-        company = user.company
-
-        return super().get_queryset().filter(company=company).order_by("id")
-
-    def perform_destroy(self, instance):
-        """Handle destroy organization skill"""
-        # Check if change skill has submitted level
-        if (
-            SkillMap.objects.filter(
-                organization=instance.organization,
-                skill=instance.skill,
-            ).exists()
-            or SubmitLevelHistory.objects.filter(
-                organization=instance.organization,
-                skill=instance.skill,
-            ).exists()
-        ):
-            raise ValidationError(
-                {
-                    "detail": ERROR_MESSAGES["cannot_delete"],
-                }
-            )
-
-        instance.delete()
-
-        return self.response(status_code=HTTP_204_NO_CONTENT)
 
 
 @extend_schema(tags=["System > Organization > Statistic Category hierarchy"])
@@ -1117,12 +1003,17 @@ class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     @extend_schema(
         parameters=[
             OpenApiParameter("screen_name", type=str, required=False),
+            OpenApiParameter("is_with_users", type=bool, required=False),
         ],
     )
     def list(self, request, *args, **kwargs):
         """
         Return list of team
         """
+        is_with_users = request.query_params.get("is_with_users", False)
         queryset = self.filter_queryset(self.get_queryset())
-
-        return self.response_ok(self.get_serializer(queryset, many=True).data)
+        if is_with_users:
+            data = OrganizationMemberSerializer(queryset, many=True).data
+        else:
+            data = self.get_serializer(queryset, many=True).data
+        return self.response_ok(data)
