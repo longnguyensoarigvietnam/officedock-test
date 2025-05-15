@@ -251,6 +251,7 @@ export interface SkillMapByOrganizationInfo {
     id: number | null;
     skillMap: number | null;
     level: string | null;
+    nextLevel:  string | null;
     measureCount: number | null;
     actualMeasureCount: number | null;
     measureTime: number | null;

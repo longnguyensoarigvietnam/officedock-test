@@ -1,5 +1,6 @@
 import ImageRound from '@components/common/ImageRound';
 import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProgressBar';
+import { TwinklingStar } from '@components/common/TwinklingStar';
 import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
 
 import {
@@ -21,7 +22,6 @@ export const SkillMapByOrganizationPanel = ({
     step: number,
     stepCompleted: boolean,
     level: number,
-    levelCompleted: boolean,
   ) => {
     // 1. Render locked state
     if (isLocked) {
@@ -52,8 +52,6 @@ export const SkillMapByOrganizationPanel = ({
     }
 
     // 3. Not completed → Show level and icons
-    const completedLevelCount = levelCompleted ? level : Math.max(level - 1, 0);
-
     const renderStepIcons = () => {
       switch (step) {
         case 1:
@@ -64,7 +62,7 @@ export const SkillMapByOrganizationPanel = ({
                   key={i}
                   name="Coin"
                   src={
-                    i < completedLevelCount
+                    i < level
                       ? '/icons/coin.svg'
                       : '/icons/gray-coin.svg'
                   }
@@ -81,7 +79,7 @@ export const SkillMapByOrganizationPanel = ({
                   key={i}
                   name="Diamond"
                   src={
-                    i < completedLevelCount
+                    i < level
                       ? '/icons/diamond.svg'
                       : '/icons/gray-diamond.svg'
                   }
@@ -98,7 +96,7 @@ export const SkillMapByOrganizationPanel = ({
                   key={i}
                   name="Crown"
                   src={
-                    i < completedLevelCount
+                    i < level
                       ? '/icons/crown.svg'
                       : '/icons/gray-crown.svg'
                   }
@@ -127,34 +125,39 @@ export const SkillMapByOrganizationPanel = ({
     );
   };
 
-  const normalizeSkillMaps = (skillMaps: SkillMapByOrganizationInfo[][]): SkillMapByOrganizationInfo[][] => {
+  const normalizeSkillMaps = (
+    skillMaps: SkillMapByOrganizationInfo[][],
+  ): SkillMapByOrganizationInfo[][] => {
     return skillMaps.map((skillMap) => {
       const skillSteps = ['1', '2', '3'];
 
       // Fill missing steps
       const filledSkillMap = skillSteps.map((step) => {
         // Check if the skillMap contains the step
-        const skill = skillMap.find((skill) => skill.step == `ステップ${step}`);
+        const skill = skillMap.find((skill) => {
+          return skill.skill.step == `ステップ${step}`;
+        });
 
         // If not found, return an empty object to fill the step
         if (!skill) {
           return {
-            id: null, // Empty ID to indicate it's a filler
+            id: null,
             skill: {
-              id: null, // No skill ID for empty step
-              name: `ステップ${step}-Empty`, // Placeholder name
-              description: '', // No description for empty step
-              step: step, // Correct step
+              id: null,
+              name: `ステップ${step}-Empty`,
+              description: '',
+              step: step,
             },
             isComplete: false,
             step: step,
-            isLocked: false, // Locked since it's a filler
+            isLocked: false,
             isHaveComment: false,
             progressPercent: 0,
             level: {
               id: null,
               skillMap: null,
               level: '',
+              nextLevel: '',
               measureCount: null,
               actualMeasureCount: null,
               measureTime: null,
@@ -172,7 +175,6 @@ export const SkillMapByOrganizationPanel = ({
         // Return the existing skill if found
         return skill;
       });
-
       return filledSkillMap;
     });
   };
@@ -215,112 +217,163 @@ export const SkillMapByOrganizationPanel = ({
           </StepInfoTooltip>
         </div>
 
-        {normalizeSkillMaps(skillMapDetail.skillMaps).map((skillMap: SkillMapByOrganizationInfo[], index) => {
-          return (
-            <div key={index} className="flex w-full mb-5">
-              {skillMap.map((skill, idx) => {
-                const isLast = idx === skillMap.length - 1;
-                const isLocked = skill.isLocked;
-                const step = skill.step ? Number(skill.step.charAt(skill.step.length - 1)) : 1;
-                const stepCompleted = skill.isComplete;
-                const level = skill.level?.level ? Number(
-                  skill.level?.level.charAt(skill.level.level.length - 1),
-                ) : 1;
-                const levelCompleted = skill.level?.isComplete;
-                const hasComment = skill.isHaveComment;
-                let strokeColor = '';
-                switch (step) {
-                  case 1:
-                    strokeColor = '#36ACDE';
-                    break;
-                  case 2:
-                    strokeColor = '#0068B6';
-                    break;
-                  case 3:
-                    strokeColor = '#424EC1';
-                    break;
-                }
-                return (
-                  <div
-                    key={skill.id}
-                    className={`relative flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}>
-                    {!skill.id ? (
-                      <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
-                    ) : (
-                      <div
-                        className="px-5 h-[90px] flex justify-between items-center w-full rounded-[6px] relative"
-                        style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
-                        <div className="w-4/5">
-                          <div className="flex justify-between items-center">
-                            <p className="text-[16px] font-medium mb-4 max-w-[calc(100%_-_20px)] truncate">
-                              {skill.skill?.name}
-                            </p>
-                            {hasComment ? (
-                              <ImageRound
-                                name="Comment"
-                                src={'/icons/comment.svg'}
-                                className="w-[16px] h-[14px] cursor-pointer"
+        {normalizeSkillMaps(skillMapDetail.skillMaps).map(
+          (skillMap: SkillMapByOrganizationInfo[], index) => {
+            return (
+              <div key={index} className="flex w-full mb-5">
+                {skillMap.map((skill, idx) => {
+                  const isLast = idx === skillMap.length - 1;
+                  const isLocked = skill.isLocked;
+                  const step = skill.skill.step
+                    ? Number(
+                        skill.skill.step.charAt(skill.skill.step.length - 1),
+                      )
+                    : 1;
+                  const stepCompleted = skill.isComplete;
+                  const level = skill.level?.nextLevel
+                    ? Number(
+                        skill.level?.nextLevel.charAt(
+                          skill.level.nextLevel.length - 1,
+                        ),
+                      )
+                    : 1;
+                  const hasComment = skill.isHaveComment;
+                  const progressPercent = skill?.progressPercent || 0;
+                  const showTwinklingStar =
+                    skill?.progressPercent == 100 && !stepCompleted;
+                  let strokeColor = '';
+                  switch (step) {
+                    case 1:
+                      strokeColor = '#36ACDE';
+                      break;
+                    case 2:
+                      strokeColor = '#0068B6';
+                      break;
+                    case 3:
+                      strokeColor = '#424EC1';
+                      break;
+                  }
+
+                  return (
+                    <div
+                      key={skill.id}
+                      className={`relative flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}>
+                      {!skill.id ? (
+                        <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
+                      ) : (
+                        <div
+                          className="px-5 h-[90px] flex justify-between items-center w-full rounded-[6px] relative"
+                          style={{
+                            boxShadow: showTwinklingStar
+                              ? '0px 0px 20px 0px #36ACDE80'
+                              : '0px 2px 8px 0px #0000001A',
+                          }}>
+                          {showTwinklingStar && (
+                            <div>
+                              <TwinklingStar
+                                className="absolute top-[-10px] left-[-10px]"
+                                delay={0}
                               />
-                            ) : (
-                              <div className="w-[16px]"></div>
+                              <TwinklingStar
+                                className="absolute top-[5px] right-[-15px]"
+                                delay={0.5}
+                              />
+                              <TwinklingStar
+                                className="absolute top-[-15px] right-[5px]"
+                                delay={0.8}
+                              />
+                              <TwinklingStar
+                                className="absolute bottom-[5px] left-[-15px]"
+                                delay={1}
+                              />
+                              <TwinklingStar
+                                className="absolute bottom-[-15px] left-[5px]"
+                                delay={1.2}
+                              />
+                              <TwinklingStar
+                                className="absolute bottom-[-10px] right-[-10px]"
+                                delay={1.5}
+                              />
+                            </div>
+                          )}
+
+                          <div className="w-4/5">
+                            <div className="flex justify-between items-center">
+                              <p className="text-[16px] font-medium mb-4 max-w-[calc(100%_-_20px)] line-clamp-1 break-all">
+                                {skill.skill?.name}
+                              </p>
+                              {hasComment ? (
+                                <ImageRound
+                                  name="Comment"
+                                  src={'/icons/comment.svg'}
+                                  className="w-[16px] h-[14px] cursor-pointer"
+                                />
+                              ) : (
+                                <div className="w-[16px]"></div>
+                              )}
+                            </div>
+
+                            <div>
+                              <SkillMapProgressBar
+                                value={progressPercent}
+                                strokeColor={
+                                  isLocked ||
+                                  progressPercent == 0 ||
+                                  stepCompleted
+                                    ? '#D2DBE1'
+                                    : strokeColor
+                                }
+                              />
+                            </div>
+                          </div>
+                          <div className="w-1/5 flex justify-end">
+                            {' '}
+                            {renderTreasureForStep(
+                              Boolean(isLocked),
+                              step,
+                              Boolean(stepCompleted),
+                              level,
                             )}
                           </div>
 
-                          <div>
-                            <SkillMapProgressBar
-                              value={skill?.progressPercent || 0}
-                              strokeColor={(isLocked || skill?.progressPercent == 0) ? '#D2DBE1' : strokeColor}
-                            />
-                          </div>
-                        </div>
-                        <div className="w-1/5 flex justify-end">
-                          {' '}
-                          {renderTreasureForStep(
-                            Boolean(isLocked),
-                            step,
-                            Boolean(stepCompleted),
-                            level,
-                            Boolean(levelCompleted),
+                          {/* Gray overlay if locked */}
+                          {isLocked && (
+                            <div className="absolute inset-0 bg-[#203D5480] bg-opacity-50 rounded-[6px] pointer-events-none">
+                              <div className="text-white flex items-center justify-center h-full gap-2">
+                                <ImageRound
+                                  name="Lock"
+                                  src={'/icons/white-lock.svg'}
+                                  className="w-[30px] h-[30px] cursor-pointer"
+                                />
+                                <p className="font-medium text-[16px]">
+                                  STEP {step} を未解放
+                                </p>
+                              </div>
+                            </div>
                           )}
                         </div>
+                      )}
 
-                        {/* Gray overlay if locked */}
-                        {isLocked && (
-                          <div className="absolute inset-0 bg-[#203D5480] bg-opacity-50 rounded-[6px] pointer-events-none">
-                            <div className="text-white flex items-center justify-center h-full gap-2">
-                              <ImageRound
-                                name="Lock"
-                                src={'/icons/white-lock.svg'}
-                                className="w-[30px] h-[30px] cursor-pointer"
-                              />
-                              <p className="font-medium text-[16px]">
-                                STEP {step} を未解放
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {!isLast && (
-                      <div
-                        style={{
-                          background: skillMap[idx + 1].isLocked
-                            ? '#D2DBE1'
-                            : (!skillMap[idx + 1].id || !skill.id)
-                              ? '#FFF'
-                              : idx === 0
-                                ? 'linear-gradient(90deg, #36ACDE 0%, #0068B6 100%)'
-                                : 'linear-gradient(90deg, #0068B6 0%, #424EC1 100%)',
-                        }}
-                        className="h-[10px] w-[30px]"></div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
+                      {!isLast && (
+                        <div
+                          style={{
+                            background: skillMap[idx + 1].isLocked
+                              ? '#D2DBE1'
+                              : !skillMap[idx + 1].id || !skill.id
+                                ? '#FFF'
+                                : idx === 0
+                                  ? 'linear-gradient(90deg, #36ACDE 0%, #0068B6 100%)'
+                                  : 'linear-gradient(90deg, #0068B6 0%, #424EC1 100%)',
+                          }}
+                          className="h-[10px] w-[30px]"></div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          },
+        )}
       </div>
     </div>
   );

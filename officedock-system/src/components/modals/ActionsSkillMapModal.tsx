@@ -28,6 +28,7 @@ import {
   ActionsModal,
   LevelUpConditionBy,
   PermissionsSystem,
+  SkillMapStep,
 } from '@constants/enums';
 import {
   LEVEL_UP_PERIOD_OPTIONS,
@@ -63,7 +64,9 @@ const ActionsSkillMapModal = ({
 }: ActionsSkillMapModalProps) => {
   const { data: session } = useSession();
 
-  const [currentStep, setCurrentStep] = useState<number>(action == ActionsModal.EDIT ? Number(step) : 1);
+  const [currentStep, setCurrentStep] = useState<number>(
+    action == ActionsModal.EDIT ? Number(step) : 1,
+  );
 
   const {
     register,
@@ -88,9 +91,9 @@ const ActionsSkillMapModal = ({
     });
 
     const value: SkillMapFormData = {
-      step1: baseStep('ステップ1'),
-      step2: baseStep('ステップ2'),
-      step3: baseStep('ステップ3'),
+      step1: baseStep(SkillMapStep.STEP_1),
+      step2: baseStep(SkillMapStep.STEP_2),
+      step3: baseStep(SkillMapStep.STEP_3),
     };
 
     if (skillMapEditDetail) {
@@ -109,8 +112,9 @@ const ActionsSkillMapModal = ({
             );
             return levelDetail
               ? {
-                  level: levelKey,
                   skillLevelId: levelDetail.id ?? null,
+                  organization: detail.organization?.id ?? 0,
+                  level: levelKey,
                   items: levelDetail.items.map((item) => ({ value: item })),
                   measureCount: levelDetail.measureCount ?? null,
                   measureTime: levelDetail.measureTime ?? null,
@@ -137,9 +141,9 @@ const ActionsSkillMapModal = ({
         };
       };
 
-      value.step1 = getStepDetail('ステップ1');
-      value.step2 = getStepDetail('ステップ2');
-      value.step3 = getStepDetail('ステップ3');
+      value.step1 = getStepDetail(SkillMapStep.STEP_1);
+      value.step2 = getStepDetail(SkillMapStep.STEP_2);
+      value.step3 = getStepDetail(SkillMapStep.STEP_3);
     }
     return value;
   }, [skillMapEditDetail]);

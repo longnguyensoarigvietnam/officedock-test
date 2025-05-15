@@ -23,6 +23,7 @@ import {
   PermissionsSystem,
   ScreenName,
   ServerStatusCode,
+  SkillMapStep,
 } from '@constants/enums';
 import { ALL_TEAMS_OPTION } from '@constants';
 
@@ -171,10 +172,10 @@ const ListSkillsMap = () => {
       description: step?.description || '',
       step:
         key === 'step1'
-          ? 'ステップ1'
+          ? SkillMapStep.STEP_1
           : key === 'step2'
-            ? 'ステップ2'
-            : 'ステップ3',
+            ? SkillMapStep.STEP_2
+            : SkillMapStep.STEP_3,
       skillLevels:
         step?.skillLevels && step?.skillLevels.length > 0
           ? step.skillLevels.map((level, index) => ({
@@ -216,16 +217,16 @@ const ListSkillsMap = () => {
       key: string,
       step: StepFormDataDetail,
     ): StepRequestDataDetail => ({
-      name: step?.name || '',
       skillId: step?.skillId ? Number(step.skillId) : null,
+      name: step?.name || '',
       organizationId: step?.organizationId ? Number(step.organizationId) : 0,
       description: step?.description || '',
       step:
         key === 'step1'
-          ? 'ステップ1'
+          ? SkillMapStep.STEP_1
           : key === 'step2'
-            ? 'ステップ2'
-            : 'ステップ3',
+            ? SkillMapStep.STEP_2
+            : SkillMapStep.STEP_3,
       skillLevels:
         step?.skillLevels && step?.skillLevels.length > 0
           ? step.skillLevels.map((level, index) => ({
@@ -251,6 +252,9 @@ const ListSkillsMap = () => {
               skillLevelId: level?.skillLevelId
                 ? Number(level.skillLevelId)
                 : null,
+              organization: level?.organization
+                ? Number(level?.organization)
+                : 0,
             }))
           : [],
     });
