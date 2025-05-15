@@ -2143,7 +2143,7 @@ const TableComponent = ({
                         label: skill.label as string,
                       };
                     })}
-                    options={dataOptionsSkill}
+                    options={dataOptionsSkill.filter((option) => option.value)}
                     onChange={(selectedSkills) => {
                       setSelectedHierarchiesToUpdate((prev) => {
                         const updatedHierarchiesToUpdate = [...prev];

@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import useSkillMapInfo from '@hooks/useSkillMapList';
+
 import { SkillMapByOrganization } from '@interfaces/skills';
+
 import { SkillMapByOrganizationPanel } from './skill-map-by-organization-panel';
 
 const SkillMap = () => {
@@ -23,7 +25,7 @@ const SkillMap = () => {
   return (
     <div className="w-full">
       {/* Banner */}
-      <div className="w-full h-[189px] relative mt-[33px] mb-5">
+      <div className="w-full h-[189px] relative mb-5">
         <Image
           alt="Mountains"
           src="/images/skill-banner.jpg"

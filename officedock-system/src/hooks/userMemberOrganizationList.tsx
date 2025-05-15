@@ -11,7 +11,7 @@ import { UserOrganization } from '@interfaces/user';
 
 interface UseMemberOrganizationListHooksProps {
   conditions?: boolean[];
-  search: string;
+  search?: string;
   onSuccess?: (success: UserOrganization[]) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;

@@ -198,6 +198,7 @@ const ListSkillsMap = () => {
               measureTime: level?.measureTime
                 ? Number(level?.measureTime)
                 : null,
+              organization: selectedOrganizationInActionsModal || 0,
             }))
           : [],
     });
