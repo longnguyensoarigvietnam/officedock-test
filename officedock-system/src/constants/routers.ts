@@ -222,6 +222,14 @@ export const pageRouters = {
     href: '/skill-map/skill-list',
   },
 
+  SKILL_MAP_SKILL: {
+    name: 'マイスキル',
+    href: '/skill-map/my-skill',
+  },
+  SKILL_MAP_LIST: {
+    name: 'スキル一覧',
+    href: '/skill-map/list',
+  },
   // SKILL MAPS
   SKILL_MAPS_MANAGEMENT: {
     name: 'スキルマップ',
@@ -350,7 +358,8 @@ export const apiRouters = {
   ORGANIZATION_SKILL_DELETE: (id: string) => `/organization-skills/${id}/`,
   ORGANIZATION_SKILL_DETAIL: (id: number) => `/skills/${id}/group-steps/`,
   ORGANIZATION_HIERARCHY: '/organizations/hierarchy/',
-  ORGANIZATION_DEFINE_STEPS: (id: number) => `/organizations/${id}/define-steps/`,
+  ORGANIZATION_DEFINE_STEPS: (id: number) =>
+    `/organizations/${id}/define-steps/`,
 
   // CREATE DATA
   ORGANIZATION_CREATION: '/creation-data/organization/',

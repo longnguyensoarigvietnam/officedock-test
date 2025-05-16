@@ -5,13 +5,22 @@ import {
   SkillMapByOrganization,
   SkillMapByOrganizationInfo,
 } from '@interfaces/skills';
+import { extractStepNumber } from '@utils';
 
 interface SkillListByOrganizationPanelProps {
   skillMapDetail: SkillMapByOrganization;
+  onDetail: ({
+    skillId,
+    stepNumber,
+  }: {
+    skillId: number;
+    stepNumber: number;
+  }) => void;
 }
 
 export const SkillListByOrganizationPanel = ({
   skillMapDetail,
+  onDetail,
 }: SkillListByOrganizationPanelProps) => {
   const normalizeSkillMaps = (
     skillMaps: SkillMapByOrganizationInfo[][],
@@ -151,13 +160,23 @@ export const SkillListByOrganizationPanel = ({
                         style={{
                           boxShadow: '0px 2px 8px 0px #0000001A',
                         }}>
-                        <p className="w-1/3 max-w-full max-h-[72px] break-all line-clamp-2 pr-3">{skill.skill.name}</p>
+                        <p className="w-1/3 max-w-full max-h-[72px] break-all line-clamp-2 pr-3">
+                          {skill.skill.name}
+                        </p>
                         <div className="w-2/3 pl-2 h-[74px] border-l-[1px] border-[#D2DBE1] flex items-center justify-between">
                           <p className="text-start max-w-[calc(100%_-_52px)] max-h-[72px] break-all line-clamp-2 pr-3">
                             {skill.skill.description}
                           </p>
                           <Button
                             variant="primary"
+                            onClick={() => {
+                              const stepNumber =
+                                extractStepNumber(`${skill.step}`) || 1;
+                              onDetail({
+                                skillId: skill.skill.id as number,
+                                stepNumber: stepNumber,
+                              });
+                            }}
                             className="text-white font-medium text-sm !p-0 w-[52px] h-[30px]">
                             詳細
                           </Button>

@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
@@ -14,13 +14,11 @@ const SkillMap = () => {
   const [skillMapByOrganizations, setSkillMapByOrganizations] = useState<
     SkillMapByOrganization[]
   >([]);
-  const { skillMapInfo } = useSkillMapInfo({});
-
-  useEffect(() => {
-    if (skillMapInfo?.organizations) {
-      setSkillMapByOrganizations(skillMapInfo?.organizations);
-    }
-  }, [skillMapInfo]);
+  const { skillMapInfo } = useSkillMapInfo({
+    onSuccess: (data) => {
+      setSkillMapByOrganizations(data.organizations);
+    },
+  });
 
   return (
     <div className="w-full">

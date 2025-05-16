@@ -20,7 +20,7 @@ import {
   TransformedUser,
   UserTotalStatus,
 } from '@interfaces/task';
-import { MAX_HEX_COLOR_VALUE } from '@constants';
+import { MAX_HEX_COLOR_VALUE, SKILL_MAP_STEPS } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
 import moment from 'moment';
@@ -777,3 +777,22 @@ export const getCompareLineChartEnableViews = (
 
   return [];
 };
+// Get step with object
+export function getSkillStep(step: string) {
+  const match = step.match(/(?:レベル|ステップ)(\d)/);
+  if (!match) return null;
+
+  const stepIndex = parseInt(match[1], 10) - 1;
+  return SKILL_MAP_STEPS[stepIndex] || null;
+}
+// Get level number
+export function extractLevelNumber(input: string): number | null {
+  const match = input.match(/レベル(\d+)/);
+  if (!match) return null;
+  return parseInt(match[1], 10);
+}
+// Get step number
+export function extractStepNumber(step: string): number {
+  const match = step.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 1;
+}

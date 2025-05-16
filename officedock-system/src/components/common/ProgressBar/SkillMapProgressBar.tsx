@@ -3,9 +3,14 @@ import { Line } from 'rc-progress';
 interface SkillMapProgressBarProps {
   value: number;
   strokeColor: string;
+  className?: string;
 }
 
-export const SkillMapProgressBar = ({ value, strokeColor }: SkillMapProgressBarProps) => {
+export const SkillMapProgressBar = ({
+  value,
+  className,
+  strokeColor,
+}: SkillMapProgressBarProps) => {
   return (
     <div className="">
       <Line
@@ -13,7 +18,8 @@ export const SkillMapProgressBar = ({ value, strokeColor }: SkillMapProgressBarP
         strokeColor={strokeColor}
         strokeWidth={3}
         trailWidth={3}
-        trailColor="#D2DBE1" 
+        trailColor="#D2DBE1"
+        className={`h-[10px] ${className}`}
       />
     </div>
   );

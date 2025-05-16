@@ -38,11 +38,13 @@ const SkillListPage = () => {
             className={`w-[90px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
             マイスキル
           </Button>
-          <Button
-            variant="primary"
-            className={`w-[90px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
-            スキル一覧
-          </Button>
+          <Link href={pageRouters.SKILL_MAP_SKILL.href}>
+            <Button
+              variant="primary"
+              className={`w-[90px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+              スキル一覧
+            </Button>
+          </Link>
         </div>
         <Link href={pageRouters.SKILL_MAPS_MANAGEMENT.href}>
           <Button className="w-[158px] !p-0 text-sm h-[34px] !border-transparent !text-[#77858F] bg-white rounded-[6px]">
