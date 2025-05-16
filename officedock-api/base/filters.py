@@ -7,7 +7,7 @@ from submit_levels.models import SubmitLevelHistory
 from tasks.models import TaskDuration
 from users.models import RoleDetail, User
 from skills.models import Skill, SkillMap, StatisticCategory
-from organizations.models import OrganizationsSkills, Organization
+from organizations.models import Organization
 
 
 class FilterByPermission(DjangoFilterBackend):
@@ -77,7 +77,6 @@ class FilterByPermission(DjangoFilterBackend):
                 return queryset.filter(organizations__in=org_ids)
             elif queryset.model in [
                 SkillMap,
-                OrganizationsSkills,
                 SubmitLevelHistory,
             ]:
                 return queryset.filter(organization__in=org_ids)

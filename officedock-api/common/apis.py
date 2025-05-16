@@ -15,11 +15,12 @@ from calendars.constants import (
 )
 from calendars.models import Schedule
 from chat.constants import WebSocketEventType
-from skills.models import StatisticCategory
+from skills.models import StatisticCategory, Skill
 from organizations.serializers import (
     BaseStatisticCategorySerializer,
     OrganizationDetailSerializer,
 )
+from skills.serializers import SkillSerializer
 from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
@@ -29,8 +30,7 @@ from tasks.constants import (
     TaskTypes,
     TaskCategoryTypes,
 )
-from skills.serializers import SkillSerializer
-from organizations.models import OrganizationsSkills, Organization
+from organizations.models import Organization
 from roles.constants import Actions, Screens, SelectionResultOptions
 from chat.models import ChatRoom
 from .serializers import (
@@ -90,13 +90,11 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 enum=[
                     Screens.CATEGORY_HIERARCHY.value,
                     Screens.SKILL_MAP.value,
-                    Screens.ORGANIZATION_SKILL.value,
                     Screens.USER.value,
                 ],
             ),
             OpenApiParameter("is_with_staff", type=bool),
             OpenApiParameter("is_hierarchy", type=bool),
-            OpenApiParameter("is_with_skill", type=bool),
         ],
     )
     @action(
@@ -111,7 +109,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         is_with_staff = request.query_params.get("is_with_staff")
         is_hierarchy = request.query_params.get("is_hierarchy")
-        is_with_skill = request.query_params.get("is_with_skill")
         screen = request.query_params.get("current_screen")
         organizations = request.user.company.organizations.order_by(
             "-created_at"
@@ -131,7 +128,13 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     item.selection_result for item in role_permissions
                 ]
                 if SelectionResultOptions.ALLOWED.value in selection_results:
-                    organizations = organizations
+                    # FIXME: Rollback code when implement skill map permission
+                    # organizations = organizations -> OLD CODE
+                    organizations = (
+                        request.user.organizations.all()
+                        if screen == "skill_map"
+                        else organizations
+                    )
                 elif (
                     SelectionResultOptions.ONLY_DATA_ORGANIZATION.value
                     in selection_results
@@ -180,13 +183,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 organizations.filter(
                     organizations_statistic_categories__isnull=True
                 )
-                .distinct()
-                .all()
-            )
-
-        if is_with_skill:
-            organizations = (
-                organizations.filter(organizations_skills__isnull=True)
                 .distinct()
                 .all()
             )
@@ -421,60 +417,35 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         organization_id = request.query_params.get("organization_id", None)
         company = request.user.company
+        orgs = Organization.objects.filter(company=company)
 
-        if not organization_id:
-            orgs = Organization.objects.filter(company=company)
-            results = []
-            for org in orgs:
-                skills = (
-                    OrganizationsSkills.objects.filter(
-                        company=company, organization_id=org.id
-                    )
-                    .select_related("skill")
-                    .order_by("id")
-                    .distinct()
-                )
+        if organization_id:
+            orgs = orgs.filter(id=organization_id)
+        results = []
+        for org in orgs:
+            skills = Skill.objects.filter(
+                company=company, organization_id=org.id
+            ).order_by("id")
 
-                unique_skills = {
-                    (id, name)
-                    for id, name in skills.values_list(
-                        "skill__id", "skill__name"
-                    )
+            results.append(
+                {
+                    "organization": {
+                        "id": org.id,
+                        "name": org.name,
+                    },
+                    "skills": [
+                        {"id": skill.id, "name": skill.name} for skill in skills
+                    ],
                 }
-
-                results.append(
-                    {
-                        "organization": {
-                            "id": org.id,
-                            "name": org.name,
-                        },
-                        "skills": [
-                            {"id": id, "name": name}
-                            for id, name in unique_skills
-                        ],
-                    }
-                )
-
-            return self.response_ok(results)
-
-        skills = (
-            OrganizationsSkills.objects.filter(
-                company=company, organization_id=organization_id
             )
-            .select_related("skill")
-            .order_by("id")
-            .distinct()
-        )
 
-        unique_skills = {
-            (id, name)
-            for id, name in skills.values_list("skill__id", "skill__name")
-        }
+        return self.response_ok(results)
 
-        return self.response_ok(
-            [{"id": id, "name": name} for id, name in unique_skills]
-        )
-
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=int, required=False),
+        ],
+    )
     @action(methods=["GET"], detail=False, url_path="tags")
     def tags(self, request):
         """
