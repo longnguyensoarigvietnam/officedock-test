@@ -165,18 +165,18 @@ const ActionsSkillMapModal = ({
     onClose();
   };
 
-  // const isDisabled =
-  //   session?.user.permissions &&
-  //   ((action === ActionsEvent.EDIT &&
-  //     !hasPermissionInArray(
-  //       session?.user.permissions,
-  //       PermissionsSystem.SKILL_MAP_UPDATE,
-  //     )) ||
-  //     (action === ActionsEvent.CREATE &&
-  //       !hasPermissionInArray(
-  //         session?.user.permissions,
-  //         PermissionsSystem.SKILL_MAP_ADD,
-  //       )));
+  const isDisabled =
+    session?.user.permissions &&
+    ((action === ActionsEvent.EDIT &&
+      !hasPermissionInArray(
+        session?.user.permissions,
+        PermissionsSystem.SKILL_MAP_UPDATE,
+      )) ||
+      (action === ActionsEvent.CREATE &&
+        !hasPermissionInArray(
+          session?.user.permissions,
+          PermissionsSystem.SKILL_MAP_ADD,
+        )));
 
   type StepField = keyof StepFormDataDetail;
 
@@ -700,17 +700,7 @@ const ActionsSkillMapModal = ({
               />
             </div>
             <div className="flex gap-2 items-center">
-              {session?.user.permissions &&
-                ((action === ActionsEvent.EDIT &&
-                  hasPermissionInArray(
-                    session?.user.permissions,
-                    PermissionsSystem.TAG_UPDATE,
-                  )) ||
-                  (action === ActionsEvent.CREATE &&
-                    hasPermissionInArray(
-                      session?.user.permissions,
-                      PermissionsSystem.TAG_ADD,
-                    ))) && (
+              {!isDisabled && (
                   <Button
                     type="submit"
                     className="w-[82px] h-[36px] !text-[12px] !px-2">
@@ -790,11 +780,13 @@ const ActionsSkillMapModal = ({
             />
           );
         })}
-        <div className="flex justify-center">
-          <Button type="submit" className="w-[200px] h-[46px] !text-[15px]">
-            保存
-          </Button>
-        </div>
+        {!isDisabled && (
+            <div className="flex justify-center">
+              <Button type="submit" className="w-[200px] h-[46px] !text-[15px]">
+                保存
+              </Button>
+            </div>
+          )}
       </form>
     </Drawer>
   );

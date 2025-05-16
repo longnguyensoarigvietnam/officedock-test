@@ -162,3 +162,13 @@ export interface UserProfileFormRequest {
     fullName: string,
   }
 }
+export interface Staff {
+  id: number;
+  username: string;
+  email: string;
+  twoFactorAuthEmail: string;
+  profile: Profile;
+  loginType: string;
+  avatar?: string
+  avatarColor: string;
+}
