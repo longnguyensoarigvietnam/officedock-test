@@ -141,15 +141,22 @@ const EditHierarchyForm = () => {
           }),
         );
       } else {
+        const foundCreationData = (
+          creationDataSkillData as CreationDataSkill[]
+        ).find(
+          (data) => data.organization.id == selectedOrganizationOption.value,
+        );
         setDataOptionsSkill([
           {
             organizationId: selectedOrganizationOption.value,
-            skills: (creationDataSkillData as Skill[]).map((skill: Skill) => {
-              return {
-                value: skill.id,
-                label: skill.name,
-              };
-            }),
+            skills: foundCreationData?.skills
+              ? foundCreationData?.skills.map((skill: Skill) => {
+                  return {
+                    value: skill.id,
+                    label: skill.name,
+                  };
+                })
+              : [],
           },
         ]);
       }
@@ -215,9 +222,12 @@ const EditHierarchyForm = () => {
         };
       },
     );
-    if(selectedHierarchiesToDelete.length == 0 && tempSelectedHierarchiesToUpdate.length == 0){
+    if (
+      selectedHierarchiesToDelete.length == 0 &&
+      tempSelectedHierarchiesToUpdate.length == 0
+    ) {
       router.push(pageRouters.HIERARCHY_MANAGEMENT.href);
-    } else{
+    } else {
       updateOrganizationCategoryHierarchy({
         ids: selectedHierarchiesToDelete
           ? selectedHierarchiesToDelete

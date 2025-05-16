@@ -213,6 +213,15 @@ export const pageRouters = {
     name: 'スキルマップ',
     href: '/skill-map',
   },
+  SKILL_MAP_TEAM: {
+    name: 'スキルマップ',
+    href: '/skill-map-team',
+  },
+  SKILL_LIST_MANAGEMENT: {
+    name: 'マイドック_スキルマップ_スキル一覧',
+    href: '/skill-map/skill-list',
+  },
+
   // SKILL MAPS
   SKILL_MAPS_MANAGEMENT: {
     name: 'スキルマップ',

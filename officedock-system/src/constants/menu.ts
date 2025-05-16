@@ -239,4 +239,14 @@ export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
     companyMenu: false,
     requiredPermission: PermissionsSystem.LIST_MEMBER_VIEW,
   },
+  {
+    ...pageRouters.SKILL_MAP_TEAM,
+    name: pageRouters.SKILL_MAP_TEAM.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/skill-room.svg' : '/icons/skill-map.svg';
+    },
+    current: false,
+    companyMenu: false,
+    requiredPermission: PermissionsSystem.SKILL_MAP_VIEW,
+  },
 ];
