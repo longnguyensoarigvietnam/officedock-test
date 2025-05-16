@@ -1,28 +1,32 @@
 'use client';
 
 import { useContext } from 'react';
+import { AxiosError } from 'axios';
 import { useQuery } from 'react-query';
-import { signOut, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 
-import { apiRouters, pageRouters } from '@constants/routers';
-import { ServerStatusCode } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
 
-import { ResponseError } from '@interfaces/response';
 import { SkillMapInfo } from '@interfaces/skills';
 
 import api from '@base/api';
 
-interface FilterProps {
+const useSkillMapInfo = ({
+  organizationId,
+  userId,
+  onSuccess,
+  onError,
+  onSettled,
+}: {
   organizationId?: number;
   userId?: number;
-}
-
-const useSkillMapInfo = (filter?: FilterProps) => {
+  onSuccess?: (success: SkillMapInfo) => void;
+  onError?: (error: AxiosError) => void;
+  onSettled?: () => void;
+}) => {
   const { data: session } = useSession();
-  const router = useRouter();
   const token = session?.accessToken;
 
   const { setIsLoading } = useContext(LoadingContext);
@@ -32,11 +36,11 @@ const useSkillMapInfo = (filter?: FilterProps) => {
     setIsLoading(true);
     const queryParams = [];
 
-    if (filter?.organizationId) {
-      queryParams.push(`organization_id=${filter.organizationId}`);
+    if (organizationId) {
+      queryParams.push(`organization_id=${organizationId}`);
     }
-    if (filter?.userId) {
-      queryParams.push(`user_id=${filter.userId}`);
+    if (userId) {
+      queryParams.push(`user_id=${userId}`);
     }
 
     const queryString =
@@ -46,7 +50,7 @@ const useSkillMapInfo = (filter?: FilterProps) => {
     const apiUrl = `${apiRouters.SKILL_MAPS_LIST}${queryString}`;
 
     const { data } = await api.get<SkillMapInfo>(apiUrl);
-      return data;
+    return data;
   };
 
   // Handle API get organization skill list
@@ -55,22 +59,21 @@ const useSkillMapInfo = (filter?: FilterProps) => {
     refetch: refetchSkillMapInfo,
     isFetched: isFetchedSkillMapInfo,
   } = useQuery({
-    queryKey: ['getSkillMapInfo', [filter]],
+    queryKey: ['getSkillMapInfo', [organizationId, userId]],
     queryFn: getSkillMapInfo,
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onError: ({ response }: ResponseError<any>) => {
-      if (response?.status === ServerStatusCode.UNAUTHORIZED) {
-        if (session) {
-          signOut();
-          router.push(pageRouters.LOGIN.href);
-        }
-      }
+    onSuccess: (response: SkillMapInfo) => {
+      onSuccess && onSuccess(response);
+    },
+    onError: (error: AxiosError) => {
+      onError && onError(error);
     },
     onSettled: () => {
       setIsLoading(false);
+      onSettled && onSettled();
     },
   });
 

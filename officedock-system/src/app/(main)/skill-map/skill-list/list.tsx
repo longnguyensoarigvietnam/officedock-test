@@ -1,20 +1,30 @@
 'use client';
+import { AxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 
 import Dropdown from '@components/common/Dropdown';
+import ActionsSkillMapDetailModal from '@components/modals/ActionsSkillMapDetailModal';
 
-import { SkillMapByOrganization } from '@interfaces/skills';
+import { ScreenName, ServerStatusCode } from '@constants/enums';
+import { ALL_TEAMS_OPTION } from '@constants';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
+
+import {
+  OrganizationSkillMapDetail,
+  SkillMapByOrganization,
+} from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
 
 import useSkillMapInfo from '@hooks/useSkillMapList';
 import useOrganizationOptions from '@hooks/useFullOrganizationList';
-
-import { ScreenName } from '@constants/enums';
-import { ALL_TEAMS_OPTION } from '@constants';
+import useOrganizationSkillMapDetail from '@hooks/useOrganizationSkillDetail';
 
 import { SkillListByOrganizationPanel } from './skill-list-by-organization-panel';
+import { useToast } from '@providers/ToastProvider';
 
 const SkillList = () => {
+  const { showToast } = useToast();
+
   const [skillMapByOrganizations, setSkillMapByOrganizations] = useState<
     SkillMapByOrganization[]
   >([]);
@@ -27,12 +37,22 @@ const SkillList = () => {
       value: '',
     });
 
+  const [selectedSkillMapId, setSelectedSkillMapId] = useState<number | null>();
+  const [selectedStep, setSelectedStep] = useState<number>(1);
+  const [openSkillMapDetailModal, setOpenSkillMapDetailModal] = useState(false);
+  const [skillMapEditDetail, setSkillMapEditDetail] = useState<
+    OrganizationSkillMapDetail[] | null
+  >([]);
+
   // Hooks
   const { organizationOptions } = useOrganizationOptions({
     current_screen: ScreenName.SKILL_MAP,
   });
-  const { skillMapInfo } = useSkillMapInfo({
+  useSkillMapInfo({
     organizationId: Number(selectedOrganizationOption.value),
+    onSuccess: (data) => {
+      setSkillMapByOrganizations(data.organizations);
+    },
   });
 
   useEffect(() => {
@@ -53,11 +73,21 @@ const SkillList = () => {
     }
   }, [organizationOptions]);
 
-  useEffect(() => {
-    if (skillMapInfo?.organizations) {
-      setSkillMapByOrganizations(skillMapInfo?.organizations);
-    }
-  }, [skillMapInfo]);
+  useOrganizationSkillMapDetail({
+    skillId: Number(selectedSkillMapId),
+    onError: (error: AxiosError) => {
+      if (error.response?.status === ServerStatusCode.NOT_FOUND) {
+        showToast({
+          variant: 'error',
+          description: ERROR_COMMON_MESSAGE,
+        });
+      }
+    },
+    onSuccess: (data) => {
+      setSkillMapEditDetail(data);
+      setOpenSkillMapDetailModal(true);
+    },
+  });
 
   return (
     <div className="w-full">
@@ -79,8 +109,34 @@ const SkillList = () => {
       {/* Skill map by organizations */}
       {skillMapByOrganizations.length > 0 &&
         skillMapByOrganizations.map((skillMap, index) => (
-          <SkillListByOrganizationPanel key={index} skillMapDetail={skillMap} />
+          <SkillListByOrganizationPanel
+            key={index}
+            skillMapDetail={skillMap}
+            onDetail={({
+              skillId,
+              stepNumber,
+            }: {
+              skillId: number;
+              stepNumber: number;
+            }) => {
+              setSelectedSkillMapId(skillId);
+              setSelectedStep(stepNumber);
+            }}
+          />
         ))}
+
+      {openSkillMapDetailModal && (
+        <ActionsSkillMapDetailModal
+          step={selectedStep}
+          open={openSkillMapDetailModal}
+          skillMapEditDetail={skillMapEditDetail}
+          onClose={() => {
+            setOpenSkillMapDetailModal(false);
+            setSelectedSkillMapId(null);
+            setSkillMapEditDetail(null);
+          }}
+        />
+      )}
     </div>
   );
 };
