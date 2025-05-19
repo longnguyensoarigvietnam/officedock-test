@@ -1,7 +1,14 @@
 from datetime import datetime, timedelta, time
 
-from tasks.constants import DatetimeUnitTypes
-from tasks.models import Task, TaskSchedule, TodoList
+from django.db.models import Q
+
+from organizations.models import (
+    OrganizationsStatisticCategories,
+    OrganizationsStatisticCategoriesSkills,
+)
+from skills.models import SkillMap
+from tasks.constants import DatetimeUnitTypes, TaskStatus
+from tasks.models import Task, TaskSchedule, TodoList, TaskDuration
 from tasks.serializers import TaskScheduleSerializer, TodoListSerializer
 from calendars.models import Schedule
 from users.models import User
@@ -146,9 +153,84 @@ def calculate_new_time(start_time, delta_value, delta_unit):
     return start_time - delta
 
 
-def calculate_progress_skill_map(task):
+def calculate_progress_skill_map(task, user, hours=None):
     """
     Handle calculate progress skill map by task
     """
-    task.categories.first()
+    task_categories = task.categories.first()
     # TODO: Wait QA 99
+    org_cats_filter = Q(organization=task.organization)
+    if task_categories.large_statistic_category:
+        org_cats_filter &= Q(
+            large_statistic_category=task_categories.large_statistic_category
+        )
+        if task_categories.medium_statistic_category:
+            org_cats_filter &= Q(
+                medium_statistic_category=task_categories.medium_statistic_category
+            )
+            if task_categories.small_statistic_category:
+                org_cats_filter &= Q(
+                    small_statistic_category=task_categories.small_statistic_category
+                )
+    # Get Organization categories
+    org_categories = OrganizationsStatisticCategories.objects.filter(
+        org_cats_filter
+    ).values_list("id", flat=True)
+    # Get Skill have categories
+    org_cat_skills = OrganizationsStatisticCategoriesSkills.objects.filter(
+        organization_statistic_category__id__in=org_categories
+    ).all()
+    for org_cat_skill in org_cat_skills:
+        skill_map = SkillMap.objects.filter(
+            skill=org_cat_skill.skill,
+            organization=org_cat_skill.organization,
+            staff=user,
+            skill_map_skill_levels__is_complete=False,
+            is_complete=False,
+        ).first()
+        if skill_map:
+            # Get all time durations of task
+            if not hours:
+                hours = get_total_hours_of_task(task)
+            # Update skill map skill level actual
+            current_skill_level = skill_map.skill_map_skill_levels.filter(
+                is_complete=False
+            ).first()
+            if task.status.name == TaskStatus.COMPLETED.value:
+                actual_measure_count = (
+                    current_skill_level.actual_measure_count + 1
+                    if not hours
+                    else current_skill_level.actual_measure_count
+                )
+                actual_measure_time = (
+                    current_skill_level.actual_measure_time + hours
+                )
+            else:
+                actual_measure_count = (
+                    current_skill_level.actual_measure_count - 1
+                )
+                actual_measure_time = (
+                    current_skill_level.actual_measure_time - hours
+                )
+            skill_map.skill_map_skill_levels.filter(
+                id=current_skill_level.id
+            ).update(
+                actual_measure_count=actual_measure_count,
+                actual_measure_time=actual_measure_time,
+            )
+
+
+def get_total_hours_of_task(task):
+    """
+    Return total hours of task
+    """
+    durations = TaskDuration.objects.filter(task=task).all()
+    total_duration = timedelta()
+    for duration in durations:
+        if duration.paused_at:
+            total_duration += duration.paused_at - duration.started_at
+    total_seconds = int(total_duration.total_seconds())
+    # Calculate and get hours
+    hours, remainder = divmod(total_seconds, 3600)
+
+    return hours
