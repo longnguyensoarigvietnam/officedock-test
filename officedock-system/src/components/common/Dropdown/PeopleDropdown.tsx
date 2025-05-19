@@ -45,6 +45,7 @@ type Props = {
   styleClass?: CSSProperties;
   styleClassOption?: CSSProperties;
   imgClassname?: string;
+  iconSize?: number;
   onChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
 };
@@ -75,6 +76,7 @@ const PeopleDropdown = ({
   styleClass,
   styleClassOption,
   isShowIconDrop = true,
+  iconSize = 30,
   onAdd,
   onChange,
 }: Props) => {
@@ -255,14 +257,14 @@ const PeopleDropdown = ({
                                   <CustomUserAvatar
                                     avatarUrl={option?.imgUrl || ''}
                                     avatarColor={option?.iconColor || ''}
-                                    size={30}
+                                    size={iconSize || 30}
                                   />
                                 )}
                                 {!option.imgUrl && option.iconColor && (
                                   <CustomUserAvatar
                                     avatarUrl={option?.imgUrl || ''}
                                     avatarColor={option?.iconColor || ''}
-                                    size={30}
+                                    size={iconSize || 30}
                                   />
                                 )}
                                 {option.imgComponent && (

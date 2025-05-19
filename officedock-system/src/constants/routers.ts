@@ -213,15 +213,10 @@ export const pageRouters = {
     name: 'スキルマップ',
     href: '/skill-map',
   },
-  SKILL_MAP_TEAM: {
-    name: 'スキルマップ',
-    href: '/skill-map-team',
-  },
   SKILL_LIST_MANAGEMENT: {
     name: 'マイドック_スキルマップ_スキル一覧',
     href: '/skill-map/skill-list',
   },
-
   SKILL_MAP_SKILL: {
     name: 'マイスキル',
     href: '/skill-map/my-skill',
@@ -275,6 +270,16 @@ export const pageRouters = {
   EDIT_SKILL_MAPS_MEMBERS: {
     name: 'スキル設定_対応メンバー編集',
     href: '/skill-maps/members/edit',
+  },
+
+  // SKILL_MAP_TEAM
+  SKILL_MAP_TEAM: {
+    name: 'スキルマップ',
+    href: '/skill-map-team',
+  },
+  LEVEL_UP_TEAM: {
+    name: 'レベルアップ申請',
+    href: '/skill-map-team/level-up',
   },
 
   // LEVEL_UP
@@ -470,6 +475,8 @@ export const apiRouters = {
   SKILL_MAPS_DETAIL_CATEGORIES: '/skill-maps/detail',
   SKILL_MAPS_RESET_INDEX: '/skill-maps/reset-index/',
   MANAGE_SKILL_MAPS: '/manage-skill-maps/',
+  SKILL_MAPS_COMMENT: (id: string) => `/skill-maps/${id}/comments`,
+  SKILL_MAPS_LEVEL_UP: (id: string) => `/skill-maps/${id}/level-up`,
 
   // SUBMIT LEVELS
   SUBMIT_LEVELS_LIST: '/submit-levels/',

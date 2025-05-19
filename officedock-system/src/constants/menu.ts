@@ -59,16 +59,6 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     requiredPermission: PermissionsSystem.CATEGORY_VIEW,
   },
   {
-    ...pageRouters.SKILLS_MANAGEMENT,
-    name: pageRouters.SKILLS_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/skills.svg' : '/icons/skills.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.SKILL_VIEW,
-  },
-  {
     ...pageRouters.SKILL_MAPS_MANAGEMENT,
     name: pageRouters.SKILL_MAPS_MANAGEMENT.name,
     iconUrl: (active: boolean) => {
@@ -79,28 +69,6 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     requiredPermission: PermissionsSystem.SKILL_MAP_VIEW,
   },
   {
-    ...pageRouters.SUBMIT_LEVELS,
-    name: pageRouters.SUBMIT_LEVELS.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/level-up.svg' : '/icons/level-up.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.SUBMIT_LEVEL_VIEW,
-  },
-  {
-    ...pageRouters.ORGANIZATION_SKILLS_MANAGEMENT,
-    name: pageRouters.ORGANIZATION_SKILLS_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active
-        ? '/icons/organization-skills.svg'
-        : '/icons/organization-skills.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.ORGANIZATION_SKILL_VIEW,
-  },
-  {
     ...pageRouters.TAGS_MANAGEMENT,
     name: pageRouters.TAGS_MANAGEMENT.name,
     iconUrl: (active: boolean) => {
@@ -109,6 +77,16 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     current: false,
     companyMenu: true,
     requiredPermission: PermissionsSystem.TAG_VIEW,
+  },
+  {
+    ...pageRouters.ACTUAL_DURATIONS_MANAGEMENT,
+    name: pageRouters.ACTUAL_DURATIONS_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/measurements.svg' : '/icons/measurements.svg';
+    },
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.ACTUAL_DURATION_VIEW,
   },
   {
     ...pageRouters.TASKS_MANAGEMENT,
@@ -174,16 +152,6 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     current: false,
     companyMenu: false,
     requiredPermission: PermissionsSystem.SKILL_MAP_VIEW,
-  },
-  {
-    ...pageRouters.ACTUAL_DURATIONS_MANAGEMENT,
-    name: pageRouters.ACTUAL_DURATIONS_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/measurements.svg' : '/icons/measurements.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.ACTUAL_DURATION_VIEW,
   },
   {
     ...pageRouters.MEMBER_MANAGEMENT,

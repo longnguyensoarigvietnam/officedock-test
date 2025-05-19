@@ -1,21 +1,77 @@
 import ImageRound from '@components/common/ImageRound';
 import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProgressBar';
 import { TwinklingStar } from '@components/common/TwinklingStar';
+import SubmitLevelUpModal from '@components/modals/SubmitLevelUpModal';
+import ViewSkillMapCommentModal from '@components/modals/ViewSkillMapCommentModal';
 import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
+import { apiRouters } from '@constants/routers';
+import useSkillMapComment from '@hooks/useSkillMapComment';
+import useSkillMapLevelUp from '@hooks/useSkillMapLevelUp';
 
 import {
   SkillMapByOrganization,
   SkillMapByOrganizationInfo,
+  SkillMapComment,
+  SkillMapLevelUp,
+  SubmitLevelUpRequest,
 } from '@interfaces/skills';
+import { useState } from 'react';
+import { useMutation } from 'react-query';
+
+import api from '@base/api';
+import { useErrorToast } from '@hooks/useErrorToast';
+import { AxiosError } from 'axios';
+import { ERROR_CREATE_MESSAGE } from '@constants/message';
 
 interface SkillMapByOrganizationPanelProps {
   skillMapDetail: SkillMapByOrganization;
+  userId: number
 }
 
 export const SkillMapByOrganizationPanel = ({
   skillMapDetail,
+  userId
 }: SkillMapByOrganizationPanelProps) => {
   const MAX_LEVEL = 3;
+  const showErrorToast = useErrorToast();
+
+  // View comment
+  const [openSkillMapCommentModal, setOpenSkillMapCommentModal] =
+    useState<boolean>(false);
+  const [skillMapCommentList, setSkillMapCommentList] = useState<
+    SkillMapComment[]
+  >([]);
+  const [selectedSkillMapToViewComment, setSelectedSkillMapToViewComment] =
+    useState<number | null>(null);
+
+  // Submit level
+  const [openSubmitLevelUpModal, setOpenSubmitLevelUpModal] =
+    useState<boolean>(false);
+  const [selectedSkillMapToSubmitLevelUp, setSelectedSkillMapToSubmitLevelUp] =
+    useState<number | null>(null);
+  const [submitLevelUpDetail, setSubmitLevelUpDetail] =
+    useState<SkillMapLevelUp & {staffId: number} | null>(null);
+  const [isSuccessSubmitLevelUp, setIsSuccessSubmitLevelUp]  =
+  useState<boolean>(false);
+
+  useSkillMapComment({
+    skillMapId: Number(selectedSkillMapToViewComment),
+    onSuccess: (data) => {
+      setSkillMapCommentList(data);
+      setOpenSkillMapCommentModal(true);
+    },
+  });
+
+  useSkillMapLevelUp({
+    skillMapId: Number(selectedSkillMapToSubmitLevelUp),
+    onSuccess: (data) => {
+      setSubmitLevelUpDetail({
+        ...data,
+        staffId: userId,
+      });
+      setOpenSubmitLevelUpModal(true);
+    },
+  });
 
   const renderTreasureForStep = (
     isLocked: boolean,
@@ -61,11 +117,7 @@ export const SkillMapByOrganizationPanel = ({
                 <ImageRound
                   key={i}
                   name="Coin"
-                  src={
-                    i < level
-                      ? '/icons/coin.svg'
-                      : '/icons/gray-coin.svg'
-                  }
+                  src={i < level ? '/icons/coin.svg' : '/icons/gray-coin.svg'}
                   className="w-[14px] h-[14px] cursor-pointer"
                 />
               ))}
@@ -79,9 +131,7 @@ export const SkillMapByOrganizationPanel = ({
                   key={i}
                   name="Diamond"
                   src={
-                    i < level
-                      ? '/icons/diamond.svg'
-                      : '/icons/gray-diamond.svg'
+                    i < level ? '/icons/diamond.svg' : '/icons/gray-diamond.svg'
                   }
                   className="w-[14px] h-[14px] cursor-pointer"
                 />
@@ -95,11 +145,7 @@ export const SkillMapByOrganizationPanel = ({
                 <ImageRound
                   key={i}
                   name="Crown"
-                  src={
-                    i < level
-                      ? '/icons/crown.svg'
-                      : '/icons/gray-crown.svg'
-                  }
+                  src={i < level ? '/icons/crown.svg' : '/icons/gray-crown.svg'}
                   className="w-[14px] h-[14px] cursor-pointer"
                 />
               ))}
@@ -179,6 +225,29 @@ export const SkillMapByOrganizationPanel = ({
     });
   };
 
+  const handleConfirmSubmitLevelUp = (data: SubmitLevelUpRequest) => {
+    submitLevelUp(data);
+  };
+
+  const handleSubmitLevelUp = async (data: SubmitLevelUpRequest) => {
+    const { data: response } = await api.post(apiRouters.SUBMIT_LEVELS_LIST, data);
+    return response;
+  };
+
+  const { mutate: submitLevelUp } = useMutation(
+    'submitLevelUp',
+    handleSubmitLevelUp,
+    {
+      onSuccess: () => {
+        setIsSuccessSubmitLevelUp(true)
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+      },
+      onSettled: () => {},
+    },
+  );
+
   return (
     <div
       className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-5"
@@ -239,7 +308,7 @@ export const SkillMapByOrganizationPanel = ({
                     : 1;
                   const hasComment = skill.isHaveComment;
                   const progressPercent = skill?.progressPercent || 0;
-                  const showTwinklingStar =
+                  const showTwinklingStars =
                     skill?.progressPercent == 100 && !stepCompleted;
                   let strokeColor = '';
                   switch (step) {
@@ -257,18 +326,24 @@ export const SkillMapByOrganizationPanel = ({
                   return (
                     <div
                       key={skill.id}
-                      className={`relative flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}>
+                      className={`relative hover:cursor-pointer flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}
+                      onClick={() => {
+                        if (!stepCompleted) {
+                          setSelectedSkillMapToSubmitLevelUp(skill.id);
+                          setOpenSubmitLevelUpModal(true);
+                        }
+                      }}>
                       {!skill.id ? (
                         <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
                       ) : (
                         <div
                           className="px-5 h-[90px] flex justify-between items-center w-full rounded-[6px] relative"
                           style={{
-                            boxShadow: showTwinklingStar
+                            boxShadow: showTwinklingStars
                               ? '0px 0px 20px 0px #36ACDE80'
                               : '0px 2px 8px 0px #0000001A',
                           }}>
-                          {showTwinklingStar && (
+                          {showTwinklingStars && (
                             <div>
                               <TwinklingStar
                                 className="absolute top-[-10px] left-[-10px]"
@@ -307,6 +382,10 @@ export const SkillMapByOrganizationPanel = ({
                                   name="Comment"
                                   src={'/icons/comment.svg'}
                                   className="w-[16px] h-[14px] cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedSkillMapToViewComment(skill.id);
+                                  }}
                                 />
                               ) : (
                                 <div className="w-[16px]"></div>
@@ -375,6 +454,37 @@ export const SkillMapByOrganizationPanel = ({
           },
         )}
       </div>
+
+      {openSkillMapCommentModal && (
+        <ViewSkillMapCommentModal
+          open={openSkillMapCommentModal}
+          skillMapCommentList={skillMapCommentList}
+          onClose={() => {
+            setSelectedSkillMapToViewComment(null);
+            setSkillMapCommentList([]);
+            setOpenSkillMapCommentModal(false);
+          }}
+        />
+      )}
+
+      {openSubmitLevelUpModal && submitLevelUpDetail && (
+        <SubmitLevelUpModal
+          open={openSubmitLevelUpModal}
+          submitLevelUpDetail={submitLevelUpDetail}
+          isSuccessSubmitLevelUp={isSuccessSubmitLevelUp}
+          onCloseAndSave={() => {
+            setOpenSubmitLevelUpModal(false);
+            setSelectedSkillMapToSubmitLevelUp(null);
+            setSubmitLevelUpDetail(null)
+          }}
+          onClose={() => {
+            setOpenSubmitLevelUpModal(false);
+            setSelectedSkillMapToSubmitLevelUp(null);
+            setSubmitLevelUpDetail(null)
+          }}
+          onSubmitLevelUp={(data) => handleConfirmSubmitLevelUp(data)}
+        />
+      )}
     </div>
   );
 };

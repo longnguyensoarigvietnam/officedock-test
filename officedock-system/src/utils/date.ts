@@ -1060,9 +1060,20 @@ export function sumDurations(data: StatisticCategoryInfo[]): string {
   return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 }
 
-//Get category formatted date
+// Get category formatted date
 export const getCategoryFormattedDate = (date: Date) => {
   return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`;
+};
+
+// Get full formatted date
+export const getFullFormattedDate = (date: Date) => {
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}年${month}月${day}日 ${hours}:${minutes}`;
 };
 
 // Get time date statistic

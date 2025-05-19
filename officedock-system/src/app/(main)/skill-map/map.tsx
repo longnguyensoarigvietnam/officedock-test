@@ -76,7 +76,7 @@ const SkillMap = () => {
       {/* Skill map by organizations */}
       {skillMapByOrganizations.length > 0 &&
         skillMapByOrganizations.map((skillMap, index) => (
-          <SkillMapByOrganizationPanel key={index} skillMapDetail={skillMap} />
+          <SkillMapByOrganizationPanel key={index} skillMapDetail={skillMap} userId={skillMapInfo?.user.id || 0}/>
         ))}
     </div>
   );
