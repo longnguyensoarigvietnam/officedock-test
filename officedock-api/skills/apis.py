@@ -16,7 +16,11 @@ from common.utils import split_id_from_string
 from organizations.serializers import (
     StatisticCategorySerializer,
 )
-from skills.constants import SkillLevel as SkillLevelConstants, SkillStep
+from skills.constants import (
+    SkillLevel as SkillLevelConstants,
+    SkillStep,
+    get_next_progression,
+)
 from skills.models import (
     StatisticCategory,
     SkillMap,
@@ -38,11 +42,12 @@ from skills.filters import StatisticCategoryFilter
 from skills.utils import get_lookback_time
 from submit_levels.constants import SubmitLevelStatus
 from submit_levels.models import SubmitLevelHistory
-from roles.constants import Screens
+from roles.constants import Screens, Actions, SelectionResultOptions
 from base.filters import FilterByPermission
 from submit_levels.serializers import SubmitLevelSerializer
 from tasks.models import TaskDuration
-from users.models import User
+from users.models import User, RoleDetail
+from users.serializers import BaseUserSerializer
 
 
 @extend_schema(tags=["System > Statistic Category"])
@@ -391,6 +396,69 @@ class SkillMapViewSet(
         return self.response_ok(
             SubmitLevelSerializer(submit_levels, many=True).data
         )
+
+    @action(
+        methods=["GET"],
+        detail=True,
+        url_path="level-up",
+    )
+    def get_level_up(self, request, pk=None):
+        """
+        Response level up and approvers of skill map
+        """
+        skill_map = self.get_object()
+        skill_map_skill_level = skill_map.skill_map_skill_levels.filter(
+            is_complete=False
+        ).first()
+        data = {}
+        if skill_map_skill_level:
+            step_after_submit, level_after_submit = get_next_progression(
+                skill_map.step, skill_map_skill_level.level
+            )
+            # Get users have permission update skill map
+            permission = Screens.SKILL_MAP.value + "_" + Actions.UPDATE.value
+            selection_results = [SelectionResultOptions.ALLOWED.value]
+            role_ids = RoleDetail.objects.filter(
+                Q(permission__name=permission)
+                & Q(selection_result__in=selection_results)
+                & Q(Q(company=skill_map.company) | Q(role__system_role=True))
+            ).values_list("role__id", flat=True)
+            users = (
+                User.objects.filter(
+                    user_roles__role__id__in=role_ids, company=skill_map.company
+                )
+                .exclude(id=skill_map.staff.id)
+                .all()
+                .distinct()
+            )
+            data = {
+                "organization": skill_map.organization.id,
+                "skill": {
+                    "id": skill_map.skill.id,
+                    "name": skill_map.skill.name,
+                },
+                "skill_map_skill_level": skill_map_skill_level.id,
+                "step_before_submit": skill_map.step,
+                "level_before_submit": skill_map_skill_level.level,
+                "step_after_submit": step_after_submit,
+                "level_after_submit": level_after_submit,
+                "items": skill_map_skill_level.skill_level.items,
+                "approvers": BaseUserSerializer(users, many=True).data,
+            }
+
+        return self.response_ok(data)
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="skill-level/(?P<skill_level_id>[^/.]+)",
+    )
+    def update_level_up(self, request, pk=None):
+        """
+        Handle store skill map skill level
+        """
+
+        return self.response_ok()
 
 
 @extend_schema(tags=["System > Skill"])
