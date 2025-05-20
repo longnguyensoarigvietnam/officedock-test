@@ -235,10 +235,12 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
                 # Formatted timedelta to string
                 actual_measure_time = format_duration(new_actual_measure_time)
                 # Compare with current measure time and send socket to show pop-up
+                hours, minutes, seconds = map(
+                    int, actual_measure_time.split(":")
+                )
                 if (
                     current_skill_level.measure_time
-                    and time_str_to_timedelta(current_skill_level.measure_time)
-                    <= new_actual_measure_time
+                    and current_skill_level.measure_time <= hours
                 ):
                     send_web_socket_event(
                         {

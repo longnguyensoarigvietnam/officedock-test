@@ -219,5 +219,7 @@ class DetailSubmitLevelSerializer(ListSubmitLevelSerializer):
             is_complete=False,
         ).first()
         data = SkillMapSkillLevelSerializer(skill_map_skill_level).data
-        data["items"] = skill_map_skill_level.items
+        data["items"] = (
+            skill_map_skill_level.items if skill_map_skill_level else None
+        )
         return data
