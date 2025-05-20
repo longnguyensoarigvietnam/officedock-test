@@ -515,7 +515,11 @@ class SkillLevelForSkillMapSerializer(serializers.ModelSerializer):
         data = []
         if items:
             for item in items:
-                data.append(item["item"])
+                if isinstance(item, dict):
+                    # Change items of skill map level to items of skill level
+                    data.append(item.get("item"))
+                else:
+                    data.append(item)
         return data
 
 
