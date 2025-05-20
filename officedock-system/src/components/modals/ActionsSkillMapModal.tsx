@@ -337,11 +337,11 @@ const ActionsSkillMapModal = ({
         );
       case LevelUpConditionBy.PERIOD:
         return (
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center w-full">
             <p className="text-[13px] font-normal">振り返りの期間</p>{' '}
-            <div className="w-[36px]">
+            <div className="w-[50px]">
               <Input
-                className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[36px] focus:!shadow-none focus:border !border-[1px] rounded-md
+                className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] mr-3 focus:!shadow-none focus:border !border-[1px] rounded-md
                   ${
                     !get(
                       errors,

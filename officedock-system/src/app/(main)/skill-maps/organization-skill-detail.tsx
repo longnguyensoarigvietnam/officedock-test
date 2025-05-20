@@ -87,7 +87,7 @@ const LevelConditionDetail = ({
         lookBackTypeText = '日';
         break;
       case 'WEEK':
-        lookBackTypeText = '週';
+        lookBackTypeText = '週間';
         break;
       case 'MONTH':
         lookBackTypeText = 'ヶ月';
