@@ -1,12 +1,20 @@
+import { useState } from 'react';
+import { useMutation } from 'react-query';
+import { AxiosError } from 'axios';
+
 import ImageRound from '@components/common/ImageRound';
 import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProgressBar';
 import { TwinklingStar } from '@components/common/TwinklingStar';
 import SubmitLevelUpModal from '@components/modals/SubmitLevelUpModal';
 import ViewSkillMapCommentModal from '@components/modals/ViewSkillMapCommentModal';
 import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
+
 import { apiRouters } from '@constants/routers';
+import { ERROR_CREATE_MESSAGE } from '@constants/message';
+
 import useSkillMapComment from '@hooks/useSkillMapComment';
 import useSkillMapLevelUp from '@hooks/useSkillMapLevelUp';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import {
   SkillMapByOrganization,
@@ -15,22 +23,19 @@ import {
   SkillMapLevelUp,
   SubmitLevelUpRequest,
 } from '@interfaces/skills';
-import { useState } from 'react';
-import { useMutation } from 'react-query';
+
+import { getLastChar } from '@utils';
 
 import api from '@base/api';
-import { useErrorToast } from '@hooks/useErrorToast';
-import { AxiosError } from 'axios';
-import { ERROR_CREATE_MESSAGE } from '@constants/message';
 
 interface SkillMapByOrganizationPanelProps {
   skillMapDetail: SkillMapByOrganization;
-  userId: number
+  userId: number;
 }
 
 export const SkillMapByOrganizationPanel = ({
   skillMapDetail,
-  userId
+  userId,
 }: SkillMapByOrganizationPanelProps) => {
   const MAX_LEVEL = 3;
   const showErrorToast = useErrorToast();
@@ -49,10 +54,11 @@ export const SkillMapByOrganizationPanel = ({
     useState<boolean>(false);
   const [selectedSkillMapToSubmitLevelUp, setSelectedSkillMapToSubmitLevelUp] =
     useState<number | null>(null);
-  const [submitLevelUpDetail, setSubmitLevelUpDetail] =
-    useState<SkillMapLevelUp & {staffId: number} | null>(null);
-  const [isSuccessSubmitLevelUp, setIsSuccessSubmitLevelUp]  =
-  useState<boolean>(false);
+  const [submitLevelUpDetail, setSubmitLevelUpDetail] = useState<
+    (SkillMapLevelUp & { staffId: number }) | null
+  >(null);
+  const [isSuccessSubmitLevelUp, setIsSuccessSubmitLevelUp] =
+    useState<boolean>(false);
 
   useSkillMapComment({
     skillMapId: Number(selectedSkillMapToViewComment),
@@ -203,7 +209,6 @@ export const SkillMapByOrganizationPanel = ({
               id: null,
               skillMap: null,
               level: '',
-              nextLevel: '',
               measureCount: null,
               actualMeasureCount: null,
               measureTime: null,
@@ -230,7 +235,10 @@ export const SkillMapByOrganizationPanel = ({
   };
 
   const handleSubmitLevelUp = async (data: SubmitLevelUpRequest) => {
-    const { data: response } = await api.post(apiRouters.SUBMIT_LEVELS_LIST, data);
+    const { data: response } = await api.post(
+      apiRouters.SUBMIT_LEVELS_LIST,
+      data,
+    );
     return response;
   };
 
@@ -239,7 +247,7 @@ export const SkillMapByOrganizationPanel = ({
     handleSubmitLevelUp,
     {
       onSuccess: () => {
-        setIsSuccessSubmitLevelUp(true)
+        setIsSuccessSubmitLevelUp(true);
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
@@ -294,17 +302,11 @@ export const SkillMapByOrganizationPanel = ({
                   const isLast = idx === skillMap.length - 1;
                   const isLocked = skill.isLocked;
                   const step = skill.skill.step
-                    ? Number(
-                        skill.skill.step.charAt(skill.skill.step.length - 1),
-                      )
+                    ? Number(getLastChar(skill.skill.step))
                     : 1;
                   const stepCompleted = skill.isComplete;
-                  const level = skill.level?.nextLevel
-                    ? Number(
-                        skill.level?.nextLevel.charAt(
-                          skill.level.nextLevel.length - 1,
-                        ),
-                      )
+                  const level = skill.level?.level
+                    ? Number(getLastChar(skill.level?.level))
                     : 1;
                   const hasComment = skill.isHaveComment;
                   const progressPercent = skill?.progressPercent || 0;
@@ -328,7 +330,7 @@ export const SkillMapByOrganizationPanel = ({
                       key={skill.id}
                       className={`relative hover:cursor-pointer flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}
                       onClick={() => {
-                        if (!stepCompleted) {
+                        if (!stepCompleted && !isLocked) {
                           setSelectedSkillMapToSubmitLevelUp(skill.id);
                           setOpenSubmitLevelUpModal(true);
                         }
@@ -372,7 +374,7 @@ export const SkillMapByOrganizationPanel = ({
                             </div>
                           )}
 
-                          <div className="w-4/5">
+                          <div className="w-4/5 max-w-[4/5]">
                             <div className="flex justify-between items-center">
                               <p className="text-[16px] font-medium mb-4 max-w-[calc(100%_-_20px)] line-clamp-1 break-all">
                                 {skill.skill?.name}
@@ -475,12 +477,14 @@ export const SkillMapByOrganizationPanel = ({
           onCloseAndSave={() => {
             setOpenSubmitLevelUpModal(false);
             setSelectedSkillMapToSubmitLevelUp(null);
-            setSubmitLevelUpDetail(null)
+            setSubmitLevelUpDetail(null);
+            setIsSuccessSubmitLevelUp(false);
           }}
           onClose={() => {
             setOpenSubmitLevelUpModal(false);
             setSelectedSkillMapToSubmitLevelUp(null);
-            setSubmitLevelUpDetail(null)
+            setSubmitLevelUpDetail(null);
+            setIsSuccessSubmitLevelUp(false);
           }}
           onSubmitLevelUp={(data) => handleConfirmSubmitLevelUp(data)}
         />

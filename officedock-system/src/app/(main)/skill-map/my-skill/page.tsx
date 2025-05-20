@@ -13,7 +13,7 @@ const SkillsPage = () => {
       showFooter={false}
       className="!py-[30px] !px-10"
       permission={PermissionsSystem.SKILL_MAP_VIEW}>
-      <div className="flex gap-2 items-center mb-5">
+      <div className="flex gap-2 items-center mb-7">
         <Link href={pageRouters.SKILL_MAP.href}>
           <Button
             variant="outline"

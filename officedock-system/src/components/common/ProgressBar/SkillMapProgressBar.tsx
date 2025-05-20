@@ -12,15 +12,13 @@ export const SkillMapProgressBar = ({
   strokeColor,
 }: SkillMapProgressBarProps) => {
   return (
-    <div className="">
-      <Line
-        percent={value}
-        strokeColor={strokeColor}
-        strokeWidth={3}
-        trailWidth={3}
-        trailColor="#D2DBE1"
-        className={`${className}`}
-      />
-    </div>
+    <Line
+      percent={value}
+      strokeColor={strokeColor}
+      strokeWidth={3.5}
+      trailWidth={3.5}
+      trailColor="#D2DBE1"
+      className={`${className}`}
+    />
   );
 };

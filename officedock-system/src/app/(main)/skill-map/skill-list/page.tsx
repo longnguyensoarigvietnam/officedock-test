@@ -23,7 +23,7 @@ const SkillListPage = () => {
       showFooter={false}
       className={`!px-10 !py-[30px] ${expanded ? '!w-[calc(100%_-_210px)]' : '!w-[calc(100%_-_70px)]'} `}
       permission={PermissionsSystem.SKILL_MAP_VIEW}>
-      <div className="flex mb-5 justify-between">
+      <div className="flex mb-7 justify-between">
         <div className="flex gap-2 items-center">
           <Link href={pageRouters.SKILL_MAP.href}>
             <Button
@@ -33,12 +33,15 @@ const SkillListPage = () => {
             </Button>
           </Link>
 
-          <Button
-            variant="outline"
-            className={`w-[90px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
-            マイスキル
-          </Button>
           <Link href={pageRouters.SKILL_MAP_SKILL.href}>
+            <Button
+              variant="outline"
+              className={`w-[90px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+              マイスキル
+            </Button>
+          </Link>
+
+          <Link href={pageRouters.SKILL_LIST_MANAGEMENT.href}>
             <Button
               variant="primary"
               className={`w-[90px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>

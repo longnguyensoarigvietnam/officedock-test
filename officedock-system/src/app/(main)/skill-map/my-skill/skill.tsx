@@ -57,7 +57,7 @@ const MySkill = () => {
   return (
     <div className="w-full">
       {/* Banner */}
-      <div className="w-full h-[189px] relative mt-[33px] mb-5">
+      <div className="w-full h-[189px] relative mb-5">
         <Image
           alt="Mountains"
           src="/images/skill-banner.jpg"
@@ -233,7 +233,7 @@ const MySkill = () => {
                             <div className="w-full mt-[10px]">
                               <SkillMapProgressBar
                                 value={lastValidSkill.progressPercent || 0}
-                                strokeColor={step?.color || '#0068B6'}
+                                strokeColor={lastValidSkill.progressPercent == 0 ? '#D2DBE1' : step?.color || '#0068B6'}
                                 className="w-full"
                               />
                             </div>

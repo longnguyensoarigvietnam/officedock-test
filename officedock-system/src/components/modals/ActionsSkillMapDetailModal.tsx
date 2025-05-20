@@ -110,7 +110,7 @@ const ActionsSkillMapDetailModal = ({
             })}
           </div>
           <div className="flex items-center gap-2 justify-between">
-            <p className="font-bold text-[22px]">スケジュール管理力</p>
+            <p className="font-bold text-[22px] max-w-[calc(100%_-_95px)] break-all line-clamp-2">{dataStep?.name}</p>
             <Button
               onClick={handleCloseModal}
               className="h-[34px] w-[86px]"

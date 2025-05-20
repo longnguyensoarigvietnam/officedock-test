@@ -1,7 +1,8 @@
+import { SkillMapLookBackType, SubmitLevelStatus } from '@constants/enums';
 import { OptionDropdownType } from './common';
 import { Organizations } from './organization';
 import { Role } from './role';
-import { Profile, Staff } from './user';
+import { Staff } from './user';
 
 export interface Skill {
   id: number;
@@ -245,7 +246,6 @@ export interface SkillMapByOrganizationInfo {
     id: number | null;
     skillMap: number | null;
     level: string | null;
-    nextLevel: string | null;
     measureCount: number | null;
     actualMeasureCount: number | null;
     measureTime: number | null;
@@ -385,31 +385,40 @@ export interface Level {
 
 export interface SubmitLevel {
   id: number;
-  isEdited?: boolean;
-  actions?: {
-    update: boolean;
-    delete: boolean;
-  };
-  organization: {
+  staff: Staff;
+  skill: {
     id: number;
     name: string;
-    userCount: number;
-    superior: Organizations | null;
+    description: string;
+    step: string;
   };
-  staff: {
-    id: number;
-    loginType: string;
-    username: string | null;
-    email: string;
-    twoFactorAuthEmail: string;
-    profile: Profile;
-  };
-  skill: Skill;
-  levelBeforeSubmit: string;
-  levelAfterSubmit?: string;
   status: string;
+  createdAt: string | Date | undefined
+  progression: {
+    levelBeforeSubmit: string;
+    levelAfterSubmit: string;
+    stepBeforeSubmit: string;
+    stepAfterSubmit: string;
+  };
+  skillMapSkillLevel: {
+    id: number | null;
+    skillMap: number | null;
+    level: string | null;
+    measureCount: number | null;
+    actualMeasureCount: number | null;
+    measureTime: number | null;
+    actualMeasureTime: number | null;
+    startLookbackAt: Date | string | null;
+    nextSubmitAt: Date | string | null;
+    lookBackInterval: number | null;
+    lookBackType: string | null;
+    items: {
+      item: string,
+      isChecked: boolean
+    }[];
+    isComplete: boolean | null;
+  }
   comment: string;
-  createdAt: Date;
 }
 
 export interface SubmitLevelByOrganization {
@@ -442,4 +451,16 @@ export interface CreationDataSkill {
     id: number;
     name: string;
   }[];
+}
+export interface CensorSubmittedLevelRequest {
+  status: SubmitLevelStatus,
+  comment: string;
+  items: {
+    item: string;
+    isChecked: boolean
+  }[]
+  measureCount?: number;
+  measureTime?: number;
+  lookBackInterval?: number;
+  lookBackType?: SkillMapLookBackType
 }

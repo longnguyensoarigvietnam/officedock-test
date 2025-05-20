@@ -15,7 +15,7 @@ const SkillsPage = () => {
       showFooter={false}
       className="!px-10 !py-[30px]"
       permission={PermissionsSystem.SKILL_MAP_VIEW}>
-      <div className="flex gap-2 items-center mb-5">
+      <div className="flex gap-2 items-center mb-7">
         <Button
           variant="primary"
           className={`w-[90px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>

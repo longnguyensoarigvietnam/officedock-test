@@ -1,14 +1,18 @@
 'use client';
 import { memo, useEffect, useState } from 'react';
+import { Checkbox } from '@headlessui/react';
 
 import Modal from '@components/common/Modal';
 import ImageRound from '@components/common/ImageRound';
-
 import Button from '@components/common/Button';
-import { SkillMapLevelUp, SubmitLevelUpRequest } from '@interfaces/skills';
-import { Checkbox } from '@headlessui/react';
 import PeopleDropdown from '@components/common/Dropdown/PeopleDropdown';
+
+import { SkillMapLevelUp, SubmitLevelUpRequest } from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
+
+import { SKILL_MAP_STEPS } from '@constants';
+
+import { getLastChar } from '@utils';
 
 export type SubmitLevelUpModalProps = {
   open: boolean;
@@ -53,12 +57,9 @@ const SubmitLevelUpModal = memo(
     return (
       <Modal
         open={open}
-        isOutSideAction={false}
         className="font-primary !rounded-[8px] text-gray-700 !p-0 w-[400px] "
         contentClass="!w-[400px] !rounded-[8px]"
-        onClose={() => {
-          onClose();
-        }}>
+        onClose={onClose}>
         <div className="py-[40px] px-[20px] flex flex-col gap-5 items-center">
           <p className="text-black font-medium text-[18px] max-w-full break-all text-center">
             {submitLevelUpDetail.skill.name}
@@ -66,22 +67,22 @@ const SubmitLevelUpModal = memo(
           <div className="flex justify-between items-center w-full">
             <div className="flex items-center justify-center w-full gap-2">
               <div className="bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center">
-                <p className="text-white text-xs font-medium bg-[#0068B6] rounded-[10px] w-[51px] h-[21px] flex justify-center items-center">
-                  STEP{' '}
-                  {Number(
-                    submitLevelUpDetail.stepBeforeSubmit.charAt(
-                      submitLevelUpDetail.stepBeforeSubmit.length - 1,
-                    ),
-                  )}
+                <p
+                  className="text-white text-xs font-medium rounded-[10px] w-[51px] h-[21px] flex justify-center items-center"
+                  style={{
+                    background:
+                      SKILL_MAP_STEPS.find((step) =>
+                        step.label.includes(
+                          getLastChar(submitLevelUpDetail.stepBeforeSubmit),
+                        ),
+                      )?.color || '#0068B6',
+                  }}>
+                  STEP {getLastChar(submitLevelUpDetail.stepBeforeSubmit)}
                 </p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-sm font-medium">Lv.</p>
                   <p className="text-[20px] font-medium">
-                    {Number(
-                      submitLevelUpDetail.levelBeforeSubmit.charAt(
-                        submitLevelUpDetail.levelBeforeSubmit.length - 1,
-                      ),
-                    )}
+                    {getLastChar(submitLevelUpDetail.levelBeforeSubmit)}
                   </p>
                 </div>
               </div>
@@ -91,22 +92,22 @@ const SubmitLevelUpModal = memo(
                 name="Blue chevron"
               />
               <div className="relative bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center">
-                <p className="text-white text-xs font-medium bg-[#0068B6] rounded-[10px] w-[51px] h-[21px] flex justify-center items-center">
-                  STEP{' '}
-                  {Number(
-                    submitLevelUpDetail.stepAfterSubmit.charAt(
-                      submitLevelUpDetail.stepAfterSubmit.length - 1,
-                    ),
-                  )}
+                <p
+                  className="text-white text-xs font-medium rounded-[10px] w-[51px] h-[21px] flex justify-center items-center"
+                  style={{
+                    background:
+                      SKILL_MAP_STEPS.find((step) =>
+                        step.label.includes(
+                          getLastChar(submitLevelUpDetail.stepAfterSubmit),
+                        ),
+                      )?.color || '#0068B6',
+                  }}>
+                  STEP {getLastChar(submitLevelUpDetail.stepAfterSubmit)}
                 </p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-sm font-medium">Lv.</p>
                   <p className="text-[20px] font-medium">
-                    {Number(
-                      submitLevelUpDetail.levelAfterSubmit.charAt(
-                        submitLevelUpDetail.levelAfterSubmit.length - 1,
-                      ),
-                    )}
+                    {getLastChar(submitLevelUpDetail.levelAfterSubmit)}
                   </p>
                 </div>
               </div>
