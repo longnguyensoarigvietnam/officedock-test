@@ -507,7 +507,7 @@ export enum AddCategoryHierarchyType {
 export enum LevelUpConditionBy {
   NUMBER_OF_TIMES = 'NUMBER_OF_TIMES',
   MEASUREMENT_TIME = 'MEASUREMENT_TIME',
-  PERIOD = 'PERIOD'
+  PERIOD = 'PERIOD',
 }
 export enum SkillMapStep {
   STEP_1 = 'ステップ1',
@@ -518,5 +518,11 @@ export enum SkillMapLookBackType {
   DAY = 'DAY',
   WEEK = 'WEEK',
   MONTH = 'MONTH',
-  YEAR = 'YEAR'
+  YEAR = 'YEAR',
+}
+export enum SkillMapTypeInterval {
+  DAY = '日',
+  WEEK = '週',
+  MONTH = '月',
+  YEAR = '年',
 }

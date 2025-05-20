@@ -1,10 +1,10 @@
 'use client';
 import { memo, useEffect, useState } from 'react';
-import { Checkbox } from '@headlessui/react';
 
 import Modal from '@components/common/Modal';
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
+import Checkbox from '@components/common/Checkbox';
 import PeopleDropdown from '@components/common/Dropdown/PeopleDropdown';
 
 import { SkillMapLevelUp, SubmitLevelUpRequest } from '@interfaces/skills';
@@ -136,8 +136,7 @@ const SubmitLevelUpModal = memo(
                   {submitLevelUpDetail.items.map((item, index) => {
                     return (
                       <div key={index} className="flex gap-2">
-                        <Checkbox />
-                        <p className="text-sm font-medium">{item}</p>
+                        <Checkbox label={item} />
                       </div>
                     );
                   })}

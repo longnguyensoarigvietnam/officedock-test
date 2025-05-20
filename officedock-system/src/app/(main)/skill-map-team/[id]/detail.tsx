@@ -5,7 +5,7 @@ import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProg
 import Button from '@components/common/Button';
 import ActionsSkillMapDetailModal from '@components/modals/ActionsSkillMapDetailModal';
 
-import { ServerStatusCode } from '@constants/enums';
+import { ServerStatusCode, SkillMapTypeInterval } from '@constants/enums';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import { useToast } from '@providers/ToastProvider';
@@ -14,7 +14,12 @@ import {
   OrganizationSkillMapDetail,
   SkillMapByOrganization,
 } from '@interfaces/skills';
-import { extractLevelNumber, extractStepNumber, getSkillStep } from '@utils';
+import {
+  extractLevelNumber,
+  extractStepNumber,
+  getSkillStep,
+  timeStringToHours,
+} from '@utils';
 
 type Props = {
   detailSkillData: SkillMapByOrganization[];
@@ -138,7 +143,7 @@ const DetailSkillUser = ({ detailSkillData }: Props) => {
                           <div className="min-w-[290px] text-xs max-w-[290px] flex-shrink-0 break-words border-r px-5 border-[#D2DBE1]">
                             <p>対応タスクを始めてから</p>
                             <div className="flex gap-[2px] items-end mt-[4px]">
-                              {lastValidSkill.level.measureCount && (
+                              {lastValidSkill.level.measureCount !== null && (
                                 <>
                                   <p className="text-[18px] text-[#0068B6]">
                                     {lastValidSkill.level.actualMeasureCount}/
@@ -149,24 +154,34 @@ const DetailSkillUser = ({ detailSkillData }: Props) => {
                                   </p>
                                 </>
                               )}
-                              {lastValidSkill.level.measureTime && (
+                              {lastValidSkill.level.measureTime !== null && (
                                 <>
                                   <p className="text-[18px] text-[#0068B6]">
-                                    {lastValidSkill.level.actualMeasureTime}/
-                                    {lastValidSkill.level.measureTime}
+                                    {lastValidSkill.level.actualMeasureTime &&
+                                      timeStringToHours(
+                                        `${lastValidSkill.level.actualMeasureTime}`,
+                                      )}
+                                    /{lastValidSkill.level.measureTime}
                                   </p>
                                   <p className="relative top-[2px]">
                                     時間経過した
                                   </p>
                                 </>
                               )}
-                              {lastValidSkill.level.lookBackInterval && (
+                              {lastValidSkill.level.lookBackInterval !==
+                                null && (
                                 <>
                                   <p className="text-[18px] text-[#0068B6]">
                                     {lastValidSkill.level.lookBackInterval}
                                   </p>
                                   <p className="relative top-[2px] text-xs">
-                                    ヶ月
+                                    ヶ{' '}
+                                    {
+                                      SkillMapTypeInterval[
+                                        lastValidSkill.level
+                                          .lookBackType as keyof typeof SkillMapTypeInterval
+                                      ]
+                                    }
                                   </p>
                                 </>
                               )}

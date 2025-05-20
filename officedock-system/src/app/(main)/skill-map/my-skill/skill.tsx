@@ -9,14 +9,19 @@ import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProg
 import Button from '@components/common/Button';
 
 import useSkillMapInfo from '@hooks/useSkillMapList';
-import { ServerStatusCode } from '@constants/enums';
+import { ServerStatusCode, SkillMapTypeInterval } from '@constants/enums';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import {
   OrganizationSkillMapDetail,
   SkillMapByOrganization,
 } from '@interfaces/skills';
-import { extractLevelNumber, extractStepNumber, getSkillStep } from '@utils';
+import {
+  extractLevelNumber,
+  extractStepNumber,
+  getSkillStep,
+  timeStringToHours,
+} from '@utils';
 import { useToast } from '@providers/ToastProvider';
 import useSkillMapUserDetail from '@hooks/useSkillMapUserDetail';
 
@@ -197,7 +202,7 @@ const MySkill = () => {
                           <div className="min-w-[290px] text-xs max-w-[290px] flex-shrink-0 break-words border-r px-5 border-[#D2DBE1]">
                             <p>対応タスクを始めてから</p>
                             <div className="flex gap-[2px] items-end mt-[4px]">
-                              {lastValidSkill.level.measureCount && (
+                              {lastValidSkill.level.measureCount !== null && (
                                 <>
                                   <p className="text-[18px] text-[#0068B6]">
                                     {lastValidSkill.level.actualMeasureCount}/
@@ -208,10 +213,14 @@ const MySkill = () => {
                                   </p>
                                 </>
                               )}
-                              {lastValidSkill.level.measureTime && (
+                              {lastValidSkill.level.measureTime !== null && (
                                 <>
                                   <p className="text-[18px] text-[#0068B6]">
-                                    {lastValidSkill.level.actualMeasureTime}/
+                                    {lastValidSkill.level.actualMeasureTime &&
+                                      timeStringToHours(
+                                        `${lastValidSkill.level.actualMeasureTime}`,
+                                      )}
+                                    /{lastValidSkill.level.measureTime}/
                                     {lastValidSkill.level.measureTime}
                                   </p>
                                   <p className="relative top-[2px]">
@@ -219,13 +228,20 @@ const MySkill = () => {
                                   </p>
                                 </>
                               )}
-                              {lastValidSkill.level.lookBackInterval && (
+                              {lastValidSkill.level.lookBackInterval !==
+                                null && (
                                 <>
                                   <p className="text-[18px] text-[#0068B6]">
                                     {lastValidSkill.level.lookBackInterval}
                                   </p>
                                   <p className="relative top-[2px] text-xs">
-                                    ヶ月
+                                    ヶ
+                                    {
+                                      SkillMapTypeInterval[
+                                        lastValidSkill.level
+                                          .lookBackType as keyof typeof SkillMapTypeInterval
+                                      ]
+                                    }
                                   </p>
                                 </>
                               )}
@@ -233,7 +249,11 @@ const MySkill = () => {
                             <div className="w-full mt-[10px]">
                               <SkillMapProgressBar
                                 value={lastValidSkill.progressPercent || 0}
-                                strokeColor={lastValidSkill.progressPercent == 0 ? '#D2DBE1' : step?.color || '#0068B6'}
+                                strokeColor={
+                                  lastValidSkill.progressPercent == 0
+                                    ? '#D2DBE1'
+                                    : step?.color || '#0068B6'
+                                }
                                 className="w-full"
                               />
                             </div>
