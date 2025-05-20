@@ -800,4 +800,17 @@ export function extractStepNumber(step: string): number {
 export const getLastChar = (str: string): string => {
   return str.charAt(str.length - 1);
 };
+// Convert time to hour string
+export function timeStringToHours(timeStr: string): number {
+  if (!timeStr) return 0;
 
+  const parts: string[] = timeStr.split(':');
+  if (parts.length !== 3) return 0;
+
+  const [hoursStr, _minutesStr, _secondsStr] = parts;
+  const hours: number = parseInt(hoursStr, 10);
+
+  if (isNaN(hours)) return 0;
+
+  return hours;
+}

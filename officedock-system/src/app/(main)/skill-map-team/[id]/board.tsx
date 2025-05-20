@@ -63,7 +63,10 @@ const BoardSkillUser = () => {
         <Button
           variant={isMapOption ? 'primary' : 'outline'}
           onClick={() => {
-            setIsMapOption(true);
+            const params = new URLSearchParams(searchParams);
+            params.delete('is_skill');
+            params.set('is_map', 'true');
+            router.replace(`?${params.toString()}`);
           }}
           className={`w-[100px] !p-0 text-xs h-[28px] border-transparent text-white !rounded-[20px] ${isMapOption ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F] border-[1px]'}`}>
           メンバー一覧
@@ -71,7 +74,10 @@ const BoardSkillUser = () => {
         <Button
           variant={isMapOption ? 'outline' : 'primary'}
           onClick={() => {
-            setIsMapOption(false);
+            const params = new URLSearchParams(searchParams);
+            params.delete('is_map');
+            params.set('is_skill', 'true');
+            router.replace(`?${params.toString()}`);
           }}
           className={` w-[120px] !p-0 text-xs h-[28px]  !rounded-[20px] ${!isMapOption ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F] border-[1px]'}`}>
           レベルアップ申請
