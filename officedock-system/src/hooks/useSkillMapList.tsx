@@ -20,8 +20,8 @@ const useSkillMapInfo = ({
   onError,
   onSettled,
 }: {
-  organizationId?: number;
-  userId?: number;
+  organizationId?: string;
+  userId?: string;
   onSuccess?: (success: SkillMapInfo) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;

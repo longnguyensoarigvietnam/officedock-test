@@ -13,8 +13,11 @@ import { useInView } from 'react-intersection-observer';
 import { useSession } from 'next-auth/react';
 
 import Item from './Item';
+import ItemRoutine from './ItemRoutine';
 import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
+
 import {
   KanbanType,
   PermissionsSystem,
@@ -22,6 +25,7 @@ import {
 } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+
 import {
   Columns,
   CreationDataTask,
@@ -31,12 +35,11 @@ import {
   TaskRequest,
 } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
+import { OptionDropdownType } from '@interfaces/common';
+
 import api from '@base/api';
 import { hasPermissionInArray } from '@utils';
 import { TaskContext } from '@providers/TaskProvider';
-import { OptionDropdownType } from '@interfaces/common';
-import ItemRoutine from './ItemRoutine';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 interface ColumnProps {
   columnId: string;
   title: string;
@@ -357,9 +360,7 @@ const Column = ({
                 session?.user.permissions,
                 PermissionsSystem.MY_TASK_ADD,
               ) && (
-                <DynamicTooltip
-                  content="タスクを新規作成"
-                  placement="top">
+                <DynamicTooltip content="タスクを新規作成" placement="top">
                   <div
                     style={{
                       padding: '6.5px',
@@ -379,9 +380,7 @@ const Column = ({
                   </div>
                 </DynamicTooltip>
               )}
-            <DynamicTooltip
-              content="タブを縮小"
-              placement="top">
+            <DynamicTooltip content="タブを縮小" placement="top">
               <div
                 onClick={async () => {
                   const newList = extendByStatus.map((item) =>
@@ -508,9 +507,7 @@ const Column = ({
     <div className="w-[40px] pt-[6px]">
       <div className="flex gap-[6px] items-center justify-center">
         <div className={`w-[10px] h-[10px] rounded-full ${statusStyle}`}></div>
-        <DynamicTooltip
-          content="タブを拡大"
-          placement="top">
+        <DynamicTooltip content="タブを拡大" placement="top">
           <div
             className={`flex items-center justify-center cursor-pointer ${Number(columnId) != StatusValueTask.MY_ROUTINE ? 'hover:bg-[#E3EAED]' : 'hover:bg-[#EBF2F7]'} rounded-full w-[22px] h-[22px]`}
             onClick={async () => {

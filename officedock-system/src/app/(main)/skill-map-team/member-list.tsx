@@ -1,13 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
 
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
+import { pageRouters } from '@constants/routers';
 
 const MemberList = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [organizationList, setOrganizationList] = useState<
     {
       orgId: number;
@@ -35,6 +39,23 @@ const MemberList = () => {
       });
     },
   });
+  const handleNavigateUserSkill = (id: number, organizationId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    params.set('is_skill', 'true');
+    params.set('user_organization', organizationId);
+    const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(id)}?${params.toString()}`;
+    router.push(newPath);
+  };
+  const handleNavigateUserMap = (id: number, organizationId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    params.set('is_map', 'true');
+    params.set('user_organization', organizationId);
+
+    const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(id)}?${params.toString()}`;
+    router.push(newPath);
+  };
 
   return (
     <>
@@ -55,7 +76,7 @@ const MemberList = () => {
                       key={user.id}
                       className="flex justify-between items-center px-3 h-[70px] bg-white rounded-[6px]"
                       style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
-                      <div className='flex gap-3 items-center w-[calc(100%_-_320px)]'>
+                      <div className="flex gap-3 items-center w-[calc(100%_-_320px)]">
                         <CustomUserAvatar
                           avatarUrl={user?.avatar || ''}
                           avatarColor={user?.avatarColor || ''}
@@ -68,10 +89,17 @@ const MemberList = () => {
                       <div className="flex gap-2 items-center w-[320px]">
                         <Button
                           variant="primary"
+                          onClick={() =>
+                            handleNavigateUserMap(user.id, String(org.orgId))
+                          }
                           className="!p-0 w-[154px] h-[36px] text-white text-sm font-medium">
                           スキルマップを見る
                         </Button>
+
                         <Button
+                          onClick={() =>
+                            handleNavigateUserSkill(user.id, String(org.orgId))
+                          }
                           variant="primary"
                           className="!p-0 w-[154px] h-[36px] text-white text-sm font-medium">
                           マイスキルを見る

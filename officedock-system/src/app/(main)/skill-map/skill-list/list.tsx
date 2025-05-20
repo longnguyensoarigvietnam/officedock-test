@@ -17,7 +17,7 @@ import { OptionDropdownType } from '@interfaces/common';
 
 import useSkillMapInfo from '@hooks/useSkillMapList';
 import useOrganizationOptions from '@hooks/useFullOrganizationList';
-import useOrganizationSkillMapDetail from '@hooks/useOrganizationSkillDetail';
+import useSkillMapUserDetail from '@hooks/useSkillMapUserDetail';
 
 import { SkillListByOrganizationPanel } from './skill-list-by-organization-panel';
 import { useToast } from '@providers/ToastProvider';
@@ -49,7 +49,7 @@ const SkillList = () => {
     current_screen: ScreenName.SKILL_MAP,
   });
   useSkillMapInfo({
-    organizationId: Number(selectedOrganizationOption.value),
+    organizationId: String(selectedOrganizationOption.value),
     onSuccess: (data) => {
       setSkillMapByOrganizations(data.organizations);
     },
@@ -73,7 +73,7 @@ const SkillList = () => {
     }
   }, [organizationOptions]);
 
-  useOrganizationSkillMapDetail({
+  useSkillMapUserDetail({
     skillId: Number(selectedSkillMapId),
     onError: (error: AxiosError) => {
       if (error.response?.status === ServerStatusCode.NOT_FOUND) {

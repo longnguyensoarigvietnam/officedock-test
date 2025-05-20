@@ -190,7 +190,7 @@ export const pageRouters = {
     href: '/categories/create',
   },
 
-  // SKILL MAP
+  // SKILL
   SKILLS_MANAGEMENT: {
     name: 'スキル',
     href: '/skills',
@@ -225,6 +225,20 @@ export const pageRouters = {
     name: 'スキル一覧',
     href: '/skill-map/list',
   },
+  // SKILL MAP TEAM
+  SKILL_MAP_TEAM: {
+    name: 'スキルマップ',
+    href: '/skill-map-team',
+  },
+  SKILL_MAP_TEAM_DETAIL: {
+    name: 'ユーザー詳細',
+    href: (id: number) => `/skill-map-team/${id}`,
+  },
+  LEVEL_UP_TEAM: {
+    name: 'レベルアップ申請',
+    href: '/skill-map-team/level-up',
+  },
+
   // SKILL MAPS
   SKILL_MAPS_MANAGEMENT: {
     name: 'スキルマップ',
@@ -270,16 +284,6 @@ export const pageRouters = {
   EDIT_SKILL_MAPS_MEMBERS: {
     name: 'スキル設定_対応メンバー編集',
     href: '/skill-maps/members/edit',
-  },
-
-  // SKILL_MAP_TEAM
-  SKILL_MAP_TEAM: {
-    name: 'スキルマップ',
-    href: '/skill-map-team',
-  },
-  LEVEL_UP_TEAM: {
-    name: 'レベルアップ申請',
-    href: '/skill-map-team/level-up',
   },
 
   // LEVEL_UP
