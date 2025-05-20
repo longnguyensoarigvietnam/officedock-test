@@ -5,6 +5,7 @@ import {
   SkillMapByOrganization,
   SkillMapByOrganizationInfo,
 } from '@interfaces/skills';
+
 import { extractStepNumber } from '@utils';
 
 interface SkillListByOrganizationPanelProps {
@@ -54,7 +55,6 @@ export const SkillListByOrganizationPanel = ({
               id: null,
               skillMap: null,
               level: '',
-              nextLevel: '',
               measureCount: null,
               actualMeasureCount: null,
               measureTime: null,
@@ -171,7 +171,7 @@ export const SkillListByOrganizationPanel = ({
                             variant="primary"
                             onClick={() => {
                               const stepNumber =
-                                extractStepNumber(`${skill.step}`) || 1;
+                                extractStepNumber(`${skill.skill.step}`) || 1;
                               onDetail({
                                 skillId: skill.skill.id as number,
                                 stepNumber: stepNumber,

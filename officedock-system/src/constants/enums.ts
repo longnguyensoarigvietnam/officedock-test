@@ -514,3 +514,9 @@ export enum SkillMapStep {
   STEP_2 = 'ステップ2',
   STEP_3 = 'ステップ3',
 }
+export enum SkillMapLookBackType {
+  DAY = 'DAY',
+  WEEK = 'WEEK',
+  MONTH = 'MONTH',
+  YEAR = 'YEAR'
+}

@@ -19,8 +19,9 @@ import useSkillMapInfo from '@hooks/useSkillMapList';
 import useOrganizationOptions from '@hooks/useFullOrganizationList';
 import useSkillMapUserDetail from '@hooks/useSkillMapUserDetail';
 
-import { SkillListByOrganizationPanel } from './skill-list-by-organization-panel';
 import { useToast } from '@providers/ToastProvider';
+
+import { SkillListByOrganizationPanel } from './skill-list-by-organization-panel';
 
 const SkillList = () => {
   const { showToast } = useToast();

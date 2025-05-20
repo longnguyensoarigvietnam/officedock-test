@@ -8,6 +8,10 @@ import { TwinklingStar } from '@components/common/TwinklingStar';
 
 import { SkillMapComment } from '@interfaces/skills';
 
+import { SKILL_MAP_STEPS } from '@constants';
+
+import { getLastChar } from '@utils';
+
 export type ViewSkillMapCommentModalProps = {
   open: boolean;
   skillMapCommentList: SkillMapComment[];
@@ -35,18 +39,17 @@ const ViewSkillMapCommentModal = memo(
     return (
       <Modal
         open={open}
-        isOutSideAction={false}
         className="font-primary !rounded-[8px] text-gray-700 !p-0 w-[400px] "
         contentClass="!w-[400px] !rounded-[8px]"
-        onClose={() => {
-          onClose();
-        }}>
+        onClose={onClose}>
         <div className="py-[40px] px-[20px] flex flex-col gap-4 items-center">
           <p className="text-black font-medium text-[18px] max-w-full break-all text-center">
             {currentComment.skill.name}
           </p>
           <div className="flex justify-between items-center w-full">
-            <div className="opacity-50 hover:cursor-pointer" onClick={handlePrev}>
+            <div
+              className="opacity-50 hover:cursor-pointer"
+              onClick={handlePrev}>
               <ImageRound
                 className="w-5 h-5"
                 src="/icons/chevron-left.svg"
@@ -55,22 +58,22 @@ const ViewSkillMapCommentModal = memo(
             </div>
             <div className="flex items-center gap-2">
               <div className="bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center opacity-55">
-                <p className="text-white text-xs font-medium bg-[#0068B6] rounded-[10px] w-[51px] h-[21px] flex justify-center items-center">
-                  STEP{' '}
-                  {Number(
-                    currentComment.stepBeforeSubmit.charAt(
-                      currentComment.stepBeforeSubmit.length - 1,
-                    ),
-                  )}
+                <p
+                  className="text-white text-xs font-medium rounded-[10px] w-[51px] h-[21px] flex justify-center items-center"
+                  style={{
+                    background:
+                      SKILL_MAP_STEPS.find((step) =>
+                        step.label.includes(
+                          getLastChar(currentComment.stepBeforeSubmit),
+                        ),
+                      )?.color || '#0068B6',
+                  }}>
+                  STEP {getLastChar(currentComment.stepBeforeSubmit)}
                 </p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-sm font-medium">Lv.</p>
                   <p className="text-[20px] font-medium">
-                    {Number(
-                      currentComment.levelBeforeSubmit.charAt(
-                        currentComment.levelBeforeSubmit.length - 1,
-                      ),
-                    )}
+                    {getLastChar(currentComment.levelBeforeSubmit)}
                   </p>
                 </div>
               </div>
@@ -98,28 +101,30 @@ const ViewSkillMapCommentModal = memo(
                     delay={1.2}
                   />
                 </div>
-                <p className="text-white text-xs font-medium bg-[#0068B6] rounded-[10px] w-[51px] h-[21px] flex justify-center items-center">
-                  STEP{' '}
-                  {Number(
-                    currentComment.stepAfterSubmit.charAt(
-                      currentComment.stepAfterSubmit.length - 1,
-                    ),
-                  )}
+                <p
+                  className="text-white text-xs font-medium rounded-[10px] w-[51px] h-[21px] flex justify-center items-center"
+                  style={{
+                    background:
+                      SKILL_MAP_STEPS.find((step) =>
+                        step.label.includes(
+                          getLastChar(currentComment.stepAfterSubmit),
+                        ),
+                      )?.color || '#0068B6',
+                  }}>
+                  STEP {getLastChar(currentComment.stepAfterSubmit)}
                 </p>
                 <div className="flex gap-1 items-baseline">
                   <p className="text-sm font-medium">Lv.</p>
                   <p className="text-[20px] font-medium">
-                    {Number(
-                      currentComment.levelAfterSubmit.charAt(
-                        currentComment.levelAfterSubmit.length - 1,
-                      ),
-                    )}
+                    {getLastChar(currentComment.levelAfterSubmit)}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="opacity-50 hover:cursor-pointer" onClick={handleNext}>
+            <div
+              className="opacity-50 hover:cursor-pointer"
+              onClick={handleNext}>
               <ImageRound
                 className="w-5 h-5"
                 src="/icons/chevron-right.svg"
@@ -137,11 +142,11 @@ const ViewSkillMapCommentModal = memo(
                 avatarColor={currentComment.staff?.avatarColor || ''}
                 size={24}
               />
-              <p className="text-sm font-medium ml-2">
-                {currentComment.staff.profile.fullName}
-              </p>
-              <p className="text-[#77858F] text-xs font-medium ml-1">
-                さんからのコメント
+              <p className="text-sm font-medium ml-2 max-w-full break-all line-clamp-4">
+                {currentComment.staff.profile.fullName}{' '}
+                <span className="text-[#77858F] text-xs font-medium ml-1">
+                  さんからのコメント
+                </span>
               </p>
             </div>
             <p className="text-sm font-normal max-w-[100%] break-all">

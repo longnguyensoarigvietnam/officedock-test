@@ -47,7 +47,7 @@ const useSubmitLevelDetail = ({
     queryKey: ['getSubmitLevelDetail'],
     queryFn: getSubmitLevelDetail,
     retry: 0,
-    enabled: !!token,
+    enabled: !!token && !!submitLevelId,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (data: SubmitLevel) => {

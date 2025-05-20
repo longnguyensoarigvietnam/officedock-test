@@ -1277,9 +1277,18 @@ export const MessageDetail = ({
                                   <Button
                                     className="!text-black !font-medium !text-xs !bg-[#CED8DE] !rounded-[100px] !w-[86px] !h-[30px] !px-0"
                                     onClick={() => {
-                                      router.push(
-                                        pageRouters.LEVEL_UP_TEAM.href,
-                                      );
+                                      if (
+                                        messageDetail.type ==
+                                        MessageType.CREATE_SUBMIT_LEVEL_SKILL
+                                      ) {
+                                        router.push(
+                                          pageRouters.LEVEL_UP_TEAM.href,
+                                        );
+                                      } else {
+                                        router.push(
+                                          `${pageRouters.SKILL_MAP.href}?submitLevelId=${messageDetail.submitLevel?.id}`,
+                                        );
+                                      }
                                     }}>
                                     確認する
                                     <ImageRound

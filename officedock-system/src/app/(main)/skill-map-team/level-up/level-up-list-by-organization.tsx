@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from 'react';
+
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
@@ -5,17 +7,22 @@ import ImageRound from '@components/common/ImageRound';
 import { SubmitLevelByOrganization } from '@interfaces/skills';
 
 import { getFullFormattedDate } from '@utils/date';
+import { getLastChar } from '@utils';
+
+import { SKILL_MAP_STEPS } from '@constants';
 
 interface LevelUpListByOrganizationProps {
   orgSubmitLevel: SubmitLevelByOrganization;
+  setSelectedSubmitLevel: Dispatch<SetStateAction<number | null>>;
 }
 
 export const LevelUpListByOrganization = ({
   orgSubmitLevel,
+  setSelectedSubmitLevel,
 }: LevelUpListByOrganizationProps) => {
   return (
     <div
-      className="w-full p-7 bg-[#F8FAFC] rounded-[14px] mb-5 overflow-x-auto scrollbar-gutter-stable max-w-full"
+      className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-5"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {orgSubmitLevel.organizationName}
@@ -52,7 +59,7 @@ export const LevelUpListByOrganization = ({
             return (
               <div
                 key={submitLevel.id}
-                className="bg-white py-[20px] rounded-[6px]"
+                className="bg-white py-[20px] rounded-[6px] mb-5"
                 style={{
                   boxShadow: '0px 2px 8px 0px #0000001A',
                 }}>
@@ -91,23 +98,28 @@ export const LevelUpListByOrganization = ({
                   <div className="flex justify-between items-center w-[195px] border-r border-[#D2DBE1]">
                     <div className="flex items-center justify-center w-full gap-2">
                       <div className="bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center">
-                        <p className="text-white text-xs font-medium bg-[#0068B6] rounded-[10px] w-[51px] h-[21px] flex justify-center items-center">
+                        <p
+                          className="text-white text-xs font-medium rounded-[10px] w-[51px] h-[21px] flex justify-center items-center"
+                          style={{
+                            background:
+                              SKILL_MAP_STEPS.find((step) =>
+                                step.label.includes(
+                                  getLastChar(
+                                    submitLevel.progression.stepBeforeSubmit,
+                                  ),
+                                ),
+                              )?.color || '#0068B6',
+                          }}>
                           STEP{' '}
-                          {Number(
-                            submitLevel.progression.stepBeforeSubmit.charAt(
-                              submitLevel.progression.stepBeforeSubmit.length -
-                                1,
-                            ),
+                          {getLastChar(
+                            submitLevel.progression.stepBeforeSubmit,
                           )}
                         </p>
                         <div className="flex gap-1 items-baseline">
                           <p className="text-sm font-medium">Lv.</p>
                           <p className="text-[20px] font-medium">
-                            {Number(
-                              submitLevel.progression.levelBeforeSubmit.charAt(
-                                submitLevel.progression.levelBeforeSubmit
-                                  .length - 1,
-                              ),
+                            {getLastChar(
+                              submitLevel.progression.levelBeforeSubmit,
                             )}
                           </p>
                         </div>
@@ -118,23 +130,26 @@ export const LevelUpListByOrganization = ({
                         name="Blue chevron"
                       />
                       <div className="relative bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center">
-                        <p className="text-white text-xs font-medium bg-[#0068B6] rounded-[10px] w-[51px] h-[21px] flex justify-center items-center">
+                        <p
+                          className="text-white text-xs font-medium rounded-[10px] w-[51px] h-[21px] flex justify-center items-center"
+                          style={{
+                            background:
+                              SKILL_MAP_STEPS.find((step) =>
+                                step.label.includes(
+                                  getLastChar(
+                                    submitLevel.progression.stepAfterSubmit,
+                                  ),
+                                ),
+                              )?.color || '#0068B6',
+                          }}>
                           STEP{' '}
-                          {Number(
-                            submitLevel.progression.stepAfterSubmit.charAt(
-                              submitLevel.progression.stepAfterSubmit.length -
-                                1,
-                            ),
-                          )}
+                          {getLastChar(submitLevel.progression.stepAfterSubmit)}
                         </p>
                         <div className="flex gap-1 items-baseline">
                           <p className="text-sm font-medium">Lv.</p>
                           <p className="text-[20px] font-medium">
-                            {Number(
-                              submitLevel.progression.levelAfterSubmit.charAt(
-                                submitLevel.progression.levelAfterSubmit
-                                  .length - 1,
-                              ),
+                            {getLastChar(
+                              submitLevel.progression.levelAfterSubmit,
                             )}
                           </p>
                         </div>
@@ -144,7 +159,10 @@ export const LevelUpListByOrganization = ({
                   <div className="px-[24px]">
                     <Button
                       variant="primary"
-                      className="w-[100px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-white">
+                      className="w-[100px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-white"
+                      onClick={() => {
+                        setSelectedSubmitLevel(submitLevel.id);
+                      }}>
                       確認する
                     </Button>
                   </div>

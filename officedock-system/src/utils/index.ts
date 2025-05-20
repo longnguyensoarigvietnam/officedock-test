@@ -796,3 +796,8 @@ export function extractStepNumber(step: string): number {
   const match = step.match(/\d+/);
   return match ? parseInt(match[0], 10) : 1;
 }
+// Get last character
+export const getLastChar = (str: string): string => {
+  return str.charAt(str.length - 1);
+};
+

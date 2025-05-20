@@ -1,24 +1,69 @@
 'use client';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import ReviewSubmittedLevelUpModal from '@components/modals/ReviewSubmittedLevelUpModal';
 
 import useSkillMapInfo from '@hooks/useSkillMapList';
+import useSubmitLevelDetail from '@hooks/useSubmitLevelDetail';
 
-import { SkillMapByOrganization } from '@interfaces/skills';
+import {
+  SkillMapByOrganization,
+  SubmitLevel,
+} from '@interfaces/skills';
 
 import { SkillMapByOrganizationPanel } from './skill-map-by-organization-panel';
 
 const SkillMap = () => {
+  // Router
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Skill map list
   const [skillMapByOrganizations, setSkillMapByOrganizations] = useState<
     SkillMapByOrganization[]
   >([]);
+
+  // Submit level id
+  const [submitLevelIdParam, setSubmitLevelIdParam] = useState<string | null>(
+    searchParams.get('submitLevelId'),
+  );
+  const [selectedSubmitLevel, setSelectedSubmitLevel] = useState<number | null>(
+    null,
+  );
+  const [submitLevelUpDetail, setSubmitLevelUpDetail] =
+    useState<SubmitLevel | null>(null);
+  const [openReviewSubmittedLevelupPopup, setOpenReviewSubmittedLevelupPopup] =
+    useState<boolean>(false);
+
   const { skillMapInfo } = useSkillMapInfo({
     onSuccess: (data) => {
       setSkillMapByOrganizations(data.organizations);
     },
   });
+
+  useSubmitLevelDetail({
+    submitLevelId: Number(selectedSubmitLevel),
+    onSuccess: (data) => {
+      setSubmitLevelUpDetail(data);
+      setOpenReviewSubmittedLevelupPopup(true);
+    },
+  });
+
+  const handleRemoveParam = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('submitLevelId');
+    setSubmitLevelIdParam(null);
+    router.replace(`?${params.toString()}`);
+  };
+
+  useEffect(() => {
+    if (submitLevelIdParam) {
+      setSelectedSubmitLevel(Number(submitLevelIdParam));
+    }
+  }, [submitLevelIdParam]);
 
   return (
     <div className="w-full">
@@ -76,8 +121,24 @@ const SkillMap = () => {
       {/* Skill map by organizations */}
       {skillMapByOrganizations.length > 0 &&
         skillMapByOrganizations.map((skillMap, index) => (
-          <SkillMapByOrganizationPanel key={index} skillMapDetail={skillMap} userId={skillMapInfo?.user.id || 0}/>
+          <SkillMapByOrganizationPanel
+            key={index}
+            skillMapDetail={skillMap}
+            userId={skillMapInfo?.user.id || 0}
+          />
         ))}
+
+      {openReviewSubmittedLevelupPopup && selectedSubmitLevel && submitLevelUpDetail && (
+        <ReviewSubmittedLevelUpModal
+          open={openReviewSubmittedLevelupPopup}
+          submitLevelUpDetail={submitLevelUpDetail}
+          onClose={() => {
+            setOpenReviewSubmittedLevelupPopup(false);
+            setSelectedSubmitLevel(null);
+            handleRemoveParam();
+          }}
+        />
+      )}
     </div>
   );
 };
