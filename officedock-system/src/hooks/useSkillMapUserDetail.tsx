@@ -31,7 +31,7 @@ const useSkillMapUserDetail = ({
   const getOrganizationSkillMapDetail = async () => {
     if (!skillId) return;
     setIsLoading(true);
-    const apiUrl = `${apiRouters.ORGANIZATION_SKILL_DETAIL(skillId)}`;
+    const apiUrl = `${apiRouters.SKILL_MAPS_DETAIL_SKILL}?skill_id=${skillId}`;
 
     const { data } = await api.get<OrganizationSkillMapDetail[]>(apiUrl);
     return data;
