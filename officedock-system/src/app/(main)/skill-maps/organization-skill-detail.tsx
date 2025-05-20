@@ -34,9 +34,6 @@ import api from '@base/api';
 
 interface OrganizationSkillDetailProps {
   orgSkillDetail: OrganizationSkill;
-  setSelectedOrganizationInActionsModal: React.Dispatch<
-    React.SetStateAction<number | null>
-  >;
   setOpenSkillMapActionsModal: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedFilterStepDetail: React.Dispatch<
     React.SetStateAction<
@@ -53,11 +50,13 @@ interface OrganizationSkillDetailProps {
   handleSetParam: ({
     id,
     action,
-    step
+    step,
+    organization
   }: {
     id?: string | null;
     action?: string | null;
-    step?: number | null
+    step?: number | null;
+    organization?: number | null;
   }) => void;
   refetchOrganizationSkillList: any;
 }
@@ -120,7 +119,9 @@ const LevelConditionDetail = ({
             return (
               <div className="flex gap-2 items-center" key={index}>
                 <div className="w-1 min-w-1 h-1 bg-black rounded-full"></div>
-                <p className="text-xs font-medium max-w-[calc(100%_-_8px)] break-all">{item}</p>
+                <p className="text-xs font-medium max-w-[calc(100%_-_8px)] break-all">
+                  {item}
+                </p>
               </div>
             );
           })}
@@ -132,7 +133,6 @@ const LevelConditionDetail = ({
 
 export const OrganizationSkillDetail = ({
   orgSkillDetail,
-  setSelectedOrganizationInActionsModal,
   setOpenSkillMapActionsModal,
   setSelectedFilterStepDetail,
   setSelectedSkillMapToUpdate,
@@ -147,7 +147,7 @@ export const OrganizationSkillDetail = ({
   const showErrorToast = useErrorToast();
   const { showToast } = useToast();
   const stepDefitionBoxRef = useRef<HTMLDivElement | null>(null);
-  const isEditingRef = useRef(false)
+  const isEditingRef = useRef(false);
   const { register, watch, reset } = useForm<OrganizationDefineSteps>({
     mode: 'onSubmit',
   });
@@ -214,7 +214,16 @@ export const OrganizationSkillDetail = ({
   });
 
   const handleConfirmEditStepDefinitions = (data: OrganizationDefineSteps) => {
-    editStepDefinitions(data);
+    const isChanged =
+      orgSkillDetail.steps.step1 != watch('defineStep1') ||
+      orgSkillDetail.steps.step2 != watch('defineStep2') ||
+      orgSkillDetail.steps.step3 != watch('defineStep3');
+    if (isChanged) {
+      editStepDefinitions(data);
+    } else {
+      setIsEditStepDefinitionMode(false);
+      isEditingRef.current = false;
+    }
   };
 
   const handleEditSkillMap = async (data: OrganizationDefineSteps) => {
@@ -327,8 +336,16 @@ export const OrganizationSkillDetail = ({
           <ImageRound
             name="Edit"
             src={'/icons/edit-gray.svg'}
-            className="w-3.5 h-3.5 hover:cursor-pointer"
-            onClick={() => setIsEditStepDefinitionMode(false)}
+            className="w-3.5 h-3.5 hover:cursor-pointer edit-icon"
+            onClick={() => {
+              if (!isEditingRef.current) {
+                handleConfirmEditStepDefinitions({
+                  defineStep1: watch('defineStep1') || null,
+                  defineStep2: watch('defineStep2') || null,
+                  defineStep3: watch('defineStep3') || null,
+                });
+              }
+            }}
           />
         </div>
       ) : (
@@ -362,7 +379,7 @@ export const OrganizationSkillDetail = ({
           <ImageRound
             name="Edit"
             src={'/icons/edit-gray.svg'}
-            className="w-3.5 h-3.5 hover:cursor-pointer opacity-45"
+            className="w-3.5 h-3.5 hover:cursor-pointer opacity-45 hover:opacity-100"
             onClick={() => {
               setIsEditStepDefinitionMode(true);
               reset({
@@ -414,8 +431,8 @@ export const OrganizationSkillDetail = ({
                 setOpenSkillMapActionsModal(true);
                 handleSetParam({
                   action: ActionsModal.CREATE,
+                  organization: orgSkillDetail.id
                 });
-                setSelectedOrganizationInActionsModal(orgSkillDetail.id);
               }}>
               <ImageRound
                 src="/icons/add-with-background.svg"
@@ -455,7 +472,7 @@ export const OrganizationSkillDetail = ({
                 return (
                   <th
                     key={header.id}
-                    className={`text-[#77858F] text-xs font-medium py-3 ${widthClass} ${!isLast ? 'border-r-[1px]' : ''}`}>
+                    className={`text-[#77858F] bg-[#F8FAFC] text-xs font-medium py-3 ${widthClass} ${!isLast ? 'border-r-[1px]' : ''}`}>
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext(),
@@ -502,12 +519,9 @@ export const OrganizationSkillDetail = ({
                           handleSetParam({
                             action: ActionsModal.EDIT,
                             id: String(row.original.id),
-                            step: currentStep
+                            step: currentStep,
                           });
                           setSelectedSkillMapToUpdate(row.original.id);
-                          setSelectedOrganizationInActionsModal(
-                            orgSkillDetail.id,
-                          );
                         }}
                       />
                       <ImageRound
@@ -548,7 +562,8 @@ export const OrganizationSkillDetail = ({
                     />
                   </p>
                 </td>
-                <td className={`w-[18.666667%] break-all border-[#D2DBE1] h-full`}>
+                <td
+                  className={`w-[18.666667%] break-all border-[#D2DBE1] h-full`}>
                   <p className="text-sm flex justify-left items-center font-medium py-4 px-5">
                     <LevelConditionDetail
                       measureCount={skillLevel3Detail?.measureCount}

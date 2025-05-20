@@ -68,6 +68,9 @@ const ListSkillsMap = () => {
   const [currentStepParam, setCurrentStepParam] = useState<string | null>(
     searchParams.get('step'),
   );
+  const [organizationParam, setOrganizationParam] = useState<string | null>(
+    searchParams.get('organization'),
+  );
 
   const [dataOrganizationSkillList, setDataOrganizationSkillList] = useState<
     OrganizationSkill[]
@@ -101,10 +104,6 @@ const ListSkillsMap = () => {
   const [skillMapEditDetail, setSkillMapEditDetail] = useState<
     OrganizationSkillMapDetail[] | null
   >([]);
-  const [
-    selectedOrganizationInActionsModal,
-    setSelectedOrganizationInActionsModal,
-  ] = useState<number | null>(null);
 
   // Fetch organization skills
   const { organizationSkillList, refetchOrganizationSkillList } =
@@ -168,7 +167,7 @@ const ListSkillsMap = () => {
       step: StepFormDataDetail,
     ): StepRequestDataDetail => ({
       name: step?.name || '',
-      organizationId: selectedOrganizationInActionsModal || 0,
+      organizationId: Number(organizationParam) || 0,
       description: step?.description || '',
       step:
         key === 'step1'
@@ -198,7 +197,7 @@ const ListSkillsMap = () => {
               measureTime: level?.measureTime
                 ? Number(level?.measureTime)
                 : null,
-              organization: selectedOrganizationInActionsModal || 0,
+              organization: Number(organizationParam) || 0,
             }))
           : [],
     });
@@ -268,6 +267,23 @@ const ListSkillsMap = () => {
     ) as SkillMapRequestData;
   };
 
+  const validateSkillLevels = (steps: SkillMapRequestData): string | null => {
+    for (const stepKey of Object.keys(steps) as (keyof SkillMapRequestData)[]) {
+      const step = steps[stepKey];
+      for (let i = 0; i < step.skillLevels.length; i++) {
+        const skill = step.skillLevels[i];
+        const { lookBackType, lookBackInterval, measureCount, measureTime } = skill;
+        const allNull = [lookBackType, lookBackInterval, measureCount, measureTime].every(
+          (value) => value === null
+        );
+        if (allNull) {
+          return stepKey;
+        }
+      }
+    }
+    return null;
+  };
+
   const handleConfirmCreateSkillMap = (data: SkillMapFormData) => {
     const filteredData = Object.fromEntries(
       Object.entries(data).filter(([_, step]) => step != null && step.name),
@@ -283,6 +299,14 @@ const ListSkillsMap = () => {
       return;
     }
     const requestData = convertFormDataToCreationRequestData(filteredData);
+    if(validateSkillLevels(requestData)) {
+      showToast({
+        variant: 'error',
+        description: `${validateSkillLevels(requestData)?.toUpperCase()}の必須情報を入力してください。`,
+      });
+      return;
+    }
+
     createSkillMap(requestData);
   };
 
@@ -301,7 +325,6 @@ const ListSkillsMap = () => {
         });
         setOpenSkillMapActionsModal(false);
         handleRemoveParam();
-        setSelectedOrganizationInActionsModal(null);
         refetchOrganizationSkillList();
       },
       onError: (error: AxiosError<any>) => {
@@ -330,6 +353,13 @@ const ListSkillsMap = () => {
       return;
     }
     const requestData = convertFormDataToEditionRequestData(filteredData);
+    if(validateSkillLevels(requestData)) {
+      showToast({
+        variant: 'error',
+        description: `${validateSkillLevels(requestData)?.toUpperCase()}の必須情報を入力してください。`,
+      });
+      return;
+    }
     editSkillMap(requestData);
   };
 
@@ -347,7 +377,6 @@ const ListSkillsMap = () => {
           description: SUCCESS_UPDATE_MESSAGE,
         });
         setOpenSkillMapActionsModal(false);
-        setSelectedOrganizationInActionsModal(null);
         setSelectedSkillMapToUpdate(null);
         setSkillMapEditDetail(null);
         handleRemoveParam();
@@ -366,10 +395,12 @@ const ListSkillsMap = () => {
     id,
     action,
     step,
+    organization
   }: {
     id?: string | null;
     action?: string | null;
     step?: number | null;
+    organization?: number | null;
   }) => {
     if (id) {
       params.set('skillId', id);
@@ -382,6 +413,10 @@ const ListSkillsMap = () => {
     if (step) {
       params.set('step', String(step));
       setCurrentStepParam(String(step));
+    }
+    if (organization) {
+      params.set('organization', String(organization));
+      setOrganizationParam(String(organization));
     }
     router.push(`?${params.toString()}`);
   };
@@ -410,9 +445,11 @@ const ListSkillsMap = () => {
     params.delete('skillId');
     params.delete('action');
     params.delete('step');
+    params.delete('organization')
     setSkillIdParam(null);
     setActionTypeParam(null);
     setCurrentStepParam(null);
+    setOrganizationParam(null)
     router.replace(`?${params.toString()}`);
   };
 
@@ -451,9 +488,6 @@ const ListSkillsMap = () => {
             <OrganizationSkillDetail
               key={orgSkill.id}
               orgSkillDetail={orgSkill}
-              setSelectedOrganizationInActionsModal={
-                setSelectedOrganizationInActionsModal
-              }
               setOpenSkillMapActionsModal={setOpenSkillMapActionsModal}
               setSelectedFilterStepDetail={setSelectedFilterStepDetail}
               setSelectedSkillMapToUpdate={setSelectedSkillMapToUpdate}
