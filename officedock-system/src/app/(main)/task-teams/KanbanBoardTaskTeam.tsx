@@ -385,8 +385,40 @@ const KanbanBoardTaskTeam = () => {
     const [sourceUserId, sourceStatus] = source.droppableId.split('-');
     const [destUserId, destStatus] = destination.droppableId.split('-');
 
-    // Drag no setting --> drop no setting
+    if (
+      StatusTask[sourceStatus as keyof typeof StatusTask] ===
+        StatusTask.COMPLETED &&
+      sourceUserId !== destUserId
+    ) {
+      return;
+    }
+    if (
+      StatusTask[sourceStatus as keyof typeof StatusTask] ===
+        StatusTask.COMPLETED &&
+      StatusTask[destStatus as keyof typeof StatusTask] !==
+        StatusTask.COMPLETED &&
+      sourceUserId === destUserId
+    ) {
+      return;
+    }
+    if (
+      StatusTask[destStatus as keyof typeof StatusTask] ===
+        StatusTask.COMPLETED &&
+      sourceUserId !== destUserId
+    ) {
+      return;
+    }
+    if (
+      StatusTask[sourceStatus as keyof typeof StatusTask] !==
+        StatusTask.COMPLETED &&
+      StatusTask[destStatus as keyof typeof StatusTask] ===
+        StatusTask.COMPLETED &&
+      sourceUserId === destUserId
+    ) {
+      return;
+    }
     if (sourceUserId === COLUMN_ID_TASK && destUserId === COLUMN_ID_TASK) {
+      // Drag no setting --> drop no setting
       if (source.index === destination.index) return;
 
       const movedItem = listTaskNoSetting[source.index];
