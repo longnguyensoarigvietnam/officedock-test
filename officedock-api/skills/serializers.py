@@ -1,9 +1,7 @@
 from datetime import datetime
 
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
-from base.messages import ERROR_MESSAGES
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import get_common_categories
 from organizations.models import Organization, OrganizationsStatisticCategories
@@ -11,9 +9,16 @@ from organizations.serializers import (
     OrganizationSerializer,
     BaseOrganizationSerializer,
 )
-from skills.models import SkillMap, Skill, SkillLevel, SkillMapSkillLevel
+from skills.models import (
+    SkillMap,
+    Skill,
+    SkillLevel,
+    SkillMapSkillLevel,
+    StatisticCategory,
+)
 from submit_levels.constants import SubmitLevelStatus
 from submit_levels.models import SubmitLevelHistory
+from users.models import User
 
 
 class SkillLevelSerializer(serializers.ModelSerializer):
@@ -51,6 +56,32 @@ class SkillLevelSerializer(serializers.ModelSerializer):
         read_only_fields = ["skill"]
 
 
+class CategorySerializer(serializers.Serializer):
+    """Serializer of category"""
+
+    large_statistic_category_id = serializers.PrimaryKeyRelatedField(
+        source="large_statistic_category",
+        queryset=StatisticCategory.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    medium_statistic_category_id = serializers.PrimaryKeyRelatedField(
+        source="medium_statistic_category",
+        queryset=StatisticCategory.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    small_statistic_category_id = serializers.PrimaryKeyRelatedField(
+        source="small_statistic_category",
+        queryset=StatisticCategory.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
+
 class SkillSerializer(serializers.ModelSerializer):
     """
     Serializer for skill
@@ -70,6 +101,9 @@ class SkillSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True,
     )
+    category_ids = CategorySerializer(
+        write_only=True, many=True, required=False
+    )
     categories = serializers.SerializerMethodField()
 
     class Meta:
@@ -83,6 +117,7 @@ class SkillSerializer(serializers.ModelSerializer):
             "description",
             "step",
             "skill_levels",
+            "category_ids",
             "categories",
             "created_at",
         ]
@@ -94,26 +129,6 @@ class SkillSerializer(serializers.ModelSerializer):
         """
         skill_levels = obj.skill_levels.all()
         return SkillLevelSerializer(skill_levels, many=True).data
-
-    def validate(self, attrs):
-        """Handle validate"""
-        instance = self.instance
-        company = (
-            self.context.get("user").company
-            if not instance
-            else instance.company
-        )
-        name = attrs.get("name")
-        skill = attrs.get("skill")
-        unique_name = Skill.objects.filter(company=company, name=name)
-        if skill and unique_name:
-            unique_name = unique_name.exclude(id=skill.id)
-        if unique_name.exists():
-            raise ValidationError(
-                {"detail": ERROR_MESSAGES["unique_skill_name"]}
-            )
-
-        return attrs
 
     def get_categories(self, obj):
         """
@@ -163,10 +178,6 @@ class SkillMapSkillLevelSerializer(serializers.ModelSerializer):
     Serializer for skill map skill level
     """
 
-    measure_count = serializers.SerializerMethodField()
-    measure_time = serializers.SerializerMethodField()
-    look_back_interval = serializers.SerializerMethodField()
-    look_back_type = serializers.SerializerMethodField()
     items = serializers.SerializerMethodField()
 
     class Meta:
@@ -187,35 +198,15 @@ class SkillMapSkillLevelSerializer(serializers.ModelSerializer):
             "is_complete",
         ]
 
-    def get_measure_count(self, obj):
-        """
-        Return measure count
-        """
-        return obj.measure_count or obj.skill_level.measure_count
-
-    def get_measure_time(self, obj):
-        """
-        Return measure time
-        """
-        return obj.measure_time or obj.skill_level.measure_time
-
-    def get_look_back_interval(self, obj):
-        """
-        Return look back interval
-        """
-        return obj.look_back_interval or obj.skill_level.look_back_interval
-
-    def get_look_back_type(self, obj):
-        """
-        Return look back type
-        """
-        return obj.look_back_type or obj.skill_level.look_back_type
-
     def get_items(self, obj):
         """
-        Return items
+        Handle object item to text array item
         """
-        return obj.items or obj.skill_level.items
+        data = []
+        if obj.items:
+            for item in obj.items:
+                data.append(item["item"])
+        return data
 
 
 class SkillMapSerializer(serializers.ModelSerializer):
@@ -499,9 +490,7 @@ class SkillLevelForSkillMapSerializer(serializers.ModelSerializer):
         skill_map_skill_level = obj.skill_map_skill_levels.filter(
             skill_map=skill_map
         ).first()
-        if skill_map_skill_level and getattr(
-            skill_map_skill_level, attr
-        ) not in [0, None]:
+        if skill_map_skill_level:
             return getattr(skill_map_skill_level, attr)
         else:
             return getattr(obj, attr)
@@ -519,7 +508,15 @@ class SkillLevelForSkillMapSerializer(serializers.ModelSerializer):
         return self._get_skill_map_value(obj, "look_back_type")
 
     def get_items(self, obj):
-        return self._get_skill_map_value(obj, "items")
+        """
+        Handle object item to text array item
+        """
+        items = self._get_skill_map_value(obj, "items")
+        data = []
+        if items:
+            for item in items:
+                data.append(item["item"])
+        return data
 
 
 class GroupStepSkillMapSerializer(SkillSerializer):
@@ -569,3 +566,15 @@ class GroupStepSkillMapSerializer(SkillSerializer):
             transformed_categories.append(get_common_categories(category))
 
         return transformed_categories
+
+
+class DraftLevelUpSerializer(serializers.Serializer):
+    """Serializer for draft level up"""
+
+    from submit_levels.serializers import ItemsOfSubmitLevel
+
+    items = ItemsOfSubmitLevel(many=True, required=False)
+    approver = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        write_only=True,
+    )

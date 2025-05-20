@@ -140,18 +140,18 @@ class SubmitLevelViewSet(
             SubmitLevelStatus.REJECT.value,
         ]:
             raise ValidationError({"detail": ERROR_MESSAGES["cannot_updated"]})
-
+        # Get current skill map
+        skill_map = SkillMap.objects.filter(
+            organization=instance.organization,
+            skill=instance.skill,
+            staff=instance.staff,
+            step=instance.step_before_submit,
+        ).first()
         if status == SubmitLevelStatus.APPROVE.value:
             step_after_submit, level_after_submit = get_next_progression(
                 instance.step_before_submit, instance.level_before_submit
             )
-            # Get current skill map
-            skill_map = SkillMap.objects.filter(
-                organization=instance.organization,
-                skill=instance.skill,
-                staff=instance.staff,
-                step=instance.step_before_submit,
-            ).first()
+
             # Update current skill map skill level
             skill_map.skill_map_skill_levels.filter(
                 level=instance.level_before_submit
@@ -204,19 +204,13 @@ class SubmitLevelViewSet(
                     company=instance.company,
                     start_lookback_at=start_look_back_at,
                     next_submit_at=next_submit_at,
+                    skill=skill_level.skill,
                 )
             submit_level = serializer.save(
                 level_after_submit=level_after_submit,
                 step_after_submit=step_after_submit,
             )
         else:
-            # Get current skill map
-            skill_map = SkillMap.objects.filter(
-                organization=instance.organization,
-                staff=instance.staff,
-                step=instance.step_before_submit,
-                skill=instance.skill,
-            ).first()
             next_submit_at = None
             if look_back_type and look_back_interval:
                 next_submit_at = get_lookback_time(
@@ -227,13 +221,16 @@ class SubmitLevelViewSet(
                 level=instance.level_before_submit
             ).update(
                 measure_time=measure_time,
+                actual_measure_time=0,
                 measure_count=measure_count,
+                actual_measure_count=0,
                 look_back_interval=look_back_interval,
                 look_back_type=look_back_type,
-                start_lookback_at=now(),
+                start_lookback_at=now() if next_submit_at else None,
                 next_submit_at=next_submit_at,
+                items=items,
             )
-            submit_level = serializer.save(items=items)
+            submit_level = serializer.save()
 
         if status in [
             SubmitLevelStatus.APPROVE.value,

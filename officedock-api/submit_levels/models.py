@@ -63,7 +63,6 @@ class SubmitLevelHistory(BaseModel):
         null=True,
         blank=True,
     )
-    items = models.JSONField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         """

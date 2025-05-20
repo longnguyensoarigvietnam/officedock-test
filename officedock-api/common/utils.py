@@ -23,6 +23,7 @@ from common.constants import STRIP_TAGS
 from organizations.constants import CategoryColors
 from organizations.models import OrganizationsStatisticCategories
 from roles.constants import SelectionResultOptions
+from skills.constants import DEFAULT_TIME
 from stat_data.constants import NONE_CATEGORY
 from users.models import User, RoleDetail
 
@@ -181,7 +182,7 @@ def get_total_unread_messages(user):
 def format_duration(duration: timedelta) -> str:
     """Helper function to format timedelta as HH:MM:SS."""
     if duration is None:
-        return None
+        return DEFAULT_TIME
     total_seconds = int(duration.total_seconds())
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)

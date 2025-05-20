@@ -7,6 +7,7 @@ from skills.constants import (
     SkillLevel as SkillLevelConstants,
     SkillStep,
     LookBackTypes,
+    DEFAULT_TIME,
 )
 
 
@@ -182,6 +183,13 @@ class SkillMapSkillLevel(BaseModel):
         related_name="skill_map_skill_levels",
         on_delete=models.CASCADE,
     )
+    skill = models.ForeignKey(
+        "skills.Skill",
+        related_name="skill_map_skill_levels",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     skill_map = models.ForeignKey(
         "skills.SkillMap",
         related_name="skill_map_skill_levels",
@@ -200,7 +208,9 @@ class SkillMapSkillLevel(BaseModel):
     measure_count = models.IntegerField(null=True, blank=True, default=0)
     actual_measure_count = models.IntegerField(null=True, blank=True, default=0)
     measure_time = models.IntegerField(null=True, blank=True, default=0)
-    actual_measure_time = models.IntegerField(null=True, blank=True, default=0)
+    actual_measure_time = models.CharField(
+        max_length=255, null=True, blank=True, default=DEFAULT_TIME
+    )
     items = models.JSONField(null=True, blank=True)
     look_back_interval = models.IntegerField(null=True, blank=True)
     look_back_type = models.CharField(

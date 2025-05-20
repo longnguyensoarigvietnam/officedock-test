@@ -1,6 +1,9 @@
 from base.constants import EnumChoices
 
 
+DEFAULT_TIME = "00:00:00"
+
+
 class SkillLevel(EnumChoices):
     """
     SkillLevel constants.
