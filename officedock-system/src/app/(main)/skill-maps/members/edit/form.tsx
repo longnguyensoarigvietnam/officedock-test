@@ -284,11 +284,11 @@ export const EditSkillMapByMemberForm = ({
                       'py-2',
                       'text-center',
                       'text-sm',
-                      'text-[#77858F]',
-                      !isFirstCol && !isLastCol && 'border',
-                      isLastCol && !isLastRow && 'border-b',
-                      isLastRow && 'border-l',
-                      isFirstCol && 'border-b sticky left-0 z-10 bg-white',
+                      'text-[#77858F] border',
+                      isFirstCol && 'border-l-0',
+                      isLastCol && 'border-r-0',
+                      isLastRow && 'border-b-0',
+                      isFirstCol && 'sticky left-0 z-0 bg-white',
                     ]
                       .filter(Boolean)
                       .join(' ');

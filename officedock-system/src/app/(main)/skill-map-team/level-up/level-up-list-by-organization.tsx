@@ -77,7 +77,7 @@ export const LevelUpListByOrganization = ({
                   </div>
 
                   <div className="w-[calc((100%_-_480px)/3)] px-[24px] border-r border-[#D2DBE1]">
-                    <p className="text-sm font-medium w-[150px] break-all line-clamp-2 ">
+                    <p className="text-sm font-medium w-[100%] break-all line-clamp-2 ">
                       {submitLevel.skill.name}
                     </p>
                   </div>

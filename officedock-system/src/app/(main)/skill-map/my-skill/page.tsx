@@ -26,7 +26,7 @@ const SkillsPage = () => {
           className={`w-[90px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
           マイスキル
         </Button>
-        <Link href={pageRouters.SKILL_MAP_LIST.href}>
+        <Link href={pageRouters.SKILL_LIST_MANAGEMENT.href}>
           <Button
             variant="outline"
             className={`w-[90px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>

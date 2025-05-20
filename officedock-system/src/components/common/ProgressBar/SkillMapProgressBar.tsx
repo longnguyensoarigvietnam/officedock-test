@@ -19,7 +19,7 @@ export const SkillMapProgressBar = ({
         strokeWidth={3}
         trailWidth={3}
         trailColor="#D2DBE1"
-        className={`h-[10px] ${className}`}
+        className={`${className}`}
       />
     </div>
   );
