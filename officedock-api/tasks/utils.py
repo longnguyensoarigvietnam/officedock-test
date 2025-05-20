@@ -163,6 +163,8 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
     """
     Handle calculate progress skill map by task
     """
+    if not task:
+        return
     task_categories = task.categories.first()
     # TODO: Wait QA 96
     org_cats_filter = Q(organization=task.organization)

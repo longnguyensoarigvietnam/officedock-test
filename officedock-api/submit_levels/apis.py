@@ -22,7 +22,7 @@ from chat.serializers import (
     ChatMessageSerializer,
 )
 from common.utils import send_web_socket_event
-from skills.constants import get_next_progression
+from skills.constants import get_next_progression, DEFAULT_TIME
 from skills.models import SkillMap, SkillMapSkillLevel, Skill
 from skills.utils import get_lookback_time
 from submit_levels.constants import SubmitLevelStatus
@@ -221,7 +221,7 @@ class SubmitLevelViewSet(
                 level=instance.level_before_submit
             ).update(
                 measure_time=measure_time,
-                actual_measure_time=0,
+                actual_measure_time=DEFAULT_TIME,
                 measure_count=measure_count,
                 actual_measure_count=0,
                 look_back_interval=look_back_interval,

@@ -127,7 +127,7 @@ class CreateSubmitLevelSerializer(SubmitLevelSerializer):
 
 class ItemsOfSubmitLevel(serializers.Serializer):
     item = serializers.CharField()
-    is_checked = serializers.BooleanField(default=False)
+    is_checked = serializers.BooleanField()
 
 
 class UpdateSubmitLevelSerializer(SubmitLevelSerializer):
@@ -213,8 +213,11 @@ class DetailSubmitLevelSerializer(ListSubmitLevelSerializer):
         Return skill map skill level
         """
         skill_map_skill_level = SkillMapSkillLevel.objects.filter(
-            skill_map__skill=obj.skill,
+            skill=obj.skill,
             level=obj.level_before_submit,
+            skill_map__staff=obj.staff,
             is_complete=False,
         ).first()
-        return SkillMapSkillLevelSerializer(skill_map_skill_level).data
+        data = SkillMapSkillLevelSerializer(skill_map_skill_level).data
+        data["items"] = skill_map_skill_level.items
+        return data
