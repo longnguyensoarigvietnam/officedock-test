@@ -204,7 +204,7 @@ const MySkill = () => {
                                     {lastValidSkill.level.measureCount}
                                   </p>
                                   <p className="relative top-[2px]">
-                                    時間経過した
+                                    回完了にする
                                   </p>
                                 </>
                               )}
@@ -215,7 +215,7 @@ const MySkill = () => {
                                     {lastValidSkill.level.measureTime}
                                   </p>
                                   <p className="relative top-[2px]">
-                                    回完了にする
+                                    時間経過した
                                   </p>
                                 </>
                               )}

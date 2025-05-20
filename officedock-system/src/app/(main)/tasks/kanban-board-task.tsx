@@ -39,6 +39,7 @@ import BoardKanban from '@components/kanban/Board';
 import ActionFilterTask from '@components/modals/ActionFilterTask';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ConfirmDragModalTask from '@components/modals/ConfirmDropModalTask';
+import CompletionRewardModal from '@components/modals/CompletionRewardModal';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useTaskBoardList from '@hooks/useTaskBoardList';
@@ -92,6 +93,7 @@ import {
 } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
 import { WebSocketMessageSortKanban } from '@interfaces/chat';
+import { OptionDropdownType } from '@interfaces/common';
 import {
   Template,
   TemplateFormData,
@@ -113,7 +115,6 @@ import {
 } from '@utils/date';
 import { compareItems } from '@utils';
 import api from '@base/api';
-import { OptionDropdownType } from '@interfaces/common';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -228,6 +229,7 @@ const KanbanBoardTask = () => {
   const [openConfirmDeleteTemplateModal, setOpenConfirmDeleteTemplateModal] =
     useState(false);
   const [openConfirmDragModal, setOpenConfirmDragModal] = useState(false);
+  const [openRewardModal, setOpenRewardModal] = useState(false);
 
   const [isListView, setIsListView] = useState<boolean>(false);
 
@@ -3032,6 +3034,7 @@ const KanbanBoardTask = () => {
     const handleSocketMessage = (data: WebSocketMessageSortKanban) => {
       switch (data.action) {
         case SocketActions.RESET_STATUS_SORT_TASK:
+          if (orderingRequest === '') return;
           setIsReadyToFetch(false);
           setOrderingRequest('');
           setDataOrderRing('');
@@ -3604,6 +3607,17 @@ const KanbanBoardTask = () => {
                     setOpenConfirmDragModal(false);
                     setPendingDropData(null);
                   }}
+                />
+              )}
+              {openRewardModal && (
+                <CompletionRewardModal
+                  open={openRewardModal}
+                  count={1}
+                  name="セミナー当日"
+                  onConfirm={function (): void {
+                    throw new Error('Function not implemented.');
+                  }}
+                  onClose={() => setOpenRewardModal(false)}
                 />
               )}
             </div>

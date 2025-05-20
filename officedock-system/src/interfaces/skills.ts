@@ -217,6 +217,8 @@ export interface SkillMapInfo {
     organizations: Organizations;
   };
   organizations: SkillMapByOrganization[];
+  nextUser: number;
+  prevUser: number;
 }
 
 export interface SkillMapByOrganization {
@@ -431,7 +433,7 @@ export interface SubmitLevelByOrganization {
       description: string;
       step: string;
     };
-    createdAt: string | Date | undefined
+    createdAt: string | Date | undefined;
     progression: {
       levelBeforeSubmit: string;
       levelAfterSubmit: string;

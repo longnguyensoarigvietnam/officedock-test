@@ -1,11 +1,13 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 import Button from '@components/common/Button';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import ImageRound from '@components/common/ImageRound';
 
+import { pageRouters } from '@constants/routers';
 import useSkillMapInfo from '@hooks/useSkillMapList';
 import { SkillMapByOrganization } from '@interfaces/skills';
 import DetailSkillUser from './detail';
@@ -14,6 +16,7 @@ const BoardSkillUser = () => {
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
   const userId = params.id;
+  const router = useRouter();
 
   const [isMapOption, setIsMapOption] = useState(true);
 
@@ -40,6 +43,19 @@ const BoardSkillUser = () => {
       setIsMapOption(false);
     }
   }, [isMapParam, isSkill]);
+
+  const handleNextUser = () => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(skillMapInfo?.nextUser as number)}?${params.toString()}`;
+    router.push(newPath);
+  };
+  const handlePrevUser = () => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(skillMapInfo?.prevUser as number)}?${params.toString()}`;
+    router.push(newPath);
+  };
 
   return (
     <>
@@ -110,6 +126,23 @@ const BoardSkillUser = () => {
                 </div>
               </div>
             </div>
+          </div>
+          <div
+            onClick={handlePrevUser}
+            className="absolute z-20 top-1/2 -translate-y-1/2 left-[-16px] h-[30px] w-[30px] flex items-center justify-center rounded-full bg-white">
+            <ImageRound
+              src="/icons/chevron-left-calendar.svg"
+              name={'left'}
+              className="h-fit w-fit"
+            />
+          </div>
+          <div className="absolute z-20 top-1/2 -translate-y-1/2 rotate-180 right-[-16px] h-[30px] w-[30px] flex items-center justify-center rounded-full bg-white">
+            <ImageRound
+              onClick={handleNextUser}
+              src="/icons/chevron-left-calendar.svg"
+              name={'right'}
+              className="h-fit w-fit"
+            />
           </div>
         </div>
         {isMapOption ? (
