@@ -254,10 +254,10 @@ class SkillMapSerializer(serializers.ModelSerializer):
                     / skill_level["measure_count"]
                 ) * 100
             elif skill_level["measure_time"]:
-                percent = (
-                    skill_level["actual_measure_time"]
-                    / skill_level["measure_time"]
-                ) * 100
+                hours, minutes, seconds = map(
+                    int, skill_level["actual_measure_time"].split(":")
+                )
+                percent = (hours / skill_level["measure_time"]) * 100
             elif skill_level["start_lookback_at"]:
                 start = datetime.fromisoformat(skill_level["start_lookback_at"])
                 end = datetime.fromisoformat(skill_level["next_submit_at"])
@@ -448,8 +448,8 @@ class BaseOrganizationWithUserSkillMapSerializer(BaseOrganizationSerializer):
                     skill=skill, staff=user, organization=obj
                 ).first()
                 user_data["skills"][skill.id] = {
-                    "skill_map": skill_map.id,
-                    "is_checked": skill_map.is_valid,
+                    "skill_map": skill_map.id if skill_map else None,
+                    "is_checked": skill_map.is_valid if skill_map else False,
                 }
             data.append(user_data)
 
