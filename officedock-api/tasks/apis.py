@@ -1143,11 +1143,8 @@ class TaskViewSet(
                 old_recurring=old_recurring,
             )
 
-        # Update skill if task status is complete
-        if (
-            current_task_status.name != TaskStatus.COMPLETED.value
-            and task.status.name == TaskStatus.COMPLETED.value
-        ):
+        # Update skill if task status is changed
+        if current_task_status.name != task.status.name:
             calculate_progress_skill_map(task, user)
 
         return self.response_ok(

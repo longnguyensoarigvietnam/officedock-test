@@ -9,3 +9,4 @@ class SubmitLevelStatus(EnumChoices):
     APPLYING = "申請中"
     APPROVE = "承認"
     REJECT = "却下"
+    DRAFT = "ドラフト"

@@ -13,6 +13,11 @@ from base.messages import ERROR_MESSAGES, KEYWORDS
 from base.permissions import ActionPermission
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import split_id_from_string
+from organizations.models import (
+    OrganizationsStatisticCategories,
+    OrganizationsStatisticCategoriesSkills,
+    Organization,
+)
 from organizations.serializers import (
     StatisticCategorySerializer,
 )
@@ -37,6 +42,7 @@ from skills.serializers import (
     BaseOrganizationWithUserSkillMapSerializer,
     SkillReplaceSkilMapSerializer,
     GroupStepSkillMapSerializer,
+    DraftLevelUpSerializer,
 )
 from skills.filters import StatisticCategoryFilter
 from skills.utils import get_lookback_time
@@ -215,7 +221,9 @@ class ManageSkillMapViewSet(
         organization_id = request.query_params.get("organization_id", None)
         user = request.user
         # FIXME: Check role permissions for get list organizations
-        organizations = user.organizations.all()
+        organizations = Organization.objects.filter(
+            company=user.company,
+        ).order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id).all()
         data = []
@@ -342,6 +350,54 @@ class SkillMapViewSet(
 
     @extend_schema(
         parameters=[
+            OpenApiParameter("organization_id", type=int),
+        ]
+    )
+    @action(methods=["GET"], detail=False, url_path="list-skills")
+    def list_skills(self, request, *args, **kwargs):
+        """
+        Response all skill of user organization
+        """
+        user = request.user
+        organization_id = request.query_params.get("organization_id", None)
+
+        organizations = user.organizations.all()
+        if organization_id:
+            organizations = organizations.filter(id=organization_id)
+        data = []
+        for organization in organizations:
+            skills = Skill.objects.filter(
+                organization=organization,
+                parent__isnull=True,
+            ).all()
+            step = organization.steps.first()
+            data_skills = []
+            for skill in skills:
+                group_skill = []
+                # Loop and get child skill
+                while skill:
+                    group_skill.append(
+                        SkillReplaceSkilMapSerializer(skill).data
+                    )
+                    skill = Skill.objects.filter(parent__id=skill.id).first()
+                data_skills.append(group_skill)
+            data.append(
+                {
+                    "id": organization.id,
+                    "organization_name": organization.name,
+                    "skill_maps": data_skills,
+                    "steps": {
+                        "step_1": step.define_step_1 if step else None,
+                        "step_2": step.define_step_2 if step else None,
+                        "step_3": step.define_step_3 if step else None,
+                    },
+                }
+            )
+
+        return self.response_ok(data)
+
+    @extend_schema(
+        parameters=[
             OpenApiParameter("skill_id", type=int),
         ]
     )
@@ -442,21 +498,50 @@ class SkillMapViewSet(
                 "level_before_submit": skill_map_skill_level.level,
                 "step_after_submit": step_after_submit,
                 "level_after_submit": level_after_submit,
-                "items": skill_map_skill_level.skill_level.items,
+                "items": skill_map_skill_level.skill_level.items,  # FIXME: Check QA101
                 "approvers": BaseUserSerializer(users, many=True).data,
             }
 
         return self.response_ok(data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("skill_map_level_id", type=int, required=True)
+        ]
+    )
     @action(
         methods=["POST"],
         detail=True,
-        url_path="skill-level/(?P<skill_level_id>[^/.]+)",
+        url_path="skill-map-level",
+        serializer_class=DraftLevelUpSerializer,
     )
     def update_level_up(self, request, pk=None):
         """
         Handle store skill map skill level
         """
+        skill_map = self.get_object()
+        skill_map_level_id = request.query_params.get(
+            "skill_map_level_id", None
+        )
+        skill_map_level = get_object_or_404(
+            SkillMapSkillLevel, id=skill_map_level_id
+        )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        # Create draft submit level
+        SubmitLevelHistory.objects.create(
+            skill=skill_map.skill,
+            step_before_submit=skill_map.step,
+            level_before_submit=skill_map_level.level,
+            organization=skill_map.organization,
+            staff=skill_map.staff,
+            status=SubmitLevelStatus.DRAFT.value,
+            approver=validated_data["approver"],
+        )
+        skill_map_level.items = validated_data["items"]
+        skill_map_level.save()
 
         return self.response_ok()
 
@@ -507,7 +592,6 @@ class SkillViewSet(
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Handle create skill"""
-        request.user.company
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
@@ -517,32 +601,25 @@ class SkillViewSet(
         first_skill = None
         second_skill = None
         skills = []
+        is_action_edit = False
         if step_1 and step_3 and step_2 is None:
             raise ValidationError({"detail": ERROR_MESSAGES["cannot_create"]})
-        else:
-            name_step_1 = step_1.get("name")
-            name_step_2 = step_2.get("name")
-            name_step_3 = step_3.get("name")
-            # Check if step(skill) has same name
-            if [name_step_1, name_step_2, name_step_3].count(None) < 2 and (
-                (name_step_1 == name_step_2)
-                or (name_step_2 == name_step_3)
-                or (name_step_1 == name_step_3)
-            ):
-                raise ValidationError(
-                    {"detail": ERROR_MESSAGES["unique_skill_name"]}
-                )
+
         if step_1:
             levels = step_1.pop("skill_levels", None)
             skill = step_1.pop("skill", None)
+            categories = step_1.pop("category_ids", None)
+            is_action_edit = bool(skill)
             first_skill, created = Skill.objects.update_or_create(
                 id=skill.id if skill else None, defaults={**step_1}
             )
             skills.append(first_skill)
-            self._create_or_update_skill_levels(levels, first_skill)
+            self._create_or_update_skill_levels(levels, first_skill, categories)
         if step_2:
             levels = step_2.pop("skill_levels", None)
             skill = step_2.pop("skill", None)
+            categories = step_2.pop("category_ids", None)
+            is_action_edit = bool(skill)
 
             second_skill, created = Skill.objects.update_or_create(
                 id=skill.id if skill else None,
@@ -550,37 +627,83 @@ class SkillViewSet(
                 defaults={**step_2},
             )
             skills.append(second_skill)
-            self._create_or_update_skill_levels(levels, second_skill)
+            self._create_or_update_skill_levels(
+                levels, second_skill, categories
+            )
         if step_3:
             levels = step_3.pop("skill_levels", None)
             skill = step_3.pop("skill", None)
+            categories = step_3.pop("category_ids", None)
+            is_action_edit = bool(skill)
             third_skill, created = Skill.objects.update_or_create(
                 id=skill.id if skill else None,
                 parent=second_skill,
                 defaults={**step_3},
             )
             skills.append(third_skill)
-            self._create_or_update_skill_levels(levels, third_skill)
+            self._create_or_update_skill_levels(levels, third_skill, categories)
 
-        # Create skill map
-        users = skills[0].organization.users.all()
-        for user in users:
-            self._create_skill_map(skills[0], user)
+        if is_action_edit:
+            # Update skill map
+            users = skills[0].organization.users.all()
+            for user in users:
+                for skill in skills:
+                    self._update_skill_map(skill, user)
+        else:
+            # Create skill map
+            users = skills[0].organization.users.all()
+            for user in users:
+                self._create_skill_map(skills[0], user)
 
         return self.response_ok()
 
-    def _create_or_update_skill_levels(self, levels, skill):
+    def _update_skill_map(self, skill, staff):
         """
-        Handle create or update skill levels
+        Handle update skill map when update skill
         """
-        for level in levels:
-            skill_level = level.pop("skill_level", None)
-            SkillLevel.objects.update_or_create(
-                id=skill_level.id if skill_level else None,
-                skill=skill,
-                company=skill.company,
-                defaults={**level},
-            )
+        skill_map = SkillMap.objects.filter(
+            company=staff.company,
+            skill=skill,
+            staff=staff,
+            organization=skill.organization,
+        ).first()
+        if skill_map:
+            skill_map_skill_levels = skill_map.skill_map_skill_levels.all()
+            for skill_map_level in skill_map_skill_levels:
+                # Check last status of submit level, if is reject skip update skill map skill level
+                check_status_reject_exists = SubmitLevelHistory.objects.filter(
+                    skill=skill,
+                    staff=staff,
+                    organization=skill.organization,
+                    step_before_submit=skill_map.step,
+                    level_before_submit=skill_map_level.level,
+                    status=SubmitLevelStatus.REJECT.value,
+                ).exists()
+                if not check_status_reject_exists:
+                    # Get skill level
+                    skill_level = skill_map_level.skill_level
+                    # Set next_submit_at if skill level has look back
+                    next_submit_at = None
+                    start_lookback_at = None
+                    if skill_level.look_back_type:
+                        next_submit_at = get_lookback_time(
+                            skill_level.look_back_type,
+                            skill_level.look_back_interval,
+                        )
+                        start_lookback_at = now()
+                    # FIXME: Check QA101
+                    data = []
+                    for item in skill_level.items:
+                        data.append({"item": item, "is_checked": False})
+                    skill_map_skill_levels.update(
+                        start_lookback_at=start_lookback_at,
+                        next_submit_at=next_submit_at,
+                        measure_count=skill_level.measure_count,
+                        measure_time=skill_level.measure_time,
+                        look_back_type=skill_level.look_back_type,
+                        look_back_interval=skill_level.look_back_interval,
+                        items=data,
+                    )
 
     def _create_skill_map(self, skill, staff):
         """
@@ -609,13 +732,58 @@ class SkillViewSet(
                     skill_level.look_back_type, skill_level.look_back_interval
                 )
                 start_lookback_at = now()
+            data = []
+            for item in skill_level.items:
+                data.append({"item": item, "is_checked": False})
             SkillMapSkillLevel.objects.create(
                 skill_level=skill_level,
+                skill=skill,
                 level=skill_level.level,
                 skill_map=skill_map,
                 company=staff.company,
                 start_lookback_at=start_lookback_at,
                 next_submit_at=next_submit_at,
+                measure_count=skill_level.measure_count,
+                measure_time=skill_level.measure_time,
+                look_back_type=skill_level.look_back_type,
+                look_back_interval=skill_level.look_back_interval,
+                items=data,
+            )
+
+    def _create_or_update_skill_levels(self, levels, skill, categories):
+        """
+        Handle create or update skill levels
+        """
+        if categories:
+            # Clear organizations_statistic_categories_skills
+            skill.organizations_statistic_categories_skills.all().delete()
+
+            for category in categories:
+                org_cat = OrganizationsStatisticCategories.objects.filter(
+                    large_statistic_category=category[
+                        "large_statistic_category"
+                    ],
+                    medium_statistic_category=category[
+                        "medium_statistic_category"
+                    ],
+                    small_statistic_category=category[
+                        "small_statistic_category"
+                    ],
+                ).first()
+                if org_cat:
+                    OrganizationsStatisticCategoriesSkills.objects.create(
+                        skill=skill,
+                        organization_statistic_category=org_cat,
+                        organization=skill.organization,
+                        company=skill.company,
+                    )
+        for level in levels:
+            skill_level = level.pop("skill_level", None)
+            SkillLevel.objects.update_or_create(
+                id=skill_level.id if skill_level else None,
+                skill=skill,
+                company=skill.company,
+                defaults={**level},
             )
 
     @transaction.atomic
@@ -658,7 +826,9 @@ class SkillViewSet(
 
         user = request.user
         # FIXME: Check role permissions for get list organizations
-        organizations = user.organizations.all()
+        organizations = Organization.objects.filter(
+            company=user.company,
+        ).order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id).all()
         data = []

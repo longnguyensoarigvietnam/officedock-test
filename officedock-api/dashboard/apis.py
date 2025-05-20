@@ -45,7 +45,7 @@ from roles.constants import Screens
 from tasks.constants import TaskStatus
 from tasks.models import TaskDuration, PeopleInChargeTasks, Task, TaskSchedule
 from tasks.serializers import TaskCalendarSerializer
-from tasks.utils import split_date_range
+from tasks.utils import split_date_range, calculate_progress_skill_map
 
 
 @extend_schema(tags=["System > Dashboard"])
@@ -528,7 +528,23 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         for duration in durations:
             # Split time range by day and create new duration for it
             for user in participant_ids:
-                separate_duration(duration, timezone.now(), user=user)
+                new_durations = separate_duration(
+                    duration,
+                    timezone.now(),
+                    user=user,
+                    is_get_new_durations=True,
+                )
+                # Calculate total duration
+                total_duration = timedelta()
+                for new_duration in new_durations:
+                    if new_duration.paused_at:
+                        total_duration += (
+                            new_duration.paused_at - new_duration.started_at
+                        )
+                # Plus total duration to skill map actual measure time
+                calculate_progress_skill_map(
+                    duration.task, user, duration_time=total_duration
+                )
 
         Task.objects.filter(id__in=task_ids).update(is_start=False)
 

@@ -133,13 +133,15 @@ class ItemsOfSubmitLevel(serializers.Serializer):
 class UpdateSubmitLevelSerializer(SubmitLevelSerializer):
     """Serializer for update SubmitLevel model"""
 
-    measure_count = serializers.IntegerField(required=False)
-    measure_time = serializers.IntegerField(required=False)
-    look_back_interval = serializers.IntegerField(required=False)
-    look_back_type = serializers.ChoiceField(
-        choices=LookBackTypes.choices(), required=False
+    measure_count = serializers.IntegerField(required=False, allow_null=True)
+    measure_time = serializers.IntegerField(required=False, allow_null=True)
+    look_back_interval = serializers.IntegerField(
+        required=False, allow_null=True
     )
-    items = ItemsOfSubmitLevel(many=True, required=False)
+    look_back_type = serializers.ChoiceField(
+        choices=LookBackTypes.choices(), required=False, allow_null=True
+    )
+    items = ItemsOfSubmitLevel(many=True, required=False, allow_null=True)
 
     class Meta:
         model = SubmitLevelHistory
@@ -203,6 +205,7 @@ class DetailSubmitLevelSerializer(ListSubmitLevelSerializer):
             "created_at",
             "progression",
             "skill_map_skill_level",
+            "comment",
         ]
 
     def get_skill_map_skill_level(self, obj):
