@@ -522,7 +522,7 @@ export enum SkillMapLookBackType {
 }
 export enum SkillMapTypeInterval {
   DAY = '日',
-  WEEK = '週',
+  WEEK = '週間',
   MONTH = 'ヶ月',
   YEAR = '年',
 }
