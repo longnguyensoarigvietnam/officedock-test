@@ -339,6 +339,20 @@ class SkillMapWithSkillSerializer(serializers.Serializer):
         required=True,
         allow_null=True,
     )
+    skill_id = serializers.PrimaryKeyRelatedField(
+        source="skill",
+        queryset=Skill.objects.all(),
+        write_only=True,
+        required=True,
+        allow_null=True,
+    )
+    user_id = serializers.PrimaryKeyRelatedField(
+        source="staff",
+        queryset=User.objects.all(),
+        write_only=True,
+        required=True,
+        allow_null=True,
+    )
     is_checked = serializers.BooleanField(required=False)
 
 
