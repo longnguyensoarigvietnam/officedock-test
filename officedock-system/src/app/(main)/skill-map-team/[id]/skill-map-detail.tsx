@@ -82,7 +82,7 @@ export const SkillMapDetailByUser = ({
       switch (step) {
         case 1:
           return (
-            <div className="flex justify-center mb-1 gap-1">
+            <div className="flex justify-center pt-1 gap-1">
               {Array.from({ length: MAX_LEVEL }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -95,7 +95,7 @@ export const SkillMapDetailByUser = ({
           );
         case 2:
           return (
-            <div className="flex justify-center mb-1 gap-1">
+            <div className="flex justify-center pt-1 gap-1">
               {Array.from({ length: MAX_LEVEL }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -110,7 +110,7 @@ export const SkillMapDetailByUser = ({
           );
         case 3:
           return (
-            <div className="flex justify-center mb-1 gap-1">
+            <div className="flex justify-center pt-1 gap-1">
               {Array.from({ length: MAX_LEVEL }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -397,20 +397,20 @@ export const SkillMapDetailByUser = ({
                 },
               )}
             </div>
-
-            {openSkillMapCommentModal && (
-              <ViewSkillMapCommentModal
-                open={openSkillMapCommentModal}
-                skillMapCommentList={skillMapCommentList}
-                onClose={() => {
-                  setSelectedSkillMapToViewComment(null);
-                  setSkillMapCommentList([]);
-                  setOpenSkillMapCommentModal(false);
-                }}
-              />
-            )}
           </div>
         ))}
+        
+      {openSkillMapCommentModal && (
+        <ViewSkillMapCommentModal
+          open={openSkillMapCommentModal}
+          skillMapCommentList={skillMapCommentList}
+          onClose={() => {
+            setSelectedSkillMapToViewComment(null);
+            setSkillMapCommentList([]);
+            setOpenSkillMapCommentModal(false);
+          }}
+        />
+      )}
     </div>
   );
 };

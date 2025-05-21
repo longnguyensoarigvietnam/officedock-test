@@ -80,6 +80,9 @@ export const SkillMapByOrganizationPanel = ({
         staffId: userId,
       });
       setOpenSubmitLevelUpModal(true);
+      if (data.isApplying) {
+        setIsSuccessSubmitLevelUp(true);
+      }
     },
   });
 
@@ -122,7 +125,7 @@ export const SkillMapByOrganizationPanel = ({
       switch (step) {
         case 1:
           return (
-            <div className="flex justify-center mb-1 gap-1">
+            <div className="flex justify-center pt-1 gap-1">
               {Array.from({ length: MAX_LEVEL }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -135,7 +138,7 @@ export const SkillMapByOrganizationPanel = ({
           );
         case 2:
           return (
-            <div className="flex justify-center mb-1 gap-1">
+            <div className="flex justify-center pt-1 gap-1">
               {Array.from({ length: MAX_LEVEL }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -150,7 +153,7 @@ export const SkillMapByOrganizationPanel = ({
           );
         case 3:
           return (
-            <div className="flex justify-center mb-1 gap-1">
+            <div className="flex justify-center pt-1 gap-1">
               {Array.from({ length: MAX_LEVEL }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -235,9 +238,37 @@ export const SkillMapByOrganizationPanel = ({
   };
 
   const handleConfirmSubmitLevelUp = (data: SubmitLevelUpRequest) => {
-    submitLevelUp(data);
+    if (data.submitLevel) {
+      editSubmittedLevelUp(data);
+    } else {
+      submitLevelUp(data);
+    }
   };
 
+  // Call API to edit submitted level up
+  const handleEditSubmittedLevelUp = async (data: SubmitLevelUpRequest) => {
+    const { data: response } = await api.put(
+      apiRouters.SUBMIT_LEVELS_DETAIL(Number(data.submitLevel)),
+      {status: '申請中'},
+    );
+    return response;
+  };
+
+  const { mutate: editSubmittedLevelUp } = useMutation(
+    'editSubmittedLevelUp',
+    handleEditSubmittedLevelUp,
+    {
+      onSuccess: () => {
+        setIsSuccessSubmitLevelUp(true);
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_SAVE_MESSAGE);
+      },
+      onSettled: () => {},
+    },
+  );
+
+  // Call API to submit level up
   const handleSubmitLevelUp = async (data: SubmitLevelUpRequest) => {
     const { data: response } = await api.post(
       apiRouters.SUBMIT_LEVELS_LIST,
@@ -260,6 +291,7 @@ export const SkillMapByOrganizationPanel = ({
     },
   );
 
+  // Call API to save level up draft
   const handleConfirmSaveLevelUpDraft = (
     data: SaveLevelUpDraftRequest & { skillMapLevelId: number },
   ) => {

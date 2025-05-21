@@ -359,6 +359,7 @@ export interface SkillMapLevelUp {
     id: number;
     name: string;
   };
+  isApplying: boolean;
   approver: Staff;
   approvers: Staff[];
   levelBeforeSubmit: string;
@@ -370,6 +371,7 @@ export interface SkillMapLevelUp {
     isChecked: boolean;
   }[];
   skillMapSkillLevel: number
+  submitLevel: number | null
 }
 
 export interface SubmitLevelUpRequest {
@@ -379,6 +381,7 @@ export interface SubmitLevelUpRequest {
   levelBeforeSubmit: string;
   stepBeforeSubmit: string;
   approver: number;
+  submitLevel: number | null
 }
 
 export interface Description {
