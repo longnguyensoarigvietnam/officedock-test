@@ -175,7 +175,6 @@ const DetailSkillUser = ({ detailSkillData }: Props) => {
                                     {lastValidSkill.level.lookBackInterval}
                                   </p>
                                   <p className="relative top-[2px] text-xs">
-                                    ヶ{' '}
                                     {
                                       SkillMapTypeInterval[
                                         lastValidSkill.level

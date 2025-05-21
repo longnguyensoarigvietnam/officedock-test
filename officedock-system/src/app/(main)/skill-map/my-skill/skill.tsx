@@ -220,8 +220,7 @@ const MySkill = () => {
                                       timeStringToHours(
                                         `${lastValidSkill.level.actualMeasureTime}`,
                                       )}
-                                    /{lastValidSkill.level.measureTime}/
-                                    {lastValidSkill.level.measureTime}
+                                    /{lastValidSkill.level.measureTime}
                                   </p>
                                   <p className="relative top-[2px]">
                                     時間経過した
@@ -235,7 +234,6 @@ const MySkill = () => {
                                     {lastValidSkill.level.lookBackInterval}
                                   </p>
                                   <p className="relative top-[2px] text-xs">
-                                    ヶ
                                     {
                                       SkillMapTypeInterval[
                                         lastValidSkill.level
