@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import { AxiosError } from 'axios';
 
@@ -25,7 +26,7 @@ type Props = {
   detailSkillData: SkillMapByOrganization[];
 };
 
-const DetailSkillUser = ({ detailSkillData }: Props) => {
+const MySkillDetailByUser = ({ detailSkillData }: Props) => {
   const { showToast } = useToast();
 
   // Skill map actions
@@ -51,6 +52,7 @@ const DetailSkillUser = ({ detailSkillData }: Props) => {
       setOpenSkillMapDetailModal(true);
     },
   });
+  
   return (
     <>
       <div className="flex flex-col gap-5">
@@ -229,4 +231,4 @@ const DetailSkillUser = ({ detailSkillData }: Props) => {
   );
 };
 
-export default DetailSkillUser;
+export default MySkillDetailByUser;

@@ -8,9 +8,13 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
 
 import { pageRouters } from '@constants/routers';
+
 import useSkillMapInfo from '@hooks/useSkillMapList';
+
 import { SkillMapByOrganization } from '@interfaces/skills';
-import DetailSkillUser from './detail';
+
+import { SkillMapDetailByUser } from './skill-map-detail';
+import MySkillDetailByUser from './my-skill-detail';
 
 const BoardSkillUser = () => {
   const searchParams = useSearchParams();
@@ -44,21 +48,17 @@ const BoardSkillUser = () => {
     }
   }, [isMapParam, isSkill]);
 
-  const handleNextUser = () => {
-    const params = new URLSearchParams(searchParams.toString());
+  const handleNavigateUser = (userId: number | undefined) => {
+    if (!userId) return;
 
-    const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(skillMapInfo?.nextUser as number)}?${params.toString()}`;
-    router.push(newPath);
-  };
-  const handlePrevUser = () => {
     const params = new URLSearchParams(searchParams.toString());
-
-    const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(skillMapInfo?.prevUser as number)}?${params.toString()}`;
+    const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(userId)}?${params.toString()}`;
     router.push(newPath);
   };
 
   return (
     <>
+      {/* Navigate buttons */}
       <div className="flex gap-2 items-center mb-[30px]">
         <Button
           variant={isMapOption ? 'primary' : 'outline'}
@@ -69,7 +69,7 @@ const BoardSkillUser = () => {
             router.replace(`?${params.toString()}`);
           }}
           className={`w-[100px] !p-0 text-xs h-[28px] border-transparent text-white !rounded-[20px] ${isMapOption ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F] border-[1px]'}`}>
-          メンバー一覧
+          スキルマップ
         </Button>
         <Button
           variant={isMapOption ? 'outline' : 'primary'}
@@ -80,7 +80,7 @@ const BoardSkillUser = () => {
             router.replace(`?${params.toString()}`);
           }}
           className={` w-[120px] !p-0 text-xs h-[28px]  !rounded-[20px] ${!isMapOption ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F] border-[1px]'}`}>
-          レベルアップ申請
+          マイスキル
         </Button>
       </div>
       <div>
@@ -134,27 +134,33 @@ const BoardSkillUser = () => {
             </div>
           </div>
           <div
-            onClick={handlePrevUser}
-            className="absolute z-20 top-1/2 -translate-y-1/2 left-[-16px] h-[30px] w-[30px] flex items-center justify-center rounded-full bg-white">
+            className={`absolute z-20 top-1/2 -translate-y-1/2 left-[-16px] h-[30px] w-[30px] flex items-center justify-center rounded-full bg-white
+              ${skillMapInfo?.prevUser ? 'hover:cursor-pointer' : 'hover:cursor-not-allowed'}`}
+            onClick={() => handleNavigateUser(skillMapInfo?.prevUser)}>
             <ImageRound
               src="/icons/chevron-left-calendar.svg"
               name={'left'}
               className="h-fit w-fit"
             />
           </div>
-          <div className="absolute z-20 top-1/2 -translate-y-1/2 rotate-180 right-[-16px] h-[30px] w-[30px] flex items-center justify-center rounded-full bg-white">
+          <div
+            className={`absolute z-20 top-1/2 -translate-y-1/2 rotate-180 right-[-16px] h-[30px] w-[30px] flex items-center justify-center rounded-full bg-white
+              ${skillMapInfo?.nextUser ? 'hover:cursor-pointer' : 'hover:cursor-not-allowed'}`}
+            onClick={() => handleNavigateUser(skillMapInfo?.nextUser)}>
             <ImageRound
-              onClick={handleNextUser}
               src="/icons/chevron-left-calendar.svg"
               name={'right'}
               className="h-fit w-fit"
             />
           </div>
         </div>
+
         {isMapOption ? (
-          <></>
+          <SkillMapDetailByUser
+            detailSkillData={detailSkillData}
+          />
         ) : (
-          <DetailSkillUser detailSkillData={detailSkillData} />
+          <MySkillDetailByUser detailSkillData={detailSkillData} />
         )}
       </div>
     </>

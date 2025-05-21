@@ -20,10 +20,16 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 interface SkillMapByMembersProps {
   skillMapByMembers: SkillMapByMembers;
   dataSkillMapList: SkillMapSkill[];
-  setSelectedSkillByUserToUpdate: React.Dispatch<React.SetStateAction<{
-    isChecked: boolean;
-    id: number;
-}[]>>
+  setSelectedSkillByUserToUpdate: React.Dispatch<
+    React.SetStateAction<
+      {
+        id: number | null;
+        skillId: number;
+        userId: number;
+        isChecked: boolean;
+      }[]
+    >
+  >;
   setDataSkillMapsByMembers: React.Dispatch<
     React.SetStateAction<SkillMapByMembers[]>
   >;
@@ -65,7 +71,7 @@ export const EditSkillMapByMemberForm = ({
     organizationId: number;
     staffId: number;
     skillId: number;
-    skillMapId: number
+    skillMapId: number | null;
   } | null>(null);
 
   const handleChangeSkillByUser = useCallback(
@@ -74,14 +80,16 @@ export const EditSkillMapByMemberForm = ({
       organizationId: number;
       staffId: number;
       skillId: number;
-      skillMapId: number
+      skillMapId: number | null;
     }) => {
       setSelectedSkillByUserToUpdate((prev) => {
         const currentSelectedSkillByUserToUpdate = [...prev];
         const foundSelectedSkillIndex =
           currentSelectedSkillByUserToUpdate.findIndex(
             (skill) =>
-              skill.id == changeSkillProps.skillMapId
+              skill.id == changeSkillProps.skillMapId &&
+              skill.skillId == changeSkillProps.skillId &&
+              skill.userId == changeSkillProps.staffId,
           );
         if (foundSelectedSkillIndex != -1) {
           currentSelectedSkillByUserToUpdate[
@@ -89,10 +97,15 @@ export const EditSkillMapByMemberForm = ({
           ].isChecked = changeSkillProps.isChecked;
           return currentSelectedSkillByUserToUpdate;
         } else {
-          return [...currentSelectedSkillByUserToUpdate, {
-            id: changeSkillProps.skillMapId,
-            isChecked: changeSkillProps.isChecked
-          }];
+          return [
+            ...currentSelectedSkillByUserToUpdate,
+            {
+              id: changeSkillProps.skillMapId,
+              isChecked: changeSkillProps.isChecked,
+              skillId: changeSkillProps.skillId,
+              userId: changeSkillProps.staffId,
+            },
+          ];
         }
       });
       setPendingChangeSkillByUser(null);
@@ -191,14 +204,14 @@ export const EditSkillMapByMemberForm = ({
                     avatarUrl: row.original?.avatar || '',
                     fullName: row.original.fullName,
                     skillName: foundSkill ? foundSkill.parentName : '',
-                    organizationName: row.original?.organizations?.name || ''
+                    organizationName: row.original?.organizations?.name || '',
                   });
                   setPendingChangeSkillByUser({
                     isChecked: false,
                     organizationId: skillMapByMembers.id,
                     staffId: row.original.id,
                     skillId: Number(skillId),
-                    skillMapId: Number(row.original.skills[skillId].skillMap)
+                    skillMapId: row.original.skills[skillId].skillMap ? Number(row.original.skills[skillId].skillMap) : null,
                   });
                 } else {
                   handleChangeSkillByUser({
@@ -206,7 +219,7 @@ export const EditSkillMapByMemberForm = ({
                     organizationId: skillMapByMembers.id,
                     staffId: row.original.id,
                     skillId: Number(skillId),
-                    skillMapId: Number(row.original.skills[skillId].skillMap)
+                    skillMapId: row.original.skills[skillId].skillMap ? Number(row.original.skills[skillId].skillMap) : null,
                   });
                 }
               }}

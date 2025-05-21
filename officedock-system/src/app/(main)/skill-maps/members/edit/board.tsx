@@ -55,8 +55,10 @@ const EditSkillMapByMemberBoard = () => {
   const [selectedSkillByUserToUpdate, setSelectedSkillByUserToUpdate] =
     useState<
       {
+        id: number | null;
+        skillId: number;
+        userId: number;
         isChecked: boolean;
-        id: number;
       }[]
     >([]);
 
