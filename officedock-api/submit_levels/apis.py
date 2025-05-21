@@ -9,6 +9,7 @@ from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission
+from organizations.models import Organization
 from roles.constants import Screens
 from chat.constants import (
     ChatMessageTypes,
@@ -22,7 +23,11 @@ from chat.serializers import (
     ChatMessageSerializer,
 )
 from common.utils import send_web_socket_event
-from skills.constants import get_next_progression, DEFAULT_TIME
+from skills.constants import (
+    DEFAULT_TIME,
+    SkillLevel as SkillLevelEnum,
+    get_next_progression,
+)
 from skills.models import SkillMap, SkillMapSkillLevel, Skill
 from skills.utils import get_lookback_time
 from submit_levels.constants import SubmitLevelStatus
@@ -182,6 +187,17 @@ class SubmitLevelViewSet(
                     )
                 else:
                     is_not_max_level = False
+            elif (
+                step_after_submit == instance.step_before_submit
+                and level_after_submit == SkillLevelEnum.LEVEL_3.value
+            ):
+                # Update last skill map
+                SkillMap.objects.filter(
+                    organization=instance.organization,
+                    staff=instance.staff,
+                    step=instance.step_before_submit,
+                    skill=instance.skill,
+                ).update(is_complete=True)
 
             # Get next skill level
             skill_level = skill_map.skill.skill_levels.filter(
@@ -271,7 +287,9 @@ class SubmitLevelViewSet(
         user = request.user
         organization_id = request.query_params.get("organization_id")
         # FIXME: Check role permissions for get list organizations
-        organizations = user.organizations.all()
+        organizations = Organization.objects.filter(
+            company=user.company,
+        ).order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id)
         data = []
