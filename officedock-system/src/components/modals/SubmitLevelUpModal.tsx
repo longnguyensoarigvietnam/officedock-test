@@ -34,10 +34,26 @@ const SubmitLevelUpModal = memo(
     onClose,
     onSubmitLevelUp,
   }: SubmitLevelUpModalProps) => {
+    const [itemStatusList, setItemStatusList] = useState<
+      {
+        item: string;
+        isChecked: boolean;
+      }[]
+    >(
+      submitLevelUpDetail.items
+        ? submitLevelUpDetail.items.map((item) => {
+            return {
+              item: item,
+              isChecked: false,
+            };
+          })
+        : [],
+    );
     const [approverOptions, setApproverOptions] = useState<
       OptionDropdownType[]
     >([]);
     const [selectedApproverId, setSelectedApproverId] = useState<number>();
+    const [showApproverErrorValidation, setShowApproverErrorValidation] = useState<boolean>(false)
 
     useEffect(() => {
       if (submitLevelUpDetail) {
@@ -129,14 +145,36 @@ const SubmitLevelUpModal = memo(
             <>
               <p className="text-sm font-medium">レベルアップが目の前です！</p>
               <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
-                <p className="text-[#0068B6] font-medium text-[16px] text-center">
+                <p className="text-[#0068B6] font-medium text-[16px] text-center mb-3">
                   振り返ってみましょう
                 </p>
                 <div className="flex flex-col gap-2 justify-start">
                   {submitLevelUpDetail.items.map((item, index) => {
                     return (
                       <div key={index} className="flex gap-2">
-                        <Checkbox label={item} />
+                        <Checkbox
+                          classLabel="text-black text-sm font-medium"
+                          label={item}
+                          onChange={() => {
+                            setItemStatusList((prev) =>
+                              prev.map((itemWithStatus) => {
+                                if (itemWithStatus.item === item) {
+                                  return {
+                                    ...itemWithStatus,
+                                    isChecked: !itemWithStatus.isChecked,
+                                  };
+                                }
+                                return itemWithStatus;
+                              }),
+                            );
+                          }}
+                          isChecked={
+                            itemStatusList.find(
+                              (itemWithStatus) =>
+                                itemWithStatus.item == item,
+                            )?.isChecked
+                          }
+                        />
                       </div>
                     );
                   })}
@@ -148,7 +186,7 @@ const SubmitLevelUpModal = memo(
                 </p>
                 <div className="w-full">
                   <PeopleDropdown
-                    className="h-[34px] w-full !py-1 text-xs !border-[1px] !border-[#77858F] rounded-md"
+                    className={`h-[34px] w-full !py-1 text-xs !border-[1px] ${showApproverErrorValidation ? '!border-error' : '!border-[#77858F]'} rounded-md`}
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs"
                     classNameError="!text-xs"
@@ -156,6 +194,7 @@ const SubmitLevelUpModal = memo(
                     iconSize={24}
                     onChange={(e) => {
                       setSelectedApproverId(Number(e.value));
+                      setShowApproverErrorValidation(false);
                     }}
                   />
                 </div>
@@ -169,8 +208,13 @@ const SubmitLevelUpModal = memo(
                 </Button>
                 <Button
                   variant="primary"
+                  disabled={itemStatusList.some((item) => !item.isChecked)}
                   className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-white"
                   onClick={() => {
+                    if(!selectedApproverId) {
+                      setShowApproverErrorValidation(true);
+                      return
+                    }
                     onSubmitLevelUp({
                       staffId: submitLevelUpDetail.staffId,
                       organizationId: submitLevelUpDetail.organization,
