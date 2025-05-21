@@ -54,12 +54,6 @@ class Organization(BaseModel):
         related_name="organizations",
         through_fields=("organization", "large_statistic_category"),
     )
-    skills = models.ManyToManyField(
-        "skills.Skill",
-        through="OrganizationsSkills",
-        related_name="organizations",
-        through_fields=("organization", "skill"),
-    )
 
     def save(self, *args, **kwargs):
         """
@@ -142,40 +136,6 @@ class OrganizationsStatisticCategories(BaseModel):
         super().save(*args, **kwargs)
 
 
-class OrganizationsSkills(BaseModel):
-    """
-    Organizations Skills model.
-    """
-
-    company = models.ForeignKey(
-        "companies.Company",
-        related_name="organizations_skills",
-        on_delete=models.CASCADE,
-    )
-    organization = models.ForeignKey(
-        "Organization",
-        on_delete=models.CASCADE,
-        related_name="organizations_skills",
-    )
-    skill = models.ForeignKey(
-        "skills.Skill",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="organizations_skills",
-    )
-    define_skill = models.TextField(null=True, blank=True)
-    index = models.IntegerField(null=True, default=1)
-    levels = models.JSONField(null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        """
-        Set default company
-        """
-        self.company = self.organization.company
-        super().save(*args, **kwargs)
-
-
 class OrganizationsStatisticCategoriesSkills(BaseModel):
     """
     Organizations statistic categories skills model
@@ -201,6 +161,33 @@ class OrganizationsStatisticCategoriesSkills(BaseModel):
         on_delete=models.CASCADE,
         related_name="organizations_statistic_categories_skills",
     )
+
+    def save(self, *args, **kwargs):
+        """
+        Set default company
+        """
+        self.company = self.organization.company
+        super().save(*args, **kwargs)
+
+
+class Step(BaseModel):
+    """
+    Step model.
+    """
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        related_name="steps",
+        on_delete=models.CASCADE,
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="steps",
+        on_delete=models.CASCADE,
+    )
+    define_step_1 = models.CharField(max_length=255, null=True, blank=True)
+    define_step_2 = models.CharField(max_length=255, null=True, blank=True)
+    define_step_3 = models.CharField(max_length=255, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         """

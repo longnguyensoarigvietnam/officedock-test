@@ -45,7 +45,7 @@ from roles.constants import Screens
 from tasks.constants import TaskStatus
 from tasks.models import TaskDuration, PeopleInChargeTasks, Task, TaskSchedule
 from tasks.serializers import TaskCalendarSerializer
-from tasks.utils import split_date_range
+from tasks.utils import split_date_range, calculate_progress_skill_map
 
 
 @extend_schema(tags=["System > Dashboard"])
@@ -314,10 +314,26 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
             new_durations = separate_duration(
                 instance, paused_at, is_get_new_durations=True, user=user
             )
+            # Calculate total duration
+            total_duration = timedelta()
+            for new_duration in new_durations:
+                if new_duration.paused_at:
+                    total_duration += (
+                        new_duration.paused_at - new_duration.started_at
+                    )
+            # Plus total duration to skill map actual measure time
+            calculate_progress_skill_map(
+                instance.task, user, duration_time=total_duration
+            )
             return DurationSerializer(
                 new_durations, many=True, context={"request": request}
             ).data
         else:
+            total_duration = instance.paused_at - instance.started_at
+            # Minus total duration to skill map actual measure time
+            calculate_progress_skill_map(
+                instance.task, instance.user, duration_time=total_duration
+            )
             # Return serialized single instance
             return [
                 DurationSerializer(instance, context={"request": request}).data
@@ -332,7 +348,11 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         if model and model.is_start:
             model.is_start = False
             model.save()
-
+        total_duration = instance.paused_at - instance.started_at
+        # Minus total duration to skill map actual measure time
+        calculate_progress_skill_map(
+            instance.task, instance.user, duration_time=-total_duration
+        )
         instance.delete()
 
     def update(self, request, *args, **kwargs):
@@ -528,7 +548,23 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         for duration in durations:
             # Split time range by day and create new duration for it
             for user in participant_ids:
-                separate_duration(duration, timezone.now(), user=user)
+                new_durations = separate_duration(
+                    duration,
+                    timezone.now(),
+                    user=user,
+                    is_get_new_durations=True,
+                )
+                # Calculate total duration
+                total_duration = timedelta()
+                for new_duration in new_durations:
+                    if new_duration.paused_at:
+                        total_duration += (
+                            new_duration.paused_at - new_duration.started_at
+                        )
+                # Plus total duration to skill map actual measure time
+                calculate_progress_skill_map(
+                    duration.task, user, duration_time=total_duration
+                )
 
         Task.objects.filter(id__in=task_ids).update(is_start=False)
 
@@ -935,7 +971,20 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             uuid=uuid,
         )
         if started_at.date() != paused_at.date():
-            separate_duration(duration, duration.paused_at, user=user)
+            new_durations = separate_duration(
+                duration, duration.paused_at, user=user
+            )
+            # Calculate total duration
+            total_duration = timedelta()
+            for new_duration in new_durations:
+                if new_duration.paused_at:
+                    total_duration += (
+                        new_duration.paused_at - new_duration.started_at
+                    )
+            # Plus total duration to skill map actual measure time
+            calculate_progress_skill_map(
+                duration.task, user, duration_time=total_duration
+            )
 
     @transaction.atomic
     def perform_update(self, serializer):
@@ -987,11 +1036,29 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             instance.started_at = started_at
         if paused_at:
             instance.paused_at = paused_at
+        total_duration = instance.paused_at - instance.started_at
+        # Minus total duration to skill map actual measure time
+        calculate_progress_skill_map(
+            instance.task, user, duration_time=-total_duration
+        )
         instance.save()
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
         if started_at.date() != paused_at.date():
-            separate_duration(instance, instance.paused_at, user=user)
+            new_durations = separate_duration(
+                instance, instance.paused_at, user=user
+            )
+            # Calculate total duration
+            total_duration = timedelta()
+            for new_duration in new_durations:
+                if new_duration.paused_at:
+                    total_duration += (
+                        new_duration.paused_at - new_duration.started_at
+                    )
+            # Plus total duration to skill map actual measure time
+            calculate_progress_skill_map(
+                instance.task, user, duration_time=total_duration
+            )
 
     @transaction.atomic
     def perform_destroy(self, instance):
@@ -1003,4 +1070,9 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             model.is_start = False
             model.save()
 
+        total_duration = instance.paused_at - instance.started_at
+        # Minus total duration to skill map actual measure time
+        calculate_progress_skill_map(
+            instance.task, instance.user, duration_time=-total_duration
+        )
         instance.delete()

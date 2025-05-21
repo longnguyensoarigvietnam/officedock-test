@@ -6,13 +6,12 @@ from base.messages import ERROR_MESSAGES
 from common.utils import compare_categories, get_signed_url
 from roles.constants import Actions, Screens
 from roles.utils import has_permission
-from skills.models import StatisticCategory, Skill, SkillMap
+from skills.models import StatisticCategory, Skill
 from common.constants import ORGANIZATION_ICON_UPLOAD_MAX_SIZE
 from organizations.constants import OrganizationTypes
 from .models import (
     Organization,
     OrganizationsStatisticCategories,
-    OrganizationsSkills,
 )
 
 
@@ -80,20 +79,19 @@ class StatisticCategorySerializer(BaseStatisticCategorySerializer):
             else instance.company
         )
         name = attrs.get("name")
-        team = attrs.get("team")
 
-        queryset = StatisticCategory.objects.filter(company=company, name=name)
-
-        if instance:
-            queryset = queryset.exclude(id=instance.id)
-
-        if team:
-            queryset = queryset.filter(Q(team=team) | Q(team__isnull=True))
-
-        if queryset.exists():
-            raise ValidationError(
-                {"detail": ERROR_MESSAGES["unique_category_name"]}
+        if not attrs.get("team", None):
+            queryset = StatisticCategory.objects.filter(
+                company=company, name=name, team__isnull=True
             )
+
+            if instance:
+                queryset = queryset.exclude(id=instance.id)
+
+            if queryset.exists():
+                raise ValidationError(
+                    {"detail": ERROR_MESSAGES["unique_category_name"]}
+                )
 
         return attrs
 
@@ -158,83 +156,6 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
             {"id": id, "name": name}
             for id, name in skills.values_list("skill__id", "skill__name")
         ]
-
-
-class LeverSerializer(serializers.Serializer):
-    """Serializer in the skill lever."""
-
-    measurement_count = serializers.IntegerField(
-        required=False, allow_null=True
-    )
-    measurement_time = serializers.IntegerField(required=False, allow_null=True)
-    review_period = serializers.CharField(
-        required=False, allow_null=True, allow_blank=True, max_length=100
-    )
-    descriptions = serializers.ListField(
-        child=serializers.CharField(
-            required=False, allow_null=True, max_length=255
-        )
-    )
-
-
-class SkillLeverSerializer(serializers.Serializer):
-    """Serializer for the Skill lever."""
-
-    level_1 = LeverSerializer(allow_null=True)
-    level_2 = LeverSerializer(allow_null=True)
-    level_3 = LeverSerializer(allow_null=True)
-
-
-class OrganizationSkillSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Organization Skill
-    """
-
-    skill = serializers.SerializerMethodField()
-    skill_id = serializers.PrimaryKeyRelatedField(
-        source="skill",
-        queryset=Skill.objects.all(),
-        write_only=True,
-        required=False,
-        allow_null=True,
-    )
-    organization_skill_id = serializers.PrimaryKeyRelatedField(
-        source="organization_skill",
-        queryset=OrganizationsSkills.objects.all(),
-        write_only=True,
-        required=False,
-        allow_null=True,
-    )
-    index = serializers.IntegerField(default=1)
-    levels = SkillLeverSerializer(allow_null=True)
-    is_has_skill_map = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = OrganizationsSkills
-        fields = [
-            "id",
-            "organization_skill_id",
-            "skill_id",
-            "skill",
-            "define_skill",
-            "levels",
-            "index",
-            "is_has_skill_map",
-        ]
-
-    def get_skill(self, obj):
-        """Handle get skill by given obj"""
-        from skills.serializers import (
-            SkillSerializer,
-        )  # lazy import, avoid circular import
-
-        return SkillSerializer(obj.skill).data
-
-    def get_is_has_skill_map(self, obj):
-        """Handle check is having skill map or not"""
-        return SkillMap.objects.filter(
-            organization=obj.organization, skill=obj.skill
-        ).exists()
 
 
 class OrganizationSerializer(BaseOrganizationSerializer):
@@ -461,7 +382,6 @@ class OrganizationDetailSerializer(OrganizationSerializer):
     """
 
     statistic_categories = serializers.SerializerMethodField()
-    skills = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
@@ -473,7 +393,6 @@ class OrganizationDetailSerializer(OrganizationSerializer):
             "superior_id",
             "user_count",
             "statistic_categories",
-            "skills",
             "actions",
             "icon",
             "icon_color",
@@ -489,14 +408,6 @@ class OrganizationDetailSerializer(OrganizationSerializer):
         return StatisticCategoryStructionSerializer(
             statistic_categories, many=True
         ).data
-
-    def get_skills(self, obj):
-        """
-        Get and organize skills for the given organization
-        """
-
-        skills = obj.organizations_skills.all().order_by("index")
-        return OrganizationSkillSerializer(skills, many=True).data
 
 
 class OrganizationStatisticCategorySerializer(serializers.ModelSerializer):
@@ -606,69 +517,12 @@ class OrganizationMemberSerializer(BaseOrganizationSerializer):
         """Get users in organization"""
         from common.serializers import CreationDataUserSerializer
 
-        users = obj.users.all()
+        users = obj.users.all().order_by("created_at")
 
         if search := self.context.get("search"):
             users = users.filter(profile__full_name__icontains=search)
 
         return CreationDataUserSerializer(users, many=True).data
-
-
-class ListOrganizationSkillSerializer(serializers.Serializer):
-    """
-    Serializer for a list of organization skills for create or update
-    """
-
-    organization_skills = OrganizationSkillSerializer(
-        many=True, write_only=True, required=False
-    )
-
-
-class OrganizationSkillForGetListSerializer(serializers.ModelSerializer):
-    """
-    Serializer for get list Organizations Skills
-    """
-
-    skill = serializers.SerializerMethodField()
-    organization = serializers.SerializerMethodField()
-    all_skills = serializers.SerializerMethodField(read_only=True)
-    actions = serializers.SerializerMethodField()
-
-    class Meta:
-        model = OrganizationsSkills
-        fields = [
-            "id",
-            "organization",
-            "skill",
-            "all_skills",
-            "actions",
-        ]
-
-    def get_skill(self, obj):
-        """Handle get skill name by given obj"""
-        return obj.skill.name if obj.skill else None
-
-    def get_all_skills(self, obj):
-        """Handle get all skills of organization"""
-        return OrganizationDetailSerializer(obj.organization).data["skills"]
-
-    def get_organization(self, obj):
-        """Handle get organization by given obj"""
-
-        return OrganizationSerializer(obj.organization).data
-
-    def get_actions(self, obj):
-        """
-        Get unique role permissions for the given object.
-        """
-        user = self.context.get("request").user
-        actions = {
-            Actions.UPDATE.value: f"{Screens.ORGANIZATION_SKILL.value}_{Actions.UPDATE.value}",
-            Actions.DELETE.value: f"{Screens.ORGANIZATION_SKILL.value}_{Actions.DELETE.value}",
-        }
-        item_org_ids = [obj.organization.id]
-
-        return has_permission(actions, user, item_org_ids)
 
 
 """
@@ -816,12 +670,12 @@ class OrganizationCategoryHierarchyForCreateSerializer(serializers.Serializer):
         if not category_data:
             return
 
-        category_name = category_data.get("name")
-        if not category_name:
+        category_uuid = category_data.get("uuid")
+        if not category_uuid:
             return
 
         category = StatisticCategory.objects.filter(
-            company=company, name=category_name
+            company=company, uuid=category_uuid
         ).first()
 
         if category and category.team and category.team != organization:
@@ -868,3 +722,19 @@ class CheckActualDurationSerializer(serializers.Serializer):
 """
 End handle organization category hierarchy
 """
+
+
+class StepSerializer(serializers.Serializer):
+    """
+    Level serializer
+    """
+
+    define_step_1 = serializers.CharField(
+        max_length=255, required=False, allow_null=True
+    )
+    define_step_2 = serializers.CharField(
+        max_length=255, required=False, allow_null=True
+    )
+    define_step_3 = serializers.CharField(
+        max_length=255, required=False, allow_null=True
+    )

@@ -1,7 +1,20 @@
 from datetime import datetime, timedelta, time
 
-from tasks.constants import DatetimeUnitTypes
-from tasks.models import Task, TaskSchedule, TodoList
+from django.db.models import Q
+
+from chat.constants import WebSocketEventType
+from common.utils import (
+    send_web_socket_event,
+    time_str_to_timedelta,
+    format_duration,
+)
+from organizations.models import (
+    OrganizationsStatisticCategories,
+    OrganizationsStatisticCategoriesSkills,
+)
+from skills.models import SkillMap
+from tasks.constants import DatetimeUnitTypes, TaskStatus
+from tasks.models import Task, TaskSchedule, TodoList, TaskDuration
 from tasks.serializers import TaskScheduleSerializer, TodoListSerializer
 from calendars.models import Schedule
 from users.models import User
@@ -144,3 +157,120 @@ def calculate_new_time(start_time, delta_value, delta_unit):
 
     # Calculate new time
     return start_time - delta
+
+
+def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
+    """
+    Handle calculate progress skill map by task
+    """
+    if not task:
+        return
+    task_categories = task.categories.first()
+    # TODO: Wait QA 96
+    org_cats_filter = Q(organization=task.organization)
+    if task_categories.large_statistic_category:
+        org_cats_filter &= Q(
+            large_statistic_category=task_categories.large_statistic_category
+        )
+        if task_categories.medium_statistic_category:
+            org_cats_filter &= Q(
+                medium_statistic_category=task_categories.medium_statistic_category
+            )
+            if task_categories.small_statistic_category:
+                org_cats_filter &= Q(
+                    small_statistic_category=task_categories.small_statistic_category
+                )
+    # Get Organization categories
+    org_categories = OrganizationsStatisticCategories.objects.filter(
+        org_cats_filter
+    ).values_list("id", flat=True)
+    # Get Skill have categories
+    org_cat_skills = OrganizationsStatisticCategoriesSkills.objects.filter(
+        organization_statistic_category__id__in=org_categories
+    ).all()
+    for org_cat_skill in org_cat_skills:
+        skill_map = SkillMap.objects.filter(
+            skill=org_cat_skill.skill,
+            organization=org_cat_skill.organization,
+            staff=user,
+            skill_map_skill_levels__is_complete=False,
+            is_complete=False,
+        ).first()
+        if skill_map:
+            current_skill_level = skill_map.skill_map_skill_levels.filter(
+                is_complete=False
+            ).first()
+            actual_measure_count = current_skill_level.actual_measure_count
+            actual_measure_time = current_skill_level.actual_measure_time
+            # Get all time durations of task
+            if not duration_time:
+                # Update skill map skill level actual measure count
+                if task.status.name == TaskStatus.COMPLETED.value:
+                    count = 1
+                else:
+                    count = -1
+                    # Get minus total duration of task if change status from complete to another
+                    duration_time = -get_total_hours_of_task(task)
+
+                actual_measure_count = actual_measure_count + count
+                if current_skill_level.measure_count <= actual_measure_count:
+                    send_web_socket_event(
+                        {
+                            "skill": {
+                                "id": skill_map.skill.id,
+                                "name": skill_map.skill.name,
+                            },
+                            "actual_measure_count": actual_measure_count,
+                            "actual_measure_time": None,
+                            "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
+                        },
+                        user=user,
+                    )
+            if duration_time:
+                # Update skill map skill level actual measure time
+                # Get new actual measure time
+                new_actual_measure_time = (
+                    time_str_to_timedelta(actual_measure_time) + duration_time
+                )
+                # Formatted timedelta to string
+                actual_measure_time = format_duration(new_actual_measure_time)
+                # Compare with current measure time and send socket to show pop-up
+                hours, minutes, seconds = map(
+                    int, actual_measure_time.split(":")
+                )
+                if (
+                    current_skill_level.measure_time
+                    and current_skill_level.measure_time <= hours
+                ):
+                    send_web_socket_event(
+                        {
+                            "skill": {
+                                "id": skill_map.skill.id,
+                                "name": skill_map.skill.name,
+                            },
+                            "actual_measure_count": None,
+                            "actual_measure_time": actual_measure_time,
+                            "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
+                        },
+                        user=user,
+                    )
+            # Update skill map level
+            skill_map.skill_map_skill_levels.filter(
+                id=current_skill_level.id
+            ).update(
+                actual_measure_count=actual_measure_count,
+                actual_measure_time=actual_measure_time,
+            )
+
+
+def get_total_hours_of_task(task):
+    """
+    Return total hours of task
+    """
+    durations = TaskDuration.objects.filter(task=task).all()
+    total_duration = timedelta()
+    for duration in durations:
+        if duration.paused_at:
+            total_duration += duration.paused_at - duration.started_at
+
+    return total_duration.total_seconds()

@@ -190,7 +190,7 @@ export const pageRouters = {
     href: '/categories/create',
   },
 
-  // SKILL MAP
+  // SKILL
   SKILLS_MANAGEMENT: {
     name: 'スキル',
     href: '/skills',
@@ -213,6 +213,32 @@ export const pageRouters = {
     name: 'スキルマップ',
     href: '/skill-map',
   },
+  SKILL_LIST_MANAGEMENT: {
+    name: 'マイドック_スキルマップ_スキル一覧',
+    href: '/skill-map/skill-list',
+  },
+  SKILL_MAP_SKILL: {
+    name: 'マイスキル',
+    href: '/skill-map/my-skill',
+  },
+  SKILL_MAP_LIST: {
+    name: 'スキル一覧',
+    href: '/skill-map/list',
+  },
+  // SKILL MAP TEAM
+  SKILL_MAP_TEAM: {
+    name: 'スキルマップ',
+    href: '/skill-map-team',
+  },
+  SKILL_MAP_TEAM_DETAIL: {
+    name: 'ユーザー詳細',
+    href: (id: number) => `/skill-map-team/${id}`,
+  },
+  LEVEL_UP_TEAM: {
+    name: 'レベルアップ申請',
+    href: '/skill-map-team/level-up',
+  },
+
   // SKILL MAPS
   SKILL_MAPS_MANAGEMENT: {
     name: 'スキルマップ',
@@ -251,6 +277,15 @@ export const pageRouters = {
     name: '組織_スキル詳細',
     href: (organizationId: string) => `/organization-skills/${organizationId}`,
   },
+  SKILL_MAPS_MEMBERS_MANAGEMENT: {
+    name: 'スキル設定_対応メンバー編集',
+    href: '/skill-maps/members',
+  },
+  EDIT_SKILL_MAPS_MEMBERS: {
+    name: 'スキル設定_対応メンバー編集',
+    href: '/skill-maps/members/edit',
+  },
+
   // LEVEL_UP
   SUBMIT_LEVELS: {
     name: 'レベルアップ申請確認',
@@ -330,8 +365,10 @@ export const apiRouters = {
     `/organizations/${id}/statistic-categories/reset-index/`,
   ORGANIZATION_SKILLS: '/organization-skills',
   ORGANIZATION_SKILL_DELETE: (id: string) => `/organization-skills/${id}/`,
-  ORGANIZATION_SKILL_DETAIL: (id: string) => `/organizations/${id}/skills/`,
+  ORGANIZATION_SKILL_DETAIL: (id: number) => `/skills/${id}/group-steps/`,
   ORGANIZATION_HIERARCHY: '/organizations/hierarchy/',
+  ORGANIZATION_DEFINE_STEPS: (id: number) =>
+    `/organizations/${id}/define-steps/`,
 
   // CREATE DATA
   ORGANIZATION_CREATION: '/creation-data/organization/',
@@ -439,8 +476,13 @@ export const apiRouters = {
   SKILL_MAPS_LIST: '/skill-maps/',
   SKILL_MAPS_DESTROY: '/skill-maps/destroy',
   SKILL_MAPS_DETAIL: (id: string) => `/skill-maps/${id}/`,
+  SKILL_MAPS_DETAIL_SKILL: '/skill-maps/group-steps/',
+
   SKILL_MAPS_DETAIL_CATEGORIES: '/skill-maps/detail',
   SKILL_MAPS_RESET_INDEX: '/skill-maps/reset-index/',
+  MANAGE_SKILL_MAPS: '/manage-skill-maps/',
+  SKILL_MAPS_COMMENT: (id: string) => `/skill-maps/${id}/comments`,
+  SKILL_MAPS_LEVEL_UP: (id: string) => `/skill-maps/${id}/level-up`,
 
   // SUBMIT LEVELS
   SUBMIT_LEVELS_LIST: '/submit-levels/',

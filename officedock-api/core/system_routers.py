@@ -5,7 +5,12 @@ from calendars.apis import (
     ScheduleViewSet,
     ScheduleTeamdockViewSet,
 )
-from skills.apis import StatisticCategoryViewSet, SkillMapViewSet, SkillViewSet
+from skills.apis import (
+    StatisticCategoryViewSet,
+    ManageSkillMapViewSet,
+    SkillViewSet,
+    SkillMapViewSet,
+)
 from stat_data.apis import (
     StatDataViewSet,
     StatisticViewSet,
@@ -29,7 +34,6 @@ from users.apis import (
 from organizations.apis import (
     OrganizationByIDViewSet,
     OrganizationViewSet,
-    OrganizationSkillViewSet,
     OrganizationCategoryHierarchyViewSet,
     TeamViewSet,
 )
@@ -53,11 +57,6 @@ api_router.register(
 )
 api_router.register(
     "organizations", OrganizationByIDViewSet, basename="organizations_by_id"
-)
-api_router.register(
-    "organization-skills",
-    OrganizationSkillViewSet,
-    basename="organization_skills",
 )
 api_router.register("users", SystemUserMemoViewSet, basename="users_memos")
 api_router.register("users", SystemUserViewSet, basename="users")
@@ -101,6 +100,9 @@ api_router.register(
 )
 api_router.register("terms", SystemTermViewSet, basename="terms")
 api_router.register("stat-data", StatDataViewSet, basename="stat_data")
+api_router.register(
+    "manage-skill-maps", ManageSkillMapViewSet, basename="mange_skill_maps"
+)
 api_router.register("skill-maps", SkillMapViewSet, basename="skill_maps")
 api_router.register("skills", SkillViewSet, basename="skills")
 api_router.register(

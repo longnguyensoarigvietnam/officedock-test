@@ -1282,13 +1282,11 @@ export const MessageDetail = ({
                                         MessageType.CREATE_SUBMIT_LEVEL_SKILL
                                       ) {
                                         router.push(
-                                          pageRouters.SUBMIT_LEVELS.href,
+                                          pageRouters.LEVEL_UP_TEAM.href,
                                         );
                                       } else {
                                         router.push(
-                                          pageRouters.DETAIL_SUBMIT_LEVELS.href(
-                                            `${messageDetail.submitLevel?.id}`,
-                                          ),
+                                          `${pageRouters.SKILL_MAP.href}?submitLevelId=${messageDetail.submitLevel?.id}`,
                                         );
                                       }
                                     }}>

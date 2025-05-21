@@ -51,6 +51,7 @@ export const UPLOAD_AVATAR_FILE_MAXIMUM_SIZE =
   '30MB以上のファイルをアップロードできません。';
 export const INVALID_CATEGORY_NAME = 'カテゴリー名がすでに存在しています。';
 export const REQUIRED_CATEGORY_NAME = 'この項目は空にできません。';
+export const PLEASE_FILL_IN_STEP_2 = 'STEP2のスキルも登録してください。';
 
 // Success message
 export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました。';

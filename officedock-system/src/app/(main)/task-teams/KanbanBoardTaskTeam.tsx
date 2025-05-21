@@ -23,9 +23,11 @@ import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
 import ActionsTaskModalTeam from '@components/modals/ActionsTaskModalTeam';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
+import NoSettingColumn from '@components/kanbanTeam/NoSettingColumn';
 import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
 
 import { useErrorToast } from '@hooks/useErrorToast';
+import useTaskNoSettingTeam from '@hooks/useTaskNoSettingTeam';
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useTaskBoardTeam from '@hooks/useTaskBoardTeam';
@@ -63,6 +65,12 @@ import {
   transformDataTotalStatus,
 } from '@utils';
 import {
+  addTimeToDate,
+  convertDateStringFull,
+  formatDateServer,
+  getRandomDateTimeBetween,
+} from '@utils/date';
+import {
   NoSettingTotalType,
   Task,
   TaskErrorPerson,
@@ -72,21 +80,14 @@ import {
   TransformedStatuses,
   UpdateTaskKanbanRequest,
 } from '@interfaces/task';
-import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
-import api from '@base/api';
-import {
-  addTimeToDate,
-  convertDateStringFull,
-  formatDateServer,
-  getRandomDateTimeBetween,
-} from '@utils/date';
+import { ResponseError } from '@interfaces/response';
+
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { ResponseError } from '@interfaces/response';
+import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import NoSettingColumn from '@components/kanbanTeam/NoSettingColumn';
-import useTaskNoSettingTeam from '@hooks/useTaskNoSettingTeam';
+import api from '@base/api';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -384,8 +385,40 @@ const KanbanBoardTaskTeam = () => {
     const [sourceUserId, sourceStatus] = source.droppableId.split('-');
     const [destUserId, destStatus] = destination.droppableId.split('-');
 
-    // Drag no setting --> drop no setting
+    if (
+      StatusTask[sourceStatus as keyof typeof StatusTask] ===
+        StatusTask.COMPLETED &&
+      sourceUserId !== destUserId
+    ) {
+      return;
+    }
+    if (
+      StatusTask[sourceStatus as keyof typeof StatusTask] ===
+        StatusTask.COMPLETED &&
+      StatusTask[destStatus as keyof typeof StatusTask] !==
+        StatusTask.COMPLETED &&
+      sourceUserId === destUserId
+    ) {
+      return;
+    }
+    if (
+      StatusTask[destStatus as keyof typeof StatusTask] ===
+        StatusTask.COMPLETED &&
+      sourceUserId !== destUserId
+    ) {
+      return;
+    }
+    if (
+      StatusTask[sourceStatus as keyof typeof StatusTask] !==
+        StatusTask.COMPLETED &&
+      StatusTask[destStatus as keyof typeof StatusTask] ===
+        StatusTask.COMPLETED &&
+      sourceUserId === destUserId
+    ) {
+      return;
+    }
     if (sourceUserId === COLUMN_ID_TASK && destUserId === COLUMN_ID_TASK) {
+      // Drag no setting --> drop no setting
       if (source.index === destination.index) return;
 
       const movedItem = listTaskNoSetting[source.index];

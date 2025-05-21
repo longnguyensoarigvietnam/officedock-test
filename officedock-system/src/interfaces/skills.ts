@@ -1,29 +1,57 @@
+import { SkillMapLookBackType, SubmitLevelStatus } from '@constants/enums';
+import { OptionDropdownType } from './common';
 import { Organizations } from './organization';
 import { Role } from './role';
-import { Profile } from './user';
+import { Staff } from './user';
 
 export interface Skill {
   id: number;
   name: string;
 }
-export interface CreateSkillFormRequest {
-  name?: string;
-}
-export interface CreateSkillFormData {
-  name?: string;
-}
+type StepKey = 'step1' | 'step2' | 'step3';
 
-export interface SkillMapFormData {
-  organizationId?: number | null;
-  staffId?: number | null;
-  skillMaps: {
-    index?: number | null;
-    point?: number | null;
-    level?: string | null;
-    skillId?: string | number | null;
-    skillMapId: number | null;
-  }[];
-}
+type BaseSkillLevel = {
+  skillLevelId?: number | null;
+  organization?: number;
+  level: string;
+  measureCount?: number | null;
+  measureTime?: number | null;
+  lookBackInterval?: number | null;
+};
+
+type BaseStepDetail = {
+  skillId?: number | null;
+  name: string;
+  organizationId: number;
+  description: string;
+  step: string;
+  categories?: {
+    id: number;
+    name: string;
+    color: string | null;
+    type: string;
+  }[][];
+};
+
+export type SkillLevelDetail = BaseSkillLevel & {
+  items: { value: string }[];
+  lookBackType?: OptionDropdownType | null;
+};
+export type SkillLevelRequestDetail = BaseSkillLevel & {
+  items: string[];
+  lookBackType?: string | null;
+};
+
+export type StepFormDataDetail = BaseStepDetail & {
+  skillLevels: SkillLevelDetail[];
+};
+
+export type StepRequestDataDetail = BaseStepDetail & {
+  skillLevels: SkillLevelRequestDetail[];
+};
+
+export type SkillMapFormData = Record<StepKey, StepFormDataDetail | null>;
+export type SkillMapRequestData = Record<StepKey, StepRequestDataDetail>;
 
 export interface SkillMap {
   id?: number;
@@ -56,6 +84,28 @@ export interface SkillMap {
     update: boolean;
     delete: boolean;
   };
+}
+
+export interface SkillMapByMembers {
+  id: number;
+  uuid: string;
+  name: string;
+  icon: string | null;
+  iconColor: string;
+  users: {
+    id: number;
+    fullName: string;
+    avatarColor: string;
+    avatar: string | null;
+    organizations: Organizations;
+    skills: Record<
+      number,
+      {
+        isChecked: boolean;
+        skillMap: number;
+      }
+    >;
+  }[];
 }
 
 export interface ChildCategory {
@@ -112,17 +162,102 @@ export interface SkillMapDetail {
 
 export interface OrganizationSkill {
   id: number;
-  skill: string;
-  allSkills: OrganizationSkillDetail[];
-  organization: {
+  uuid: string;
+  name: string;
+  icon: string | null;
+  iconColor: string;
+  steps: {
+    step1: string;
+    step2: string;
+    step3: string;
+  };
+  skills: {
     id: number;
     name: string;
-    superior: Organizations;
-    userCount: number;
+    description: string;
+    step: string;
+    skillLevels: (Omit<BaseSkillLevel, 'skillLevelId'> & {
+      id: number;
+      items: string[];
+      lookBackType?: string;
+      skill: number;
+    })[];
+  }[];
+}
+
+export interface SkillMapSkill {
+  id: number;
+  uuid: string;
+  name: string;
+  icon: string | null;
+  iconColor: string;
+  steps: {
+    step1: string;
+    step2: string;
+    step3: string;
   };
-  actions?: {
-    update: boolean;
-    delete: boolean;
+  skills: {
+    parentName: string;
+    id: number;
+    detail: {
+      id: number;
+      name: string;
+      description: string;
+      step: string;
+    }[];
+  }[];
+}
+
+export interface SkillMapInfo {
+  user: {
+    id: number;
+    fullName: string;
+    avatarColor: string;
+    avatar: string | null;
+    organizations: Organizations;
+  };
+  organizations: SkillMapByOrganization[];
+  nextUser: number;
+  prevUser: number;
+}
+
+export interface SkillMapByOrganization {
+  organizationName: string;
+  skillMaps: SkillMapByOrganizationInfo[][];
+  steps: {
+    step1: string;
+    step2: string;
+    step3: string;
+  };
+}
+
+export interface SkillMapByOrganizationInfo {
+  id: number | null;
+  skill: {
+    id: number | null;
+    name: string | null;
+    description: string | null;
+    step: string | null;
+  };
+  isComplete: boolean | null;
+  step: string | null;
+  isLocked: boolean | null;
+  isHaveComment: boolean | null;
+  progressPercent?: number | null;
+  level: {
+    id: number | null;
+    skillMap: number | null;
+    level: string | null;
+    measureCount: number | null;
+    actualMeasureCount: number | null;
+    measureTime: number | null;
+    actualMeasureTime: number | null;
+    startLookbackAt: Date | string | null;
+    nextSubmitAt: Date | string | null;
+    lookBackInterval: number | null;
+    lookBackType: string | null;
+    items: string[];
+    isComplete: boolean | null;
   };
 }
 
@@ -147,20 +282,95 @@ export interface LevelDetail {
   descriptions?: string[] | null;
 }
 
-export interface OrganizationSkillDetail {
+export interface OrganizationSkillMapDetail {
   id?: number;
-  skill?: {
+  name: string;
+  organization: {
+    id: number;
+    uuid: string;
+    name: string;
+    superior: Organizations | null;
+    userCount: number;
+    actions: {
+      update: boolean;
+      delete: boolean;
+    };
+    icon: string;
+    iconColor: string;
+  };
+  description: string;
+  step: string;
+  skillLevels: (Omit<BaseSkillLevel, 'skillLevelId'> & {
+    id: number;
+    items: string[];
+    lookBackType?: string;
+    skill: number;
+  })[];
+  categories: {
+    id: number;
+    name: string;
+    color: string | null;
+    type: string;
+  }[][];
+  createdAt?: Date | null;
+}
+
+export interface OrganizationDefineSteps {
+  defineStep1: string | null;
+  defineStep2: string | null;
+  defineStep3: string | null;
+}
+
+export interface ManageSkillMapsRequest {
+  items: {
+    isChecked: boolean;
+    id: number;
+  }[];
+}
+
+export interface SkillMapComment {
+  id: number;
+  staff: Staff;
+  organization: Pick<
+    Organizations,
+    'id' | 'uuid' | 'name' | 'userCount' | 'actions'
+  >;
+  skill: {
+    id: number;
+    name: string;
+    description: string;
+    step: string;
+  };
+  levelBeforeSubmit: string;
+  levelAfterSubmit: string;
+  stepBeforeSubmit: string;
+  stepAfterSubmit: string;
+  status: string;
+  comment: string;
+  createdAt: Date | null;
+}
+
+export interface SkillMapLevelUp {
+  organization: number;
+  skill: {
     id: number;
     name: string;
   };
-  defineSkill?: string;
-  levels: {
-    level1: LevelDetail;
-    level2: LevelDetail;
-    level3: LevelDetail;
-  };
-  index: number;
-  isHasSkillMap?: boolean;
+  approvers: Staff[];
+  levelBeforeSubmit: string;
+  levelAfterSubmit: string;
+  stepBeforeSubmit: string;
+  stepAfterSubmit: string;
+  items: string[];
+}
+
+export interface SubmitLevelUpRequest {
+  staffId: number;
+  organizationId: number;
+  skillId: number;
+  levelBeforeSubmit: string;
+  stepBeforeSubmit: string;
+  approver: number;
 }
 
 export interface Description {
@@ -174,55 +384,65 @@ export interface Level {
   reviewPeriod: string;
   descriptions: Description[];
 }
-export interface CreateRowDataType {
-  id?: number | null;
-  customId: string;
-  skillId: number | null;
-  defineSkill: string;
-  levels: {
-    level1: Level;
-    level2: Level;
-    level3: Level;
-  };
-  index: number;
-  isShow: boolean;
-  isHasSkillMap?: boolean;
-}
 
 export interface SubmitLevel {
   id: number;
-  isEdited?: boolean;
-  actions?: {
-    update: boolean;
-    delete: boolean;
-  };
-  organization: {
+  staff: Staff;
+  skill: {
     id: number;
     name: string;
-    userCount: number;
-    superior: Organizations | null;
+    description: string;
+    step: string;
   };
-  staff: {
-    id: number;
-    loginType: string;
-    username: string | null;
-    email: string;
-    twoFactorAuthEmail: string;
-    profile: Profile;
-  };
-  skill: Skill;
-  levelBeforeSubmit: string;
-  levelAfterSubmit?: string;
   status: string;
+  createdAt: string | Date | undefined
+  progression: {
+    levelBeforeSubmit: string;
+    levelAfterSubmit: string;
+    stepBeforeSubmit: string;
+    stepAfterSubmit: string;
+  };
+  skillMapSkillLevel: {
+    id: number | null;
+    skillMap: number | null;
+    level: string | null;
+    measureCount: number | null;
+    actualMeasureCount: number | null;
+    measureTime: number | null;
+    actualMeasureTime: number | null;
+    startLookbackAt: Date | string | null;
+    nextSubmitAt: Date | string | null;
+    lookBackInterval: number | null;
+    lookBackType: string | null;
+    items: {
+      item: string,
+      isChecked: boolean
+    }[];
+    isComplete: boolean | null;
+  }
   comment: string;
-  createdAt: Date;
 }
 
-export interface CreateSubmitLevelsFormData {
-  staffId: number;
-  organizationId: number;
-  skillId: number;
-  levelBeforeSubmit: string;
+export interface SubmitLevelByOrganization {
+  organizationName: string;
+  submitLevels: {
+    id: number;
+    skill: {
+      id: number;
+      name: string;
+      description: string;
+      step: string;
+    };
+    createdAt: string | Date | undefined;
+    progression: {
+      levelBeforeSubmit: string;
+      levelAfterSubmit: string;
+      stepBeforeSubmit: string;
+      stepAfterSubmit: string;
+    };
+    status: string;
+    staff: Staff;
+  }[];
 }
 export interface CreationDataSkill {
   organization: {
@@ -233,4 +453,16 @@ export interface CreationDataSkill {
     id: number;
     name: string;
   }[];
+}
+export interface CensorSubmittedLevelRequest {
+  status: SubmitLevelStatus,
+  comment: string;
+  items: {
+    item: string;
+    isChecked: boolean
+  }[]
+  measureCount?: number;
+  measureTime?: number;
+  lookBackInterval?: number;
+  lookBackType?: SkillMapLookBackType
 }

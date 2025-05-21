@@ -227,7 +227,6 @@ export enum NestedFieldKey {
 }
 
 export enum LevelName {
-  LEVEL0 = 'レベル0',
   LEVEL1 = 'レベル1',
   LEVEL2 = 'レベル2',
   LEVEL3 = 'レベル3',
@@ -504,4 +503,26 @@ export enum HierarchyType {
 export enum AddCategoryHierarchyType {
   INPUT = 'input',
   PULLDOWN = 'pulldown',
+}
+export enum LevelUpConditionBy {
+  NUMBER_OF_TIMES = 'NUMBER_OF_TIMES',
+  MEASUREMENT_TIME = 'MEASUREMENT_TIME',
+  PERIOD = 'PERIOD',
+}
+export enum SkillMapStep {
+  STEP_1 = 'ステップ1',
+  STEP_2 = 'ステップ2',
+  STEP_3 = 'ステップ3',
+}
+export enum SkillMapLookBackType {
+  DAY = 'DAY',
+  WEEK = 'WEEK',
+  MONTH = 'MONTH',
+  YEAR = 'YEAR',
+}
+export enum SkillMapTypeInterval {
+  DAY = '日',
+  WEEK = '週間',
+  MONTH = 'ヶ月',
+  YEAR = '年',
 }

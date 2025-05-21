@@ -37,6 +37,9 @@ import InputSearch from '@components/common/InputSearch';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import BoardKanban from '@components/kanban/Board';
 import ActionFilterTask from '@components/modals/ActionFilterTask';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import ConfirmDragModalTask from '@components/modals/ConfirmDropModalTask';
+import CompletionRewardModal from '@components/modals/CompletionRewardModal';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useTaskBoardList from '@hooks/useTaskBoardList';
@@ -90,6 +93,7 @@ import {
 } from '@interfaces/task';
 import { ResponseError } from '@interfaces/response';
 import { WebSocketMessageSortKanban } from '@interfaces/chat';
+import { OptionDropdownType } from '@interfaces/common';
 import {
   Template,
   TemplateFormData,
@@ -111,8 +115,6 @@ import {
 } from '@utils/date';
 import { compareItems } from '@utils';
 import api from '@base/api';
-import { OptionDropdownType } from '@interfaces/common';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -226,6 +228,8 @@ const KanbanBoardTask = () => {
     useState(false);
   const [openConfirmDeleteTemplateModal, setOpenConfirmDeleteTemplateModal] =
     useState(false);
+  const [openConfirmDragModal, setOpenConfirmDragModal] = useState(false);
+  const [openRewardModal, setOpenRewardModal] = useState(false);
 
   const [isListView, setIsListView] = useState<boolean>(false);
 
@@ -257,6 +261,9 @@ const KanbanBoardTask = () => {
 
   const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
   const [closeAction, setCloseAction] = useState<ActionTask | null>();
+  const [pendingDropData, setPendingDropData] = useState<DropResult | null>(
+    null,
+  );
 
   // Template
   const [dataTemplateEdit, setDataTemplateEdit] = useState<Template | null>(
@@ -1389,6 +1396,14 @@ const KanbanBoardTask = () => {
         return;
       }
 
+      if (
+        source.droppableId == String(StatusValueTask.COMPLETED) &&
+        destination.droppableId !== String(StatusValueTask.COMPLETED)
+      ) {
+        setPendingDropData(result);
+        setOpenConfirmDragModal(true);
+        return;
+      }
       const sourceColumn = columnsKanbanData[source.droppableId];
       const itemDataTask = sourceColumn.items[source.index];
 
@@ -1632,6 +1647,253 @@ const KanbanBoardTask = () => {
     },
     [columnsKanbanData],
   );
+  const handleConfirmCommitDrop = () => {
+    if (!pendingDropData) return;
+    const { source, destination, type } = pendingDropData;
+    if (!destination || !columnsKanbanData) {
+      return;
+    }
+    const sourceColumn = columnsKanbanData[source.droppableId];
+    const itemDataTask = sourceColumn.items[source.index];
+
+    if (!itemDataTask) return;
+
+    try {
+      if (type === KanbanType.COLUMN) {
+        // Handle column sorting
+        const newColumnOrder = Array.from(Object.keys(columnsKanbanData));
+        const [removed] = newColumnOrder.splice(source.index, 1);
+        newColumnOrder.splice(destination.index, 0, removed);
+        const newColumns = newColumnOrder.reduce((acc, columnId) => {
+          acc[columnId] = columnsKanbanData[columnId];
+          return acc;
+        }, {} as Columns);
+        setColumnsKanbanData(newColumns);
+        return;
+      } else {
+        const sourceColumn = columnsKanbanData[source.droppableId];
+        const destColumn = columnsKanbanData[destination.droppableId];
+        let sourceItems = Array.from(sourceColumn.items);
+        const destItems =
+          source.droppableId === destination.droppableId
+            ? sourceItems
+            : Array.from(destColumn.items);
+        const [movedItem] = sourceItems.splice(source.index, 1); // Remove item from its original position
+        if (
+          (source.droppableId == String(StatusValueTask.MY_ROUTINE) &&
+            destination.droppableId != String(StatusValueTask.MY_ROUTINE)) ||
+          (source.droppableId != String(StatusValueTask.MY_ROUTINE) &&
+            destination.droppableId == String(StatusValueTask.MY_ROUTINE))
+        ) {
+          handleSetParam({
+            id: `${movedItem.id}`,
+            action: ActionTask.EDIT,
+            type:
+              destination.droppableId == String(StatusValueTask.MY_ROUTINE)
+                ? ItemStartType.FIXED_TASK
+                : ItemStartType.TASK,
+          });
+
+          getDataDetailTask(movedItem.id);
+        }
+
+        // Update the status of the item when dropped into a new column
+        movedItem.status = {
+          id: parseInt(destination.droppableId),
+          name: destColumn.title,
+        };
+
+        if (
+          source.droppableId != String(StatusValueTask.MY_ROUTINE) &&
+          destination.droppableId == String(StatusValueTask.MY_ROUTINE)
+        ) {
+          movedItem.repeatType = TASK_REPETITIVE_OPTIONS.find(
+            (option) => option.label == TaskRepetitiveType.ONCE,
+          )?.value;
+        }
+
+        const prevMovedItem =
+          source.droppableId === destination.droppableId
+            ? sourceItems[destination.index - 1]
+            : destItems[destination.index - 1];
+        const nextMovedItem =
+          source.droppableId === destination.droppableId
+            ? sourceItems[destination.index]
+            : destItems[destination.index];
+
+        // Check if the item has `pin`
+        if (movedItem.pinAt) {
+          // Check if the item is being dropped between non-pinned items
+          const prevItem = destItems[destination.index - 1];
+          const nextItem = destItems[destination.index];
+
+          const isPrevItemNotPinned = !prevItem || !prevItem.pinAt;
+          const isNextItemNotPinned = !nextItem || !nextItem.pinAt;
+
+          // If both previous and next items are not pinned, move the item to the top of the column
+          if (isPrevItemNotPinned && isNextItemNotPinned) {
+            destItems.unshift({
+              ...movedItem,
+              pinAt: convertDateStringFull(new Date()), // Update new pin time
+            }); // Move the item to the top of the column
+          } else {
+            // If not dropped at the top, calculate the `index` as before
+            const dateAtPrev = prevMovedItem ? prevMovedItem.pinAt : null;
+            const dateAtNext = nextMovedItem ? nextMovedItem.pinAt : null;
+
+            const newPinAt = getRandomDateTimeBetween(dateAtNext, dateAtPrev);
+            const newSource = sourceItems.map((item) => {
+              if (item.id === movedItem.id) {
+                return {
+                  ...item,
+                  pinAt: newPinAt,
+                };
+              }
+              return item;
+            });
+
+            sourceItems = [...newSource];
+            destItems.splice(destination.index, 0, {
+              ...movedItem,
+              pinAt: `${newPinAt}`,
+            });
+          }
+        } else {
+          // If the item after has a pin, move the item to the end of the pinned list and the beginning of the non-pinned list
+          if (nextMovedItem && nextMovedItem.pinAt) {
+            const pinnedItems = destItems.filter((item) => item.pinAt); // Filter items with pins
+            const nonPinnedItems = destItems.filter((item) => !item.pinAt); // Filter items without pins
+
+            // Check to see if the trimmer also has a battery or not
+            const column = columnsKanbanData?.[destination.droppableId];
+
+            let isLastItemPinned = false;
+
+            if (column && column.items.length > 0) {
+              const lastItem = column.items[column.items.length - 1];
+              isLastItemPinned = !!lastItem.pinAt; // Check if `pinAt` exists (true if it does, false if it doesn't)
+            }
+            // Gets hasMores value if found, otherwise returns null
+            const resultHasNext = numberPagesData.find(
+              (item) => `${item.id}` === `${destination.droppableId}`,
+            );
+            const hasMoresValue = resultHasNext ? resultHasNext.hasMores : null;
+
+            if (hasMoresValue && isLastItemPinned) {
+              pinnedItems.push();
+              setNumberPagesData((prevState) =>
+                prevState.map((item) => {
+                  if (item.id === destination.droppableId) {
+                    return { ...item, count: item.count + 1 };
+                  }
+                  return item;
+                }),
+              );
+            } else {
+              pinnedItems.push({
+                ...movedItem,
+                index: nonPinnedItems.length
+                  ? nonPinnedItems[0].index + INITIAL_INDEX_VALUE
+                  : INITIAL_INDEX_VALUE * 1000,
+              });
+            }
+
+            // Update the list of items
+            destItems.splice(
+              0,
+              destItems.length,
+              ...pinnedItems,
+              ...nonPinnedItems,
+            ); // Merge pinned and non-pinned lists
+          } else {
+            // If there is no pin, drop the item in the correct position in the non-pinned group
+
+            let prevItemIndex = prevMovedItem
+              ? prevMovedItem.index
+              : INITIAL_INDEX_VALUE;
+            if (prevMovedItem && prevMovedItem.pinAt) {
+              prevItemIndex = INITIAL_INDEX_VALUE;
+            }
+            const nextItemIndex = nextMovedItem
+              ? nextMovedItem.index
+              : -INITIAL_INDEX_VALUE;
+
+            movedItem.index =
+              prevItemIndex === INITIAL_INDEX_VALUE ||
+              nextItemIndex === INITIAL_INDEX_VALUE
+                ? prevItemIndex + nextItemIndex
+                : (prevItemIndex + nextItemIndex) / 2;
+
+            const pinnedItems = destItems.filter((item) => item.pinAt); // Filter items with pins
+            const nonPinnedItems = destItems.filter((item) => !item.pinAt); // Filter items without pins
+
+            nonPinnedItems.splice(
+              destination.index - pinnedItems.length,
+              0,
+              movedItem,
+            ); // Drop in the correct position
+
+            // Update the list of items
+            destItems.splice(
+              0,
+              destItems.length,
+              ...pinnedItems,
+              ...nonPinnedItems,
+            ); // Merge pinned and non-pinned lists
+          }
+        }
+
+        // Update the state of the columns
+        if (source.droppableId === destination.droppableId) {
+          // When the item is dropped in the same column
+          setColumnsKanbanData({
+            ...columnsKanbanData,
+            [source.droppableId]: {
+              ...sourceColumn,
+              items: destItems, // Update the items list for the column
+            },
+          });
+        } else {
+          // When the item is dropped in a different column
+          setColumnsKanbanData({
+            ...columnsKanbanData,
+            [source.droppableId]: {
+              ...sourceColumn,
+              items: sourceItems, // Update the items list for the source column
+            },
+            [destination.droppableId]: {
+              ...destColumn,
+              items: destItems, // Update the items list for the destination column
+            },
+          });
+        }
+        setFrequentlyTasks((prevFrequentlyTasks) =>
+          prevFrequentlyTasks.map((item) => {
+            if (`${item.id}` === `${movedItem.id}`) {
+              return {
+                ...item,
+                status: {
+                  id: parseInt(destination.droppableId),
+                  name: destColumn.title,
+                },
+              };
+            }
+            return item;
+          }),
+        );
+
+        setDataItemDrop(pendingDropData);
+        setIsInteracting(false);
+        setPendingDropData(null);
+        setOpenConfirmDragModal(false);
+
+        isDragEndExecuteRef.current = true;
+        return;
+      }
+    } catch (error) {
+      // TODO: Handle error
+    }
+  };
 
   // Only call onChange when columns data updated and handleDragEnd executed
   useEffect(() => {
@@ -2772,6 +3034,7 @@ const KanbanBoardTask = () => {
     const handleSocketMessage = (data: WebSocketMessageSortKanban) => {
       switch (data.action) {
         case SocketActions.RESET_STATUS_SORT_TASK:
+          if (orderingRequest === '') return;
           setIsReadyToFetch(false);
           setOrderingRequest('');
           setDataOrderRing('');
@@ -3334,6 +3597,27 @@ const KanbanBoardTask = () => {
                   onClose={() => {
                     setOpenConfirmDeleteTemplateModal(false);
                   }}
+                />
+              )}
+              {openConfirmDragModal && (
+                <ConfirmDragModalTask
+                  open={openConfirmDragModal}
+                  onConfirm={handleConfirmCommitDrop}
+                  onClose={() => {
+                    setOpenConfirmDragModal(false);
+                    setPendingDropData(null);
+                  }}
+                />
+              )}
+              {openRewardModal && (
+                <CompletionRewardModal
+                  open={openRewardModal}
+                  count={1}
+                  name="セミナー当日"
+                  onConfirm={function (): void {
+                    throw new Error('Function not implemented.');
+                  }}
+                  onClose={() => setOpenRewardModal(false)}
                 />
               )}
             </div>

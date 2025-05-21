@@ -1,0 +1,8 @@
+input[type='radio']:checked {
+  background-color: none;
+  background-image: url('/icons/radio.svg');
+}
+
+input[type='radio']:focus {
+  box-shadow: none;
+}

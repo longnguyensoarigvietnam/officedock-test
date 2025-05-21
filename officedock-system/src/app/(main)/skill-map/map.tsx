@@ -1,286 +1,145 @@
 'use client';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-import { Fragment } from 'react';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import ReviewSubmittedLevelUpModal from '@components/modals/ReviewSubmittedLevelUpModal';
 
-import ImageRound from '@components/common/ImageRound';
-import RangeSlider from '@components/common/Slider';
-import { Table, TableBody, TableHeader } from '@components/common/Table';
+import useSkillMapInfo from '@hooks/useSkillMapList';
+import useSubmitLevelDetail from '@hooks/useSubmitLevelDetail';
 
-import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import {
+  SkillMapByOrganization,
+  SubmitLevel,
+} from '@interfaces/skills';
+
+import { SkillMapByOrganizationPanel } from './skill-map-by-organization-panel';
 
 const SkillMap = () => {
-  const { authenticatedUser } = useAuthenticatedUser({});
+  // Router
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Skill map list
+  const [skillMapByOrganizations, setSkillMapByOrganizations] = useState<
+    SkillMapByOrganization[]
+  >([]);
+
+  // Submit level id
+  const [submitLevelIdParam, setSubmitLevelIdParam] = useState<string | null>(
+    searchParams.get('submitLevelId'),
+  );
+  const [selectedSubmitLevel, setSelectedSubmitLevel] = useState<number | null>(
+    null,
+  );
+  const [submitLevelUpDetail, setSubmitLevelUpDetail] =
+    useState<SubmitLevel | null>(null);
+  const [openReviewSubmittedLevelupPopup, setOpenReviewSubmittedLevelupPopup] =
+    useState<boolean>(false);
+
+  const { skillMapInfo } = useSkillMapInfo({
+    onSuccess: (data) => {
+      setSkillMapByOrganizations(data.organizations);
+    },
+  });
+
+  useSubmitLevelDetail({
+    submitLevelId: Number(selectedSubmitLevel),
+    onSuccess: (data) => {
+      setSubmitLevelUpDetail(data);
+      setOpenReviewSubmittedLevelupPopup(true);
+    },
+  });
+
+  const handleRemoveParam = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('submitLevelId');
+    setSubmitLevelIdParam(null);
+    router.replace(`?${params.toString()}`);
+  };
+
+  useEffect(() => {
+    if (submitLevelIdParam) {
+      setSelectedSubmitLevel(Number(submitLevelIdParam));
+    }
+  }, [submitLevelIdParam]);
+
   return (
-    <Fragment>
-      <div className="flex items-center mb-5">
-        <ImageRound
-          className="w-24 h-24"
-          src="/images/avatar-default.svg"
-          border="full"
-          name="Avatar user"
+    <div className="w-full">
+      {/* Banner */}
+      <div className="w-full h-[189px] relative mb-5">
+        <Image
+          alt="Mountains"
+          src="/images/skill-banner.jpg"
+          fill
+          style={{ height: '100%', width: '100%' }}
+          className=" rounded-[14px]"
         />
-        <div className="ml-5">
-          <div className="flex gap-3 items-center">
-            <p className="font-normal text-2xl mb-2 truncate max-w-[300px]">
-              {authenticatedUser?.profile.fullName}
-            </p>
-            <ImageRound
-              className="w-9 h-9"
-              src="/icons/pajamas-smile.svg"
-              border="full"
-              name="Pajamas smile"
+
+        <div className="absolute w-full h-full top-0 left-0 flex justify-between gap-5 pl-[50px] pr-[30px] pt-[30px]">
+          <div className=" h-full flex gap-5 items-start w-[395px]">
+            <CustomUserAvatar
+              avatarUrl={skillMapInfo?.user?.avatar || ''}
+              avatarColor={skillMapInfo?.user?.avatarColor || ''}
+              size={70}
             />
+            <div className="flex flex-col items-start justify-center">
+              <p className="text-sm font-medium text-white line-clamp-2">
+                {skillMapInfo?.user?.organizations?.name || ''}
+              </p>
+              <p className="text-black font-medium text-[26px] max-w-[300px] truncate">
+                {skillMapInfo?.user.fullName}
+              </p>
+            </div>
           </div>
-          <div className=" flex gap-1 font-normal text-lg">
-            <p className="truncate max-w-[500px]">
-              {authenticatedUser?.organizations &&
-                authenticatedUser?.organizations.map((organization, index) => (
-                  <span
-                    key={
-                      organization.id
-                    }>{`${organization.name}${authenticatedUser?.organizations && authenticatedUser?.organizations.length - 1 !== index ? '、' : ''}`}</span>
-                ))}
-            </p>{' '}
+          <div className="text-xs font-medium text-white w-fit flex-grow flex-shrink-0">
+            <div className="bg-[#FFFFFFBF] w-full h-[104px] mt-3 rounded-md px-[30px] py-[25px] flex flex-col gap-2">
+              <div className="flex items-center gap-[10px] text-black font-medium text-base">
+                <Image
+                  src="/icons/completed.svg"
+                  width={12}
+                  height={12}
+                  alt="completed-icon"
+                />
+                <p>直近1ヶ月で大カテゴリーAのタスクを60時間行いました</p>
+              </div>
+              <div className="flex items-center gap-[10px] text-black font-medium text-base">
+                <Image
+                  src="/icons/completed.svg"
+                  width={12}
+                  height={12}
+                  alt="completed-icon"
+                />
+                <p>企画提案力のレベルアップが近づいています！</p>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="ml-64">
-          <p className="font-normal text-lg mb-2 ">レベルの説明</p>
-          <p className="font-normal text-lg mb-2 ">ポイントの付与の説明</p>
-        </div>
       </div>
-      <div>
-        <Table className="">
-          <TableHeader>
-            <th className="font-normal">
-              <span className="text-sm">大カテゴリー</span>
-            </th>
-            <th className="font-normal">
-              <span className="text-sm">中カテゴリー</span>
-            </th>
-            <th className="font-normal">
-              <span className="text-sm">小カテゴリー</span>
-            </th>
-            <th className="font-normal !px-1 level-width">
-              <div className=" flex items-center justify-center py-2 gap-2">
-                <p className="text-sm">レベル1</p>
-                <ImageRound
-                  className="w-4 h-4"
-                  src="/icons/question-mark.svg"
-                  border="full"
-                  name="Question mark"
-                />
-              </div>
-            </th>
-            <th className="font-normal !px-1">
-              <div className=" flex items-center justify-center py-2 gap-2">
-                <p className="text-sm">レベル2</p>
-                <ImageRound
-                  className="w-4 h-4"
-                  src="/icons/question-mark.svg"
-                  border="full"
-                  name="Question mark"
-                />
-              </div>
-            </th>
-            <th className="font-normal !px-1">
-              <div className=" flex items-center justify-center py-2 gap-2">
-                <p className="text-sm">レベル3</p>
-                <ImageRound
-                  className="w-4 h-4"
-                  src="/icons/question-mark.svg"
-                  border="full"
-                  name="Question mark"
-                />
-              </div>
-            </th>
-          </TableHeader>
-          <TableBody>
-            <tr className="border-[1px] relative">
-              <td rowSpan={6} className="border-[1px] py-5 px-8 text-center">
-                <span className="text-sm">セミナー・撮影 関係</span>
-              </td>
-              <td rowSpan={2} className="border-[1px] py-5 px-8 text-center">
-                <span className="text-sm">セミナー・撮影準備</span>
-              </td>
-              <td className="border-[1px] text-center relative">
-                <p className="text-sm text-center py-2 px-10">配信素材作成</p>
-                <ImageRound
-                  className="w-4 h-4 absolute top-2 right-2"
-                  src="/icons/question-mark.svg"
-                  border="full"
-                  name="Question mark"
-                />
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <div className="absolute top-[10px] -left-[0px] transform w-[calc(305%)] h-full overflow-x-hidden">
-                  <RangeSlider value={0} />
-                </div>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-            </tr>
-            <tr className="border-[1px]">
-              <td className="border-[1px] relative">
-                <p className="text-sm text-center py-2 px-10">その他</p>
-                <ImageRound
-                  className="w-4 h-4 absolute top-2 right-2"
-                  src="/icons/question-mark.svg"
-                  border="full"
-                  name="Question mark"
-                />
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <div className="absolute top-[10px] -left-[0px] transform w-[calc(305%)] h-full overflow-x-hidden">
-                  <RangeSlider value={0} />
-                </div>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-            </tr>
-            <tr className="border-[1px]">
-              <td className="border-[1px]">
-                <p className="text-sm text-center py-2 px-10">
-                  セミナー・撮影当日
-                </p>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center bg-[#EAF8FF]">
-                ー
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <div className="absolute top-[10px] -left-[0px] transform w-[calc(305%)] h-full overflow-x-hidden">
-                  <RangeSlider value={0} />
-                </div>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-            </tr>
-            <tr className="border-[1px] py-5 px-8 text-center">
-              <td className="border-[1px] py-5 px-8 text-center">
-                <p className="text-sm  py-2 px-10">セミナー・撮影後</p>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center bg-[#EAF8FF]">
-                ー
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <div className="absolute top-[10px] -left-[0px] transform w-[calc(305%)] h-full overflow-x-hidden">
-                  <RangeSlider value={0} />
-                </div>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-            </tr>
-            <tr className="border-[1px] py-5 px-8 text-center">
-              <td className="border-[1px] ">
-                <p className="text-sm py-2 px-10">技術向上</p>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center bg-[#EAF8FF]">
-                ー
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <div className="absolute top-[10px] -left-[0px] transform w-[calc(305%)] h-full overflow-x-hidden">
-                  <RangeSlider value={0} />
-                </div>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-            </tr>
-            <tr className="border-[1px] py-5 px-8 text-center">
-              <td className="border-[1px]">
-                <p className="text-sm py-2 px-10">その他</p>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center bg-[#EAF8FF]">
-                ー
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <div className="absolute top-[10px] -left-[0px] transform w-[calc(305%)] h-full overflow-x-hidden">
-                  <RangeSlider value={0} />
-                </div>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-            </tr>
-            <tr className="border-[1px]">
-              <td rowSpan={5} className="border-[1px] py-5 px-8 text-center">
-                <span className="text-sm">教材・動画・印刷物 関係</span>
-              </td>
-              <td rowSpan={5} className="border-[1px] py-5 px-8 text-center">
-                <span className="text-sm">動画編集</span>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <p className="text-sm  py-2 px-10">アーカイブ編集</p>
-                <ImageRound
-                  className="w-4 h-4 absolute top-2 right-2"
-                  src="/icons/question-mark.svg"
-                  border="full"
-                  name="Question mark"
-                />
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <div className="absolute top-[10px] -left-[0px] transform w-[calc(305%)] h-full overflow-x-hidden">
-                  <RangeSlider value={0} />
-                </div>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-            </tr>
-            <tr className="border-[1px]">
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <p className="text-sm  py-2 px-10">講義動画編集</p>
-                <ImageRound
-                  className="w-4 h-4 absolute top-2 right-2"
-                  src="/icons/question-mark.svg"
-                  border="full"
-                  name="Question mark"
-                />
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <div className="absolute top-[10px] -left-[0px] transform w-[calc(305%)] h-full overflow-x-hidden">
-                  <RangeSlider value={0} />
-                </div>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-            </tr>
-            <tr className="border-[1px]">
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <p className="text-sm  py-2 px-10">Web講習会</p>
-                <ImageRound
-                  className="w-4 h-4 absolute top-2 right-2"
-                  src="/icons/question-mark.svg"
-                  border="full"
-                  name="Question mark"
-                />
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <div className="absolute top-[10px] -left-[0px] transform w-[calc(305%)] h-full overflow-x-hidden">
-                  <RangeSlider value={0} />
-                </div>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-            </tr>
-            <tr className="border-[1px]">
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <p className="text-sm py-2 px-10">ｅラーニング</p>
-                <ImageRound
-                  className="w-4 h-4 absolute top-2 right-2"
-                  src="/icons/question-mark.svg"
-                  border="full"
-                  name="Question mark"
-                />
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center relative">
-                <div className="absolute top-[10px] -left-[0px] transform w-[calc(305%)] h-full overflow-x-hidden">
-                  <RangeSlider value={0} />
-                </div>
-              </td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-              <td className="border-[1px] py-5 px-8 text-center"></td>
-            </tr>
-          </TableBody>
-        </Table>
-      </div>
-    </Fragment>
+
+      {/* Skill map by organizations */}
+      {skillMapByOrganizations.length > 0 &&
+        skillMapByOrganizations.map((skillMap, index) => (
+          <SkillMapByOrganizationPanel
+            key={index}
+            skillMapDetail={skillMap}
+            userId={skillMapInfo?.user.id || 0}
+          />
+        ))}
+
+      {openReviewSubmittedLevelupPopup && selectedSubmitLevel && submitLevelUpDetail && (
+        <ReviewSubmittedLevelUpModal
+          open={openReviewSubmittedLevelupPopup}
+          submitLevelUpDetail={submitLevelUpDetail}
+          onClose={() => {
+            setOpenReviewSubmittedLevelupPopup(false);
+            setSelectedSubmitLevel(null);
+            handleRemoveParam();
+          }}
+        />
+      )}
+    </div>
   );
 };
 

@@ -68,6 +68,7 @@ from tasks.utils import (
     update_task_schedule,
     update_todo_list_for_task,
     calculate_new_time,
+    calculate_progress_skill_map,
 )
 from roles.constants import Screens
 from users.utils import reset_sort_task
@@ -1142,6 +1143,10 @@ class TaskViewSet(
                 old_recurring=old_recurring,
             )
 
+        # Update skill if task status is changed
+        if current_task_status.name != task.status.name:
+            calculate_progress_skill_map(task, user)
+
         return self.response_ok(
             self.get_serializer(
                 task,
@@ -1345,8 +1350,15 @@ class TaskViewSet(
                         "month_day": None,
                         "month": None,
                     }
+                old_task_status = task.status.name
                 task.status = task_status
                 task.save()
+                if not (
+                    task_status.name
+                    == old_task_status
+                    == TaskStatus.COMPLETED.value
+                ):
+                    calculate_progress_skill_map(task, user)
                 for user in task.people_in_charge.all():
                     send_web_socket_event(
                         {

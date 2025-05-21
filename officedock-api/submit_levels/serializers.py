@@ -4,11 +4,12 @@ from rest_framework.exceptions import ValidationError
 from base.messages import ERROR_MESSAGES
 from organizations.models import Organization
 from organizations.serializers import OrganizationSerializer
-from roles.constants import Actions, Screens
-from roles.utils import has_permission
-from skills.constants import SkillLevel
-from skills.models import Skill
-from skills.serializers import SkillSerializer
+from skills.constants import SkillLevel, get_next_progression, LookBackTypes
+from skills.models import Skill, SkillMapSkillLevel, SkillMap
+from skills.serializers import (
+    BaseSkillHierarchySerializer,
+    SkillMapSkillLevelSerializer,
+)
 from submit_levels.constants import SubmitLevelStatus
 from submit_levels.models import SubmitLevelHistory
 from users.models import User
@@ -41,7 +42,7 @@ class SubmitLevelSerializer(serializers.ModelSerializer):
     )
     organization = OrganizationSerializer(read_only=True)
     staff = BaseUserSerializer(read_only=True)
-    skill = SkillSerializer(read_only=True)
+    skill = BaseSkillHierarchySerializer(read_only=True)
 
     class Meta:
         model = SubmitLevelHistory
@@ -55,6 +56,8 @@ class SubmitLevelSerializer(serializers.ModelSerializer):
             "skill",
             "level_before_submit",
             "level_after_submit",
+            "step_before_submit",
+            "step_after_submit",
             "status",
             "comment",
             "created_at",
@@ -75,6 +78,8 @@ class CreateSubmitLevelSerializer(SubmitLevelSerializer):
             "organization",
             "skill",
             "level_before_submit",
+            "step_before_submit",
+            "approver",
         ]
 
     def validate(self, data):
@@ -83,20 +88,35 @@ class CreateSubmitLevelSerializer(SubmitLevelSerializer):
         staff = data.get("staff")
         skill = data.get("skill")
         level_before_submit = data.get("level_before_submit")
+        step_before_submit = data.get("step_before_submit")
 
         # Check if company not match
         if organization.company != skill.company != staff.company:
             raise ValidationError(
                 {"detail": ERROR_MESSAGES["company_not_match"]}
             )
-
+        skill_map_exists = SkillMap.objects.filter(
+            organization=organization,
+            skill=skill,
+            staff=staff,
+            step=step_before_submit,
+            skill_map_skill_levels__level=level_before_submit,
+        ).exists()
+        if not skill_map_exists:
+            raise ValidationError(
+                {"detail": ERROR_MESSAGES["skill_not_exists"]}
+            )
         # Check if exists submit level with same input data
         if SubmitLevelHistory.objects.filter(
             organization=organization,
             staff=staff,
             skill=skill,
             level_before_submit=level_before_submit,
-            status=SubmitLevelStatus.APPLYING.value,
+            step_before_submit=step_before_submit,
+            status__in=[
+                SubmitLevelStatus.APPLYING.value,
+                SubmitLevelStatus.APPROVE.value,
+            ],
         ).exists():
             raise ValidationError(
                 {"detail": ERROR_MESSAGES["submit_level_exists"]}
@@ -105,57 +125,101 @@ class CreateSubmitLevelSerializer(SubmitLevelSerializer):
         return data
 
 
+class ItemsOfSubmitLevel(serializers.Serializer):
+    item = serializers.CharField()
+    is_checked = serializers.BooleanField()
+
+
 class UpdateSubmitLevelSerializer(SubmitLevelSerializer):
     """Serializer for update SubmitLevel model"""
+
+    measure_count = serializers.IntegerField(required=False, allow_null=True)
+    measure_time = serializers.IntegerField(required=False, allow_null=True)
+    look_back_interval = serializers.IntegerField(
+        required=False, allow_null=True
+    )
+    look_back_type = serializers.ChoiceField(
+        choices=LookBackTypes.choices(), required=False, allow_null=True
+    )
+    items = ItemsOfSubmitLevel(many=True, required=False, allow_null=True)
 
     class Meta:
         model = SubmitLevelHistory
         fields = [
             "status",
             "comment",
+            "items",
+            "measure_count",
+            "measure_time",
+            "look_back_interval",
+            "look_back_type",
         ]
 
 
 class ListSubmitLevelSerializer(SubmitLevelSerializer):
     """Serializer for list SubmitLevel model"""
 
-    is_edited = serializers.SerializerMethodField(read_only=True)
-    actions = serializers.SerializerMethodField(read_only=True)
+    progression = serializers.SerializerMethodField()
 
     class Meta:
         model = SubmitLevelHistory
         fields = [
             "id",
             "staff",
-            "organization",
             "skill",
             "status",
-            "is_edited",
-            "comment",
             "created_at",
-            "actions",
+            "progression",
         ]
 
-    def get_is_edited(self, obj):
-        """Handle check is edited or not"""
-        user = self.context.get("request").user
-        return (
-            obj.status
-            in [
-                SubmitLevelStatus.APPROVE.value,
-                SubmitLevelStatus.REJECT.value,
-            ]
-            or obj.staff == user
+    def get_progression(self, obj):
+        """
+        Return progression of skill
+        """
+        step_before_submit = obj.step_before_submit
+        level_before_submit = obj.level_before_submit
+        step_after_submit, level_after_submit = get_next_progression(
+            step_before_submit, level_before_submit
         )
 
-    def get_actions(self, obj):
-        """
-        Get unique role permissions for the given object.
-        """
-        user = self.context.get("request").user
-        actions = {
-            Actions.UPDATE.value: f"{Screens.SUBMIT_LEVEL.value}_{Actions.UPDATE.value}",
-            Actions.DELETE.value: f"{Screens.SUBMIT_LEVEL.value}_{Actions.DELETE.value}",
+        return {
+            "step_before_submit": step_before_submit,
+            "level_before_submit": level_before_submit,
+            "step_after_submit": step_after_submit,
+            "level_after_submit": level_after_submit,
         }
-        item_org_ids = [obj.organization.id]
-        return has_permission(actions, user, item_org_ids)
+
+
+class DetailSubmitLevelSerializer(ListSubmitLevelSerializer):
+    """Serializer for detail SubmitLevel model"""
+
+    skill_map_skill_level = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SubmitLevelHistory
+        fields = [
+            "id",
+            "staff",
+            "skill",
+            "status",
+            "created_at",
+            "progression",
+            "skill_map_skill_level",
+            "comment",
+        ]
+
+    def get_skill_map_skill_level(self, obj):
+        """
+        Return skill map skill level
+        """
+        skill_map_skill_level = SkillMapSkillLevel.objects.filter(
+            skill=obj.skill,
+            level=obj.level_before_submit,
+            skill_map__staff=obj.staff,
+            is_complete=False,
+        ).first()
+        data = SkillMapSkillLevelSerializer(skill_map_skill_level).data
+        data["items"] = (
+            skill_map_skill_level.items if skill_map_skill_level else None
+        )
+        return data

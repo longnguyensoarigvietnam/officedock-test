@@ -1207,13 +1207,18 @@ const TimeSchedule = memo(
       const handleKeyUp = (e: any) => {
         if (e.key === 'Shift') setIsShiftPressed(false);
       };
+      const handleBlur = () => {
+        setIsShiftPressed(false);
+      };
 
       window.addEventListener('keydown', handleKeyDown);
       window.addEventListener('keyup', handleKeyUp);
+      window.addEventListener('blur', handleBlur);
 
       return () => {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
+        window.removeEventListener('blur', handleBlur);
       };
     }, []);
 
@@ -1536,147 +1541,146 @@ const TimeSchedule = memo(
           !resourcePlan
         ) {
           info.event.remove();
-        }
-
-        const hasOverlap = taskTimeScheduleList.some((item) => {
-          return (
-            newEvent.start < item.end &&
-            newEvent.end > item.start &&
-            item.resourceId === ItemScheduleType.ACTUAL &&
-            !resourcePlan &&
-            item.taskId === Number(newEventId)
-          );
-        });
-
-        // Check overlap actual
-        if (hasOverlap) {
-          const externalEvents = document.getElementById('external-events');
-          const eventEl = document.createElement('div');
-          eventEl.className = 'fc-event';
-          eventEl.innerText = 'event';
-          eventEl.setAttribute('data-id', 'event');
-
-          externalEvents?.appendChild(eventEl);
-          info.event.remove();
         } else {
-          info.view.calendar.refetchEvents();
-
-          // Add new data into schedule
-          setTaskTimeScheduleList((prevEvents) => {
-            const updatedEvents = [...prevEvents];
-
-            updatedEvents.push({
-              taskId: parseInt(`${newEventId}`),
-              id: uuidv4(),
-              uuid: uuidData,
-              title: newEvent.title || '',
-              start: newEvent.start || new Date(),
-              end: newEvent.end || new Date(),
-              type: ItemStartType.TASK,
-              isStart: newEvent.extendedProps.isStart,
-              allDay: false,
-              resourceId:
-                searchParams.get('view') === ViewOptions.WEEK
-                  ? isLessThanToday
-                    ? ItemScheduleType.ACTUAL
-                    : ItemScheduleType.PLANS
-                  : resourcePlan
-                    ? ItemScheduleType.PLANS
-                    : ItemScheduleType.ACTUAL,
-
-              startEditable: true,
-              planStartDate: String(newEvent.start) || '',
-              planEndDate: String(newEvent.end) || '',
-              largeColor: newEvent.extendedProps.largeColor,
-              deadline: newEvent.extendedProps.deadline,
-              statusId: newEvent.extendedProps.status.id,
-            });
-
-            return updatedEvents;
+          const hasOverlap = taskTimeScheduleList.some((item) => {
+            return (
+              newEvent.start < item.end &&
+              newEvent.end > item.start &&
+              item.resourceId === ItemScheduleType.ACTUAL &&
+              !resourcePlan &&
+              item.taskId === Number(newEventId)
+            );
           });
-          if (isTodaySchedule(newEvent.start) && resourcePlan) {
-            handleEditShowClockItem(parseInt(newEventId));
-          }
+          // Check overlap actual
+          if (hasOverlap) {
+            const externalEvents = document.getElementById('external-events');
+            const eventEl = document.createElement('div');
+            eventEl.className = 'fc-event';
+            eventEl.innerText = 'event';
+            eventEl.setAttribute('data-id', 'event');
 
-          await new Promise((resolve) => setTimeout(resolve, 100));
-
-          if (searchParams.get('view') === ViewOptions.WEEK) {
-            if (isLessThanToday) {
-              createActualDuration({
-                taskId: newEventId,
-                uuid: uuidData,
-                startedAt: convertDateString(`${newEvent.start}`),
-                pausedAt: convertDateString(`${newEvent.end}`),
-              });
-            } else {
-              // Set data time default for task frequently in kanban for color show task
-              setFrequentlyTasks((prevFrequentlyTasks) =>
-                prevFrequentlyTasks.map((item) => {
-                  if (`${item.id}` === `${newEventId}`) {
-                    return {
-                      ...item,
-                      taskSchedules: [
-                        {
-                          planStartDate: `${newEvent.start}`,
-                          planEndDate: `${newEvent.end}`,
-                        },
-                      ],
-                    };
-                  }
-                  return item;
-                }),
-              );
-              updateTaskDates({
-                taskId: parseInt(`${newEvent.id}`),
-                newStartDate: `${newEvent.start}`,
-                newEndDate: `${newEvent.end}`,
-              });
-
-              createPlanTime({
-                taskId: newEventId,
-                uuid: uuidData,
-                planStartDate: convertDateString(`${newEvent.start}`),
-                planEndDate: convertDateString(`${newEvent.end}`),
-              });
-            }
+            externalEvents?.appendChild(eventEl);
+            info.event.remove();
           } else {
-            if (resourcePlan) {
-              // Set data time default for task frequently in kanban for color show task
-              setFrequentlyTasks((prevFrequentlyTasks) =>
-                prevFrequentlyTasks.map((item) => {
-                  if (`${item.id}` === `${newEventId}`) {
-                    return {
-                      ...item,
-                      taskSchedules: [
-                        {
-                          planStartDate: `${newEvent.start}`,
-                          planEndDate: `${newEvent.end}`,
-                        },
-                      ],
-                    };
-                  }
-                  return item;
-                }),
-              );
-              updateTaskDates({
-                taskId: parseInt(`${newEvent.id}`),
-                newStartDate: `${newEvent.start}`,
-                newEndDate: `${newEvent.end}`,
+            info.view.calendar.refetchEvents();
+
+            // Add new data into schedule
+            setTaskTimeScheduleList((prevEvents) => {
+              const updatedEvents = [...prevEvents];
+
+              updatedEvents.push({
+                taskId: parseInt(`${newEventId}`),
+                id: uuidv4(),
+                uuid: uuidData,
+                title: newEvent.title || '',
+                start: newEvent.start || new Date(),
+                end: newEvent.end || new Date(),
+                type: ItemStartType.TASK,
+                isStart: newEvent.extendedProps.isStart,
+                allDay: false,
+                resourceId:
+                  searchParams.get('view') === ViewOptions.WEEK
+                    ? isLessThanToday
+                      ? ItemScheduleType.ACTUAL
+                      : ItemScheduleType.PLANS
+                    : resourcePlan
+                      ? ItemScheduleType.PLANS
+                      : ItemScheduleType.ACTUAL,
+
+                startEditable: true,
+                planStartDate: String(newEvent.start) || '',
+                planEndDate: String(newEvent.end) || '',
+                largeColor: newEvent.extendedProps.largeColor,
+                deadline: newEvent.extendedProps.deadline,
+                statusId: newEvent.extendedProps.status.id,
               });
 
-              createPlanTime({
-                taskId: newEventId,
-                uuid: uuidData,
-                planStartDate: convertDateString(`${newEvent.start}`),
-                planEndDate: convertDateString(`${newEvent.end}`),
-              });
+              return updatedEvents;
+            });
+            if (isTodaySchedule(newEvent.start) && resourcePlan) {
+              handleEditShowClockItem(parseInt(newEventId));
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            if (searchParams.get('view') === ViewOptions.WEEK) {
+              if (isLessThanToday) {
+                createActualDuration({
+                  taskId: newEventId,
+                  uuid: uuidData,
+                  startedAt: convertDateString(`${newEvent.start}`),
+                  pausedAt: convertDateString(`${newEvent.end}`),
+                });
+              } else {
+                // Set data time default for task frequently in kanban for color show task
+                setFrequentlyTasks((prevFrequentlyTasks) =>
+                  prevFrequentlyTasks.map((item) => {
+                    if (`${item.id}` === `${newEventId}`) {
+                      return {
+                        ...item,
+                        taskSchedules: [
+                          {
+                            planStartDate: `${newEvent.start}`,
+                            planEndDate: `${newEvent.end}`,
+                          },
+                        ],
+                      };
+                    }
+                    return item;
+                  }),
+                );
+                updateTaskDates({
+                  taskId: parseInt(`${newEvent.id}`),
+                  newStartDate: `${newEvent.start}`,
+                  newEndDate: `${newEvent.end}`,
+                });
+
+                createPlanTime({
+                  taskId: newEventId,
+                  uuid: uuidData,
+                  planStartDate: convertDateString(`${newEvent.start}`),
+                  planEndDate: convertDateString(`${newEvent.end}`),
+                });
+              }
             } else {
-              createActualDuration({
-                taskId: newEventId,
-                uuid: uuidData,
-                startedAt: convertDateString(`${newEvent.start}`),
-                pausedAt: convertDateString(`${newEvent.end}`),
-              });
+              if (resourcePlan) {
+                // Set data time default for task frequently in kanban for color show task
+                setFrequentlyTasks((prevFrequentlyTasks) =>
+                  prevFrequentlyTasks.map((item) => {
+                    if (`${item.id}` === `${newEventId}`) {
+                      return {
+                        ...item,
+                        taskSchedules: [
+                          {
+                            planStartDate: `${newEvent.start}`,
+                            planEndDate: `${newEvent.end}`,
+                          },
+                        ],
+                      };
+                    }
+                    return item;
+                  }),
+                );
+                updateTaskDates({
+                  taskId: parseInt(`${newEvent.id}`),
+                  newStartDate: `${newEvent.start}`,
+                  newEndDate: `${newEvent.end}`,
+                });
+
+                createPlanTime({
+                  taskId: newEventId,
+                  uuid: uuidData,
+                  planStartDate: convertDateString(`${newEvent.start}`),
+                  planEndDate: convertDateString(`${newEvent.end}`),
+                });
+              } else {
+                createActualDuration({
+                  taskId: newEventId,
+                  uuid: uuidData,
+                  startedAt: convertDateString(`${newEvent.start}`),
+                  pausedAt: convertDateString(`${newEvent.end}`),
+                });
+              }
             }
           }
         }
@@ -3139,6 +3143,7 @@ const TimeSchedule = memo(
         }
       },
     });
+
     useEffect(() => {
       if (authenticatedUser) {
         const value = authenticatedUser.setting?.scheduleZoom as number;
@@ -3327,7 +3332,7 @@ const TimeSchedule = memo(
                 )}
               </div>
               <div
-                className={`schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll  `}>
+                className={`schedule-custom relative h-[calc(100vh_-_184px)]  w-full overflow-y-scroll`}>
                 <FullCalendar
                   ref={calendarRef}
                   plugins={[

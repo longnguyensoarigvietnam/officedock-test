@@ -20,7 +20,7 @@ import {
   TransformedUser,
   UserTotalStatus,
 } from '@interfaces/task';
-import { MAX_HEX_COLOR_VALUE } from '@constants';
+import { MAX_HEX_COLOR_VALUE, SKILL_MAP_STEPS } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
 import moment from 'moment';
@@ -777,3 +777,40 @@ export const getCompareLineChartEnableViews = (
 
   return [];
 };
+// Get step with object
+export function getSkillStep(step: string) {
+  const match = step.match(/(?:レベル|ステップ)(\d)/);
+  if (!match) return null;
+
+  const stepIndex = parseInt(match[1], 10) - 1;
+  return SKILL_MAP_STEPS[stepIndex] || null;
+}
+// Get level number
+export function extractLevelNumber(input: string): number | null {
+  const match = input.match(/レベル(\d+)/);
+  if (!match) return null;
+  return parseInt(match[1], 10);
+}
+// Get step number
+export function extractStepNumber(step: string): number {
+  const match = step.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 1;
+}
+// Get last character
+export const getLastChar = (str: string): string => {
+  return str.charAt(str.length - 1);
+};
+// Convert time to hour string
+export function timeStringToHours(timeStr: string): number {
+  if (!timeStr) return 0;
+
+  const parts: string[] = timeStr.split(':');
+  if (parts.length !== 3) return 0;
+
+  const [hoursStr, _minutesStr, _secondsStr] = parts;
+  const hours: number = parseInt(hoursStr, 10);
+
+  if (isNaN(hours)) return 0;
+
+  return hours;
+}

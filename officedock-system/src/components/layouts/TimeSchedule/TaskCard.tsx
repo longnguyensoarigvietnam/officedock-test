@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { ChangeEvent, useContext, useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
@@ -6,6 +7,8 @@ import { EventContentArg } from '@fullcalendar/core/index.js';
 
 import ImageRound from '@components/common/ImageRound';
 import WarningStartTaskModal from '@components/modals/WarningStartTaskModal';
+import PopupDetail from './PopupDetail';
+import PopupDetailEvent from './PopupDetailEvent';
 
 import { apiRouters } from '@constants/routers';
 import { NO_SETTING } from '@constants';
@@ -21,9 +24,6 @@ import {
   isMoreThanFifteenMinutes,
   isMoreThanThirtyMinutes,
 } from '@utils/date';
-import { createPortal } from 'react-dom';
-import PopupDetail from './PopupDetail';
-import PopupDetailEvent from './PopupDetailEvent';
 import { TaskTimeSchedule } from '@interfaces/task';
 import { EventEditFormData } from '@interfaces/calendar';
 
@@ -446,7 +446,7 @@ const TaskCard = ({
         setIsSmallItem(true);
       }
     }
-  }, [isOptionZoomSchedule, slotHeight]);
+  }, [isOptionZoomSchedule, slotHeight, event]);
   useEffect(() => {
     if (isShiftPressed) {
       setIsHovering(false);
