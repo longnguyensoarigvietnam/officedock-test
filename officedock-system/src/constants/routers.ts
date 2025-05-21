@@ -484,6 +484,7 @@ export const apiRouters = {
   MANAGE_SKILL_MAPS: '/manage-skill-maps/',
   SKILL_MAPS_COMMENT: (id: string) => `/skill-maps/${id}/comments`,
   SKILL_MAPS_LEVEL_UP: (id: string) => `/skill-maps/${id}/level-up`,
+  SAVE_SKILL_MAPS_LEVEL_UP_DRAFT: (id: string) => `/skill-maps/${id}/skill-map-level/`,
 
   // SUBMIT LEVELS
   SUBMIT_LEVELS_LIST: '/submit-levels/',

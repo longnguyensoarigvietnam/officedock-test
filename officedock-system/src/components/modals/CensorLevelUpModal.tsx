@@ -41,13 +41,15 @@ const CensorLevelUpModal = memo(
       {
         item: string;
         isChecked: boolean;
+        id: number;
       }[]
     >(
       submitLevelUpDetail.skillMapSkillLevel.items
-        ? submitLevelUpDetail.skillMapSkillLevel.items.map((item) => {
+        ? submitLevelUpDetail.skillMapSkillLevel.items.map((item, index) => {
             return {
               item: item.item,
               isChecked: false,
+              id: index,
             };
           })
         : [],
@@ -219,7 +221,9 @@ const CensorLevelUpModal = memo(
             </div>
           ) : currentStep == 3 ? (
             <p className="text-[#0068B6] font-medium text-sm">
-              この内容で承認しますか？
+              {selectRejectOption
+                ? 'この内容で差し戻しますか？'
+                : 'この内容で承認しますか？'}
             </p>
           ) : (
             <></>
@@ -241,7 +245,8 @@ const CensorLevelUpModal = memo(
                           SKILL_MAP_STEPS.find((step) =>
                             step.label.includes(
                               getLastChar(
-                                submitLevelUpDetail.progression.stepBeforeSubmit,
+                                submitLevelUpDetail.progression
+                                  .stepBeforeSubmit,
                               ),
                             ),
                           )?.color || '#0068B6',
@@ -319,7 +324,10 @@ const CensorLevelUpModal = memo(
                               onChange={() => {
                                 setItemStatusList((prev) =>
                                   prev.map((itemWithStatus) => {
-                                    if (itemWithStatus.item === item.item) {
+                                    if (
+                                      itemWithStatus.item === item.item &&
+                                      itemWithStatus.id == index
+                                    ) {
                                       return {
                                         ...itemWithStatus,
                                         isChecked: !itemWithStatus.isChecked,
@@ -332,7 +340,8 @@ const CensorLevelUpModal = memo(
                               isChecked={
                                 itemStatusList.find(
                                   (itemWithStatus) =>
-                                    itemWithStatus.item == item.item,
+                                    itemWithStatus.item == item.item &&
+                                    itemWithStatus.id == index,
                                 )?.isChecked
                               }
                             />
@@ -473,7 +482,12 @@ const CensorLevelUpModal = memo(
                       onSubmit({
                         status: SubmitLevelStatus.REJECTED,
                         comment,
-                        items: itemStatusList,
+                        items: itemStatusList.map((item) => {
+                          return {
+                            item: item.item,
+                            isChecked: item.isChecked,
+                          };
+                        }),
                         measureCount: measureCount!,
                         measureTime: measureTime!,
                         lookBackInterval: lookBackInterval!,
@@ -493,7 +507,12 @@ const CensorLevelUpModal = memo(
                       onSubmit({
                         status: SubmitLevelStatus.APPROVAL,
                         comment,
-                        items: itemStatusList,
+                        items: itemStatusList.map((item) => {
+                          return {
+                            item: item.item,
+                            isChecked: item.isChecked,
+                          };
+                        }),
                       });
                     }
                   }}

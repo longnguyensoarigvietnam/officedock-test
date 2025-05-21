@@ -7,7 +7,11 @@ import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
 import PeopleDropdown from '@components/common/Dropdown/PeopleDropdown';
 
-import { SkillMapLevelUp, SubmitLevelUpRequest } from '@interfaces/skills';
+import {
+  SaveLevelUpDraftRequest,
+  SkillMapLevelUp,
+  SubmitLevelUpRequest,
+} from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { SKILL_MAP_STEPS } from '@constants';
@@ -20,7 +24,9 @@ export type SubmitLevelUpModalProps = {
     staffId: number;
   };
   isSuccessSubmitLevelUp: boolean;
-  onCloseAndSave: () => void;
+  onCloseAndSave: (
+    data: SaveLevelUpDraftRequest & { skillMapLevelId: number },
+  ) => void;
   onClose: () => void;
   onSubmitLevelUp: (data: SubmitLevelUpRequest) => void;
 };
@@ -38,13 +44,15 @@ const SubmitLevelUpModal = memo(
       {
         item: string;
         isChecked: boolean;
+        id: number;
       }[]
     >(
       submitLevelUpDetail.items
-        ? submitLevelUpDetail.items.map((item) => {
+        ? submitLevelUpDetail.items.map((item, index) => {
             return {
-              item: item,
-              isChecked: false,
+              item: item.item,
+              isChecked: item.isChecked,
+              id: index,
             };
           })
         : [],
@@ -52,8 +60,11 @@ const SubmitLevelUpModal = memo(
     const [approverOptions, setApproverOptions] = useState<
       OptionDropdownType[]
     >([]);
-    const [selectedApproverId, setSelectedApproverId] = useState<number>();
-    const [showApproverErrorValidation, setShowApproverErrorValidation] = useState<boolean>(false)
+    const [selectedApproverId, setSelectedApproverId] = useState<number | null>(
+      null,
+    );
+    const [showApproverErrorValidation, setShowApproverErrorValidation] =
+      useState<boolean>(false);
 
     useEffect(() => {
       if (submitLevelUpDetail) {
@@ -67,6 +78,9 @@ const SubmitLevelUpModal = memo(
             };
           }),
         );
+        if (submitLevelUpDetail.approver) {
+          setSelectedApproverId(submitLevelUpDetail.approver.id);
+        }
       }
     }, [submitLevelUpDetail]);
 
@@ -149,35 +163,41 @@ const SubmitLevelUpModal = memo(
                   振り返ってみましょう
                 </p>
                 <div className="flex flex-col gap-2 justify-start">
-                  {submitLevelUpDetail.items.map((item, index) => {
-                    return (
-                      <div key={index} className="flex gap-2">
-                        <Checkbox
-                          classLabel="text-black text-sm font-medium"
-                          label={item}
-                          onChange={() => {
-                            setItemStatusList((prev) =>
-                              prev.map((itemWithStatus) => {
-                                if (itemWithStatus.item === item) {
-                                  return {
-                                    ...itemWithStatus,
-                                    isChecked: !itemWithStatus.isChecked,
-                                  };
-                                }
-                                return itemWithStatus;
-                              }),
-                            );
-                          }}
-                          isChecked={
-                            itemStatusList.find(
-                              (itemWithStatus) =>
-                                itemWithStatus.item == item,
-                            )?.isChecked
-                          }
-                        />
-                      </div>
-                    );
-                  })}
+                  {submitLevelUpDetail.items &&
+                    submitLevelUpDetail.items.length > 0 &&
+                    submitLevelUpDetail.items.map((item, index) => {
+                      return (
+                        <div key={index} className="flex gap-2">
+                          <Checkbox
+                            classLabel="text-black text-sm font-medium"
+                            label={item.item}
+                            onChange={() => {
+                              setItemStatusList((prev) =>
+                                prev.map((itemWithStatus) => {
+                                  if (
+                                    itemWithStatus.item === item.item &&
+                                    itemWithStatus.id == index
+                                  ) {
+                                    return {
+                                      ...itemWithStatus,
+                                      isChecked: !itemWithStatus.isChecked,
+                                    };
+                                  }
+                                  return itemWithStatus;
+                                }),
+                              );
+                            }}
+                            isChecked={
+                              itemStatusList.find(
+                                (itemWithStatus) =>
+                                  itemWithStatus.item == item.item &&
+                                  itemWithStatus.id == index,
+                              )?.isChecked
+                            }
+                          />
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
               <div className="flex w-full flex-col gap-1 justify-start">
@@ -191,6 +211,9 @@ const SubmitLevelUpModal = memo(
                     classNameOption="!text-xs"
                     classNameError="!text-xs"
                     options={approverOptions}
+                    selectedOption={approverOptions.find(
+                      (element) => element.value == selectedApproverId,
+                    )}
                     iconSize={24}
                     onChange={(e) => {
                       setSelectedApproverId(Number(e.value));
@@ -203,7 +226,20 @@ const SubmitLevelUpModal = memo(
                 <Button
                   variant="outline"
                   className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-[#0068B6] bg-white"
-                  onClick={onCloseAndSave}>
+                  onClick={() => {
+                    onCloseAndSave({
+                      items: itemStatusList.map((item) => {
+                        return {
+                          item: item.item,
+                          isChecked: item.isChecked,
+                        };
+                      }),
+                      approver: Number(selectedApproverId),
+                      skillMapLevelId: Number(
+                        submitLevelUpDetail.skillMapSkillLevel,
+                      ),
+                    });
+                  }}>
                   保存して閉じる
                 </Button>
                 <Button
@@ -211,9 +247,9 @@ const SubmitLevelUpModal = memo(
                   disabled={itemStatusList.some((item) => !item.isChecked)}
                   className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-white"
                   onClick={() => {
-                    if(!selectedApproverId) {
+                    if (!selectedApproverId) {
                       setShowApproverErrorValidation(true);
-                      return
+                      return;
                     }
                     onSubmitLevelUp({
                       staffId: submitLevelUpDetail.staffId,

@@ -359,12 +359,17 @@ export interface SkillMapLevelUp {
     id: number;
     name: string;
   };
+  approver: Staff;
   approvers: Staff[];
   levelBeforeSubmit: string;
   levelAfterSubmit: string;
   stepBeforeSubmit: string;
   stepAfterSubmit: string;
-  items: string[];
+  items: {
+    item: string,
+    isChecked: boolean;
+  }[];
+  skillMapSkillLevel: number
 }
 
 export interface SubmitLevelUpRequest {
@@ -468,4 +473,11 @@ export interface CensorSubmittedLevelRequest {
   measureTime?: number;
   lookBackInterval?: number;
   lookBackType?: SkillMapLookBackType;
+}
+export interface SaveLevelUpDraftRequest {
+  items: {
+    item: string;
+    isChecked: boolean;
+  }[];
+  approver: number
 }
