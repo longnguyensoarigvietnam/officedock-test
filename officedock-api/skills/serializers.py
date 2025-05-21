@@ -2,6 +2,7 @@ from datetime import datetime
 
 from rest_framework import serializers
 
+from base.messages import ERROR_MESSAGES
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import get_common_categories
 from organizations.models import Organization, OrganizationsStatisticCategories
@@ -80,6 +81,25 @@ class CategorySerializer(serializers.Serializer):
         required=False,
         allow_null=True,
     )
+
+    def validate(self, attrs):
+        """
+        Validate data
+        """
+        large_category = attrs.get("large_statistic_category")
+        medium_category = attrs.get("medium_statistic_category")
+        small_category = attrs.get("small_statistic_category")
+
+        if not OrganizationsStatisticCategories.objects.filter(
+            large_statistic_category=large_category,
+            medium_statistic_category=medium_category,
+            small_statistic_category=small_category,
+        ).exists():
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["statistic_category_not_exists"]}
+            )
+
+        return attrs
 
 
 class SkillSerializer(serializers.ModelSerializer):
