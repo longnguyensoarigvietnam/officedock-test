@@ -5,7 +5,8 @@ from django.db.models import Min
 from django.utils.timezone import now
 
 from roles.constants import SelectionResultOptions
-from skills.constants import LookBackTypes
+from skills.constants import LookBackTypes, SkillStep, SkillLevel
+from skills.models import SkillMap
 from users.models import RoleDetail
 
 
@@ -63,3 +64,43 @@ def get_list_org_hierarchies(user, permission_name):
             organizations = organizations.filter(id__in=org_ids)
 
     return organizations
+
+
+def get_next_progression(
+    current_step, current_level, skill=None, organization=None, staff=None
+):
+    """Returns the next (step, level) progression based on current step and level."""
+    steps = list(SkillStep)
+    levels = list(SkillLevel)
+    try:
+        current_level_index = levels.index(SkillLevel(current_level))
+        current_step_index = steps.index(SkillStep(current_step))
+    except ValueError:
+        return None  # Invalid input
+
+    if current_level_index < len(levels) - 1:
+        # Move to next level in same step
+        return (
+            steps[current_step_index].value,
+            levels[current_level_index + 1].value,
+        )
+    else:
+        if staff and skill and organization:
+            exists_next_skill_map = SkillMap.objects.filter(
+                skill=skill,
+                step=steps[current_step_index + 1].value,
+                organization=organization,
+                staff=staff,
+            ).exists()
+            # If not exists next step, replace next step is current step
+            if not exists_next_skill_map:
+                return current_step, current_level
+        # Move to LEVEL_1 in next step, if exists
+        if current_step_index < len(steps) - 1:
+            return steps[current_step_index + 1].value, SkillLevel.LEVEL_1.value
+        else:
+            # Already at final step and final level
+            return (
+                steps[current_step_index].value,
+                levels[current_level_index].value,
+            )

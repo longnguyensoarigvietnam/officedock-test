@@ -4,12 +4,13 @@ from rest_framework.exceptions import ValidationError
 from base.messages import ERROR_MESSAGES
 from organizations.models import Organization
 from organizations.serializers import OrganizationSerializer
-from skills.constants import SkillLevel, get_next_progression, LookBackTypes
+from skills.constants import SkillLevel, LookBackTypes
 from skills.models import Skill, SkillMapSkillLevel, SkillMap
 from skills.serializers import (
     BaseSkillHierarchySerializer,
     SkillMapSkillLevelSerializer,
 )
+from skills.utils import get_next_progression
 from submit_levels.constants import SubmitLevelStatus
 from submit_levels.models import SubmitLevelHistory
 from users.models import User
@@ -179,7 +180,11 @@ class ListSubmitLevelSerializer(SubmitLevelSerializer):
         step_before_submit = obj.step_before_submit
         level_before_submit = obj.level_before_submit
         step_after_submit, level_after_submit = get_next_progression(
-            step_before_submit, level_before_submit
+            step_before_submit,
+            level_before_submit,
+            skill=obj.skill,
+            organization=obj.organization,
+            staff=obj.staff,
         )
 
         return {

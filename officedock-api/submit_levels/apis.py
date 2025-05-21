@@ -26,10 +26,9 @@ from common.utils import send_web_socket_event
 from skills.constants import (
     DEFAULT_TIME,
     SkillLevel as SkillLevelEnum,
-    get_next_progression,
 )
 from skills.models import SkillMap, SkillMapSkillLevel, Skill
-from skills.utils import get_lookback_time
+from skills.utils import get_lookback_time, get_next_progression
 from submit_levels.constants import SubmitLevelStatus
 from submit_levels.models import SubmitLevelHistory
 from submit_levels.serializers import (
@@ -188,8 +187,13 @@ class SubmitLevelViewSet(
                 else:
                     is_not_max_level = False
             elif (
-                step_after_submit == instance.step_before_submit
-                and level_after_submit == SkillLevelEnum.LEVEL_3.value
+                level_after_submit == SkillLevelEnum.LEVEL_3.value
+                and not SkillMap.objects.filter(
+                    organization=instance.organization,
+                    staff=instance.staff,
+                    step=step_after_submit,
+                    skill=instance.skill,
+                ).exists()
             ):
                 # Update last skill map
                 SkillMap.objects.filter(
@@ -212,6 +216,10 @@ class SubmitLevelViewSet(
                         skill_level.look_back_interval,
                     )
                     start_look_back_at = now()
+                items = [
+                    {"item": item, "is_checked": False}
+                    for item in skill_level.items
+                ]
                 # Create new Skill Map Skill Level
                 SkillMapSkillLevel.objects.create(
                     skill_level=skill_level,
@@ -225,8 +233,15 @@ class SubmitLevelViewSet(
                     measure_count=skill_level.measure_count,
                     look_back_interval=look_back_interval,
                     look_back_type=look_back_type,
-                    items=skill_level.items,
+                    items=items,
                 )
+            step_after_submit, level_after_submit = get_next_progression(
+                instance.step_before_submit,
+                instance.level_before_submit,
+                skill=instance.skill,
+                organization=instance.organization,
+                staff=instance.staff,
+            )
             submit_level = serializer.save(
                 level_after_submit=level_after_submit,
                 step_after_submit=step_after_submit,

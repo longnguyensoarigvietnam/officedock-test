@@ -225,7 +225,10 @@ class SkillMapSkillLevelSerializer(serializers.ModelSerializer):
         data = []
         if obj.items:
             for item in obj.items:
-                data.append(item["item"])
+                if isinstance(item, dict):
+                    data.append(item["item"])
+                else:
+                    data.append(item)
         return data
 
 
