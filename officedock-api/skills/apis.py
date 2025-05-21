@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
@@ -328,8 +328,20 @@ class SkillMapViewSet(
             user = get_object_or_404(User, id=user_id)
         organizations = user.organizations.all()
         if organization_id:
-            organizations = organizations.filter(id=organization_id)
-            organization = organizations.first()
+            # Get the single organization
+            organization = organizations.filter(id=organization_id).first()
+            if not organization:
+                raise NotFound(
+                    {"detail": ERROR_MESSAGES["organization_not_exists"]}
+                )
+            # Combine, putting the organization required one first
+            organizations = user.organizations.annotate(
+                priority=Case(
+                    When(id=organization_id, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            ).order_by("priority")
             users = list(organization.users.all().order_by("created_at"))
             # Find the user's position in the list
             try:
