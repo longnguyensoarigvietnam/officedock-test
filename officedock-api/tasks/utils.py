@@ -169,7 +169,6 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
     task_categories = task.categories.first()
     if not task_categories:
         return
-    # TODO: Wait QA 96
     org_cats_filter = Q(organization=task.organization)
     if task_categories.large_statistic_category:
         org_cats_filter &= Q(

@@ -225,6 +225,7 @@ class SubmitLevelViewSet(
                     measure_count=skill_level.measure_count,
                     look_back_interval=look_back_interval,
                     look_back_type=look_back_type,
+                    items=skill_level.items,
                 )
             submit_level = serializer.save(
                 level_after_submit=level_after_submit,

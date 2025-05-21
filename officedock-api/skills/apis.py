@@ -519,6 +519,15 @@ class SkillMapViewSet(
             step_after_submit, level_after_submit = get_next_progression(
                 skill_map.step, skill_map_skill_level.level
             )
+            # Get draft submit level
+            draft_submit_level = SubmitLevelHistory.objects.filter(
+                skill=skill_map.skill,
+                step_before_submit=skill_map.step,
+                level_before_submit=skill_map_skill_level.level,
+                organization=skill_map.organization,
+                staff=skill_map.staff,
+                status=SubmitLevelStatus.DRAFT.value,
+            ).first()
             # Get users have permission update skill map
             permission = Screens.SKILL_MAP.value + "_" + Actions.UPDATE.value
             selection_results = [SelectionResultOptions.ALLOWED.value]
@@ -546,7 +555,10 @@ class SkillMapViewSet(
                 "level_before_submit": skill_map_skill_level.level,
                 "step_after_submit": step_after_submit,
                 "level_after_submit": level_after_submit,
-                "items": skill_map_skill_level.skill_level.items,  # FIXME: Check QA101
+                "items": skill_map_skill_level.items,
+                "approver": BaseUserSerializer(draft_submit_level.approver).data
+                if draft_submit_level
+                else None,
                 "approvers": BaseUserSerializer(users, many=True).data,
             }
 
@@ -579,14 +591,16 @@ class SkillMapViewSet(
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
         # Create draft submit level
-        SubmitLevelHistory.objects.create(
+        SubmitLevelHistory.objects.update_or_create(
             skill=skill_map.skill,
             step_before_submit=skill_map.step,
             level_before_submit=skill_map_level.level,
             organization=skill_map.organization,
             staff=skill_map.staff,
             status=SubmitLevelStatus.DRAFT.value,
-            approver=validated_data["approver"],
+            defaults={
+                "approver": validated_data["approver"],
+            },
         )
         skill_map_level.items = validated_data["items"]
         skill_map_level.save()
@@ -727,9 +741,25 @@ class SkillViewSet(
                     level_before_submit=skill_map_level.level,
                     status=SubmitLevelStatus.REJECT.value,
                 ).exists()
+                # Get skill level
+                skill_level = skill_map_level.skill_level
+                # Transform items of skill map level to items of skill level
+                skill_map_items_format = (
+                    [item["item"] for item in skill_map_level.items]
+                    if skill_map_level.items
+                    else None
+                )
+                # Get new skill level items if skill level items is different with skill map level items
+                data = (
+                    [
+                        {"item": item, "is_checked": False}
+                        for item in skill_level.items
+                    ]
+                    if (skill_level.items != skill_map_items_format)
+                    else skill_map_level.items
+                )
+
                 if not check_status_reject_exists:
-                    # Get skill level
-                    skill_level = skill_map_level.skill_level
                     # Set next_submit_at if skill level has look back
                     next_submit_at = None
                     start_lookback_at = None
@@ -739,11 +769,9 @@ class SkillViewSet(
                             skill_level.look_back_interval,
                         )
                         start_lookback_at = now()
-                    # FIXME: Check QA101
-                    data = []
-                    for item in skill_level.items:
-                        data.append({"item": item, "is_checked": False})
-                    skill_map_skill_levels.update(
+                    SkillMapSkillLevel.objects.filter(
+                        id=skill_map_level.id
+                    ).update(
                         start_lookback_at=start_lookback_at,
                         next_submit_at=next_submit_at,
                         measure_count=skill_level.measure_count,
@@ -752,6 +780,10 @@ class SkillViewSet(
                         look_back_interval=skill_level.look_back_interval,
                         items=data,
                     )
+                else:
+                    SkillMapSkillLevel.objects.filter(
+                        id=skill_map_level.id
+                    ).update(items=data)
 
     def _create_skill_map(self, skill, staff):
         """
