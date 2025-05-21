@@ -1,5 +1,5 @@
 'use client';
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 
 import Modal from '@components/common/Modal';
 import ImageRound from '@components/common/ImageRound';
@@ -68,6 +68,10 @@ const CensorLevelUpModal = memo(
     );
     const [lookBackType, setLookBackType] =
       useState<SkillMapLookBackType | null>(null);
+    const [showLookBackIntervalErr, setShowLookBackIntervalErr] =
+      useState<boolean>(false);
+    const [showLookBackTypeErr, setShowLookBackTypeErr] =
+      useState<boolean>(false);
 
     const resetMeasureFieldsWhenChangeRadioBtn = () => {
       setMeasureCount(null);
@@ -75,6 +79,27 @@ const CensorLevelUpModal = memo(
       setLookBackInterval(null);
       setLookBackType(null);
     };
+
+    useEffect(() => {
+      if (submitLevelUpDetail) {
+        setMeasureCount(submitLevelUpDetail.skillMapSkillLevel.measureCount);
+        setMeasureTime(submitLevelUpDetail.skillMapSkillLevel.measureTime);
+        setLookBackInterval(
+          submitLevelUpDetail.skillMapSkillLevel.lookBackInterval,
+        );
+        setLookBackType(
+          submitLevelUpDetail.skillMapSkillLevel
+            .lookBackType as SkillMapLookBackType,
+        );
+        if (submitLevelUpDetail.skillMapSkillLevel.measureCount != null) {
+          setLevelUpConditionBy(LevelUpConditionBy.NUMBER_OF_TIMES);
+        } else if (submitLevelUpDetail.skillMapSkillLevel.measureTime != null) {
+          setLevelUpConditionBy(LevelUpConditionBy.MEASUREMENT_TIME);
+        } else {
+          setLevelUpConditionBy(LevelUpConditionBy.PERIOD);
+        }
+      }
+    }, [submitLevelUpDetail]);
 
     const renderConditionByRadioButton = (
       levelUpConditionBy: string | undefined,
@@ -86,7 +111,7 @@ const CensorLevelUpModal = memo(
               <p className="text-[13px] font-normal">対応タスクを</p>
               <div className="w-[50px]">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] border-[#77858F] rounded-md`}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -108,7 +133,7 @@ const CensorLevelUpModal = memo(
               <p className="text-[13px] font-normal">対応タスクを</p>
               <div className="w-[50px]">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] border-[#77858F] rounded-md`}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -130,7 +155,7 @@ const CensorLevelUpModal = memo(
               <p className="text-[13px] font-normal">振り返りの期間</p>{' '}
               <div className="w-[36px] mr-3">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md ${showLookBackIntervalErr ? 'border-error' : 'border-[#77858F]'}`}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -138,6 +163,7 @@ const CensorLevelUpModal = memo(
                     const value = e.target.value;
                     if (ONLY_DIGITS_REGEX.test(value)) {
                       setLookBackInterval(Number(value));
+                      setShowLookBackIntervalErr(false);
                     }
                   }}
                   value={lookBackInterval || ''}
@@ -145,14 +171,16 @@ const CensorLevelUpModal = memo(
               </div>
               <div className="w-[68px]">
                 <Dropdown
-                  className={`h-[34px] !w-[68px] !py-1 !pr-0 text-xs !border-[1px] !rounded-md`}
+                  className={`h-[34px] !w-[68px] !py-1 !pr-0 text-xs !border-[1px] !rounded-md ${showLookBackTypeErr ? 'border-error' : 'border-[#77858F]'}`}
                   classNameTextData="!text-xs"
                   classNameOption="!text-xs"
                   classNameError="!text-xs"
                   labelOptionClass="!pr-0"
                   options={LEVEL_UP_PERIOD_OPTIONS}
+                  selectedOption={LEVEL_UP_PERIOD_OPTIONS.find((option) => option.value == lookBackType)}
                   onChange={(e) => {
                     setLookBackType(e.value as SkillMapLookBackType);
+                    setShowLookBackTypeErr(false);
                   }}
                 />
               </div>
@@ -186,6 +214,21 @@ const CensorLevelUpModal = memo(
           </div>
         );
       } else if (lookBackInterval && lookBackType) {
+        let lookBackTypeText = '';
+        switch (lookBackType) {
+          case 'DAY':
+            lookBackTypeText = '日';
+            break;
+          case 'WEEK':
+            lookBackTypeText = '週間';
+            break;
+          case 'MONTH':
+            lookBackTypeText = 'ヶ月';
+            break;
+          case 'YEAR':
+            lookBackTypeText = '年';
+            break;
+        }
         return (
           <div className="text-black">
             <p className="text-sm font-medium mb-3">
@@ -193,7 +236,7 @@ const CensorLevelUpModal = memo(
             </p>
             <p className="text-[13px] font-normal">
               振り返りの期間{lookBackInterval}
-              {lookBackType}ごと
+              {lookBackTypeText}ごと
             </p>
           </div>
         );
@@ -477,6 +520,14 @@ const CensorLevelUpModal = memo(
                   variant="outline"
                   className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-[#0068B6] bg-white"
                   onClick={() => {
+                    if (lookBackInterval && !lookBackType) {
+                      setShowLookBackTypeErr(true);
+                      return;
+                    }
+                    if (!lookBackInterval && lookBackType) {
+                      setShowLookBackIntervalErr(true);
+                      return;
+                    }
                     setCurrentStep((prev) => prev + 1);
                     if (currentStep == 3) {
                       onSubmit({
