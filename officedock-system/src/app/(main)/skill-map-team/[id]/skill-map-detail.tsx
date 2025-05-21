@@ -266,6 +266,11 @@ export const SkillMapDetailByUser = ({
                             strokeColor = '#424EC1';
                             break;
                         }
+                        if (stepCompleted) {
+                          strokeColor = '#D2DBE1';
+                        } else if (isLocked || progressPercent == 0) {
+                          strokeColor = '#EBF1F7';
+                        }
 
                         return (
                           <div
@@ -275,7 +280,7 @@ export const SkillMapDetailByUser = ({
                               <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
                             ) : (
                               <div
-                                className="px-5 h-[90px] flex justify-between items-center w-full rounded-[6px] relative"
+                                className="px-5 h-[90px] flex gap-3 items-center w-full rounded-[6px] relative"
                                 style={{
                                   boxShadow: showTwinklingStars
                                     ? '0px 0px 20px 0px #36ACDE80'
@@ -310,9 +315,10 @@ export const SkillMapDetailByUser = ({
                                   </div>
                                 )}
 
-                                <div className="w-4/5 max-w-[4/5]">
-                                  <div className="flex justify-between items-center">
-                                    <p className="text-[16px] font-medium mb-4 max-w-[calc(100%_-_20px)] line-clamp-1 break-all">
+                                <div className="w-[calc(100%_-_72px)]">
+                                  <div className="flex justify-between items-start mb-4">
+                                    <p
+                                      className={`text-[16px] font-medium max-w-[calc(100%_-_20px)] line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
                                       {skill.skill?.name}
                                     </p>
                                     {hasComment ? (
@@ -335,17 +341,14 @@ export const SkillMapDetailByUser = ({
                                   <div>
                                     <SkillMapProgressBar
                                       value={progressPercent}
-                                      strokeColor={
-                                        isLocked ||
-                                        progressPercent == 0 ||
-                                        stepCompleted
-                                          ? '#D2DBE1'
-                                          : strokeColor
+                                      strokeColor={strokeColor}
+                                      trailColor={
+                                        stepCompleted ? '#D2DBE1' : '#EBF1F7'
                                       }
                                     />
                                   </div>
                                 </div>
-                                <div className="w-1/5 flex justify-end">
+                                <div className="w-[60px] flex justify-end">
                                   {' '}
                                   {renderTreasureForStep(
                                     Boolean(isLocked),

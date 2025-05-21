@@ -47,15 +47,20 @@ const ViewSkillMapCommentModal = memo(
             {currentComment.skill.name}
           </p>
           <div className="flex justify-between items-center w-full">
-            <div
-              className="opacity-50 hover:cursor-pointer"
-              onClick={handlePrev}>
-              <ImageRound
-                className="w-5 h-5"
-                src="/icons/chevron-left.svg"
-                name="Arrow left"
-              />
-            </div>
+            {currentIndex > 0 ? (
+              <div
+                className="opacity-50 hover:cursor-pointer"
+                onClick={handlePrev}>
+                <ImageRound
+                  className="w-5 h-5"
+                  src="/icons/chevron-left.svg"
+                  name="Arrow left"
+                />
+              </div>
+            ) : (
+              <div className="w-5 h-5"></div>
+            )}
+
             <div className="flex items-center gap-2">
               <div className="bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center opacity-55">
                 <p
@@ -122,15 +127,19 @@ const ViewSkillMapCommentModal = memo(
               </div>
             </div>
 
-            <div
-              className="opacity-50 hover:cursor-pointer"
-              onClick={handleNext}>
-              <ImageRound
-                className="w-5 h-5"
-                src="/icons/chevron-right.svg"
-                name="Arrow right"
-              />
-            </div>
+            {currentIndex < skillMapCommentList.length - 1 ? (
+              <div
+                className="opacity-50 hover:cursor-pointer"
+                onClick={handleNext}>
+                <ImageRound
+                  className="w-5 h-5"
+                  src="/icons/chevron-right.svg"
+                  name="Arrow right"
+                />
+              </div>
+            ) : (
+              <div className="w-5 h-5"></div>
+            )}
           </div>
           <p className="text-[#0068B6] text-[18px] font-medium">
             レベルアップしました！

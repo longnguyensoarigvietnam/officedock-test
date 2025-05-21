@@ -72,7 +72,7 @@ const ReviewSubmittedLevelUpModal = memo(
         onClose={() => {
           onClose();
         }}>
-        <div className="py-[40px] px-[20px] flex flex-col gap-4 items-center">
+        <div className="py-[40px] px-[20px] flex flex-col gap-5 items-center">
           {/* Header */}
           <p className="text-black font-medium text-[18px] max-w-full break-all text-center">
             {submitLevelUpDetail?.skill.name}
@@ -223,8 +223,10 @@ const ReviewSubmittedLevelUpModal = memo(
               {submitLevelUpDetail.comment}
             </p>
           </div>
+
+          {/* Close button */}
           <p
-            className="text-[#0068B6] font-medium text-[13px] hover:cursor-pointer"
+            className="text-[#0068B6] font-medium text-[13px] mt-2 hover:cursor-pointer"
             onClick={onClose}>
             閉じる
           </p>

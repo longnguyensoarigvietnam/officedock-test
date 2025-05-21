@@ -10,19 +10,22 @@ import ViewSkillMapCommentModal from '@components/modals/ViewSkillMapCommentModa
 import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
 
 import { apiRouters } from '@constants/routers';
-import { ERROR_CREATE_MESSAGE } from '@constants/message';
+import { ERROR_SAVE_MESSAGE, SUCCESS_SAVE_MESSAGE } from '@constants/message';
 
 import useSkillMapComment from '@hooks/useSkillMapComment';
 import useSkillMapLevelUp from '@hooks/useSkillMapLevelUp';
 import { useErrorToast } from '@hooks/useErrorToast';
 
 import {
+  SaveLevelUpDraftRequest,
   SkillMapByOrganization,
   SkillMapByOrganizationInfo,
   SkillMapComment,
   SkillMapLevelUp,
   SubmitLevelUpRequest,
 } from '@interfaces/skills';
+
+import { useToast } from '@providers/ToastProvider';
 
 import { getLastChar } from '@utils';
 
@@ -39,6 +42,7 @@ export const SkillMapByOrganizationPanel = ({
 }: SkillMapByOrganizationPanelProps) => {
   const MAX_LEVEL = 3;
   const showErrorToast = useErrorToast();
+  const { showToast } = useToast();
 
   // View comment
   const [openSkillMapCommentModal, setOpenSkillMapCommentModal] =
@@ -250,7 +254,49 @@ export const SkillMapByOrganizationPanel = ({
         setIsSuccessSubmitLevelUp(true);
       },
       onError: (error: AxiosError) => {
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
+        showErrorToast(error, ERROR_SAVE_MESSAGE);
+      },
+      onSettled: () => {},
+    },
+  );
+
+  const handleConfirmSaveLevelUpDraft = (
+    data: SaveLevelUpDraftRequest & { skillMapLevelId: number },
+  ) => {
+    saveLevelUpDraft(data);
+  };
+
+  const handleSaveLevelUpDraft = async (
+    data: SaveLevelUpDraftRequest & { skillMapLevelId: number },
+  ) => {
+    const { data: response } = await api.post(
+      `${apiRouters.SAVE_SKILL_MAPS_LEVEL_UP_DRAFT(
+        String(selectedSkillMapToSubmitLevelUp),
+      )}?id=${String(selectedSkillMapToSubmitLevelUp)}&skill_map_level_id=${String(data.skillMapLevelId)}`,
+      {
+        items: data.items,
+        approver: data.approver,
+      },
+    );
+    return response;
+  };
+
+  const { mutate: saveLevelUpDraft } = useMutation(
+    'handleSaveLevelUpDraft',
+    handleSaveLevelUpDraft,
+    {
+      onSuccess: () => {
+        setOpenSubmitLevelUpModal(false);
+        setSelectedSkillMapToSubmitLevelUp(null);
+        setSubmitLevelUpDetail(null);
+        setIsSuccessSubmitLevelUp(false);
+        showToast({
+          variant: 'success',
+          description: SUCCESS_SAVE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_SAVE_MESSAGE);
       },
       onSettled: () => {},
     },
@@ -324,6 +370,11 @@ export const SkillMapByOrganizationPanel = ({
                       strokeColor = '#424EC1';
                       break;
                   }
+                  if (stepCompleted) {
+                    strokeColor = '#D2DBE1';
+                  } else if (isLocked || progressPercent == 0) {
+                    strokeColor = '#EBF1F7';
+                  }
 
                   return (
                     <div
@@ -339,7 +390,7 @@ export const SkillMapByOrganizationPanel = ({
                         <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
                       ) : (
                         <div
-                          className="px-5 h-[90px] flex justify-between items-center w-full rounded-[6px] relative"
+                          className="px-5 h-[90px] flex gap-3 items-center w-full rounded-[6px] relative"
                           style={{
                             boxShadow: showTwinklingStars
                               ? '0px 0px 20px 0px #36ACDE80'
@@ -374,9 +425,10 @@ export const SkillMapByOrganizationPanel = ({
                             </div>
                           )}
 
-                          <div className="w-4/5 max-w-[4/5]">
-                            <div className="flex justify-between items-center">
-                              <p className="text-[16px] font-medium mb-4 max-w-[calc(100%_-_20px)] line-clamp-1 break-all">
+                          <div className="w-[calc(100%_-_72px)]">
+                            <div className="flex justify-between items-start mb-4">
+                              <p
+                                className={`text-[16px] font-medium max-w-[calc(100%_-_20px)] line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
                                 {skill.skill?.name}
                               </p>
                               {hasComment ? (
@@ -397,17 +449,14 @@ export const SkillMapByOrganizationPanel = ({
                             <div>
                               <SkillMapProgressBar
                                 value={progressPercent}
-                                strokeColor={
-                                  isLocked ||
-                                  progressPercent == 0 ||
-                                  stepCompleted
-                                    ? '#D2DBE1'
-                                    : strokeColor
+                                strokeColor={strokeColor}
+                                trailColor={
+                                  stepCompleted ? '#D2DBE1' : '#EBF1F7'
                                 }
                               />
                             </div>
                           </div>
-                          <div className="w-1/5 flex justify-end">
+                          <div className="w-[60px] flex justify-end">
                             {' '}
                             {renderTreasureForStep(
                               Boolean(isLocked),
@@ -474,12 +523,7 @@ export const SkillMapByOrganizationPanel = ({
           open={openSubmitLevelUpModal}
           submitLevelUpDetail={submitLevelUpDetail}
           isSuccessSubmitLevelUp={isSuccessSubmitLevelUp}
-          onCloseAndSave={() => {
-            setOpenSubmitLevelUpModal(false);
-            setSelectedSkillMapToSubmitLevelUp(null);
-            setSubmitLevelUpDetail(null);
-            setIsSuccessSubmitLevelUp(false);
-          }}
+          onCloseAndSave={(data) => handleConfirmSaveLevelUpDraft(data)}
           onClose={() => {
             setOpenSubmitLevelUpModal(false);
             setSelectedSkillMapToSubmitLevelUp(null);
