@@ -24,7 +24,6 @@ from organizations.serializers import (
 from skills.constants import (
     SkillLevel as SkillLevelConstants,
     SkillStep,
-    get_next_progression,
 )
 from skills.models import (
     StatisticCategory,
@@ -45,7 +44,7 @@ from skills.serializers import (
     DraftLevelUpSerializer,
 )
 from skills.filters import StatisticCategoryFilter
-from skills.utils import get_lookback_time
+from skills.utils import get_lookback_time, get_next_progression
 from submit_levels.constants import SubmitLevelStatus
 from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens, Actions, SelectionResultOptions
@@ -529,8 +528,13 @@ class SkillMapViewSet(
         data = {}
         if skill_map_skill_level:
             step_after_submit, level_after_submit = get_next_progression(
-                skill_map.step, skill_map_skill_level.level
+                skill_map.step,
+                skill_map_skill_level.level,
+                skill=skill_map.skill,
+                organization=skill_map.organization,
+                staff=skill_map.staff,
             )
+
             # Get draft submit level
             draft_submit_level = SubmitLevelHistory.objects.filter(
                 skill=skill_map.skill,
@@ -757,7 +761,10 @@ class SkillViewSet(
                 skill_level = skill_map_level.skill_level
                 # Transform items of skill map level to items of skill level
                 skill_map_items_format = (
-                    [item["item"] for item in skill_map_level.items]
+                    [
+                        item["item"] if isinstance(item, dict) else item
+                        for item in skill_map_level.items
+                    ]
                     if skill_map_level.items
                     else None
                 )
