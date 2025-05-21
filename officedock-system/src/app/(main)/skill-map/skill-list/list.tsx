@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ActionsSkillMapDetailModal from '@components/modals/ActionsSkillMapDetailModal';
 
-import { ScreenName, ServerStatusCode } from '@constants/enums';
+import { ServerStatusCode } from '@constants/enums';
 import { ALL_TEAMS_OPTION } from '@constants';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
@@ -15,9 +15,9 @@ import {
 } from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
 
-import useSkillMapInfo from '@hooks/useSkillMapList';
-import useOrganizationOptions from '@hooks/useFullOrganizationList';
 import useSkillMapUserDetail from '@hooks/useSkillMapUserDetail';
+import useListSkillsInSkillMap from '@hooks/useListSkillsInSkillMap';
+import useCreationDataTask from '@hooks/useCreationDataTask';
 
 import { useToast } from '@providers/ToastProvider';
 
@@ -46,19 +46,17 @@ const SkillList = () => {
   >([]);
 
   // Hooks
-  const { organizationOptions } = useOrganizationOptions({
-    current_screen: ScreenName.SKILL_MAP,
-  });
-  useSkillMapInfo({
+  const { creationDataTaskData } = useCreationDataTask({});
+  useListSkillsInSkillMap({
     organizationId: String(selectedOrganizationOption.value),
     onSuccess: (data) => {
-      setSkillMapByOrganizations(data.organizations);
+      setSkillMapByOrganizations(data);
     },
   });
 
   useEffect(() => {
-    if (organizationOptions) {
-      const organizationList = organizationOptions.map((org) => {
+    if (creationDataTaskData) {
+      const organizationList = creationDataTaskData.organizations.map((org) => {
         return {
           value: Number(org.id),
           label: org.name,
@@ -72,7 +70,7 @@ const SkillList = () => {
         ...organizationList,
       ]);
     }
-  }, [organizationOptions]);
+  }, [creationDataTaskData]);
 
   useSkillMapUserDetail({
     skillId: Number(selectedSkillMapId),

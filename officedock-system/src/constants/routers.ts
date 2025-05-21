@@ -477,6 +477,7 @@ export const apiRouters = {
   SKILL_MAPS_DESTROY: '/skill-maps/destroy',
   SKILL_MAPS_DETAIL: (id: string) => `/skill-maps/${id}/`,
   SKILL_MAPS_DETAIL_SKILL: '/skill-maps/group-steps/',
+  SKILL_MAPS_LIST_SKILLS: '/skill-maps/list-skills/',
 
   SKILL_MAPS_DETAIL_CATEGORIES: '/skill-maps/detail',
   SKILL_MAPS_RESET_INDEX: '/skill-maps/reset-index/',

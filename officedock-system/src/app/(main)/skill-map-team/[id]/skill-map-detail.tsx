@@ -1,0 +1,413 @@
+'use client';
+import { useState } from 'react';
+
+import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
+import ImageRound from '@components/common/ImageRound';
+import { TwinklingStar } from '@components/common/TwinklingStar';
+import ViewSkillMapCommentModal from '@components/modals/ViewSkillMapCommentModal';
+import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProgressBar';
+
+import {
+  SkillMapByOrganization,
+  SkillMapByOrganizationInfo,
+  SkillMapComment,
+} from '@interfaces/skills';
+
+import { getLastChar } from '@utils';
+
+import useSkillMapComment from '@hooks/useSkillMapComment';
+
+interface SkillMapDetailByUserProps {
+  detailSkillData: SkillMapByOrganization[];
+}
+
+export const SkillMapDetailByUser = ({
+  detailSkillData,
+}: SkillMapDetailByUserProps) => {
+  const MAX_LEVEL = 3;
+
+  // View comment
+  const [openSkillMapCommentModal, setOpenSkillMapCommentModal] =
+    useState<boolean>(false);
+  const [skillMapCommentList, setSkillMapCommentList] = useState<
+    SkillMapComment[]
+  >([]);
+  const [selectedSkillMapToViewComment, setSelectedSkillMapToViewComment] =
+    useState<number | null>(null);
+
+  useSkillMapComment({
+    skillMapId: Number(selectedSkillMapToViewComment),
+    onSuccess: (data) => {
+      setSkillMapCommentList(data);
+      setOpenSkillMapCommentModal(true);
+    },
+  });
+
+  const renderTreasureForStep = (
+    isLocked: boolean,
+    step: number,
+    stepCompleted: boolean,
+    level: number,
+  ) => {
+    // 1. Render locked state
+    if (isLocked) {
+      return (
+        <ImageRound
+          name="Lock treasure"
+          src="/icons/lock-treasure.svg"
+          className="w-[51px] h-[40px] cursor-pointer"
+        />
+      );
+    }
+
+    // 2. If step is completed, return treasure image
+    const treasureIcons: Record<number, string> = {
+      1: '/icons/step-1-treasure.svg',
+      2: '/icons/step-2-treasure.svg',
+      3: '/icons/step-3-treasure.svg',
+    };
+
+    if (stepCompleted) {
+      return (
+        <ImageRound
+          name={`Step ${step} treasure`}
+          src={treasureIcons[step]}
+          className="w-[60px] h-[60px] cursor-pointer"
+        />
+      );
+    }
+
+    // 3. Not completed → Show level and icons
+    const renderStepIcons = () => {
+      switch (step) {
+        case 1:
+          return (
+            <div className="flex justify-center mb-1 gap-1">
+              {Array.from({ length: MAX_LEVEL }).map((_, i) => (
+                <ImageRound
+                  key={i}
+                  name="Coin"
+                  src={i < level ? '/icons/coin.svg' : '/icons/gray-coin.svg'}
+                  className="w-[14px] h-[14px] cursor-pointer"
+                />
+              ))}
+            </div>
+          );
+        case 2:
+          return (
+            <div className="flex justify-center mb-1 gap-1">
+              {Array.from({ length: MAX_LEVEL }).map((_, i) => (
+                <ImageRound
+                  key={i}
+                  name="Diamond"
+                  src={
+                    i < level ? '/icons/diamond.svg' : '/icons/gray-diamond.svg'
+                  }
+                  className="w-[14px] h-[14px] cursor-pointer"
+                />
+              ))}
+            </div>
+          );
+        case 3:
+          return (
+            <div className="flex justify-center mb-1 gap-1">
+              {Array.from({ length: MAX_LEVEL }).map((_, i) => (
+                <ImageRound
+                  key={i}
+                  name="Crown"
+                  src={i < level ? '/icons/crown.svg' : '/icons/gray-crown.svg'}
+                  className="w-[14px] h-[14px] cursor-pointer"
+                />
+              ))}
+            </div>
+          );
+        default:
+          return null;
+      }
+    };
+
+    const renderLevelText = () => (
+      <div className="flex gap-1 items-baseline">
+        <p className="text-sm font-medium">Lv.</p>
+        <p className="text-[30px] font-medium">{level}</p>
+      </div>
+    );
+
+    return (
+      <div className="flex flex-col items-center">
+        {renderStepIcons()}
+        {renderLevelText()}
+      </div>
+    );
+  };
+
+  const normalizeSkillMaps = (
+    skillMaps: SkillMapByOrganizationInfo[][],
+  ): SkillMapByOrganizationInfo[][] => {
+    return skillMaps.map((skillMap) => {
+      const skillSteps = ['1', '2', '3'];
+
+      // Fill missing steps
+      const filledSkillMap = skillSteps.map((step) => {
+        // Check if the skillMap contains the step
+        const skill = skillMap.find((skill) => {
+          return skill.skill.step == `ステップ${step}`;
+        });
+
+        // If not found, return an empty object to fill the step
+        if (!skill) {
+          return {
+            id: null,
+            skill: {
+              id: null,
+              name: `ステップ${step}-Empty`,
+              description: '',
+              step: step,
+            },
+            isComplete: false,
+            step: step,
+            isLocked: false,
+            isHaveComment: false,
+            progressPercent: 0,
+            level: {
+              id: null,
+              skillMap: null,
+              level: '',
+              measureCount: null,
+              actualMeasureCount: null,
+              measureTime: null,
+              actualMeasureTime: null,
+              startLookbackAt: null,
+              nextSubmitAt: null,
+              lookBackInterval: 0,
+              lookBackType: '',
+              items: [],
+              isComplete: false,
+            },
+          };
+        }
+
+        // Return the existing skill if found
+        return skill;
+      });
+      return filledSkillMap;
+    });
+  };
+
+  return (
+    <div>
+      {detailSkillData.length > 0 &&
+        detailSkillData.map((skillMap, index) => (
+          <div
+            key={index}
+            className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-5"
+            style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
+            <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
+              {skillMap.organizationName}
+            </p>
+
+            <div>
+              <div className="flex w-full font-medium text-white text-[16px] mb-5 h-[32px]">
+                <StepInfoTooltip
+                  placement="top"
+                  currentStep={1}
+                  stepDefinition={skillMap.steps.step1}>
+                  <div className="w-[calc(33.33333%_+_16px)] rounded-l-[6px] bg-[#36ACDE] relative clip-left  text-center flex items-center justify-center">
+                    STEP 1
+                  </div>
+                </StepInfoTooltip>
+
+                <StepInfoTooltip
+                  placement="top"
+                  currentStep={2}
+                  stepDefinition={skillMap.steps.step2}>
+                  <div className="w-[calc(33.33333%_+_34px)] ml-[-8.5px] bg-[#0068B6] relative clip-middle text-center flex items-center justify-center">
+                    STEP 2
+                  </div>
+                </StepInfoTooltip>
+
+                <StepInfoTooltip
+                  placement="top"
+                  currentStep={3}
+                  stepDefinition={skillMap.steps.step3}>
+                  <div className="w-[calc(33.33333%_+_16px)] rounded-r-[6px] ml-[-9px] bg-[#424EC1] relative clip-right text-center flex items-center justify-center">
+                    STEP 3
+                  </div>
+                </StepInfoTooltip>
+              </div>
+
+              {normalizeSkillMaps(skillMap.skillMaps).map(
+                (skillMap: SkillMapByOrganizationInfo[], index) => {
+                  return (
+                    <div key={index} className="flex w-full mb-5">
+                      {skillMap.map((skill, idx) => {
+                        const isLast = idx === skillMap.length - 1;
+                        const isLocked = skill.isLocked;
+                        const step = skill.skill.step
+                          ? Number(getLastChar(skill.skill.step))
+                          : 1;
+                        const stepCompleted = skill.isComplete;
+                        const level = skill.level?.level
+                          ? Number(getLastChar(skill.level?.level))
+                          : 1;
+                        const hasComment = skill.isHaveComment;
+                        const progressPercent = skill?.progressPercent || 0;
+                        const showTwinklingStars =
+                          skill?.progressPercent == 100 && !stepCompleted;
+                        let strokeColor = '';
+                        switch (step) {
+                          case 1:
+                            strokeColor = '#36ACDE';
+                            break;
+                          case 2:
+                            strokeColor = '#0068B6';
+                            break;
+                          case 3:
+                            strokeColor = '#424EC1';
+                            break;
+                        }
+
+                        return (
+                          <div
+                            key={skill.id}
+                            className={`relative hover:cursor-pointer flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}>
+                            {!skill.id ? (
+                              <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
+                            ) : (
+                              <div
+                                className="px-5 h-[90px] flex justify-between items-center w-full rounded-[6px] relative"
+                                style={{
+                                  boxShadow: showTwinklingStars
+                                    ? '0px 0px 20px 0px #36ACDE80'
+                                    : '0px 2px 8px 0px #0000001A',
+                                }}>
+                                {showTwinklingStars && (
+                                  <div>
+                                    <TwinklingStar
+                                      className="absolute top-[-10px] left-[-10px]"
+                                      delay={0}
+                                    />
+                                    <TwinklingStar
+                                      className="absolute top-[5px] right-[-15px]"
+                                      delay={0.5}
+                                    />
+                                    <TwinklingStar
+                                      className="absolute top-[-15px] right-[5px]"
+                                      delay={0.8}
+                                    />
+                                    <TwinklingStar
+                                      className="absolute bottom-[5px] left-[-15px]"
+                                      delay={1}
+                                    />
+                                    <TwinklingStar
+                                      className="absolute bottom-[-15px] left-[5px]"
+                                      delay={1.2}
+                                    />
+                                    <TwinklingStar
+                                      className="absolute bottom-[-10px] right-[-10px]"
+                                      delay={1.5}
+                                    />
+                                  </div>
+                                )}
+
+                                <div className="w-4/5 max-w-[4/5]">
+                                  <div className="flex justify-between items-center">
+                                    <p className="text-[16px] font-medium mb-4 max-w-[calc(100%_-_20px)] line-clamp-1 break-all">
+                                      {skill.skill?.name}
+                                    </p>
+                                    {hasComment ? (
+                                      <ImageRound
+                                        name="Comment"
+                                        src={'/icons/comment.svg'}
+                                        className="w-[16px] h-[14px] cursor-pointer"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedSkillMapToViewComment(
+                                            skill.id,
+                                          );
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="w-[16px]"></div>
+                                    )}
+                                  </div>
+
+                                  <div>
+                                    <SkillMapProgressBar
+                                      value={progressPercent}
+                                      strokeColor={
+                                        isLocked ||
+                                        progressPercent == 0 ||
+                                        stepCompleted
+                                          ? '#D2DBE1'
+                                          : strokeColor
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                                <div className="w-1/5 flex justify-end">
+                                  {' '}
+                                  {renderTreasureForStep(
+                                    Boolean(isLocked),
+                                    step,
+                                    Boolean(stepCompleted),
+                                    level,
+                                  )}
+                                </div>
+
+                                {/* Gray overlay if locked */}
+                                {isLocked && (
+                                  <div className="absolute inset-0 bg-[#203D5480] bg-opacity-50 rounded-[6px] pointer-events-none">
+                                    <div className="text-white flex items-center justify-center h-full gap-2">
+                                      <ImageRound
+                                        name="Lock"
+                                        src={'/icons/white-lock.svg'}
+                                        className="w-[30px] h-[30px] cursor-pointer"
+                                      />
+                                      <p className="font-medium text-[16px]">
+                                        STEP {step} を未解放
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {!isLast && (
+                              <div
+                                style={{
+                                  background: skillMap[idx + 1].isLocked
+                                    ? '#D2DBE1'
+                                    : !skillMap[idx + 1].id || !skill.id
+                                      ? '#FFF'
+                                      : idx === 0
+                                        ? 'linear-gradient(90deg, #36ACDE 0%, #0068B6 100%)'
+                                        : 'linear-gradient(90deg, #0068B6 0%, #424EC1 100%)',
+                                }}
+                                className="h-[10px] w-[30px]"></div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                },
+              )}
+            </div>
+
+            {openSkillMapCommentModal && (
+              <ViewSkillMapCommentModal
+                open={openSkillMapCommentModal}
+                skillMapCommentList={skillMapCommentList}
+                onClose={() => {
+                  setSelectedSkillMapToViewComment(null);
+                  setSkillMapCommentList([]);
+                  setOpenSkillMapCommentModal(false);
+                }}
+              />
+            )}
+          </div>
+        ))}
+    </div>
+  );
+};

@@ -209,6 +209,7 @@ export interface SkillMapSkill {
 }
 
 export interface SkillMapInfo {
+  id?: number;
   user: {
     id: number;
     fullName: string;
@@ -323,8 +324,10 @@ export interface OrganizationDefineSteps {
 
 export interface ManageSkillMapsRequest {
   items: {
+    id: number | null;
+    skillId: number;
+    userId: number;
     isChecked: boolean;
-    id: number;
   }[];
 }
 
@@ -395,7 +398,7 @@ export interface SubmitLevel {
     step: string;
   };
   status: string;
-  createdAt: string | Date | undefined
+  createdAt: string | Date | undefined;
   progression: {
     levelBeforeSubmit: string;
     levelAfterSubmit: string;
@@ -415,11 +418,11 @@ export interface SubmitLevel {
     lookBackInterval: number | null;
     lookBackType: string | null;
     items: {
-      item: string,
-      isChecked: boolean
+      item: string;
+      isChecked: boolean;
     }[];
     isComplete: boolean | null;
-  }
+  };
   comment: string;
 }
 
@@ -455,14 +458,14 @@ export interface CreationDataSkill {
   }[];
 }
 export interface CensorSubmittedLevelRequest {
-  status: SubmitLevelStatus,
+  status: SubmitLevelStatus;
   comment: string;
   items: {
     item: string;
-    isChecked: boolean
-  }[]
+    isChecked: boolean;
+  }[];
   measureCount?: number;
   measureTime?: number;
   lookBackInterval?: number;
-  lookBackType?: SkillMapLookBackType
+  lookBackType?: SkillMapLookBackType;
 }

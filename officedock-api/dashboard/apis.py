@@ -329,11 +329,14 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 new_durations, many=True, context={"request": request}
             ).data
         else:
-            total_duration = instance.paused_at - instance.started_at
-            # Minus total duration to skill map actual measure time
-            calculate_progress_skill_map(
-                instance.task, instance.user, duration_time=total_duration
-            )
+            if validated_data.get("started_at") and validated_data.get(
+                "paused_at"
+            ):
+                total_duration = instance.paused_at - instance.started_at
+                # Minus total duration to skill map actual measure time
+                calculate_progress_skill_map(
+                    instance.task, instance.user, duration_time=total_duration
+                )
             # Return serialized single instance
             return [
                 DurationSerializer(instance, context={"request": request}).data
@@ -970,21 +973,13 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             user=user,
             uuid=uuid,
         )
+        total_duration = duration.paused_at - duration.started_at
+        # Minus total duration to skill map actual measure time
+        calculate_progress_skill_map(
+            duration.task, user, duration_time=total_duration
+        )
         if started_at.date() != paused_at.date():
-            new_durations = separate_duration(
-                duration, duration.paused_at, user=user
-            )
-            # Calculate total duration
-            total_duration = timedelta()
-            for new_duration in new_durations:
-                if new_duration.paused_at:
-                    total_duration += (
-                        new_duration.paused_at - new_duration.started_at
-                    )
-            # Plus total duration to skill map actual measure time
-            calculate_progress_skill_map(
-                duration.task, user, duration_time=total_duration
-            )
+            separate_duration(duration, duration.paused_at, user=user)
 
     @transaction.atomic
     def perform_update(self, serializer):
@@ -1042,23 +1037,16 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             instance.task, user, duration_time=-total_duration
         )
         instance.save()
+
+        total_duration = instance.paused_at - instance.started_at
+        # Plus total duration to skill map actual measure time
+        calculate_progress_skill_map(
+            instance.task, user, duration_time=total_duration
+        )
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
         if started_at.date() != paused_at.date():
-            new_durations = separate_duration(
-                instance, instance.paused_at, user=user
-            )
-            # Calculate total duration
-            total_duration = timedelta()
-            for new_duration in new_durations:
-                if new_duration.paused_at:
-                    total_duration += (
-                        new_duration.paused_at - new_duration.started_at
-                    )
-            # Plus total duration to skill map actual measure time
-            calculate_progress_skill_map(
-                instance.task, user, duration_time=total_duration
-            )
+            separate_duration(instance, instance.paused_at, user=user)
 
     @transaction.atomic
     def perform_destroy(self, instance):

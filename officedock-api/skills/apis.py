@@ -200,16 +200,64 @@ class ManageSkillMapViewSet(
 
         for data in items:
             skill_map = data.get("skill_map", None)
+            skill = data.get("skill", None)
+            staff = data.get("staff", None)
             is_checked = data.get("is_checked", False)
-            # Update skill map and child of skill map
-            while skill_map:
-                SkillMap.objects.filter(id=skill_map.id).update(
-                    is_valid=is_checked
+            if skill_map is None and skill and staff:
+                """
+                Handle create skill map
+                """
+                skill_map, created = SkillMap.objects.get_or_create(
+                    company=staff.company,
+                    skill=skill,
+                    step=skill.step,
+                    skill_parent=skill.parent,
+                    staff=staff,
+                    organization=skill.organization,
+                    is_valid=is_checked,
+                    is_complete=False,
                 )
+                if skill.parent is None and created:
+                    # Get skill level 1 of parent skill
+                    skill_level = skill.skill_levels.filter(
+                        level=SkillLevelConstants.LEVEL_1.value
+                    ).first()
+                    # Set next_submit_at if skill level has look back
+                    next_submit_at = None
+                    start_lookback_at = None
+                    if skill_level.look_back_type:
+                        next_submit_at = get_lookback_time(
+                            skill_level.look_back_type,
+                            skill_level.look_back_interval,
+                        )
+                        start_lookback_at = now()
+                    data = []
+                    for item in skill_level.items:
+                        data.append({"item": item, "is_checked": False})
+                    SkillMapSkillLevel.objects.create(
+                        skill_level=skill_level,
+                        skill=skill,
+                        level=skill_level.level,
+                        skill_map=skill_map,
+                        company=staff.company,
+                        start_lookback_at=start_lookback_at,
+                        next_submit_at=next_submit_at,
+                        measure_count=skill_level.measure_count,
+                        measure_time=skill_level.measure_time,
+                        look_back_type=skill_level.look_back_type,
+                        look_back_interval=skill_level.look_back_interval,
+                        items=data,
+                    )
+            elif skill_map:
+                # Update skill map and child of skill map
+                while skill_map:
+                    SkillMap.objects.filter(id=skill_map.id).update(
+                        is_valid=is_checked
+                    )
 
-                skill_map = SkillMap.objects.filter(
-                    skill_parent=skill_map.skill
-                ).first()
+                    skill_map = SkillMap.objects.filter(
+                        skill_parent=skill_map.skill
+                    ).first()
 
         return self.response_ok()
 
@@ -517,7 +565,7 @@ class SkillMapViewSet(
     )
     def update_level_up(self, request, pk=None):
         """
-        Handle store skill map skill level
+        Handle store draft submit level of skill map skill level
         """
         skill_map = self.get_object()
         skill_map_level_id = request.query_params.get(

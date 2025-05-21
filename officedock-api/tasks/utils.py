@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, time
 
 from django.db.models import Q
+from rest_framework.exceptions import ValidationError
 
 from chat.constants import WebSocketEventType
 from common.utils import (
@@ -166,6 +167,8 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
     if not task:
         return
     task_categories = task.categories.first()
+    if not task_categories:
+        return
     # TODO: Wait QA 96
     org_cats_filter = Q(organization=task.organization)
     if task_categories.large_statistic_category:
@@ -185,13 +188,17 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
         org_cats_filter
     ).values_list("id", flat=True)
     # Get Skill have categories
-    org_cat_skills = OrganizationsStatisticCategoriesSkills.objects.filter(
-        organization_statistic_category__id__in=org_categories
-    ).all()
-    for org_cat_skill in org_cat_skills:
+    org_cat_skills = (
+        OrganizationsStatisticCategoriesSkills.objects.filter(
+            organization_statistic_category__id__in=org_categories
+        )
+        .values_list("skill", flat=True)
+        .distinct()
+    )
+    for skill in org_cat_skills:
         skill_map = SkillMap.objects.filter(
-            skill=org_cat_skill.skill,
-            organization=org_cat_skill.organization,
+            skill__id=skill,
+            organization=task.organization,
             staff=user,
             skill_map_skill_levels__is_complete=False,
             is_complete=False,
@@ -205,23 +212,25 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
             # Get all time durations of task
             if not duration_time:
                 # Update skill map skill level actual measure count
-                if task.status.name == TaskStatus.COMPLETED.value:
-                    count = 1
-                else:
-                    count = -1
-                    # Get minus total duration of task if change status from complete to another
-                    duration_time = -get_total_hours_of_task(task)
-
+                count = (
+                    1 if task.status.name == TaskStatus.COMPLETED.value else -1
+                )
                 actual_measure_count = actual_measure_count + count
-                if current_skill_level.measure_count <= actual_measure_count:
+                if (
+                    current_skill_level.measure_count
+                    and current_skill_level.measure_count
+                    <= actual_measure_count
+                ):
                     send_web_socket_event(
                         {
                             "skill": {
                                 "id": skill_map.skill.id,
                                 "name": skill_map.skill.name,
                             },
-                            "actual_measure_count": actual_measure_count,
-                            "actual_measure_time": None,
+                            "measure_count": current_skill_level.measure_count,
+                            "measure_time": None,
+                            "look_back_interval": None,
+                            "look_back_type": None,
                             "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
                         },
                         user=user,
@@ -229,9 +238,13 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
             if duration_time:
                 # Update skill map skill level actual measure time
                 # Get new actual measure time
-                new_actual_measure_time = (
-                    time_str_to_timedelta(actual_measure_time) + duration_time
-                )
+                try:
+                    new_actual_measure_time = (
+                        time_str_to_timedelta(actual_measure_time)
+                        + duration_time
+                    )
+                except:
+                    raise ValidationError()
                 # Formatted timedelta to string
                 actual_measure_time = format_duration(new_actual_measure_time)
                 # Compare with current measure time and send socket to show pop-up
@@ -248,8 +261,10 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
                                 "id": skill_map.skill.id,
                                 "name": skill_map.skill.name,
                             },
-                            "actual_measure_count": None,
-                            "actual_measure_time": actual_measure_time,
+                            "measure_count": None,
+                            "measure_time": current_skill_level.measure_time,
+                            "look_back_interval": None,
+                            "look_back_type": None,
                             "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
                         },
                         user=user,
@@ -273,4 +288,4 @@ def get_total_hours_of_task(task):
         if duration.paused_at:
             total_duration += duration.paused_at - duration.started_at
 
-    return total_duration.total_seconds()
+    return total_duration
