@@ -15,7 +15,7 @@ from calendars.constants import (
 )
 from calendars.models import Schedule
 from chat.constants import WebSocketEventType
-from skills.models import StatisticCategory, Skill
+from skills.models import StatisticCategory, Skill, SkillMapSkillLevel
 from organizations.serializers import (
     BaseStatisticCategorySerializer,
     OrganizationDetailSerializer,
@@ -559,6 +559,27 @@ class CronJobViewSet(BaseAPIViewSet):
         tasks = Task.objects.filter(
             remind_at__lte=timezone.now(), deadline__gt=timezone.now()
         ).all()
+        now = timezone.now()
+        one_minute_before = now - timedelta(minutes=1)
+        skill_map_levels = SkillMapSkillLevel.objects.filter(
+            next_submit_at__range=(one_minute_before, now),
+        ).all()
+        for skill_map_level in skill_map_levels:
+            skill_map = skill_map_level.skill_map
+            send_web_socket_event(
+                {
+                    "skill": {
+                        "id": skill_map.skill.id,
+                        "name": skill_map.skill.name,
+                    },
+                    "measure_count": None,
+                    "measure_time": None,
+                    "look_back_interval": skill_map_level.look_back_interval,
+                    "look_back_type": skill_map_level.look_back_type,
+                    "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
+                },
+                user=skill_map.staff,
+            )
 
         for task in tasks:
             if task.deadline and task.remind_at:
