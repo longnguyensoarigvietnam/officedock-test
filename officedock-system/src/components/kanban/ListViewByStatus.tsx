@@ -1,5 +1,5 @@
 'use client';
-import { UseMutateFunction, useMutation } from 'react-query';
+import { useMutation } from 'react-query';
 import {
   Dispatch,
   SetStateAction,
@@ -19,12 +19,11 @@ import Spinner from '@components/common/Spinner';
 import {
   Columns,
   CreationDataTask,
+  DataStatusChangeInline,
   KanbanDataResponse,
   Task,
-  TaskErrorPerson,
-  TaskRequest,
 } from '@interfaces/task';
-import { ResponseError } from '@interfaces/response';
+import { TaskContext } from '@providers/TaskProvider';
 
 import { apiRouters } from '@constants/routers';
 import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
@@ -32,7 +31,6 @@ import { StatusTask, StatusValueTask } from '@constants/enums';
 
 import { encodeFormatDateISO } from '@utils/date';
 import api from '@base/api';
-import { TaskContext } from '@providers/TaskProvider';
 
 interface ListViewByStatusProps {
   listItems: Task[];
@@ -48,14 +46,7 @@ interface ListViewByStatusProps {
   handleActionEditTask: (id: number) => void;
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
-  editTask: UseMutateFunction<
-    Task,
-    ResponseError<{
-      detail: TaskErrorPerson;
-    }>,
-    TaskRequest,
-    unknown
-  >;
+  editTaskInline: (data: DataStatusChangeInline) => void;
   creationDataTaskData?: CreationDataTask;
   columnsKanbanData: Columns;
   addTask: (columnId: string) => void;
@@ -86,13 +77,13 @@ const ListViewByStatus = ({
   handleActionEditTask,
   handleConfirmCopyTask,
   handleUpdateItemInline,
-  editTask,
+  editTaskInline,
   addTask,
   creationDataTaskData,
   columnsKanbanData,
   setColumnsKanbanData,
   setNumberPagesData,
-  saveExtendColumn
+  saveExtendColumn,
 }: ListViewByStatusProps) => {
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
@@ -277,8 +268,9 @@ const ListViewByStatus = ({
               src="/icons/extend-column.svg"
               name="Extend column"
               className={`!w-3 !h-3 hover:cursor-pointer ${
-                extendByStatus.find((list) => list.id == listId)?.status ?
-                '-rotate-90' : 'rotate-180'
+                extendByStatus.find((list) => list.id == listId)?.status
+                  ? '-rotate-90'
+                  : 'rotate-180'
               }`}
               style={{
                 width: `8px`,
@@ -298,9 +290,7 @@ const ListViewByStatus = ({
           <p className="text-[#77858F] text-[14px]">{count}</p>
         )}
 
-        <DynamicTooltip
-          content="タスクを新規作成"
-          placement="top">
+        <DynamicTooltip content="タスクを新規作成" placement="top">
           <div
             className={`rounded-full cursor-pointer p-1.5 w-fit bg-[#E3EAED]`}
             onClick={() => addTask(String(listId))}
@@ -337,7 +327,7 @@ const ListViewByStatus = ({
                   id={String(item.id)}
                   index={index}
                   content={item}
-                  editTask={editTask}
+                  editTaskInline={editTaskInline}
                   handlePinItem={handlePinItem}
                   creationDataTaskData={creationDataTaskData}
                   handleActionEditTask={handleActionEditTask}

@@ -39,7 +39,6 @@ import BoardKanban from '@components/kanban/Board';
 import ActionFilterTask from '@components/modals/ActionFilterTask';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ConfirmDragModalTask from '@components/modals/ConfirmDropModalTask';
-import CompletionRewardModal from '@components/modals/CompletionRewardModal';
 
 import useCreationDataTask from '@hooks/useCreationDataTask';
 import useTaskBoardList from '@hooks/useTaskBoardList';
@@ -50,7 +49,7 @@ import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
-import { apiRouters, pageRouters } from '@constants/routers';
+import { apiRouters } from '@constants/routers';
 import {
   ActionTask,
   EventWorkCategory,
@@ -83,6 +82,7 @@ import {
 
 import {
   Columns,
+  DataStatusChangeInline,
   StatusTask,
   Task,
   TaskErrorPerson,
@@ -229,9 +229,14 @@ const KanbanBoardTask = () => {
   const [openConfirmDeleteTemplateModal, setOpenConfirmDeleteTemplateModal] =
     useState(false);
   const [openConfirmDragModal, setOpenConfirmDragModal] = useState(false);
-  const [openRewardModal, setOpenRewardModal] = useState(false);
-  const [dataRewardSkill, setDataRewardSkill] =
-    useState<WebSocketMessageSortKanban>();
+  const [openConfirmDragModalEdit, setOpenConfirmDragModalEdit] =
+    useState(false);
+  const [dataConfirmRewardInline, setDataConfirmRewardInline] =
+    useState<DataStatusChangeInline | null>(null);
+  const [openConfirmDragModalForm, setOpenConfirmDragModalForm] =
+    useState(false);
+  const [dataConfirmRewardForm, setDataConfirmRewardForm] =
+    useState<TaskFormData | null>(null);
 
   const [isListView, setIsListView] = useState<boolean>(false);
 
@@ -2091,6 +2096,8 @@ const KanbanBoardTask = () => {
         description: SUCCESS_UPDATE_MESSAGE,
       });
       setDataTaskEdit(null);
+      setOpenConfirmDragModalForm(false);
+      setDataConfirmRewardForm(null);
     },
     onError: ({
       response,
@@ -2143,6 +2150,8 @@ const KanbanBoardTask = () => {
           index: data.index,
           categories: [],
         });
+        setOpenConfirmDragModalEdit(false);
+        setDataConfirmRewardInline(null);
       },
       onError: ({ response }: ResponseError<{ detail: TaskErrorPerson }>) => {
         if (response?.data.detail) {
@@ -3041,9 +3050,6 @@ const KanbanBoardTask = () => {
           setOrderingRequest('');
           setDataOrderRing('');
           break;
-        case SocketActions.SKILL_LEVEL_UP_COMPLETED:
-          setDataRewardSkill(data);
-          setOpenRewardModal(true);
       }
     };
 
@@ -3144,6 +3150,12 @@ const KanbanBoardTask = () => {
       container.scrollTop = 0;
     }
   }, [isListView]);
+
+  const handleConfirmDragModalEdit = () => {
+    if (dataConfirmRewardInline) {
+      editTaskInline(dataConfirmRewardInline);
+    }
+  };
 
   return (
     <>
@@ -3419,7 +3431,18 @@ const KanbanBoardTask = () => {
                         creationDataTaskData={creationDataTaskData}
                         setColumnsKanbanData={setColumnsKanbanData}
                         setNumberPagesData={setNumberPagesData}
-                        editTaskInline={editTaskInline}
+                        editTaskInline={(data: DataStatusChangeInline) => {
+                          if (
+                            data.oldIdStatus ===
+                              String(StatusValueTask.COMPLETED) &&
+                            data.statusId !== StatusValueTask.COMPLETED
+                          ) {
+                            setDataConfirmRewardInline(data);
+                            setOpenConfirmDragModalEdit(true);
+                          } else {
+                            editTaskInline(data);
+                          }
+                        }}
                         pinItemToTop={pinItemToTop}
                         handleActionEditTask={handleActionEditTask}
                         handleConfirmCopyTask={handleActionCopyTask}
@@ -3452,7 +3475,18 @@ const KanbanBoardTask = () => {
                     handleUpdateItemInline={handleUpdateItemInline}
                     creationDataTaskData={creationDataTaskData}
                     pinItemToTop={pinItemToTop}
-                    editTask={editTaskInline}
+                    editTaskInline={(data: DataStatusChangeInline) => {
+                      if (
+                        data.oldIdStatus ===
+                          String(StatusValueTask.COMPLETED) &&
+                        data.statusId !== StatusValueTask.COMPLETED
+                      ) {
+                        setDataConfirmRewardInline(data);
+                        setOpenConfirmDragModalEdit(true);
+                      } else {
+                        editTaskInline(data);
+                      }
+                    }}
                     addTask={(id: string) => {
                       setColumnId(id);
                       setShowEditTaskModal(true);
@@ -3490,7 +3524,17 @@ const KanbanBoardTask = () => {
                     setIsLoading(false);
                   }}
                   onSubmit={handleConfirmCreateTask}
-                  onEdit={handleConfirmEditTask}
+                  onEdit={(values: TaskFormData) => {
+                    if (
+                      dataTaskEdit?.status?.id === StatusValueTask.COMPLETED &&
+                      values.statusId?.value !== StatusValueTask.COMPLETED
+                    ) {
+                      setDataConfirmRewardForm(values);
+                      setOpenConfirmDragModalForm(true);
+                    } else {
+                      handleConfirmEditTask(values);
+                    }
+                  }}
                   onCopy={handleConfirmCreateTask}
                   onDelete={() => {
                     setOpenConfirmDeleteTaskModal(true);
@@ -3614,14 +3658,26 @@ const KanbanBoardTask = () => {
                   }}
                 />
               )}
-              {openRewardModal && (
-                <CompletionRewardModal
-                  open={openRewardModal}
-                  dataRewardSkill={dataRewardSkill}
-                  onConfirm={() => {
-                    router.push(pageRouters.SKILL_MAP.href);
+              {openConfirmDragModalEdit && (
+                <ConfirmDragModalTask
+                  open={openConfirmDragModalEdit}
+                  onConfirm={handleConfirmDragModalEdit}
+                  onClose={() => {
+                    setOpenConfirmDragModalEdit(false);
+                    setDataConfirmRewardInline(null);
                   }}
-                  onClose={() => setOpenRewardModal(false)}
+                />
+              )}
+              {openConfirmDragModalForm && (
+                <ConfirmDragModalTask
+                  open={openConfirmDragModalForm}
+                  onConfirm={() =>
+                    handleConfirmEditTask(dataConfirmRewardForm as TaskFormData)
+                  }
+                  onClose={() => {
+                    setOpenConfirmDragModalForm(false);
+                    setDataConfirmRewardForm(null);
+                  }}
                 />
               )}
             </div>

@@ -379,7 +379,19 @@ const CategoryStepRaw = ({
               className="w-12 h-[30px] hover:opacity-70 !border-none !px-0 !py-0 !rounded-md text-xs !bg-[#EBF1F7]"
               type="button"
               name="Remove Category"
-              onClick={() => removeOuter(index)}>
+              onClick={() => {
+                removeOuter(index);
+
+                setDataOptionsCategoryMedium((prev) => ({
+                  ...prev,
+                  [stepKey]: prev[stepKey].filter((_, i) => i !== index),
+                }));
+
+                setDataOptionsCategorySmall((prev) => ({
+                  ...prev,
+                  [stepKey]: prev[stepKey].filter((_, i) => i !== index),
+                }));
+              }}>
               削除
             </Button>
           </div>

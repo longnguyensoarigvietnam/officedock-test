@@ -1,7 +1,7 @@
 import { useSearchParams } from 'next/navigation';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
 import { Dispatch, SetStateAction, useContext } from 'react';
-import { UseMutateFunction, useMutation } from 'react-query';
+import { useMutation } from 'react-query';
 
 import ColumnsSkeleton from '@components/skeleton/ColumnSkeleton';
 import Column from './Column';
@@ -13,11 +13,9 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import {
   Columns,
   CreationDataTask,
+  DataStatusChangeInline,
   Task,
-  TaskErrorPerson,
-  TaskRequest,
 } from '@interfaces/task';
-import { ResponseError } from '@interfaces/response';
 import { OptionDropdownType } from '@interfaces/common';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
@@ -46,14 +44,7 @@ interface BoardKanbanProps {
       }[]
     >
   >;
-  editTaskInline: UseMutateFunction<
-    Task,
-    ResponseError<{
-      detail: TaskErrorPerson;
-    }>,
-    TaskRequest,
-    unknown
-  >;
+  editTaskInline: (data: DataStatusChangeInline) => void;
   handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;

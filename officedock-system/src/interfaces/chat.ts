@@ -137,7 +137,7 @@ export interface ChatRoomItem {
   isExisted?: boolean;
 }
 
-export interface WebSocketMessageData {
+export interface WebSocketMessageData extends DataSkillReward {
   id?: number;
   action: string;
   clientId: string | null;
@@ -156,19 +156,6 @@ export interface WebSocketMessageData {
   remindType?: string;
   title?: string;
 }
-export interface WebSocketMessageDataOverTime {
-  action: string;
-  isOverEstimate: boolean;
-  taskDurationRunningUuid: string;
-  type: string;
-  id: number;
-}
-
-export interface WebSocketMessageSortKanban extends DataSkillReward {
-  action: string;
-  isSortingTaskByDeadline: boolean;
-  isSortingTaskByImportant: boolean;
-}
 interface DataSkillReward {
   skill: {
     id: number;
@@ -178,6 +165,21 @@ interface DataSkillReward {
   measureTime: string | null;
   lookBackInterval: string | null;
   lookBackType: string | null;
+  skill_map: number;
+  skill_map_level: number;
+}
+export interface WebSocketMessageDataOverTime {
+  action: string;
+  isOverEstimate: boolean;
+  taskDurationRunningUuid: string;
+  type: string;
+  id: number;
+}
+
+export interface WebSocketMessageSortKanban {
+  action: string;
+  isSortingTaskByDeadline: boolean;
+  isSortingTaskByImportant: boolean;
 }
 
 export interface DataChatRoomSocket {

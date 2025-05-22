@@ -1,5 +1,5 @@
 'use client';
-import { UseMutateFunction, useMutation } from 'react-query';
+import { useMutation } from 'react-query';
 import { Dispatch, SetStateAction, useContext } from 'react';
 import { useSearchParams } from 'next/navigation';
 
@@ -9,20 +9,18 @@ import {
   Columns,
   ColumnType,
   CreationDataTask,
+  DataStatusChangeInline,
   Task,
-  TaskErrorPerson,
-  TaskRequest,
 } from '@interfaces/task';
-import { ResponseError } from '@interfaces/response';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
 
 import { StatusTask } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
+import { ERROR_EXTEND_COLUMN } from '@constants/message';
 
 import api from '@base/api';
-import { ERROR_EXTEND_COLUMN } from '@constants/message';
 import { useToast } from '@providers/ToastProvider';
 
 interface CardListViewProps {
@@ -36,14 +34,7 @@ interface CardListViewProps {
   handleActionEditTask: (id: number) => void;
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
-  editTask: UseMutateFunction<
-    Task,
-    ResponseError<{
-      detail: TaskErrorPerson;
-    }>,
-    TaskRequest,
-    unknown
-  >;
+  editTaskInline: (data: DataStatusChangeInline) => void;
   addTask: (columnId: string) => void;
   disableDraggable?: boolean;
   columnsKanbanData?: Columns;
@@ -68,7 +59,7 @@ const CardListView = ({
   handleActionEditTask,
   handleConfirmCopyTask,
   handleUpdateItemInline,
-  editTask,
+  editTaskInline,
   addTask,
   pinItemToTop,
   creationDataTaskData,
@@ -147,7 +138,7 @@ const CardListView = ({
                   handleActionEditTask={handleActionEditTask}
                   handleConfirmCopyTask={handleConfirmCopyTask}
                   handleUpdateItemInline={handleUpdateItemInline}
-                  editTask={editTask}
+                  editTaskInline={editTaskInline}
                   addTask={addTask}
                   totalCount={count || 0}
                   setColumnsKanbanData={setColumnsKanbanData}
