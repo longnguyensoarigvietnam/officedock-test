@@ -24,6 +24,8 @@ import { LEVEL_UP_PERIOD_OPTIONS, SKILL_MAP_STEPS } from '@constants';
 
 import { getLastChar } from '@utils';
 
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+
 export type CensorLevelUpModalProps = {
   open: boolean;
   submitLevelUpDetail: SubmitLevel;
@@ -42,6 +44,7 @@ const CensorLevelUpModal = memo(
     onSubmit,
     onClose,
   }: CensorLevelUpModalProps) => {
+    const { authenticatedUser } = useAuthenticatedUser({});
     const [itemStatusList, setItemStatusList] = useState<
       {
         item: string;
@@ -502,12 +505,12 @@ const CensorLevelUpModal = memo(
             <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
               <div className="flex gap-2 justify-start items-center mb-3">
                 <CustomUserAvatar
-                  avatarUrl={submitLevelUpDetail.staff?.avatar || ''}
-                  avatarColor={submitLevelUpDetail.staff?.avatarColor || ''}
+                  avatarUrl={authenticatedUser?.avatar || ''}
+                  avatarColor={authenticatedUser?.avatarColor || ''}
                   size={24}
                 />
                 <p className="text-[15px] max-w-full font-medium break-all line-clamp-4">
-                  {submitLevelUpDetail.staff.profile.fullName}{' '}
+                  {authenticatedUser?.profile?.fullName}{' '}
                   <span className="text-[#77858F] text-xs font-medium">
                     さんへのコメント
                   </span>
