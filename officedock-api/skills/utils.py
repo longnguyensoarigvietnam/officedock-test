@@ -6,7 +6,7 @@ from django.utils.timezone import now
 
 from roles.constants import SelectionResultOptions
 from skills.constants import LookBackTypes, SkillStep, SkillLevel
-from skills.models import SkillMap
+from skills.models import Skill
 from users.models import RoleDetail
 
 
@@ -14,6 +14,8 @@ def get_lookback_time(lookback_type, lookback_interval):
     """
     Return look back time based on lookback_type.
     """
+    if not lookback_type and not lookback_interval:
+        return None, None
     match lookback_type:
         case LookBackTypes.DAY.value:
             next_submit_at = now() + timedelta(days=lookback_interval)
@@ -26,7 +28,7 @@ def get_lookback_time(lookback_type, lookback_interval):
         case _:
             next_submit_at = now()
 
-    return next_submit_at
+    return next_submit_at, now()
 
 
 def get_list_org_hierarchies(user, permission_name):
@@ -66,9 +68,7 @@ def get_list_org_hierarchies(user, permission_name):
     return organizations
 
 
-def get_next_progression(
-    current_step, current_level, skill=None, organization=None, staff=None
-):
+def get_next_progression(current_step, current_level, skill=None):
     """Returns the next (step, level) progression based on current step and level."""
     steps = list(SkillStep)
     levels = list(SkillLevel)
@@ -85,15 +85,12 @@ def get_next_progression(
             levels[current_level_index + 1].value,
         )
     else:
-        if staff and skill and organization:
-            exists_next_skill_map = SkillMap.objects.filter(
-                skill=skill,
-                step=steps[current_step_index + 1].value,
-                organization=organization,
-                staff=staff,
-            ).exists()
+        if skill:
+            exists_next_skill = Skill.objects.filter(
+                parent__id=skill.id
+            ).first()
             # If not exists next step, replace next step is current step
-            if not exists_next_skill_map:
+            if not exists_next_skill:
                 return current_step, current_level
         # Move to LEVEL_1 in next step, if exists
         if current_step_index < len(steps) - 1:
