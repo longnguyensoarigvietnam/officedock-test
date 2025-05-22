@@ -1,6 +1,7 @@
 'use client';
 
 import { useContext } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
 import MainLayout from '@components/layouts/MainLayout';
@@ -13,8 +14,10 @@ import { PermissionsSystem } from '@constants/enums';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import SkillList from './list';
+import { hasPermissionInArray } from '@utils';
 
 const SkillListPage = () => {
+  const { data: session } = useSession();
   const { expanded } = useContext(GlobalStateContext);
 
   return (
@@ -49,20 +52,26 @@ const SkillListPage = () => {
             </Button>
           </Link>
         </div>
-        <Link href={pageRouters.SKILL_MAPS_MANAGEMENT.href}>
-          <Button className="w-[158px] !p-0 text-sm h-[34px] !border-transparent !text-[#77858F] bg-white rounded-[6px]">
-            スキルマップ設定{' '}
-            <ImageRound
-              src="/icons/detail-task.svg"
-              name="right"
-              style={{
-                height: '18px',
-                width: '18px',
-              }}
-              className="!text-transparent ml-1 cursor-pointer"
-            />
-          </Button>
-        </Link>
+        {session?.user.permissions &&
+          hasPermissionInArray(
+            session?.user.permissions,
+            PermissionsSystem.SKILL_MAP_UPDATE,
+          ) && (
+            <Link href={pageRouters.SKILL_MAPS_MANAGEMENT.href}>
+              <Button className="w-[158px] !p-0 text-sm h-[34px] !border-transparent !text-[#77858F] bg-white rounded-[6px]">
+                スキルマップ設定{' '}
+                <ImageRound
+                  src="/icons/detail-task.svg"
+                  name="right"
+                  style={{
+                    height: '18px',
+                    width: '18px',
+                  }}
+                  className="!text-transparent ml-1 cursor-pointer"
+                />
+              </Button>
+            </Link>
+          )}
       </div>
 
       <SkillList />

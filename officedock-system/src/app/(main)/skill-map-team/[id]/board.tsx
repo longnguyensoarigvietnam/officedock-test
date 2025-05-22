@@ -102,7 +102,7 @@ const BoardSkillUser = () => {
                 size={70}
               />
               <div className="flex flex-col items-start justify-center">
-                <p className="text-sm font-medium text-white line-clamp-2">
+                <p className="text-sm font-medium text-white max-w-full break-all line-clamp-2">
                   {skillMapInfo?.user?.organizations?.name || ''}
                 </p>
                 <p className="text-black font-medium text-[26px] max-w-[300px] truncate">
