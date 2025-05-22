@@ -344,6 +344,7 @@ export interface ManageSkillMapsRequest {
 export interface SkillMapComment {
   id: number;
   staff: Staff;
+  approver: Staff;
   organization: Pick<
     Organizations,
     'id' | 'uuid' | 'name' | 'userCount' | 'actions'
@@ -390,8 +391,14 @@ export interface SubmitLevelUpRequest {
   skillId: number;
   levelBeforeSubmit: string;
   stepBeforeSubmit: string;
-  approver: number;
+  approverId: number;
+  status?: SubmitLevelStatus
+  items?: {
+    item: string;
+    isChecked: boolean;
+  }[];
   submitLevel: number | null;
+  skillMapSkillLevel?: number | null;
 }
 
 export interface Description {
@@ -442,6 +449,7 @@ export interface SubmitLevel {
     isComplete: boolean | null;
   };
   comment: string;
+  approver?: Staff
 }
 
 export interface SubmitLevelByOrganization {

@@ -7,14 +7,11 @@ import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
 import PeopleDropdown from '@components/common/Dropdown/PeopleDropdown';
 
-import {
-  SaveLevelUpDraftRequest,
-  SkillMapLevelUp,
-  SubmitLevelUpRequest,
-} from '@interfaces/skills';
+import { SkillMapLevelUp, SubmitLevelUpRequest } from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { SKILL_MAP_STEPS } from '@constants';
+import { SubmitLevelStatus } from '@constants/enums';
 
 import { getLastChar } from '@utils';
 
@@ -24,9 +21,7 @@ export type SubmitLevelUpModalProps = {
     staffId: number;
   };
   isSuccessSubmitLevelUp: boolean;
-  onCloseAndSave: (
-    data: SaveLevelUpDraftRequest & { skillMapLevelId: number },
-  ) => void;
+  onCloseAndSave: (data: SubmitLevelUpRequest) => void;
   onClose: () => void;
   onSubmitLevelUp: (data: SubmitLevelUpRequest) => void;
 };
@@ -169,7 +164,7 @@ const SubmitLevelUpModal = memo(
                       return (
                         <div key={index} className="flex gap-2">
                           <Checkbox
-                            classLabel="text-black text-sm font-medium"
+                            classLabel="text-black text-sm font-medium !max-w-full !break-all"
                             label={item.item}
                             onChange={() => {
                               setItemStatusList((prev) =>
@@ -227,15 +222,26 @@ const SubmitLevelUpModal = memo(
                   variant="outline"
                   className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-[#0068B6] bg-white"
                   onClick={() => {
+                    if (!selectedApproverId) {
+                      setShowApproverErrorValidation(true);
+                      return;
+                    }
                     onCloseAndSave({
+                      staffId: submitLevelUpDetail.staffId,
+                      organizationId: submitLevelUpDetail.organization,
+                      skillId: submitLevelUpDetail.skill.id,
+                      levelBeforeSubmit: submitLevelUpDetail.levelBeforeSubmit,
+                      stepBeforeSubmit: submitLevelUpDetail.stepBeforeSubmit,
+                      approverId: Number(selectedApproverId),
+                      status: SubmitLevelStatus.DRAFT,
                       items: itemStatusList.map((item) => {
                         return {
                           item: item.item,
                           isChecked: item.isChecked,
                         };
                       }),
-                      approver: Number(selectedApproverId),
-                      skillMapLevelId: Number(
+                      submitLevel: submitLevelUpDetail.submitLevel,
+                      skillMapSkillLevel: Number(
                         submitLevelUpDetail.skillMapSkillLevel,
                       ),
                     });
@@ -257,8 +263,9 @@ const SubmitLevelUpModal = memo(
                       levelBeforeSubmit: submitLevelUpDetail.levelBeforeSubmit,
                       stepBeforeSubmit: submitLevelUpDetail.stepBeforeSubmit,
                       skillId: submitLevelUpDetail.skill.id,
-                      approver: Number(selectedApproverId),
-                      submitLevel: submitLevelUpDetail.submitLevel
+                      approverId: Number(selectedApproverId),
+                      status: SubmitLevelStatus.PENDING,
+                      submitLevel: submitLevelUpDetail.submitLevel,
                     });
                   }}>
                   レベルアップ申請

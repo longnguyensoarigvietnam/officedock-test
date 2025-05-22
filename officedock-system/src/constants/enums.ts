@@ -242,6 +242,7 @@ export enum SubmitLevelStatus {
   PENDING = '申請中',
   APPROVAL = '承認',
   REJECTED = '却下',
+  DRAFT = 'ドラフト'
 }
 
 export enum PermissionsSystem {
