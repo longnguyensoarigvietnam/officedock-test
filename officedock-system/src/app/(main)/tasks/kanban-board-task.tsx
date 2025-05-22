@@ -50,7 +50,7 @@ import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
-import { apiRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ActionTask,
   EventWorkCategory,
@@ -230,6 +230,8 @@ const KanbanBoardTask = () => {
     useState(false);
   const [openConfirmDragModal, setOpenConfirmDragModal] = useState(false);
   const [openRewardModal, setOpenRewardModal] = useState(false);
+  const [dataRewardSkill, setDataRewardSkill] =
+    useState<WebSocketMessageSortKanban>();
 
   const [isListView, setIsListView] = useState<boolean>(false);
 
@@ -3039,6 +3041,9 @@ const KanbanBoardTask = () => {
           setOrderingRequest('');
           setDataOrderRing('');
           break;
+        case SocketActions.SKILL_LEVEL_UP_COMPLETED:
+          setDataRewardSkill(data);
+          setOpenRewardModal(true);
       }
     };
 
@@ -3612,10 +3617,9 @@ const KanbanBoardTask = () => {
               {openRewardModal && (
                 <CompletionRewardModal
                   open={openRewardModal}
-                  count={1}
-                  name="セミナー当日"
-                  onConfirm={function (): void {
-                    throw new Error('Function not implemented.');
+                  dataRewardSkill={dataRewardSkill}
+                  onConfirm={() => {
+                    router.push(pageRouters.SKILL_MAP.href);
                   }}
                   onClose={() => setOpenRewardModal(false)}
                 />

@@ -164,10 +164,20 @@ export interface WebSocketMessageDataOverTime {
   id: number;
 }
 
-export interface WebSocketMessageSortKanban {
+export interface WebSocketMessageSortKanban extends DataSkillReward {
   action: string;
   isSortingTaskByDeadline: boolean;
   isSortingTaskByImportant: boolean;
+}
+interface DataSkillReward {
+  skill: {
+    id: number;
+    name: string;
+  };
+  measureCount: number | null;
+  measureTime: string | null;
+  lookBackInterval: string | null;
+  lookBackType: string | null;
 }
 
 export interface DataChatRoomSocket {

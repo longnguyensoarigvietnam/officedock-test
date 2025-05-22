@@ -520,6 +520,7 @@ export const OrganizationSkillDetail = ({
                             action: ActionsModal.EDIT,
                             id: String(row.original.id),
                             step: currentStep,
+                            organization: orgSkillDetail.id,
                           });
                           setSelectedSkillMapToUpdate(row.original.id);
                         }}

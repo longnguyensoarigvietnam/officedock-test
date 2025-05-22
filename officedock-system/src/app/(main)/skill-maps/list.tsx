@@ -200,6 +200,11 @@ const ListSkillsMap = () => {
               organization: Number(organizationParam) || 0,
             }))
           : [],
+      categoryIds: step.rawCategories.map((cate) => ({
+        largeStatisticCategoryId: cate.LARGE.value as number,
+        mediumStatisticCategoryId: cate.MEDIUM.value as number,
+        smallStatisticCategoryId: cate.SMALL.value as number,
+      })),
     });
 
     return Object.fromEntries(
@@ -257,6 +262,11 @@ const ListSkillsMap = () => {
                 : 0,
             }))
           : [],
+      categoryIds: step.rawCategories.map((cate) => ({
+        largeStatisticCategoryId: cate.LARGE.value as number,
+        mediumStatisticCategoryId: cate.MEDIUM.value as number,
+        smallStatisticCategoryId: cate.SMALL.value as number,
+      })),
     });
 
     return Object.fromEntries(
@@ -272,10 +282,14 @@ const ListSkillsMap = () => {
       const step = steps[stepKey];
       for (let i = 0; i < step.skillLevels.length; i++) {
         const skill = step.skillLevels[i];
-        const { lookBackType, lookBackInterval, measureCount, measureTime } = skill;
-        const allNull = [lookBackType, lookBackInterval, measureCount, measureTime].every(
-          (value) => value === null
-        );
+        const { lookBackType, lookBackInterval, measureCount, measureTime } =
+          skill;
+        const allNull = [
+          lookBackType,
+          lookBackInterval,
+          measureCount,
+          measureTime,
+        ].every((value) => value === null);
         if (allNull) {
           return stepKey;
         }
@@ -299,7 +313,7 @@ const ListSkillsMap = () => {
       return;
     }
     const requestData = convertFormDataToCreationRequestData(filteredData);
-    if(validateSkillLevels(requestData)) {
+    if (validateSkillLevels(requestData)) {
       showToast({
         variant: 'error',
         description: `${validateSkillLevels(requestData)?.toUpperCase()}の必須情報を入力してください。`,
@@ -353,7 +367,7 @@ const ListSkillsMap = () => {
       return;
     }
     const requestData = convertFormDataToEditionRequestData(filteredData);
-    if(validateSkillLevels(requestData)) {
+    if (validateSkillLevels(requestData)) {
       showToast({
         variant: 'error',
         description: `${validateSkillLevels(requestData)?.toUpperCase()}の必須情報を入力してください。`,
@@ -395,7 +409,7 @@ const ListSkillsMap = () => {
     id,
     action,
     step,
-    organization
+    organization,
   }: {
     id?: string | null;
     action?: string | null;
@@ -445,11 +459,11 @@ const ListSkillsMap = () => {
     params.delete('skillId');
     params.delete('action');
     params.delete('step');
-    params.delete('organization')
+    params.delete('organization');
     setSkillIdParam(null);
     setActionTypeParam(null);
     setCurrentStepParam(null);
-    setOrganizationParam(null)
+    setOrganizationParam(null);
     router.replace(`?${params.toString()}`);
   };
 
