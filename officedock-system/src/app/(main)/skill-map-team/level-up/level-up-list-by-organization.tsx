@@ -1,4 +1,7 @@
+'use client';
+
 import { Dispatch, SetStateAction } from 'react';
+import { useSession } from 'next-auth/react';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
@@ -20,6 +23,8 @@ export const LevelUpListByOrganization = ({
   orgSubmitLevel,
   setSelectedSubmitLevel,
 }: LevelUpListByOrganizationProps) => {
+  const { data: session } = useSession();
+
   return (
     <div
       className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-5"
@@ -157,14 +162,17 @@ export const LevelUpListByOrganization = ({
                     </div>
                   </div>
                   <div className="px-3">
-                    <Button
-                      variant="primary"
-                      className="w-[100px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-white"
-                      onClick={() => {
-                        setSelectedSubmitLevel(submitLevel.id);
-                      }}>
-                      確認する
-                    </Button>
+                    {' '}
+                    {session?.user.id != submitLevel.staff.id && (
+                      <Button
+                        variant="primary"
+                        className="w-[100px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-white"
+                        onClick={() => {
+                          setSelectedSubmitLevel(submitLevel.id);
+                        }}>
+                        確認する
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

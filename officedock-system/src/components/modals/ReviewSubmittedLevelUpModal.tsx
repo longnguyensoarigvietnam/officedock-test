@@ -9,7 +9,11 @@ import Checkbox from '@components/common/Checkbox';
 
 import { SubmitLevel } from '@interfaces/skills';
 
-import { SubmitLevelStatus } from '@constants/enums';
+import {
+  SkillMapLookBackType,
+  SkillMapTypeInterval,
+  SubmitLevelStatus,
+} from '@constants/enums';
 import { SKILL_MAP_STEPS } from '@constants';
 
 import { getLastChar } from '@utils';
@@ -51,12 +55,28 @@ const ReviewSubmittedLevelUpModal = memo(
           </div>
         );
       } else if (lookBackInterval && lookBackType) {
+        let lookBackTypeText = '';
+        switch (lookBackType) {
+          case SkillMapLookBackType.DAY:
+            lookBackTypeText = SkillMapTypeInterval.DAY;
+            break;
+          case SkillMapLookBackType.WEEK:
+            lookBackTypeText = SkillMapTypeInterval.WEEK;
+            break;
+          case SkillMapLookBackType.MONTH:
+            lookBackTypeText = SkillMapTypeInterval.MONTH;
+            break;
+          case SkillMapLookBackType.YEAR:
+            lookBackTypeText = SkillMapTypeInterval.YEAR;
+            break;
+        }
+
         return (
           <div className="text-black flex flex-col justify-start w-full">
             <p className="text-sm font-medium mb-3">再度レベルアップ条件</p>
             <p className="text-[13px] font-normal">
               振り返りの期間{lookBackInterval}
-              {lookBackType}ごと
+              {lookBackTypeText}ごと
             </p>
           </div>
         );
@@ -66,12 +86,9 @@ const ReviewSubmittedLevelUpModal = memo(
     return (
       <Modal
         open={open}
-        isOutSideAction={false}
         className="font-primary !rounded-[8px] text-gray-700 !p-0 w-[400px] "
         contentClass="!w-[400px] !rounded-[8px]"
-        onClose={() => {
-          onClose();
-        }}>
+        onClose={onClose}>
         <div className="py-[40px] px-[20px] flex flex-col gap-5 items-center">
           {/* Header */}
           <p className="text-black font-medium text-[18px] max-w-full break-all text-center">
@@ -183,9 +200,10 @@ const ReviewSubmittedLevelUpModal = memo(
                     return (
                       <div key={index} className="flex gap-2">
                         <Checkbox
-                          classLabel="text-black text-sm font-medium"
+                          classLabel="text-black text-sm font-medium !max-w-full !break-all"
                           label={item.item}
                           isChecked={item.isChecked}
+                          disable={true}
                         />
                       </div>
                     );
@@ -208,12 +226,13 @@ const ReviewSubmittedLevelUpModal = memo(
           <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
             <div className="flex items-center mb-3">
               <CustomUserAvatar
-                avatarUrl={submitLevelUpDetail.staff?.avatar || ''}
-                avatarColor={submitLevelUpDetail.staff?.avatarColor || ''}
+                avatarUrl={submitLevelUpDetail.approver?.avatar || ''}
+                avatarColor={submitLevelUpDetail.approver?.avatarColor || ''}
                 size={24}
               />
               <p className="text-sm font-medium ml-2 max-w-full break-all line-clamp-4">
-                {submitLevelUpDetail.staff.profile.fullName}{' '}
+                {submitLevelUpDetail.approver &&
+                  submitLevelUpDetail.approver.profile.fullName}{' '}
                 <span className="text-[#77858F] text-xs font-medium ml-1">
                   さんからのコメント
                 </span>

@@ -390,18 +390,22 @@ export const MessageDetail = ({
       if (status == SubmitLevelStatus.APPROVAL) {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm">{skillName}</p>
-            <p className="text-black text-sm">
-              のスキルがレベルアップしました！
+            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+              {skillName}{' '}
+              <span className="text-black text-sm font-normal">
+                のスキルがレベルアップしました！
+              </span>
             </p>
           </div>
         );
       } else {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm">{skillName}</p>
-            <p className="text-black text-sm">
-              のレベルアップの申請についてコメントが届いています。
+            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+              {skillName}{' '}
+              <span className="text-black text-sm font-normal">
+                のレベルアップの申請についてコメントが届いています。
+              </span>
             </p>
           </div>
         );
@@ -1197,13 +1201,7 @@ export const MessageDetail = ({
           {chatRoomDetail?.type === ChatRoomType.SKILL && (
             <div
               className={`flex !box-border  ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
-              <div>
-                {renderAvatar(
-                  messageDetail.type == MessageType.CREATE_SUBMIT_LEVEL_SKILL
-                    ? Number(session?.user.id)
-                    : messageDetail.sender.id,
-                )}
-              </div>
+              <div>{renderAvatar(messageDetail.sender.id)}</div>
               <div className={`ml-3 w-full pr-5`}>
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">

@@ -17,7 +17,6 @@ import useSkillMapLevelUp from '@hooks/useSkillMapLevelUp';
 import { useErrorToast } from '@hooks/useErrorToast';
 
 import {
-  SaveLevelUpDraftRequest,
   SkillMapByOrganization,
   SkillMapByOrganizationInfo,
   SkillMapComment,
@@ -292,30 +291,9 @@ export const SkillMapByOrganizationPanel = ({
   );
 
   // Call API to save level up draft
-  const handleConfirmSaveLevelUpDraft = (
-    data: SaveLevelUpDraftRequest & { skillMapLevelId: number },
-  ) => {
-    saveLevelUpDraft(data);
-  };
-
-  const handleSaveLevelUpDraft = async (
-    data: SaveLevelUpDraftRequest & { skillMapLevelId: number },
-  ) => {
-    const { data: response } = await api.post(
-      `${apiRouters.SAVE_SKILL_MAPS_LEVEL_UP_DRAFT(
-        String(selectedSkillMapToSubmitLevelUp),
-      )}?id=${String(selectedSkillMapToSubmitLevelUp)}&skill_map_level_id=${String(data.skillMapLevelId)}`,
-      {
-        items: data.items,
-        approver: data.approver,
-      },
-    );
-    return response;
-  };
-
   const { mutate: saveLevelUpDraft } = useMutation(
     'handleSaveLevelUpDraft',
-    handleSaveLevelUpDraft,
+    handleSubmitLevelUp,
     {
       onSuccess: () => {
         setOpenSubmitLevelUpModal(false);
@@ -555,7 +533,7 @@ export const SkillMapByOrganizationPanel = ({
           open={openSubmitLevelUpModal}
           submitLevelUpDetail={submitLevelUpDetail}
           isSuccessSubmitLevelUp={isSuccessSubmitLevelUp}
-          onCloseAndSave={(data) => handleConfirmSaveLevelUpDraft(data)}
+          onCloseAndSave={(data) => saveLevelUpDraft(data)}
           onClose={() => {
             setOpenSubmitLevelUpModal(false);
             setSelectedSkillMapToSubmitLevelUp(null);

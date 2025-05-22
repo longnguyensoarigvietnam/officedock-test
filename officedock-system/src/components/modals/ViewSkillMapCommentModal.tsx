@@ -147,12 +147,12 @@ const ViewSkillMapCommentModal = memo(
           <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
             <div className="flex items-center mb-3">
               <CustomUserAvatar
-                avatarUrl={currentComment.staff?.avatar || ''}
-                avatarColor={currentComment.staff?.avatarColor || ''}
+                avatarUrl={currentComment.approver?.avatar || ''}
+                avatarColor={currentComment.approver?.avatarColor || ''}
                 size={24}
               />
               <p className="text-sm font-medium ml-2 max-w-full break-all line-clamp-4">
-                {currentComment.staff.profile.fullName}{' '}
+                {currentComment.approver.profile.fullName}{' '}
                 <span className="text-[#77858F] text-xs font-medium ml-1">
                   さんからのコメント
                 </span>

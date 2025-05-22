@@ -367,7 +367,7 @@ const CensorLevelUpModal = memo(
                         return (
                           <div key={index} className="flex gap-2">
                             <Checkbox
-                              classLabel="text-black text-sm font-medium"
+                              classLabel="text-black text-sm font-medium !max-w-full !break-all"
                               label={item.item}
                               onChange={() => {
                                 setItemStatusList((prev) =>
