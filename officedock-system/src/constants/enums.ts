@@ -527,3 +527,7 @@ export enum SkillMapTypeInterval {
   MONTH = 'ヶ月',
   YEAR = '年',
 }
+export enum MenuPlacementType {
+  TOP = 'top',
+  BOTTOM = 'bottom'
+}

@@ -4,7 +4,10 @@ import makeAnimated from 'react-select/animated';
 import Image from 'next/image';
 
 import { NO_OPTIONS_CUSTOM } from '@constants';
+import { MenuPlacementType } from '@constants/enums';
+
 import { OptionDropdownType } from '@interfaces/common';
+
 import './styles/singleSelect.css';
 
 export type SingleSelectProps = {
@@ -40,7 +43,9 @@ const SingleSelect = ({
 }: SingleSelectProps) => {
   const animatedComponents = makeAnimated();
   const [menuIsOpen, setMenuIsOpen] = useState(false);
-  const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('bottom');
+  const [menuPlacement, setMenuPlacement] = useState<MenuPlacementType>(
+    MenuPlacementType.BOTTOM,
+  );
   const selectRef = useRef<any>(null);
 
   useEffect(() => {
@@ -48,9 +53,13 @@ const SingleSelect = ({
 
     const rect = selectRef.current.controlRef.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
-    
+
     // Check if there is enough space below, otherwise open above
-    setMenuPlacement(rect.bottom + 100 > viewportHeight ? 'top' : 'bottom');
+    setMenuPlacement(
+      rect.bottom + 100 > viewportHeight
+        ? MenuPlacementType.TOP
+        : MenuPlacementType.BOTTOM,
+    );
   }, [menuIsOpen]);
 
   const handleChange = (selectedOption: any) => {
