@@ -2,7 +2,7 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { Controller, useForm } from 'react-hook-form';
 import { formatISO } from 'date-fns';
-import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -22,12 +22,10 @@ import { apiRouters } from '@constants/routers';
 
 import {
   CreationDataTask,
+  DataStatusChangeInline,
   Task,
-  TaskErrorPerson,
   TaskFormData,
-  TaskRequest,
 } from '@interfaces/task';
-import { ResponseError } from '@interfaces/response';
 import { OptionDropdownType } from '@interfaces/common';
 
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
@@ -53,14 +51,7 @@ interface ListViewItemProps {
   handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;
-  editTask: UseMutateFunction<
-    Task,
-    ResponseError<{
-      detail: TaskErrorPerson;
-    }>,
-    TaskRequest,
-    unknown
-  >;
+  editTaskInline: (data: DataStatusChangeInline) => void;
   handlePinItem: (id: string) => void;
   disableDraggable?: boolean;
 }
@@ -69,7 +60,7 @@ const ListViewItem = ({
   index,
   content,
   creationDataTaskData,
-  editTask,
+  editTaskInline,
   handlePinItem,
   handleUpdateItemInline,
   handleConfirmCopyTask,
@@ -538,7 +529,7 @@ const ListViewItem = ({
                             )}
                             onChange={(e) => {
                               onChange(e);
-                              editTask({
+                              editTaskInline({
                                 id: `${content.id}`,
                                 oldIdStatus: `${content.status?.id}`,
                                 statusId: watch('statusId')?.value as number,

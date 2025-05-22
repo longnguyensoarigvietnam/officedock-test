@@ -6,12 +6,11 @@ import ImageRound from '@components/common/ImageRound';
 
 import { SkillMapTypeInterval } from '@constants/enums';
 
-import { WebSocketMessageSortKanban } from '@interfaces/chat';
-import { timeStringToHours } from '@utils';
+import { WebSocketMessageData } from '@interfaces/chat';
 
 export type CompletionRewardModalProps = {
   open: boolean;
-  dataRewardSkill?: WebSocketMessageSortKanban;
+  dataRewardSkill?: WebSocketMessageData;
   onConfirm: () => void;
   onClose: () => void;
 };
@@ -39,11 +38,11 @@ const CompletionRewardModal = memo(
         <div className="font-medium text-[18px] text-[#0068B6] text-center my-[30px] ">
           「{dataRewardSkill?.skill.name}」を{' '}
           {dataRewardSkill?.measureCount !== null && (
-            <>{dataRewardSkill?.measureCount}回完了にする</>
+            <>{dataRewardSkill?.measureCount}回完了しました！</>
           )}
           {dataRewardSkill?.measureTime !== null && (
             <>
-              {timeStringToHours(`${dataRewardSkill?.measureTime}`)}
+              {dataRewardSkill?.measureTime}
               時間経過した
             </>
           )}

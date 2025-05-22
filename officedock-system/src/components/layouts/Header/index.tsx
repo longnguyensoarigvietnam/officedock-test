@@ -44,6 +44,8 @@ import ViewProfileModal from '@components/modals/ViewProfileModal';
 import EditProfileModal from '@components/modals/EditProfileModal';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
+import ConfirmDragModalTask from '@components/modals/ConfirmDropModalTask';
+import CompletionRewardModal from '@components/modals/CompletionRewardModal';
 
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
@@ -57,6 +59,7 @@ import {
   ERROR_DELETE_MESSAGE,
   ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
+  ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -73,6 +76,7 @@ import { UserProfileFormData, UserProfileFormRequest } from '@interfaces/user';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
+
 type HeaderProps = {
   className?: string;
 };
@@ -178,6 +182,13 @@ const Header = ({ className }: HeaderProps) => {
     useState<boolean>(false);
   const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
     useState(false);
+  const [openConfirmDragModalForm, setOpenConfirmDragModalForm] =
+    useState(false);
+  const [dataConfirmRewardForm, setDataConfirmRewardForm] =
+    useState<TaskFormData | null>(null);
+  const [openRewardModal, setOpenRewardModal] = useState(false);
+  const [dataRewardSkill, setDataRewardSkill] =
+    useState<WebSocketMessageData>();
 
   const { showToast } = useToast();
   const { authenticatedUser } = useAuthenticatedUser({});
@@ -220,6 +231,9 @@ const Header = ({ className }: HeaderProps) => {
             title: data.title as string,
           });
           break;
+        case SocketActions.SKILL_LEVEL_UP_COMPLETED:
+          setDataRewardSkill(data);
+          setOpenRewardModal(true);
       }
     };
 
@@ -363,6 +377,8 @@ const Header = ({ className }: HeaderProps) => {
       setPendingTaskData(null);
       setCloseAction(null);
       setOpenWarningDeadlineModal(false);
+      setOpenConfirmDragModalForm(false);
+      setDataConfirmRewardForm(null);
     },
     onError: (error: AxiosError<any>) => {
       if (error.response?.data.taskSchedules) {
@@ -846,8 +862,12 @@ const Header = ({ className }: HeaderProps) => {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['getAuthenticatedUser'] }),
           queryClient.invalidateQueries({ queryKey: ['getUserList'] }),
-          queryClient.invalidateQueries({ queryKey: ['getDashboardMemberList'] }),
-          queryClient.invalidateQueries({ queryKey: ['getCreationDataStatistic'] }),
+          queryClient.invalidateQueries({
+            queryKey: ['getDashboardMemberList'],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ['getCreationDataStatistic'],
+          }),
           queryClient.invalidateQueries({ queryKey: ['getTaskTeamList'] }),
         ]);
       },
@@ -857,6 +877,33 @@ const Header = ({ className }: HeaderProps) => {
       onSettled: () => {
         setIsLoading(false);
       },
+    },
+  );
+
+  // Handle cancel reward popup
+  const handleCancelReward = async () => {
+    const { data: response } = await api.put(
+      `${apiRouters.SAVE_SKILL_MAPS_LEVEL_UP_DRAFT(
+        String(dataRewardSkill?.skill.id),
+      )}?id=${String(dataRewardSkill?.skill_map)}&skill_map_level_id=${String(dataRewardSkill?.skill_map_level)}`,
+      {
+        popup: false,
+      },
+    );
+    return response;
+  };
+
+  const { mutate: cancelReward } = useMutation(
+    'handleCancelRewardPopup',
+    handleCancelReward,
+    {
+      onSuccess: () => {
+        setOpenRewardModal(false);
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_SAVE_MESSAGE);
+      },
+      onSettled: () => {},
     },
   );
 
@@ -1088,7 +1135,17 @@ const Header = ({ className }: HeaderProps) => {
             setCloseAction(action);
             setOpenWarningCloseModal(true);
           }}
-          onEdit={handleConfirmEditTask}
+          onEdit={(values: TaskFormData) => {
+            if (
+              dataTaskEdit?.status?.id === StatusValueTask.COMPLETED &&
+              values.statusId?.value !== StatusValueTask.COMPLETED
+            ) {
+              setDataConfirmRewardForm(values);
+              setOpenConfirmDragModalForm(true);
+            } else {
+              handleConfirmEditTask(values);
+            }
+          }}
           dashboardMemberList={dashboardMemberList}
           creationDataTaskData={creationDataTaskData}
           onDelete={() => {
@@ -1251,6 +1308,28 @@ const Header = ({ className }: HeaderProps) => {
             cancelUploadChatFiles();
             handleNavigateToNewPage(pendingPageChange);
           }}
+        />
+      )}
+      {openConfirmDragModalForm && (
+        <ConfirmDragModalTask
+          open={openConfirmDragModalForm}
+          onConfirm={() =>
+            handleConfirmEditTask(dataConfirmRewardForm as TaskFormData)
+          }
+          onClose={() => {
+            setOpenConfirmDragModalForm(false);
+            setDataConfirmRewardForm(null);
+          }}
+        />
+      )}
+      {openRewardModal && (
+        <CompletionRewardModal
+          open={openRewardModal}
+          dataRewardSkill={dataRewardSkill}
+          onConfirm={() => {
+            router.push(pageRouters.SKILL_MAP.href);
+          }}
+          onClose={cancelReward}
         />
       )}
     </>

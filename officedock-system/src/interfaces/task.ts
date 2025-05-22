@@ -438,3 +438,8 @@ export interface NoSettingTotalType {
   count: number;
   hasNext: boolean;
 }
+export interface DataStatusChangeInline {
+  id: string;
+  oldIdStatus: string;
+  statusId: number;
+}
