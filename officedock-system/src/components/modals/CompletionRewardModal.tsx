@@ -27,7 +27,7 @@ const CompletionRewardModal = memo(
         open={open}
         className="font-primary bg-white w-[500px] !rounded-lg  py-10"
         isOutSideAction={false}
-        onClose={onClose}>
+        onClose={() => {}}>
         <div className="flex justify-center">
           <ImageRound
             src={'/icons/success.svg'}
@@ -72,7 +72,7 @@ const CompletionRewardModal = memo(
           </Button>
         </div>
 
-        <div className="text-center">
+        <div onClick={onClose} className="text-center">
           <p className="text-[#0068B6] text-[13px] font-medium cursor-pointer">
             今はやめておく
           </p>

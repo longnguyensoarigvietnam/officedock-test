@@ -165,8 +165,8 @@ interface DataSkillReward {
   measureTime: string | null;
   lookBackInterval: string | null;
   lookBackType: string | null;
-  skill_map: number;
-  skill_map_level: number;
+  skillMap: number;
+  skillMapLevel: number;
 }
 export interface WebSocketMessageDataOverTime {
   action: string;

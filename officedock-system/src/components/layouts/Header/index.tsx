@@ -882,10 +882,10 @@ const Header = ({ className }: HeaderProps) => {
 
   // Handle cancel reward popup
   const handleCancelReward = async () => {
-    const { data: response } = await api.put(
+    const { data: response } = await api.post(
       `${apiRouters.SAVE_SKILL_MAPS_LEVEL_UP_DRAFT(
         String(dataRewardSkill?.skill.id),
-      )}?id=${String(dataRewardSkill?.skill_map)}&skill_map_level_id=${String(dataRewardSkill?.skill_map_level)}`,
+      )}?skill_map_level_id=${String(dataRewardSkill?.skillMapLevel)}`,
       {
         popup: false,
       },
@@ -1327,6 +1327,7 @@ const Header = ({ className }: HeaderProps) => {
           open={openRewardModal}
           dataRewardSkill={dataRewardSkill}
           onConfirm={() => {
+            cancelReward();
             router.push(pageRouters.SKILL_MAP.href);
           }}
           onClose={cancelReward}
