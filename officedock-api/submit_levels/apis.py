@@ -1,5 +1,4 @@
 from django.db import transaction
-from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
@@ -158,7 +157,6 @@ class SubmitLevelViewSet(
             step_after_submit, level_after_submit = get_next_progression(
                 instance.step_before_submit, instance.level_before_submit
             )
-
             # Update current skill map skill level
             skill_map.skill_map_skill_levels.filter(
                 level=instance.level_before_submit
@@ -166,12 +164,9 @@ class SubmitLevelViewSet(
             is_not_max_level = True
             if step_after_submit != instance.step_before_submit:
                 # Update current skill map
-                SkillMap.objects.filter(
-                    organization=instance.organization,
-                    staff=instance.staff,
-                    step=instance.step_before_submit,
-                    skill=instance.skill,
-                ).update(is_complete=True)
+                SkillMap.objects.filter(id=skill_map.id).update(
+                    is_complete=True
+                )
                 skill = Skill.objects.filter(
                     parent__id=instance.skill.id
                 ).first()
@@ -190,35 +185,25 @@ class SubmitLevelViewSet(
                 else:
                     is_not_max_level = False
             elif (
-                level_after_submit == SkillLevelEnum.LEVEL_3.value
-                and not SkillMap.objects.filter(
-                    organization=instance.organization,
-                    staff=instance.staff,
-                    step=step_after_submit,
-                    skill=instance.skill,
+                instance.level_before_submit == SkillLevelEnum.LEVEL_3.value
+                and not Skill.objects.filter(
+                    parent__id=instance.skill.id
                 ).exists()
             ):
                 # Update last skill map
-                SkillMap.objects.filter(
-                    organization=instance.organization,
-                    staff=instance.staff,
-                    step=instance.step_before_submit,
-                    skill=instance.skill,
-                ).update(is_complete=True)
+                SkillMap.objects.filter(id=skill_map.id).update(
+                    is_complete=True
+                )
 
             # Get next skill level
             skill_level = skill_map.skill.skill_levels.filter(
                 level=level_after_submit
             ).first()
-            next_submit_at = None
-            start_look_back_at = None
             if skill_level and is_not_max_level:
-                if skill_level.look_back_type:
-                    next_submit_at = get_lookback_time(
-                        skill_level.look_back_type,
-                        skill_level.look_back_interval,
-                    )
-                    start_look_back_at = now()
+                next_submit_at, start_look_back_at = get_lookback_time(
+                    skill_level.look_back_type,
+                    skill_level.look_back_interval,
+                )
                 items = [
                     {"item": item, "is_checked": False}
                     for item in skill_level.items
@@ -242,21 +227,18 @@ class SubmitLevelViewSet(
                 instance.step_before_submit,
                 instance.level_before_submit,
                 skill=instance.skill,
-                organization=instance.organization,
-                staff=instance.staff,
             )
             submit_level = serializer.save(
                 level_after_submit=level_after_submit,
                 step_after_submit=step_after_submit,
             )
         elif status == SubmitLevelStatus.REJECT.value:
-            next_submit_at = None
-            if look_back_type and look_back_interval:
-                next_submit_at = get_lookback_time(
-                    look_back_type, look_back_interval
-                )
+            next_submit_at, start_look_back_at = get_lookback_time(
+                look_back_type,
+                look_back_interval,
+            )
             # Update current skill level
-            skill_map_level = skill_map.skill_map_skill_levels.filter(
+            skill_map.skill_map_skill_levels.filter(
                 level=instance.level_before_submit
             ).update(
                 measure_time=measure_time,
@@ -265,13 +247,17 @@ class SubmitLevelViewSet(
                 actual_measure_count=0,
                 look_back_interval=look_back_interval,
                 look_back_type=look_back_type,
-                start_lookback_at=now() if next_submit_at else None,
+                start_lookback_at=start_look_back_at,
                 next_submit_at=next_submit_at,
                 items=items,
             )
             submit_level = serializer.save()
         else:
+            # Send websocket to chat
             submit_level = serializer.save()
+            self._send_to_chat(
+                submit_level.approver, submit_level, is_create=True
+            )
 
         if status in [
             SubmitLevelStatus.APPROVE.value,
@@ -280,21 +266,48 @@ class SubmitLevelViewSet(
             self._send_to_chat(instance.staff, submit_level)
 
     @transaction.atomic()
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
         """Handle create submit level"""
         user = self.request.user
-        staff = serializer.validated_data.get("staff")
-        approver = serializer.validated_data.get("approver")
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        staff = serializer_data.get("staff")
+        approver = serializer_data.get("approver")
+        skill_map_level = serializer_data.pop("skill_map_level", None)
+        items = serializer_data.pop("items", None)
+        submit_level = serializer_data.pop("submit_level", None)
+
         # Allow to submit when staff is logged user
         if user != staff:
             raise PermissionDenied(
                 {"detail": ERROR_MESSAGES["permission_denied"]}
             )
-
-        submit_level = serializer.save()
+        # Get current skill map
+        if skill_map_level:
+            skill_map_level.items = items
+            skill_map_level.save()
+        # Update if exists submit level
+        if submit_level:
+            submit_level.staff = serializer_data.get("staff")
+            submit_level.organization = serializer_data.get("organization")
+            submit_level.skill = serializer_data.get("skill")
+            submit_level.step_before_submit = serializer_data.get(
+                "step_before_submit"
+            )
+            submit_level.approver = serializer_data.get("approver")
+            submit_level.level_before_submit = serializer_data.get(
+                "level_before_submit"
+            )
+            submit_level.status = serializer_data.get("status")
+            submit_level.save()
+        else:
+            submit_level = serializer.save()
+            self._send_to_chat(approver, submit_level, is_create=True)
 
         # Send websocket to chat
-        self._send_to_chat(approver, submit_level, is_create=True)
+
+        return self.response_ok(ListSubmitLevelSerializer(submit_level).data)
 
     @extend_schema(
         parameters=[

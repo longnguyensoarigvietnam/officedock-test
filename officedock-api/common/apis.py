@@ -22,6 +22,7 @@ from organizations.serializers import (
 )
 from skills.serializers import SkillSerializer
 from tags.serializers import BaseTagSerializer
+from tasks.utils import _send_socket_show_popup_complete
 
 from users.serializers import RoleSerializer
 from users.models import Role, RoleDetail, User
@@ -562,23 +563,15 @@ class CronJobViewSet(BaseAPIViewSet):
         now = timezone.now()
         one_minute_before = now - timedelta(minutes=1)
         skill_map_levels = SkillMapSkillLevel.objects.filter(
-            next_submit_at__range=(one_minute_before, now),
+            next_submit_at__range=(one_minute_before, now), popup=True
         ).all()
         for skill_map_level in skill_map_levels:
-            skill_map = skill_map_level.skill_map
-            send_web_socket_event(
-                {
-                    "skill": {
-                        "id": skill_map.skill.id,
-                        "name": skill_map.skill.name,
-                    },
-                    "measure_count": None,
-                    "measure_time": None,
-                    "look_back_interval": skill_map_level.look_back_interval,
-                    "look_back_type": skill_map_level.look_back_type,
-                    "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
-                },
-                user=skill_map.staff,
+            _send_socket_show_popup_complete(
+                skill_map_level.skill_map,
+                None,
+                None,
+                skill_map_level.skill_map.staff,
+                skill_map_level,
             )
 
         for task in tasks:

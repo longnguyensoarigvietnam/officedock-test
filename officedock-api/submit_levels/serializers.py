@@ -43,6 +43,7 @@ class SubmitLevelSerializer(serializers.ModelSerializer):
     )
     organization = OrganizationSerializer(read_only=True)
     staff = BaseUserSerializer(read_only=True)
+    approver = BaseUserSerializer(read_only=True)
     skill = BaseSkillHierarchySerializer(read_only=True)
 
     class Meta:
@@ -62,12 +63,40 @@ class SubmitLevelSerializer(serializers.ModelSerializer):
             "status",
             "comment",
             "created_at",
+            "approver",
         ]
         read_only_fields = ["id", "created_at"]
 
 
+class ItemsOfSubmitLevel(serializers.Serializer):
+    item = serializers.CharField()
+    is_checked = serializers.BooleanField()
+
+
 class CreateSubmitLevelSerializer(SubmitLevelSerializer):
     """Serializer for create SubmitLevel model"""
+
+    items = ItemsOfSubmitLevel(many=True, allow_null=True, required=False)
+    skill_map_skill_level = serializers.PrimaryKeyRelatedField(
+        source="skill_map_level",
+        queryset=SkillMapSkillLevel.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    approver_id = serializers.PrimaryKeyRelatedField(
+        source="approver",
+        queryset=User.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    submit_level = serializers.PrimaryKeyRelatedField(
+        queryset=SubmitLevelHistory.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = SubmitLevelHistory
@@ -80,7 +109,11 @@ class CreateSubmitLevelSerializer(SubmitLevelSerializer):
             "skill",
             "level_before_submit",
             "step_before_submit",
-            "approver",
+            "approver_id",
+            "status",
+            "items",
+            "skill_map_skill_level",
+            "submit_level",
         ]
 
     def validate(self, data):
@@ -126,11 +159,6 @@ class CreateSubmitLevelSerializer(SubmitLevelSerializer):
         return data
 
 
-class ItemsOfSubmitLevel(serializers.Serializer):
-    item = serializers.CharField()
-    is_checked = serializers.BooleanField()
-
-
 class UpdateSubmitLevelSerializer(SubmitLevelSerializer):
     """Serializer for update SubmitLevel model"""
 
@@ -171,6 +199,7 @@ class ListSubmitLevelSerializer(SubmitLevelSerializer):
             "status",
             "created_at",
             "progression",
+            "approver",
         ]
 
     def get_progression(self, obj):
@@ -183,8 +212,6 @@ class ListSubmitLevelSerializer(SubmitLevelSerializer):
             step_before_submit,
             level_before_submit,
             skill=obj.skill,
-            organization=obj.organization,
-            staff=obj.staff,
         )
 
         return {
@@ -211,6 +238,7 @@ class DetailSubmitLevelSerializer(ListSubmitLevelSerializer):
             "progression",
             "skill_map_skill_level",
             "comment",
+            "approver",
         ]
 
     def get_skill_map_skill_level(self, obj):

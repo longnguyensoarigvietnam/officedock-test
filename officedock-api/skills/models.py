@@ -219,3 +219,4 @@ class SkillMapSkillLevel(BaseModel):
     start_lookback_at = models.DateTimeField(null=True, blank=True)
     next_submit_at = models.DateTimeField(null=True, blank=True)
     is_complete = models.BooleanField(default=False)
+    popup = models.BooleanField(default=True)

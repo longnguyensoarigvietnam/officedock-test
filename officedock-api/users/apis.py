@@ -35,6 +35,7 @@ from common.utils import (
 from companies.models import Company, Contract
 from skills.models import SkillMapSkillLevel
 from submit_levels.models import SubmitLevelHistory
+from tasks.utils import _send_socket_show_popup_complete
 from users.constants import (
     RoleTypes,
     StepsRegisterTypes,
@@ -1135,24 +1136,15 @@ class SystemUserMemoViewSet(BaseAPIViewSet):
             # Send websocket when completed progress lookback skill map
 
             skill_map_levels = SkillMapSkillLevel.objects.filter(
-                next_submit_at__lte=datetime.now(), skill_map__staff=user
+                next_submit_at__lte=datetime.now(),
+                skill_map__staff=user,
+                popup=True,
             ).all()
             for skill_map_level in skill_map_levels:
-                skill_map = skill_map_level.skill_map
-                send_web_socket_event(
-                    {
-                        "skill": {
-                            "id": skill_map.skill.id,
-                            "name": skill_map.skill.name,
-                        },
-                        "measure_count": None,
-                        "measure_time": None,
-                        "look_back_interval": skill_map_level.look_back_interval,
-                        "look_back_type": skill_map_level.look_back_type,
-                        "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
-                    },
-                    user=user,
+                _send_socket_show_popup_complete(
+                    skill_map_level.skill_map, None, None, user, skill_map_level
                 )
+
             return self.response_ok(
                 self.get_serializer(
                     user.memo if hasattr(user, "memo") else None
