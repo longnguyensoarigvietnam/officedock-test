@@ -44,10 +44,20 @@ export type SkillLevelRequestDetail = BaseSkillLevel & {
 
 export type StepFormDataDetail = BaseStepDetail & {
   skillLevels: SkillLevelDetail[];
+  rawCategories: {
+    LARGE: OptionDropdownType;
+    MEDIUM: OptionDropdownType;
+    SMALL: OptionDropdownType;
+  }[];
 };
 
 export type StepRequestDataDetail = BaseStepDetail & {
   skillLevels: SkillLevelRequestDetail[];
+  categoryIds: {
+    largeStatisticCategoryId: number;
+    mediumStatisticCategoryId: number;
+    smallStatisticCategoryId: number;
+  }[];
 };
 
 export type SkillMapFormData = Record<StepKey, StepFormDataDetail | null>;
@@ -367,11 +377,11 @@ export interface SkillMapLevelUp {
   stepBeforeSubmit: string;
   stepAfterSubmit: string;
   items: {
-    item: string,
+    item: string;
     isChecked: boolean;
   }[];
-  skillMapSkillLevel: number
-  submitLevel: number | null
+  skillMapSkillLevel: number;
+  submitLevel: number | null;
 }
 
 export interface SubmitLevelUpRequest {
@@ -381,7 +391,7 @@ export interface SubmitLevelUpRequest {
   levelBeforeSubmit: string;
   stepBeforeSubmit: string;
   approver: number;
-  submitLevel: number | null
+  submitLevel: number | null;
 }
 
 export interface Description {
@@ -482,5 +492,5 @@ export interface SaveLevelUpDraftRequest {
     item: string;
     isChecked: boolean;
   }[];
-  approver: number
+  approver: number;
 }

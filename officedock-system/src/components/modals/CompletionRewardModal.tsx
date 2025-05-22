@@ -4,10 +4,14 @@ import Modal from '../common/Modal';
 import Button from '../common/Button';
 import ImageRound from '@components/common/ImageRound';
 
+import { SkillMapTypeInterval } from '@constants/enums';
+
+import { WebSocketMessageSortKanban } from '@interfaces/chat';
+import { timeStringToHours } from '@utils';
+
 export type CompletionRewardModalProps = {
   open: boolean;
-  name?: string;
-  count: number;
+  dataRewardSkill?: WebSocketMessageSortKanban;
   onConfirm: () => void;
   onClose: () => void;
 };
@@ -15,8 +19,7 @@ export type CompletionRewardModalProps = {
 const CompletionRewardModal = memo(
   ({
     open,
-    count = 1,
-    name,
+    dataRewardSkill,
     onConfirm,
     onClose,
   }: CompletionRewardModalProps) => {
@@ -34,7 +37,26 @@ const CompletionRewardModal = memo(
           />
         </div>
         <div className="font-medium text-[18px] text-[#0068B6] text-center my-[30px] ">
-          「{name}」を{count}回完了しました！
+          「{dataRewardSkill?.skill.name}」を{' '}
+          {dataRewardSkill?.measureCount !== null && (
+            <>{dataRewardSkill?.measureCount}回完了にする</>
+          )}
+          {dataRewardSkill?.measureTime !== null && (
+            <>
+              {timeStringToHours(`${dataRewardSkill?.measureTime}`)}
+              時間経過した
+            </>
+          )}
+          {dataRewardSkill?.lookBackInterval !== null && (
+            <>
+              {dataRewardSkill?.lookBackInterval}
+              {
+                SkillMapTypeInterval[
+                  dataRewardSkill?.lookBackType as keyof typeof SkillMapTypeInterval
+                ]
+              }
+            </>
+          )}
         </div>
         <div className="text-sm font-normal text-center mb-[30px]">
           <p>あなたの成長を確認できる</p>
