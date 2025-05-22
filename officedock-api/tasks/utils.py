@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, time
 
-from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 
 from chat.constants import WebSocketEventType
@@ -169,22 +168,13 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
     task_categories = task.categories.first()
     if not task_categories:
         return
-    org_cats_filter = Q(organization=task.organization)
-    if task_categories.large_statistic_category:
-        org_cats_filter &= Q(
-            large_statistic_category=task_categories.large_statistic_category
-        )
-        if task_categories.medium_statistic_category:
-            org_cats_filter &= Q(
-                medium_statistic_category=task_categories.medium_statistic_category
-            )
-            if task_categories.small_statistic_category:
-                org_cats_filter &= Q(
-                    small_statistic_category=task_categories.small_statistic_category
-                )
+
     # Get Organization categories
     org_categories = OrganizationsStatisticCategories.objects.filter(
-        org_cats_filter
+        large_statistic_category=task_categories.large_statistic_category,
+        medium_statistic_category=task_categories.medium_statistic_category,
+        small_statistic_category=task_categories.small_statistic_category,
+        organization=task.organization,
     ).values_list("id", flat=True)
     # Get Skill have categories
     org_cat_skills = (

@@ -536,13 +536,16 @@ class SkillMapViewSet(
             )
 
             # Get draft submit level
-            draft_submit_level = SubmitLevelHistory.objects.filter(
+            submit_level = SubmitLevelHistory.objects.filter(
                 skill=skill_map.skill,
                 step_before_submit=skill_map.step,
                 level_before_submit=skill_map_skill_level.level,
                 organization=skill_map.organization,
                 staff=skill_map.staff,
-                status=SubmitLevelStatus.DRAFT.value,
+                status__in=[
+                    SubmitLevelStatus.DRAFT.value,
+                    SubmitLevelStatus.APPLYING.value,
+                ],
             ).first()
             # Get users have permission update skill map
             permission = Screens.SKILL_MAP.value + "_" + Actions.UPDATE.value
@@ -572,10 +575,15 @@ class SkillMapViewSet(
                 "step_after_submit": step_after_submit,
                 "level_after_submit": level_after_submit,
                 "items": skill_map_skill_level.items,
-                "approver": BaseUserSerializer(draft_submit_level.approver).data
-                if draft_submit_level
+                "approver": BaseUserSerializer(submit_level.approver).data
+                if submit_level
                 else None,
                 "approvers": BaseUserSerializer(users, many=True).data,
+                "is_applying": submit_level.status
+                == SubmitLevelStatus.APPLYING.value
+                if submit_level
+                else None,
+                "submit_level": submit_level.id if submit_level else None,
             }
 
         return self.response_ok(data)

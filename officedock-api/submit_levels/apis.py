@@ -135,7 +135,10 @@ class SubmitLevelViewSet(
         items = serializer_data.pop("items", None)
 
         # Allow to edit submit when staff isn't logged user
-        if user == instance.staff:
+        if user == instance.staff and status in [
+            SubmitLevelStatus.APPROVE.value,
+            SubmitLevelStatus.REJECT.value,
+        ]:
             raise PermissionDenied(
                 {"detail": ERROR_MESSAGES["permission_denied"]}
             )
@@ -246,7 +249,7 @@ class SubmitLevelViewSet(
                 level_after_submit=level_after_submit,
                 step_after_submit=step_after_submit,
             )
-        else:
+        elif status == SubmitLevelStatus.REJECT.value:
             next_submit_at = None
             if look_back_type and look_back_interval:
                 next_submit_at = get_lookback_time(
@@ -266,6 +269,8 @@ class SubmitLevelViewSet(
                 next_submit_at=next_submit_at,
                 items=items,
             )
+            submit_level = serializer.save()
+        else:
             submit_level = serializer.save()
 
         if status in [
