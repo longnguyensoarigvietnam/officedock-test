@@ -258,6 +258,7 @@ const SubmitLevelUpModal = memo(
                       stepBeforeSubmit: submitLevelUpDetail.stepBeforeSubmit,
                       skillId: submitLevelUpDetail.skill.id,
                       approver: Number(selectedApproverId),
+                      submitLevel: submitLevelUpDetail.submitLevel
                     });
                   }}>
                   レベルアップ申請

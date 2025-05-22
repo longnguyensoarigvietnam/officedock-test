@@ -488,7 +488,7 @@ export const apiRouters = {
 
   // SUBMIT LEVELS
   SUBMIT_LEVELS_LIST: '/submit-levels/',
-  SUBMIT_LEVELS_DETAIL: (id: string) => `/submit-levels/${id}/`,
+  SUBMIT_LEVELS_DETAIL: (id: string | number) => `/submit-levels/${id}/`,
 
   // STATISTIC ORGANIZATION
   ACTION_STATISTIC_ORGANIZATION: (id: string) =>

@@ -14,7 +14,7 @@ import ImageRound from '@components/common/ImageRound';
 import Input from '@components/common/Input';
 import { Table } from '@components/common/Table';
 
-import { ActionsModal, PermissionsSystem } from '@constants/enums';
+import { ActionsModal, PermissionsSystem, SkillMapLookBackType, SkillMapTypeInterval } from '@constants/enums';
 import {
   ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -51,7 +51,7 @@ interface OrganizationSkillDetailProps {
     id,
     action,
     step,
-    organization
+    organization,
   }: {
     id?: string | null;
     action?: string | null;
@@ -83,17 +83,17 @@ const LevelConditionDetail = ({
   } else {
     let lookBackTypeText = '';
     switch (lookBackType) {
-      case 'DAY':
-        lookBackTypeText = '日';
+      case SkillMapLookBackType.DAY:
+        lookBackTypeText = SkillMapTypeInterval.DAY;
         break;
-      case 'WEEK':
-        lookBackTypeText = '週間';
+      case SkillMapLookBackType.WEEK:
+        lookBackTypeText = SkillMapTypeInterval.WEEK;
         break;
-      case 'MONTH':
-        lookBackTypeText = 'ヶ月';
+      case SkillMapLookBackType.MONTH:
+        lookBackTypeText = SkillMapTypeInterval.MONTH;
         break;
-      case 'YEAR':
-        lookBackTypeText = '年';
+      case SkillMapLookBackType.YEAR:
+        lookBackTypeText = SkillMapTypeInterval.YEAR;
         break;
     }
     measureConditionText = `振り返りの期間${lookBackInterval}${lookBackTypeText}ごと`;
@@ -431,7 +431,7 @@ export const OrganizationSkillDetail = ({
                 setOpenSkillMapActionsModal(true);
                 handleSetParam({
                   action: ActionsModal.CREATE,
-                  organization: orgSkillDetail.id
+                  organization: orgSkillDetail.id,
                 });
               }}>
               <ImageRound

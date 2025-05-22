@@ -1,7 +1,10 @@
 'use client';
 import { useContext, useState } from 'react';
+import { useMutation } from 'react-query';
+import { AxiosError } from 'axios';
 
 import CensorLevelUpModal from '@components/modals/CensorLevelUpModal';
+import LevelUpCompletionModal from '@components/modals/LevelUpCompletionModal';
 
 import {
   CensorSubmittedLevelRequest,
@@ -11,16 +14,16 @@ import {
 
 import useSubmitLevelListByOrganizations from '@hooks/useSubmitLevelListByOrganizations';
 import useSubmitLevelDetail from '@hooks/useSubmitLevelDetail';
-
-import { LevelUpListByOrganization } from './level-up-list-by-organization';
-import { useMutation } from 'react-query';
-import { AxiosError } from 'axios';
-import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { useErrorToast } from '@hooks/useErrorToast';
+
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
-import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
+
+import api from '@base/api';
+
+import { LevelUpListByOrganization } from './level-up-list-by-organization';
 
 const LevelUpList = () => {
   const showErrorToast = useErrorToast();
@@ -33,6 +36,11 @@ const LevelUpList = () => {
   const [selectedSubmitLevel, setSelectedSubmitLevel] = useState<number | null>(
     null,
   );
+  const [selectRejectOption, setSelectRejectOption] = useState<boolean | null>(
+    null,
+  );
+  const [openLevelUpCompletionPopup, setOpenLevelUpCompletionPopup] =
+    useState<boolean>(false);
   const [submitLevelUpDetail, setSubmitLevelUpDetail] =
     useState<SubmitLevel | null>(null);
 
@@ -57,6 +65,7 @@ const LevelUpList = () => {
   };
 
   const handleCensorLevelUp = async (data: CensorSubmittedLevelRequest) => {
+    setOpenLevelUpCensoringPopup(false);
     setIsLoading(true);
     const { data: response } = await api.put(
       apiRouters.SUBMIT_LEVELS_DETAIL(`${selectedSubmitLevel}`),
@@ -70,6 +79,10 @@ const LevelUpList = () => {
     handleCensorLevelUp,
     {
       onSuccess: () => {
+        setOpenLevelUpCompletionPopup(true);
+        setSubmitLevelUpDetail(null);
+        setSelectedSubmitLevel(null);
+        refetchSubmitLevelList();
         setIsLoading(false);
       },
       onError: (error: AxiosError) => {
@@ -96,16 +109,26 @@ const LevelUpList = () => {
         <CensorLevelUpModal
           open={openLevelUpCensoringPopup}
           submitLevelUpDetail={submitLevelUpDetail}
+          selectRejectOption={selectRejectOption}
+          setSelectRejectOption={setSelectRejectOption}
           onSubmit={(data: CensorSubmittedLevelRequest) => {
             handleConfirmCensorLevelUp(data);
           }}
-          onClose={(currentStep: number) => {
+          onClose={() => {
             setOpenLevelUpCensoringPopup(false);
             setSubmitLevelUpDetail(null);
             setSelectedSubmitLevel(null);
-            if (currentStep == 4) {
-              refetchSubmitLevelList();
-            }
+          }}
+        />
+      )}
+
+      {openLevelUpCompletionPopup && (
+        <LevelUpCompletionModal
+          open={openLevelUpCompletionPopup}
+          selectRejectOption={Boolean(selectRejectOption)}
+          onClose={() => {
+            setOpenLevelUpCompletionPopup(false);
+            setSelectRejectOption(null);
           }}
         />
       )}

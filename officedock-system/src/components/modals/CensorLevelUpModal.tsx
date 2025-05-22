@@ -1,5 +1,5 @@
 'use client';
-import { memo, useEffect, useState } from 'react';
+import { Dispatch, memo, SetStateAction, useEffect, useState } from 'react';
 
 import Modal from '@components/common/Modal';
 import ImageRound from '@components/common/ImageRound';
@@ -16,6 +16,7 @@ import { CensorSubmittedLevelRequest, SubmitLevel } from '@interfaces/skills';
 import {
   LevelUpConditionBy,
   SkillMapLookBackType,
+  SkillMapTypeInterval,
   SubmitLevelStatus,
 } from '@constants/enums';
 import { ONLY_DIGITS_REGEX } from '@constants/regex';
@@ -26,14 +27,18 @@ import { getLastChar } from '@utils';
 export type CensorLevelUpModalProps = {
   open: boolean;
   submitLevelUpDetail: SubmitLevel;
+  selectRejectOption: boolean | null;
+  setSelectRejectOption: Dispatch<SetStateAction<boolean | null>>;
   onSubmit: (data: CensorSubmittedLevelRequest) => void;
-  onClose: (currentStep: number) => void;
+  onClose: () => void;
 };
 
 const CensorLevelUpModal = memo(
   ({
     open,
     submitLevelUpDetail,
+    selectRejectOption,
+    setSelectRejectOption,
     onSubmit,
     onClose,
   }: CensorLevelUpModalProps) => {
@@ -55,9 +60,7 @@ const CensorLevelUpModal = memo(
         : [],
     );
     const [currentStep, setCurrentStep] = useState<number>(1);
-    const [selectRejectOption, setSelectRejectOption] = useState<
-      boolean | null
-    >(null);
+
     const [comment, setComment] = useState<string>('');
     const [levelUpConditionBy, setLevelUpConditionBy] =
       useState<LevelUpConditionBy>(LevelUpConditionBy.NUMBER_OF_TIMES);
@@ -177,7 +180,9 @@ const CensorLevelUpModal = memo(
                   classNameError="!text-xs"
                   labelOptionClass="!pr-0"
                   options={LEVEL_UP_PERIOD_OPTIONS}
-                  selectedOption={LEVEL_UP_PERIOD_OPTIONS.find((option) => option.value == lookBackType)}
+                  selectedOption={LEVEL_UP_PERIOD_OPTIONS.find(
+                    (option) => option.value == lookBackType,
+                  )}
                   onChange={(e) => {
                     setLookBackType(e.value as SkillMapLookBackType);
                     setShowLookBackTypeErr(false);
@@ -216,17 +221,17 @@ const CensorLevelUpModal = memo(
       } else if (lookBackInterval && lookBackType) {
         let lookBackTypeText = '';
         switch (lookBackType) {
-          case 'DAY':
-            lookBackTypeText = '日';
+          case SkillMapLookBackType.DAY:
+            lookBackTypeText = SkillMapTypeInterval.DAY;
             break;
-          case 'WEEK':
-            lookBackTypeText = '週間';
+          case SkillMapLookBackType.WEEK:
+            lookBackTypeText = SkillMapTypeInterval.WEEK;
             break;
-          case 'MONTH':
-            lookBackTypeText = 'ヶ月';
+          case SkillMapLookBackType.MONTH:
+            lookBackTypeText = SkillMapTypeInterval.MONTH;
             break;
-          case 'YEAR':
-            lookBackTypeText = '年';
+          case SkillMapLookBackType.YEAR:
+            lookBackTypeText = SkillMapTypeInterval.YEAR;
             break;
         }
         return (
@@ -248,7 +253,7 @@ const CensorLevelUpModal = memo(
         open={open}
         className="font-primary !rounded-[8px] text-gray-700 !p-0 w-[400px] "
         contentClass="!w-[400px] !rounded-[8px]"
-        onClose={() => onClose(currentStep)}>
+        onClose={onClose}>
         <div className="py-[40px] px-[20px] flex flex-col gap-5 items-center">
           {/* Header */}
           {currentStep < 3 ? (
@@ -574,22 +579,11 @@ const CensorLevelUpModal = memo(
             </div>
           )}
 
-          {/* Completion text */}
-          {currentStep == 4 && (
-            <div>
-              <p className="text-sm font-modal">
-                {selectRejectOption
-                  ? 'スキルのレベルアップを差し戻しました。'
-                  : 'スキルのレベルアップを承認しました。'}
-              </p>
-            </div>
-          )}
-
           {/* Close button */}
           <p
             className="text-[#0068B6] text-[13px] font-medium flex justify-center hover:cursor-pointer"
-            onClick={() => onClose(currentStep)}>
-            {currentStep == 4 ? '閉じる' : 'キャンセル'}
+            onClick={onClose}>
+            キャンセル
           </p>
         </div>
       </Modal>
