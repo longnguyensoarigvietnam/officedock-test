@@ -195,20 +195,22 @@ const ReviewSubmittedLevelUpModal = memo(
                 チェックリスト
               </p>
               <div className="flex flex-col gap-2 justify-start">
-                {submitLevelUpDetail.skillMapSkillLevel.items.map(
-                  (item, index) => {
-                    return (
-                      <div key={index} className="flex gap-2">
-                        <Checkbox
-                          classLabel="text-black text-sm font-medium !max-w-full !break-all"
-                          label={item.item}
-                          isChecked={item.isChecked}
-                          disable={true}
-                        />
-                      </div>
-                    );
-                  },
-                )}
+                {submitLevelUpDetail.skillMapSkillLevel?.items &&
+                  submitLevelUpDetail.skillMapSkillLevel?.items.length > 0 &&
+                  submitLevelUpDetail.skillMapSkillLevel.items.map(
+                    (item, index) => {
+                      return (
+                        <div key={index} className="flex gap-2">
+                          <Checkbox
+                            classLabel="text-black text-sm font-medium !max-w-full !break-all"
+                            label={item.item}
+                            isChecked={item.isChecked}
+                            disable={true}
+                          />
+                        </div>
+                      );
+                    },
+                  )}
               </div>
             </div>
           )}
