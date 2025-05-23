@@ -1142,7 +1142,13 @@ class SystemUserMemoViewSet(BaseAPIViewSet):
             ).all()
             for skill_map_level in skill_map_levels:
                 _send_socket_show_popup_complete(
-                    skill_map_level.skill_map, None, None, user, skill_map_level
+                    skill_map_level.skill_map,
+                    None,
+                    None,
+                    user,
+                    skill_map_level,
+                    look_back_interval=skill_map_level.look_back_interval,
+                    look_back_type=skill_map_level.look_back_type,
                 )
 
             return self.response_ok(

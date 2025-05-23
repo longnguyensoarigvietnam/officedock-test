@@ -572,6 +572,8 @@ class CronJobViewSet(BaseAPIViewSet):
                 None,
                 skill_map_level.skill_map.staff,
                 skill_map_level,
+                look_back_interval=skill_map_level.look_back_interval,
+                look_back_type=skill_map_level.look_back_type,
             )
 
         for task in tasks:
