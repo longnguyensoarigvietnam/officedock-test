@@ -24,7 +24,6 @@ export type ActionsSkillMapDetailModalProps = {
   open: boolean;
   skillMapEditDetail: OrganizationSkillMapDetail[] | null;
   step?: number;
-  action?: string;
   onClose: () => void;
   onCreate?: (values: SkillMapFormData) => void;
   onEdit?: (values: SkillMapFormData) => void;
@@ -34,7 +33,6 @@ const ActionsSkillMapDetailModal = ({
   open,
   skillMapEditDetail,
   step = 1,
-  action,
   onClose,
 }: ActionsSkillMapDetailModalProps) => {
   const [currentStep, setCurrentStep] = useState<number>(
