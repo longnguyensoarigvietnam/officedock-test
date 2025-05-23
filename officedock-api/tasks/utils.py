@@ -12,6 +12,7 @@ from organizations.models import (
     OrganizationsStatisticCategories,
     OrganizationsStatisticCategoriesSkills,
 )
+from skills.constants import DEFAULT_TIME
 from skills.models import SkillMap
 from tasks.constants import DatetimeUnitTypes, TaskStatus
 from tasks.models import Task, TaskSchedule, TodoList, TaskDuration
@@ -191,6 +192,7 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
             staff=user,
             skill_map_skill_levels__is_complete=False,
             is_complete=False,
+            is_valid=True,
         ).first()
         if skill_map:
             current_skill_level = skill_map.skill_map_skill_levels.filter(
@@ -235,7 +237,12 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
                 except:
                     raise ValidationError()
                 # Formatted timedelta to string
-                actual_measure_time = format_duration(new_actual_measure_time)
+                actual_measure_time = (
+                    format_duration(new_actual_measure_time)
+                    if new_actual_measure_time > timedelta(0)
+                    else DEFAULT_TIME
+                )
+                print(user, actual_measure_time)
                 # Compare with current measure time and send socket to show pop-up
                 hours, _, _ = map(int, actual_measure_time.split(":"))
                 if (
@@ -255,7 +262,9 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
             skill_map.skill_map_skill_levels.filter(
                 id=current_skill_level.id
             ).update(
-                actual_measure_count=actual_measure_count,
+                actual_measure_count=actual_measure_count
+                if actual_measure_count > 0
+                else 0,
                 actual_measure_time=actual_measure_time,
             )
 
@@ -272,6 +281,8 @@ def _send_socket_show_popup_complete(
     """
     Handle send socket show popup complete skill map level
     """
+    if not skill_map.is_valid:
+        return
     send_web_socket_event(
         {
             "skill": {

@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from base.messages import ERROR_MESSAGES
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
-from common.utils import get_common_categories
+from common.utils import get_common_categories, time_str_to_timedelta
 from organizations.models import Organization, OrganizationsStatisticCategories
 from organizations.serializers import (
     OrganizationSerializer,
@@ -307,10 +307,11 @@ class SkillMapSerializer(serializers.ModelSerializer):
                     / skill_level["measure_count"]
                 ) * 100
             elif skill_level["measure_time"]:
-                hours, _, _ = map(
-                    int, skill_level["actual_measure_time"].split(":")
-                )
-                percent = (hours / skill_level["measure_time"]) * 100
+                measure_time_str = str(skill_level["measure_time"]) + ":00:00"
+                percent = (
+                    time_str_to_timedelta(skill_level["actual_measure_time"])
+                    / time_str_to_timedelta(measure_time_str)
+                ) * 100
             elif skill_level["start_lookback_at"]:
                 start = datetime.fromisoformat(skill_level["start_lookback_at"])
                 end = datetime.fromisoformat(skill_level["next_submit_at"])

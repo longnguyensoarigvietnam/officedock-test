@@ -1,6 +1,6 @@
 import os
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
@@ -33,9 +33,7 @@ from common.utils import (
     send_web_socket_event,
 )
 from companies.models import Company, Contract
-from skills.models import SkillMapSkillLevel
 from submit_levels.models import SubmitLevelHistory
-from tasks.utils import _send_socket_show_popup_complete
 from users.constants import (
     RoleTypes,
     StepsRegisterTypes,
@@ -1133,23 +1131,6 @@ class SystemUserMemoViewSet(BaseAPIViewSet):
         # Retrieve the memo of the logged-in user.
         if request.method == "GET":
             user = request.user
-            # Send websocket when completed progress lookback skill map
-
-            skill_map_levels = SkillMapSkillLevel.objects.filter(
-                next_submit_at__lte=datetime.now(),
-                skill_map__staff=user,
-                popup=True,
-            ).all()
-            for skill_map_level in skill_map_levels:
-                _send_socket_show_popup_complete(
-                    skill_map_level.skill_map,
-                    None,
-                    None,
-                    user,
-                    skill_map_level,
-                    look_back_interval=skill_map_level.look_back_interval,
-                    look_back_type=skill_map_level.look_back_type,
-                )
 
             return self.response_ok(
                 self.get_serializer(

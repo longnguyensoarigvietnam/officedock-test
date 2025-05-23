@@ -171,6 +171,13 @@ class UpdateSubmitLevelSerializer(SubmitLevelSerializer):
         choices=LookBackTypes.choices(), required=False, allow_null=True
     )
     items = ItemsOfSubmitLevel(many=True, required=False, allow_null=True)
+    approver_id = serializers.PrimaryKeyRelatedField(
+        source="approver",
+        queryset=User.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = SubmitLevelHistory
@@ -182,6 +189,7 @@ class UpdateSubmitLevelSerializer(SubmitLevelSerializer):
             "measure_time",
             "look_back_interval",
             "look_back_type",
+            "approver_id",
         ]
 
 
@@ -253,6 +261,6 @@ class DetailSubmitLevelSerializer(ListSubmitLevelSerializer):
         ).first()
         data = SkillMapSkillLevelSerializer(skill_map_skill_level).data
         data["items"] = (
-            skill_map_skill_level.items if skill_map_skill_level else None
+            skill_map_skill_level.items if skill_map_skill_level else []
         )
         return data
