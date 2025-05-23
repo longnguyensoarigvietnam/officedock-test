@@ -303,9 +303,10 @@ class SubmitLevelViewSet(
             submit_level.save()
         else:
             submit_level = serializer.save()
-            self._send_to_chat(approver, submit_level, is_create=True)
 
         # Send websocket to chat
+        if serializer_data.get("status") == SubmitLevelStatus.APPLYING.value:
+            self._send_to_chat(approver, submit_level, is_create=True)
 
         return self.response_ok(ListSubmitLevelSerializer(submit_level).data)
 

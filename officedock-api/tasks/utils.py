@@ -199,11 +199,16 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
             actual_measure_count = current_skill_level.actual_measure_count
             actual_measure_time = current_skill_level.actual_measure_time
             # Get all time durations of task
+            total_duration_of_task = None
             if not duration_time:
                 # Update skill map skill level actual measure count
-                count = (
-                    1 if task.status.name == TaskStatus.COMPLETED.value else -1
-                )
+                if task.status.name == TaskStatus.COMPLETED.value:
+                    count = 1
+                    total_duration_of_task = get_total_hours_of_task(task)
+                else:
+                    count = -1
+                    total_duration_of_task = -get_total_hours_of_task(task)
+
                 actual_measure_count = actual_measure_count + count
                 if (
                     current_skill_level.measure_count
@@ -218,13 +223,14 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
                         user,
                         skill_map_level=current_skill_level,
                     )
-            if duration_time:
+            if total_duration_of_task or duration_time:
                 # Update skill map skill level actual measure time
                 # Get new actual measure time
+                time_duration = total_duration_of_task or duration_time
                 try:
                     new_actual_measure_time = (
                         time_str_to_timedelta(actual_measure_time)
-                        + duration_time
+                        + time_duration
                     )
                 except:
                     raise ValidationError()

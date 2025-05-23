@@ -827,11 +827,17 @@ class SkillViewSet(
         """
         Handle create or update skill levels
         """
+        # Clear organizations_statistic_categories_skills
+        skill.organizations_statistic_categories_skills.all().delete()
         if categories:
-            # Clear organizations_statistic_categories_skills
-            skill.organizations_statistic_categories_skills.all().delete()
-
             for category in categories:
+                if (
+                    category["large_statistic_category"]
+                    == category["medium_statistic_category"]
+                    == category["small_statistic_category"]
+                    is None
+                ):
+                    continue
                 org_cat = OrganizationsStatisticCategories.objects.filter(
                     large_statistic_category=category[
                         "large_statistic_category"
@@ -842,6 +848,7 @@ class SkillViewSet(
                     small_statistic_category=category[
                         "small_statistic_category"
                     ],
+                    organization=skill.organization,
                 ).first()
                 if org_cat:
                     OrganizationsStatisticCategoriesSkills.objects.create(
