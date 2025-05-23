@@ -2,8 +2,9 @@ from datetime import datetime
 
 from rest_framework import serializers
 
+from base.messages import ERROR_MESSAGES
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
-from common.utils import get_common_categories
+from common.utils import get_common_categories, time_str_to_timedelta
 from organizations.models import Organization, OrganizationsStatisticCategories
 from organizations.serializers import (
     OrganizationSerializer,
@@ -80,6 +81,25 @@ class CategorySerializer(serializers.Serializer):
         required=False,
         allow_null=True,
     )
+
+    def validate(self, attrs):
+        """
+        Validate data
+        """
+        large_category = attrs.get("large_statistic_category")
+        medium_category = attrs.get("medium_statistic_category")
+        small_category = attrs.get("small_statistic_category")
+
+        if not OrganizationsStatisticCategories.objects.filter(
+            large_statistic_category=large_category,
+            medium_statistic_category=medium_category,
+            small_statistic_category=small_category,
+        ).exists():
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["statistic_category_not_exists"]}
+            )
+
+        return attrs
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -179,6 +199,8 @@ class SkillMapSkillLevelSerializer(serializers.ModelSerializer):
     """
 
     items = serializers.SerializerMethodField()
+    actual_measure_count = serializers.SerializerMethodField()
+    actual_measure_time = serializers.SerializerMethodField()
 
     class Meta:
         model = SkillMapSkillLevel
@@ -196,6 +218,7 @@ class SkillMapSkillLevelSerializer(serializers.ModelSerializer):
             "look_back_type",
             "items",
             "is_complete",
+            "popup",
         ]
 
     def get_items(self, obj):
@@ -205,8 +228,38 @@ class SkillMapSkillLevelSerializer(serializers.ModelSerializer):
         data = []
         if obj.items:
             for item in obj.items:
-                data.append(item["item"])
+                if isinstance(item, dict):
+                    data.append(item["item"])
+                else:
+                    data.append(item)
         return data
+
+    def get_actual_measure_count(self, obj):
+        """
+        return actual measure count if lower than measure count
+        """
+        if not obj.measure_count:
+            return obj.actual_measure_count
+        return (
+            obj.actual_measure_count
+            if obj.actual_measure_count <= obj.measure_count
+            else obj.measure_count
+        )
+
+    def get_actual_measure_time(self, obj):
+        """
+        Handle object item to text array item
+        """
+        if not obj.measure_time:
+            return obj.actual_measure_time
+        hours, _, _ = map(int, obj.actual_measure_time.split(":"))
+        format_measure_time = str(obj.measure_time) + ":00:00"
+
+        return (
+            obj.actual_measure_time
+            if obj.measure_time and hours <= obj.measure_time
+            else format_measure_time
+        )
 
 
 class SkillMapSerializer(serializers.ModelSerializer):
@@ -254,10 +307,11 @@ class SkillMapSerializer(serializers.ModelSerializer):
                     / skill_level["measure_count"]
                 ) * 100
             elif skill_level["measure_time"]:
-                hours, minutes, seconds = map(
-                    int, skill_level["actual_measure_time"].split(":")
-                )
-                percent = (hours / skill_level["measure_time"]) * 100
+                measure_time_str = str(skill_level["measure_time"]) + ":00:00"
+                percent = (
+                    time_str_to_timedelta(skill_level["actual_measure_time"])
+                    / time_str_to_timedelta(measure_time_str)
+                ) * 100
             elif skill_level["start_lookback_at"]:
                 start = datetime.fromisoformat(skill_level["start_lookback_at"])
                 end = datetime.fromisoformat(skill_level["next_submit_at"])
@@ -564,7 +618,7 @@ class GroupStepSkillMapSerializer(SkillSerializer):
         Return skill level and skill map skill level if have
         """
         skill_map = self.context.get("skill_map")
-        skill_levels = obj.skill_levels.all()
+        skill_levels = obj.skill_levels.all().order_by("level")
         return SkillLevelForSkillMapSerializer(
             skill_levels, many=True, context={"skill_map": skill_map}
         ).data
@@ -586,13 +640,12 @@ class GroupStepSkillMapSerializer(SkillSerializer):
         return transformed_categories
 
 
-class DraftLevelUpSerializer(serializers.Serializer):
-    """Serializer for draft level up"""
+class UpdateSkillMapSkillLevelSerializer(SkillMapSkillLevelSerializer):
+    """Serializer for update skill map skill level"""
 
-    from submit_levels.serializers import ItemsOfSubmitLevel
-
-    items = ItemsOfSubmitLevel(many=True, required=False)
-    approver = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        write_only=True,
-    )
+    class Meta:
+        model = SkillMapSkillLevel
+        fields = [
+            "id",
+            "popup",
+        ]

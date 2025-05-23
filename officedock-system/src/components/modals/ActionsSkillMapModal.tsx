@@ -1,4 +1,5 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import {
@@ -15,19 +16,16 @@ import ImageRound from '@components/common/ImageRound';
 import Drawer from '@components/common/Drawers';
 import Dropdown from '@components/common/Dropdown';
 import RadioButton from '@components/common/RadioButton';
+import CategoryStepRaw from '@components/skillMap/CategoryStepRaw';
 
-import {
-  OrganizationSkillMapDetail,
-  SkillLevelDetail,
-  SkillMapFormData,
-  StepFormDataDetail,
-} from '@interfaces/skills';
-
+import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
 import {
   ActionsEvent,
   ActionsModal,
+  EventWorkCategory,
   LevelUpConditionBy,
   PermissionsSystem,
+  ScreenName,
   SkillMapStep,
 } from '@constants/enums';
 import {
@@ -36,12 +34,23 @@ import {
   SKILL_MAP_STEP_COUNT,
   SKILL_MAP_STEPS,
 } from '@constants';
+import { ERROR_CREATE_MESSAGE, ERROR_UPDATE_MESSAGE } from '@constants/message';
 
 import { formatShowDateJapanese } from '@utils/date';
 import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
+import { OptionDropdownType } from '@interfaces/common';
+import { StepKey } from '@interfaces/skill-map';
+import {
+  CategoryStructure,
+  OrganizationSkillMapDetail,
+  SkillLevelDetail,
+  SkillMapFormData,
+  StepFormDataDetail,
+} from '@interfaces/skills';
+import { useToast } from '@providers/ToastProvider';
 
 export type ActionsSkillMapModalProps = {
   open: boolean;
@@ -63,17 +72,95 @@ const ActionsSkillMapModal = ({
   onEdit,
 }: ActionsSkillMapModalProps) => {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const organizationId = searchParams.get('organization');
+  const { showToast } = useToast();
 
   const [currentStep, setCurrentStep] = useState<number>(
     action == ActionsModal.EDIT ? Number(step) : 1,
   );
+  const [dataOrganizationCategories, setDataOrganizationCategories] = useState<
+    CategoryStructure[]
+  >([]);
+
+  const [dataOptionsCategorySmall, setDataOptionsCategorySmall] = useState<{
+    step1: OptionDropdownType[][];
+    step2: OptionDropdownType[][];
+    step3: OptionDropdownType[][];
+  }>({
+    step1: [
+      [
+        {
+          label: '',
+          value: '',
+        },
+      ],
+    ],
+    step2: [
+      [
+        {
+          label: '',
+          value: '',
+        },
+      ],
+    ],
+    step3: [
+      [
+        {
+          label: '',
+          value: '',
+        },
+      ],
+    ],
+  });
+  const [dataOptionsCategoryMedium, setDataOptionsCategoryMedium] = useState<{
+    step1: OptionDropdownType[][];
+    step2: OptionDropdownType[][];
+    step3: OptionDropdownType[][];
+  }>({
+    step1: [
+      [
+        {
+          label: '',
+          value: '',
+        },
+      ],
+    ],
+    step2: [
+      [
+        {
+          label: '',
+          value: '',
+        },
+      ],
+    ],
+    step3: [
+      [
+        {
+          label: '',
+          value: '',
+        },
+      ],
+    ],
+  });
+  const [dataOptionsCategoryLarge, setDataOptionsCategoryLarge] = useState<
+    OptionDropdownType[]
+  >([
+    {
+      label: '',
+      value: '',
+    },
+  ]);
 
   const {
     register,
     watch,
     handleSubmit,
     reset,
+    setError,
+    clearErrors,
     setValue,
+    getValues,
     formState: { errors },
     control,
   } = useForm<SkillMapFormData>({
@@ -88,6 +175,7 @@ const ActionsSkillMapModal = ({
       description: '',
       skillLevels: [],
       categories: [],
+      rawCategories: [],
     });
 
     const value: SkillMapFormData = {
@@ -95,7 +183,6 @@ const ActionsSkillMapModal = ({
       step2: baseStep(SkillMapStep.STEP_2),
       step3: baseStep(SkillMapStep.STEP_3),
     };
-
     if (skillMapEditDetail) {
       const getStepDetail = (step: string): StepFormDataDetail | null => {
         const detail = skillMapEditDetail.find((skill) => skill.step === step);
@@ -138,6 +225,7 @@ const ActionsSkillMapModal = ({
           description: detail.description,
           skillLevels,
           categories: detail.categories,
+          rawCategories: [],
         };
       };
 
@@ -150,9 +238,214 @@ const ActionsSkillMapModal = ({
 
   useEffect(() => {
     reset(defaultValues);
-  }, [defaultValues, reset]);
+  }, [defaultValues, reset, open]);
 
+  useEffect(() => {
+    if (skillMapEditDetail && dataOrganizationCategories) {
+      skillMapEditDetail.map((skill, index) => {
+        const stepKey = `step${index + 1}`;
+        setTimeout(() => {
+          const mappedCategories = skill.categories.map((cate) => ({
+            LARGE: {
+              label:
+                cate.find((item) => item.type === EventWorkCategory.LARGE)
+                  ?.name || '',
+              value:
+                cate.find((item) => item.type === EventWorkCategory.LARGE)
+                  ?.id || '',
+            },
+            MEDIUM: {
+              label:
+                cate.find((item) => item.type === EventWorkCategory.MEDIUM)
+                  ?.name || '',
+              value:
+                cate.find((item) => item.type === EventWorkCategory.MEDIUM)
+                  ?.id || '',
+            },
+            SMALL: {
+              label:
+                cate.find((item) => item.type === EventWorkCategory.SMALL)
+                  ?.name || '',
+              value:
+                cate.find((item) => item.type === EventWorkCategory.SMALL)
+                  ?.id || '',
+            },
+          }));
+
+          const mediumOptions = mappedCategories.map((row) => {
+            const selectedLarge = dataOrganizationCategories.find(
+              (category) => category.LARGE.id === row.LARGE.value,
+            );
+
+            if (!selectedLarge) return [];
+
+            return selectedLarge.MEDIUM.map((medium) => ({
+              label: medium.MEDIUM.name,
+              value: medium.MEDIUM.id,
+            }));
+          });
+          const smallOptions = mappedCategories.map((row) => {
+            const selectedLarge = dataOrganizationCategories.find(
+              (category) => category.LARGE.id === row.LARGE.value,
+            );
+
+            const selectedMedium = selectedLarge?.MEDIUM.find(
+              (m) => m.MEDIUM.id === row.MEDIUM.value,
+            );
+
+            if (!selectedMedium) return [];
+
+            return selectedMedium.SMALL.map((small) => ({
+              label: small.name,
+              value: small.id,
+            }));
+          });
+          setDataOptionsCategoryMedium((prev) => ({
+            ...prev,
+            [stepKey]: mediumOptions,
+          }));
+          setDataOptionsCategorySmall((prev) => ({
+            ...prev,
+            [stepKey]: smallOptions,
+          }));
+          setValue(`${stepKey}.rawCategories` as any, mappedCategories, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        }, 0);
+      });
+    }
+  }, [skillMapEditDetail, dataOrganizationCategories]);
+
+  const stepMap: Record<number, StepKey> = {
+    1: 'step1',
+    2: 'step2',
+    3: 'step3',
+  };
+  const stepKey = stepMap[currentStep];
+
+  useOrganizationStatisticCategories({
+    organizationId: Number(organizationId),
+    condition: [Boolean(organizationId)],
+    currentScreen: ScreenName.MY_TASK,
+    onSuccess: (data) => {
+      const organizationCategories = data.map((category) => {
+        const largeCategory = category.LARGE || {
+          id: '',
+          name: '',
+          uuid: '',
+        };
+
+        const mediumCategories = (category.MEDIUM || []).map(
+          (mediumCategory) => {
+            const mediumCategoryField = mediumCategory.MEDIUM || {
+              id: '',
+              name: '',
+              uuid: '',
+            };
+            const smallCategories = mediumCategory.SMALL || [
+              { id: '', name: '', uuid: '' },
+            ];
+
+            return {
+              MEDIUM: mediumCategoryField,
+              SMALL: smallCategories,
+            };
+          },
+        );
+
+        return {
+          LARGE: largeCategory,
+          MEDIUM: mediumCategories,
+        };
+      });
+
+      setDataOrganizationCategories(organizationCategories);
+      setDataOptionsCategoryLarge(() => {
+        const largeCategories: OptionDropdownType[] = [
+          {
+            label: '',
+            value: '',
+          },
+        ];
+        data.map((category) => {
+          if (category.LARGE) {
+            largeCategories.push({
+              label: category.LARGE.name,
+              value: category.LARGE.id,
+            });
+          }
+        });
+        return largeCategories.filter((item) => item.value !== '');
+      });
+    },
+  });
+
+  // Submit form data
   const onSubmitData: SubmitHandler<SkillMapFormData> = async (data) => {
+    // Validate duplicate category
+    const checkDuplicates = (stepData: StepFormDataDetail | null) => {
+      if (!stepData) return [];
+
+      const rawCategories = stepData.rawCategories || [];
+      const duplicates: number[] = [];
+
+      rawCategories.forEach((item, idx, arr) => {
+        const isEmptyAll =
+          !item.LARGE?.value && !item.MEDIUM?.value && !item.SMALL?.value;
+
+        if (isEmptyAll) return;
+        const currentKey = `${item.LARGE?.value}-${item.MEDIUM?.value}-${item.SMALL?.value}`;
+        for (let j = 0; j < arr.length; j++) {
+          if (j === idx) continue;
+          const compareKey = `${arr[j].LARGE?.value}-${arr[j].MEDIUM?.value}-${arr[j].SMALL?.value}`;
+          if (currentKey && currentKey === compareKey) {
+            duplicates.push(idx);
+            break;
+          }
+        }
+      });
+
+      return duplicates;
+    };
+
+    const steps = ['step1', 'step2', 'step3'] as const;
+    let hasError = false;
+
+    for (const stepKey of steps) {
+      const duplicates = checkDuplicates(data[stepKey]);
+
+      if (duplicates.length > 0) {
+        hasError = true;
+        duplicates.forEach((idx) => {
+          [
+            EventWorkCategory.LARGE,
+            EventWorkCategory.MEDIUM,
+            EventWorkCategory.SMALL,
+          ].forEach((size) => {
+            setError(`${stepKey}.rawCategories.${idx}.${size}` as any, {
+              type: 'duplicate',
+              message: 'duplicate',
+            });
+          });
+        });
+      }
+    }
+
+    if (hasError) {
+      if (action === ActionsEvent.CREATE) {
+        showToast({
+          variant: 'error',
+          description: ERROR_CREATE_MESSAGE,
+        });
+      } else {
+        showToast({
+          variant: 'error',
+          description: ERROR_UPDATE_MESSAGE,
+        });
+      }
+      return;
+    }
     if (action === ActionsEvent.CREATE) {
       onCreate && onCreate(data as SkillMapFormData);
     }
@@ -701,12 +994,12 @@ const ActionsSkillMapModal = ({
             </div>
             <div className="flex gap-2 items-center">
               {!isDisabled && (
-                  <Button
-                    type="submit"
-                    className="w-[82px] h-[36px] !text-[12px] !px-2">
-                    保存
-                  </Button>
-                )}
+                <Button
+                  type="submit"
+                  className="w-[82px] h-[36px] !text-[12px] !px-2">
+                  保存
+                </Button>
+              )}
               <Button
                 variant="outline"
                 type="button"
@@ -729,42 +1022,23 @@ const ActionsSkillMapModal = ({
             )}
           />
         </div>
-        {action == ActionsModal.EDIT &&
-          (watch(getStepField(currentStep as 1 | 2 | 3, 'categories')) || [])
-            ?.length > 0 && (
-            <div className="w-full">
-              <p className="text-sm font-medium mb-3">対応カテゴリー</p>
-              <div className="flex flex-col gap-2">
-                {(
-                  watch(getStepField(currentStep as 1 | 2 | 3, 'categories')) ||
-                  []
-                ).map((categoryLine, index) => {
-                  return (
-                    <div className="flex items-center gap-2 w-full" key={index}>
-                      {categoryLine.map((category, idx) => {
-                        return (
-                          <div
-                            key={idx}
-                            className="flex items-center w-1/3 max-w-1/3 min-w-0 gap-1">
-                            <div className="bg-[#EBF1F7] truncate w-full rounded-[6px] pl-[8px] py-[10px] text-[13px] text-black font-normal">
-                              {category.name}
-                            </div>
-                            {idx !== categoryLine.length - 1 && (
-                              <ImageRound
-                                className="w-fit h-fit"
-                                src="/icons/statistic-compare.svg"
-                                name="icon chevron right"
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+        <CategoryStepRaw
+          clearErrors={clearErrors}
+          control={control}
+          dataOptionsCategoryLarge={dataOptionsCategoryLarge}
+          dataOptionsCategoryMedium={dataOptionsCategoryMedium}
+          dataOptionsCategorySmall={dataOptionsCategorySmall}
+          dataOrganizationCategories={dataOrganizationCategories}
+          setDataOptionsCategoryMedium={setDataOptionsCategoryMedium}
+          setDataOptionsCategorySmall={setDataOptionsCategorySmall}
+          setError={setError}
+          setValue={setValue}
+          stepKey={stepKey}
+          watch={watch}
+          key={stepKey}
+          getValues={getValues}
+          action={action}
+        />
 
         {['レベル0→1', 'レベル1→2', 'レベル2→3'].map((levelTitle, idx) => {
           return (
@@ -781,12 +1055,12 @@ const ActionsSkillMapModal = ({
           );
         })}
         {!isDisabled && (
-            <div className="flex justify-center">
-              <Button type="submit" className="w-[200px] h-[46px] !text-[15px]">
-                保存
-              </Button>
-            </div>
-          )}
+          <div className="flex justify-center">
+            <Button type="submit" className="w-[200px] h-[46px] !text-[15px]">
+              保存
+            </Button>
+          </div>
+        )}
       </form>
     </Drawer>
   );

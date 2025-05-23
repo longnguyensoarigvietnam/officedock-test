@@ -9,25 +9,6 @@ import {
   Transition,
 } from '@headlessui/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  ActionsEvent,
-  ActionTask,
-  EventWorkCategory,
-  ItemStartType,
-  PermissionsSystem,
-  ScreenName,
-  ServerStatusCode,
-  SocketActions,
-  StatusValueTask,
-  TimeType,
-} from '@constants/enums';
-import { MenuItem } from '@interfaces/menu';
-import TaskPageDataHeader from './TaskPageDataHeader';
-import { useToast } from '@providers/ToastProvider';
-import { Task, TaskFormData, TaskRequest } from '@interfaces/task';
-import { addTimeToDate } from '@utils/date';
-import { EventEditFormData, EventRequest } from '@interfaces/calendar';
-import api from '@base/api';
 import { useMutation, useQueryClient } from 'react-query';
 import { AxiosError } from 'axios';
 
@@ -44,6 +25,8 @@ import ViewProfileModal from '@components/modals/ViewProfileModal';
 import EditProfileModal from '@components/modals/EditProfileModal';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
+import ConfirmDragModalTask from '@components/modals/ConfirmDropModalTask';
+import CompletionRewardModal from '@components/modals/CompletionRewardModal';
 
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataTask from '@hooks/useCreationDataTask';
@@ -51,12 +34,25 @@ import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
+import {
+  ActionsEvent,
+  ActionTask,
+  EventWorkCategory,
+  ItemStartType,
+  PermissionsSystem,
+  ScreenName,
+  ServerStatusCode,
+  SocketActions,
+  StatusValueTask,
+  TimeType,
+} from '@constants/enums';
 import { SETTING_MENU, SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_DELETE_MESSAGE,
   ERROR_MESSAGE_OVERLAP_TASK,
   ERROR_NOT_FOUND_EVENT,
+  ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -67,12 +63,23 @@ import {
   DEFAULT_START_TIME,
   NO_OPTION_CATEGORY,
 } from '@constants';
+
+import { Task, TaskFormData, TaskRequest } from '@interfaces/task';
+import { EventEditFormData, EventRequest } from '@interfaces/calendar';
 import { OptionDropdownType } from '@interfaces/common';
 import { WebSocketMessageData } from '@interfaces/chat';
 import { UserProfileFormData, UserProfileFormRequest } from '@interfaces/user';
+import { MenuItem } from '@interfaces/menu';
+
 import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
+import { useToast } from '@providers/ToastProvider';
+
+import TaskPageDataHeader from './TaskPageDataHeader';
+import { addTimeToDate } from '@utils/date';
+import api from '@base/api';
+
 type HeaderProps = {
   className?: string;
 };
@@ -178,6 +185,13 @@ const Header = ({ className }: HeaderProps) => {
     useState<boolean>(false);
   const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
     useState(false);
+  const [openConfirmDragModalForm, setOpenConfirmDragModalForm] =
+    useState(false);
+  const [dataConfirmRewardForm, setDataConfirmRewardForm] =
+    useState<TaskFormData | null>(null);
+  const [openRewardModal, setOpenRewardModal] = useState(false);
+  const [dataRewardSkill, setDataRewardSkill] =
+    useState<WebSocketMessageData>();
 
   const { showToast } = useToast();
   const { authenticatedUser } = useAuthenticatedUser({});
@@ -220,6 +234,9 @@ const Header = ({ className }: HeaderProps) => {
             title: data.title as string,
           });
           break;
+        case SocketActions.SKILL_LEVEL_UP_COMPLETED:
+          setDataRewardSkill(data);
+          setOpenRewardModal(true);
       }
     };
 
@@ -363,6 +380,8 @@ const Header = ({ className }: HeaderProps) => {
       setPendingTaskData(null);
       setCloseAction(null);
       setOpenWarningDeadlineModal(false);
+      setOpenConfirmDragModalForm(false);
+      setDataConfirmRewardForm(null);
     },
     onError: (error: AxiosError<any>) => {
       if (error.response?.data.taskSchedules) {
@@ -846,8 +865,12 @@ const Header = ({ className }: HeaderProps) => {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['getAuthenticatedUser'] }),
           queryClient.invalidateQueries({ queryKey: ['getUserList'] }),
-          queryClient.invalidateQueries({ queryKey: ['getDashboardMemberList'] }),
-          queryClient.invalidateQueries({ queryKey: ['getCreationDataStatistic'] }),
+          queryClient.invalidateQueries({
+            queryKey: ['getDashboardMemberList'],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ['getCreationDataStatistic'],
+          }),
           queryClient.invalidateQueries({ queryKey: ['getTaskTeamList'] }),
         ]);
       },
@@ -857,6 +880,33 @@ const Header = ({ className }: HeaderProps) => {
       onSettled: () => {
         setIsLoading(false);
       },
+    },
+  );
+
+  // Handle cancel reward popup
+  const handleCancelReward = async () => {
+    const { data: response } = await api.post(
+      `${apiRouters.SAVE_SKILL_MAPS_LEVEL_UP_DRAFT(
+        String(dataRewardSkill?.skill.id),
+      )}?skill_map_level_id=${String(dataRewardSkill?.skillMapLevel)}`,
+      {
+        popup: false,
+      },
+    );
+    return response;
+  };
+
+  const { mutate: cancelReward } = useMutation(
+    'handleCancelRewardPopup',
+    handleCancelReward,
+    {
+      onSuccess: () => {
+        setOpenRewardModal(false);
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_SAVE_MESSAGE);
+      },
+      onSettled: () => {},
     },
   );
 
@@ -1088,7 +1138,17 @@ const Header = ({ className }: HeaderProps) => {
             setCloseAction(action);
             setOpenWarningCloseModal(true);
           }}
-          onEdit={handleConfirmEditTask}
+          onEdit={(values: TaskFormData) => {
+            if (
+              dataTaskEdit?.status?.id === StatusValueTask.COMPLETED &&
+              values.statusId?.value !== StatusValueTask.COMPLETED
+            ) {
+              setDataConfirmRewardForm(values);
+              setOpenConfirmDragModalForm(true);
+            } else {
+              handleConfirmEditTask(values);
+            }
+          }}
           dashboardMemberList={dashboardMemberList}
           creationDataTaskData={creationDataTaskData}
           onDelete={() => {
@@ -1251,6 +1311,29 @@ const Header = ({ className }: HeaderProps) => {
             cancelUploadChatFiles();
             handleNavigateToNewPage(pendingPageChange);
           }}
+        />
+      )}
+      {openConfirmDragModalForm && (
+        <ConfirmDragModalTask
+          open={openConfirmDragModalForm}
+          onConfirm={() =>
+            handleConfirmEditTask(dataConfirmRewardForm as TaskFormData)
+          }
+          onClose={() => {
+            setOpenConfirmDragModalForm(false);
+            setDataConfirmRewardForm(null);
+          }}
+        />
+      )}
+      {openRewardModal && (
+        <CompletionRewardModal
+          open={openRewardModal}
+          dataRewardSkill={dataRewardSkill}
+          onConfirm={() => {
+            cancelReward();
+            router.push(pageRouters.SKILL_MAP.href);
+          }}
+          onClose={cancelReward}
         />
       )}
     </>

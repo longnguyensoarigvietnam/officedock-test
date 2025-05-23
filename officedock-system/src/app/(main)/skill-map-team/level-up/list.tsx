@@ -1,7 +1,13 @@
 'use client';
 import { useContext, useState } from 'react';
+import { useMutation } from 'react-query';
+import { AxiosError } from 'axios';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 import CensorLevelUpModal from '@components/modals/CensorLevelUpModal';
+import Button from '@components/common/Button';
+import LevelUpCompletionModal from '@components/modals/LevelUpCompletionModal';
 
 import {
   CensorSubmittedLevelRequest,
@@ -11,20 +17,23 @@ import {
 
 import useSubmitLevelListByOrganizations from '@hooks/useSubmitLevelListByOrganizations';
 import useSubmitLevelDetail from '@hooks/useSubmitLevelDetail';
-
-import { LevelUpListByOrganization } from './level-up-list-by-organization';
-import { useMutation } from 'react-query';
-import { AxiosError } from 'axios';
-import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { useErrorToast } from '@hooks/useErrorToast';
-import { apiRouters } from '@constants/routers';
+
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
+import { apiRouters, pageRouters } from '@constants/routers';
+
+import { LoadingContext } from '@providers/LoadingProvider';
 
 import api from '@base/api';
-import { LoadingContext } from '@providers/LoadingProvider';
+
+import { LevelUpListByOrganization } from './level-up-list-by-organization';
 
 const LevelUpList = () => {
   const showErrorToast = useErrorToast();
   const { setIsLoading } = useContext(LoadingContext);
+
+  const searchParams = useSearchParams();
+  const tabId = searchParams.get('tabId');
 
   const [submitLevelUpByOrganization, setSubmitLevelUpByOrganization] =
     useState<SubmitLevelByOrganization[]>([]);
@@ -33,6 +42,11 @@ const LevelUpList = () => {
   const [selectedSubmitLevel, setSelectedSubmitLevel] = useState<number | null>(
     null,
   );
+  const [selectRejectOption, setSelectRejectOption] = useState<boolean | null>(
+    null,
+  );
+  const [openLevelUpCompletionPopup, setOpenLevelUpCompletionPopup] =
+    useState<boolean>(false);
   const [submitLevelUpDetail, setSubmitLevelUpDetail] =
     useState<SubmitLevel | null>(null);
 
@@ -57,6 +71,7 @@ const LevelUpList = () => {
   };
 
   const handleCensorLevelUp = async (data: CensorSubmittedLevelRequest) => {
+    setOpenLevelUpCensoringPopup(false);
     setIsLoading(true);
     const { data: response } = await api.put(
       apiRouters.SUBMIT_LEVELS_DETAIL(`${selectedSubmitLevel}`),
@@ -70,6 +85,10 @@ const LevelUpList = () => {
     handleCensorLevelUp,
     {
       onSuccess: () => {
+        setOpenLevelUpCompletionPopup(true);
+        setSubmitLevelUpDetail(null);
+        setSelectedSubmitLevel(null);
+        refetchSubmitLevelList();
         setIsLoading(false);
       },
       onError: (error: AxiosError) => {
@@ -81,31 +100,60 @@ const LevelUpList = () => {
 
   return (
     <div className="w-full">
-      {submitLevelUpByOrganization.length > 0 &&
-        submitLevelUpByOrganization.map((orgSubmitLevel, index) => {
-          return (
-            <LevelUpListByOrganization
-              key={index}
-              orgSubmitLevel={orgSubmitLevel}
-              setSelectedSubmitLevel={setSelectedSubmitLevel}
-            />
-          );
-        })}
+      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#EBF1F7]">
+        <div className="flex gap-2 items-center mb-[30px]">
+          <Link href={`${pageRouters.SKILL_MAP_TEAM.href}?tabId=${tabId || 0}`}>
+            <Button
+              variant="outline"
+              className={`w-[100px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+              メンバー一覧
+            </Button>
+          </Link>
+          <Button
+            variant="primary"
+            className={`w-[120px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+            レベルアップ申請
+          </Button>
+        </div>
+      </div>
+
+      <div className="px-10">
+        {submitLevelUpByOrganization.length > 0 &&
+          submitLevelUpByOrganization.map((orgSubmitLevel, index) => {
+            return (
+              <LevelUpListByOrganization
+                key={index}
+                orgSubmitLevel={orgSubmitLevel}
+                setSelectedSubmitLevel={setSelectedSubmitLevel}
+              />
+            );
+          })}
+      </div>
 
       {openLevelUpCensoringPopup && submitLevelUpDetail && (
         <CensorLevelUpModal
           open={openLevelUpCensoringPopup}
           submitLevelUpDetail={submitLevelUpDetail}
+          selectRejectOption={selectRejectOption}
+          setSelectRejectOption={setSelectRejectOption}
           onSubmit={(data: CensorSubmittedLevelRequest) => {
             handleConfirmCensorLevelUp(data);
           }}
-          onClose={(currentStep: number) => {
+          onClose={() => {
             setOpenLevelUpCensoringPopup(false);
             setSubmitLevelUpDetail(null);
             setSelectedSubmitLevel(null);
-            if (currentStep == 4) {
-              refetchSubmitLevelList();
-            }
+          }}
+        />
+      )}
+
+      {openLevelUpCompletionPopup && (
+        <LevelUpCompletionModal
+          open={openLevelUpCompletionPopup}
+          selectRejectOption={Boolean(selectRejectOption)}
+          onClose={() => {
+            setOpenLevelUpCompletionPopup(false);
+            setSelectRejectOption(null);
           }}
         />
       )}

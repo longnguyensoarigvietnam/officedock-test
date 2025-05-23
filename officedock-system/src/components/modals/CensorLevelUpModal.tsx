@@ -1,5 +1,5 @@
 'use client';
-import { memo, useState } from 'react';
+import { Dispatch, memo, SetStateAction, useEffect, useState } from 'react';
 
 import Modal from '@components/common/Modal';
 import ImageRound from '@components/common/ImageRound';
@@ -16,6 +16,7 @@ import { CensorSubmittedLevelRequest, SubmitLevel } from '@interfaces/skills';
 import {
   LevelUpConditionBy,
   SkillMapLookBackType,
+  SkillMapTypeInterval,
   SubmitLevelStatus,
 } from '@constants/enums';
 import { ONLY_DIGITS_REGEX } from '@constants/regex';
@@ -26,14 +27,18 @@ import { getLastChar } from '@utils';
 export type CensorLevelUpModalProps = {
   open: boolean;
   submitLevelUpDetail: SubmitLevel;
+  selectRejectOption: boolean | null;
+  setSelectRejectOption: Dispatch<SetStateAction<boolean | null>>;
   onSubmit: (data: CensorSubmittedLevelRequest) => void;
-  onClose: (currentStep: number) => void;
+  onClose: () => void;
 };
 
 const CensorLevelUpModal = memo(
   ({
     open,
     submitLevelUpDetail,
+    selectRejectOption,
+    setSelectRejectOption,
     onSubmit,
     onClose,
   }: CensorLevelUpModalProps) => {
@@ -41,21 +46,21 @@ const CensorLevelUpModal = memo(
       {
         item: string;
         isChecked: boolean;
+        id: number;
       }[]
     >(
       submitLevelUpDetail.skillMapSkillLevel.items
-        ? submitLevelUpDetail.skillMapSkillLevel.items.map((item) => {
+        ? submitLevelUpDetail.skillMapSkillLevel.items.map((item, index) => {
             return {
               item: item.item,
               isChecked: false,
+              id: index,
             };
           })
         : [],
     );
     const [currentStep, setCurrentStep] = useState<number>(1);
-    const [selectRejectOption, setSelectRejectOption] = useState<
-      boolean | null
-    >(null);
+
     const [comment, setComment] = useState<string>('');
     const [levelUpConditionBy, setLevelUpConditionBy] =
       useState<LevelUpConditionBy>(LevelUpConditionBy.NUMBER_OF_TIMES);
@@ -66,6 +71,10 @@ const CensorLevelUpModal = memo(
     );
     const [lookBackType, setLookBackType] =
       useState<SkillMapLookBackType | null>(null);
+    const [showLookBackIntervalErr, setShowLookBackIntervalErr] =
+      useState<boolean>(false);
+    const [showLookBackTypeErr, setShowLookBackTypeErr] =
+      useState<boolean>(false);
 
     const resetMeasureFieldsWhenChangeRadioBtn = () => {
       setMeasureCount(null);
@@ -73,6 +82,27 @@ const CensorLevelUpModal = memo(
       setLookBackInterval(null);
       setLookBackType(null);
     };
+
+    useEffect(() => {
+      if (submitLevelUpDetail) {
+        setMeasureCount(submitLevelUpDetail.skillMapSkillLevel.measureCount);
+        setMeasureTime(submitLevelUpDetail.skillMapSkillLevel.measureTime);
+        setLookBackInterval(
+          submitLevelUpDetail.skillMapSkillLevel.lookBackInterval,
+        );
+        setLookBackType(
+          submitLevelUpDetail.skillMapSkillLevel
+            .lookBackType as SkillMapLookBackType,
+        );
+        if (submitLevelUpDetail.skillMapSkillLevel.measureCount != null) {
+          setLevelUpConditionBy(LevelUpConditionBy.NUMBER_OF_TIMES);
+        } else if (submitLevelUpDetail.skillMapSkillLevel.measureTime != null) {
+          setLevelUpConditionBy(LevelUpConditionBy.MEASUREMENT_TIME);
+        } else {
+          setLevelUpConditionBy(LevelUpConditionBy.PERIOD);
+        }
+      }
+    }, [submitLevelUpDetail]);
 
     const renderConditionByRadioButton = (
       levelUpConditionBy: string | undefined,
@@ -84,7 +114,7 @@ const CensorLevelUpModal = memo(
               <p className="text-[13px] font-normal">対応タスクを</p>
               <div className="w-[50px]">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] border-[#77858F] rounded-md`}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -106,7 +136,7 @@ const CensorLevelUpModal = memo(
               <p className="text-[13px] font-normal">対応タスクを</p>
               <div className="w-[50px]">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] border-[#77858F] rounded-md`}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -128,7 +158,7 @@ const CensorLevelUpModal = memo(
               <p className="text-[13px] font-normal">振り返りの期間</p>{' '}
               <div className="w-[36px] mr-3">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md ${showLookBackIntervalErr ? 'border-error' : 'border-[#77858F]'}`}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
@@ -136,6 +166,7 @@ const CensorLevelUpModal = memo(
                     const value = e.target.value;
                     if (ONLY_DIGITS_REGEX.test(value)) {
                       setLookBackInterval(Number(value));
+                      setShowLookBackIntervalErr(false);
                     }
                   }}
                   value={lookBackInterval || ''}
@@ -143,14 +174,18 @@ const CensorLevelUpModal = memo(
               </div>
               <div className="w-[68px]">
                 <Dropdown
-                  className={`h-[34px] !w-[68px] !py-1 !pr-0 text-xs !border-[1px] !rounded-md`}
+                  className={`h-[34px] !w-[68px] !py-1 !pr-0 text-xs !border-[1px] !rounded-md ${showLookBackTypeErr ? 'border-error' : 'border-[#77858F]'}`}
                   classNameTextData="!text-xs"
                   classNameOption="!text-xs"
                   classNameError="!text-xs"
                   labelOptionClass="!pr-0"
                   options={LEVEL_UP_PERIOD_OPTIONS}
+                  selectedOption={LEVEL_UP_PERIOD_OPTIONS.find(
+                    (option) => option.value == lookBackType,
+                  )}
                   onChange={(e) => {
                     setLookBackType(e.value as SkillMapLookBackType);
+                    setShowLookBackTypeErr(false);
                   }}
                 />
               </div>
@@ -184,6 +219,21 @@ const CensorLevelUpModal = memo(
           </div>
         );
       } else if (lookBackInterval && lookBackType) {
+        let lookBackTypeText = '';
+        switch (lookBackType) {
+          case SkillMapLookBackType.DAY:
+            lookBackTypeText = SkillMapTypeInterval.DAY;
+            break;
+          case SkillMapLookBackType.WEEK:
+            lookBackTypeText = SkillMapTypeInterval.WEEK;
+            break;
+          case SkillMapLookBackType.MONTH:
+            lookBackTypeText = SkillMapTypeInterval.MONTH;
+            break;
+          case SkillMapLookBackType.YEAR:
+            lookBackTypeText = SkillMapTypeInterval.YEAR;
+            break;
+        }
         return (
           <div className="text-black">
             <p className="text-sm font-medium mb-3">
@@ -191,7 +241,7 @@ const CensorLevelUpModal = memo(
             </p>
             <p className="text-[13px] font-normal">
               振り返りの期間{lookBackInterval}
-              {lookBackType}ごと
+              {lookBackTypeText}ごと
             </p>
           </div>
         );
@@ -203,7 +253,7 @@ const CensorLevelUpModal = memo(
         open={open}
         className="font-primary !rounded-[8px] text-gray-700 !p-0 w-[400px] "
         contentClass="!w-[400px] !rounded-[8px]"
-        onClose={() => onClose(currentStep)}>
+        onClose={onClose}>
         <div className="py-[40px] px-[20px] flex flex-col gap-5 items-center">
           {/* Header */}
           {currentStep < 3 ? (
@@ -219,7 +269,9 @@ const CensorLevelUpModal = memo(
             </div>
           ) : currentStep == 3 ? (
             <p className="text-[#0068B6] font-medium text-sm">
-              この内容で承認しますか？
+              {selectRejectOption
+                ? 'この内容で差し戻しますか？'
+                : 'この内容で承認しますか？'}
             </p>
           ) : (
             <></>
@@ -241,7 +293,8 @@ const CensorLevelUpModal = memo(
                           SKILL_MAP_STEPS.find((step) =>
                             step.label.includes(
                               getLastChar(
-                                submitLevelUpDetail.progression.stepBeforeSubmit,
+                                submitLevelUpDetail.progression
+                                  .stepBeforeSubmit,
                               ),
                             ),
                           )?.color || '#0068B6',
@@ -314,12 +367,15 @@ const CensorLevelUpModal = memo(
                         return (
                           <div key={index} className="flex gap-2">
                             <Checkbox
-                              classLabel="text-black text-sm font-medium"
+                              classLabel="text-black text-sm font-medium !max-w-full !break-all"
                               label={item.item}
                               onChange={() => {
                                 setItemStatusList((prev) =>
                                   prev.map((itemWithStatus) => {
-                                    if (itemWithStatus.item === item.item) {
+                                    if (
+                                      itemWithStatus.item === item.item &&
+                                      itemWithStatus.id == index
+                                    ) {
                                       return {
                                         ...itemWithStatus,
                                         isChecked: !itemWithStatus.isChecked,
@@ -332,7 +388,8 @@ const CensorLevelUpModal = memo(
                               isChecked={
                                 itemStatusList.find(
                                   (itemWithStatus) =>
-                                    itemWithStatus.item == item.item,
+                                    itemWithStatus.item == item.item &&
+                                    itemWithStatus.id == index,
                                 )?.isChecked
                               }
                             />
@@ -450,7 +507,7 @@ const CensorLevelUpModal = memo(
                   size={24}
                 />
                 <p className="text-[15px] max-w-full font-medium break-all line-clamp-4">
-                  {submitLevelUpDetail.staff.profile.fullName}{' '}
+                  {submitLevelUpDetail.staff?.profile?.fullName}{' '}
                   <span className="text-[#77858F] text-xs font-medium">
                     さんへのコメント
                   </span>
@@ -468,12 +525,25 @@ const CensorLevelUpModal = memo(
                   variant="outline"
                   className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-[#0068B6] bg-white"
                   onClick={() => {
+                    if (lookBackInterval && !lookBackType) {
+                      setShowLookBackTypeErr(true);
+                      return;
+                    }
+                    if (!lookBackInterval && lookBackType) {
+                      setShowLookBackIntervalErr(true);
+                      return;
+                    }
                     setCurrentStep((prev) => prev + 1);
                     if (currentStep == 3) {
                       onSubmit({
                         status: SubmitLevelStatus.REJECTED,
                         comment,
-                        items: itemStatusList,
+                        items: itemStatusList.map((item) => {
+                          return {
+                            item: item.item,
+                            isChecked: item.isChecked,
+                          };
+                        }),
                         measureCount: measureCount!,
                         measureTime: measureTime!,
                         lookBackInterval: lookBackInterval!,
@@ -493,7 +563,12 @@ const CensorLevelUpModal = memo(
                       onSubmit({
                         status: SubmitLevelStatus.APPROVAL,
                         comment,
-                        items: itemStatusList,
+                        items: itemStatusList.map((item) => {
+                          return {
+                            item: item.item,
+                            isChecked: item.isChecked,
+                          };
+                        }),
                       });
                     }
                   }}
@@ -504,22 +579,11 @@ const CensorLevelUpModal = memo(
             </div>
           )}
 
-          {/* Completion text */}
-          {currentStep == 4 && (
-            <div>
-              <p className="text-sm font-modal">
-                {selectRejectOption
-                  ? 'スキルのレベルアップを差し戻しました。'
-                  : 'スキルのレベルアップを承認しました。'}
-              </p>
-            </div>
-          )}
-
           {/* Close button */}
           <p
             className="text-[#0068B6] text-[13px] font-medium flex justify-center hover:cursor-pointer"
-            onClick={() => onClose(currentStep)}>
-            {currentStep == 4 ? '閉じる' : 'キャンセル'}
+            onClick={onClose}>
+            キャンセル
           </p>
         </div>
       </Modal>

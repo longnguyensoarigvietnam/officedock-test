@@ -4,12 +4,14 @@ import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 
+import Button from '@components/common/Button';
 import ActionsSkillMapModal from '@components/modals/ActionsSkillMapModal';
 import { OrganizationSkillDetail } from './organization-skill-detail';
 import Dropdown from '@components/common/Dropdown';
 
-import { apiRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
@@ -200,6 +202,11 @@ const ListSkillsMap = () => {
               organization: Number(organizationParam) || 0,
             }))
           : [],
+      categoryIds: step.rawCategories.map((cate) => ({
+        largeStatisticCategoryId: cate.LARGE.value as number,
+        mediumStatisticCategoryId: cate.MEDIUM.value as number,
+        smallStatisticCategoryId: cate.SMALL.value as number,
+      })),
     });
 
     return Object.fromEntries(
@@ -257,6 +264,11 @@ const ListSkillsMap = () => {
                 : 0,
             }))
           : [],
+      categoryIds: step.rawCategories.map((cate) => ({
+        largeStatisticCategoryId: cate.LARGE.value as number,
+        mediumStatisticCategoryId: cate.MEDIUM.value as number,
+        smallStatisticCategoryId: cate.SMALL.value as number,
+      })),
     });
 
     return Object.fromEntries(
@@ -272,10 +284,14 @@ const ListSkillsMap = () => {
       const step = steps[stepKey];
       for (let i = 0; i < step.skillLevels.length; i++) {
         const skill = step.skillLevels[i];
-        const { lookBackType, lookBackInterval, measureCount, measureTime } = skill;
-        const allNull = [lookBackType, lookBackInterval, measureCount, measureTime].every(
-          (value) => value === null
-        );
+        const { lookBackType, lookBackInterval, measureCount, measureTime } =
+          skill;
+        const allNull = [
+          lookBackType,
+          lookBackInterval,
+          measureCount,
+          measureTime,
+        ].every((value) => value === null);
         if (allNull) {
           return stepKey;
         }
@@ -299,7 +315,7 @@ const ListSkillsMap = () => {
       return;
     }
     const requestData = convertFormDataToCreationRequestData(filteredData);
-    if(validateSkillLevels(requestData)) {
+    if (validateSkillLevels(requestData)) {
       showToast({
         variant: 'error',
         description: `${validateSkillLevels(requestData)?.toUpperCase()}の必須情報を入力してください。`,
@@ -353,7 +369,7 @@ const ListSkillsMap = () => {
       return;
     }
     const requestData = convertFormDataToEditionRequestData(filteredData);
-    if(validateSkillLevels(requestData)) {
+    if (validateSkillLevels(requestData)) {
       showToast({
         variant: 'error',
         description: `${validateSkillLevels(requestData)?.toUpperCase()}の必須情報を入力してください。`,
@@ -395,7 +411,7 @@ const ListSkillsMap = () => {
     id,
     action,
     step,
-    organization
+    organization,
   }: {
     id?: string | null;
     action?: string | null;
@@ -445,11 +461,11 @@ const ListSkillsMap = () => {
     params.delete('skillId');
     params.delete('action');
     params.delete('step');
-    params.delete('organization')
+    params.delete('organization');
     setSkillIdParam(null);
     setActionTypeParam(null);
     setCurrentStepParam(null);
-    setOrganizationParam(null)
+    setOrganizationParam(null);
     router.replace(`?${params.toString()}`);
   };
 
@@ -468,34 +484,56 @@ const ListSkillsMap = () => {
 
   return (
     <Fragment>
-      <Dropdown
-        options={organizationList}
-        className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
-        classNameOption="!w-[220px]"
-        selectedOption={organizationList.find(
-          (element) => element.value == selectedOrganizationOption.value,
-        )}
-        onChange={(e) => {
-          setSelectedOrganizationOption({
-            label: e.label,
-            value: e.value,
-          });
-        }}
-      />
-      {dataOrganizationSkillList.length > 0 &&
-        dataOrganizationSkillList.map((orgSkill) => {
-          return (
-            <OrganizationSkillDetail
-              key={orgSkill.id}
-              orgSkillDetail={orgSkill}
-              setOpenSkillMapActionsModal={setOpenSkillMapActionsModal}
-              setSelectedFilterStepDetail={setSelectedFilterStepDetail}
-              setSelectedSkillMapToUpdate={setSelectedSkillMapToUpdate}
-              handleSetParam={handleSetParam}
-              refetchOrganizationSkillList={refetchOrganizationSkillList}
-            />
-          );
-        })}
+      <div className="sticky z-[21] top-[0px] px-10 py-8 bg-[#EBF1F7]">
+        <div className="flex gap-4 items-center mb-5">
+          <p className="text-black font-medium text-[26px]">スキルマップ設定</p>
+          <div className="flex gap-2">
+            <Button
+              variant="primary"
+              className={`w-[90px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+              スキル編集
+            </Button>
+            <Link href={pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}>
+              <Button
+                variant="outline"
+                className={`w-[120px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                対応メンバー編集
+              </Button>
+            </Link>
+          </div>
+        </div>
+        <Dropdown
+          options={organizationList}
+          className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
+          classNameOption="!w-[220px]"
+          selectedOption={organizationList.find(
+            (element) => element.value == selectedOrganizationOption.value,
+          )}
+          onChange={(e) => {
+            setSelectedOrganizationOption({
+              label: e.label,
+              value: e.value,
+            });
+          }}
+        />
+      </div>
+      <div className="px-10 flex flex-col gap-6">
+        {dataOrganizationSkillList.length > 0 &&
+          dataOrganizationSkillList.map((orgSkill) => {
+            return (
+              <OrganizationSkillDetail
+                key={orgSkill.id}
+                orgSkillDetail={orgSkill}
+                setOpenSkillMapActionsModal={setOpenSkillMapActionsModal}
+                setSelectedFilterStepDetail={setSelectedFilterStepDetail}
+                setSelectedSkillMapToUpdate={setSelectedSkillMapToUpdate}
+                handleSetParam={handleSetParam}
+                refetchOrganizationSkillList={refetchOrganizationSkillList}
+              />
+            );
+          })}
+      </div>
+
       {openSkillMapActionsModal &&
         actionTypeParam &&
         (hasAddPermission || hasUpdatePermission) && (

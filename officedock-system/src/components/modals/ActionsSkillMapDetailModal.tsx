@@ -6,6 +6,8 @@ import ImageRound from '@components/common/ImageRound';
 import Drawer from '@components/common/Drawers';
 
 import { SKILL_MAP_STEPS } from '@constants';
+import { SkillMapLookBackType, SkillMapTypeInterval } from '@constants/enums';
+
 import {
   OrganizationSkillMapDetail,
   SkillMapFormData,
@@ -110,7 +112,9 @@ const ActionsSkillMapDetailModal = ({
             })}
           </div>
           <div className="flex items-center gap-2 justify-between">
-            <p className="font-bold text-[22px] max-w-[calc(100%_-_95px)] break-all line-clamp-2">{dataStep?.name}</p>
+            <p className="font-bold text-[22px] max-w-[calc(100%_-_95px)] break-all line-clamp-2">
+              {dataStep?.name}
+            </p>
             <Button
               onClick={handleCloseModal}
               className="h-[34px] w-[86px]"
@@ -123,9 +127,7 @@ const ActionsSkillMapDetailModal = ({
           <p className="text-base text-[#0068B6] font-medium mb-3 ">
             スキルの定義
           </p>
-          <p className="font-normal break-all mb-9">
-            複数のプロジェクトの進捗や予定を管理し、計画通りに進められるように行動できること
-          </p>
+          <p className="font-normal break-all mb-9">{dataStep?.description}</p>
           {/* Category */}
           <div>
             <p className="text-base text-[#0068B6] font-medium mb-3 ">
@@ -157,11 +159,27 @@ const ActionsSkillMapDetailModal = ({
                 ))}
             </div>
           </div>
-          {/* Level */}
 
+          {/* Level */}
           {dataStep &&
             dataStep.skillLevels.map((level) => {
               const number = extractLevelNumber(level.level) || 1;
+              let lookBackTypeText = '';
+              switch (level.lookBackType) {
+                case SkillMapLookBackType.DAY:
+                  lookBackTypeText = SkillMapTypeInterval.DAY;
+                  break;
+                case SkillMapLookBackType.WEEK:
+                  lookBackTypeText = SkillMapTypeInterval.WEEK;
+                  break;
+                case SkillMapLookBackType.MONTH:
+                  lookBackTypeText = SkillMapTypeInterval.MONTH;
+                  break;
+                case SkillMapLookBackType.YEAR:
+                  lookBackTypeText = SkillMapTypeInterval.YEAR;
+                  break;
+              }
+
               return (
                 <div key={level.id}>
                   <p className="text-base text-[#0068B6] font-medium mb-4 mt-[10px]">
@@ -186,14 +204,22 @@ const ActionsSkillMapDetailModal = ({
                         level.lookBackInterval ||
                         level.measureTime}
                     </div>
-                    <div>回</div>
-                    <div className="w-[274px] h-[30px] rounded-md bg-[#EBF1F7] flex items-center justify-start px-2">
+                    <p className="text-nowrap">
                       {level.measureCount
-                        ? '回完了した'
+                        ? '回'
+                        : level.lookBackInterval
+                          ? lookBackTypeText
+                          : '時間'}
+                    </p>
+
+                    <div
+                      className={`w-[274px] h-[30px] rounded-md bg-[#EBF1F7] flex items-center justify-start px-2`}>
+                      {level.measureCount
+                        ? '完了した'
                         : level.lookBackInterval
                           ? 'ごと'
                           : level.measureTime
-                            ? '時間行った'
+                            ? '行った'
                             : ''}
                     </div>
                   </div>

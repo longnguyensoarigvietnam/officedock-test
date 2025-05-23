@@ -154,6 +154,7 @@ export enum SocketActions {
   REMIND_TASK = 'REMIND_TASK',
   RESET_STATUS_SORT_TASK = 'RESET_STATUS_SORT_TASK',
   DURATION_OVERTIME_WARNING = 'DURATION_OVERTIME_WARNING',
+  SKILL_LEVEL_UP_COMPLETED = 'SKILL_LEVEL_UP_COMPLETED',
 }
 
 export enum WebSocketState {
@@ -241,6 +242,7 @@ export enum SubmitLevelStatus {
   PENDING = '申請中',
   APPROVAL = '承認',
   REJECTED = '却下',
+  DRAFT = 'ドラフト'
 }
 
 export enum PermissionsSystem {
@@ -525,4 +527,8 @@ export enum SkillMapTypeInterval {
   WEEK = '週間',
   MONTH = 'ヶ月',
   YEAR = '年',
+}
+export enum MenuPlacementType {
+  TOP = 'top',
+  BOTTOM = 'bottom'
 }

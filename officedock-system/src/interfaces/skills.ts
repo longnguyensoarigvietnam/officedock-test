@@ -44,10 +44,20 @@ export type SkillLevelRequestDetail = BaseSkillLevel & {
 
 export type StepFormDataDetail = BaseStepDetail & {
   skillLevels: SkillLevelDetail[];
+  rawCategories: {
+    LARGE: OptionDropdownType;
+    MEDIUM: OptionDropdownType;
+    SMALL: OptionDropdownType;
+  }[];
 };
 
 export type StepRequestDataDetail = BaseStepDetail & {
   skillLevels: SkillLevelRequestDetail[];
+  categoryIds: {
+    largeStatisticCategoryId: number;
+    mediumStatisticCategoryId: number;
+    smallStatisticCategoryId: number;
+  }[];
 };
 
 export type SkillMapFormData = Record<StepKey, StepFormDataDetail | null>;
@@ -334,6 +344,7 @@ export interface ManageSkillMapsRequest {
 export interface SkillMapComment {
   id: number;
   staff: Staff;
+  approver: Staff;
   organization: Pick<
     Organizations,
     'id' | 'uuid' | 'name' | 'userCount' | 'actions'
@@ -359,12 +370,19 @@ export interface SkillMapLevelUp {
     id: number;
     name: string;
   };
+  isApplying: boolean;
+  approver: Staff;
   approvers: Staff[];
   levelBeforeSubmit: string;
   levelAfterSubmit: string;
   stepBeforeSubmit: string;
   stepAfterSubmit: string;
-  items: string[];
+  items: {
+    item: string;
+    isChecked: boolean;
+  }[];
+  skillMapSkillLevel: number;
+  submitLevel: number | null;
 }
 
 export interface SubmitLevelUpRequest {
@@ -373,7 +391,14 @@ export interface SubmitLevelUpRequest {
   skillId: number;
   levelBeforeSubmit: string;
   stepBeforeSubmit: string;
-  approver: number;
+  approverId: number | null;
+  status?: SubmitLevelStatus
+  items?: {
+    item: string;
+    isChecked: boolean;
+  }[];
+  submitLevel: number | null;
+  skillMapSkillLevel?: number | null;
 }
 
 export interface Description {
@@ -424,6 +449,7 @@ export interface SubmitLevel {
     isComplete: boolean | null;
   };
   comment: string;
+  approver?: Staff
 }
 
 export interface SubmitLevelByOrganization {
@@ -468,4 +494,11 @@ export interface CensorSubmittedLevelRequest {
   measureTime?: number;
   lookBackInterval?: number;
   lookBackType?: SkillMapLookBackType;
+}
+export interface SaveLevelUpDraftRequest {
+  items: {
+    item: string;
+    isChecked: boolean;
+  }[];
+  approver: number;
 }

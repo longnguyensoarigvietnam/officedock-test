@@ -1,7 +1,6 @@
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField
 from django.shortcuts import get_object_or_404
-from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, mixins
@@ -17,6 +16,7 @@ from organizations.models import (
     OrganizationsStatisticCategories,
     OrganizationsStatisticCategoriesSkills,
     Organization,
+    UsersOrganizations,
 )
 from organizations.serializers import (
     StatisticCategorySerializer,
@@ -24,7 +24,6 @@ from organizations.serializers import (
 from skills.constants import (
     SkillLevel as SkillLevelConstants,
     SkillStep,
-    get_next_progression,
 )
 from skills.models import (
     StatisticCategory,
@@ -42,10 +41,10 @@ from skills.serializers import (
     BaseOrganizationWithUserSkillMapSerializer,
     SkillReplaceSkilMapSerializer,
     GroupStepSkillMapSerializer,
-    DraftLevelUpSerializer,
+    UpdateSkillMapSkillLevelSerializer,
 )
 from skills.filters import StatisticCategoryFilter
-from skills.utils import get_lookback_time
+from skills.utils import get_lookback_time, get_next_progression
 from submit_levels.constants import SubmitLevelStatus
 from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens, Actions, SelectionResultOptions
@@ -222,15 +221,16 @@ class ManageSkillMapViewSet(
                     skill_level = skill.skill_levels.filter(
                         level=SkillLevelConstants.LEVEL_1.value
                     ).first()
+                    user_org = UsersOrganizations.objects.filter(
+                        user=staff,
+                        organization=skill.organization,
+                    ).first()
                     # Set next_submit_at if skill level has look back
-                    next_submit_at = None
-                    start_lookback_at = None
-                    if skill_level.look_back_type:
-                        next_submit_at = get_lookback_time(
-                            skill_level.look_back_type,
-                            skill_level.look_back_interval,
-                        )
-                        start_lookback_at = now()
+                    next_submit_at, start_lookback_at = get_lookback_time(
+                        skill_level.look_back_type,
+                        skill_level.look_back_interval,
+                        user_organization=user_org,
+                    )
                     data = []
                     for item in skill_level.items:
                         data.append({"item": item, "is_checked": False})
@@ -319,17 +319,24 @@ class SkillMapViewSet(
         """
         Handle data and response list of skill map by user
         """
-        user = request.user
         user_id = request.query_params.get("user_id", None)
         organization_id = request.query_params.get("organization_id", None)
         prev_user = None
         next_user = None
-        if user_id:
-            user = get_object_or_404(User, id=user_id)
+        user = get_object_or_404(User, id=user_id) if user_id else request.user
         organizations = user.organizations.all()
         if organization_id:
-            organizations = organizations.filter(id=organization_id)
-            organization = organizations.first()
+            # Get the single organization
+            organization = get_object_or_404(Organization, id=organization_id)
+
+            # Combine, putting the organization required one first
+            organizations = user.organizations.annotate(
+                priority=Case(
+                    When(id=organization_id, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            ).order_by("priority")
             users = list(organization.users.all().order_by("created_at"))
             # Find the user's position in the list
             try:
@@ -516,9 +523,25 @@ class SkillMapViewSet(
         ).first()
         data = {}
         if skill_map_skill_level:
+
             step_after_submit, level_after_submit = get_next_progression(
-                skill_map.step, skill_map_skill_level.level
+                skill_map.step,
+                skill_map_skill_level.level,
+                skill=skill_map.skill,
             )
+
+            # Get draft submit level
+            submit_level = SubmitLevelHistory.objects.filter(
+                skill=skill_map.skill,
+                step_before_submit=skill_map.step,
+                level_before_submit=skill_map_skill_level.level,
+                organization=skill_map.organization,
+                staff=skill_map.staff,
+                status__in=[
+                    SubmitLevelStatus.DRAFT.value,
+                    SubmitLevelStatus.APPLYING.value,
+                ],
+            ).first()
             # Get users have permission update skill map
             permission = Screens.SKILL_MAP.value + "_" + Actions.UPDATE.value
             selection_results = [SelectionResultOptions.ALLOWED.value]
@@ -546,8 +569,16 @@ class SkillMapViewSet(
                 "level_before_submit": skill_map_skill_level.level,
                 "step_after_submit": step_after_submit,
                 "level_after_submit": level_after_submit,
-                "items": skill_map_skill_level.skill_level.items,  # FIXME: Check QA101
+                "items": skill_map_skill_level.items,
+                "approver": BaseUserSerializer(submit_level.approver).data
+                if submit_level
+                else None,
                 "approvers": BaseUserSerializer(users, many=True).data,
+                "is_applying": submit_level.status
+                == SubmitLevelStatus.APPLYING.value
+                if submit_level
+                else None,
+                "submit_level": submit_level.id if submit_level else None,
             }
 
         return self.response_ok(data)
@@ -561,34 +592,21 @@ class SkillMapViewSet(
         methods=["POST"],
         detail=True,
         url_path="skill-map-level",
-        serializer_class=DraftLevelUpSerializer,
+        serializer_class=UpdateSkillMapSkillLevelSerializer,
     )
-    def update_level_up(self, request, pk=None):
+    def update_skill_map_level(self, request, pk=None):
         """
-        Handle store draft submit level of skill map skill level
+        Handle update skill map skill level
         """
-        skill_map = self.get_object()
         skill_map_level_id = request.query_params.get(
             "skill_map_level_id", None
         )
         skill_map_level = get_object_or_404(
             SkillMapSkillLevel, id=skill_map_level_id
         )
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated_data = serializer.validated_data
-        # Create draft submit level
-        SubmitLevelHistory.objects.create(
-            skill=skill_map.skill,
-            step_before_submit=skill_map.step,
-            level_before_submit=skill_map_level.level,
-            organization=skill_map.organization,
-            staff=skill_map.staff,
-            status=SubmitLevelStatus.DRAFT.value,
-            approver=validated_data["approver"],
-        )
-        skill_map_level.items = validated_data["items"]
+        skill_map_level.popup = serializer.validated_data.get("popup", True)
         skill_map_level.save()
 
         return self.response_ok()
@@ -658,7 +676,7 @@ class SkillViewSet(
             skill = step_1.pop("skill", None)
             categories = step_1.pop("category_ids", None)
             is_action_edit = bool(skill)
-            first_skill, created = Skill.objects.update_or_create(
+            first_skill, _ = Skill.objects.update_or_create(
                 id=skill.id if skill else None, defaults={**step_1}
             )
             skills.append(first_skill)
@@ -669,7 +687,7 @@ class SkillViewSet(
             categories = step_2.pop("category_ids", None)
             is_action_edit = bool(skill)
 
-            second_skill, created = Skill.objects.update_or_create(
+            second_skill, _ = Skill.objects.update_or_create(
                 id=skill.id if skill else None,
                 parent=first_skill,
                 defaults={**step_2},
@@ -683,7 +701,7 @@ class SkillViewSet(
             skill = step_3.pop("skill", None)
             categories = step_3.pop("category_ids", None)
             is_action_edit = bool(skill)
-            third_skill, created = Skill.objects.update_or_create(
+            third_skill, _ = Skill.objects.update_or_create(
                 id=skill.id if skill else None,
                 parent=second_skill,
                 defaults={**step_3},
@@ -715,43 +733,61 @@ class SkillViewSet(
             staff=staff,
             organization=skill.organization,
         ).first()
-        if skill_map:
-            skill_map_skill_levels = skill_map.skill_map_skill_levels.all()
-            for skill_map_level in skill_map_skill_levels:
-                # Check last status of submit level, if is reject skip update skill map skill level
-                check_status_reject_exists = SubmitLevelHistory.objects.filter(
-                    skill=skill,
-                    staff=staff,
-                    organization=skill.organization,
-                    step_before_submit=skill_map.step,
-                    level_before_submit=skill_map_level.level,
-                    status=SubmitLevelStatus.REJECT.value,
-                ).exists()
-                if not check_status_reject_exists:
-                    # Get skill level
-                    skill_level = skill_map_level.skill_level
-                    # Set next_submit_at if skill level has look back
-                    next_submit_at = None
-                    start_lookback_at = None
-                    if skill_level.look_back_type:
-                        next_submit_at = get_lookback_time(
-                            skill_level.look_back_type,
-                            skill_level.look_back_interval,
-                        )
-                        start_lookback_at = now()
-                    # FIXME: Check QA101
-                    data = []
-                    for item in skill_level.items:
-                        data.append({"item": item, "is_checked": False})
-                    skill_map_skill_levels.update(
-                        start_lookback_at=start_lookback_at,
-                        next_submit_at=next_submit_at,
-                        measure_count=skill_level.measure_count,
-                        measure_time=skill_level.measure_time,
-                        look_back_type=skill_level.look_back_type,
-                        look_back_interval=skill_level.look_back_interval,
-                        items=data,
-                    )
+        if not skill_map:
+            return
+        skill_map_skill_levels = skill_map.skill_map_skill_levels.all()
+        for skill_map_level in skill_map_skill_levels:
+            # Check last status of submit level, if is reject skip update skill map skill level
+            check_status_reject_exists = SubmitLevelHistory.objects.filter(
+                skill=skill,
+                staff=staff,
+                organization=skill.organization,
+                step_before_submit=skill_map.step,
+                level_before_submit=skill_map_level.level,
+                status=SubmitLevelStatus.REJECT.value,
+            ).exists()
+            # Get skill level
+            skill_level = skill_map_level.skill_level
+            # Transform items of skill map level to items of skill level
+            skill_map_items_format = (
+                [
+                    item["item"] if isinstance(item, dict) else item
+                    for item in skill_map_level.items
+                ]
+                if skill_map_level.items
+                else None
+            )
+            # Get new skill level items if skill level items is different with skill map level items
+            data = (
+                [
+                    {"item": item, "is_checked": False}
+                    for item in skill_level.items
+                ]
+                if (skill_level.items != skill_map_items_format)
+                else skill_map_level.items
+            )
+
+            if not check_status_reject_exists:
+                # Set next_submit_at if skill level has look back
+                next_submit_at, start_look_back_at = get_lookback_time(
+                    skill_level.look_back_type,
+                    skill_level.look_back_interval,
+                    start_lookback_at=skill_map_level.start_lookback_at,
+                )
+                SkillMapSkillLevel.objects.filter(id=skill_map_level.id).update(
+                    start_lookback_at=start_look_back_at,
+                    next_submit_at=next_submit_at,
+                    measure_count=skill_level.measure_count,
+                    measure_time=skill_level.measure_time,
+                    look_back_type=skill_level.look_back_type,
+                    look_back_interval=skill_level.look_back_interval,
+                    items=data,
+                    popup=True,
+                )
+            else:
+                SkillMapSkillLevel.objects.filter(id=skill_map_level.id).update(
+                    items=data
+                )
 
     def _create_skill_map(self, skill, staff):
         """
@@ -773,13 +809,10 @@ class SkillViewSet(
                 level=SkillLevelConstants.LEVEL_1.value
             ).first()
             # Set next_submit_at if skill level has look back
-            next_submit_at = None
-            start_lookback_at = None
-            if skill_level.look_back_type:
-                next_submit_at = get_lookback_time(
-                    skill_level.look_back_type, skill_level.look_back_interval
-                )
-                start_lookback_at = now()
+            next_submit_at, start_look_back_at = get_lookback_time(
+                skill_level.look_back_type,
+                skill_level.look_back_interval,
+            )
             data = []
             for item in skill_level.items:
                 data.append({"item": item, "is_checked": False})
@@ -789,7 +822,7 @@ class SkillViewSet(
                 level=skill_level.level,
                 skill_map=skill_map,
                 company=staff.company,
-                start_lookback_at=start_lookback_at,
+                start_lookback_at=start_look_back_at,
                 next_submit_at=next_submit_at,
                 measure_count=skill_level.measure_count,
                 measure_time=skill_level.measure_time,
@@ -802,11 +835,17 @@ class SkillViewSet(
         """
         Handle create or update skill levels
         """
+        # Clear organizations_statistic_categories_skills
+        skill.organizations_statistic_categories_skills.all().delete()
         if categories:
-            # Clear organizations_statistic_categories_skills
-            skill.organizations_statistic_categories_skills.all().delete()
-
             for category in categories:
+                if (
+                    category["large_statistic_category"]
+                    == category["medium_statistic_category"]
+                    == category["small_statistic_category"]
+                    is None
+                ):
+                    continue
                 org_cat = OrganizationsStatisticCategories.objects.filter(
                     large_statistic_category=category[
                         "large_statistic_category"
@@ -817,6 +856,7 @@ class SkillViewSet(
                     small_statistic_category=category[
                         "small_statistic_category"
                     ],
+                    organization=skill.organization,
                 ).first()
                 if org_cat:
                     OrganizationsStatisticCategoriesSkills.objects.create(
@@ -883,10 +923,8 @@ class SkillViewSet(
         steps = []
         if not screen:
             # Filter step of skills per organization
-            filter_organization_ids = (
-                split_id_from_string(filter_organization_ids)
-                if filter_organization_ids
-                else []
+            filter_organization_ids = split_id_from_string(
+                filter_organization_ids
             )
             if filter_steps:
                 for step in filter_steps.split(","):

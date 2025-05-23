@@ -137,7 +137,7 @@ export interface ChatRoomItem {
   isExisted?: boolean;
 }
 
-export interface WebSocketMessageData {
+export interface WebSocketMessageData extends DataSkillReward {
   id?: number;
   action: string;
   clientId: string | null;
@@ -155,6 +155,18 @@ export interface WebSocketMessageData {
   remindCountdown?: number;
   remindType?: string;
   title?: string;
+}
+interface DataSkillReward {
+  skill: {
+    id: number;
+    name: string;
+  };
+  measureCount: number | null;
+  measureTime: string | null;
+  lookBackInterval: string | null;
+  lookBackType: string | null;
+  skillMap: number;
+  skillMapLevel: number;
 }
 export interface WebSocketMessageDataOverTime {
   action: string;

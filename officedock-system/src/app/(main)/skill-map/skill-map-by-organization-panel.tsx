@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import { AxiosError } from 'axios';
 
@@ -9,8 +9,9 @@ import SubmitLevelUpModal from '@components/modals/SubmitLevelUpModal';
 import ViewSkillMapCommentModal from '@components/modals/ViewSkillMapCommentModal';
 import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
 
+import { SubmitLevelStatus } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
-import { ERROR_CREATE_MESSAGE } from '@constants/message';
+import { ERROR_SAVE_MESSAGE, SUCCESS_SAVE_MESSAGE } from '@constants/message';
 
 import useSkillMapComment from '@hooks/useSkillMapComment';
 import useSkillMapLevelUp from '@hooks/useSkillMapLevelUp';
@@ -23,6 +24,8 @@ import {
   SkillMapLevelUp,
   SubmitLevelUpRequest,
 } from '@interfaces/skills';
+
+import { useToast } from '@providers/ToastProvider';
 
 import { getLastChar } from '@utils';
 
@@ -39,6 +42,7 @@ export const SkillMapByOrganizationPanel = ({
 }: SkillMapByOrganizationPanelProps) => {
   const MAX_LEVEL = 3;
   const showErrorToast = useErrorToast();
+  const { showToast } = useToast();
 
   // View comment
   const [openSkillMapCommentModal, setOpenSkillMapCommentModal] =
@@ -60,6 +64,10 @@ export const SkillMapByOrganizationPanel = ({
   const [isSuccessSubmitLevelUp, setIsSuccessSubmitLevelUp] =
     useState<boolean>(false);
 
+  // Refs
+  const isEditingRef = useRef(false);
+  const isSubmittingRef = useRef(false);
+
   useSkillMapComment({
     skillMapId: Number(selectedSkillMapToViewComment),
     onSuccess: (data) => {
@@ -76,6 +84,9 @@ export const SkillMapByOrganizationPanel = ({
         staffId: userId,
       });
       setOpenSubmitLevelUpModal(true);
+      if (data.isApplying) {
+        setIsSuccessSubmitLevelUp(true);
+      }
     },
   });
 
@@ -118,7 +129,7 @@ export const SkillMapByOrganizationPanel = ({
       switch (step) {
         case 1:
           return (
-            <div className="flex justify-center mb-1 gap-1">
+            <div className="flex justify-center pt-1 gap-1">
               {Array.from({ length: MAX_LEVEL }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -131,7 +142,7 @@ export const SkillMapByOrganizationPanel = ({
           );
         case 2:
           return (
-            <div className="flex justify-center mb-1 gap-1">
+            <div className="flex justify-center pt-1 gap-1">
               {Array.from({ length: MAX_LEVEL }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -146,7 +157,7 @@ export const SkillMapByOrganizationPanel = ({
           );
         case 3:
           return (
-            <div className="flex justify-center mb-1 gap-1">
+            <div className="flex justify-center pt-1 gap-1">
               {Array.from({ length: MAX_LEVEL }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -231,9 +242,44 @@ export const SkillMapByOrganizationPanel = ({
   };
 
   const handleConfirmSubmitLevelUp = (data: SubmitLevelUpRequest) => {
-    submitLevelUp(data);
+    if (data.submitLevel) {
+      if (isEditingRef.current) return;
+      editSubmittedLevelUp(data);
+    } else {
+      if (isSubmittingRef.current) return;
+      submitLevelUp(data);
+    }
   };
 
+  // Call API to edit submitted level up
+  const handleEditSubmittedLevelUp = async (data: SubmitLevelUpRequest) => {
+    const { data: response } = await api.put(
+      apiRouters.SUBMIT_LEVELS_DETAIL(Number(data.submitLevel)),
+      { status: SubmitLevelStatus.PENDING, approverId: data.approverId },
+    );
+    return response;
+  };
+
+  const { mutate: editSubmittedLevelUp } = useMutation(
+    'editSubmittedLevelUp',
+    handleEditSubmittedLevelUp,
+    {
+      onMutate: () => {
+        isEditingRef.current = true;
+      },
+      onSuccess: () => {
+        setIsSuccessSubmitLevelUp(true);
+        isEditingRef.current = false;
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_SAVE_MESSAGE);
+        isEditingRef.current = false;
+      },
+      onSettled: () => {},
+    },
+  );
+
+  // Call API to submit level up
   const handleSubmitLevelUp = async (data: SubmitLevelUpRequest) => {
     const { data: response } = await api.post(
       apiRouters.SUBMIT_LEVELS_LIST,
@@ -246,11 +292,38 @@ export const SkillMapByOrganizationPanel = ({
     'submitLevelUp',
     handleSubmitLevelUp,
     {
+      onMutate: () => {
+        isSubmittingRef.current = true;
+      },
       onSuccess: () => {
         setIsSuccessSubmitLevelUp(true);
+        isSubmittingRef.current = false;
       },
       onError: (error: AxiosError) => {
-        showErrorToast(error, ERROR_CREATE_MESSAGE);
+        showErrorToast(error, ERROR_SAVE_MESSAGE);
+        isSubmittingRef.current = false;
+      },
+      onSettled: () => {},
+    },
+  );
+
+  // Call API to save level up draft
+  const { mutate: saveLevelUpDraft } = useMutation(
+    'handleSaveLevelUpDraft',
+    handleSubmitLevelUp,
+    {
+      onSuccess: () => {
+        setOpenSubmitLevelUpModal(false);
+        setSelectedSkillMapToSubmitLevelUp(null);
+        setSubmitLevelUpDetail(null);
+        setIsSuccessSubmitLevelUp(false);
+        showToast({
+          variant: 'success',
+          description: SUCCESS_SAVE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_SAVE_MESSAGE);
       },
       onSettled: () => {},
     },
@@ -258,7 +331,7 @@ export const SkillMapByOrganizationPanel = ({
 
   return (
     <div
-      className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-5"
+      className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-6"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {skillMapDetail.organizationName}
@@ -324,6 +397,11 @@ export const SkillMapByOrganizationPanel = ({
                       strokeColor = '#424EC1';
                       break;
                   }
+                  if (stepCompleted) {
+                    strokeColor = '#D2DBE1';
+                  } else if (isLocked || progressPercent == 0) {
+                    strokeColor = '#EBF1F7';
+                  }
 
                   return (
                     <div
@@ -339,7 +417,7 @@ export const SkillMapByOrganizationPanel = ({
                         <div className="px-5 h-[90px] bg-white w-full rounded-[6px]"></div>
                       ) : (
                         <div
-                          className="px-5 h-[90px] flex justify-between items-center w-full rounded-[6px] relative"
+                          className="px-5 h-[90px] flex gap-3 items-center w-full rounded-[6px] relative"
                           style={{
                             boxShadow: showTwinklingStars
                               ? '0px 0px 20px 0px #36ACDE80'
@@ -374,9 +452,10 @@ export const SkillMapByOrganizationPanel = ({
                             </div>
                           )}
 
-                          <div className="w-4/5 max-w-[4/5]">
-                            <div className="flex justify-between items-center">
-                              <p className="text-[16px] font-medium mb-4 max-w-[calc(100%_-_20px)] line-clamp-1 break-all">
+                          <div className="w-[calc(100%_-_72px)]">
+                            <div className="flex justify-between items-start mb-4">
+                              <p
+                                className={`text-[16px] font-medium max-w-[calc(100%_-_20px)] line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
                                 {skill.skill?.name}
                               </p>
                               {hasComment ? (
@@ -397,17 +476,14 @@ export const SkillMapByOrganizationPanel = ({
                             <div>
                               <SkillMapProgressBar
                                 value={progressPercent}
-                                strokeColor={
-                                  isLocked ||
-                                  progressPercent == 0 ||
-                                  stepCompleted
-                                    ? '#D2DBE1'
-                                    : strokeColor
+                                strokeColor={strokeColor}
+                                trailColor={
+                                  stepCompleted ? '#D2DBE1' : '#EBF1F7'
                                 }
                               />
                             </div>
                           </div>
-                          <div className="w-1/5 flex justify-end">
+                          <div className="w-[60px] flex justify-end">
                             {' '}
                             {renderTreasureForStep(
                               Boolean(isLocked),
@@ -474,12 +550,7 @@ export const SkillMapByOrganizationPanel = ({
           open={openSubmitLevelUpModal}
           submitLevelUpDetail={submitLevelUpDetail}
           isSuccessSubmitLevelUp={isSuccessSubmitLevelUp}
-          onCloseAndSave={() => {
-            setOpenSubmitLevelUpModal(false);
-            setSelectedSkillMapToSubmitLevelUp(null);
-            setSubmitLevelUpDetail(null);
-            setIsSuccessSubmitLevelUp(false);
-          }}
+          onCloseAndSave={(data) => saveLevelUpDraft(data)}
           onClose={() => {
             setOpenSubmitLevelUpModal(false);
             setSelectedSkillMapToSubmitLevelUp(null);

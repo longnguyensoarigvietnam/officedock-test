@@ -5,27 +5,48 @@ from django.db.models import Min
 from django.utils.timezone import now
 
 from roles.constants import SelectionResultOptions
-from skills.constants import LookBackTypes
+from skills.constants import LookBackTypes, SkillStep, SkillLevel
+from skills.models import Skill
 from users.models import RoleDetail
 
 
-def get_lookback_time(lookback_type, lookback_interval):
+def get_lookback_time(
+    lookback_type,
+    lookback_interval,
+    user_organization=None,
+    start_lookback_at=now(),
+):
     """
     Return look back time based on lookback_type.
     """
+    if not lookback_type and not lookback_interval:
+        return None, now()
+    if user_organization:
+        start_lookback_at = (
+            user_organization.created_at if user_organization else now()
+        )
+
     match lookback_type:
         case LookBackTypes.DAY.value:
-            next_submit_at = now() + timedelta(days=lookback_interval)
+            next_submit_at = start_lookback_at + timedelta(
+                days=lookback_interval
+            )
         case LookBackTypes.WEEK.value:
-            next_submit_at = now() + timedelta(weeks=lookback_interval)
+            next_submit_at = start_lookback_at + timedelta(
+                weeks=lookback_interval
+            )
         case LookBackTypes.MONTH.value:
-            next_submit_at = now() + relativedelta(months=lookback_interval)
+            next_submit_at = start_lookback_at + relativedelta(
+                months=lookback_interval
+            )
         case LookBackTypes.YEAR.value:
-            next_submit_at = now() + relativedelta(years=lookback_interval)
+            next_submit_at = start_lookback_at + relativedelta(
+                years=lookback_interval
+            )
         case _:
-            next_submit_at = now()
+            next_submit_at = start_lookback_at
 
-    return next_submit_at
+    return next_submit_at, start_lookback_at
 
 
 def get_list_org_hierarchies(user, permission_name):
@@ -63,3 +84,38 @@ def get_list_org_hierarchies(user, permission_name):
             organizations = organizations.filter(id__in=org_ids)
 
     return organizations
+
+
+def get_next_progression(current_step, current_level, skill=None):
+    """Returns the next (step, level) progression based on current step and level."""
+    steps = list(SkillStep)
+    levels = list(SkillLevel)
+    try:
+        current_level_index = levels.index(SkillLevel(current_level))
+        current_step_index = steps.index(SkillStep(current_step))
+    except ValueError:
+        return None  # Invalid input
+
+    if current_level_index < len(levels) - 1:
+        # Move to next level in same step
+        return (
+            steps[current_step_index].value,
+            levels[current_level_index + 1].value,
+        )
+    else:
+        if skill:
+            exists_next_skill = Skill.objects.filter(
+                parent__id=skill.id
+            ).first()
+            # If not exists next step, replace next step is current step
+            if not exists_next_skill:
+                return current_step, current_level
+        # Move to LEVEL_1 in next step, if exists
+        if current_step_index < len(steps) - 1:
+            return steps[current_step_index + 1].value, SkillLevel.LEVEL_1.value
+        else:
+            # Already at final step and final level
+            return (
+                steps[current_step_index].value,
+                levels[current_level_index].value,
+            )

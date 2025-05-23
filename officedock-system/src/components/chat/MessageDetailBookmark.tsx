@@ -182,18 +182,22 @@ export const MessageDetailBookmark = ({
       if (status == SubmitLevelStatus.APPROVAL) {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm">{skillName}</p>
-            <p className="text-black text-sm">
-              のスキルがレベルアップしました！
+            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+              {skillName}{' '}
+              <span className="text-black text-sm font-normal">
+                のスキルがレベルアップしました！
+              </span>
             </p>
           </div>
         );
       } else {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm">{skillName}</p>
-            <p className="text-black text-sm">
-              のレベルアップの申請についてコメントが届いています。
+            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+              {skillName}{' '}
+              <span className="text-black text-sm font-normal">
+                のレベルアップの申請についてコメントが届いています。
+              </span>
             </p>
           </div>
         );
@@ -885,13 +889,7 @@ export const MessageDetailBookmark = ({
         {chatRoomInfo?.type === ChatRoomType.SKILL && (
           <div
             className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-[14px] ml-5 mr-3 group-hover:rounded-md`}>
-            <div>
-              {renderAvatar(
-                messageDetail.type == MessageType.CREATE_SUBMIT_LEVEL_SKILL
-                  ? Number(session?.user.id)
-                  : messageDetail.sender.id,
-              )}
-            </div>
+            <div>{renderAvatar(messageDetail.sender.id)}</div>
             <div className={`ml-3 w-full pr-5`}>
               <div className="flex justify-between items-center">
                 <div className="flex gap-2 items-center font-semibold text-sm pb-2">
@@ -961,9 +959,7 @@ export const MessageDetailBookmark = ({
                                 <Button
                                   className="!text-black !font-medium !text-xs !bg-[#CED8DE] !rounded-[100px] !w-[86px] !h-[30px] !px-0"
                                   onClick={() => {
-                                    router.push(
-                                      pageRouters.LEVEL_UP_TEAM.href,
-                                    );
+                                    router.push(pageRouters.LEVEL_UP_TEAM.href);
                                   }}>
                                   確認する
                                   <ImageRound

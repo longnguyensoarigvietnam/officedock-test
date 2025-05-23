@@ -3,6 +3,7 @@ from datetime import timedelta, datetime, time
 from django.db import transaction
 from django.db.models import Count, Q, F
 from django.utils import timezone
+from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -559,27 +560,16 @@ class CronJobViewSet(BaseAPIViewSet):
         tasks = Task.objects.filter(
             remind_at__lte=timezone.now(), deadline__gt=timezone.now()
         ).all()
-        now = timezone.now()
-        one_minute_before = now - timedelta(minutes=1)
         skill_map_levels = SkillMapSkillLevel.objects.filter(
-            next_submit_at__range=(one_minute_before, now),
+            skill_map__is_valid=True, popup=True, is_complete=False
         ).all()
         for skill_map_level in skill_map_levels:
-            skill_map = skill_map_level.skill_map
-            send_web_socket_event(
-                {
-                    "skill": {
-                        "id": skill_map.skill.id,
-                        "name": skill_map.skill.name,
-                    },
-                    "measure_count": None,
-                    "measure_time": None,
-                    "look_back_interval": skill_map_level.look_back_interval,
-                    "look_back_type": skill_map_level.look_back_type,
-                    "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
-                },
-                user=skill_map.staff,
-            )
+            data = self._check_process_skill_map_level(skill_map_level)
+            if data:
+                send_web_socket_event(
+                    data,
+                    user=skill_map_level.skill_map.staff,
+                )
 
         for task in tasks:
             if task.deadline and task.remind_at:
@@ -654,3 +644,44 @@ class CronJobViewSet(BaseAPIViewSet):
                     )
 
         return self.response_ok()
+
+    def _check_process_skill_map_level(self, skill_map_level):
+        """
+        Handle check skill map level and response data socket
+        """
+        data = {
+            "skill": {
+                "id": skill_map_level.skill.id,
+                "name": skill_map_level.skill.name,
+            },
+            "skill_map": skill_map_level.skill_map.id,
+            "skill_map_level": skill_map_level.id,
+            "measure_count": None,
+            "measure_time": None,
+            "look_back_interval": None,
+            "look_back_type": None,
+            "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
+        }
+        if (
+            skill_map_level.next_submit_at
+            and skill_map_level.next_submit_at <= now()
+        ):
+            data["look_back_interval"] = skill_map_level.look_back_interval
+            data["look_back_type"] = skill_map_level.look_back_type
+            return data
+        if skill_map_level.measure_time:
+            hours, _, _ = map(
+                int, skill_map_level.actual_measure_time.split(":")
+            )
+            if skill_map_level.measure_time <= hours:
+                data["measure_time"] = skill_map_level.measure_time
+                return data
+        if (
+            skill_map_level.measure_count
+            and skill_map_level.measure_count
+            <= skill_map_level.actual_measure_count
+        ):
+            data["measure_count"] = skill_map_level.measure_count
+            return data
+
+        return False

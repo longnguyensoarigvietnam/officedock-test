@@ -1,7 +1,10 @@
 from django.core.management import BaseCommand
 from django.db.models import Q
 
-from skills.models import SkillMapSkillLevel
+from skills.constants import SkillLevel
+from skills.models import SkillMapSkillLevel, SkillMap
+from submit_levels.constants import SubmitLevelStatus
+from submit_levels.models import SubmitLevelHistory
 
 
 class Command(BaseCommand):
@@ -28,6 +31,21 @@ class Command(BaseCommand):
                 skill_map_level.skill_level.look_back_type
             )
             skill_map_level.save()
+
+        submit_levels = SubmitLevelHistory.objects.filter(
+            level_after_submit=SkillLevel.LEVEL_3.value,
+            status=SubmitLevelStatus.APPROVE.value,
+        )
+        for submit_level in submit_levels:
+            SkillMap.objects.filter(
+                skill=submit_level.skill,
+                staff=submit_level.staff,
+                organization=submit_level.organization,
+                step=submit_level.step_after_submit,
+                is_complete=False,
+            ).update(
+                is_complete=True,
+            )
         self.stdout.write(
             self.style.SUCCESS(f"Successfully update data skill map level")
         )

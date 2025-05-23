@@ -311,6 +311,10 @@ class TaskViewSet(
                 plan_end_date,
                 month,
             )
+        # Increase measure count if task created have status completed
+        if task.status.name == TaskStatus.COMPLETED.value:
+            for user in task.people_in_charge.all():
+                calculate_progress_skill_map(task, user)
 
         return self.response_created(
             self.get_serializer(
@@ -1144,8 +1148,20 @@ class TaskViewSet(
             )
 
         # Update skill if task status is changed
-        if current_task_status.name != task.status.name:
-            calculate_progress_skill_map(task, user)
+        is_change_another_to_complete_status = (
+            current_task_status.name != TaskStatus.COMPLETED.value
+            and task.status.name == TaskStatus.COMPLETED.value
+        )
+        is_change_complete_to_another_status = (
+            current_task_status.name == TaskStatus.COMPLETED.value
+            and task.status.name != TaskStatus.COMPLETED.value
+        )
+        if (
+            is_change_another_to_complete_status
+            or is_change_complete_to_another_status
+        ):
+            for user in task.people_in_charge.all():
+                calculate_progress_skill_map(task, user)
 
         return self.response_ok(
             self.get_serializer(
@@ -1353,12 +1369,20 @@ class TaskViewSet(
                 old_task_status = task.status.name
                 task.status = task_status
                 task.save()
-                if not (
-                    task_status.name
-                    == old_task_status
-                    == TaskStatus.COMPLETED.value
+                is_change_another_to_complete_status = (
+                    old_task_status != TaskStatus.COMPLETED.value
+                    and task_status.name == TaskStatus.COMPLETED.value
+                )
+                is_change_complete_to_another_status = (
+                    old_task_status == TaskStatus.COMPLETED.value
+                    and task_status.name != TaskStatus.COMPLETED.value
+                )
+                if (
+                    is_change_another_to_complete_status
+                    or is_change_complete_to_another_status
                 ):
-                    calculate_progress_skill_map(task, user)
+                    for user in task.people_in_charge.all():
+                        calculate_progress_skill_map(task, user)
                 for user in task.people_in_charge.all():
                     send_web_socket_event(
                         {

@@ -46,7 +46,7 @@ type Props = {
   imgClassname?: string;
   onChange?: (value: OptionDropdownType) => void;
   onAdd?: (value: string) => void;
-  disableItems?: string[]
+  disableItems?: string[];
 };
 
 const Dropdown = ({
@@ -183,7 +183,7 @@ const Dropdown = ({
                         )}
                         <span
                           className={`${selected.imgUrl && 'ml-3'} ${selected.imgComponent && 'ml-2'} block truncate ${labelClass} ${classActive} `}>
-                          {selected.label}
+                          {selected.label || <div className="h-[22px]"></div>}
                         </span>
                       </>
                     ) : (
@@ -258,7 +258,9 @@ const Dropdown = ({
                           }
                           value={option}
                           onClick={() => handleOptionClick(option)}
-                          disabled={disableItems.includes(String(option.value))}>
+                          disabled={disableItems.includes(
+                            String(option.value),
+                          )}>
                           {() => (
                             <>
                               <div

@@ -554,6 +554,8 @@ def split_id_from_string(string_ids):
     """
     Convert a comma-separated string of IDs into a list of integers.
     """
+    if string_ids is None:
+        return []
     ids = []
     for id in string_ids.split(","):
         try:

@@ -140,22 +140,22 @@ export const SearchMessagesModal = ({
       if (status == SubmitLevelStatus.APPROVAL) {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm">
-              {highlightTitleBySearchTerm(skillName, searchChatMsg)}
-            </p>
-            <p className="text-black text-sm">
-              のスキルがレベルアップしました！
+            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+              {highlightTitleBySearchTerm(skillName, searchChatMsg)}{' '}
+              <span className="text-black text-sm font-normal">
+                のスキルがレベルアップしました！
+              </span>
             </p>
           </div>
         );
       } else {
         return (
           <div className="flex gap-2">
-            <p className="text-[#0068B6] font-medium text-sm">
-              {highlightTitleBySearchTerm(skillName, searchChatMsg)}
-            </p>
-            <p className="text-black text-sm">
-              のレベルアップの申請についてコメントが届いています。
+            <p className="text-[#0068B6] font-medium text-sm max-w-full break-all">
+              {highlightTitleBySearchTerm(skillName, searchChatMsg)}{' '}
+              <span className="text-black text-sm font-normal">
+                のレベルアップの申請についてコメントが届いています。
+              </span>
             </p>
           </div>
         );

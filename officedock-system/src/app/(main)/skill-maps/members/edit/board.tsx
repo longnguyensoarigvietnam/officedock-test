@@ -128,7 +128,7 @@ const EditSkillMapByMemberBoard = () => {
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
-        setSelectedSkillByUserToUpdate([])
+        setSelectedSkillByUserToUpdate([]);
         router.push(pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href);
       },
       onError: (error: AxiosError<any>) => {
@@ -142,48 +142,69 @@ const EditSkillMapByMemberBoard = () => {
 
   return (
     <Fragment>
-      <div className="flex justify-between items-center">
-        <Dropdown
-          options={organizationList}
-          className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
-          classNameOption="!w-[220px]"
-          selectedOption={organizationList.find(
-            (element) => element.value == selectedOrganizationOption.value,
-          )}
-          onChange={(e) => {
-            setSelectedOrganizationOption({
-              label: e.label,
-              value: e.value,
-            });
-          }}
-        />
-        <div className="flex justify-center gap-3 items-center">
-          <Link href={pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}>
-            <Button variant="outline" className="w-[100px] !p-0 !h-[34px]">
-              キャンセル
+      <div className="sticky z-[21] top-[0px] px-10 py-8 bg-[#EBF1F7]">
+        <div className="flex gap-4 items-center mb-5">
+          <p className="text-black font-medium text-[26px]">スキルマップ設定</p>
+          <div className="flex gap-2">
+            <Link href={pageRouters.SKILL_MAPS_MANAGEMENT.href}>
+              <Button
+                variant="outline"
+                className={`w-[90px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                スキル編集
+              </Button>
+            </Link>
+            <Button
+              variant="primary"
+              className={`w-[120px] !p-0 text-xs h-[28px] text-white !border-transparent !rounded-[20px]`}>
+              対応メンバー編集
             </Button>
-          </Link>
-          <Button
-            variant="primary"
-            className="w-[100px] !p-0 !h-[34px]"
-            onClick={handleConfirmUpdateSkillMapByUsers}>
-            保存
-          </Button>
+          </div>
+        </div>
+        <div className="flex justify-between items-center">
+          <Dropdown
+            options={organizationList}
+            className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
+            classNameOption="!w-[220px] !z-[30]"
+            selectedOption={organizationList.find(
+              (element) => element.value == selectedOrganizationOption.value,
+            )}
+            onChange={(e) => {
+              setSelectedOrganizationOption({
+                label: e.label,
+                value: e.value,
+              });
+            }}
+          />
+          <div className="flex justify-center gap-3 items-center">
+            <Link href={pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}>
+              <Button variant="outline" className="w-[100px] !p-0 !h-[34px]">
+                キャンセル
+              </Button>
+            </Link>
+            <Button
+              variant="primary"
+              className="w-[100px] !p-0 !h-[34px]"
+              onClick={handleConfirmUpdateSkillMapByUsers}>
+              保存
+            </Button>
+          </div>
         </div>
       </div>
 
-      {dataSkillMapsByMembers.length > 0 &&
-        dataSkillMapsByMembers.map((skillMapByMembers) => {
-          return (
-            <EditSkillMapByMemberForm
-              key={skillMapByMembers.id}
-              skillMapByMembers={skillMapByMembers}
-              dataSkillMapList={dataSkillMapList}
-              setSelectedSkillByUserToUpdate={setSelectedSkillByUserToUpdate}
-              setDataSkillMapsByMembers={setDataSkillMapsByMembers}
-            />
-          );
-        })}
+      <div className="px-10 flex flex-col gap-6">
+        {dataSkillMapsByMembers.length > 0 &&
+          dataSkillMapsByMembers.map((skillMapByMembers) => {
+            return (
+              <EditSkillMapByMemberForm
+                key={skillMapByMembers.id}
+                skillMapByMembers={skillMapByMembers}
+                dataSkillMapList={dataSkillMapList}
+                setSelectedSkillByUserToUpdate={setSelectedSkillByUserToUpdate}
+                setDataSkillMapsByMembers={setDataSkillMapsByMembers}
+              />
+            );
+          })}
+      </div>
     </Fragment>
   );
 };

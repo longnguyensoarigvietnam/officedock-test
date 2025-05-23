@@ -2,7 +2,7 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { Controller, useForm } from 'react-hook-form';
 import { formatISO } from 'date-fns';
-import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -20,12 +20,10 @@ import {
 import { apiRouters } from '@constants/routers';
 import {
   CreationDataTask,
+  DataStatusChangeInline,
   Task,
-  TaskErrorPerson,
   TaskFormData,
-  TaskRequest,
 } from '@interfaces/task';
-import { ResponseError } from '@interfaces/response';
 import { OptionDropdownType } from '@interfaces/common';
 
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
@@ -50,14 +48,8 @@ interface ItemProps {
   handleActionEditTask: (id: number, type?: string) => void;
   handleConfirmCopyTask: (id: number, type?: string) => void;
   handleUpdateItemInline: (data: Task) => void;
-  editTask: UseMutateFunction<
-    Task,
-    ResponseError<{
-      detail: TaskErrorPerson;
-    }>,
-    TaskRequest,
-    unknown
-  >;
+  editTask: (data: DataStatusChangeInline) => void;
+
   handlePinItem: (id: string) => void;
   disableDraggable?: boolean;
 }

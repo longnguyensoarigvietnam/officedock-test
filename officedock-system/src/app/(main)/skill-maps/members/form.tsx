@@ -141,7 +141,7 @@ export const SkillMapByMembersDetail = ({
                       className={`
                         text-[#77858F] text-xs font-medium py-3 max-w-[100%] truncate 
                         ${index !== headerGroup.headers.length - 1 ? 'border-r-[1px]' : ''}
-                        ${isSticky ? 'sticky left-0 z-10 bg-white' : ''}
+                        ${isSticky ? 'sticky left-0 z-20 bg-white' : ''}
                       `}>
                       {flexRender(
                         header.column.columnDef.header,
@@ -174,7 +174,7 @@ export const SkillMapByMembersDetail = ({
                       isFirstCol && 'border-l-0',
                       isLastCol && 'border-r-0',
                       isLastRow && 'border-b-0',
-                      isFirstCol && 'sticky left-0 z-0 bg-white',
+                      isFirstCol && 'sticky left-0 z-20 bg-white',
                     ]
                       .filter(Boolean)
                       .join(' ');

@@ -1,5 +1,5 @@
 'use client';
-import { UseMutateFunction, useMutation } from 'react-query';
+import { useMutation } from 'react-query';
 import { Droppable } from '@hello-pangea/dnd';
 import {
   Dispatch,
@@ -29,12 +29,10 @@ import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import {
   Columns,
   CreationDataTask,
+  DataStatusChangeInline,
   KanbanDataResponse,
   Task,
-  TaskErrorPerson,
-  TaskRequest,
 } from '@interfaces/task';
-import { ResponseError } from '@interfaces/response';
 import { OptionDropdownType } from '@interfaces/common';
 
 import api from '@base/api';
@@ -61,14 +59,8 @@ interface ColumnProps {
   handleConfirmCopyTask: (id: number) => void;
   handleUpdateItemInline: (data: Task) => void;
   setColumnsKanbanData: Dispatch<SetStateAction<Columns | undefined>>;
-  editTask: UseMutateFunction<
-    Task,
-    ResponseError<{
-      detail: TaskErrorPerson;
-    }>,
-    TaskRequest,
-    unknown
-  >;
+  editTask: (data: DataStatusChangeInline) => void;
+
   setNumberPagesData: Dispatch<
     SetStateAction<
       {

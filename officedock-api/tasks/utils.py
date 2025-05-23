@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, time
 
-from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 
 from chat.constants import WebSocketEventType
@@ -13,6 +12,7 @@ from organizations.models import (
     OrganizationsStatisticCategories,
     OrganizationsStatisticCategoriesSkills,
 )
+from skills.constants import DEFAULT_TIME
 from skills.models import SkillMap
 from tasks.constants import DatetimeUnitTypes, TaskStatus
 from tasks.models import Task, TaskSchedule, TodoList, TaskDuration
@@ -169,23 +169,13 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
     task_categories = task.categories.first()
     if not task_categories:
         return
-    # TODO: Wait QA 96
-    org_cats_filter = Q(organization=task.organization)
-    if task_categories.large_statistic_category:
-        org_cats_filter &= Q(
-            large_statistic_category=task_categories.large_statistic_category
-        )
-        if task_categories.medium_statistic_category:
-            org_cats_filter &= Q(
-                medium_statistic_category=task_categories.medium_statistic_category
-            )
-            if task_categories.small_statistic_category:
-                org_cats_filter &= Q(
-                    small_statistic_category=task_categories.small_statistic_category
-                )
+
     # Get Organization categories
     org_categories = OrganizationsStatisticCategories.objects.filter(
-        org_cats_filter
+        large_statistic_category=task_categories.large_statistic_category,
+        medium_statistic_category=task_categories.medium_statistic_category,
+        small_statistic_category=task_categories.small_statistic_category,
+        organization=task.organization,
     ).values_list("id", flat=True)
     # Get Skill have categories
     org_cat_skills = (
@@ -202,6 +192,7 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
             staff=user,
             skill_map_skill_levels__is_complete=False,
             is_complete=False,
+            is_valid=True,
         ).first()
         if skill_map:
             current_skill_level = skill_map.skill_map_skill_levels.filter(
@@ -210,72 +201,104 @@ def calculate_progress_skill_map(task, user, duration_time: timedelta = None):
             actual_measure_count = current_skill_level.actual_measure_count
             actual_measure_time = current_skill_level.actual_measure_time
             # Get all time durations of task
+            total_duration_of_task = None
             if not duration_time:
                 # Update skill map skill level actual measure count
-                count = (
-                    1 if task.status.name == TaskStatus.COMPLETED.value else -1
-                )
+                if task.status.name == TaskStatus.COMPLETED.value:
+                    count = 1
+                    total_duration_of_task = get_total_hours_of_task(task)
+                else:
+                    count = -1
+                    total_duration_of_task = -get_total_hours_of_task(task)
+
                 actual_measure_count = actual_measure_count + count
                 if (
                     current_skill_level.measure_count
                     and current_skill_level.measure_count
                     <= actual_measure_count
+                    and current_skill_level.popup
                 ):
-                    send_web_socket_event(
-                        {
-                            "skill": {
-                                "id": skill_map.skill.id,
-                                "name": skill_map.skill.name,
-                            },
-                            "measure_count": current_skill_level.measure_count,
-                            "measure_time": None,
-                            "look_back_interval": None,
-                            "look_back_type": None,
-                            "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
-                        },
-                        user=user,
+                    _send_socket_show_popup_complete(
+                        skill_map,
+                        current_skill_level.measure_count,
+                        None,
+                        user,
+                        skill_map_level=current_skill_level,
                     )
-            if duration_time:
+            if total_duration_of_task or duration_time:
                 # Update skill map skill level actual measure time
                 # Get new actual measure time
+                time_duration = total_duration_of_task or duration_time
                 try:
                     new_actual_measure_time = (
                         time_str_to_timedelta(actual_measure_time)
-                        + duration_time
+                        + time_duration
                     )
                 except:
                     raise ValidationError()
                 # Formatted timedelta to string
-                actual_measure_time = format_duration(new_actual_measure_time)
-                # Compare with current measure time and send socket to show pop-up
-                hours, minutes, seconds = map(
-                    int, actual_measure_time.split(":")
+                actual_measure_time = (
+                    format_duration(new_actual_measure_time)
+                    if new_actual_measure_time > timedelta(0)
+                    else DEFAULT_TIME
                 )
+                print(user, actual_measure_time)
+                # Compare with current measure time and send socket to show pop-up
+                hours, _, _ = map(int, actual_measure_time.split(":"))
                 if (
                     current_skill_level.measure_time
                     and current_skill_level.measure_time <= hours
+                    and current_skill_level.popup
                 ):
-                    send_web_socket_event(
-                        {
-                            "skill": {
-                                "id": skill_map.skill.id,
-                                "name": skill_map.skill.name,
-                            },
-                            "measure_count": None,
-                            "measure_time": current_skill_level.measure_time,
-                            "look_back_interval": None,
-                            "look_back_type": None,
-                            "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
-                        },
-                        user=user,
+                    _send_socket_show_popup_complete(
+                        skill_map,
+                        None,
+                        current_skill_level.measure_time,
+                        user,
+                        skill_map_level=current_skill_level,
                     )
+
             # Update skill map level
             skill_map.skill_map_skill_levels.filter(
                 id=current_skill_level.id
             ).update(
-                actual_measure_count=actual_measure_count,
+                actual_measure_count=actual_measure_count
+                if actual_measure_count > 0
+                else 0,
                 actual_measure_time=actual_measure_time,
             )
+
+
+def _send_socket_show_popup_complete(
+    skill_map,
+    measure_count=None,
+    measure_time=None,
+    user=None,
+    skill_map_level=None,
+    look_back_interval=None,
+    look_back_type=None,
+):
+    """
+    Handle send socket show popup complete skill map level
+    """
+    if not skill_map.is_valid:
+        return
+    send_web_socket_event(
+        {
+            "skill": {
+                "id": skill_map.skill.id,
+                "name": skill_map.skill.name,
+            },
+            "skill_map": skill_map.id,
+            "skill_map_level": skill_map_level.id,
+            "measure_count": measure_count,
+            "measure_time": measure_time,
+            "look_back_interval": look_back_interval,
+            "look_back_type": look_back_type,
+            "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
+        },
+        user=user,
+    )
 
 
 def get_total_hours_of_task(task):

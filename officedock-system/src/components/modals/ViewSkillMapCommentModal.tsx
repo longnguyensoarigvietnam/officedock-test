@@ -47,15 +47,20 @@ const ViewSkillMapCommentModal = memo(
             {currentComment.skill.name}
           </p>
           <div className="flex justify-between items-center w-full">
-            <div
-              className="opacity-50 hover:cursor-pointer"
-              onClick={handlePrev}>
-              <ImageRound
-                className="w-5 h-5"
-                src="/icons/chevron-left.svg"
-                name="Arrow left"
-              />
-            </div>
+            {currentIndex > 0 ? (
+              <div
+                className="opacity-50 hover:cursor-pointer"
+                onClick={handlePrev}>
+                <ImageRound
+                  className="w-5 h-5"
+                  src="/icons/chevron-left.svg"
+                  name="Arrow left"
+                />
+              </div>
+            ) : (
+              <div className="w-5 h-5"></div>
+            )}
+
             <div className="flex items-center gap-2">
               <div className="bg-[#EBF1F7] rounded-[6px] w-[62px] h-[62px] flex flex-col items-center justify-center opacity-55">
                 <p
@@ -122,15 +127,19 @@ const ViewSkillMapCommentModal = memo(
               </div>
             </div>
 
-            <div
-              className="opacity-50 hover:cursor-pointer"
-              onClick={handleNext}>
-              <ImageRound
-                className="w-5 h-5"
-                src="/icons/chevron-right.svg"
-                name="Arrow right"
-              />
-            </div>
+            {currentIndex < skillMapCommentList.length - 1 ? (
+              <div
+                className="opacity-50 hover:cursor-pointer"
+                onClick={handleNext}>
+                <ImageRound
+                  className="w-5 h-5"
+                  src="/icons/chevron-right.svg"
+                  name="Arrow right"
+                />
+              </div>
+            ) : (
+              <div className="w-5 h-5"></div>
+            )}
           </div>
           <p className="text-[#0068B6] text-[18px] font-medium">
             レベルアップしました！
@@ -138,12 +147,12 @@ const ViewSkillMapCommentModal = memo(
           <div className="bg-[#EBF1F7] py-[24px] px-[30px] rounded-[6px] !w-full">
             <div className="flex items-center mb-3">
               <CustomUserAvatar
-                avatarUrl={currentComment.staff?.avatar || ''}
-                avatarColor={currentComment.staff?.avatarColor || ''}
+                avatarUrl={currentComment.approver?.avatar || ''}
+                avatarColor={currentComment.approver?.avatarColor || ''}
                 size={24}
               />
               <p className="text-sm font-medium ml-2 max-w-full break-all line-clamp-4">
-                {currentComment.staff.profile.fullName}{' '}
+                {currentComment.approver.profile.fullName}{' '}
                 <span className="text-[#77858F] text-xs font-medium ml-1">
                   さんからのコメント
                 </span>

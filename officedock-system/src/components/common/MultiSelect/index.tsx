@@ -1,9 +1,11 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Select, { GroupBase, MultiValue, PropsValue } from 'react-select';
 import makeAnimated from 'react-select/animated';
 
 import { NO_OPTIONS } from '@constants';
+import { MenuPlacementType } from '@constants/enums';
+
 import './styles/multiselect.css';
 
 export type MultiSelectProps = {
@@ -38,6 +40,25 @@ const MultiSelect = ({
 }: MultiSelectProps) => {
   const animatedComponents = makeAnimated();
   const [menuIsOpen, setMenuIsOpen] = useState(false);
+  const [menuPlacement, setMenuPlacement] = useState<MenuPlacementType>(
+    MenuPlacementType.BOTTOM,
+  );
+  const selectRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!menuIsOpen || !selectRef.current) return;
+
+    const rect = selectRef.current.controlRef.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+
+    // Check if there is enough space below, otherwise open above
+    setMenuPlacement(
+      (options && options?.length > 0 && rect.bottom + 270 > viewportHeight) ||
+        (options && options?.length == 0 && rect.bottom + 60 > viewportHeight)
+        ? MenuPlacementType.TOP
+        : MenuPlacementType.BOTTOM,
+    );
+  }, [menuIsOpen, options]);
 
   const style = {
     control: (base: any) => ({
@@ -92,6 +113,7 @@ const MultiSelect = ({
   return (
     <div className={`h-full w-full border custom-input shadow-sm ${className}`}>
       <Select
+        ref={selectRef}
         closeMenuOnSelect={closeMenuOnSelect}
         noOptionsMessage={() => NO_OPTIONS}
         isMulti
@@ -117,6 +139,7 @@ const MultiSelect = ({
         menuIsOpen={menuIsOpen}
         onMenuOpen={() => setMenuIsOpen(true)}
         onMenuClose={() => setMenuIsOpen(false)}
+        menuPlacement={menuPlacement}
       />
     </div>
   );
