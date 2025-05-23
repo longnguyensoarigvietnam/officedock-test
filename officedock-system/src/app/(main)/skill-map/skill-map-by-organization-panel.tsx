@@ -314,7 +314,7 @@ export const SkillMapByOrganizationPanel = ({
 
   return (
     <div
-      className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-5"
+      className="w-full py-5 px-10 bg-[#F8FAFC] rounded-[14px] mb-6"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {skillMapDetail.organizationName}

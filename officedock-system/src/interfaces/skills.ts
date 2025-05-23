@@ -391,7 +391,7 @@ export interface SubmitLevelUpRequest {
   skillId: number;
   levelBeforeSubmit: string;
   stepBeforeSubmit: string;
-  approverId: number;
+  approverId: number | null;
   status?: SubmitLevelStatus
   items?: {
     item: string;
