@@ -35,7 +35,7 @@ const CompletionRewardModal = memo(
             className="w-10 h-10"
           />
         </div>
-        <div className="font-medium text-[18px] text-[#0068B6] text-center my-[30px] ">
+        <div className="font-medium text-[18px] text-[#0068B6] text-center my-[30px] break-all">
           「{dataRewardSkill?.skill.name}」を{' '}
           {dataRewardSkill?.measureCount !== null && (
             <>{dataRewardSkill?.measureCount}回完了しました！</>

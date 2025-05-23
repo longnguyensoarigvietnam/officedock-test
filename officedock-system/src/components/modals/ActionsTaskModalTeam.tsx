@@ -1577,11 +1577,23 @@ const ActionsTaskModalTeam = ({
                         isCheckActionPermission ||
                         (dataTask
                           ? dataTask.status?.id === StatusValueTask.MY_ROUTINE
+                          : false) ||
+                        (dataTask
+                          ? dataTask.status?.id === StatusValueTask.COMPLETED
                           : false)
                       }
-                      options={dataOptionsStatus.filter(
-                        (item) => item.value !== StatusValueTask.MY_ROUTINE,
-                      )}
+                      options={
+                        dataTask?.status?.id !== StatusValueTask.COMPLETED
+                          ? dataOptionsStatus.filter(
+                              (item) =>
+                                item.value !== StatusValueTask.MY_ROUTINE &&
+                                item.value !== StatusValueTask.COMPLETED,
+                            )
+                          : dataOptionsStatus.filter(
+                              (item) =>
+                                item.value !== StatusValueTask.MY_ROUTINE,
+                            )
+                      }
                       selectedOption={dataOptionsStatus.find(
                         (element) => element.value === value?.value,
                       )}

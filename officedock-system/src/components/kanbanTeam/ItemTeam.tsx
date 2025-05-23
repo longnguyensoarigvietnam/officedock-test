@@ -580,25 +580,49 @@ const ItemTeam = ({
                             styleClassOption={{
                               fontSize: '12px',
                             }}
+                            disabled={
+                              content.status?.id === StatusValueTask.COMPLETED
+                            }
                             options={
                               content.status?.id === StatusValueTask.MY_ROUTINE
                                 ? dataOptionsStatus
-                                : dataOptionsStatus.filter(
-                                    (item) =>
-                                      item.value !== StatusValueTask.MY_ROUTINE,
-                                  )
+                                : content.status?.id !==
+                                    StatusValueTask.COMPLETED
+                                  ? dataOptionsStatus.filter(
+                                      (item) =>
+                                        item.value !==
+                                          StatusValueTask.MY_ROUTINE &&
+                                        item.value !==
+                                          StatusValueTask.COMPLETED,
+                                    )
+                                  : dataOptionsStatus.filter(
+                                      (item) =>
+                                        item.value !==
+                                        StatusValueTask.MY_ROUTINE,
+                                    )
                             }
                             selectedOption={dataOptionsStatus.find(
                               (element) => element.value === value?.value,
                             )}
                             onChange={(e) => {
-                              onChange(e);
-                              editTask({
-                                oldIdStatus: `${content.status?.id}`,
-                                status: watch('statusId')?.value as string,
-                                task: content.id,
-                                oldNameStatus: content.status?.name || '',
-                              });
+                              if (
+                                (e.value !== StatusValueTask.COMPLETED &&
+                                  content.status?.id ===
+                                    StatusValueTask.COMPLETED) ||
+                                (e.value === StatusValueTask.COMPLETED &&
+                                  content.status?.id !==
+                                    StatusValueTask.COMPLETED)
+                              ) {
+                                return;
+                              } else {
+                                onChange(e);
+                                editTask({
+                                  oldIdStatus: `${content.status?.id}`,
+                                  status: watch('statusId')?.value as string,
+                                  task: content.id,
+                                  oldNameStatus: content.status?.name || '',
+                                });
+                              }
                             }}
                             error={errors.statusId?.message}
                           />
