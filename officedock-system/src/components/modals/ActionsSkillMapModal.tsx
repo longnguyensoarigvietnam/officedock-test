@@ -1037,6 +1037,7 @@ const ActionsSkillMapModal = ({
           watch={watch}
           key={stepKey}
           getValues={getValues}
+          action={action}
         />
 
         {['レベル0→1', 'レベル1→2', 'レベル2→3'].map((levelTitle, idx) => {

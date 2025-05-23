@@ -54,6 +54,7 @@ const CompletionRewardModal = memo(
                   dataRewardSkill?.lookBackType as keyof typeof SkillMapTypeInterval
                 ]
               }
+              完了しました！
             </>
           )}
         </div>

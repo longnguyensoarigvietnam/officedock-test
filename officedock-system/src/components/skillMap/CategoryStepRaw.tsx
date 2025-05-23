@@ -15,13 +15,14 @@ import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 
-import { EventWorkCategory } from '@constants/enums';
+import { ActionsModal, EventWorkCategory } from '@constants/enums';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { StepKey } from '@interfaces/skill-map';
 import { CategoryStructure, SkillMapFormData } from '@interfaces/skills';
 
 type StepRawCategoriesProps = {
+  action: string | null;
   stepKey: StepKey;
   control: Control<SkillMapFormData>;
   setError: UseFormSetError<SkillMapFormData>;
@@ -59,6 +60,7 @@ type StepRawCategoriesProps = {
 const CategoryStepRaw = ({
   stepKey,
   control,
+  action,
   watch,
   setError,
   clearErrors,
@@ -126,14 +128,18 @@ const CategoryStepRaw = ({
           SMALL: { label: '', value: '' },
         });
       } else {
-        setTimeout(() => {
+        if (action !== ActionsModal.EDIT) {
+          setTimeout(() => {
+            removeOuter();
+            appendOuter({
+              LARGE: { label: '', value: '' },
+              MEDIUM: { label: '', value: '' },
+              SMALL: { label: '', value: '' },
+            });
+          }, 0);
+        } else {
           removeOuter();
-          appendOuter({
-            LARGE: { label: '', value: '' },
-            MEDIUM: { label: '', value: '' },
-            SMALL: { label: '', value: '' },
-          });
-        }, 0);
+        }
       }
     }
   }, [stepKey]);
@@ -180,6 +186,9 @@ const CategoryStepRaw = ({
 
   return (
     <div>
+      <p className="text-base text-[#0068B6] font-medium mb-3 ">
+        対応カテゴリー
+      </p>
       <div className="flex gap-[10px] flex-col">
         {outerFields.map((field, index) => (
           <div key={field.id} className="flex gap-2 items-center h-[30px]">
