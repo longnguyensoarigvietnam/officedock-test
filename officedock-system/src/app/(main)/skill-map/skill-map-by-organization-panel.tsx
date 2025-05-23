@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import { AxiosError } from 'axios';
 
@@ -63,6 +63,10 @@ export const SkillMapByOrganizationPanel = ({
   >(null);
   const [isSuccessSubmitLevelUp, setIsSuccessSubmitLevelUp] =
     useState<boolean>(false);
+
+  // Refs
+  const isEditingRef = useRef(false);
+  const isSubmittingRef = useRef(false);
 
   useSkillMapComment({
     skillMapId: Number(selectedSkillMapToViewComment),
@@ -239,8 +243,10 @@ export const SkillMapByOrganizationPanel = ({
 
   const handleConfirmSubmitLevelUp = (data: SubmitLevelUpRequest) => {
     if (data.submitLevel) {
+      if (isEditingRef.current) return;
       editSubmittedLevelUp(data);
     } else {
+      if (isSubmittingRef.current) return;
       submitLevelUp(data);
     }
   };
@@ -258,11 +264,16 @@ export const SkillMapByOrganizationPanel = ({
     'editSubmittedLevelUp',
     handleEditSubmittedLevelUp,
     {
+      onMutate: () => {
+        isEditingRef.current = true;
+      },
       onSuccess: () => {
         setIsSuccessSubmitLevelUp(true);
+        isEditingRef.current = false;
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_SAVE_MESSAGE);
+        isEditingRef.current = false;
       },
       onSettled: () => {},
     },
@@ -281,11 +292,16 @@ export const SkillMapByOrganizationPanel = ({
     'submitLevelUp',
     handleSubmitLevelUp,
     {
+      onMutate: () => {
+        isSubmittingRef.current = true;
+      },
       onSuccess: () => {
         setIsSuccessSubmitLevelUp(true);
+        isSubmittingRef.current = false;
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_SAVE_MESSAGE);
+        isSubmittingRef.current = false;
       },
       onSettled: () => {},
     },
