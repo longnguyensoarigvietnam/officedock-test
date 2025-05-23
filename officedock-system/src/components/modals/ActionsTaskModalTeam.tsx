@@ -1584,11 +1584,16 @@ const ActionsTaskModalTeam = ({
                       }
                       options={
                         dataTask?.status?.id !== StatusValueTask.COMPLETED
-                          ? dataOptionsStatus.filter(
-                              (item) =>
-                                item.value !== StatusValueTask.MY_ROUTINE &&
-                                item.value !== StatusValueTask.COMPLETED,
-                            )
+                          ? action === ActionTask.EDIT
+                            ? dataOptionsStatus.filter(
+                                (item) =>
+                                  item.value !== StatusValueTask.MY_ROUTINE &&
+                                  item.value !== StatusValueTask.COMPLETED,
+                              )
+                            : dataOptionsStatus.filter(
+                                (item) =>
+                                  item.value !== StatusValueTask.MY_ROUTINE,
+                              )
                           : dataOptionsStatus.filter(
                               (item) =>
                                 item.value !== StatusValueTask.MY_ROUTINE,
