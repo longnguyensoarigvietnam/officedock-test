@@ -309,6 +309,13 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
         user = request.user
+        for user in instance.task.people_in_charge.all():
+            # Minus duration to skill map actual measure time
+            calculate_progress_skill_map(
+                instance.task,
+                user,
+                duration_time=-(instance.paused_at - instance.started_at),
+            )
         if started_at.date() != paused_at.date():
             # Call separate_duration to handle multi-day durations
             new_durations = separate_duration(
