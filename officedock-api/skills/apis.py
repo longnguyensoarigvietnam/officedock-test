@@ -16,6 +16,7 @@ from organizations.models import (
     OrganizationsStatisticCategories,
     OrganizationsStatisticCategoriesSkills,
     Organization,
+    UsersOrganizations,
 )
 from organizations.serializers import (
     StatisticCategorySerializer,
@@ -220,10 +221,15 @@ class ManageSkillMapViewSet(
                     skill_level = skill.skill_levels.filter(
                         level=SkillLevelConstants.LEVEL_1.value
                     ).first()
+                    user_org = UsersOrganizations.objects.filter(
+                        user=staff,
+                        organization=skill.organization,
+                    ).first()
                     # Set next_submit_at if skill level has look back
                     next_submit_at, start_lookback_at = get_lookback_time(
                         skill_level.look_back_type,
                         skill_level.look_back_interval,
+                        user_organization=user_org,
                     )
                     data = []
                     for item in skill_level.items:
@@ -766,6 +772,7 @@ class SkillViewSet(
                 next_submit_at, start_look_back_at = get_lookback_time(
                     skill_level.look_back_type,
                     skill_level.look_back_interval,
+                    start_lookback_at=skill_map_level.start_lookback_at,
                 )
                 SkillMapSkillLevel.objects.filter(id=skill_map_level.id).update(
                     start_lookback_at=start_look_back_at,
@@ -775,6 +782,7 @@ class SkillViewSet(
                     look_back_type=skill_level.look_back_type,
                     look_back_interval=skill_level.look_back_interval,
                     items=data,
+                    popup=True,
                 )
             else:
                 SkillMapSkillLevel.objects.filter(id=skill_map_level.id).update(

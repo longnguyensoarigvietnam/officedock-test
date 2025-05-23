@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
@@ -233,9 +234,20 @@ class SubmitLevelViewSet(
                 step_after_submit=step_after_submit,
             )
         elif status == SubmitLevelStatus.REJECT.value:
+            # Get next skill level
+            skill_map_level = skill_map.skill_map_skill_levels.filter(
+                level=instance.level_before_submit
+            ).first()
+            start_lookback_at = now()
+            if (
+                look_back_type == skill_map_level.look_back_type
+                and look_back_interval == skill_map_level.look_back_interval
+            ):
+                start_lookback_at = skill_map_level.start_lookback_at
             next_submit_at, start_look_back_at = get_lookback_time(
                 look_back_type,
                 look_back_interval,
+                start_lookback_at=start_lookback_at,
             )
             # Update current skill level
             skill_map.skill_map_skill_levels.filter(
@@ -250,6 +262,7 @@ class SubmitLevelViewSet(
                 start_lookback_at=start_look_back_at,
                 next_submit_at=next_submit_at,
                 items=items,
+                popup=True,
             )
             submit_level = serializer.save()
         else:

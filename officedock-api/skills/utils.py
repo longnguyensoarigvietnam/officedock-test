@@ -10,25 +10,43 @@ from skills.models import Skill
 from users.models import RoleDetail
 
 
-def get_lookback_time(lookback_type, lookback_interval):
+def get_lookback_time(
+    lookback_type,
+    lookback_interval,
+    user_organization=None,
+    start_lookback_at=now(),
+):
     """
     Return look back time based on lookback_type.
     """
     if not lookback_type and not lookback_interval:
-        return None, None
+        return None, now()
+    if user_organization:
+        start_lookback_at = (
+            user_organization.created_at if user_organization else now()
+        )
+
     match lookback_type:
         case LookBackTypes.DAY.value:
-            next_submit_at = now() + timedelta(days=lookback_interval)
+            next_submit_at = start_lookback_at + timedelta(
+                days=lookback_interval
+            )
         case LookBackTypes.WEEK.value:
-            next_submit_at = now() + timedelta(weeks=lookback_interval)
+            next_submit_at = start_lookback_at + timedelta(
+                weeks=lookback_interval
+            )
         case LookBackTypes.MONTH.value:
-            next_submit_at = now() + relativedelta(months=lookback_interval)
+            next_submit_at = start_lookback_at + relativedelta(
+                months=lookback_interval
+            )
         case LookBackTypes.YEAR.value:
-            next_submit_at = now() + relativedelta(years=lookback_interval)
+            next_submit_at = start_lookback_at + relativedelta(
+                years=lookback_interval
+            )
         case _:
-            next_submit_at = now()
+            next_submit_at = start_lookback_at
 
-    return next_submit_at, now()
+    return next_submit_at, start_lookback_at
 
 
 def get_list_org_hierarchies(user, permission_name):

@@ -266,6 +266,8 @@ def _send_socket_show_popup_complete(
     measure_time=None,
     user=None,
     skill_map_level=None,
+    look_back_interval=None,
+    look_back_type=None,
 ):
     """
     Handle send socket show popup complete skill map level
@@ -280,8 +282,8 @@ def _send_socket_show_popup_complete(
             "skill_map_level": skill_map_level.id,
             "measure_count": measure_count,
             "measure_time": measure_time,
-            "look_back_interval": None,
-            "look_back_type": None,
+            "look_back_interval": look_back_interval,
+            "look_back_type": look_back_type,
             "action": WebSocketEventType.SKILL_LEVEL_UP_COMPLETED.value,
         },
         user=user,
