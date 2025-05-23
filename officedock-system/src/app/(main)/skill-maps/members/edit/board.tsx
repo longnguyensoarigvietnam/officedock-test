@@ -146,7 +146,7 @@ const EditSkillMapByMemberBoard = () => {
         <Dropdown
           options={organizationList}
           className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
-          classNameOption="!w-[220px]"
+          classNameOption="!w-[220px] !z-[30]"
           selectedOption={organizationList.find(
             (element) => element.value == selectedOrganizationOption.value,
           )}

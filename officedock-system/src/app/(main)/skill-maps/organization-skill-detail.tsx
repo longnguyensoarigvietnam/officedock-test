@@ -175,7 +175,7 @@ export const OrganizationSkillDetail = ({
     {
       accessorKey: 'level1',
       header: () => (
-        <div className="flex gap-1 justify-center">
+        <div className="flex gap-1 justify-start px-5">
           <p className="font-medium text-xs text-[#0068B6]">レベル1→2</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
@@ -186,7 +186,7 @@ export const OrganizationSkillDetail = ({
     {
       accessorKey: 'level2',
       header: () => (
-        <div className="flex gap-1 justify-center">
+        <div className="flex gap-1 justify-start px-5">
           <p className="font-medium text-xs text-[#0068B6]">レベル2→3</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
@@ -197,7 +197,7 @@ export const OrganizationSkillDetail = ({
     {
       accessorKey: 'level3',
       header: () => (
-        <div className="flex gap-1 justify-center">
+        <div className="flex gap-1 justify-start px-5">
           <p className="font-medium text-xs text-[#0068B6]">レベル3→</p>
           <p className="font-medium text-xs text-[#77858F]">
             のレベルアップ条件
