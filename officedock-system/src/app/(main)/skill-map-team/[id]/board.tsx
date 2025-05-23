@@ -15,12 +15,15 @@ import { SkillMapByOrganization } from '@interfaces/skills';
 
 import { SkillMapDetailByUser } from './skill-map-detail';
 import MySkillDetailByUser from './my-skill-detail';
+import Link from 'next/link';
 
 const BoardSkillUser = () => {
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
-  const userId = params.id;
   const router = useRouter();
+
+  const userId = params.id;
+  const tabId = searchParams.get('tabId');
 
   const [isMapOption, setIsMapOption] = useState(true);
 
@@ -60,29 +63,45 @@ const BoardSkillUser = () => {
     <>
       {/* Navigate buttons */}
       <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#EBF1F7]">
-        <div className="flex gap-2 items-center mb-[30px]">
-          <Button
-            variant={isMapOption ? 'primary' : 'outline'}
-            onClick={() => {
-              const params = new URLSearchParams(searchParams);
-              params.delete('is_skill');
-              params.set('is_map', 'true');
-              router.replace(`?${params.toString()}`);
-            }}
-            className={`w-[100px] !p-0 text-xs h-[28px] border-transparent text-white !rounded-[20px] ${isMapOption ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F] border-[1px]'}`}>
-            スキルマップ
-          </Button>
-          <Button
-            variant={isMapOption ? 'outline' : 'primary'}
-            onClick={() => {
-              const params = new URLSearchParams(searchParams);
-              params.delete('is_map');
-              params.set('is_skill', 'true');
-              router.replace(`?${params.toString()}`);
-            }}
-            className={` w-[120px] !p-0 text-xs h-[28px]  !rounded-[20px] ${!isMapOption ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F] border-[1px]'}`}>
-            マイスキル
-          </Button>
+        <div className="flex mb-[30px] justify-between">
+          <div className="flex gap-2 items-center">
+            <Button
+              variant={isMapOption ? 'primary' : 'outline'}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams);
+                params.delete('is_skill');
+                params.set('is_map', 'true');
+                router.replace(`?${params.toString()}`);
+              }}
+              className={`w-[100px] !p-0 text-xs h-[28px] border-transparent text-white !rounded-[20px] ${isMapOption ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F] border-[1px]'}`}>
+              スキルマップ
+            </Button>
+            <Button
+              variant={isMapOption ? 'outline' : 'primary'}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams);
+                params.delete('is_map');
+                params.set('is_skill', 'true');
+                router.replace(`?${params.toString()}`);
+              }}
+              className={` w-[120px] !p-0 text-xs h-[28px]  !rounded-[20px] ${!isMapOption ? '' : '!text-[#77858F] !bg-transparent !border-[#77858F] border-[1px]'}`}>
+              マイスキル
+            </Button>
+          </div>
+          <Link href={`${pageRouters.SKILL_MAP_TEAM.href}?tabId=${tabId || 0}`}>
+            <Button className="w-[130px] !p-0 text-sm h-[34px] !border-transparent !text-[#77858F] bg-white rounded-[6px]">
+              メンバー一覧{' '}
+              <ImageRound
+                src="/icons/detail-task.svg"
+                name="right"
+                style={{
+                  height: '18px',
+                  width: '18px',
+                }}
+                className="!text-transparent ml-1 cursor-pointer"
+              />
+            </Button>
+          </Link>
         </div>
       </div>
 
