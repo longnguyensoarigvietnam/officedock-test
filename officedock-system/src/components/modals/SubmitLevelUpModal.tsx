@@ -222,17 +222,13 @@ const SubmitLevelUpModal = memo(
                   variant="outline"
                   className="w-[140px] h-[36px] !p-0 text-sm font-medium rounded-[6px] text-[#0068B6] bg-white"
                   onClick={() => {
-                    if (!selectedApproverId) {
-                      setShowApproverErrorValidation(true);
-                      return;
-                    }
                     onCloseAndSave({
                       staffId: submitLevelUpDetail.staffId,
                       organizationId: submitLevelUpDetail.organization,
                       skillId: submitLevelUpDetail.skill.id,
                       levelBeforeSubmit: submitLevelUpDetail.levelBeforeSubmit,
                       stepBeforeSubmit: submitLevelUpDetail.stepBeforeSubmit,
-                      approverId: Number(selectedApproverId),
+                      approverId: selectedApproverId,
                       status: SubmitLevelStatus.DRAFT,
                       items: itemStatusList.map((item) => {
                         return {
