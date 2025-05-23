@@ -312,7 +312,7 @@ class SkillMapSerializer(serializers.ModelSerializer):
                     time_str_to_timedelta(skill_level["actual_measure_time"])
                     / time_str_to_timedelta(measure_time_str)
                 ) * 100
-            elif skill_level["start_lookback_at"]:
+            elif skill_level["next_submit_at"]:
                 start = datetime.fromisoformat(skill_level["start_lookback_at"])
                 end = datetime.fromisoformat(skill_level["next_submit_at"])
                 elapsed = (datetime.now() - start).total_seconds()
