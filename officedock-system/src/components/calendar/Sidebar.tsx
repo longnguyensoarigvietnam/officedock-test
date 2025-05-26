@@ -15,7 +15,9 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import { EventParticipant } from '@interfaces/calendar';
+
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
 import { EventParticipantType } from '@constants/enums';
@@ -87,6 +89,7 @@ export const CalendarSidebar = ({
 }: CalendarSidebarProps) => {
   const { data: session } = useSession();
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
     EventParticipant[]
@@ -153,6 +156,7 @@ export const CalendarSidebar = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Check is participant selected
   const checkIsParticipantSelected = (member: EventParticipant) => {
     const updatedUserIds: string[] = selectedScheduleUserIds
       ? selectedScheduleUserIds.split(',').filter(Boolean)
@@ -178,6 +182,7 @@ export const CalendarSidebar = ({
     }
   };
 
+  // Render user's avatar
   const renderAvatar = (memberId: number) => {
     const memberInfo = dashboardMembersWithAvatars.find(
       (memberWithAvatar) => memberWithAvatar.id === memberId,

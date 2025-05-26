@@ -532,3 +532,7 @@ export enum MenuPlacementType {
   TOP = 'top',
   BOTTOM = 'bottom'
 }
+export enum SortingType{
+  ASC = 'asc',
+  DESC = 'desc'
+}

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 import Button from '@components/common/Button';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
@@ -15,26 +16,26 @@ import { SkillMapByOrganization } from '@interfaces/skills';
 
 import { SkillMapDetailByUser } from './skill-map-detail';
 import MySkillDetailByUser from './my-skill-detail';
-import Link from 'next/link';
 
 const BoardSkillUser = () => {
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
   const router = useRouter();
 
-  const userId = params.id;
-  const tabId = searchParams.get('tabId');
-
   const [isMapOption, setIsMapOption] = useState(true);
 
+  // Params
   const user_organizationId = searchParams.get('user_organization');
   const isMapParam = searchParams.get('is_map');
   const isSkill = searchParams.get('is_skill');
+  const userId = params.id;
+  const tabId = searchParams.get('tabId');
 
   const [detailSkillData, setDetailSkillData] = useState<
     SkillMapByOrganization[]
   >([]);
 
+  // Get skillmap info
   const { skillMapInfo } = useSkillMapInfo({
     organizationId: user_organizationId || '',
     userId: userId,
@@ -42,6 +43,7 @@ const BoardSkillUser = () => {
       setDetailSkillData(data.organizations);
     },
   });
+
   useEffect(() => {
     if (isMapParam) {
       setIsMapOption(true);
@@ -51,6 +53,7 @@ const BoardSkillUser = () => {
     }
   }, [isMapParam, isSkill]);
 
+  // Navigate to prev/next user
   const handleNavigateUser = (userId: number | undefined) => {
     if (!userId) return;
 
@@ -127,7 +130,7 @@ const BoardSkillUser = () => {
                 <p className="text-sm font-medium text-white max-w-full break-all line-clamp-2">
                   {skillMapInfo?.user?.organizations?.name || ''}
                 </p>
-                <p className="text-black font-medium text-[26px] max-w-[300px] truncate">
+                <p className="text-black font-medium text-[26px] max-w-[300px] break-all line-clamp-2">
                   {skillMapInfo?.user.fullName}
                 </p>
               </div>

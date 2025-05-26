@@ -62,6 +62,7 @@ const ListSkillsMapByMembers = () => {
     }
   }, [organizationSkillList]);
 
+  // Get organization options for pulldown
   useEffect(() => {
     if (organizationOptions) {
       const organizationList = organizationOptions.map((org) => {

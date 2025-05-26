@@ -2,19 +2,13 @@ import Image from 'next/image';
 import { format, isSameDay } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import {
-  Dispatch,
-  Fragment,
-  MutableRefObject,
-  SetStateAction,
-  useEffect,
-  useState,
-} from 'react';
+import { Dispatch, Fragment, MutableRefObject, SetStateAction } from 'react';
 import { Editor } from '@tiptap/react';
 
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 import { ProgressBar } from '@components/common/ProgressBar';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import {
   ADD_MEMBER_TASK_MESSAGE,
@@ -54,7 +48,6 @@ import {
 
 import { MessageHoverOptions } from './MessageHoverOptions';
 import DetailReactionChat from './DetailReactionChat';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -131,14 +124,7 @@ export const MessageDetail = ({
   const { data: session } = useSession();
   const router = useRouter();
 
-  const [dataMsgDetail, setDataMsgDetail] = useState<ChatMessageResponse>();
-
-  useEffect(() => {
-    if (messageDetail) {
-      setDataMsgDetail(messageDetail);
-    }
-  }, [messageDetail]);
-
+  // Delete message
   const handleOpenDeleteMsgModal = (id: string) => {
     setOpenConfirmDeleteModal(true);
     if (setMsgIdDeleted) {
@@ -146,6 +132,7 @@ export const MessageDetail = ({
     }
   };
 
+  // Edit message
   const handleOpenEditForm = async (id: string) => {
     if (setMsgIdUpdated) {
       setMsgIdUpdated(id);
@@ -217,6 +204,7 @@ export const MessageDetail = ({
     return container.innerHTML;
   }
 
+  // Render avatar
   const renderAvatar = (senderId: number) => {
     const memberInfo = dashboardMembers.find(
       (member) => member.id === senderId,
@@ -262,6 +250,7 @@ export const MessageDetail = ({
     return div.innerHTML;
   };
 
+  // Highlight mentions
   const highlightMentions = (message: string, mentions: number[]) => {
     if (!mentions || mentions.length === 0)
       return parseReactionsToImages(message);
@@ -377,6 +366,7 @@ export const MessageDetail = ({
     return nodes.map((node, index) => processNode(node, index));
   };
 
+  // Render submit level message
   const renderSubmitLevelMessage = (
     type: string,
     status: string,
@@ -413,40 +403,43 @@ export const MessageDetail = ({
     }
   };
 
+  // React message
   const handleReactionClickDetail = (icon: string) => {
-    if (dataMsgDetail) {
-      handleReactionClick(dataMsgDetail?.uuid, icon);
+    if (messageDetail) {
+      handleReactionClick(messageDetail?.uuid, icon);
       handleResetChatRoomNotification();
     }
   };
 
+  // Remove reactions
   const handleRemoveReactionClickDetail = (icon: string) => {
-    if (dataMsgDetail) {
-      handleRemoveReactionClick(dataMsgDetail?.uuid, icon);
+    if (messageDetail) {
+      handleRemoveReactionClick(messageDetail?.uuid, icon);
       handleResetChatRoomNotification();
     }
   };
 
   return (
     <Fragment>
-      {dataMsgDetail && (
+      {messageDetail && (
         <div className="group my-2">
           {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
             chatRoomDetail?.type === ChatRoomType.GROUP ||
             chatRoomDetail?.type === ChatRoomType.SELF) && (
             <div
-              className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} py-1 ml-5 mr-3 group-hover:rounded-md`}>
-              {renderAvatar(dataMsgDetail.sender.id)}
-              <div className={`ml-3 !w-[96%]`}>
-                <div className="flex justify-between items-center pb-2">
-                  <div className="flex gap-2 items-center font-semibold text-[15px]">
-                    <p className="truncate max-w-[500px]">
-                      {dataMsgDetail.sender.fullName}{' '}
+              className={`flex !box-border group-hover:bg-[#FFFFFF] ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              {renderAvatar(messageDetail.sender.id)}
+              <div className={`ml-3 !w-full`}>
+                <div className="flex justify-between items-baseline pb-2">
+                  <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                    <p className="max-w-full break-all">
+                      {messageDetail.sender.fullName}{' '}
+                      <span className="font-medium text-xs text-[#77858F]">
+                        {messageDetail.sender?.organizations?.name}
+                      </span>
                     </p>
-                    <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
-                      {dataMsgDetail.sender?.organizations?.name}
-                    </p>
-                    {dataMsgDetail.isBookmark && (
+
+                    {messageDetail.isBookmark && (
                       <ImageRound
                         name="Save"
                         src="/icons/save-active.svg"
@@ -455,22 +448,24 @@ export const MessageDetail = ({
                     )}
                   </div>
                   <div className={`flex items-start`}>
-                    <p className="font-medium text-xs text-[#77858F] min-w-[80px]">
-                      {dataMsgDetail.createdAt &&
+                    <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
+                      {messageDetail.createdAt &&
                         formatCheckDate(
                           getFormattedDateTime(
-                            convertToCurrentTimezone(dataMsgDetail.createdAt),
+                            convertToCurrentTimezone(messageDetail.createdAt),
                           ),
                         )}
                     </p>
-                    {dataMsgDetail.isEdited && !dataMsgDetail.deletedAt && (
+                    {messageDetail.isEdited && !messageDetail.deletedAt && (
                       <div className="flex items-center">
                         <ImageRound
                           name="Dot"
                           src={'/icons/dot.svg'}
                           className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
                         />
-                        <p className="font-normal text-xs ml-2">編集済</p>
+                        <p className="font-normal text-xs ml-2 text-nowrap">
+                          編集済
+                        </p>
                       </div>
                     )}
                   </div>
@@ -478,36 +473,36 @@ export const MessageDetail = ({
                 <div className="relative !box-border">
                   <div>
                     <div className="flex flex-col">
-                      {dataMsgDetail.deletedAt ? (
+                      {messageDetail.deletedAt ? (
                         <p
                           className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
                           {MESSAGE_DELETED}
                         </p>
                       ) : (
                         <div>
-                          {dataMsgDetail.type === MessageType.MESSAGE && (
+                          {messageDetail.type === MessageType.MESSAGE && (
                             <div className="break-words">
                               {processMessage(
-                                dataMsgDetail.message,
-                                dataMsgDetail.mentions || [],
+                                messageDetail.message,
+                                messageDetail.mentions || [],
                               )}
-                              {dataMsgDetail?.chatFiles &&
-                              dataMsgDetail?.chatFiles.length > 0 &&
-                              uploadFileStatus[dataMsgDetail.uuid]?.progress >=
+                              {messageDetail?.chatFiles &&
+                              messageDetail?.chatFiles.length > 0 &&
+                              uploadFileStatus[messageDetail.uuid]?.progress >=
                                 0 &&
-                              uploadFileStatus[dataMsgDetail.uuid]?.progress <
+                              uploadFileStatus[messageDetail.uuid]?.progress <
                                 100 ? (
                                 <ProgressBar
                                   value={
-                                    uploadFileStatus[dataMsgDetail.uuid]
+                                    uploadFileStatus[messageDetail.uuid]
                                       .progress
                                   }
                                 />
                               ) : (
                                 <div className="flex flex-col gap-2 !w-[100%]">
-                                  {dataMsgDetail?.chatFiles &&
-                                    dataMsgDetail?.chatFiles.length > 0 &&
-                                    dataMsgDetail?.chatFiles.map(
+                                  {messageDetail?.chatFiles &&
+                                    messageDetail?.chatFiles.length > 0 &&
+                                    messageDetail?.chatFiles.map(
                                       (file, index) => {
                                         return (
                                           <div
@@ -554,75 +549,75 @@ export const MessageDetail = ({
                               )}
                             </div>
                           )}
-                          {dataMsgDetail.type ===
+                          {messageDetail.type ===
                             MessageType.REMOVE_SCHEDULE && (
                             <div className={`w-full flex justify-start`}>
                               <div
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
-                                  <p className="w-fit font-semibold text-black">
-                                    {dataMsgDetail.sender.fullName}{' '}
+                                  <p className="w-fit font-semibold text-black max-w-full break-all">
+                                    {messageDetail.sender.fullName}{' '}
                                     {EVENT_DELETED}
                                   </p>
                                   <p className="font-semibold mt-2">日時</p>
                                   <p>
-                                    {dataMsgDetail.scheduleChanges?.new &&
+                                    {messageDetail.scheduleChanges?.new &&
                                       `${format(
-                                        dataMsgDetail.scheduleChanges?.new
+                                        messageDetail.scheduleChanges?.new
                                           .startDate as string,
                                         DATE_FORMAT,
                                       )}(${getJapaneseDayName(
-                                        dataMsgDetail.scheduleChanges?.new
+                                        messageDetail.scheduleChanges?.new
                                           .startDate as string,
                                       )})`}{' '}
-                                    {dataMsgDetail.scheduleChanges?.new &&
+                                    {messageDetail.scheduleChanges?.new &&
                                       convertToTimeString(
-                                        `${dataMsgDetail.scheduleChanges?.new.startDate}`,
+                                        `${messageDetail.scheduleChanges?.new.startDate}`,
                                       )}{' '}
                                     ~{' '}
-                                    {dataMsgDetail.scheduleChanges?.new &&
+                                    {messageDetail.scheduleChanges?.new &&
                                       String(
                                         format(
-                                          dataMsgDetail.scheduleChanges?.new
+                                          messageDetail.scheduleChanges?.new
                                             .startDate as string,
                                           DATE_FORMAT,
                                         ),
                                       ) !==
                                         String(
                                           format(
-                                            dataMsgDetail.scheduleChanges?.new
+                                            messageDetail.scheduleChanges?.new
                                               .endDate as string,
                                             DATE_FORMAT,
                                           ),
                                         ) &&
                                       `${format(
-                                        dataMsgDetail.scheduleChanges?.new
+                                        messageDetail.scheduleChanges?.new
                                           .endDate as string,
                                         DATE_FORMAT,
                                       )}(${getJapaneseDayName(
-                                        dataMsgDetail.scheduleChanges?.new
+                                        messageDetail.scheduleChanges?.new
                                           .endDate as string,
                                       )})`}{' '}
-                                    {dataMsgDetail.scheduleChanges?.new &&
+                                    {messageDetail.scheduleChanges?.new &&
                                       convertToTimeString(
-                                        `${dataMsgDetail.scheduleChanges?.new.endDate}`,
+                                        `${messageDetail.scheduleChanges?.new.endDate}`,
                                       )}
                                   </p>
                                   <p className="font-semibold mt-2">参加者</p>
                                   <p>
                                     {
-                                      dataMsgDetail.scheduleChanges?.participants?.find(
+                                      messageDetail.scheduleChanges?.participants?.find(
                                         (participant) => participant.isCreator,
                                       )?.name
                                     }{' '}
-                                    {dataMsgDetail.scheduleChanges?.participants?.find(
+                                    {messageDetail.scheduleChanges?.participants?.find(
                                       (participant) => participant.isCreator,
                                     ) && '-主催者'}
                                   </p>
-                                  {dataMsgDetail.scheduleChanges?.participants?.find(
+                                  {messageDetail.scheduleChanges?.participants?.find(
                                     (participant) => participant.isCreator,
                                   )
-                                    ? dataMsgDetail.scheduleChanges?.participants
+                                    ? messageDetail.scheduleChanges?.participants
                                         ?.filter(
                                           (participant) =>
                                             !participant.isCreator,
@@ -633,49 +628,49 @@ export const MessageDetail = ({
                                             {participant.name}{' '}
                                           </p>
                                         ))
-                                    : dataMsgDetail.scheduleChanges?.participants
+                                    : messageDetail.scheduleChanges?.participants
                                         ?.slice(0, 4)
                                         .map((participant) => (
                                           <p key={participant.id}>
                                             {participant.name}{' '}
                                           </p>
                                         ))}
-                                  {dataMsgDetail.scheduleChanges
+                                  {messageDetail.scheduleChanges
                                     ?.participants &&
-                                    dataMsgDetail.scheduleChanges?.participants
+                                    messageDetail.scheduleChanges?.participants
                                       ?.length > 4 && <p>その他</p>}
                                   <p
                                     className={`mt-2 text-left`}
                                     dangerouslySetInnerHTML={{
                                       __html: formatWithParagraphTags(
-                                        dataMsgDetail.message,
+                                        messageDetail.message,
                                       ),
                                     }}></p>
                                 </div>
                               </div>
                             </div>
                           )}
-                          {dataMsgDetail.type === MessageType.EDIT_SCHEDULE && (
+                          {messageDetail.type === MessageType.EDIT_SCHEDULE && (
                             <div className={`w-full flex justify-start`}>
                               <div
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
-                                  <p className="w-fit font-semibold text-black">
-                                    {dataMsgDetail.sender.fullName}{' '}
+                                  <p className="w-fit font-semibold text-black max-w-full break-all">
+                                    {messageDetail.sender.fullName}{' '}
                                     {EVENT_EDITED}
                                   </p>
                                   <p className="mt-2">
                                     変更あり:{' '}
-                                    {dataMsgDetail.scheduleChanges?.fieldChanges?.map(
+                                    {messageDetail.scheduleChanges?.fieldChanges?.map(
                                       (field, index) => {
                                         return (
                                           <span key={index}>
                                             {field}
-                                            {dataMsgDetail.scheduleChanges &&
-                                              dataMsgDetail.scheduleChanges
+                                            {messageDetail.scheduleChanges &&
+                                              messageDetail.scheduleChanges
                                                 .fieldChanges &&
                                               index <
-                                                dataMsgDetail.scheduleChanges
+                                                messageDetail.scheduleChanges
                                                   .fieldChanges.length -
                                                   1 &&
                                               '、'}
@@ -687,92 +682,92 @@ export const MessageDetail = ({
                                   <p className="font-semibold mt-2">日時</p>
                                   <div className={`text-left`}>
                                     <p>
-                                      {dataMsgDetail.scheduleChanges?.new &&
+                                      {messageDetail.scheduleChanges?.new &&
                                         `${format(
-                                          dataMsgDetail.scheduleChanges?.new
+                                          messageDetail.scheduleChanges?.new
                                             .startDate as string,
                                           DATE_FORMAT,
                                         )}(${getJapaneseDayName(
-                                          dataMsgDetail.scheduleChanges?.new
+                                          messageDetail.scheduleChanges?.new
                                             .startDate as string,
                                         )})`}{' '}
-                                      {dataMsgDetail.scheduleChanges?.new &&
+                                      {messageDetail.scheduleChanges?.new &&
                                         convertToTimeString(
-                                          `${dataMsgDetail.scheduleChanges?.new.startDate}`,
+                                          `${messageDetail.scheduleChanges?.new.startDate}`,
                                         )}{' '}
                                       ~{' '}
-                                      {dataMsgDetail.scheduleChanges?.new &&
+                                      {messageDetail.scheduleChanges?.new &&
                                         String(
                                           format(
-                                            dataMsgDetail.scheduleChanges?.new
+                                            messageDetail.scheduleChanges?.new
                                               .startDate as string,
                                             DATE_FORMAT,
                                           ),
                                         ) !==
                                           String(
                                             format(
-                                              dataMsgDetail.scheduleChanges?.new
+                                              messageDetail.scheduleChanges?.new
                                                 .endDate as string,
                                               DATE_FORMAT,
                                             ),
                                           ) &&
                                         `${format(
-                                          dataMsgDetail.scheduleChanges?.new
+                                          messageDetail.scheduleChanges?.new
                                             .endDate as string,
                                           DATE_FORMAT,
                                         )}(${getJapaneseDayName(
-                                          dataMsgDetail.scheduleChanges?.new
+                                          messageDetail.scheduleChanges?.new
                                             .endDate as string,
                                         )})`}{' '}
-                                      {dataMsgDetail.scheduleChanges?.new &&
+                                      {messageDetail.scheduleChanges?.new &&
                                         convertToTimeString(
-                                          `${dataMsgDetail.scheduleChanges?.new.endDate}`,
+                                          `${messageDetail.scheduleChanges?.new.endDate}`,
                                         )}
                                     </p>
-                                    {dataMsgDetail.scheduleChanges?.old && (
+                                    {messageDetail.scheduleChanges?.old && (
                                       <p>
                                         {'('}
                                         {EVENT_BEFORE_EDITED}
-                                        {dataMsgDetail.scheduleChanges?.old &&
+                                        {messageDetail.scheduleChanges?.old &&
                                           `${format(
-                                            dataMsgDetail.scheduleChanges?.old
+                                            messageDetail.scheduleChanges?.old
                                               .startDate as string,
                                             DATE_FORMAT,
                                           )}(${getJapaneseDayName(
-                                            dataMsgDetail.scheduleChanges?.old
+                                            messageDetail.scheduleChanges?.old
                                               .startDate as string,
                                           )})`}{' '}
-                                        {dataMsgDetail.scheduleChanges?.old &&
+                                        {messageDetail.scheduleChanges?.old &&
                                           convertToTimeString(
-                                            `${dataMsgDetail.scheduleChanges?.old.startDate}`,
+                                            `${messageDetail.scheduleChanges?.old.startDate}`,
                                           )}{' '}
                                         ~{' '}
-                                        {dataMsgDetail.scheduleChanges?.old &&
+                                        {messageDetail.scheduleChanges?.old &&
                                           String(
                                             format(
-                                              dataMsgDetail.scheduleChanges?.old
+                                              messageDetail.scheduleChanges?.old
                                                 .startDate as string,
                                               DATE_FORMAT,
                                             ),
                                           ) !==
                                             String(
                                               format(
-                                                dataMsgDetail.scheduleChanges
+                                                messageDetail.scheduleChanges
                                                   ?.old.endDate as string,
                                                 DATE_FORMAT,
                                               ),
                                             ) &&
                                           `${format(
-                                            dataMsgDetail.scheduleChanges?.old
+                                            messageDetail.scheduleChanges?.old
                                               .endDate as string,
                                             DATE_FORMAT,
                                           )}(${getJapaneseDayName(
-                                            dataMsgDetail.scheduleChanges?.old
+                                            messageDetail.scheduleChanges?.old
                                               .endDate as string,
                                           )})`}{' '}
-                                        {dataMsgDetail.scheduleChanges?.old &&
+                                        {messageDetail.scheduleChanges?.old &&
                                           convertToTimeString(
-                                            `${dataMsgDetail.scheduleChanges?.old.endDate}`,
+                                            `${messageDetail.scheduleChanges?.old.endDate}`,
                                           )}
                                         {')'}
                                       </p>
@@ -781,18 +776,18 @@ export const MessageDetail = ({
                                   <p className="font-semibold mt-2">参加者</p>
                                   <p>
                                     {
-                                      dataMsgDetail.scheduleChanges?.participants?.find(
+                                      messageDetail.scheduleChanges?.participants?.find(
                                         (participant) => participant.isCreator,
                                       )?.name
                                     }{' '}
-                                    {dataMsgDetail.scheduleChanges?.participants?.find(
+                                    {messageDetail.scheduleChanges?.participants?.find(
                                       (participant) => participant.isCreator,
                                     ) && '-主催者'}
                                   </p>
-                                  {dataMsgDetail.scheduleChanges?.participants?.find(
+                                  {messageDetail.scheduleChanges?.participants?.find(
                                     (participant) => participant.isCreator,
                                   )
-                                    ? dataMsgDetail.scheduleChanges?.participants
+                                    ? messageDetail.scheduleChanges?.participants
                                         ?.filter(
                                           (participant) =>
                                             !participant.isCreator,
@@ -803,23 +798,23 @@ export const MessageDetail = ({
                                             {participant.name}{' '}
                                           </p>
                                         ))
-                                    : dataMsgDetail.scheduleChanges?.participants
+                                    : messageDetail.scheduleChanges?.participants
                                         ?.slice(0, 4)
                                         .map((participant) => (
                                           <p key={participant.id}>
                                             {participant.name}{' '}
                                           </p>
                                         ))}
-                                  {dataMsgDetail.scheduleChanges
+                                  {messageDetail.scheduleChanges
                                     ?.participants &&
-                                    dataMsgDetail.scheduleChanges?.participants
+                                    messageDetail.scheduleChanges?.participants
                                       ?.length > 4 && <p>その他</p>}
-                                  {dataMsgDetail.schedule?.id ? (
+                                  {messageDetail.schedule?.id ? (
                                     <p
                                       className="hover:cursor-pointer mt-2"
                                       onClick={() =>
                                         handleConfirmGetDataDetailEvent(
-                                          `${dataMsgDetail.schedule?.id}`,
+                                          `${messageDetail.schedule?.id}`,
                                         )
                                       }>
                                       予定を確認する
@@ -833,82 +828,82 @@ export const MessageDetail = ({
                                     className={`mt-2 text-left`}
                                     dangerouslySetInnerHTML={{
                                       __html: formatWithParagraphTags(
-                                        dataMsgDetail.message,
+                                        messageDetail.message,
                                       ),
                                     }}></p>
                                 </div>
                               </div>
                             </div>
                           )}
-                          {dataMsgDetail.type ===
+                          {messageDetail.type ===
                             MessageType.CREATION_SCHEDULE && (
                             <div className={`w-full flex justify-start`}>
                               <div
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
-                                  <p className="w-fit font-semibold text-black">
-                                    {dataMsgDetail.sender.fullName}{' '}
+                                  <p className="font-semibold text-black max-w-full break-all">
+                                    {messageDetail.sender.fullName}{' '}
                                     {EVENT_CREATED}
                                   </p>
                                   <p className="font-semibold mt-2">日時</p>
                                   <p>
-                                    {dataMsgDetail.scheduleChanges?.new &&
+                                    {messageDetail.scheduleChanges?.new &&
                                       `${format(
-                                        dataMsgDetail.scheduleChanges?.new
+                                        messageDetail.scheduleChanges?.new
                                           .startDate as string,
                                         DATE_FORMAT,
                                       )}(${getJapaneseDayName(
-                                        dataMsgDetail.scheduleChanges?.new
+                                        messageDetail.scheduleChanges?.new
                                           .startDate as string,
                                       )})`}{' '}
-                                    {dataMsgDetail.scheduleChanges?.new &&
+                                    {messageDetail.scheduleChanges?.new &&
                                       convertToTimeString(
-                                        `${dataMsgDetail.scheduleChanges?.new.startDate}`,
+                                        `${messageDetail.scheduleChanges?.new.startDate}`,
                                       )}{' '}
                                     ~{' '}
-                                    {dataMsgDetail.scheduleChanges?.new &&
+                                    {messageDetail.scheduleChanges?.new &&
                                       String(
                                         format(
-                                          dataMsgDetail.scheduleChanges?.new
+                                          messageDetail.scheduleChanges?.new
                                             .startDate as string,
                                           DATE_FORMAT,
                                         ),
                                       ) !==
                                         String(
                                           format(
-                                            dataMsgDetail.scheduleChanges?.new
+                                            messageDetail.scheduleChanges?.new
                                               .endDate as string,
                                             DATE_FORMAT,
                                           ),
                                         ) &&
                                       `${format(
-                                        dataMsgDetail.scheduleChanges?.new
+                                        messageDetail.scheduleChanges?.new
                                           .endDate as string,
                                         DATE_FORMAT,
                                       )}(${getJapaneseDayName(
-                                        dataMsgDetail.scheduleChanges?.new
+                                        messageDetail.scheduleChanges?.new
                                           .endDate as string,
                                       )})`}{' '}
-                                    {dataMsgDetail.scheduleChanges?.new &&
+                                    {messageDetail.scheduleChanges?.new &&
                                       convertToTimeString(
-                                        `${dataMsgDetail.scheduleChanges?.new.endDate}`,
+                                        `${messageDetail.scheduleChanges?.new.endDate}`,
                                       )}
                                   </p>
                                   <p className="font-semibold mt-2">参加者</p>
                                   <p>
                                     {
-                                      dataMsgDetail.scheduleChanges?.participants?.find(
+                                      messageDetail.scheduleChanges?.participants?.find(
                                         (participant) => participant.isCreator,
                                       )?.name
                                     }{' '}
-                                    {dataMsgDetail.scheduleChanges?.participants?.find(
+                                    {messageDetail.scheduleChanges?.participants?.find(
                                       (participant) => participant.isCreator,
                                     ) && '-主催者'}
                                   </p>
-                                  {dataMsgDetail.scheduleChanges?.participants?.find(
+                                  {messageDetail.scheduleChanges?.participants?.find(
                                     (participant) => participant.isCreator,
                                   )
-                                    ? dataMsgDetail.scheduleChanges?.participants
+                                    ? messageDetail.scheduleChanges?.participants
                                         ?.filter(
                                           (participant) =>
                                             !participant.isCreator,
@@ -919,23 +914,23 @@ export const MessageDetail = ({
                                             {participant.name}{' '}
                                           </p>
                                         ))
-                                    : dataMsgDetail.scheduleChanges?.participants
+                                    : messageDetail.scheduleChanges?.participants
                                         ?.slice(0, 4)
                                         .map((participant) => (
                                           <p key={participant.id}>
                                             {participant.name}{' '}
                                           </p>
                                         ))}
-                                  {dataMsgDetail.scheduleChanges
+                                  {messageDetail.scheduleChanges
                                     ?.participants &&
-                                    dataMsgDetail.scheduleChanges?.participants
+                                    messageDetail.scheduleChanges?.participants
                                       ?.length > 4 && <p>その他</p>}
-                                  {dataMsgDetail.schedule?.id ? (
+                                  {messageDetail.schedule?.id ? (
                                     <p
                                       className="hover:cursor-pointer mt-2"
                                       onClick={() =>
                                         handleConfirmGetDataDetailEvent(
-                                          `${dataMsgDetail.schedule?.id}`,
+                                          `${messageDetail.schedule?.id}`,
                                         )
                                       }>
                                       予定を確認する
@@ -949,36 +944,36 @@ export const MessageDetail = ({
                               </div>
                             </div>
                           )}
-                          {(dataMsgDetail.type === MessageType.CREATION_TASK ||
-                            dataMsgDetail.type ===
+                          {(messageDetail.type === MessageType.CREATION_TASK ||
+                            messageDetail.type ===
                               MessageType.REMOVE_MEMBER_TASK ||
-                            dataMsgDetail.type ===
+                            messageDetail.type ===
                               MessageType.ADD_MEMBER_TASK) &&
-                            (dataMsgDetail.task ? (
+                            (messageDetail.task ? (
                               <div className={`w-full flex justify-start`}>
                                 <div
                                   className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
                                   <div className={`flex flex-col items-start`}>
-                                    <h4 className="text-sm w-fit font-medium text-black h-5">
-                                      {dataMsgDetail.type ==
+                                    <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
+                                      {messageDetail.type ==
                                       MessageType.CREATION_TASK
                                         ? CREATION_TASK_MESSAGE
-                                        : dataMsgDetail.type ==
+                                        : messageDetail.type ==
                                             MessageType.REMOVE_MEMBER_TASK
                                           ? REMOVE_MEMBER_TASK_MESSAGE
                                           : ADD_MEMBER_TASK_MESSAGE}
                                     </h4>
                                     <h4 className="text-sm w-fit text-black h-5 truncate max-w-[500px]">
                                       タスクのタイトル:{' '}
-                                      {dataMsgDetail.task.title || NO_SETTING}
+                                      {messageDetail.task.title || NO_SETTING}
                                     </h4>
-                                    {dataMsgDetail.type !==
+                                    {messageDetail.type !==
                                       MessageType.REMOVE_MEMBER_TASK && (
                                       <p className="w-fit mt-2">
                                         締切 :{' '}
-                                        {(dataMsgDetail.task.deadline &&
+                                        {(messageDetail.task.deadline &&
                                           format(
-                                            dataMsgDetail.task.deadline,
+                                            messageDetail.task.deadline,
                                             DATE_FORMAT,
                                           )) ||
                                           NO_SETTING}
@@ -1004,13 +999,13 @@ export const MessageDetail = ({
                       )}
                     </div>
                     <>
-                      {!dataMsgDetail.deletedAt &&
+                      {!messageDetail.deletedAt &&
                         !(
-                          uploadFileStatus[dataMsgDetail.uuid]?.progress >= 0 &&
-                          uploadFileStatus[dataMsgDetail.uuid]?.progress < 100
+                          uploadFileStatus[messageDetail.uuid]?.progress >= 0 &&
+                          uploadFileStatus[messageDetail.uuid]?.progress < 100
                         ) && (
                           <MessageHoverOptions
-                            messageDetail={dataMsgDetail}
+                            messageDetail={messageDetail}
                             chatRoomDetail={chatRoomDetail}
                             handleOpenEditForm={handleOpenEditForm}
                             handleOpenDeleteMsgModal={handleOpenDeleteMsgModal}
@@ -1028,7 +1023,7 @@ export const MessageDetail = ({
                 {!messageDetail.deletedAt && (
                   <div>
                     <DetailReactionChat
-                      dataMsgDetail={dataMsgDetail}
+                      dataMsgDetail={messageDetail}
                       handleReactionClick={handleReactionClickDetail}
                       handleRemoveReactionClick={
                         handleRemoveReactionClickDetail
@@ -1042,7 +1037,7 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.TASK && (
             <div
-              className={`flex !box-border  ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               {messageDetail.type !== MessageType.MESSAGE ? (
                 <ImageRound
                   className="w-10 h-10"
@@ -1053,32 +1048,31 @@ export const MessageDetail = ({
               ) : (
                 <div>{renderAvatar(messageDetail.sender.id)}</div>
               )}
-              <div className={`ml-3 w-full pr-5`}>
-                <div className="flex justify-between items-center">
-                  {messageDetail.type !== MessageType.MESSAGE ? (
-                    <div className="flex gap-2 !items-center font-semibold text-[15px] pb-2">
+              <div className={`ml-3 !w-full`}>
+                <div className="flex justify-between items-baseline pb-2">
+                  <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                    {messageDetail.type !== MessageType.MESSAGE ? (
                       <p className="font-semibold text-sm">タスクカード</p>
-                      {messageDetail.isBookmark && (
-                        <ImageRound
-                          name="Save"
-                          src="/icons/save-active.svg"
-                          className="w-[10px] h-[12px] hover:cursor-pointer"
-                        />
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                      <p className="truncate max-w-[500px]">
+                    ) : (
+                      <p className="max-w-full break-all">
                         {messageDetail.sender.fullName}{' '}
+                        <span className="font-medium text-xs text-[#77858F]">
+                          {messageDetail.sender?.organizations?.name}
+                        </span>
                       </p>
-                      <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
-                        {messageDetail.sender?.organizations?.name}
-                      </p>
-                    </div>
-                  )}
+                    )}
+
+                    {messageDetail.isBookmark && (
+                      <ImageRound
+                        name="Save"
+                        src="/icons/save-active.svg"
+                        className="w-[10px] h-[12px] hover:cursor-pointer"
+                      />
+                    )}
+                  </div>
 
                   <div className={`flex items-start`}>
-                    <p className="font-medium text-xs text-[#77858F]">
+                    <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                       {messageDetail.createdAt &&
                         formatCheckDate(
                           getFormattedDateTime(
@@ -1086,16 +1080,6 @@ export const MessageDetail = ({
                           ),
                         )}
                     </p>
-                    {messageDetail.isEdited && !messageDetail.deletedAt && (
-                      <div className="flex items-center">
-                        <ImageRound
-                          name="Dot"
-                          src={'/icons/dot.svg'}
-                          className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
-                        />
-                        <p className="font-normal text-xs ml-2">編集済</p>
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="relative">
@@ -1121,7 +1105,7 @@ export const MessageDetail = ({
                                 <div
                                   className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
                                   <div className={`flex flex-col items-start`}>
-                                    <h4 className="text-sm w-fit font-medium text-black h-5">
+                                    <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
                                       {messageDetail.type ==
                                       MessageType.CREATION_TASK
                                         ? CREATION_TASK_MESSAGE
@@ -1186,7 +1170,7 @@ export const MessageDetail = ({
                 {!messageDetail.deletedAt && (
                   <div>
                     <DetailReactionChat
-                      dataMsgDetail={dataMsgDetail}
+                      dataMsgDetail={messageDetail}
                       handleReactionClick={handleReactionClickDetail}
                       handleRemoveReactionClick={
                         handleRemoveReactionClickDetail
@@ -1200,17 +1184,18 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.SKILL && (
             <div
-              className={`flex !box-border  ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-1 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border  ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               <div>{renderAvatar(messageDetail.sender.id)}</div>
-              <div className={`ml-3 w-full pr-5`}>
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                    <p className="truncate max-w-[500px]">
+              <div className={`ml-3 w-full`}>
+                <div className="flex justify-between items-baseline pb-2">
+                  <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                    <p className="max-w-full break-all">
                       {messageDetail.sender.fullName}{' '}
+                      <span className="font-medium text-xs text-[#77858F]">
+                        {messageDetail.sender?.organizations?.name}
+                      </span>
                     </p>
-                    <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
-                      {messageDetail.sender?.organizations?.name}
-                    </p>
+
                     {messageDetail.isBookmark && (
                       <ImageRound
                         name="Save"
@@ -1220,7 +1205,7 @@ export const MessageDetail = ({
                     )}
                   </div>
                   <div className={`flex items-start`}>
-                    <p className="font-medium text-xs text-[#77858F]">
+                    <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                       {messageDetail.createdAt &&
                         formatCheckDate(
                           getFormattedDateTime(
@@ -1228,16 +1213,6 @@ export const MessageDetail = ({
                           ),
                         )}
                     </p>
-                    {messageDetail.isEdited && !messageDetail.deletedAt && (
-                      <div className="flex items-center">
-                        <ImageRound
-                          name="Dot"
-                          src={'/icons/dot.svg'}
-                          className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
-                        />
-                        <p className="font-normal text-xs ml-2">編集済</p>
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="relative">
@@ -1264,7 +1239,7 @@ export const MessageDetail = ({
                             <div className="w-full flex justify-start">
                               <div className={`text-xs font-normal !w-[100%] `}>
                                 <div className={`flex gap-5 items-center`}>
-                                  <h4 className="text-sm w-fit text-black h-5">
+                                  <h4 className="text-sm w-fit text-black h-5 max-w-full break-all">
                                     {renderSubmitLevelMessage(
                                       messageDetail.type,
                                       messageDetail.submitLevel?.status || '',
@@ -1324,7 +1299,7 @@ export const MessageDetail = ({
                 {!messageDetail.deletedAt && (
                   <div>
                     <DetailReactionChat
-                      dataMsgDetail={dataMsgDetail}
+                      dataMsgDetail={messageDetail}
                       handleReactionClick={handleReactionClickDetail}
                       handleRemoveReactionClick={
                         handleRemoveReactionClickDetail
@@ -1338,17 +1313,18 @@ export const MessageDetail = ({
           )}
           {chatRoomDetail?.type === ChatRoomType.CALENDAR && (
             <div
-              className={`flex !box-border ${String(dataMsgDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+              className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               <div>{renderAvatar(messageDetail.sender.id)}</div>
-              <div className={`ml-3 w-full pr-5`}>
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2 items-center font-semibold text-[15px] pb-2">
-                    <p className="truncate max-w-[500px]">
+              <div className={`ml-3 w-full`}>
+                <div className="flex justify-between items-baseline pb-2">
+                  <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                    <p className="max-w-full break-all">
                       {messageDetail.sender.fullName}
+                      <span className="font-medium text-xs text-[#77858F]">
+                        {messageDetail.sender?.organizations?.name}
+                      </span>
                     </p>
-                    <p className="font-medium text-xs truncate max-w-[200px] text-[#77858F]">
-                      {messageDetail.sender?.organizations?.name}
-                    </p>
+
                     {messageDetail.isBookmark && (
                       <ImageRound
                         name="Save"
@@ -1357,16 +1333,15 @@ export const MessageDetail = ({
                       />
                     )}
                   </div>
-                  <div className={`flex items-start`}>
-                    <p className="font-medium text-xs text-[#77858F]">
-                      {messageDetail.createdAt &&
-                        formatCheckDate(
-                          getFormattedDateTime(
-                            convertToCurrentTimezone(messageDetail.createdAt),
-                          ),
-                        )}
-                    </p>
-                  </div>
+
+                  <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
+                    {messageDetail.createdAt &&
+                      formatCheckDate(
+                        getFormattedDateTime(
+                          convertToCurrentTimezone(messageDetail.createdAt),
+                        ),
+                      )}
+                  </p>
                 </div>
                 <div className="relative">
                   <div className={`!w-[100%]`}>
@@ -1388,15 +1363,15 @@ export const MessageDetail = ({
                         </p>
                       </div>
                       <div className="flex gap-1 text-sm font-medium">
-                        <p className="text-[#0068B6] max-w-[500px] truncate">
+                        <p className="text-[#0068B6] break-all max-w-full">
                           {messageDetail.sender.fullName}
-                        </p>
-                        <p>
-                          {messageDetail.type === MessageType.REMOVE_SCHEDULE
-                            ? EVENT_DELETED
-                            : messageDetail.type === MessageType.EDIT_SCHEDULE
-                              ? EVENT_EDITED
-                              : EVENT_CREATED}
+                          <span className="text-black">
+                            {messageDetail.type === MessageType.REMOVE_SCHEDULE
+                              ? EVENT_DELETED
+                              : messageDetail.type === MessageType.EDIT_SCHEDULE
+                                ? EVENT_EDITED
+                                : EVENT_CREATED}
+                          </span>
                         </p>
                       </div>
                       <div className="text-[#5B6770] font-normal text-sm">
@@ -1500,7 +1475,7 @@ export const MessageDetail = ({
                 {!messageDetail.deletedAt && (
                   <div>
                     <DetailReactionChat
-                      dataMsgDetail={dataMsgDetail}
+                      dataMsgDetail={messageDetail}
                       handleReactionClick={handleReactionClickDetail}
                       handleRemoveReactionClick={
                         handleRemoveReactionClickDetail

@@ -85,6 +85,7 @@ export const SkillListByOrganizationPanel = ({
       </p>
 
       <div>
+        {/* Steps bar */}
         <div className="flex w-max font-medium text-white text-[16px] mb-5">
           <div className="w-[625px]">
             <StepInfoTooltip

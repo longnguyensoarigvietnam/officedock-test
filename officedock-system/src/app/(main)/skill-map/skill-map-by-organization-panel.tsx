@@ -12,6 +12,7 @@ import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
 import { SubmitLevelStatus } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import { ERROR_SAVE_MESSAGE, SUCCESS_SAVE_MESSAGE } from '@constants/message';
+import { SKILL_MAP_LEVEL_COUNT } from '@constants';
 
 import useSkillMapComment from '@hooks/useSkillMapComment';
 import useSkillMapLevelUp from '@hooks/useSkillMapLevelUp';
@@ -40,7 +41,6 @@ export const SkillMapByOrganizationPanel = ({
   skillMapDetail,
   userId,
 }: SkillMapByOrganizationPanelProps) => {
-  const MAX_LEVEL = 3;
   const showErrorToast = useErrorToast();
   const { showToast } = useToast();
 
@@ -130,7 +130,7 @@ export const SkillMapByOrganizationPanel = ({
         case 1:
           return (
             <div className="flex justify-center pt-1 gap-1">
-              {Array.from({ length: MAX_LEVEL }).map((_, i) => (
+              {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
                   name="Coin"
@@ -143,7 +143,7 @@ export const SkillMapByOrganizationPanel = ({
         case 2:
           return (
             <div className="flex justify-center pt-1 gap-1">
-              {Array.from({ length: MAX_LEVEL }).map((_, i) => (
+              {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
                   name="Diamond"
@@ -158,7 +158,7 @@ export const SkillMapByOrganizationPanel = ({
         case 3:
           return (
             <div className="flex justify-center pt-1 gap-1">
-              {Array.from({ length: MAX_LEVEL }).map((_, i) => (
+              {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
                   name="Crown"
@@ -338,6 +338,8 @@ export const SkillMapByOrganizationPanel = ({
       </p>
 
       <div>
+
+        {/* Steps bar */}
         <div className="flex w-full font-medium text-white text-[16px] mb-5 h-[32px]">
           <StepInfoTooltip
             placement="top"
@@ -533,6 +535,7 @@ export const SkillMapByOrganizationPanel = ({
         )}
       </div>
 
+      {/* View skill map comments modal */}
       {openSkillMapCommentModal && (
         <ViewSkillMapCommentModal
           open={openSkillMapCommentModal}
@@ -545,6 +548,7 @@ export const SkillMapByOrganizationPanel = ({
         />
       )}
 
+      {/* Open submit level up modal */}
       {openSubmitLevelUpModal && submitLevelUpDetail && (
         <SubmitLevelUpModal
           open={openSubmitLevelUpModal}
