@@ -128,11 +128,6 @@ class SubmitLevelViewSet(
         instance = serializer.instance
         serializer_data = serializer.validated_data
         status = serializer_data.get("status")
-        measure_count = serializer_data.pop("measure_count", None)
-        measure_time = serializer_data.pop("measure_time", None)
-        look_back_interval = serializer_data.pop("look_back_interval", None)
-        look_back_type = serializer_data.pop("look_back_type", None)
-        items = serializer_data.pop("items", None)
 
         # Allow to edit submit when staff isn't logged user
         if user == instance.staff and status in [
@@ -155,119 +150,19 @@ class SubmitLevelViewSet(
             step=instance.step_before_submit,
         ).first()
         if status == SubmitLevelStatus.APPROVE.value:
-            step_after_submit, level_after_submit = get_next_progression(
-                instance.step_before_submit, instance.level_before_submit
-            )
-            # Update current skill map skill level
-            skill_map.skill_map_skill_levels.filter(
-                level=instance.level_before_submit
-            ).update(is_complete=True)
-            is_not_max_level = True
-            if step_after_submit != instance.step_before_submit:
-                # Update current skill map
-                SkillMap.objects.filter(id=skill_map.id).update(
-                    is_complete=True
-                )
-                skill = Skill.objects.filter(
-                    parent__id=instance.skill.id
-                ).first()
-                if skill:
-                    # Get next skill map
-                    skill_map = SkillMap.objects.create(
-                        company=instance.company,
-                        skill=skill,
-                        step=step_after_submit,
-                        skill_parent=skill.parent,
-                        staff=instance.staff,
-                        organization=skill.organization,
-                        is_valid=True,
-                        is_complete=False,
-                    )
-                else:
-                    is_not_max_level = False
-            elif (
-                instance.level_before_submit == SkillLevelEnum.LEVEL_3.value
-                and not Skill.objects.filter(
-                    parent__id=instance.skill.id
-                ).exists()
-            ):
-                # Update last skill map
-                SkillMap.objects.filter(id=skill_map.id).update(
-                    is_complete=True
-                )
-
-            # Get next skill level
-            skill_level = skill_map.skill.skill_levels.filter(
-                level=level_after_submit
-            ).first()
-            if skill_level and is_not_max_level:
-                next_submit_at, start_look_back_at = get_lookback_time(
-                    skill_level.look_back_type,
-                    skill_level.look_back_interval,
-                )
-                items = [
-                    {"item": item, "is_checked": False}
-                    for item in skill_level.items
-                ]
-                # Create new Skill Map Skill Level
-                SkillMapSkillLevel.objects.create(
-                    skill_level=skill_level,
-                    level=skill_level.level,
-                    skill_map=skill_map,
-                    company=instance.company,
-                    start_lookback_at=start_look_back_at,
-                    next_submit_at=next_submit_at,
-                    skill=skill_level.skill,
-                    measure_time=skill_level.measure_time,
-                    measure_count=skill_level.measure_count,
-                    look_back_interval=look_back_interval,
-                    look_back_type=look_back_type,
-                    items=items,
-                )
-            step_after_submit, level_after_submit = get_next_progression(
-                instance.step_before_submit,
-                instance.level_before_submit,
-                skill=instance.skill,
-            )
-            submit_level = serializer.save(
-                level_after_submit=level_after_submit,
-                step_after_submit=step_after_submit,
+            submit_level = self._handle_approve_submit_level(
+                instance,
+                skill_map,
+                serializer,
+                serializer_data,
             )
         elif status == SubmitLevelStatus.REJECT.value:
-            # Get next skill level
-            skill_map_level = skill_map.skill_map_skill_levels.filter(
-                level=instance.level_before_submit
-            ).first()
-            start_lookback_at = now()
-            if (
-                look_back_type == skill_map_level.look_back_type
-                and look_back_interval == skill_map_level.look_back_interval
-            ):
-                start_lookback_at = skill_map_level.start_lookback_at
-            next_submit_at, start_look_back_at = get_lookback_time(
-                look_back_type,
-                look_back_interval,
-                start_lookback_at=start_lookback_at,
+            submit_level = self._handle_reject_submit_level(
+                instance, skill_map, serializer, serializer_data
             )
-            # Update current skill level
-            skill_map.skill_map_skill_levels.filter(
-                level=instance.level_before_submit
-            ).update(
-                measure_time=measure_time,
-                actual_measure_time=DEFAULT_TIME,
-                measure_count=measure_count,
-                actual_measure_count=0,
-                look_back_interval=look_back_interval,
-                look_back_type=look_back_type,
-                start_lookback_at=start_look_back_at,
-                next_submit_at=next_submit_at,
-                items=items,
-                popup=True,
-            )
-            submit_level = serializer.save()
         else:
-            # Send websocket to chat
             submit_level = serializer.save()
+            # Send websocket to approver chat with status APPLYING
             self._send_to_chat(
                 submit_level.approver, submit_level, is_create=True
             )
@@ -277,6 +172,131 @@ class SubmitLevelViewSet(
             SubmitLevelStatus.REJECT.value,
         ]:
             self._send_to_chat(instance.staff, submit_level)
+
+    def _handle_approve_submit_level(
+        self, instance, skill_map, serializer, serializer_data
+    ):
+        """
+        Handle approve submit level.
+        Update the status of skill_map and create a new skill_map if all levels have been completed.
+        Also update the complete status of the current skill map level and create a new skill map for the next level.
+        """
+        look_back_interval = serializer_data.pop("look_back_interval", None)
+        look_back_type = serializer_data.pop("look_back_type", None)
+        step_after_submit, level_after_submit = get_next_progression(
+            instance.step_before_submit, instance.level_before_submit
+        )
+        # Update current skill map skill level
+        skill_map.skill_map_skill_levels.filter(
+            level=instance.level_before_submit
+        ).update(is_complete=True)
+        is_not_max_level = True
+        if step_after_submit != instance.step_before_submit:
+            # Update current skill map
+            SkillMap.objects.filter(id=skill_map.id).update(is_complete=True)
+            skill = Skill.objects.filter(parent__id=instance.skill.id).first()
+            if skill:
+                # Get next skill map
+                skill_map = SkillMap.objects.create(
+                    company=instance.company,
+                    skill=skill,
+                    step=step_after_submit,
+                    skill_parent=skill.parent,
+                    staff=instance.staff,
+                    organization=skill.organization,
+                    is_valid=True,
+                    is_complete=False,
+                )
+            else:
+                is_not_max_level = False
+        elif (
+            instance.level_before_submit == SkillLevelEnum.LEVEL_3.value
+            and not Skill.objects.filter(parent__id=instance.skill.id).exists()
+        ):
+            # Update last skill map
+            SkillMap.objects.filter(id=skill_map.id).update(is_complete=True)
+
+        # Get next skill level
+        skill_level = skill_map.skill.skill_levels.filter(
+            level=level_after_submit
+        ).first()
+        if skill_level and is_not_max_level:
+            next_submit_at, start_look_back_at = get_lookback_time(
+                skill_level.look_back_type,
+                skill_level.look_back_interval,
+            )
+            items = [
+                {"item": item, "is_checked": False}
+                for item in skill_level.items
+            ]
+            # Create new Skill Map Skill Level
+            SkillMapSkillLevel.objects.create(
+                skill_level=skill_level,
+                level=skill_level.level,
+                skill_map=skill_map,
+                company=instance.company,
+                start_lookback_at=start_look_back_at,
+                next_submit_at=next_submit_at,
+                skill=skill_level.skill,
+                measure_time=skill_level.measure_time,
+                measure_count=skill_level.measure_count,
+                look_back_interval=look_back_interval,
+                look_back_type=look_back_type,
+                items=items,
+            )
+        step_after_submit, level_after_submit = get_next_progression(
+            instance.step_before_submit,
+            instance.level_before_submit,
+            skill=instance.skill,
+        )
+        return serializer.save(
+            level_after_submit=level_after_submit,
+            step_after_submit=step_after_submit,
+        )
+
+    def _handle_reject_submit_level(
+        self, instance, skill_map, serializer, serializer_data
+    ):
+        """
+        Handle reject submit level and reset conditional of skill map level from serializer_data
+        """
+        measure_count = serializer_data.pop("measure_count", None)
+        measure_time = serializer_data.pop("measure_time", None)
+        look_back_interval = serializer_data.pop("look_back_interval", None)
+        look_back_type = serializer_data.pop("look_back_type", None)
+        items = serializer_data.pop("items", None)
+
+        # Get next skill level
+        skill_map_level = skill_map.skill_map_skill_levels.filter(
+            level=instance.level_before_submit
+        ).first()
+        start_lookback_at = now()
+        if (
+            look_back_type == skill_map_level.look_back_type
+            and look_back_interval == skill_map_level.look_back_interval
+        ):
+            start_lookback_at = skill_map_level.start_lookback_at
+        next_submit_at, start_look_back_at = get_lookback_time(
+            look_back_type,
+            look_back_interval,
+            start_lookback_at=start_lookback_at,
+        )
+        # Update current skill level
+        skill_map.skill_map_skill_levels.filter(
+            level=instance.level_before_submit
+        ).update(
+            measure_time=measure_time,
+            actual_measure_time=DEFAULT_TIME,
+            measure_count=measure_count,
+            actual_measure_count=0,
+            look_back_interval=look_back_interval,
+            look_back_type=look_back_type,
+            start_lookback_at=start_look_back_at,
+            next_submit_at=next_submit_at,
+            items=items,
+            popup=True,
+        )
+        return serializer.save()
 
     @transaction.atomic()
     def create(self, request, *args, **kwargs):

@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import timedelta
+import re
 
 from django.db.models import (
     Sum,
@@ -12,8 +13,11 @@ from django.db.models import (
 )
 from django.db.models.functions import Now, Coalesce
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
+from base.messages import ERROR_MESSAGES
 from calendars.models import Schedule
+from common.constants import DATE_REGEX
 from common.serializers import CreationDataUserSerializer
 from common.utils import (
     format_duration,
@@ -953,3 +957,11 @@ def get_list_id_category_of_organization(organization_ids):
         set(medium_category_ids),
         set(small_category_ids),
     )
+
+
+def validate_date_format_using_regex(date):
+    """
+    Validate date format using default regex YYYY-MM-DD
+    """
+    if not date or not re.match(DATE_REGEX, date):
+        raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})

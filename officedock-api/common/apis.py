@@ -25,7 +25,7 @@ from skills.serializers import SkillSerializer
 from tags.serializers import BaseTagSerializer
 
 from users.serializers import RoleSerializer
-from users.models import Role, RoleDetail, User
+from users.models import Role, RoleDetail
 from tasks.models import TaskStatus, Task, TaskDuration
 from tasks.constants import (
     TaskTypes,
@@ -193,37 +193,6 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         return self.response_ok(
             self.get_serializer(organizations, many=True).data
         )
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter("organization_id", type=str, required=False),
-        ],
-    )
-    @action(
-        methods=["GET"],
-        detail=False,
-        url_path="people-in-charge",
-        serializer_class=CreationDataUserSerializer,
-    )
-    def people_in_charge(self, request):
-        """
-        Get creation data for people in charge
-        """
-
-        if organization_id := request.query_params.get("organization_id"):
-            users = (
-                User.objects.filter(organizations__id=organization_id)
-                .order_by("created_at")
-                .all()
-            )
-        else:
-            users = (
-                User.objects.filter(company=request.user.company)
-                .order_by("created_at")
-                .all()
-            )
-
-        return self.response_ok(self.get_serializer(users, many=True).data)
 
     @extend_schema(
         parameters=[
