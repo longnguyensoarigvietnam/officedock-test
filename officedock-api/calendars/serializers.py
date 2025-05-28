@@ -116,6 +116,8 @@ class ScheduleSerializer(serializers.ModelSerializer):
         source="location",
         queryset=EventLocation.objects.all(),
         write_only=True,
+        required=False,
+        allow_null=True,
     )
     location = EventLocationSerializer(read_only=True)
     start_date = serializers.DateTimeField(allow_null=True, required=False)

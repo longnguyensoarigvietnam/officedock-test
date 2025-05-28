@@ -237,7 +237,7 @@ class DashboardViewSet(BaseAPIViewSet):
             OpenApiParameter("end_date", type=datetime, required=True),
         ],
     )
-    @action(methods=["GET"], detail=False, url_path="kanban_schedules")
+    @action(methods=["GET"], detail=False, url_path="kanban-schedules")
     def kanban_schedules(self, request):
         """
         Get all schedule in kanban
@@ -259,10 +259,10 @@ class DashboardViewSet(BaseAPIViewSet):
                 people_in_charge=user,
             ).distinct()
             schedules = Schedule.objects.filter(
-                repeat_schedules__start_date__gte=start_date,
-                repeat_schedules__end_date__lte=end_date,
+                repeat_schedules__plan_start_date__gte=start_date,
+                repeat_schedules__plan_end_date__lte=end_date,
                 participants=user,
-            )
+            ).distinct()
             data = (
                 TaskCalendarSerializer(
                     tasks, many=True, context={"request": request}

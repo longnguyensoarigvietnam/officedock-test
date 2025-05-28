@@ -484,14 +484,10 @@ def process_categories(
                 )
 
         # Calculate the percentage of the total duration
-        if total_duration.total_seconds() > 0:
-            percent_per_total_duration = (
-                time_str_to_timedelta(category_duration).total_seconds()
-                / total_duration.total_seconds()
-                * 100
-            )
-        else:
-            percent_per_total_duration = 0
+        percent_per_total_duration = percentage_calculation_of_duration(
+            total_duration.total_seconds(),
+            time_str_to_timedelta(category_duration).total_seconds(),
+        )
 
         # Ensure percentage does not exceed remaining percent
         if round(percent_per_total_duration) <= percent:
@@ -532,14 +528,9 @@ def process_users(
         if filter_durations:
             duration = get_total_durations(filter_durations)
             # Calculate the percentage of the total duration
-            if total_duration.total_seconds() > 0:
-                percent_per_total_duration = (
-                    duration.total_seconds()
-                    / total_duration.total_seconds()
-                    * 100
-                )
-            else:
-                percent_per_total_duration = 0
+            percent_per_total_duration = percentage_calculation_of_duration(
+                total_duration.total_seconds(), duration.total_seconds()
+            )
 
             # Ensure percentage does not exceed remaining percent
             if round(percent_per_total_duration) <= percent:
@@ -620,14 +611,10 @@ def process_tags(
                     )
 
         # Calculate the percentage of the total duration
-        if total_duration.total_seconds() > 0:
-            percent_per_total_duration = (
-                time_str_to_timedelta(tag_duration).total_seconds()
-                / total_duration.total_seconds()
-                * 100
-            )
-        else:
-            percent_per_total_duration = 0
+        percent_per_total_duration = percentage_calculation_of_duration(
+            total_duration.total_seconds(),
+            time_str_to_timedelta(tag_duration).total_seconds(),
+        )
 
         # Ensure percentage does not exceed remaining percent
         if round(percent_per_total_duration) <= percent:
@@ -830,9 +817,9 @@ def build_category_filters(
     large_category_id=None,
     medium_category_id=None,
     small_category_id=None,
-    large_category_ids=None,
-    medium_category_ids=None,
-    small_category_ids=None,
+    exists_large_category_ids=None,
+    exists_medium_category_ids=None,
+    exists_small_category_ids=None,
 ):
     """
     Handle build category filter
@@ -844,7 +831,7 @@ def build_category_filters(
         filters &= Q(categories__large_statistic_category__id=large_category_id)
     elif large_category_id == NONE_CATEGORY:
         filters &= Q(categories__large_statistic_category__isnull=True) | ~Q(
-            categories__large_statistic_category__in=large_category_ids
+            categories__large_statistic_category__in=exists_large_category_ids
         )
 
     # Medium Category Filtering
@@ -854,7 +841,7 @@ def build_category_filters(
         )
     elif medium_category_id == NONE_CATEGORY:
         filters &= Q(categories__medium_statistic_category__isnull=True) | ~Q(
-            categories__medium_statistic_category__in=medium_category_ids
+            categories__medium_statistic_category__in=exists_medium_category_ids
         )
 
     # Small Category Filtering
@@ -862,7 +849,7 @@ def build_category_filters(
         filters &= Q(categories__small_statistic_category__id=small_category_id)
     elif small_category_id == NONE_CATEGORY:
         filters &= Q(categories__small_statistic_category__isnull=True) | ~Q(
-            categories__small_statistic_category__in=small_category_ids
+            categories__small_statistic_category__in=exists_small_category_ids
         )
 
     return filters
@@ -912,7 +899,7 @@ def get_duration_of_none_category(durations, large_id=None, medium_id=None):
 
 def check_is_not_none_category(large_id=None, medium_id=None, small_id=None):
     """
-    Handle check category is none in query params
+    Return True if none of the given category levels is explicitly marked as NONE_CATEGORY.
     """
 
     return not (
@@ -965,3 +952,7 @@ def validate_date_format_using_regex(date):
     """
     if not date or not re.match(DATE_REGEX, date):
         raise ValidationError({"detail": ERROR_MESSAGES["date_invalid"]})
+
+
+def percentage_calculation_of_duration(total_sec, duration_sec):
+    return (duration_sec / total_sec) * 100 if total_sec and duration_sec else 0

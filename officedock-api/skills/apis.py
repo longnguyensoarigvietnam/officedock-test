@@ -285,20 +285,6 @@ class ManageSkillMapViewSet(
 
         return self.response_ok(data)
 
-    @action(detail=True, methods=["GET"], url_path="check_delete")
-    def check_delete(self, request, *args, **kwargs):
-        """
-        Check skill map is have
-        """
-        skill_map = self.get_object()
-        is_can_delete = skill_map.skill_map_skill_levels.filter(
-            actual_measure_count__isnull=True,
-            actual_measure_time__isnull=True,
-            next_submit_at__isnull=True,
-            level=SkillLevelConstants.LEVEL_1.value,
-        ).exists()
-        return self.response_ok({"is_can_delete": is_can_delete})
-
 
 @extend_schema(tags=["System > Skill Map"])
 class SkillMapViewSet(
