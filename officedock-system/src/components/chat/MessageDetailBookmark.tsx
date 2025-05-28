@@ -78,6 +78,7 @@ export const MessageDetailBookmark = ({
   const { data: session } = useSession();
   const router = useRouter();
 
+  // Render user avatar
   const renderAvatar = (senderId: number) => {
     const memberInfo = dashboardMembers.find(
       (member) => member.id === senderId,
@@ -123,6 +124,7 @@ export const MessageDetailBookmark = ({
     return div.innerHTML;
   };
 
+  // Highlight mentions
   const highlightMentions = (message: string, mentions: number[]) => {
     if (!mentions || mentions.length === 0)
       return parseReactionsToImages(message);
@@ -169,6 +171,7 @@ export const MessageDetailBookmark = ({
     return parseReactionsToImages(processedHtml);
   };
 
+  // Render submit level message
   const renderSubmitLevelMessage = (
     type: string,
     status: string,
@@ -207,21 +210,21 @@ export const MessageDetailBookmark = ({
 
   return (
     <Fragment>
-      <div className="group">
+      <div className="group my-2">
         {(chatRoomInfo?.type === ChatRoomType.PRIVATE ||
           chatRoomInfo?.type === ChatRoomType.GROUP ||
           chatRoomInfo?.type === ChatRoomType.SELF) && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] py-[14px] group-hover:bg-[#FFFFFF] ml-[30px] mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
             {renderAvatar(messageDetail.sender.id)}
-            <div className={`ml-[10px] w-full pr-5 pt-2`}>
-              <div className="flex justify-between items-center gap-2 pb-2">
-                <div className="flex gap-2 font-semibold items-center text-sm ">
-                  <p className="text-[15px] font-medium text-black">
-                    {messageDetail.sender.fullName}
-                  </p>
-                  <p className="font-medium text-xs truncate min-w-10 flex-shrink-0 max-w-[400px] text-[#77858F]">
-                    {messageDetail.sender?.organizations?.name}
+            <div className={`ml-3 !w-full`}>
+              <div className="flex justify-between items-baseline pb-2">
+                <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                  <p className="max-w-full break-all">
+                    {messageDetail.sender.fullName}{' '}
+                    <span className="font-medium text-xs text-[#77858F]">
+                      {messageDetail.sender?.organizations?.name}
+                    </span>
                   </p>
                   <ImageRound
                     name="Save"
@@ -230,7 +233,7 @@ export const MessageDetailBookmark = ({
                   />
                 </div>
                 <div className={`flex items-start`}>
-                  <p className="font-medium text-xs text-[#77858F] min-w-24 flex-shrink-0">
+                  <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                     {messageDetail.createdAt &&
                       formatCheckDate(
                         getFormattedDateTime(
@@ -238,19 +241,9 @@ export const MessageDetailBookmark = ({
                         ),
                       )}
                   </p>
-                  {messageDetail.isEdited && !messageDetail.deletedAt && (
-                    <div className="flex items-center w-fit flex-shrink-0">
-                      <ImageRound
-                        name="Dot"
-                        src={'/icons/dot.svg'}
-                        className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
-                      />
-                      <p className="font-normal text-xs ml-2">編集済</p>
-                    </div>
-                  )}
                 </div>
               </div>
-              <div className="relative">
+              <div className="relative !box-border">
                 <div>
                   <div className="flex flex-col">
                     {messageDetail.deletedAt ? (
@@ -425,7 +418,7 @@ export const MessageDetailBookmark = ({
                             <div
                               className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                               <div className={`flex flex-col items-start`}>
-                                <p className="w-fit font-semibold text-black">
+                                <p className="w-fit font-semibold max-w-full break-all text-black">
                                   {messageDetail.sender.fullName} {EVENT_EDITED}
                                 </p>
                                 <p className="mt-2">
@@ -576,7 +569,21 @@ export const MessageDetailBookmark = ({
                                 {messageDetail.scheduleChanges?.participants &&
                                   messageDetail.scheduleChanges?.participants
                                     ?.length > 4 && <p>その他</p>}
-
+                                {messageDetail.schedule?.id ? (
+                                  <p
+                                    className="hover:cursor-pointer mt-2"
+                                    onClick={() =>
+                                      handleConfirmGetDataDetailEvent(
+                                        `${messageDetail.schedule?.id}`,
+                                      )
+                                    }>
+                                    予定を確認する
+                                  </p>
+                                ) : (
+                                  <p className="mt-2 italic text-gray-600">
+                                    {EVENT_DELETED}
+                                  </p>
+                                )}
                                 <p
                                   className={`mt-2 text-left`}
                                   dangerouslySetInnerHTML={{
@@ -594,7 +601,7 @@ export const MessageDetailBookmark = ({
                             <div
                               className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                               <div className={`flex flex-col items-start`}>
-                                <p className="w-fit font-semibold text-black">
+                                <p className="font-semibold text-black max-w-full break-all">
                                   {messageDetail.sender.fullName}
                                   {EVENT_CREATED}
                                 </p>
@@ -689,7 +696,7 @@ export const MessageDetailBookmark = ({
                               <div
                                 className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
-                                  <h4 className="text-sm w-fit font-medium text-black h-5">
+                                  <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
                                     {messageDetail.type ==
                                     MessageType.CREATION_TASK
                                       ? CREATION_TASK_MESSAGE
@@ -749,7 +756,7 @@ export const MessageDetailBookmark = ({
         )}
         {chatRoomInfo?.type === ChatRoomType.TASK && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-[14px] ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
             {messageDetail.type !== MessageType.MESSAGE ? (
               <ImageRound
                 className="w-10 h-10"
@@ -760,32 +767,28 @@ export const MessageDetailBookmark = ({
             ) : (
               <div>{renderAvatar(messageDetail.sender.id)}</div>
             )}
-            <div className={`ml-3 w-full pr-5`}>
-              <div className="flex justify-between items-center">
-                {messageDetail.type !== MessageType.MESSAGE ? (
-                  <div className="flex gap-2 !items-center font-semibold text-[15px] pb-2">
+            <div className={`ml-3 !w-full`}>
+              <div className="flex justify-between items-baseline pb-2">
+                <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                  {messageDetail.type !== MessageType.MESSAGE ? (
                     <p className="font-semibold text-sm">タスクカード</p>
-                    <ImageRound
-                      name="Save"
-                      src="/icons/save-active.svg"
-                      className="w-[10px] h-[12px] hover:cursor-pointer"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 font-semibold text-sm pb-2">
-                    <p>{messageDetail.sender.fullName}</p>
-                    <p className="font-normal text-[10px] truncate min-w-10 w-fit flex-shrink-0 max-w-[400px] text-[#77858F]">
-                      {messageDetail.sender?.organizations?.name}
+                  ) : (
+                    <p className="max-w-full break-all">
+                      {messageDetail.sender.fullName}{' '}
+                      <span className="font-medium text-xs text-[#77858F]">
+                        {messageDetail.sender?.organizations?.name}
+                      </span>
                     </p>
-                    <ImageRound
-                      name="Save"
-                      src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px] hover:cursor-pointer"
-                    />
-                  </div>
-                )}
-                <div className={`flex items-start w-[240px] flex-shrink-0`}>
-                  <p className="font-medium text-xs text-[#77858F] w-full">
+                  )}
+
+                  <ImageRound
+                    name="Save"
+                    src="/icons/save-active.svg"
+                    className="w-[10px] h-[12px] hover:cursor-pointer"
+                  />
+                </div>
+                <div className={`flex items-start`}>
+                  <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                     {messageDetail.createdAt &&
                       formatCheckDate(
                         getFormattedDateTime(
@@ -793,16 +796,6 @@ export const MessageDetailBookmark = ({
                         ),
                       )}
                   </p>
-                  {messageDetail.isEdited && !messageDetail.deletedAt && (
-                    <div className="flex items-center">
-                      <ImageRound
-                        name="Dot"
-                        src={'/icons/dot.svg'}
-                        className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
-                      />
-                      <p className="font-normal text-xs ml-2">編集済</p>
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="relative">
@@ -828,7 +821,7 @@ export const MessageDetailBookmark = ({
                               <div
                                 className={`text-xs font-normal bg-[#eaf8ff] w-[750px] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
-                                  <h4 className="text-sm w-fit font-medium text-black h-5">
+                                  <h4 className="text-sm w-fit font-medium text-black h-5 max-w-full break-all">
                                     {messageDetail.type ==
                                     MessageType.CREATION_TASK
                                       ? CREATION_TASK_MESSAGE
@@ -888,23 +881,26 @@ export const MessageDetailBookmark = ({
         )}
         {chatRoomInfo?.type === ChatRoomType.SKILL && (
           <div
-            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-[14px] ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
             <div>{renderAvatar(messageDetail.sender.id)}</div>
-            <div className={`ml-3 w-full pr-5`}>
-              <div className="flex justify-between items-center">
-                <div className="flex gap-2 items-center font-semibold text-sm pb-2">
-                  <p>{messageDetail.sender.fullName}</p>
-                  <p className="font-normal text-[10px] truncate min-w-10 w-fit flex-shrink-0 max-w-[400px] text-[#77858F]">
-                    {messageDetail.sender?.organizations?.name}
+            <div className={`ml-3 w-full`}>
+              <div className="flex justify-between items-baseline pb-2">
+                <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                  <p className="max-w-full break-all">
+                    {messageDetail.sender.fullName}{' '}
+                    <span className="font-medium text-xs text-[#77858F]">
+                      {messageDetail.sender?.organizations?.name}
+                    </span>
                   </p>
+
                   <ImageRound
                     name="Save"
-                    src={`/icons/save-active.svg`}
+                    src="/icons/save-active.svg"
                     className="w-[10px] h-[12px] hover:cursor-pointer"
                   />
                 </div>
-                <div className={`flex items-start w-[240px] flex-shrink-0`}>
-                  <p className="font-medium text-xs text-[#77858F] w-full">
+                <div className={`flex items-start`}>
+                  <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                     {messageDetail.createdAt &&
                       formatCheckDate(
                         getFormattedDateTime(
@@ -912,16 +908,6 @@ export const MessageDetailBookmark = ({
                         ),
                       )}
                   </p>
-                  {messageDetail.isEdited && !messageDetail.deletedAt && (
-                    <div className="flex items-center">
-                      <ImageRound
-                        name="Dot"
-                        src={'/icons/dot.svg'}
-                        className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
-                      />
-                      <p className="font-normal text-xs ml-2">編集済</p>
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="relative">
@@ -948,7 +934,7 @@ export const MessageDetailBookmark = ({
                           <div className="w-full flex justify-start">
                             <div className={`text-xs font-normal !w-[100%] `}>
                               <div className={`flex gap-5 items-center`}>
-                                <h4 className="text-sm w-fit text-black h-5">
+                                <h4 className="text-sm w-fit text-black h-5 max-w-full break-all">
                                   {renderSubmitLevelMessage(
                                     messageDetail.type,
                                     messageDetail.submitLevel?.status || '',
@@ -991,23 +977,26 @@ export const MessageDetailBookmark = ({
         )}
         {chatRoomInfo?.type === ChatRoomType.CALENDAR && (
           <div
-            className={`flex !box-border ${!isLastItem && 'border-b border-[#D2DBE1]'} group-hover:bg-[#FFFFFF] py-[14px] ml-5 mr-3 group-hover:rounded-md`}>
+            className={`flex !box-border ${!isLastItem && 'border-b border-[#D2DBE1]'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
             <div>{renderAvatar(messageDetail.sender.id)}</div>
-            <div className={`ml-3 w-full pr-5`}>
-              <div className="flex justify-between items-center gap-2 pb-2">
-                <div className="flex items-center gap-2 font-semibold text-sm ">
-                  <p>{messageDetail.sender.fullName}</p>
-                  <p className="font-normal text-[10px] min-w-10 flex-shrink-0 truncate max-w-[400px] text-[#77858F]">
-                    {messageDetail.sender?.organizations?.name}
+            <div className={`ml-3 w-full`}>
+              <div className="flex justify-between items-baseline pb-2">
+                <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
+                  <p className="max-w-full break-all">
+                    {messageDetail.sender.fullName}{' '}
+                    <span className="font-medium text-xs text-[#77858F]">
+                      {messageDetail.sender?.organizations?.name}
+                    </span>
                   </p>
+
                   <ImageRound
                     name="Save"
-                    src={`/icons/save-active.svg`}
+                    src="/icons/save-active.svg"
                     className="w-[10px] h-[12px] hover:cursor-pointer"
                   />
                 </div>
-                <div className={`flex items-start min-w-24 flex-shrink-0`}>
-                  <p className="font-medium text-xs text-[#77858F] w-full">
+                <div className={`flex items-start`}>
+                  <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
                     {messageDetail.createdAt &&
                       formatCheckDate(
                         getFormattedDateTime(
@@ -1038,15 +1027,15 @@ export const MessageDetailBookmark = ({
                     </div>
                     <div className="flex gap-3 w-full">
                       <div className="flex flex-row  gap-3 text-sm font-medium">
-                        <p className="text-[#0068B6] flex-grow break-all">
+                        <p className="text-[#0068B6] max-w-full break-all">
                           {messageDetail.sender.fullName}
-                        </p>
-                        <p className="w-fit flex-shrink-0">
-                          {messageDetail.type === MessageType.REMOVE_SCHEDULE
-                            ? EVENT_DELETED
-                            : messageDetail.type === MessageType.EDIT_SCHEDULE
-                              ? EVENT_EDITED
-                              : EVENT_CREATED}
+                          <span className="text-black">
+                            {messageDetail.type === MessageType.REMOVE_SCHEDULE
+                              ? EVENT_DELETED
+                              : messageDetail.type === MessageType.EDIT_SCHEDULE
+                                ? EVENT_EDITED
+                                : EVENT_CREATED}
+                          </span>
                         </p>
                       </div>
                     </div>

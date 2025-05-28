@@ -98,27 +98,30 @@ import {
 import api from '@base/api';
 
 const EventCalendar = () => {
+  // Refs
   const calendarRef = useRef<FullCalendar | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef(null);
+
+  // Session
+  const { data: session } = useSession();
+
+  // Open modals
   const [openCreateEventModal, setOpenCreateEventModal] =
     useState<boolean>(false);
-  const [currentRange, setCurrentRange] = useState<EventCalendarDayRange>({
-    start: '',
-    end: '',
-  });
-  const { data: session } = useSession();
-  const [events, setEvents] = useState<EventCalendarDetail[]>([]);
-  const [selectedScheduleUserIds, setSelectedScheduleUserIds] =
-    useState<string>(`${Number(session?.user.id)}`);
-  const [selectedScheduleOrgIds, setSelectedScheduleOrgIds] =
-    useState<string>('');
-  const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [openConfirmDeleteEventModal, setOpenConfirmDeleteEventModal] =
     useState(false);
   const [openConfirmCreateEventModal, setOpenConfirmCreateEventModal] =
     useState(false);
   const [openConfirmEditEventModal, setOpenConfirmEditEventModal] =
     useState(false);
+  const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
+
+  // Event list
+  const [events, setEvents] = useState<EventCalendarDetail[]>([]);
+  
+  // Event actions (edit, delete, click, filter)
+  const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [confirmEventDataToCreate, setConfirmEventDataToCreate] =
     useState<EventFormData>();
   const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
@@ -128,30 +131,85 @@ const EventCalendar = () => {
   const [actionEventClick, setActionEventClick] = useState<string>(
     ActionsEvent.CREATE,
   );
+  const [selectedScheduleUserIds, setSelectedScheduleUserIds] =
+    useState<string>(`${Number(session?.user.id)}`);
+  const [selectedScheduleOrgIds, setSelectedScheduleOrgIds] =
+    useState<string>('');
   const [searchName, setSearchName] = useState<string>('');
   const [removeMyselfOption, setRemoveMyselfOption] = useState(false);
+
+  // Display title
   const [displayYear, setDisplayYear] = useState<number>();
   const [displayMonth, setDisplayMonth] = useState<number>();
   const [displayDay, setDisplayDay] = useState<number>();
+
   const [showSidebar, setShowSidebar] = useState(false);
   const { creationDataEventCalendar } = useCreationDataEventCalendar({});
   const { dashboardMemberList } = useDashboardMemberList();
+
+  // Toasts
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
+
+  // Context
+  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+
+  // Loading
   const { setIsLoading } = useContext(LoadingContext);
+  const [calendarLoading, setIsCalendarLoading] = useState(false);
+  const [isEventRendering, setIsEventRendering] = useState(false);
+  const [popoverInfoLoading, setPopoverInfoLoading] = useState<boolean>(false);
+
+  // Params
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const router = useRouter();
   const actionType = searchParams.get('action');
   const eventIdURL = searchParams.get('event');
   const views = searchParams.get('view');
-
   const eventDetailId = eventIdURL?.replace('event', '');
-  const containerRef = useRef(null);
+
+  // Popup
   const [popoverInfo, setPopoverInfo] = useState<CalendarPopoverInfo | null>(
     null,
   );
-  const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
-  const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const [infoModalPosition, setInfoModalPosition] = useState<{
+    top: number;
+    left: number;
+  }>({
+    top: 0,
+    left: 0,
+  });
+
+  // Resources
+  const [currentResources, setCurrentResources] = useState<
+    {
+      id: string;
+      title: string;
+    }[]
+  >([]);
+
+  // Date range
+  const [defaultCreateStartDate, setDefaultCreateStartDate] = useState<
+    Date | undefined
+  >();
+  const [currentRange, setCurrentRange] = useState<EventCalendarDayRange>({
+    start: '',
+    end: '',
+  });
+
+  // Zoom
+  const screenHeight = window.innerHeight;
+
+  const baseHeight = Math.round(43 * (screenHeight / 717));
+  const baseSlider = Math.round(43 * (screenHeight / 717));
+  const [resetTrigger, _setResetTrigger] = useState(0);
+  const [isOptionZoomSchedule, setIsOptionZoomSchedule] = useState('00:15:00');
+
+  const [sliderValue, setSliderValue] = useState(baseSlider);
+  const [slotHeight, setSlotHeight] = useState(baseHeight);
+
+  // Get authenticated user
   const { authenticatedUser } = useAuthenticatedUser({
     onSuccess: (data) => {
       setCurrentResources((prevCurrentResources) => {
@@ -186,27 +244,7 @@ const EventCalendar = () => {
     },
   });
 
-  const [infoModalPosition, setInfoModalPosition] = useState<{
-    top: number;
-    left: number;
-  }>({
-    top: 0,
-    left: 0,
-  });
-  const [currentResources, setCurrentResources] = useState<
-    {
-      id: string;
-      title: string;
-    }[]
-  >([]);
-  const [calendarLoading, setIsCalendarLoading] = useState(false);
-  const [isEventRendering, setIsEventRendering] = useState(false);
-  const [defaultCreateStartDate, setDefaultCreateStartDate] = useState<
-    Date | undefined
-  >();
-  const [popoverInfoLoading, setPopoverInfoLoading] = useState<boolean>(false);
-  const showErrorToast = useErrorToast();
-
+  // Check whether current screen is day or week view
   const isDayOrWeekView = () => {
     return (
       watch('calendarView') &&
@@ -215,6 +253,7 @@ const EventCalendar = () => {
     );
   };
 
+  // Fetch calendar data using debounce
   const debouncedFetchCalendarData = useRef(
     debounce(
       async ({
@@ -257,6 +296,7 @@ const EventCalendar = () => {
     ),
   ).current;
 
+  // Handle prev
   const handlePrev = () => {
     if (calendarRef.current) {
       setIsEventRendering(true);
@@ -281,6 +321,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle next 
   const handleNext = () => {
     if (calendarRef.current) {
       setIsEventRendering(true);
@@ -305,6 +346,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle navigate to today view
   const handleNavigateToTodayView = () => {
     if (calendarRef.current) {
       setIsEventRendering(true);
@@ -327,6 +369,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle navigate to specific day
   const handleNavigateToSpecificDay = (date: Date) => {
     if (calendarRef.current) {
       setIsEventRendering(true);
@@ -350,6 +393,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Show events in year view
   const handleShowEventsInYearView = (
     date: Date,
     clientX: number,
@@ -409,6 +453,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle view change
   const handleViewChange = async (calendarView: string) => {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
@@ -465,6 +510,7 @@ const EventCalendar = () => {
     return () => resizeObserver.disconnect();
   }, [calendarRef, containerRef]);
 
+  // Scroll to current time
   const scrollToCurrentTime = () => {
     setTimeout(() => {
       const nowIndicator = document.querySelector(
@@ -486,6 +532,7 @@ const EventCalendar = () => {
     }, 500);
   };
 
+  // Check to show user's avatar
   const checkShowUserAvatar = (
     type?: EventCalendarType,
     participants?: EventParticipant[],
@@ -506,6 +553,7 @@ const EventCalendar = () => {
     );
   };
 
+  // Show user's avatar
   const showUserAvatars = (
     participantList: EventParticipant[],
     avatarSize: number,
@@ -829,6 +877,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle click to more link button
   const handleMoreLinkClick = (clickInfo: any) => {
     const clickInfoEvents = clickInfo.allSegs.map((seg: any) => {
       return seg.event.id;
@@ -922,6 +971,7 @@ const EventCalendar = () => {
     clickInfo.jsEvent.preventDefault();
   };
 
+  // Handle close popup
   const handlePopoverClose = () => {
     setPopoverInfo(null);
   };
@@ -938,6 +988,7 @@ const EventCalendar = () => {
     });
   };
 
+  // Show events in modal
   const handleShowEventsInModal = (
     eventList: any[],
     date: Date,
@@ -1011,6 +1062,7 @@ const EventCalendar = () => {
     });
   };
 
+  // Get events by users
   const handleGetEventCalendarByUsers = async ({
     userId,
     startDate,
@@ -1098,6 +1150,7 @@ const EventCalendar = () => {
     },
   );
 
+  // Filter events by users
   const handleFilterScheduleByUserIds = (
     member: EventParticipant,
     dataOptionsParticipants: EventParticipant[],
@@ -1211,6 +1264,7 @@ const EventCalendar = () => {
     });
   };
 
+  // Handle get all member events
   const handleGetAllMemberSchedules = (
     dataOptionsParticipants: EventParticipant[],
   ) => {
@@ -1283,6 +1337,7 @@ const EventCalendar = () => {
     });
   };
 
+  // Handle remove all member events
   const handleRemoveAllMemberSchedules = (
     dataOptionsParticipants: EventParticipant[],
   ) => {
@@ -1337,6 +1392,7 @@ const EventCalendar = () => {
     });
   };
 
+  // Get event detail
   const handleGetDataDetailEvent = async (id: string) => {
     const { data: response } = await api.get(apiRouters.SCHEDULE_DETAIL(id));
     return response;
@@ -1392,6 +1448,7 @@ const EventCalendar = () => {
     getDataEventInfo(id);
   };
 
+  // Handle click in event
   const handleEventClick = (clickInfo: EventClickArg) => {
     if (
       searchParams.get('view') == ViewOptions.DAY ||
@@ -1430,6 +1487,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle click in popup
   const handleEventClickInPopup = (eventType: string, eventId: string) => {
     if (eventType === EventCalendarType.SCHEDULE) {
       handleConfirmGetDataEventInfo(`${eventId}`);
@@ -1489,6 +1547,7 @@ const EventCalendar = () => {
     },
   ];
 
+  // Get calendar initial view
   const getCalendarInitialView = () => {
     const currentView = searchParams.get('view');
     if (currentView) {
@@ -1505,6 +1564,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Handle date click
   const handleDateClick = (clickInfo?: any) => {
     setDefaultCreateStartDate(clickInfo.date);
     if (searchParams.get('view') == ViewOptions.YEAR) {
@@ -1541,6 +1601,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Create new event from popup
   const handleCreateNewEventFromPopup = () => {
     setActionEventClick(ActionsEvent.CREATE);
     setDataEventEdit(undefined);
@@ -1551,6 +1612,7 @@ const EventCalendar = () => {
     setOpenCreateEventModal(true);
   };
 
+  // Create event
   const handleConfirmCreateEventCalendar = (
     data: EventFormData,
     sendToChat: boolean,
@@ -1638,6 +1700,7 @@ const EventCalendar = () => {
   const handleCreateEventCalendar = async (data: EventRequest) => {
     return await api.post(apiRouters.SCHEDULES, data);
   };
+
   const { mutate: createEventCalendar } = useMutation(
     'postCreateEventCalendar',
     handleCreateEventCalendar,
@@ -1722,6 +1785,7 @@ const EventCalendar = () => {
     },
   );
 
+  // Edit event
   const handleConfirmEditEventCalendar = (
     data: EventEditFormData,
     sendToChat: boolean,
@@ -1903,6 +1967,7 @@ const EventCalendar = () => {
     },
   );
 
+  // Delete event
   const handleConfirmDeleteEventCalendar = (sendToChat: boolean) => {
     if (eventDetailId) {
       deleteEventCalendar({ id: eventDetailId, sendToChat });
@@ -1950,6 +2015,7 @@ const EventCalendar = () => {
     },
   );
 
+  // Modify events before rendering them
   const modifyEvents = (events: EventCalendarDetail[]) => {
     if (isEventRendering) {
       if (
@@ -1993,6 +2059,7 @@ const EventCalendar = () => {
     }
   };
 
+  // Set params
   const handleSetEventParam = ({
     id,
     action,
@@ -2009,6 +2076,7 @@ const EventCalendar = () => {
     router.push(`?${params.toString()}`);
   };
 
+  // Remove params
   const handleRemoveEventParam = () => {
     const params = new URLSearchParams(searchParams);
     params.delete('event');
@@ -2017,6 +2085,7 @@ const EventCalendar = () => {
     router.replace(`?${params.toString()}`);
   };
 
+  // Get default calendar view
   const getDefaultCalendarView = () => {
     let defaultView = calendarViewOptions[2];
     switch (searchParams.get('view')) {
@@ -2038,6 +2107,7 @@ const EventCalendar = () => {
     return defaultView;
   };
 
+  // Handle close popup
   const handleClosePopover = (event: MouseEvent) => {
     if (
       popoverRef.current &&
@@ -2047,6 +2117,7 @@ const EventCalendar = () => {
       setDefaultCreateStartDate(undefined);
     }
   };
+
   useEffect(() => {
     document.addEventListener('click', handleClosePopover, true);
     return () => {
@@ -2081,16 +2152,6 @@ const EventCalendar = () => {
   };
 
   // Zoom calendar
-  const screenHeight = window.innerHeight;
-
-  const baseHeight = Math.round(43 * (screenHeight / 717));
-  const baseSlider = Math.round(43 * (screenHeight / 717));
-  const [resetTrigger, _setResetTrigger] = useState(0);
-  const [isOptionZoomSchedule, setIsOptionZoomSchedule] = useState('00:15:00');
-
-  const [sliderValue, setSliderValue] = useState(baseSlider);
-  const [slotHeight, setSlotHeight] = useState(baseHeight);
-
   const calculateSlotHeight = (value: number): number => {
     if (value < 38) {
       return 93 - (38 - value);

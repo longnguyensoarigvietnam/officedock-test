@@ -40,12 +40,14 @@ const SkillMap = () => {
   const [openReviewSubmittedLevelupPopup, setOpenReviewSubmittedLevelupPopup] =
     useState<boolean>(false);
 
+  // Get skill map info
   const { skillMapInfo } = useSkillMapInfo({
     onSuccess: (data) => {
       setSkillMapByOrganizations(data.organizations);
     },
   });
 
+  // Get submit level detail
   useSubmitLevelDetail({
     submitLevelId: Number(selectedSubmitLevel),
     onSuccess: (data) => {
@@ -54,6 +56,7 @@ const SkillMap = () => {
     },
   });
 
+  // Remove params from URL
   const handleRemoveParam = () => {
     const params = new URLSearchParams(searchParams);
     params.delete('submitLevelId');
@@ -115,7 +118,7 @@ const SkillMap = () => {
                 <p className="text-sm font-medium text-white max-w-full break-all line-clamp-2">
                   {skillMapInfo?.user?.organizations?.name || ''}
                 </p>
-                <p className="text-black font-medium text-[26px] max-w-[300px] truncate">
+                <p className="text-black font-medium text-[26px] max-w-[300px] break-all line-clamp-2">
                   {skillMapInfo?.user.fullName}
                 </p>
               </div>
@@ -156,6 +159,7 @@ const SkillMap = () => {
           ))}
       </div>
 
+      {/* Review submitted level up modal */}
       {openReviewSubmittedLevelupPopup &&
         selectedSubmitLevel &&
         submitLevelUpDetail && (

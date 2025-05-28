@@ -107,7 +107,7 @@ const ListSkillsMap = () => {
     OrganizationSkillMapDetail[] | null
   >([]);
 
-  // Fetch organization skills
+  // Get organization skills
   const { organizationSkillList, refetchOrganizationSkillList } =
     useOrganizationSkillList({
       organizationId: Number(selectedOrganizationOption.value),
@@ -119,6 +119,7 @@ const ListSkillsMap = () => {
         : undefined,
     });
 
+  // Get skill map detail
   useOrganizationSkillMapDetail({
     skillId: Number(selectedSkillMapToUpdate),
     onError: (error: AxiosError) => {
@@ -143,6 +144,7 @@ const ListSkillsMap = () => {
     }
   }, [organizationSkillList]);
 
+  // Get organization options for pulldown
   useEffect(() => {
     if (organizationOptions) {
       const organizationList = organizationOptions.map((org) => {
@@ -517,6 +519,8 @@ const ListSkillsMap = () => {
           }}
         />
       </div>
+
+      {/* Render skills by organizations */}
       <div className="px-10 flex flex-col gap-6">
         {dataOrganizationSkillList.length > 0 &&
           dataOrganizationSkillList.map((orgSkill) => {
@@ -534,6 +538,7 @@ const ListSkillsMap = () => {
           })}
       </div>
 
+      {/* Open skill map actions modal */}
       {openSkillMapActionsModal &&
         actionTypeParam &&
         (hasAddPermission || hasUpdatePermission) && (

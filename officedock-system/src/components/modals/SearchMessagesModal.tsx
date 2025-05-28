@@ -1,5 +1,12 @@
 'use client';
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import {
+  Dispatch,
+  MutableRefObject,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { format, isSameDay } from 'date-fns';
@@ -45,6 +52,7 @@ import { formatWithParagraphTags, getFileURL } from '@utils';
 
 interface SearchMessagesModalProps {
   open: boolean;
+  isSearchingMessagesRef?: MutableRefObject<boolean>;
   searchChatMsg: string;
   dashboardMembers: ChatDashboardMember[];
   hasMoreSearchResultDetail: boolean;
@@ -83,6 +91,7 @@ interface SearchMessagesModalProps {
 
 export const SearchMessagesModal = ({
   open,
+  isSearchingMessagesRef,
   searchChatMsg,
   searchMessageResults,
   hasMoreSearchResultDetail,
@@ -169,10 +178,13 @@ export const SearchMessagesModal = ({
       if (
         resultsContainer &&
         hasMoreSearchResultDetail &&
+        searchResultsPage + 1 <= Number(searchMessageResults?.numPages) &&
         Math.round(
           resultsContainer.clientHeight + Math.abs(resultsContainer.scrollTop),
-        ) === resultsContainer.scrollHeight
+        ) >=
+          0.9 * resultsContainer.scrollHeight
       ) {
+        if (isSearchingMessagesRef && isSearchingMessagesRef.current) return;
         const updatedSearchResultsPage = searchResultsPage + 1;
         onSubmit(
           searchChatMsg,
@@ -199,7 +211,12 @@ export const SearchMessagesModal = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMoreSearchResultDetail, searchResultsPage]);
+  }, [
+    hasMoreSearchResultDetail,
+    searchResultsPage,
+    isSearchingMessagesRef,
+    searchMessageResults,
+  ]);
 
   const highlightTextSafely = (htmlString: string, term: string) => {
     const escapedTerm = term.replace(HIGHLIGHT_SEARCH_TERM_REGEX, '\\$&');
@@ -343,10 +360,10 @@ export const SearchMessagesModal = ({
                       renderAvatar(messageDetail.sender.id)
                     )}
                   </div>
-                  <div className="flex justify-between !w-full items-start">
+                  <div className="flex justify-between !w-full items-baseline">
                     <div className="w-[88%]">
-                      <div className="flex items-center gap-2 font-semibold text-sm pb-2">
-                        <p>
+                      <div className="flex items-baseline gap-2 font-semibold text-sm pb-2 pr-2">
+                        <p className="max-w-full break-all line-clamp-3">
                           {chatRoomType === ChatRoomType.TASK ||
                           (chatRoomType == ChatRoomType.BOOKMARK &&
                             messageDetail.chatRoom?.type ==
@@ -359,15 +376,17 @@ export const SearchMessagesModal = ({
                           ) : (
                             messageDetail.sender.fullName
                           )}{' '}
+                          <span className="font-normal text-[10px] text-[#77858F]">
+                            {chatRoomType != ChatRoomType.TASK &&
+                              !(
+                                chatRoomType == ChatRoomType.BOOKMARK &&
+                                messageDetail.chatRoom?.type ==
+                                  ChatRoomType.TASK
+                              ) &&
+                              messageDetail.sender?.organizations?.name}
+                          </span>
                         </p>
-                        <p className="font-normal text-[10px] truncate max-w-[400px] text-[#77858F]">
-                          {chatRoomType != ChatRoomType.TASK &&
-                            !(
-                              chatRoomType == ChatRoomType.BOOKMARK &&
-                              messageDetail.chatRoom?.type == ChatRoomType.TASK
-                            ) &&
-                            messageDetail.sender?.organizations?.name}
-                        </p>
+
                         {messageDetail.isBookmark && (
                           <ImageRound
                             name="Book mark"
@@ -766,7 +785,7 @@ export const SearchMessagesModal = ({
                                     className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                     <div
                                       className={`flex flex-col items-start`}>
-                                      <p className="w-fit font-semibold text-black">
+                                      <p className="max-w-full break-all font-semibold text-black">
                                         {messageDetail.sender.fullName}{' '}
                                         {EVENT_CREATED}
                                       </p>
@@ -1100,17 +1119,17 @@ export const SearchMessagesModal = ({
                             </p>
                           </div>
                           <div className="flex gap-1 text-sm font-medium">
-                            <p className="text-[#0068B6]">
-                              {messageDetail.sender.fullName}
-                            </p>
-                            <p>
-                              {messageDetail.type ===
-                              MessageType.REMOVE_SCHEDULE
-                                ? EVENT_DELETED
-                                : messageDetail.type ===
-                                    MessageType.EDIT_SCHEDULE
-                                  ? EVENT_EDITED
-                                  : EVENT_CREATED}
+                            <p className="text-[#0068B6] max-w-full break-all">
+                              {messageDetail.sender.fullName}{' '}
+                              <span className="text-black">
+                                {messageDetail.type ===
+                                MessageType.REMOVE_SCHEDULE
+                                  ? EVENT_DELETED
+                                  : messageDetail.type ===
+                                      MessageType.EDIT_SCHEDULE
+                                    ? EVENT_EDITED
+                                    : EVENT_CREATED}
+                              </span>
                             </p>
                           </div>
                           <div className="text-[#5B6770] font-normal text-sm">

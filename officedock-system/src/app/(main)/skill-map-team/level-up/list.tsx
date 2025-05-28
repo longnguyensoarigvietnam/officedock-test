@@ -130,6 +130,7 @@ const LevelUpList = () => {
           })}
       </div>
 
+      {/* Level up censoring modal */}
       {openLevelUpCensoringPopup && submitLevelUpDetail && (
         <CensorLevelUpModal
           open={openLevelUpCensoringPopup}
@@ -147,6 +148,7 @@ const LevelUpList = () => {
         />
       )}
 
+      {/* Level up completion modal */}
       {openLevelUpCompletionPopup && (
         <LevelUpCompletionModal
           open={openLevelUpCompletionPopup}

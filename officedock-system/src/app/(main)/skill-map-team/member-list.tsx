@@ -29,6 +29,7 @@ const MemberList = () => {
     }[]
   >([]);
 
+  // Get members by organization
   useMemberOrganizationList({
     search: '',
     onSuccess: (data) => {
@@ -43,6 +44,8 @@ const MemberList = () => {
       });
     },
   });
+
+  // Navigate to user's skill screen
   const handleNavigateUserSkill = (id: number, organizationId: string) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -51,6 +54,8 @@ const MemberList = () => {
     const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(id)}?${params.toString()}`;
     router.push(newPath);
   };
+
+  // Navigate to user's skillmap screen
   const handleNavigateUserMap = (id: number, organizationId: string) => {
     const params = new URLSearchParams(searchParams.toString());
 

@@ -37,6 +37,7 @@ export const SkillMapByMembersDetail = ({
 }: SkillMapByMembersProps) => {
   const { expanded } = useContext(GlobalStateContext);
 
+  // Declare fixed columns
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const fixedColumns: ColumnDef<DynamicRow, any>[] = [
     {
@@ -60,6 +61,7 @@ export const SkillMapByMembersDetail = ({
     },
   ];
 
+  // Declare dynamic columns
   const dynamicColumns: ColumnDef<DynamicRow>[] = useMemo(() => {
     if (!skillMapByMembers || skillMapByMembers.users.length === 0) return [];
 

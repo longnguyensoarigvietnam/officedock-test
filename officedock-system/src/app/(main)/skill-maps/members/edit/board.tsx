@@ -91,6 +91,7 @@ const EditSkillMapByMemberBoard = () => {
     }
   }, [organizationSkillList]);
 
+  // Get organization options for pulldown
   useEffect(() => {
     if (teamList) {
       const organizationList = teamList.map((org) => {
@@ -109,6 +110,7 @@ const EditSkillMapByMemberBoard = () => {
     }
   }, [teamList]);
 
+  // Update skill map by users
   const handleConfirmUpdateSkillMapByUsers = () => {
     updateSkillMapByUsers({
       items: selectedSkillByUserToUpdate,

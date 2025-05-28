@@ -142,15 +142,19 @@ export const OrganizationSkillDetail = ({
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isEditStepDefinitionMode, setIsEditStepDefinitionMode] =
     useState<boolean>(false);
+
   const { data: session } = useSession();
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
   const { showToast } = useToast();
+
   const stepDefitionBoxRef = useRef<HTMLDivElement | null>(null);
   const isEditingRef = useRef(false);
+  
   const { register, watch, reset } = useForm<OrganizationDefineSteps>({
     mode: 'onSubmit',
   });
+
   const columns = [
     {
       accessorKey: 'id',
@@ -213,6 +217,7 @@ export const OrganizationSkillDetail = ({
     getCoreRowModel: getCoreRowModel(),
   });
 
+  // Edit step definitions
   const handleConfirmEditStepDefinitions = (data: OrganizationDefineSteps) => {
     const isChanged =
       orgSkillDetail.steps.step1 != watch('defineStep1') ||
@@ -259,6 +264,7 @@ export const OrganizationSkillDetail = ({
     },
   );
 
+  // Handle call API when click outside
   useEffect(() => {
     const handleClickOutside = (event: any) => {
       if (

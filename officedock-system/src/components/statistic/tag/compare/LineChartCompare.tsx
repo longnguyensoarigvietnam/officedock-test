@@ -16,14 +16,13 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 
 import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody } from '@components/common/Table';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+  import RowSkeleton from '@components/skeleton/RowSkeleton';
 import Dropdown from '@components/common/Dropdown';
 import {
   StatisticsCategories,
@@ -32,12 +31,14 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 
 import {
+  SortingType,
   StatisticChartType,
   StatisticViewLabels,
   StatisticViewOptions,
 } from '@constants/enums';
 
 import {
+  convertDurationToTotalMinutes,
   convertTimeToDecimal,
   convertToJapaneseDateRange,
   convertToStatisticJapaneseLabels,
@@ -58,7 +59,6 @@ import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import useStatisticTagTaskDurations from '@hooks/useStatisticTagTaskDurations';
 import useStatisticTagTaskDurationsCompare from '@hooks/useStatisticTagTaskDurationsCompare';
-import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 ChartJS.register(
   CategoryScale,
@@ -181,6 +181,12 @@ const LineChartCompare = ({
   const [standardDateLabels, setStandardDateLabels] = useState<string[]>([]);
   const [compareDateLabels, setCompareDateLabels] = useState<string[]>([]);
   const { expanded } = useContext(GlobalStateContext);
+
+  // Sorting
+  const [percentageSortingStatus, setPercentageSortingStatus] =
+    useState<string>('');
+  const [durationSortingStatus, setDurationSortingStatus] =
+    useState<string>('');
 
   const viewOptions = [
     {
@@ -900,51 +906,52 @@ const LineChartCompare = ({
     totalDurationCategoryCompare,
   ]);
 
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'tagPercent', desc: true },
-  ]);
+  const sortByPercentDifference = (
+    data: MergedTableCategory[],
+    sortingType: string,
+  ) => {
+    const sortedArr = data.slice().sort((rowA, rowB) => {
+      const rowAStandard = Number(rowA.standardInfo?.tagPercent || 0);
+      const rowACompare = Number(rowA.compareInfo?.tagPercent || 0);
+      const rowBStandard = Number(rowB.standardInfo?.tagPercent || 0);
+      const rowBCompare = Number(rowB.compareInfo?.tagPercent || 0);
 
-  const handleSortingChange = (updater: any) => {
-    setSorting((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      return next.length === 0 ? [{ id: 'tagPercent', desc: true }] : next;
+      const rowADiff = rowAStandard - rowACompare;
+      const rowBDiff = rowBStandard - rowBCompare;
+
+      return sortingType == SortingType.ASC
+        ? rowADiff - rowBDiff
+        : rowBDiff - rowADiff;
     });
-  };
-  const differenceSorting = (rowA: any, rowB: any) => {
-    const standardA = Number(rowA.original.standardInfo?.tagPercent) || 0;
-    const compareA = Number(rowA.original.compareInfo?.tagPercent) || 0;
-    const differenceA = standardA - compareA;
-
-    const standardB = Number(rowB.original.standardInfo?.tagPercent) || 0;
-    const compareB = Number(rowB.original.compareInfo?.tagPercent) || 0;
-    const differenceB = standardB - compareB;
-
-    return differenceA - differenceB;
+    setTableData(sortedArr);
   };
 
-  const durationSorting = (rowA: any, rowB: any) => {
-    const parseDuration = (duration: string) => {
-      const [hours, minutes, seconds] = duration.split(':').map(Number);
-      return hours * 60 + minutes + seconds / 60; // Convert to total minutes
-    };
+  const sortByDurationDifference = (
+    data: MergedTableCategory[],
+    sortingType: string,
+  ) => {
+    const sortedArr = data.slice().sort((rowA, rowB) => {
+      const rowAStandard = convertDurationToTotalMinutes(
+        rowA.standardInfo?.tagDuration || '00:00:00',
+      );
+      const rowACompare = convertDurationToTotalMinutes(
+        rowA.compareInfo?.tagDuration || '00:00:00',
+      );
+      const rowADiff = rowAStandard - rowACompare;
 
-    const standardA = parseDuration(
-      rowA.original.standardInfo?.tagDuration || '00:00:00',
-    );
-    const compareA = parseDuration(
-      rowA.original.compareInfo?.tagDuration || '00:00:00',
-    );
-    const differenceA = standardA - compareA;
+      const rowBStandard = convertDurationToTotalMinutes(
+        rowB.standardInfo?.tagDuration || '00:00:00',
+      );
+      const rowBCompare = convertDurationToTotalMinutes(
+        rowB.compareInfo?.tagDuration || '00:00:00',
+      );
+      const rowBDiff = rowBStandard - rowBCompare;
 
-    const standardB = parseDuration(
-      rowB.original.standardInfo?.tagDuration || '00:00:00',
-    );
-    const compareB = parseDuration(
-      rowB.original.compareInfo?.tagDuration || '00:00:00',
-    );
-    const differenceB = standardB - compareB;
-
-    return differenceA - differenceB;
+      return sortingType == SortingType.ASC
+        ? rowADiff - rowBDiff
+        : rowBDiff - rowADiff;
+    });
+    setTableData(sortedArr);
   };
 
   const columns: ColumnDef<MergedTableCategory>[] = [
@@ -1019,12 +1026,22 @@ const LineChartCompare = ({
     {
       accessorKey: 'tagDuration',
       size: 40,
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
+      header: () => {
         return (
           <div
             className="flex gap-1 items-center justify-center"
-            onClick={() => column.toggleSorting(isSorted === 'asc')}>
+            onClick={() => {
+              if (
+                !durationSortingStatus ||
+                durationSortingStatus == SortingType.DESC
+              ) {
+                setDurationSortingStatus(SortingType.ASC);
+                sortByDurationDifference(tableData, SortingType.ASC);
+              } else {
+                setDurationSortingStatus(SortingType.DESC);
+                sortByDurationDifference(tableData, SortingType.DESC);
+              }
+            }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
             <div>
               <Image
@@ -1032,14 +1049,13 @@ const LineChartCompare = ({
                 alt="Sort down"
                 width={9}
                 height={10}
-                className={`cursor-pointer justify-self-end ${isSorted == 'asc' && 'rotate-180'} `}
+                className={`cursor-pointer justify-self-end ${durationSortingStatus == SortingType.ASC && 'rotate-180'} `}
               />
             </div>
           </div>
         );
       },
-      sortingFn: durationSorting,
-      enableSorting: true,
+      enableSorting: false,
       cell: (info) => {
         return (
           <div className="flex flex-col pl-2 gap-2 w-full">
@@ -1083,12 +1099,22 @@ const LineChartCompare = ({
     {
       accessorKey: 'tagPercent',
       size: 25,
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
+      header: () => {
         return (
           <div
             className="flex gap-1 items-center justify-center"
-            onClick={() => column.toggleSorting(isSorted === 'asc')}>
+            onClick={() => {
+              if (
+                !percentageSortingStatus ||
+                percentageSortingStatus == SortingType.DESC
+              ) {
+                setPercentageSortingStatus(SortingType.ASC);
+                sortByPercentDifference(tableData, SortingType.ASC);
+              } else {
+                setPercentageSortingStatus(SortingType.DESC);
+                sortByPercentDifference(tableData, SortingType.DESC);
+              }
+            }}>
             <p className="!text-xs font-medium !text-[#77858F]">割合</p>
             <div>
               <Image
@@ -1096,14 +1122,13 @@ const LineChartCompare = ({
                 alt="Sort down"
                 width={9}
                 height={10}
-                className={`cursor-pointer justify-self-end ${isSorted == 'asc' && 'rotate-180'} `}
+                className={`cursor-pointer justify-self-end ${percentageSortingStatus == SortingType.ASC && 'rotate-180'} `}
               />
             </div>
           </div>
         );
       },
-      enableSorting: true,
-      sortingFn: differenceSorting,
+      enableSorting: false,
       cell: (info) => {
         return (
           <div className="flex flex-col pl-2 gap-2 w-full">
@@ -1134,10 +1159,6 @@ const LineChartCompare = ({
     data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    state: { sorting },
-    sortingFns: { differenceSorting },
-    onSortingChange: handleSortingChange,
   });
 
   const getDisableViews = () => {

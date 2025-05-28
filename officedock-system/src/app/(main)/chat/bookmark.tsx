@@ -109,6 +109,7 @@ const BookmarkList = ({
     results: ChatMessageResponse[];
     hasNext?: boolean;
   }>();
+  const isSearchingMessagesRef = useRef(false);
 
   useBookMarkList({
     page: page,
@@ -180,6 +181,9 @@ const BookmarkList = ({
     'searchMessagesInChatRoom',
     handleSearchMessagesInChatRoom,
     {
+      onMutate: () => {
+        isSearchingMessagesRef.current = true;
+      },
       onSuccess: (data) => {
         if (data) {
           setSearchMessageResults((prev) => {
@@ -191,7 +195,11 @@ const BookmarkList = ({
             };
           });
           setHasMoreSearchResultDetail(data.data.hasNext || false);
+          isSearchingMessagesRef.current = false;
         }
+      },
+      onError: () => {
+        isSearchingMessagesRef.current = false;
       },
       onSettled: () => {
         setIsLoading(false);
@@ -604,6 +612,7 @@ const BookmarkList = ({
       {openSearchMessagesModal && (
         <SearchMessagesModal
           open={true}
+          isSearchingMessagesRef={isSearchingMessagesRef}
           chatRoomType={ChatRoomType.BOOKMARK}
           dashboardMembers={dashboardMembers}
           searchMessageResults={searchMessageResults}
