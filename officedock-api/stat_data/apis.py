@@ -26,7 +26,10 @@ from base.messages import ERROR_MESSAGES
 from base.paginations import BasePagination
 from calendars.models import Schedule
 from common.constants import BASE_DATE_FORMAT
-from common.serializers import CreationDataUserSerializer
+from common.serializers import (
+    CreationDataUserSerializer,
+    CreationDataUserWithMainOrganizationSerializer,
+)
 from common.utils import (
     format_duration,
     time_str_to_timedelta,
@@ -42,6 +45,7 @@ from stat_data.serializers import (
     DailyTaskSerializer,
     StatisticTaskSerializer,
     StatisticEventSerializer,
+    DurationDetailForPDFSerializer,
 )
 from stat_data.utils import (
     annotate_duration,
@@ -344,6 +348,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             else timezone.now().date()
         )
 
+        # Get remark of user
         data["remark"] = DailyReportSerializer(
             user.daily_reports.filter(date=date).first()
         ).data
@@ -443,6 +448,257 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         "users": user_list,
                     }
                 )
+
+        return self.response_ok(data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="date", type=datetime),
+            OpenApiParameter(name="user_id", type=int),
+            OpenApiParameter(name="organization_id", type=int),
+        ]
+    )
+    @action(
+        detail=False,
+        methods=["GET"],
+        url_path="daily-report-pdf",
+        serializer_class=None,
+    )
+    def daily_report_pdf(self, request, *args, **kwargs):
+        """
+        Response data of daily report for print PDF
+        """
+        user_id = request.query_params.get("user_id", None)
+        organization_id = request.query_params.get("organization_id")
+        date = request.query_params.get("date", None)
+
+        validate_date_format_using_regex(date)
+        date = (
+            datetime.strptime(date, BASE_DATE_FORMAT).date()
+            if date
+            else now().date()
+        )
+        user = get_object_or_404(User, id=user_id) if user_id else request.user
+        organization = get_object_or_404(Organization, id=organization_id)
+
+        start_of_day = datetime.combine(date, time.min)
+        start_of_today = datetime.combine(now().date(), time.min)
+        end_of_day = datetime.combine(date, time.max)
+
+        durations = TaskDuration.objects.filter(
+            Q(Q(user=user) & Q(paused_at__isnull=True))
+        )
+
+        for duration in durations:
+            self._separate_duration(duration, timezone.now(), user=user)
+
+        if start_of_today == start_of_day:
+            durations = TaskDuration.objects.filter(
+                Q(
+                    Q(started_at__gte=start_of_day)
+                    & Q(user=user)
+                    & Q(
+                        Q(paused_at__isnull=True) | Q(paused_at__lte=end_of_day)
+                    )
+                )
+            )
+        else:
+            durations = TaskDuration.objects.filter(
+                Q(
+                    Q(started_at__gte=start_of_day)
+                    & Q(user=user)
+                    & Q(paused_at__lte=end_of_day)
+                )
+            )
+        tasks = Task.objects.filter(
+            id__in=durations.values_list("task", flat=True)
+        )
+        events = Schedule.objects.filter(
+            id__in=durations.values_list("schedule", flat=True)
+        )
+        merged_duration = (
+            DailyTaskSerializer(
+                tasks,
+                many=True,
+                context={
+                    "start_of_day": start_of_day,
+                    "end_of_day": end_of_day,
+                    "user": user,
+                },
+            ).data
+            + DailyEventSerializer(
+                events,
+                many=True,
+                context={
+                    "start_of_day": start_of_day,
+                    "end_of_day": end_of_day,
+                    "user": user,
+                },
+            ).data
+        )
+        data = {}
+        total_duration = get_total_durations(durations)
+
+        def get_category_durations(queryset):
+            """
+            Splits the queryset into two parts:
+            - One with a large statistic category
+            - One without a large statistic category
+            """
+            with_large = queryset.filter(
+                Q(categories__large_statistic_category__isnull=False)
+            ).values(
+                "categories__large_statistic_category__name",
+                "categories__large_statistic_category__id",
+                "organization__id",
+            )
+
+            return with_large.distinct()
+
+        data["total_duration"] = format_duration(total_duration)
+        data["categories"] = []
+        category_dict = {}
+
+        combine_cards = list(get_category_durations(tasks)) + list(
+            get_category_durations(events)
+        )
+        organization_durations = {}
+        for card in combine_cards:
+            category_name = card["categories__large_statistic_category__name"]
+            category_id = card["categories__large_statistic_category__id"]
+            organization_id = card["organization__id"]
+            category_color = (
+                OrganizationsStatisticCategories.objects.filter(
+                    organization_id=organization_id,
+                    large_statistic_category__name=category_name,
+                )
+                .values_list("color", flat=True)
+                .first()
+            )
+            filter_durations = durations.filter(
+                Q(task__categories__large_statistic_category__id=category_id)
+                | Q(
+                    schedule__categories__large_statistic_category__id=category_id
+                )
+            )
+            duration = annotate_duration(
+                filter_durations, start_of_day, end_of_day
+            )["total_duration"]
+
+            # Get duration each organization
+            if organization_id in organization_durations:
+                organization_durations[organization_id]["duration"] += duration
+            else:
+                organization_durations[organization_id] = {
+                    "id": organization_id,
+                    "duration": duration,
+                }
+
+            if category_id in category_dict:
+                category_dict[category_id]["duration"] += duration
+            else:
+                category_dict[category_id] = {
+                    "category_id": category_id,
+                    "category_name": category_name,
+                    "category_color": category_color,
+                    "duration": duration,
+                }
+        user_serializer = CreationDataUserWithMainOrganizationSerializer(
+            user
+        ).data
+        sub_duration = timedelta(0)
+        for organization_duration in list(organization_durations.values()):
+            # Skip organization if is main organization
+            if (
+                user_serializer["organizations"]
+                and user_serializer["organizations"]["id"]
+                == organization_duration["id"]
+            ):
+                continue
+            sub_duration += organization_duration["duration"]
+
+        data["sub_organization_duration"] = format_duration(sub_duration)
+        filter_durations = durations.filter(
+            Q(task__categories__large_statistic_category__isnull=True)
+            & Q(schedule__categories__large_statistic_category__isnull=True)
+        )
+        if filter_durations.exists():
+            category_dict["empty_category"] = {
+                "category_id": None,
+                "category_name": None,
+                "category_color": CategoryColors.GRAY.value,
+                "duration": annotate_duration(
+                    filter_durations, start_of_day, end_of_day
+                )["total_duration"],
+            }
+
+        category_list = list(category_dict.values())
+        total_duration = time_str_to_timedelta(format_duration(total_duration))
+        percent = 100
+        for cat in category_list:
+            category_duration = format_duration(cat["duration"]) or timedelta(0)
+            category_name = cat["category_name"]
+            category_color = cat["category_color"]
+            category_id = cat["category_id"]
+            percent_per_total_duration = (
+                (
+                    time_str_to_timedelta(category_duration).total_seconds()
+                    / total_duration.total_seconds()
+                    * 100
+                )
+                if total_duration.total_seconds() > 0
+                else 0
+            )
+
+            if round(percent_per_total_duration) <= percent:
+                percent -= round(percent_per_total_duration)
+            else:
+                percent_per_total_duration = percent
+
+            data["categories"].append(
+                {
+                    "category_id": category_id,
+                    "category_name": category_name,
+                    "category_color": category_color,
+                    "duration": category_duration,
+                    "percent": round(percent_per_total_duration)
+                    if percent_per_total_duration < 100
+                    else 100,
+                }
+            )
+
+        date = (
+            request.query_params.get("date")
+            if request.query_params.get("date")
+            else timezone.now().date()
+        )
+
+        # Get remark of user
+        data["remark"] = DailyReportSerializer(
+            user.daily_reports.filter(date=date).first()
+        ).data
+        confirm_report = (
+            user.reported_confirmations.filter(
+                date=date, confirm_by=request.user
+            )
+            .values_list("is_confirmed", flat=True)
+            .first()
+        ) or False
+
+        data["remark"].update(
+            {
+                "user": user_serializer,
+                "organization_name": organization.name
+                if organization
+                else None,
+                "is_confirmed": confirm_report,
+            }
+        )
+
+        # Get task durations order by started_at for print PDF
+        data["task_durations"] = DurationDetailForPDFSerializer(
+            durations.order_by("started_at").all(), many=True
+        ).data
 
         return self.response_ok(data)
 
