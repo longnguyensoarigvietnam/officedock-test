@@ -17,6 +17,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import resourcePlugin from '@fullcalendar/resource';
 import scrollgridPlugin from '@fullcalendar/scrollgrid';
+import { getHolidaysOf } from 'japanese-holidays';
 import './styles/calendar.css';
 
 import ImageRound from '@components/common/ImageRound';
@@ -30,7 +31,7 @@ import EventInfoModal from '@components/modals/EventInfoModal';
 import Button from '@components/common/Button';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { CalendarSidebar } from '@components/calendar/Sidebar';
-import { TaskAndEventListModal } from '@components/modals/TaskAndEventListModal';
+import { EventListModal } from '@components/modals/EventListModal';
 import RangeSlider from '@components/common/RangeSlider';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
@@ -119,7 +120,7 @@ const EventCalendar = () => {
 
   // Event list
   const [events, setEvents] = useState<EventCalendarDetail[]>([]);
-  
+
   // Event actions (edit, delete, click, filter)
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [confirmEventDataToCreate, setConfirmEventDataToCreate] =
@@ -257,6 +258,7 @@ const EventCalendar = () => {
   const debouncedFetchCalendarData = useRef(
     debounce(
       async ({
+        currentYear,
         startDate,
         endDate,
         keySearch,
@@ -266,6 +268,7 @@ const EventCalendar = () => {
         clientY,
         isYearView,
       }: {
+        currentYear?: number;
         startDate: string;
         endDate: string;
         keySearch: string;
@@ -289,6 +292,15 @@ const EventCalendar = () => {
           clientY,
           keySearch,
         });
+
+        if (
+          watch('calendarView').value != CalendarViewOptions.VIEW_BY_YEAR &&
+          startDate &&
+          endDate &&
+          currentYear
+        ) {
+          getHolidayEvents(startDate, endDate, currentYear);
+        }
         setPopoverInfoLoading(false);
         setIsEventRendering(false);
       },
@@ -311,7 +323,10 @@ const EventCalendar = () => {
         calendarApi.view.activeEnd,
       );
 
+      const currentYear = calendarApi.view.currentStart.getFullYear();
+
       debouncedFetchCalendarData({
+        currentYear,
         startDate: startDateISOString,
         endDate: endDateISOString,
         selectedScheduleUserIds: selectedScheduleUserIds,
@@ -321,7 +336,7 @@ const EventCalendar = () => {
     }
   };
 
-  // Handle next 
+  // Handle next
   const handleNext = () => {
     if (calendarRef.current) {
       setIsEventRendering(true);
@@ -336,7 +351,10 @@ const EventCalendar = () => {
         calendarApi.view.activeEnd,
       );
 
+      const currentYear = calendarApi.view.currentStart.getFullYear();
+
       debouncedFetchCalendarData({
+        currentYear,
         startDate: startDateISOString,
         endDate: endDateISOString,
         selectedScheduleUserIds: selectedScheduleUserIds,
@@ -359,7 +377,11 @@ const EventCalendar = () => {
       const endDateISOString = formatQueryEndDateForCalendar(
         calendarApi.view.activeEnd,
       );
+
+      const currentYear = calendarApi.view.currentStart.getFullYear();
+
       debouncedFetchCalendarData({
+        currentYear,
         startDate: startDateISOString,
         endDate: endDateISOString,
         selectedScheduleUserIds: selectedScheduleUserIds,
@@ -383,7 +405,10 @@ const EventCalendar = () => {
         calendarApi.view.activeEnd,
       );
 
+      const currentYear = calendarApi.view.currentStart.getFullYear();
+
       debouncedFetchCalendarData({
+        currentYear,
         startDate: startDateISOString,
         endDate: endDateISOString,
         selectedScheduleUserIds: selectedScheduleUserIds,
@@ -482,12 +507,15 @@ const EventCalendar = () => {
           ? selectedScheduleUserIds.split(',').filter(Boolean)
           : [];
 
-        getEventCalendarByUsers({
+        await getEventCalendarByUsers({
           userId: updatedUserIds.join(','),
           startDate: startDateISOString,
           endDate: endDateISOString,
           keySearch: keySearch,
         });
+
+        const currentYear = calendarApi.view.currentStart.getFullYear();
+        getHolidayEvents(startDateISOString, endDateISOString, currentYear);
       }
 
       setIsEventRendering(false);
@@ -673,6 +701,21 @@ const EventCalendar = () => {
 
       if (currentView === CalendarViewOptions.VIEW_BY_WEEK) {
         if (eventContent.event.allDay) {
+          if (
+            eventContent.event.extendedProps.type == EventCalendarType.HOLIDAY
+          ) {
+            return (
+              <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
+                <p
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-error font-semibold px-1 text-[12px]`}>
+                  {eventContent.event.title != 'null'
+                    ? eventContent.event.title
+                    : ''}
+                </p>
+              </div>
+            );
+          }
+
           return (
             <div className="mb-1 hover:cursor-pointer">
               <div
@@ -757,6 +800,21 @@ const EventCalendar = () => {
         );
       } else if (currentView === CalendarViewOptions.VIEW_BY_DAY) {
         if (eventContent.event.allDay) {
+          if (
+            eventContent.event.extendedProps.type == EventCalendarType.HOLIDAY
+          ) {
+            return (
+              <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
+                <p
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-error font-semibold px-1 text-[12px]`}>
+                  {eventContent.event.title != 'null'
+                    ? eventContent.event.title
+                    : ''}
+                </p>
+              </div>
+            );
+          }
+
           const end = new Date(eventContent.event?.end);
           const start = new Date(eventContent.event?.start);
           if (start.toDateString() !== end.toDateString()) {
@@ -819,6 +877,21 @@ const EventCalendar = () => {
           new Date(eventContent.event.start).getDate() !=
             new Date(eventContent.event.end).getDate()
         ) {
+          if (
+            eventContent.event.extendedProps.type == EventCalendarType.HOLIDAY
+          ) {
+            return (
+              <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
+                <p
+                  className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-error font-semibold px-1 text-[12px]`}>
+                  {eventContent.event.title != 'null'
+                    ? eventContent.event.title
+                    : ''}
+                </p>
+              </div>
+            );
+          }
+
           return (
             <div
               className={`fc-daygrid-event mb-1 ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
@@ -1059,6 +1132,49 @@ const EventCalendar = () => {
         },
         6,
       ).top,
+    });
+  };
+
+  // Get holiday events
+  const getHolidayEvents = (
+    startDate: string,
+    endDate: string,
+    currentYear: number,
+  ) => {
+    const holidayList = getHolidaysOf(Number(currentYear));
+    const holidayEvents = holidayList
+      .filter((holiday) => {
+        const holidayDate = `${currentYear}-${String(holiday.month).padStart(2, '0')}-${String(
+          holiday.date,
+        ).padStart(2, '0')}T00:00:00`;
+
+        return removeTimeAndCompareDates(
+          new Date(startDate),
+          new Date(endDate),
+          new Date(holidayDate),
+        );
+      })
+      .map((holiday) => {
+        return {
+          title: holiday.name,
+          start: `${currentYear}-${String(holiday.month).padStart(2, '0')}-${String(
+            holiday.date,
+          ).padStart(2, '0')}T00:00:00`,
+          end: `${currentYear}-${String(holiday.month).padStart(2, '0')}-${String(
+            holiday.date,
+          ).padStart(2, '0')}T23:59:59`,
+          allDay: true,
+          id: `holiday-${holiday.month}-${holiday.date}`,
+          type: EventCalendarType.HOLIDAY,
+          participants: [],
+          address: '',
+          resourceIds: [],
+        };
+      });
+
+    setEvents((prev) => {
+      const prevEvents = [...prev];
+      return [...prevEvents, ...holidayEvents];
     });
   };
 
@@ -2621,7 +2737,7 @@ const EventCalendar = () => {
         </div>
         {popoverInfo && (
           <div className="z-30 flex items-center justify-center">
-            <TaskAndEventListModal
+            <EventListModal
               checkShowUserAvatar={checkShowUserAvatar}
               handleCreateNewEventFromPopup={handleCreateNewEventFromPopup}
               handleEventClickInPopup={handleEventClickInPopup}

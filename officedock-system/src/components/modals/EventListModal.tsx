@@ -1,5 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, MutableRefObject, SetStateAction, useContext } from 'react';
+import { isSameDay } from 'date-fns';
 
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
@@ -7,35 +8,33 @@ import Spinner from '@components/common/Spinner';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { EventCalendarType, PermissionsSystem } from '@constants/enums';
+
 import { CalendarPopoverInfo, EventParticipant } from '@interfaces/calendar';
+
 import { hasPermissionInArray } from '@utils';
 import {
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
   getDateInfo,
 } from '@utils/date';
-import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { isSameDay } from 'date-fns';
 
-interface TaskAndEventListModalProps {
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
+interface EventListModalProps {
   popoverRef: MutableRefObject<HTMLDivElement | null>;
   popoverInfo: CalendarPopoverInfo | null;
   popoverInfoLoading: boolean;
   setDefaultCreateStartDate: Dispatch<SetStateAction<Date | undefined>>;
   handlePopoverClose: () => void;
   handleCreateNewEventFromPopup: () => void;
-  handleEventClickInPopup: (
-    eventType: string,
-    eventId: string,
-    taskScheduleId: string | undefined,
-  ) => void;
+  handleEventClickInPopup: (eventType: string, eventId: string) => void;
   checkShowUserAvatar: (
     type?: EventCalendarType,
     participants?: EventParticipant[],
   ) => boolean;
 }
 
-export const TaskAndEventListModal = ({
+export const EventListModal = ({
   popoverRef,
   popoverInfo,
   popoverInfoLoading,
@@ -44,22 +43,19 @@ export const TaskAndEventListModal = ({
   handleCreateNewEventFromPopup,
   handleEventClickInPopup,
   checkShowUserAvatar,
-}: TaskAndEventListModalProps) => {
+}: EventListModalProps) => {
   const { data: session } = useSession();
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
 
-  const showUserAvatars = (
-    participantList: EventParticipant[],
-    type: string,
-  ) => {
+  const showUserAvatars = (participantList: EventParticipant[]) => {
     if (participantList && participantList.length > 0) {
-      if (type == EventCalendarType.TASK) {
+      if (participantList.length == 1) {
         const memberInfo = dashboardMembersWithAvatars.find(
-          (member) => member.id == session?.user.id,
+          (member) => member.id == participantList[0].id,
         );
         return (
           <DynamicTooltip
-            content={`${session?.user.profile.fullName}`}
+            content={`${participantList[0].fullName}`}
             placement="top">
             <div className="border-[1px] border-white rounded-full mt-[-7px] mr-1">
               <CustomUserAvatar
@@ -70,86 +66,67 @@ export const TaskAndEventListModal = ({
             </div>
           </DynamicTooltip>
         );
-      } else {
-        if (participantList.length == 1) {
-          const memberInfo = dashboardMembersWithAvatars.find(
-            (member) => member.id == participantList[0].id,
-          );
-          return (
-            <DynamicTooltip
-              content={`${participantList[0].fullName}`}
-              placement="top">
-              <div className="border-[1px] border-white rounded-full mt-[-7px] mr-1">
-                <CustomUserAvatar
-                  avatarUrl={memberInfo?.avatar || ''}
-                  avatarColor={memberInfo?.avatarColor || ''}
-                  size={27}
-                />
-              </div>
-            </DynamicTooltip>
-          );
-        } else if (participantList.length === 2) {
-          return (
-            <div className="mt-[-7px] mr-1 flex items-center">
-              {participantList.map((participant, index) => {
-                const memberInfo = dashboardMembersWithAvatars.find(
-                  (member) => member.id === participant.id,
-                );
+      } else if (participantList.length === 2) {
+        return (
+          <div className="mt-[-7px] mr-1 flex items-center">
+            {participantList.map((participant, index) => {
+              const memberInfo = dashboardMembersWithAvatars.find(
+                (member) => member.id === participant.id,
+              );
 
-                return (
-                  <DynamicTooltip
-                    content={`${participant.fullName}`}
-                    placement="top"
-                    key={participant.id}>
-                    <div
-                      className={`border-[1px] border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
-                      <CustomUserAvatar
-                        avatarUrl={memberInfo?.avatar || ''}
-                        avatarColor={memberInfo?.avatarColor || ''}
-                        size={27}
-                      />
-                    </div>
-                  </DynamicTooltip>
-                );
-              })}
-            </div>
-          );
-        } else if (participantList.length > 2) {
-          return (
-            <div className="mt-[-7px] mr-1 flex items-center">
-              {participantList.slice(0, 1).map((participant, index) => {
-                const memberInfo = dashboardMembersWithAvatars.find(
-                  (member) => member.id === participant.id,
-                );
-
-                return (
-                  <DynamicTooltip
-                    content={`${participant.fullName}`}
-                    placement="top"
-                    key={participant.id}>
-                    <div
-                      className={`border-[1px] border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
-                      <CustomUserAvatar
-                        avatarUrl={memberInfo?.avatar || ''}
-                        avatarColor={memberInfo?.avatarColor || ''}
-                        size={27}
-                      />
-                    </div>
-                  </DynamicTooltip>
-                );
-              })}
-              {participantList && participantList.length > 1 && (
+              return (
                 <DynamicTooltip
-                  content={`他に${participantList.length - 1}人の表示があります`}
-                  placement="top">
-                  <div className="text-white border-[1px] w-[27px] h-[27px] ml-[-7px] border-white rounded-full text-[11px] font-medium bg-[#77858F] flex items-center justify-center">
-                    +{participantList.length - 1}
+                  content={`${participant.fullName}`}
+                  placement="top"
+                  key={participant.id}>
+                  <div
+                    className={`border-[1px] border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
+                    <CustomUserAvatar
+                      avatarUrl={memberInfo?.avatar || ''}
+                      avatarColor={memberInfo?.avatarColor || ''}
+                      size={27}
+                    />
                   </div>
                 </DynamicTooltip>
-              )}
-            </div>
-          );
-        }
+              );
+            })}
+          </div>
+        );
+      } else if (participantList.length > 2) {
+        return (
+          <div className="mt-[-7px] mr-1 flex items-center">
+            {participantList.slice(0, 1).map((participant, index) => {
+              const memberInfo = dashboardMembersWithAvatars.find(
+                (member) => member.id === participant.id,
+              );
+
+              return (
+                <DynamicTooltip
+                  content={`${participant.fullName}`}
+                  placement="top"
+                  key={participant.id}>
+                  <div
+                    className={`border-[1px] border-white rounded-full ${index != 0 && 'ml-[-7px]'}`}>
+                    <CustomUserAvatar
+                      avatarUrl={memberInfo?.avatar || ''}
+                      avatarColor={memberInfo?.avatarColor || ''}
+                      size={27}
+                    />
+                  </div>
+                </DynamicTooltip>
+              );
+            })}
+            {participantList && participantList.length > 1 && (
+              <DynamicTooltip
+                content={`他に${participantList.length - 1}人の表示があります`}
+                placement="top">
+                <div className="text-white border-[1px] w-[27px] h-[27px] ml-[-7px] border-white rounded-full text-[11px] font-medium bg-[#77858F] flex items-center justify-center">
+                  +{participantList.length - 1}
+                </div>
+              </DynamicTooltip>
+            )}
+          </div>
+        );
       }
     }
   };
@@ -198,23 +175,16 @@ export const TaskAndEventListModal = ({
               return (
                 <li
                   key={event.id}
-                  className={`text-xs list-none mb-1 bg-[#EBF1F7] text-[#444546] !rounded-[8px] pl-1.5 pt-1`}
+                  className={`text-xs list-none mb-1 bg-[#EBF1F7] text-[#444546] !rounded-[8px] pl-1.5 pt-1 ${event.id.includes('holiday') && 'hover:cursor-not-allowed'}`}
                   onClick={() => {
-                    handlePopoverClose();
-                    handleEventClickInPopup(
-                      `${event.type}`,
-                      event.type == EventCalendarType.TASK
-                        ? String(event.taskId)
-                        : event.id,
-                      event.type == EventCalendarType.TASK ? event.id : '',
-                    );
+                    if (!event.id.includes('holiday')) {
+                      handlePopoverClose();
+                      handleEventClickInPopup(`${event.type}`, event.id);
+                    }
                   }}>
                   <div className="flex items-center gap-2">
                     {checkShowUserAvatar(event.type, event.participants) &&
-                      showUserAvatars(
-                        event.participants || [],
-                        event.type as string,
-                      )}
+                      showUserAvatars(event.participants || [])}
                     <div className="mb-2">
                       <div className="font-semibold max-w-[200px] min-h-4 truncate">
                         {event.title || ''}

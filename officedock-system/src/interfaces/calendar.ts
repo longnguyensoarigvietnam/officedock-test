@@ -6,8 +6,8 @@ import { EventCalendarType, EventParticipantType } from '@constants/enums';
 export interface EventCalendarDetail {
   id?: string;
   title: string;
-  start: Date;
-  end?: Date;
+  start: Date | string;
+  end?: Date | string;
   allDay?: boolean;
   type?: string;
   isMyEvent?: boolean;
