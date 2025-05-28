@@ -3479,6 +3479,7 @@ const TimeSchedule = memo(
                       scheduleZoom: value,
                     });
                   }
+                  scrollToNowIndicator();
                 }}
               />
             </div>

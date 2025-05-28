@@ -246,7 +246,13 @@ const MultiDatePickerCustom = ({
           startDate={startDate}
           endDate={endDate}
           selectsRange
-          minDate={null}
+          minDate={
+            isTypeTime === TimeOptionsType.MORE &&
+            endDate &&
+            !isStartButtonClicked
+              ? endDate
+              : null
+          }
           locale={customLocale}
           dateFormat={dateFormat}
           className={`w-full px-3.5 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}
