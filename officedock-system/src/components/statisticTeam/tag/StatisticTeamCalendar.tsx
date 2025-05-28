@@ -51,6 +51,14 @@ function StatisticTeamCalendar() {
   const [dataStartDate, setDataStartDate] = useState(new Date());
   const [dataEndDate, setDataEndDate] = useState<Date | null>(null);
   const [isDataCheckCompare, setIsDataCheckCompare] = useState(false);
+  const [isErrorData, setIsErrorData] = useState({
+    start: false,
+    end: false,
+  });
+  const [isErrorDataCompare, setIsErrorDataCompare] = useState({
+    start: false,
+    end: false,
+  });
 
   // Compare
 
@@ -125,6 +133,10 @@ function StatisticTeamCalendar() {
   // Selection option time
   const handleSelectTimeOption = (option: TimeOptionsType) => {
     setIsTypeTime(option);
+    setIsErrorData({
+      start: false,
+      end: false,
+    });
     if (!dataEndDate) {
       setDataEndDate(new Date());
     }
@@ -194,6 +206,10 @@ function StatisticTeamCalendar() {
     setDataStartDate(newStartDate);
 
     if (isDataCheckCompare) {
+      setIsErrorDataCompare({
+        start: false,
+        end: false,
+      });
       setDataStartDateCompare(
         handleSetStartDateBefore(option, newStartDate) as Date,
       );
@@ -210,11 +226,37 @@ function StatisticTeamCalendar() {
   // Change data time calendar
   const handleChangeCalendar = (startDate: Date, endDate: Date | null) => {
     setDataStartDate(startDate);
+    if (startDate) {
+      setIsErrorData({
+        ...isErrorData,
+        start: false,
+      });
+    }
     setDataEndDate(endDate);
+    if (endDate) {
+      setIsErrorData({
+        ...isErrorData,
+        end: false,
+      });
+    }
   };
 
   // Save data time
   const handleSaveCalendar = () => {
+    if (!dataEndDate) {
+      setIsErrorData({
+        ...isErrorData,
+        end: true,
+      });
+      return;
+    }
+    if (!dataStartDate) {
+      setIsErrorData({
+        ...isErrorData,
+        start: true,
+      });
+      return;
+    }
     if (dataEndDate !== endDate || dataStartDate !== startDate) {
       setIsLoadingLarge(true);
       setIsLoadingMedium(true);
@@ -232,11 +274,44 @@ function StatisticTeamCalendar() {
     endDate: Date | null,
   ) => {
     setDataStartDateCompare(startDate);
+    if (startDate) {
+      setIsErrorDataCompare({
+        ...isErrorData,
+        start: false,
+      });
+    }
     setDataEndDateCompare(endDate);
+    if (endDate) {
+      setIsErrorDataCompare({
+        ...isErrorData,
+        end: false,
+      });
+    }
   };
 
   // Save data time compare
   const handleSaveCalendarCompare = () => {
+    if (!dataEndDate) {
+      setIsErrorData({
+        ...isErrorData,
+        end: true,
+      });
+      return;
+    }
+    if (!dataStartDate) {
+      setIsErrorData({
+        ...isErrorData,
+        start: true,
+      });
+      return;
+    }
+    if (!dataEndDateCompare) {
+      setIsErrorDataCompare({
+        ...isErrorData,
+        end: true,
+      });
+      return;
+    }
     // Loading
     if (dataEndDate !== endDate || dataStartDate !== startDate) {
       setIsLoadingLarge(true);
@@ -440,7 +515,8 @@ function StatisticTeamCalendar() {
                   }}
                   className="gap-3 flex items-center mt-[6px]">
                   <span>開始日</span>
-                  <div className="w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F]">
+                  <div
+                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F] ${isErrorData.start && '!border-red-500'} `}>
                     {formatShowDateJapanese(dataStartDate)}
                   </div>
                   <div className="h-[34px] flex items-center text-[#77858F]">
@@ -455,7 +531,8 @@ function StatisticTeamCalendar() {
                   }}
                   className="gap-3 flex items-center mt-[6px]">
                   <span>終了日</span>
-                  <div className="w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F]">
+                  <div
+                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F] ${isErrorData.end && '!border-red-500'} `}>
                     {dataEndDate && formatShowDateJapanese(dataEndDate)}
                   </div>
                 </div>
@@ -464,6 +541,10 @@ function StatisticTeamCalendar() {
                     isChecked={isDataCheckCompare}
                     onChange={(e) => {
                       if (e) {
+                        setIsErrorDataCompare({
+                          start: false,
+                          end: false,
+                        });
                         const dateStart = handleSetStartDateBefore(
                           isTypeTime,
                           dataStartDate,
@@ -537,7 +618,8 @@ function StatisticTeamCalendar() {
                     }}
                     className="gap-3 flex items-center mt-[6px]">
                     <span>開始日</span>
-                    <div className="w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F]">
+                    <div
+                      className={` w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F] ${isErrorDataCompare.start && '!border-red-500'}`}>
                       {dataStartDateCompare &&
                         formatShowDateJapanese(dataStartDateCompare)}
                     </div>
@@ -552,7 +634,8 @@ function StatisticTeamCalendar() {
                     }}
                     className="gap-3 flex items-center mt-[6px]">
                     <span>終了日</span>
-                    <div className="w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F]">
+                    <div
+                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F] ${isErrorDataCompare.end && '!border-red-500'}`}>
                       {dataEndDateCompare &&
                         formatShowDateJapanese(dataEndDateCompare)}
                     </div>

@@ -205,7 +205,7 @@ const PercentageCategory = ({
         });
       }
       if (statisticCategoryList.mediumCategories) {
-        const color = statisticCategoryList.largeCategories.find(
+        const color = statisticCategoryList?.largeCategories.find(
           (item) => item.categoryId === selectedLarge?.value,
         );
         const mediumChartData = processChartData(
@@ -340,7 +340,7 @@ const PercentageCategory = ({
 
     const element = document.getElementById('task-list-statistic');
     setIsShowModal(false);
-    setDetailCategory(null)
+    setDetailCategory(null);
 
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -648,8 +648,7 @@ const PercentageCategory = ({
           selectedOrganization={selectedOrganization}
           onClose={() => {
             setIsShowModal(false);
-            setDetailCategory(null)
-
+            setDetailCategory(null);
           }}
           handleScroll={handleScroll}
         />

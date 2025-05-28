@@ -75,6 +75,7 @@ import {
   TaskFormData,
   TodoItem,
 } from '@interfaces/task';
+import { CategoryStructure } from '@interfaces/skills';
 
 import {
   convertDateToStartDate,
@@ -91,7 +92,6 @@ import {
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
-import { CategoryStructure } from '@interfaces/skills';
 
 export type ActionTaskModalProps = {
   open: boolean;
