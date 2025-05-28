@@ -263,10 +263,10 @@ function StatisticCalendar() {
     if (
       (dataEndDate &&
         endDate &&
-        dataEndDate?.getTime() !== endDate?.getTime()) ||
+        dataEndDate?.toDateString() !== endDate?.toDateString()) ||
       (dataStartDate &&
         startDate &&
-        dataStartDate?.getTime() !== startDate?.getTime())
+        dataStartDate?.toDateString() !== startDate?.toDateString())
     ) {
       setIsLoadingLarge(true);
       setIsLoadingMedium(true);
@@ -346,10 +346,10 @@ function StatisticCalendar() {
     if (
       (dataEndDate &&
         endDate &&
-        dataEndDate?.getTime() !== endDate?.getTime()) ||
+        dataEndDate?.toDateString() !== endDate?.toDateString()) ||
       (dataStartDate &&
         startDate &&
-        dataStartDate?.getTime() !== startDate?.getTime())
+        dataStartDate?.toDateString() !== startDate?.toDateString())
     ) {
       setIsLoadingLarge(true);
       setIsLoadingMedium(true);
@@ -358,10 +358,12 @@ function StatisticCalendar() {
     if (
       (dataEndDateCompare &&
         endDateCompare &&
-        dataEndDateCompare?.getTime() !== endDateCompare?.getTime()) ||
+        dataEndDateCompare?.toDateString() !==
+          endDateCompare?.toDateString()) ||
       (startDateCompare &&
         startDateCompare &&
-        dataStartDateCompare?.getTime() !== startDateCompare?.getTime())
+        dataStartDateCompare?.toDateString() !==
+          startDateCompare?.toDateString())
     ) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);

@@ -256,7 +256,10 @@ function StatisticTeamCalendar() {
       });
       return;
     }
-    if (dataEndDate !== endDate || dataStartDate !== startDate) {
+    if (
+      dataEndDate.toDateString() !== endDate?.toDateString() ||
+      dataStartDate.toDateString() !== startDate.toDateString()
+    ) {
       setIsLoadingLarge(true);
       setIsLoadingMedium(true);
       setIsLoadingOrganization(true);
@@ -311,14 +314,17 @@ function StatisticTeamCalendar() {
       return;
     }
     // Loading
-    if (dataEndDate !== endDate || dataStartDate !== startDate) {
+    if (
+      dataEndDate.toDateString() !== endDate?.toDateString() ||
+      dataStartDate.toDateString() !== startDate.toDateString()
+    ) {
       setIsLoadingLarge(true);
       setIsLoadingMedium(true);
       setIsLoadingOrganization(true);
     }
     if (
-      dataEndDateCompare !== endDateCompare ||
-      dataStartDateCompare !== startDateCompare
+      dataEndDateCompare.toDateString() !== endDateCompare?.toDateString() ||
+      dataStartDateCompare.toDateString() !== startDateCompare.toDateString()
     ) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
