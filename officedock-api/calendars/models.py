@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from base.models import BaseModel
 from calendars.constants import ScheduleTypes
@@ -15,8 +17,6 @@ class Schedule(BaseModel):
         Company, on_delete=models.CASCADE, related_name="schedules"
     )
     title = models.CharField(max_length=255)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
     is_all_day = models.BooleanField(default=True)
     type = models.CharField(
         max_length=50, choices=ScheduleTypes.choices(), null=True, blank=True
@@ -43,6 +43,7 @@ class Schedule(BaseModel):
     )
     is_start = models.BooleanField(default=False)
     creator_id = models.IntegerField(null=True, blank=True)
+    recurring = models.JSONField(null=True, blank=True)
 
 
 class TagsSchedules(BaseModel):
@@ -77,3 +78,28 @@ class ParticipantsSchedules(BaseModel):
         on_delete=models.CASCADE,
         related_name="participants_schedules",
     )
+
+
+class RepeatSchedule(BaseModel):
+    """
+    Repeat schedule model.
+    """
+
+    schedule = models.ForeignKey(
+        "Schedule", related_name="repeat_schedules", on_delete=models.CASCADE
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="repeat_schedules",
+        on_delete=models.CASCADE,
+    )
+    uuid = models.UUIDField(unique=True, default=uuid.uuid4)
+    plan_start_date = models.DateTimeField()
+    plan_end_date = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        """
+        Set default company
+        """
+        self.company = self.schedule.company
+        super().save(*args, **kwargs)

@@ -1,7 +1,11 @@
+from datetime import datetime
+
+from django.db.models import Q
 from rest_framework import serializers
 
 from base.messages import ERROR_MESSAGES
-from calendars.models import Schedule
+from calendars.models import Schedule, RepeatSchedule
+from common.constants import BASE_DATETIME_FORMAT
 from common.serializers import CreationDataUserSerializer
 from common.utils import get_common_categories
 from organizations.models import Organization
@@ -9,6 +13,7 @@ from organizations.serializers import OrganizationSerializer
 from skills.models import StatisticCategory
 from tags.models import Tag
 from tags.serializers import BaseTagSerializer
+from tasks.constants import FrequencyMap
 from users.models import User
 from tasks.models import PeopleInChargeTasks, TaskSchedule
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
@@ -27,6 +32,22 @@ class CategoryForCreationTaskSerializer(serializers.Serializer):
     type = serializers.ChoiceField(
         choices=ScheduleCategoryTypes.choices(), required=True
     )
+
+
+class RepeatScheduleSerializer(serializers.ModelSerializer):
+    """ "
+    Serializer of repeat schedule
+    """
+
+    class Meta:
+        model = RepeatSchedule
+        fields = [
+            "id",
+            "uuid",
+            "schedule",
+            "plan_start_date",
+            "plan_end_date",
+        ]
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
@@ -63,6 +84,25 @@ class ScheduleSerializer(serializers.ModelSerializer):
         queryset=Organization.objects.all(),
         write_only=True,
     )
+    start_date = serializers.DateTimeField(allow_null=True, required=False)
+    end_date = serializers.DateTimeField(allow_null=True, required=False)
+    repeat_type = serializers.ChoiceField(
+        choices=FrequencyMap.choices(),
+        allow_null=True,
+        required=False,
+        default=FrequencyMap.ONCE.value,
+    )
+    repeat_interval = serializers.IntegerField(allow_null=True, required=False)
+    week_day = serializers.IntegerField(
+        min_value=0, max_value=6, required=False, allow_null=True
+    )
+    month_day = serializers.IntegerField(
+        min_value=1, max_value=31, required=False, allow_null=True
+    )
+    month = serializers.IntegerField(
+        min_value=1, max_value=12, required=False, allow_null=True
+    )
+    repeat_schedules = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Schedule
@@ -87,6 +127,12 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "message",
             "is_start",
             "select_organizations",
+            "repeat_interval",
+            "repeat_type",
+            "week_day",
+            "month_day",
+            "month",
+            "repeat_schedules",
         ]
         read_only_fields = ["id"]
 
@@ -135,6 +181,31 @@ class ScheduleSerializer(serializers.ModelSerializer):
         )
         return CreationDataUserSerializer(sorted_participants, many=True).data
 
+    def get_repeat_schedules(self, obj):
+        """
+        Handle get repeat schedules
+        """
+        request = self.context.get("request")
+        if request.query_params.get("start_date") and request.query_params.get(
+            "end_date"
+        ):
+            start_date = request.query_params.get("start_date")
+            end_date = request.query_params.get("end_date")
+            start_date = datetime.strptime(
+                start_date, BASE_DATETIME_FORMAT
+            ).date()
+            end_date = datetime.strptime(end_date, BASE_DATETIME_FORMAT).date()
+            repeat_schedules = obj.repeat_schedules.filter(
+                Q(
+                    Q(plan_start_date__date__gte=start_date)
+                    & Q(plan_end_date__date__lte=end_date)
+                )
+            ).all()
+        else:
+            repeat_schedules = obj.repeat_schedules.all()
+
+        return RepeatScheduleSerializer(repeat_schedules, many=True).data
+
 
 class BaseScheduleSerializer(ScheduleSerializer):
     """
@@ -145,6 +216,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
     event_type = serializers.SerializerMethodField()
     is_my_schedule = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
+    repeat_schedules = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Schedule
@@ -162,6 +234,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "event_type",
             "categories",
             "select_organizations",
+            "repeat_schedules",
         ]
 
     def get_categories(self, obj):
@@ -339,3 +412,61 @@ class ScheduleTeamdockSerializer(BaseScheduleSerializer):
             "event_type",
             "categories",
         ]
+
+
+class ScheduleDetailSerializer(ScheduleSerializer):
+    """
+    Serializer for schedule detail
+    """
+
+    repeat_schedules = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Schedule
+        fields = [
+            "id",
+            "title",
+            "organization",
+            "start_date",
+            "end_date",
+            "is_all_day",
+            "address",
+            "type",
+            "participants",
+            "is_start",
+            "categories",
+            "select_organizations",
+            "memo",
+            "repeat_schedules",
+            "tags",
+        ]
+
+    def to_representation(self, instance):
+        """
+        Custom data before return
+        """
+        representation = super().to_representation(instance)
+
+        if recurring := instance.recurring:
+            fields = [
+                "start_date",
+                "end_date",
+                "repeat_type",
+                "repeat_interval",
+                "week_day",
+                "month_day",
+                "month",
+            ]
+            for field in fields:
+                representation[field] = recurring.get(field)
+        return representation
+
+    def get_repeat_schedules(self, obj):
+        """
+        Handle get repeat schedules
+        """
+        request = self.context.get("request")
+        if repeat_id := request.query_params.get("repeat_schedule_id"):
+            repeat_schedule = obj.repeat_schedules.filter(id=repeat_id).first()
+            return RepeatScheduleSerializer(repeat_schedule).data
+        return None
