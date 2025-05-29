@@ -103,3 +103,19 @@ class RepeatSchedule(BaseModel):
         """
         self.company = self.schedule.company
         super().save(*args, **kwargs)
+
+
+class EventLocation(BaseModel):
+    """
+    Event location model.
+    """
+
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="event_locations",
+        on_delete=models.CASCADE,
+    )
+    uuid = models.UUIDField(unique=True, default=uuid.uuid4)
+    name = models.CharField(
+        max_length=255,
+    )

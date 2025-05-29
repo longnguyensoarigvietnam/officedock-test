@@ -1,6 +1,7 @@
 from rest_framework import routers
 
 from calendars.apis import (
+    EventLocationViewSet,
     CalendarViewSet,
     ScheduleViewSet,
     ScheduleTeamdockViewSet,
@@ -90,6 +91,9 @@ api_router.register(
     basename="org_category_hierarchies",
 )
 api_router.register("schedules", ScheduleViewSet, basename="schedules")
+api_router.register(
+    "event-locations", EventLocationViewSet, basename="event-locations"
+)
 api_router.register(
     "teamdock/schedules", ScheduleTeamdockViewSet, basename="teamdock-schedules"
 )
