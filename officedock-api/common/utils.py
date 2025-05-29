@@ -25,7 +25,6 @@ from organizations.models import OrganizationsStatisticCategories
 from roles.constants import SelectionResultOptions
 from skills.constants import DEFAULT_TIME
 from stat_data.constants import NONE_CATEGORY
-from tasks.models import Task
 from users.models import User, RoleDetail
 
 
@@ -492,6 +491,9 @@ def check_task_overtime(model, task_duration, limit_time=None):
     """
     Handle return boolean if task run overtime or not.
     """
+    # Avoid circular import
+    from tasks.models import Task
+
     datetime.combine(timezone.now().date(), time.min)
     is_over_estimate = False
     is_send_sk = False

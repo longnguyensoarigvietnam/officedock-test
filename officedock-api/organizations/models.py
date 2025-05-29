@@ -1,6 +1,8 @@
 import uuid
+
 from django.core.validators import FileExtensionValidator
 from django.db import models
+
 from base.models import BaseModel
 from organizations.constants import CategoryColors
 from common.constants import (
@@ -8,6 +10,10 @@ from common.constants import (
     ORGANIZATION_ICON_FOLDER_UPLOAD,
 )
 from organizations.constants import OrganizationTypes
+from organizations.managers import (
+    OrganizationWithoutCalendarTypeManager,
+    UserOrganizationWithoutCalendarTypeManager,
+)
 from users.constants import AvatarColors
 
 
@@ -16,6 +22,8 @@ class Organization(BaseModel):
     Organization model.
     """
 
+    objects = OrganizationWithoutCalendarTypeManager()
+    all_objects = models.Manager()
     uuid = models.UUIDField(unique=True, default=uuid.uuid4)
     icon = models.ImageField(
         upload_to=ORGANIZATION_ICON_FOLDER_UPLOAD,
@@ -69,6 +77,7 @@ class UsersOrganizations(BaseModel):
     Users Organizations model.
     """
 
+    objects = UserOrganizationWithoutCalendarTypeManager()
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
     organization = models.ForeignKey("Organization", on_delete=models.CASCADE)
     company = models.ForeignKey(

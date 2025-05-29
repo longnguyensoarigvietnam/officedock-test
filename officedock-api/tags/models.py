@@ -1,5 +1,7 @@
 from django.db import models
 from base.models import BaseModel
+from organizations.constants import OrganizationTypes
+from organizations.models import Organization
 
 
 class Tag(BaseModel):
@@ -19,6 +21,15 @@ class Tag(BaseModel):
         on_delete=models.CASCADE,
     )
     is_hidden = models.BooleanField(default=False)
+
+    def get_calendar_organization(self):
+        """
+        Get all organizations
+        """
+        calendar_org = Organization.all_objects.filter(
+            company=self.company, type=OrganizationTypes.CALENDAR.value
+        ).first()
+        return self.organization_tags.filter(organization=calendar_org).first()
 
 
 class OrganizationsTags(BaseModel):
