@@ -6,6 +6,8 @@ from rest_framework import viewsets
 from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.permissions import ActionPermission
+from organizations.constants import OrganizationTypes
+from organizations.models import Organization
 
 from roles.constants import Screens
 from .models import Tag
@@ -52,6 +54,9 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         serializer_data = serializer.validated_data
         organizations = serializer_data.pop("organizations")
+        calendar_organization_check = serializer_data.pop(
+            "calendar_organization_check"
+        )
 
         company = self.request.user.company
         tag = serializer.save(company=company)
@@ -59,6 +64,14 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         for organization in organizations:
             tag.organizations.add(
                 organization, through_defaults={"company": company}
+            )
+        # Set calendar organization for tag if checked
+        calendar_org = Organization.all_objects.filter(
+            type=OrganizationTypes.CALENDAR.value, company=company
+        ).first()
+        if calendar_organization_check and calendar_org:
+            tag.organizations.add(
+                calendar_org, through_defaults={"company": company}
             )
 
     @transaction.atomic
@@ -70,6 +83,9 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Pop people_in_charge_ids from validated data
         serializer_data = serializer.validated_data
         organizations = serializer_data.pop("organizations", None)
+        calendar_organization_check = serializer_data.pop(
+            "calendar_organization_check", None
+        )
 
         # Update the tag instance
         tag = serializer.save()
@@ -79,6 +95,19 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 tag.organizations.add(
                     organization, through_defaults={"company": tag.company}
                 )
+        # Set calendar organization for tag if checked
+        calendar_org = Organization.all_objects.filter(
+            type=OrganizationTypes.CALENDAR.value,
+            company=self.request.user.company,
+        ).first()
+        if calendar_organization_check and calendar_org:
+            tag.organizations.add(
+                calendar_org, through_defaults={"company": tag.company}
+            )
+        elif (
+            not calendar_organization_check and tag.get_calendar_organization()
+        ):
+            tag.get_calendar_organization().delete()
 
     @extend_schema(
         parameters=[

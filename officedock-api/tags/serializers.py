@@ -35,6 +35,12 @@ class TagSerializer(serializers.ModelSerializer):
     organizations = CreationDataOrganizationSerializer(
         many=True, read_only=True
     )
+    calendar_organization_check = serializers.BooleanField(
+        required=False, write_only=True
+    )
+    is_calendar_organization_check = serializers.SerializerMethodField(
+        read_only=True
+    )
     actions = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -46,6 +52,8 @@ class TagSerializer(serializers.ModelSerializer):
             "organizations",
             "actions",
             "is_hidden",
+            "calendar_organization_check",
+            "is_calendar_organization_check",
         ]
 
     def validate(self, data):
@@ -109,6 +117,13 @@ class TagSerializer(serializers.ModelSerializer):
             }
 
         return permissions
+
+    def get_is_calendar_organization_check(self, obj):
+        """
+        Check is tag in calendar organization or not
+        """
+
+        return bool(obj.get_calendar_organization())
 
 
 class TagsForCreationSerializer(serializers.Serializer):
