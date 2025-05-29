@@ -697,8 +697,9 @@ class TaskViewSet(
         task_schedule_end_date = request.query_params.get(
             "task_schedule_end_date"
         )
-        validate_date_format_using_regex(task_schedule_from_date)
-        validate_date_format_using_regex(task_schedule_end_date)
+        if task_schedule_from_date and task_schedule_end_date:
+            validate_date_format_using_regex(task_schedule_from_date)
+            validate_date_format_using_regex(task_schedule_end_date)
 
         task_schedule_from_date = (
             datetime.strptime(task_schedule_from_date, BASE_DATE_FORMAT).date()
