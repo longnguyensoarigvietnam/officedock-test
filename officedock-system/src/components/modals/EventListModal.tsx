@@ -27,7 +27,7 @@ interface EventListModalProps {
   setDefaultCreateStartDate: Dispatch<SetStateAction<Date | undefined>>;
   handlePopoverClose: () => void;
   handleCreateNewEventFromPopup: () => void;
-  handleEventClickInPopup: (eventType: string, eventId: string) => void;
+  handleEventClickInPopup: (eventId: string, repeatScheduleId: string) => void;
   checkShowUserAvatar: (
     type?: EventCalendarType,
     participants?: EventParticipant[],
@@ -174,19 +174,22 @@ export const EventListModal = ({
             {popoverInfo.events.map((event) => {
               return (
                 <li
-                  key={event.id}
-                  className={`text-xs list-none mb-1 bg-[#EBF1F7] text-[#444546] !rounded-[8px] pl-1.5 pt-1 ${event.id.includes('holiday') && 'hover:cursor-not-allowed'}`}
+                  key={event.eventId}
+                  className={`text-xs list-none mb-1 bg-[#EBF1F7] text-[#444546] !rounded-[8px] pl-1.5 pt-1 ${event.repeatScheduleId.includes('holiday') && 'hover:cursor-not-allowed'}`}
                   onClick={() => {
-                    if (!event.id.includes('holiday')) {
+                    if (!event.repeatScheduleId.includes('holiday')) {
                       handlePopoverClose();
-                      handleEventClickInPopup(`${event.type}`, event.id);
+                      handleEventClickInPopup(
+                        event.eventId,
+                        event.repeatScheduleId,
+                      );
                     }
                   }}>
                   <div className="flex items-center gap-2">
                     {checkShowUserAvatar(event.type, event.participants) &&
                       showUserAvatars(event.participants || [])}
                     <div className="mb-2">
-                      <div className="font-semibold max-w-[200px] min-h-4 truncate">
+                      <div className={`font-semibold max-w-[200px] min-h-4 truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>
                         {event.title || ''}
                       </div>
                       <div className="flex gap-1">

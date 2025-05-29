@@ -457,6 +457,7 @@ export const apiRouters = {
   // SCHEDULE
   SCHEDULES: '/schedules/',
   SCHEDULE_DETAIL: (id: string) => `/schedules/${id}/`,
+  DELETE_REPEAT_SCHEDULE: (id: string) => `/schedules/${id}/delete_repeat_schedule/`,
   TASK_CALENDAR: '/calendars/',
   USER_SETTING: '/users/setting/',
 

@@ -229,7 +229,7 @@ const ChatDetail = ({
   const [msgIdDeleted, setMsgIdDeleted] = useState<string>();
   const [msgIdUpdated, setMsgIdUpdated] = useState<string>();
   const [msgEditing, setMsgEditing] = useState<string | undefined>();
-  const { chatRoomDetail } = useChatRoomDetail({
+  const { refetchChatRoomDetail, chatRoomDetail } = useChatRoomDetail({
     code: `${chatRoomCode}`,
   });
 
@@ -1858,6 +1858,7 @@ const ChatDetail = ({
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
+        refetchChatRoomDetail()
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -1866,7 +1867,6 @@ const ChatDetail = ({
         setSelectedRemoveMemberId(undefined);
         setIsLoading(false);
         setOpenConfirmRemoveMemberModal(false);
-        setOpenSettingBox(true);
       },
     },
   );
@@ -2894,6 +2894,7 @@ const ChatDetail = ({
         <ChatSettingModal
           open={true}
           onClose={() => setOpenSettingBox(false)}
+          chatRoomDetail={chatRoomDetail}
           code={`${chatRoomCode}`}
           dashboardMembers={dashboardMembers}
           openAddMemberModal={() => {
@@ -2902,7 +2903,6 @@ const ChatDetail = ({
             setOpenAddMembersBoxFromSetting(true);
           }}
           openConfirmRemoveModal={(id: number) => {
-            setOpenSettingBox(false);
             setOpenConfirmRemoveMemberModal(true);
             setSelectedRemoveMemberId(id);
           }}
@@ -2947,6 +2947,7 @@ const ChatDetail = ({
                 )
           }
           code={`${chatRoomCode}`}
+          refetchChatRoomDetail={refetchChatRoomDetail}
         />
       )}
       {openConfirmDeleteModal && (

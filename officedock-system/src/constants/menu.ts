@@ -10,6 +10,7 @@ export const SETTING_MENU: SettingMenuItem[] = [
   {
     name: '設定',
     href: pageRouters.SETTING.href,
+    disable: true
   },
   {
     name: 'ログアウト',

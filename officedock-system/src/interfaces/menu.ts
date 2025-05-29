@@ -17,4 +17,5 @@ export interface SettingMenuItem {
   href?: string;
   iconUrl?: string;
   showModal?: boolean;
+  disable?: boolean;
 }

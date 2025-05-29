@@ -911,7 +911,7 @@ const ListChatUsers = ({
         </div>
         <div className="flex items-center w-1/5 justify-between">
           <Popover className="relative">
-            {({ open }) => {
+            {({ open, close }) => {
               return (
                 <>
                   <DynamicTooltip
@@ -940,6 +940,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == '' && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType('');
+                            close()
                           }}>
                           すべてのチャット
                         </p>
@@ -947,6 +948,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.UNREAD && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType(ChatRoomType.UNREAD);
+                            close()
                           }}>
                           未読があるチャット
                         </p>
@@ -954,6 +956,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.GROUP && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType(ChatRoomType.GROUP);
+                            close()
                           }}>
                           グループチャット
                         </p>
@@ -961,6 +964,7 @@ const ListChatUsers = ({
                           className={`py-[10px] px-[14px] hover:bg-[#7D8A94] hover:cursor-pointer ${searchRoomType == ChatRoomType.PRIVATE && 'bg-[#7D8A94]'}`}
                           onClick={() => {
                             setSearchRoomType(ChatRoomType.PRIVATE);
+                            close()
                           }}>
                           個人チャット
                         </p>
