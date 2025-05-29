@@ -23,7 +23,7 @@ import InputSearch from '@components/common/InputSearch';
 import ActionsTagModal from '@components/modals/ActionsTagModal';
 import Dropdown from '@components/common/Dropdown';
 
-import { NO_DATA_AVAILABLE } from '@constants';
+import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import { apiRouters } from '@constants/routers';
 import {
   ERROR_COMMON_MESSAGE,
@@ -44,6 +44,8 @@ import {
 import useTagList from '@hooks/useTagList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDebounceText from '@hooks/useDebounceText';
+import useTeamList from '@hooks/useListTeam';
+import useTagDetail from '@hooks/useTagDetail';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -55,7 +57,6 @@ import { Organizations } from '@interfaces/organization';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
-import useTeamList from '@hooks/useListTeam';
 
 const FilterOrganizationComponent = ({
   dataOrganizationList,
@@ -144,26 +145,21 @@ const ListTags = () => {
   });
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
-  const actionType = searchParams.get('action');
-  const tagId = searchParams.get('tagId');
   const router = useRouter();
-  const PAGE_SIZE_OPTIONS = [
-    {
-      label: '10',
-      value: 10,
-    },
-    {
-      label: '20',
-      value: 20,
-    },
-    {
-      label: '30',
-      value: 30,
-    },
-  ];
+  const [tagIdParam, setTagIdParam] = useState<string | null>(
+    searchParams.get('tagId'),
+  );
+  const [actionTypeParam, setActionTypeParam] = useState<string | null>(
+    searchParams.get('action'),
+  );
 
-  // Set ID tag for delete
-  const [selectedTagToDelete, setSelectedTagToDelete] = useState<Tags | null>();
+  // Set ID tag for delete and update
+  const [selectedTagToDelete, setSelectedTagToDelete] = useState<Tags | null>(
+    null,
+  );
+  const [selectedTagToUpdate, setSelectedTagToUpdate] = useState<number | null>(
+    null,
+  );
 
   // Actions
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
@@ -186,6 +182,32 @@ const ListTags = () => {
     onSuccess: (data) => {
       setDataTags(data.results);
       setTotalPages(data.numPages);
+    },
+  });
+
+  useTagDetail({
+    tagId: Number(selectedTagToUpdate),
+    onSuccess: (data) => {
+      setDataTagEdit(data);
+      setOpenActionsTagModal(true);
+      if (selectedTagToUpdate) {
+        handleSetParam({
+          id: String(selectedTagToUpdate),
+          action: ActionsModal.EDIT,
+        });
+      }
+    },
+    onError: (error: AxiosError) => {
+      if (error.response?.status === ServerStatusCode.NOT_FOUND) {
+        showToast({
+          variant: 'error',
+          description: ERROR_COMMON_MESSAGE,
+        });
+        handleRemoveParam();
+      }
+    },
+    onSettled: () => {
+      setIsLoading(false);
     },
   });
 
@@ -228,9 +250,11 @@ const ListTags = () => {
   }) => {
     if (id) {
       params.set('tagId', id);
+      setTagIdParam(id);
     }
     if (action) {
       params.set('action', action);
+      setActionTypeParam(action);
     }
     router.push(`?${params.toString()}`);
   };
@@ -239,41 +263,9 @@ const ListTags = () => {
     const params = new URLSearchParams(searchParams);
     params.delete('tagId');
     params.delete('action');
+    setTagIdParam(null);
+    setActionTypeParam(null);
     router.replace(`?${params.toString()}`);
-  };
-
-  // Get tag's detail
-  const handleGetDataDetailTag = async (id: string) => {
-    setIsLoading(true);
-    const { data: response } = await api.get(apiRouters.TAG_DETAIL(id));
-    return response;
-  };
-
-  const { mutate: getDataDetailTag } = useMutation(
-    'getDataDetailTag',
-    handleGetDataDetailTag,
-    {
-      onSuccess: async (data) => {
-        setDataTagEdit(data);
-        setOpenActionsTagModal(true);
-      },
-      onError: (error: AxiosError) => {
-        if (error.response?.status === ServerStatusCode.NOT_FOUND) {
-          showToast({
-            variant: 'error',
-            description: ERROR_COMMON_MESSAGE,
-          });
-          handleRemoveParam();
-        }
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
-    },
-  );
-
-  const handleConfirmGetDataDetailTag = (id: string) => {
-    getDataDetailTag(id);
   };
 
   // Create tag
@@ -306,13 +298,17 @@ const ListTags = () => {
     createTag({
       name: data.name || '',
       organizationIds,
+      calendarOrganizationCheck: data.calendarOrganizationCheck,
     });
   };
 
   // Edit tag
   const handleEditTag = async (data: TagRequest) => {
     setIsLoading(true);
-    return await api.patch(apiRouters.TAG_DETAIL(String(tagId)), data);
+    return await api.patch(
+      apiRouters.TAG_DETAIL(String(selectedTagToUpdate)),
+      data,
+    );
   };
 
   const { mutate: editTag } = useMutation('postEditTag', handleEditTag, {
@@ -320,9 +316,10 @@ const ListTags = () => {
       showToast({
         description: SUCCESS_UPDATE_MESSAGE,
       });
-      setOpenActionsTagModal(false);
-      handleRemoveParam();
       setDataTagEdit(null);
+      setOpenActionsTagModal(false);
+      setSelectedTagToUpdate(null);
+      handleRemoveParam();
       refetchTagList();
     },
     onError: (error: AxiosError<any>) => {
@@ -340,6 +337,7 @@ const ListTags = () => {
     editTag({
       name: data.name || '',
       organizationIds,
+      calendarOrganizationCheck: data.calendarOrganizationCheck,
     });
   };
 
@@ -423,17 +421,15 @@ const ListTags = () => {
   });
 
   useEffect(() => {
-    if (tagId && dataTagEdit == null && actionType && !openActionsTagModal) {
-      handleConfirmGetDataDetailTag(tagId);
-    }
-    if (actionType === ActionsModal.CREATE) {
-      setOpenActionsTagModal(true);
-    } else {
-      setOpenActionsTagModal(false);
+    if (tagIdParam && !dataTagEdit && actionTypeParam === ActionsModal.EDIT) {
+      setSelectedTagToUpdate(Number(tagIdParam));
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getDataDetailTag, tagId, actionType]);
+    if (actionTypeParam === ActionsModal.CREATE && !openActionsTagModal) {
+      setOpenActionsTagModal(true);
+    }
+  }, [tagIdParam, actionTypeParam, dataTagEdit, openActionsTagModal]);
+
   return (
     <Fragment>
       <div className="flex justify-between">
@@ -603,17 +599,18 @@ const ListTags = () => {
                 タグ名
               </span>
             </th>
-            <th className="w-[calc(100%_-_500px)] text-left">
+            <th className="w-[calc(100%_-_600px)] text-left">
               <span className="text-[#77858F] text-[12px] font-medium">
                 表示するチーム
               </span>
             </th>
+            <th className="w-[100px] max-w-[100px]"></th>
           </TableHeader>
           <TableBody>
             {dataTags && dataTags.length ? (
               dataTags.map((element, index) => (
                 <tr key={index}>
-                  <td className="w-[500px] max-w-[500px]  border-r-[1px] border-r-[#D2DBE1]">
+                  <td className="w-[500px] max-w-[500px] border-r-[1px] border-r-[#D2DBE1]">
                     <div className="flex justify-between items-center">
                       <p className="text-left max-w-[350px] truncate text-[16px] font-medium">
                         {element.name}
@@ -622,16 +619,12 @@ const ListTags = () => {
                         {element.actions?.update ? (
                           <div
                             onClick={() => {
-                              handleConfirmGetDataDetailTag(String(element.id));
-                              handleSetParam({
-                                id: String(element.id),
-                                action: ActionsModal.EDIT,
-                              });
+                              setSelectedTagToUpdate(Number(element.id));
                             }}>
                             <ImageRound
                               name="Edit"
                               src={'/icons/edit-gray.svg'}
-                              className="w-3.5 h-3.5 hover:cursor-pointer"
+                              className={`w-3.5 h-3.5 hover:cursor-pointer ${selectedTagToUpdate != element.id && 'opacity-45'}`}
                             />
                           </div>
                         ) : (
@@ -668,11 +661,22 @@ const ListTags = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="!w-[calc(100%_-_500px)] !break-words text-left text-[14px] font-medium">
+                  <td className="!w-[calc(100%_-_600px)] !break-all text-left text-[14px] font-medium">
                     {element?.organizations &&
                       element?.organizations
                         .map((org: Organizations) => org.name)
                         .join('/ ')}
+                  </td>
+                  <td className="w-[100px] max-w-[100px]">
+                    <div className="flex justify-end px-3">
+                      {element.isCalendarOrganizationCheck && (
+                        <ImageRound
+                          className={`w-4 h-4 hover:cursor-pointer`}
+                          name="Calendar icon"
+                          src="/icons/calendar-time.svg"
+                        />
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
@@ -734,16 +738,18 @@ const ListTags = () => {
         onConfirm={handleConfirmDeleteTag}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />
-      {openActionsTagModal && (
+      
+      {openActionsTagModal && actionTypeParam && (
         <ActionsTagModal
           open={true}
-          action={actionType}
+          action={actionTypeParam}
           dataTag={dataTagEdit}
           dataOrganizationList={dataOrganizationList}
           onClose={() => {
             setOpenActionsTagModal(false);
             handleRemoveParam();
             setDataTagEdit(null);
+            setSelectedTagToUpdate(null)
           }}
           onCreate={(data) => {
             handleConfirmCreateTag(data);

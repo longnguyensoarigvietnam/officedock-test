@@ -8,6 +8,7 @@ import Button from '@components/common/Button';
 import Input from '@components/common/Input';
 import ImageRound from '@components/common/ImageRound';
 import Drawer from '@components/common/Drawers';
+import Checkbox from '@components/common/Checkbox';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { Tags, TagFormData } from '@interfaces/tag';
@@ -60,6 +61,7 @@ const ActionsTagModal = ({
     const value: TagFormData = {
       name: '',
       organizations: [],
+      calendarOrganizationCheck: false,
     };
     if (dataTag) {
       (value.name = `${dataTag.name}`),
@@ -70,7 +72,10 @@ const ActionsTagModal = ({
                 value: Number(org.id),
               };
             })
-          : []);
+          : []),
+        (value.calendarOrganizationCheck = Boolean(
+          dataTag.isCalendarOrganizationCheck,
+        ));
     }
     return value;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -201,20 +206,20 @@ const ActionsTagModal = ({
               </Button>
             </div>
           </header>
-          <div className="text-xs font-normal flex flex-col gap-4">
+          <div className="font-normal flex flex-col gap-5 mb-5">
             <div className="flex gap-3 items-center">
-              <p className="!w-fit font-medium text-[14px] whitespace-nowrap">
+              <p className="!w-[120px] font-medium text-[14px] whitespace-nowrap">
                 表示するチーム
               </p>
-              <div className="w-full">
+              <div className="w-[calc(100%_-_132px)]">
                 <MultiSelectDropdown
                   className="!h-[34px]"
                   disabled={isDisabled}
                   valueClassName="!border-[1px] !border-[#77858F]"
                   options={dataOrganizationList}
                   optionClassName="!border-[1px] !border-[#77858F]"
-                  labelClass="max-w-[460px]"
-                  labelOptionClass="w-[460px]"
+                  labelClass="max-w-[450px] !break-all"
+                  labelOptionClass="w-[450px] !break-all"
                   customLabel={
                     (watch('organizations') ?? [])
                       .filter((org: OptionDropdownType) => org.value)
@@ -245,7 +250,21 @@ const ActionsTagModal = ({
                 />
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <p className="!w-[120px] font-medium text-[14px] whitespace-nowrap">
+                カレンダーで使用
+              </p>
+              <Checkbox
+                label=""
+                className="!w-4"
+                isChecked={watch('calendarOrganizationCheck')}
+                onChange={(state) => {
+                  setValue('calendarOrganizationCheck', state);
+                }}
+              />
+            </div>
           </div>
+
           <div className="flex justify-center mt-8">
             {session?.user.permissions &&
               ((action === ActionsEvent.EDIT &&
