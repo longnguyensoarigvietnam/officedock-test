@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
 import { validate as isUUID } from 'uuid';
+import { useSession } from 'next-auth/react';
 
 import Dropdown from '@components/common/Dropdown';
 import Button from '@components/common/Button';
@@ -16,47 +17,29 @@ import useTeamList from '@hooks/useListTeam';
 import { OptionDropdownType } from '@interfaces/common';
 import {
   OrganizationCategoryHierarchyDetail,
+  OrganizationCategoryRow,
   StatisticCategory,
 } from '@interfaces/hierarchy';
 import { CreationDataSkill, Skill } from '@interfaces/skills';
 
-import { AddCategoryHierarchyType, ScreenName } from '@constants/enums';
+import { AddCategoryHierarchyType, PermissionsSystem, ScreenName } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ALL_TEAMS_OPTION } from '@constants';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 
+import { hasPermissionInArray } from '@utils';
 import TableComponent from './form';
 import api from '@base/api';
-
-interface rowDataType {
-  id: number | string;
-  large: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  medium: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  small: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  skills: OptionDropdownType[];
-  color: string;
-}
 
 interface HierarchyDetail {
   id: number | string;
   name: string;
-  statisticCategories: rowDataType[];
+  statisticCategories: OrganizationCategoryRow[];
 }
 
 const EditHierarchyForm = () => {
+  const { data: session } = useSession();
   const [hierarchyList, setHierarchyList] = useState<HierarchyDetail[]>([]);
   const [categoryList, setCategoryList] = useState<OptionDropdownType[]>([]);
   const [selectedHierarchiesToDelete, setSelectedHierarchiesToDelete] =
@@ -226,7 +209,7 @@ const EditHierarchyForm = () => {
       selectedHierarchiesToDelete.length == 0 &&
       tempSelectedHierarchiesToUpdate.length == 0
     ) {
-      router.push(pageRouters.HIERARCHY_MANAGEMENT.href);
+      router.push(pageRouters.TEAM_CATEGORY_MANAGEMENT.href);
     } else {
       updateOrganizationCategoryHierarchy({
         ids: selectedHierarchiesToDelete
@@ -283,7 +266,7 @@ const EditHierarchyForm = () => {
       onSuccess: async () => {
         setSelectedHierarchiesToDelete([]);
         setSelectedHierarchiesToUpdate([]);
-        router.push(pageRouters.HIERARCHY_MANAGEMENT.href);
+        router.push(pageRouters.TEAM_CATEGORY_MANAGEMENT.href);
       },
       onSettled: () => {
         setIsLoading(false);
@@ -390,7 +373,7 @@ const EditHierarchyForm = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="sticky z-[21] top-[0px] px-8 pt-8 pb-3 bg-[#EBF1F7]">
+      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#EBF1F7]">
         <div className="flex gap-4 items-center mb-5">
           <p className="text-black font-medium text-[26px]">
             業務カテゴリー設定
@@ -399,18 +382,30 @@ const EditHierarchyForm = () => {
             <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
               <Button
                 variant="outline"
-                className={`w-[152px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                className={`w-[128px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
                 社内共通カテゴリー
               </Button>
             </Link>
 
-            <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
-              <Button
-                variant="primary"
-                className={`w-[152px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
-                チームカテゴリー
-              </Button>
-            </Link>
+            <Button
+              variant="primary"
+              className={`w-[128px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+              チームカテゴリー
+            </Button>
+
+            {session?.user.permissions &&
+              hasPermissionInArray(
+                session?.user.permissions,
+                PermissionsSystem.CATEGORY_HIERARCHY_VIEW,
+              ) && (
+                <Link href={pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href}>
+                  <Button
+                    variant="outline"
+                    className={`w-[140px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                    カレンダーカテゴリー
+                  </Button>
+                </Link>
+              )}
           </div>
         </div>
 
@@ -433,7 +428,7 @@ const EditHierarchyForm = () => {
           </div>
 
           <div className="flex justify-center gap-3 items-center">
-            <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
+            <Link href={pageRouters.TEAM_CATEGORY_MANAGEMENT.href}>
               <Button
                 variant="outline"
                 className="w-[100px] !p-0 !h-[34px]"
@@ -454,7 +449,7 @@ const EditHierarchyForm = () => {
           </div>
         </div>
       </div>
-      <div className="px-8 mt-5">
+      <div className="px-10 mt-5">
         {selectedOrganizationOption.value === '' ? (
           <div className="flex flex-col gap-5">
             {hierarchyList.map((data) => (
