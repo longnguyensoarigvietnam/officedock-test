@@ -187,6 +187,7 @@ export enum ActionsEvent {
 export enum EventCalendarType {
   TASK = 'TASK',
   SCHEDULE = 'SCHEDULE',
+  HOLIDAY = 'HOLIDAY'
 }
 
 export enum EventWorkCategory {
