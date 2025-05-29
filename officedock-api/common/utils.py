@@ -25,6 +25,7 @@ from organizations.models import OrganizationsStatisticCategories
 from roles.constants import SelectionResultOptions
 from skills.constants import DEFAULT_TIME
 from stat_data.constants import NONE_CATEGORY
+from tasks.models import Task
 from users.models import User, RoleDetail
 
 
@@ -487,15 +488,20 @@ def generate_file_name(file_name=None) -> str:
     return f"{current_time}{random_number}.{ext}"
 
 
-def check_task_overtime(task, task_duration, limit_time=None):
+def check_task_overtime(model, task_duration, limit_time=None):
     """
     Handle return boolean if task run overtime or not.
     """
     datetime.combine(timezone.now().date(), time.min)
     is_over_estimate = False
     is_send_sk = False
+    if isinstance(model, Task):
+        task_schedules = model.task_schedules.all().order_by("plan_start_date")
+    else:
+        task_schedules = model.repeat_schedules.all().order_by(
+            "plan_start_date"
+        )
 
-    task_schedules = task.task_schedules.all().order_by("plan_start_date")
     for idx, task_schedule in enumerate(task_schedules):
         if idx + 1 < len(
             task_schedules

@@ -729,17 +729,9 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                     started_at__gte=start_of_today,
                     paused_at__isnull=True,
                 ).first()
-                if isinstance(current_duration_start, Task):
-                    is_send_sk, is_over_estimate = check_task_overtime(
-                        current_duration_start, task_running
-                    )
-                elif isinstance(current_duration_start, Schedule):
-                    if (
-                        timezone.now() - current_duration_start.end_date
-                        >= timedelta(minutes=30)
-                        and task_running.is_cancel_alert is False
-                    ):
-                        is_over_estimate = True
+                is_send_sk, is_over_estimate = check_task_overtime(
+                    current_duration_start, task_running
+                )
 
             categories = None
             if current_duration_start.categories.exists():

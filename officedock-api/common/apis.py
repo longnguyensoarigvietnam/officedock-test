@@ -570,8 +570,6 @@ class CronJobViewSet(BaseAPIViewSet):
             started_at__gte=start_of_today, paused_at__isnull=True
         ).all()
         for task_duration in task_durations:
-            is_over_estimate = False
-            is_send_sk = False
             users = []
             related_obj = (
                 task_duration.task
@@ -580,18 +578,15 @@ class CronJobViewSet(BaseAPIViewSet):
             )
             if isinstance(related_obj, Task):
                 users = related_obj.people_in_charge.all()
-                is_send_sk, is_over_estimate = check_task_overtime(
-                    related_obj, task_duration, timedelta(minutes=35)
-                )
             elif (
                 isinstance(related_obj, Schedule)
                 and task_duration.is_cancel_alert is False
             ):
                 users = related_obj.participants.all()
-                diff_time = timezone.now() - related_obj.end_date
-                if timedelta(minutes=30) <= diff_time <= timedelta(minutes=35):
-                    is_send_sk = True
-                    is_over_estimate = True
+
+            is_send_sk, is_over_estimate = check_task_overtime(
+                related_obj, task_duration, timedelta(minutes=35)
+            )
 
             if is_send_sk:
                 for user in users:
