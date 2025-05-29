@@ -8,7 +8,7 @@ import { apiRouters } from '@constants/routers';
 import { Tags } from '@interfaces/tag';
 
 interface UseTagDetailHooksProps {
-  tagId: string;
+  tagId: number;
   onSuccess?: (success: Tags) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -25,7 +25,8 @@ const useTagDetail = ({
 
   // Handle call API get tag detail
   const getTagDetail = async () => {
-    const apiUrl = apiRouters.TAG_DETAIL(tagId);
+    if (!tagId) return;
+    const apiUrl = apiRouters.TAG_DETAIL(String(tagId));
 
     const { data } = await api.get<Tags>(apiUrl);
     return data;
