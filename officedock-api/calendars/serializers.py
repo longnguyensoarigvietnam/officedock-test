@@ -4,7 +4,7 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from base.messages import ERROR_MESSAGES
-from calendars.models import Schedule, RepeatSchedule
+from calendars.models import EventLocation, Schedule, RepeatSchedule
 from common.constants import BASE_DATETIME_FORMAT
 from common.serializers import CreationDataUserSerializer
 from common.utils import get_common_categories
@@ -470,3 +470,40 @@ class ScheduleDetailSerializer(ScheduleSerializer):
             repeat_schedule = obj.repeat_schedules.filter(id=repeat_id).first()
             return RepeatScheduleSerializer(repeat_schedule).data
         return None
+
+
+class EventLocationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for event location
+    """
+
+    uuid = serializers.UUIDField(required=False, allow_null=True)
+
+    class Meta:
+        model = EventLocation
+        fields = [
+            "id",
+            "uuid",
+            "name",
+        ]
+
+    def validate(self, attrs):
+        """
+        Handle validate unique name in company
+        """
+        instance = self.instance
+        request = self.context.get("request")
+        company = request.user.company if not instance else instance.company
+        name = attrs.get("name")
+
+        queryset = EventLocation.objects.filter(company=company, name=name)
+
+        if instance:
+            queryset = queryset.exclude(id=instance.id)
+
+        if queryset.exists():
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["unique_event_location_name"]}
+            )
+
+        return attrs

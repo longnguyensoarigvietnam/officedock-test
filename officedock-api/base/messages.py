@@ -68,6 +68,7 @@ _ERROR_MESSAGES = {
         "skill_not_exists": _("The skill does not exists."),
         "unique_category_name": _("This category name is existed."),
         "unique_skill_name": _("This skill name is existed."),
+        "unique_event_location_name": _("This event location name is existed."),
         "skill_not_exists_in_organization": _(
             "The skill '{names}' does not belong to the selected organization."
         ),
@@ -148,6 +149,7 @@ _ERROR_MESSAGES = {
         "skill_not_exists": _("このスキルが存在しません。"),
         "unique_category_name": _("このカテゴリー名はすでに存在しています。"),
         "unique_skill_name": _("スキル名はすでに存在しています。"),
+        "unique_event_location_name": _("場所名が既に存在しています。"),
         "skill_not_exists_in_organization": _("「{names}」スキルは選択した組織に所属していません。"),
         "submit_level_exists": "このレベルアップ申請がすでに存在しています。",
         "cannot_delete_system_role": "システムロールは削除できません。",

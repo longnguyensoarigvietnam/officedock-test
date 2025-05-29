@@ -15,9 +15,10 @@ from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
 from calendars.constants import ScheduleFields, CalendarTypes
-from calendars.models import Schedule, RepeatSchedule
+from calendars.models import EventLocation, Schedule, RepeatSchedule
 from calendars.filters import TaskScheduleForCalendarFilter
 from calendars.serializers import (
+    EventLocationSerializer,
     ScheduleSerializer,
     BaseScheduleSerializer,
     ScheduleTeamdockSerializer,
@@ -1144,3 +1145,35 @@ class CalendarViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             queryset = queryset.none()
 
         return queryset.filter(company=user.company)
+
+
+@extend_schema(tags=["System > Event Locations"])
+class EventLocationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
+    """
+    API endpoint for managing event locations in the system.
+
+    This viewset provides CRUD operations for event locations, allowing users to:
+    - Create new event locations
+    - List all event locations for their company
+    - Retrieve specific event location details
+    - Update existing event locations
+    - Delete event locations
+    """
+
+    queryset = EventLocation.objects.order_by("-created_at")
+    serializer_class = EventLocationSerializer
+    permission_classes = [ActionPermission]
+    screen_name = Screens.CALENDAR.value
+    pagination_class = None
+
+    def get_queryset(self):
+        """
+        Filter the queryset to only return event locations belonging to the user's company.
+        """
+        return super().get_queryset().filter(company=self.request.user.company)
+
+    def perform_create(self, serializer):
+        """
+        Create a new event location and associate it with the user's company.
+        """
+        serializer.save(company=self.request.user.company)
