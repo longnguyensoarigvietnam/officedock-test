@@ -108,8 +108,8 @@ class DashboardViewSet(BaseAPIViewSet):
         user = request.user
 
         for ele in list:
-            if isinstance(ele, Schedule):
-                model = ele
+            if isinstance(ele, RepeatSchedule):
+                model = ele.schedule
                 model_type = CalendarTypes.SCHEDULE.value
             else:
                 model = ele.task or ele.schedule
@@ -206,8 +206,8 @@ class DashboardViewSet(BaseAPIViewSet):
 
         # Get data event in schedule
         repeat_schedules = RepeatSchedule.objects.filter(
-            plan_start_date__gte=start_date,
-            plan_end_date__lte=end_date,
+            plan_end_date__gte=start_date,
+            plan_start_date__lte=end_date,
             schedule__participants_schedules__user=request.user,
         ).all()
         data = self._append_data_to_cards(data, repeat_schedules, request)

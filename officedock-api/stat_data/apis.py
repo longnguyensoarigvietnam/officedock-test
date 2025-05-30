@@ -479,7 +479,6 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             else now().date()
         )
         user = get_object_or_404(User, id=user_id) if user_id else request.user
-        organization = get_object_or_404(Organization, id=organization_id)
 
         start_of_day = datetime.combine(date, time.min)
         start_of_today = datetime.combine(now().date(), time.min)
@@ -617,7 +616,18 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 continue
             sub_duration += organization_duration["duration"]
 
-        data["sub_organization_duration"] = format_duration(sub_duration)
+        data["sub_organization"] = {
+            "duration": format_duration(sub_duration),
+            "percent": round(
+                (
+                    sub_duration.total_seconds()
+                    / total_duration.total_seconds()
+                    * 100
+                )
+            )
+            if total_duration and sub_duration
+            else 0,
+        }
         filter_durations = durations.filter(
             Q(task__categories__large_statistic_category__isnull=True)
             & Q(schedule__categories__large_statistic_category__isnull=True)
@@ -684,13 +694,16 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             .values_list("is_confirmed", flat=True)
             .first()
         ) or False
+        organization_name = (
+            get_object_or_404(Organization, id=organization_id).name
+            if organization_id
+            else None
+        )
 
         data["remark"].update(
             {
                 "user": user_serializer,
-                "organization_name": organization.name
-                if organization
-                else None,
+                "organization_name": organization_name,
                 "is_confirmed": confirm_report,
             }
         )
