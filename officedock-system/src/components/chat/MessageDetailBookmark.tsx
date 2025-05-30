@@ -25,7 +25,6 @@ import {
   TASK_DELETED,
 } from '@constants';
 import { ChatRoomType, MessageType, SubmitLevelStatus } from '@constants/enums';
-import { MENTION_NAME_REGEX } from '@constants/regex';
 import { pageRouters } from '@constants/routers';
 
 import {
@@ -60,6 +59,7 @@ export type MessageDetailProps = {
         participants: ChatParticipant;
       }
     | undefined;
+  handleActionEditTask: (id: number) => void;
   handleConfirmGetDataDetailEvent: (id: string) => void;
   onGotoMessage: () => void;
   handleRemoveItemBookmark: (uuid: string) => void;
@@ -69,8 +69,8 @@ export const MessageDetailBookmark = ({
   isLastItem,
   messageDetail,
   dashboardMembers,
-  dashboardMemberList,
   chatRoomInfo,
+  handleActionEditTask,
   handleConfirmGetDataDetailEvent,
   onGotoMessage,
   handleRemoveItemBookmark,
@@ -129,46 +129,115 @@ export const MessageDetailBookmark = ({
     if (!mentions || mentions.length === 0)
       return parseReactionsToImages(message);
 
-    let processedHtml = '';
-    let i = 0;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(message, 'text/html');
 
-    while (i < message.length) {
-      if (message[i] === '@') {
-        let j = i + 1;
-        while (j < message.length && MENTION_NAME_REGEX.test(message[j])) j++;
+    doc.querySelectorAll('.mention').forEach((mention) => {
+      let mentionName = mention.textContent?.trim() || '';
 
-        const mentionName = message.substring(i + 1, j).trim();
-        if (
-          mentionName === MENTION_ALL_MEMBERS &&
-          dashboardMemberList.every((participant) =>
-            [...mentions, Number(session?.user.id)].includes(
-              Number(participant.id),
-            ),
-          )
-        ) {
-          processedHtml += `<span style="color: #0068B7;">@${mentionName}</span>`;
-          i = j;
-          continue;
-        }
-
-        const matchedUser = dashboardMembers.find(
-          (member) => member.fullName === mentionName,
-        );
-
-        if (matchedUser) {
-          const color =
-            matchedUser.id == session?.user.id ? '#0068B7' : '#77858F';
-          processedHtml += `<span style="color: ${color};">@${mentionName}</span>`;
-          i = j;
-          continue;
-        }
+      if (mentionName.startsWith('@')) {
+        mentionName = mentionName.slice(1);
       }
 
-      processedHtml += message[i];
-      i++;
-    }
+      const matchedUser = dashboardMembers.find(
+        (member) => member.fullName === mentionName,
+      );
 
-    return parseReactionsToImages(processedHtml);
+      const color =
+        matchedUser?.id === session?.user.id ||
+        mentionName === MENTION_ALL_MEMBERS
+          ? '#0068B7'
+          : '#77858F';
+      mention.setAttribute('style', `color: ${color};`);
+    });
+
+    return parseReactionsToImages(doc.body.innerHTML);
+  };
+
+  const processMessage = (message: string, mentions: number[]) => {
+    const highlightedMessage = highlightMentions(message, mentions);
+
+    const dom = new DOMParser().parseFromString(
+      highlightedMessage,
+      'text/html',
+    );
+
+    const nodes = Array.from(dom.body.childNodes);
+
+    const processNode = (node: ChildNode, index: number) => {
+      if (node.nodeType === 1) {
+        const element = node as HTMLElement;
+
+        if (element.tagName === 'P') {
+          const taskQuote = element.querySelector('span[data-task-id]');
+
+          if (taskQuote) {
+            const taskId = taskQuote.getAttribute('data-task-id');
+            const restOfContent = element.innerHTML.replace(
+              taskQuote.outerHTML,
+              '',
+            );
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(
+              taskQuote.innerHTML,
+              'text/html',
+            );
+
+            const spans = doc.querySelectorAll('span');
+
+            const targetSpan = spans[1]?.outerHTML || '';
+
+            return (
+              <>
+                <div
+                  key={`${index}-quote`}
+                  id={taskId || undefined}
+                  onClick={() => {
+                    if (taskId) {
+                      handleActionEditTask(Number(taskId));
+                    }
+                  }}
+                  className="flex mb-2 items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
+                  <ImageRound
+                    className="w-[14px] h-[14px]"
+                    name="Task icon"
+                    src="/icons/gray-checkbox.svg"
+                  />
+                  <span
+                    className="text-sm font-medium"
+                    dangerouslySetInnerHTML={{ __html: targetSpan }}
+                  />
+                </div>
+
+                {restOfContent.trim() && (
+                  <p
+                    key={`${index}-rest`}
+                    className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]"
+                    dangerouslySetInnerHTML={{ __html: restOfContent }}
+                  />
+                )}
+              </>
+            );
+          }
+
+          return (
+            <p
+              key={index}
+              className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]">
+              <span dangerouslySetInnerHTML={{ __html: element.innerHTML }} />
+            </p>
+          );
+        }
+      } else if (node.nodeType === 3) {
+        return node.textContent?.trim() ? (
+          <span key={index}>{node.textContent}</span>
+        ) : null;
+      }
+      return null;
+    };
+
+    return nodes.map((node, index) => processNode(node, index));
   };
 
   // Render submit level message
@@ -254,15 +323,11 @@ export const MessageDetailBookmark = ({
                     ) : (
                       <div>
                         {messageDetail.type === MessageType.MESSAGE && (
-                          <div className="!w-[100%]">
-                            <p
-                              className={`text-chat-box font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px]  `}
-                              dangerouslySetInnerHTML={{
-                                __html: highlightMentions(
-                                  messageDetail.message,
-                                  messageDetail.mentions || [],
-                                ),
-                              }}></p>
+                          <div className="!w-[100%] break-all">
+                            {processMessage(
+                              messageDetail.message,
+                              messageDetail.mentions || [],
+                            )}
                             {messageDetail?.chatFiles &&
                               messageDetail?.chatFiles.length > 0 && (
                                 <div className="flex flex-col gap-2 !w-[100%]">
@@ -292,7 +357,7 @@ export const MessageDetailBookmark = ({
                                                 </div>
                                               )}
                                               <p
-                                                className={`text-[#0068B6] font-medium text-[14px] break-words break-all max-w-full ${
+                                                className={`text-[#0068B6] font-medium text-[14px] break-all max-w-full ${
                                                   file.fileType.includes(
                                                     'image',
                                                   )

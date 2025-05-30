@@ -260,7 +260,7 @@ const ListLocation = () => {
                             ref={inputRef}
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
-                            onBlur={() => handleBlur(item.uuid)}
+                            onBlur={() => handleBlur(item?.uuid as string)}
                             placeholder="チーム名を入力"
                             className={`w-full px-3.5 ${errors[item.uuid] && '!border-red-500'} py-2.5 leading-5.5 placeholder-gray-300  rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 !border-[1px] !border-[#77858F] !text-sm !h-[34px]`}
                           />
@@ -289,7 +289,7 @@ const ListLocation = () => {
                             onClick={() => {
                               setIsEditing(true);
 
-                              handleEditClick(item.uuid, item.name);
+                              handleEditClick(item?.uuid as string, item.name);
                             }}
                           />
                         </button>

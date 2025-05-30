@@ -182,6 +182,7 @@ export enum ActionsEvent {
   EDIT = 'EDIT',
   CREATE = 'CREATE',
   DELETE = 'DELETE',
+  COPY = 'COPY'
 }
 
 export enum EventCalendarType {

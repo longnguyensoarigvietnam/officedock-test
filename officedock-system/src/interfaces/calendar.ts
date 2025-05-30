@@ -65,7 +65,7 @@ export interface EventEditFormData {
   participants?: EventParticipant[];
   participantIds?: number[];
   selectOrganizations?: number[];
-  location?: OptionDropdownType;
+  location?: OptionDropdownType | LocationEventType | null;
   memo?: string;
   type?: string | OptionDropdownType;
   largeCategory?: OptionDropdownType;

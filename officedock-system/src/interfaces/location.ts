@@ -1,5 +1,5 @@
 export interface LocationEventType {
   id?: number;
-  uuid: string;
+  uuid?: string;
   name: string;
 }
