@@ -1164,6 +1164,7 @@ class EventLocationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     serializer_class = EventLocationSerializer
     permission_classes = [ActionPermission]
     screen_name = Screens.CALENDAR.value
+    lookup_field = "uuid"
     pagination_class = None
 
     def get_queryset(self):

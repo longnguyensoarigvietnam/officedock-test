@@ -17,7 +17,7 @@ from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES
 from calendars.constants import CalendarTypes
-from calendars.models import Schedule
+from calendars.models import Schedule, RepeatSchedule
 from calendars.serializers import BaseScheduleSerializer
 from common.constants import BASE_DATETIME_FORMAT
 from common.serializers import (
@@ -205,12 +205,12 @@ class DashboardViewSet(BaseAPIViewSet):
         data = self._append_data_to_cards(data, task_durations, request)
 
         # Get data event in schedule
-        events = Schedule.objects.filter(
-            Q(start_date__lte=end_date)
-            & Q(end_date__gte=start_date)
-            & Q(participants_schedules__user=request.user)
+        repeat_schedules = RepeatSchedule.objects.filter(
+            plan_start_date__gte=start_date,
+            plan_end_date__lte=end_date,
+            schedule__participants_schedules__user=request.user,
         ).all()
-        data = self._append_data_to_cards(data, events, request)
+        data = self._append_data_to_cards(data, repeat_schedules, request)
 
         # Get actual duration of event
         event_durations = (
@@ -219,7 +219,12 @@ class DashboardViewSet(BaseAPIViewSet):
                 & Q(Q(paused_at__lte=end_date) | Q(paused_at__isnull=True))
                 & Q(schedule__participants_schedules__user=request.user)
             )
-            .exclude(schedule__in=[event for event in events])
+            .exclude(
+                schedule__in=[
+                    repeat_schedule.schedule
+                    for repeat_schedule in repeat_schedules
+                ]
+            )
             .all()
         )
         data = self._append_data_to_cards(data, event_durations, request)
@@ -253,10 +258,9 @@ class DashboardViewSet(BaseAPIViewSet):
                 task_schedules__plan_start_date__lte=end_date,
                 people_in_charge=user,
             ).distinct()
-            # FIXME: Change conditional when implement repeat schedule of event
             schedules = Schedule.objects.filter(
-                start_date__gte=start_date,
-                end_date__lte=end_date,
+                repeat_schedules__start_date__gte=start_date,
+                repeat_schedules__end_date__lte=end_date,
                 participants=user,
             )
             data = (
