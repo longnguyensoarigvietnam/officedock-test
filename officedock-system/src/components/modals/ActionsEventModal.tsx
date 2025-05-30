@@ -1,7 +1,7 @@
 'use client';
 import { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
@@ -24,8 +24,6 @@ import {
   EventFormData,
   EventParticipant,
 } from '@interfaces/calendar';
-import { CategoryStructure } from '@interfaces/skills';
-import { Organizations } from '@interfaces/organization';
 import { User } from '@interfaces/user';
 
 import {
@@ -68,8 +66,6 @@ import {
 } from '@utils';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-
-import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
 export type ActionsEventModalProps = {
@@ -107,16 +103,13 @@ const ActionsEventModal = ({
   const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
     OptionDropdownType[]
   >([]);
-  const [dataOrganizationCategories, setDataOrganizationCategories] = useState<
-    CategoryStructure[]
-  >([]);
-  const [dataOptionsCategorySmall, setDataOptionsCategorySmall] = useState<
+  const [dataOptionsCategorySmall, _setDataOptionsCategorySmall] = useState<
     OptionDropdownType[]
   >([]);
-  const [dataOptionsCategoryMedium, setDataOptionsCategoryMedium] = useState<
+  const [dataOptionsCategoryMedium, _setDataOptionsCategoryMedium] = useState<
     OptionDropdownType[]
   >([]);
-  const [dataOptionsCategoryLarge, setDataOptionsCategoryLarge] = useState<
+  const [dataOptionsCategoryLarge, _setDataOptionsCategoryLarge] = useState<
     OptionDropdownType[]
   >([]);
   const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
@@ -124,6 +117,9 @@ const ActionsEventModal = ({
   >([]);
   const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
     EventParticipant[]
+  >([]);
+  const [dataOptionsEventLocation, setDataOptionsEventLocation] = useState<
+    OptionDropdownType[]
   >([]);
   const [searchName, setSearchName] = useState<string>('');
   const [time, setTime] = useState<string>('');
@@ -152,98 +148,6 @@ const ActionsEventModal = ({
     },
   });
 
-  const organizationValue = useWatch({
-    control,
-    name: 'organization.value',
-  });
-
-  const { refetchCreationDataStatistic } = useCreationDataStatisticTeam({
-    organization_id: organizationValue ? String(organizationValue) : '',
-    isTeam: true,
-    onSuccess: (data) => {
-      if (!data) return;
-
-      const organizationCategories = data.organization.statisticCategories.map(
-        (category) => {
-          const largeCategory = category.LARGE || {
-            id: NO_OPTION_CATEGORY,
-            name: NO_OPTION_CATEGORY,
-            uuid: '',
-          };
-
-          const mediumCategories = (category.MEDIUM || []).map(
-            (mediumCategory) => {
-              const mediumCategoryField = mediumCategory.MEDIUM || {
-                id: NO_OPTION_CATEGORY,
-                name: NO_OPTION_CATEGORY,
-                uuid: '',
-              };
-              const smallCategories = mediumCategory.SMALL || [
-                { id: NO_OPTION_CATEGORY, name: NO_OPTION_CATEGORY, uuid: '' },
-              ];
-
-              return {
-                MEDIUM: mediumCategoryField,
-                SMALL: smallCategories,
-              };
-            },
-          );
-
-          return {
-            LARGE: largeCategory,
-            MEDIUM: mediumCategories,
-          };
-        },
-      );
-
-      setDataOrganizationCategories(organizationCategories || []);
-      setDataOptionsCategoryLarge(() => {
-        const largeCategories: OptionDropdownType[] = [
-          {
-            label: NO_OPTION_CATEGORY,
-            value: NO_OPTION_CATEGORY,
-          },
-        ];
-        data.organization.statisticCategories.map((category) => {
-          if (category.LARGE) {
-            largeCategories.push({
-              label: category.LARGE.name,
-              value: category.LARGE.id,
-            });
-          }
-        });
-        return largeCategories;
-      });
-      setDataOptionsTagIds(
-        data.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
-        })),
-      );
-    },
-  });
-
-  const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
-    is_calendar_page: true,
-
-    onSuccess: (data) => {
-      setDataOptionsOrganizations([
-        ...data.organizations.map((org) => ({
-          value: org.id || '',
-          label: org.name,
-          userIds: org.users ? org.users.map((user) => user.id) : [],
-          iconColor: org.iconColor || '#0068B6',
-        })),
-      ]);
-    },
-  });
-
-  useEffect(() => {
-    if (organizationValue) {
-      refetchCreationDataStatistic();
-    }
-  }, [organizationValue, refetchCreationDataStatistic]);
-
   const defaultValues = useMemo<EventEditFormData>(() => {
     const value: EventEditFormData = {
       participantIds: [session?.user.id as number],
@@ -261,21 +165,9 @@ const ActionsEventModal = ({
         value: '',
       },
       memo: '',
-      address: '',
+      location: undefined,
       isAllDay: false,
       tagIds: dataEvent ? [] : [{ label: '', value: '' }],
-      organization: authenticatedUser?.organizations
-        ? {
-            label:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.name || '',
-            value:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.id || '',
-          }
-        : undefined,
       repeatType: {
         label: TaskRepetitiveType.ONCE,
         value: String(
@@ -289,22 +181,6 @@ const ActionsEventModal = ({
       monthDay: undefined,
       weekDay: undefined,
     };
-    if (authenticatedUser) {
-      value.organization = authenticatedUser?.organizations.find(
-        (organization) => organization.isMain,
-      )
-        ? {
-            label:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.name || '',
-            value:
-              authenticatedUser?.organizations.find(
-                (organization) => organization.isMain,
-              )?.id || '',
-          }
-        : undefined;
-    }
     if (dataEvent) {
       let newParticipantIds: number[] = [];
       let newSelectedOrganizations: number[] = [];
@@ -367,22 +243,6 @@ const ActionsEventModal = ({
         (value.title = dataEvent.title),
         (value.participantIds = newParticipantIds),
         (value.selectOrganizations = newSelectedOrganizations),
-        (value.organization = dataEvent.organization
-          ? {
-              label: backToEditing
-                ? ((dataEvent.organization as OptionDropdownType)
-                    .label as string)
-                : dataEvent.organization
-                  ? (dataEvent.organization as Organizations).name
-                  : '',
-              value: backToEditing
-                ? ((dataEvent.organization as OptionDropdownType)
-                    .value as string)
-                : dataEvent.organization
-                  ? ((dataEvent.organization as Organizations).id as number)
-                  : '',
-            }
-          : undefined),
         (value.largeCategory = backToEditing
           ? dataEvent.largeCategory
           : newLargeCategory),
@@ -393,7 +253,6 @@ const ActionsEventModal = ({
           ? dataEvent.smallCategory
           : newSmallCategory),
         (value.memo = dataEvent.memo),
-        (value.address = dataEvent.address),
         (value.isAllDay = dataEvent.isAllDay),
         (value.type = {
           label: backToEditing
@@ -534,68 +393,20 @@ const ActionsEventModal = ({
     reset(defaultValues);
   }, [defaultValues, reset]);
 
-  // Watch the form fields dynamically
-  const largeCategoryValue = useWatch({
-    control,
-    name: 'largeCategory.value',
-  });
+  useCreationDataStatistic({
+    is_calendar_page: true,
 
-  const mediumCategoryValue = useWatch({
-    control,
-    name: 'mediumCategory.value',
-  });
-
-  // Dynamically compute dropdown options
-  useMemo(() => {
-    if (!dataOrganizationCategories || !watch('largeCategory.value')) {
-      setDataOptionsCategoryMedium([]);
-      return;
-    }
-
-    const selectedLargeCategory = dataOrganizationCategories.find(
-      (category) => category.LARGE.id == watch('largeCategory.value'),
-    );
-
-    if (!selectedLargeCategory) {
-      setDataOptionsCategoryMedium([]);
-    } else {
-      setDataOptionsCategoryMedium(
-        selectedLargeCategory.MEDIUM.map((mediumCategory) => ({
-          label: mediumCategory.MEDIUM.name,
-          value: mediumCategory.MEDIUM.id,
+    onSuccess: (data) => {
+      setDataOptionsOrganizations([
+        ...data.organizations.map((org) => ({
+          value: org.id || '',
+          label: org.name,
+          userIds: org.users ? org.users.map((user) => user.id) : [],
+          iconColor: org.iconColor || '#0068B6',
         })),
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataOrganizationCategories, largeCategoryValue, watch]);
-
-  useMemo(() => {
-    if (!dataOrganizationCategories || !watch('mediumCategory.value')) {
-      setDataOptionsCategorySmall([]);
-      return;
-    }
-
-    const selectedLargeCategoryOption = dataOrganizationCategories.find(
-      (category) => category.LARGE.id == watch('largeCategory.value'),
-    );
-
-    const selectedMediumCategoryOption =
-      selectedLargeCategoryOption?.MEDIUM.find(
-        (category) => category.MEDIUM.id == watch('mediumCategory.value'),
-      );
-
-    if (!selectedMediumCategoryOption) {
-      setDataOptionsCategorySmall([]);
-      return;
-    }
-
-    setDataOptionsCategorySmall(
-      selectedMediumCategoryOption.SMALL.map((smallCategory) => ({
-        label: smallCategory.name,
-        value: smallCategory.id,
-      })),
-    );
-  }, [dataOrganizationCategories, mediumCategoryValue, watch]);
+      ]);
+    },
+  });
 
   useEffect(() => {
     if (creationDataEventCalendar) {
@@ -605,30 +416,21 @@ const ActionsEventModal = ({
           value: org,
         })),
       );
+      setDataOptionsEventLocation(
+        creationDataEventCalendar.eventLocations.map((org) => ({
+          label: org.name,
+          value: org.id || '',
+        })),
+      );
       const eventMembers = creationDataEventCalendar.members.map((org) => ({
         id: org.id,
         fullName: org.fullName,
         type: EventParticipantType.USER,
       }));
-      if (isFetchedCreationDataStatistic) {
-        const eventOrganizations = dataOptionsOrganizations
-          ? dataOptionsOrganizations.map((org) => ({
-              id: org.value,
-              fullName: org.label,
-              type: EventParticipantType.ORGANIZATION,
-              userIds: org.userIds,
-              color: org.iconColor,
-            }))
-          : [];
-        setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
-      }
+      setDataOptionsParticipants([...eventMembers]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    creationDataEventCalendar,
-    dataOptionsOrganizations,
-    isFetchedCreationDataStatistic,
-  ]);
+  }, [creationDataEventCalendar]);
 
   const [isCall, setIsCall] = useState<boolean>(false);
 
@@ -1638,49 +1440,6 @@ const ActionsEventModal = ({
               />
             </div>
           </div>
-          {/* Organization */}
-          <div className="flex justify-between items-center">
-            <p className="w-fit font-medium text-[14px]">組織</p>
-            <div className="w-[513px]">
-              <Controller
-                control={control}
-                name={'organization'}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    className="h-8 !py-1 text-xs max-w-[513px] !border-[1px] !border-[#77858F] rounded-md"
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs w-[513px]"
-                    classNameError="!text-xs"
-                    placeholder="選択してください"
-                    disabled={isDisabled}
-                    options={dataOptionsOrganizations}
-                    selectedOption={dataOptionsOrganizations.find(
-                      (element) =>
-                        element.value == (value as OptionDropdownType)?.value,
-                    )}
-                    onChange={(e) => {
-                      if (e.value != watch('organization.value')) {
-                        setValue('largeCategory', { label: '', value: '' });
-                        setValue('mediumCategory', { label: '', value: '' });
-                        setValue('smallCategory', { label: '', value: '' });
-                        setDataOptionsCategoryLarge([]);
-                        setDataOptionsCategorySmall([]);
-                        setDataOptionsCategoryMedium([]);
-                      }
-                      setValue('tagIds', []);
-
-                      onChange(e);
-                    }}
-                  />
-                )}
-                rules={{ required: ORGANIZATION_REQUIRED_MESSAGE }}
-              />
-              <ErrorMessage
-                error={errors.organization?.message}
-                className="text-xs"
-              />
-            </div>
-          </div>
           {/* Work type */}
           <div className="flex justify-between items-start">
             <p className="w-fit font-medium text-[14px]">業務の種類</p>
@@ -1728,67 +1487,13 @@ const ActionsEventModal = ({
                   )}
                 />
               </div>
-              {(watch('organization') as OptionDropdownType)?.value &&
-                watch('largeCategory')?.value && (
-                  <div className="mb-2">
-                    <Controller
-                      control={control}
-                      name={'mediumCategory'}
-                      render={({ field: { value, onChange } }) => {
-                        return (
-                          <Dropdown
-                            className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
-                            classNameTextData="!text-xs"
-                            classNameOption="!text-xs"
-                            options={[
-                              {
-                                label: NO_OPTION_CATEGORY,
-                                value: NO_OPTION_CATEGORY,
-                              },
-                              ...dataOptionsCategoryMedium.filter(
-                                (category) =>
-                                  category.label !== NO_OPTION_CATEGORY,
-                              ),
-                            ]}
-                            selectedOption={[
-                              {
-                                label: NO_OPTION_CATEGORY,
-                                value: NO_OPTION_CATEGORY,
-                              },
-                              ...dataOptionsCategoryMedium.filter(
-                                (category) =>
-                                  category.label !== NO_OPTION_CATEGORY,
-                              ),
-                            ].find(
-                              (element) =>
-                                element.value ==
-                                (value as OptionDropdownType)?.value,
-                            )}
-                            placeholder={'中カテゴリ'}
-                            onChange={(e) => {
-                              if (e.value != watch('mediumCategory.value')) {
-                                setValue('smallCategory', {
-                                  label: '',
-                                  value: '',
-                                });
-                              }
-                              onChange(e);
-                            }}
-                            disabled={isDisabled}
-                          />
-                        );
-                      }}
-                    />
-                  </div>
-                )}
-
-              {(watch('organization') as OptionDropdownType)?.value &&
-                watch('mediumCategory')?.value && (
-                  <div className="mb-2">
-                    <Controller
-                      control={control}
-                      name={'smallCategory'}
-                      render={({ field: { value, onChange } }) => (
+              {watch('largeCategory')?.value && (
+                <div className="mb-2">
+                  <Controller
+                    control={control}
+                    name={'mediumCategory'}
+                    render={({ field: { value, onChange } }) => {
+                      return (
                         <Dropdown
                           className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
                           classNameTextData="!text-xs"
@@ -1798,7 +1503,7 @@ const ActionsEventModal = ({
                               label: NO_OPTION_CATEGORY,
                               value: NO_OPTION_CATEGORY,
                             },
-                            ...dataOptionsCategorySmall.filter(
+                            ...dataOptionsCategoryMedium.filter(
                               (category) =>
                                 category.label !== NO_OPTION_CATEGORY,
                             ),
@@ -1808,7 +1513,7 @@ const ActionsEventModal = ({
                               label: NO_OPTION_CATEGORY,
                               value: NO_OPTION_CATEGORY,
                             },
-                            ...dataOptionsCategorySmall.filter(
+                            ...dataOptionsCategoryMedium.filter(
                               (category) =>
                                 category.label !== NO_OPTION_CATEGORY,
                             ),
@@ -1817,16 +1522,66 @@ const ActionsEventModal = ({
                               element.value ==
                               (value as OptionDropdownType)?.value,
                           )}
-                          placeholder={'小カテゴリ'}
+                          placeholder={'中カテゴリ'}
                           onChange={(e) => {
+                            if (e.value != watch('mediumCategory.value')) {
+                              setValue('smallCategory', {
+                                label: '',
+                                value: '',
+                              });
+                            }
                             onChange(e);
                           }}
                           disabled={isDisabled}
                         />
-                      )}
-                    />
-                  </div>
-                )}
+                      );
+                    }}
+                  />
+                </div>
+              )}
+
+              {watch('mediumCategory')?.value && (
+                <div className="mb-2">
+                  <Controller
+                    control={control}
+                    name={'smallCategory'}
+                    render={({ field: { value, onChange } }) => (
+                      <Dropdown
+                        className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
+                        classNameTextData="!text-xs"
+                        classNameOption="!text-xs"
+                        options={[
+                          {
+                            label: NO_OPTION_CATEGORY,
+                            value: NO_OPTION_CATEGORY,
+                          },
+                          ...dataOptionsCategorySmall.filter(
+                            (category) => category.label !== NO_OPTION_CATEGORY,
+                          ),
+                        ]}
+                        selectedOption={[
+                          {
+                            label: NO_OPTION_CATEGORY,
+                            value: NO_OPTION_CATEGORY,
+                          },
+                          ...dataOptionsCategorySmall.filter(
+                            (category) => category.label !== NO_OPTION_CATEGORY,
+                          ),
+                        ].find(
+                          (element) =>
+                            element.value ==
+                            (value as OptionDropdownType)?.value,
+                        )}
+                        placeholder={'小カテゴリ'}
+                        onChange={(e) => {
+                          onChange(e);
+                        }}
+                        disabled={isDisabled}
+                      />
+                    )}
+                  />
+                </div>
+              )}
             </div>
           </div>
           {/* Tag */}
@@ -1919,11 +1674,33 @@ const ActionsEventModal = ({
           {/* Address */}
           <div className="flex justify-between items-center">
             <p className="w-fit font-medium text-[14px]">場所</p>
-            <div>
-              <TextArea
-                register={register('address')}
-                className="h-[50px] !w-[513px] text-xs !border-[1px] !border-[#77858F]"
-                disabled={isDisabled}
+            <div className="w-[513px]">
+              <Controller
+                control={control}
+                name={'location'}
+                render={({ field: { value, onChange } }) => (
+                  <Dropdown
+                    className="h-8 !py-1 text-xs max-w-[513px] !border-[1px] !border-[#77858F] rounded-md"
+                    classNameTextData="!text-xs"
+                    classNameOption="!text-xs w-[513px]"
+                    classNameError="!text-xs"
+                    placeholder="選択してください"
+                    disabled={isDisabled}
+                    options={dataOptionsEventLocation}
+                    selectedOption={dataOptionsEventLocation.find(
+                      (element) =>
+                        element.value == (value as OptionDropdownType)?.value,
+                    )}
+                    onChange={(e) => {
+                      onChange(e);
+                    }}
+                  />
+                )}
+                rules={{ required: ORGANIZATION_REQUIRED_MESSAGE }}
+              />
+              <ErrorMessage
+                error={errors.location?.message}
+                className="text-xs"
               />
             </div>
           </div>

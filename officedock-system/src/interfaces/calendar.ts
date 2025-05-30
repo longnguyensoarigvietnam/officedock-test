@@ -1,6 +1,7 @@
 import { Tags } from './tag';
 import { Organizations } from './organization';
 import { OptionDropdownType } from './common';
+import { LocationEventType } from './location';
 import { EventCalendarType, EventParticipantType } from '@constants/enums';
 
 export interface EventCalendarDetail {
@@ -13,7 +14,7 @@ export interface EventCalendarDetail {
   isMyEvent?: boolean;
   participants?: EventParticipant[];
   resourceIds?: string[];
-  address?: string;
+  location?: LocationEventType;
   largeColor?: string;
   isStart?: boolean;
   planStartDate?: string;
@@ -38,13 +39,12 @@ export interface EventFormData {
   tagIds?: OptionDropdownType[];
   participantIds?: number[];
   selectOrganizations?: number[];
-  address?: string;
+  location?: OptionDropdownType;
   memo?: string;
   type?: OptionDropdownType;
   largeCategory?: OptionDropdownType;
   mediumCategory?: OptionDropdownType;
   smallCategory?: OptionDropdownType;
-  organization?: OptionDropdownType;
   repeatType?: OptionDropdownType | null;
   repeatInterval?: OptionDropdownType | null;
   weekDay?: OptionDropdownType | null;
@@ -65,14 +65,13 @@ export interface EventEditFormData {
   participants?: EventParticipant[];
   participantIds?: number[];
   selectOrganizations?: number[];
-  address?: string;
+  location?: OptionDropdownType;
   memo?: string;
   type?: string | OptionDropdownType;
   largeCategory?: OptionDropdownType;
   mediumCategory?: OptionDropdownType;
   smallCategory?: OptionDropdownType;
   categories?: { id: string; name: string; type: string }[];
-  organization?: OptionDropdownType | Organizations;
   createdAt?: Date;
   repeatType?: OptionDropdownType;
   repeatInterval?: OptionDropdownType;
@@ -89,7 +88,7 @@ export interface EventRequest {
   isAllDay?: boolean;
   tagIds?: number[];
   participantIds?: number[];
-  address?: string;
+  locationId?: string;
   memo?: string;
   type?: string;
   sendToChat?: boolean;
@@ -101,7 +100,6 @@ export interface EventRequest {
         type: string;
       }[]
     | null;
-  organizationId?: number | null;
   selectOrganizations?: number[];
   repeatType?: string | null;
   repeatInterval?: number | null;
@@ -121,6 +119,7 @@ export interface CreationDataEventCalendar {
     superior: { id: number; name: string } | null;
     tags: { id: number; name: string }[];
   }[];
+  eventLocations: LocationEventType[];
 }
 
 export interface EventWorkCategory {
@@ -158,7 +157,7 @@ export interface EventCalendarProps {
   isMySchedule?: boolean;
   isStart: boolean;
   participants?: EventParticipant[];
-  address?: string;
+  location?: LocationEventType;
   categories?: {
     name: string;
     type: string;
@@ -201,13 +200,13 @@ export interface CalendarPopoverInfo {
   date: Date;
   events: Array<{
     eventId: string;
-    repeatScheduleId: string
+    repeatScheduleId: string;
     title: string;
     start?: Date;
     end?: Date;
     type?: EventCalendarType;
     participants?: EventParticipant[];
-    address?: string;
+    location?: LocationEventType;
     allDay?: boolean;
   }>;
   left?: number;

@@ -1555,15 +1555,12 @@ const ChatDetail = ({
       isAllDay: data.isAllDay || false,
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
-      address: data.address || '',
+      locationId: data.location ? String(data.location?.value) : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
       message: actionsEventMessage,
       categoryIds: newWorkCategories,
-      organizationId: data.organization
-        ? Number((data.organization as OptionDropdownType).value)
-        : null,
     });
   };
 
@@ -1858,7 +1855,7 @@ const ChatDetail = ({
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
-        refetchChatRoomDetail()
+        refetchChatRoomDetail();
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);

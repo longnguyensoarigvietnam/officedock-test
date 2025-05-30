@@ -592,7 +592,8 @@ const ScheduleTeamBoard = () => {
                 isStart: event.isStart,
                 type: event.type,
                 participants: event.participants || [],
-                address: event.address || '',
+                locationId: data.location ? String(data.location?.value) : '',
+
                 largeColor: largeColor,
                 planStartDate: `${event.startDate}`,
                 planEndDate: event.endDate
@@ -684,7 +685,7 @@ const ScheduleTeamBoard = () => {
                 id: `${event.id}`,
                 type: event.type,
                 participants: event.participants || [],
-                address: event.address || '',
+                locationId: data.location ? String(data.location?.value) : '',
                 largeColor: largeColor,
                 resourceIds: [
                   ...(event.participants?.map(

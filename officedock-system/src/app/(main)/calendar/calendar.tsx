@@ -66,7 +66,6 @@ import {
   EventRequest,
 } from '@interfaces/calendar';
 import { OptionDropdownType } from '@interfaces/common';
-import { Organizations } from '@interfaces/organization';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -970,7 +969,7 @@ const EventCalendar = () => {
                     end: adjustedEndISOString,
                     type: event.type,
                     participants: event.participants || [],
-                    address: event.address || '',
+                    location: event.location || '',
                   });
                 }
               } else {
@@ -981,7 +980,7 @@ const EventCalendar = () => {
                   end: adjustedEndISOString,
                   type: event.type,
                   participants: event.participants || [],
-                  address: event.address || '',
+                  location: event.location || '',
                 });
               }
             }
@@ -1198,7 +1197,7 @@ const EventCalendar = () => {
                   eventId: event.id,
                   type: EventCalendarType.SCHEDULE,
                   participants: event.participants || [],
-                  address: event.address || '',
+                  location: event.location || '',
                   resourceIds: [
                     ...(event.participants
                       ?.filter(
@@ -1855,14 +1854,11 @@ const EventCalendar = () => {
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
       selectOrganizations: data.selectOrganizations || [],
-      address: data.address || '',
+      locationId: data.location ? String(data.location.value) : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
       categoryIds: newWorkCategories,
-      organizationId: data.organization
-        ? Number(data.organization.value)
-        : null,
       repeatType:
         data.repeatType && data.repeatType.value
           ? String(data.repeatType.value)
@@ -2067,15 +2063,12 @@ const EventCalendar = () => {
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
       selectOrganizations: data.selectOrganizations || [],
-      address: data.address || '',
+      locationId: data.location ? String(data.location.value) : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
       message: actionsEventMessage,
       categoryIds: newWorkCategories,
-      organizationId: data.organization
-        ? Number((data.organization as OptionDropdownType).value)
-        : null,
       repeatType:
         data.repeatType && data.repeatType.value
           ? String(data.repeatType.value)
@@ -3137,10 +3130,6 @@ const EventCalendar = () => {
               endTime: convertToTimeString(`${data.endDate}`),
               startDate: new Date(`${data.startDate}`),
               startTime: convertToTimeString(`${data.startDate}`),
-              organization: {
-                label: (data.organization as Organizations).name as string,
-                value: (data.organization as Organizations).id as number,
-              },
             });
             setOpenCreateEventModal(false);
             setOpenConfirmDeleteEventModal(true);
