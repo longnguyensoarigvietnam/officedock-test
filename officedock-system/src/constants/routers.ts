@@ -341,6 +341,10 @@ export const pageRouters = {
     name: 'メンバー一覧',
     href: `/member`,
   },
+  LOCATION_MANAGEMENT: {
+    name: 'カレンダー設定',
+    href: `/location`,
+  },
 };
 
 // For the API routers
@@ -484,7 +488,8 @@ export const apiRouters = {
   MANAGE_SKILL_MAPS: '/manage-skill-maps/',
   SKILL_MAPS_COMMENT: (id: string) => `/skill-maps/${id}/comments`,
   SKILL_MAPS_LEVEL_UP: (id: string) => `/skill-maps/${id}/level-up`,
-  SAVE_SKILL_MAPS_LEVEL_UP_DRAFT: (id: string) => `/skill-maps/${id}/skill-map-level/`,
+  SAVE_SKILL_MAPS_LEVEL_UP_DRAFT: (id: string) =>
+    `/skill-maps/${id}/skill-map-level/`,
 
   // SUBMIT LEVELS
   SUBMIT_LEVELS_LIST: '/submit-levels/',
@@ -530,4 +535,8 @@ export const apiRouters = {
   ORGANIZATION_CATEGORY_HIERARCHY_DETAIL: (id: number) =>
     `/organization-category-hierarchies/${id}/`,
   ORGANIZATION_CATEGORY_HIERARCHY_LIST: '/organization-category-hierarchies/',
+
+  // LOCATION
+  LOCATION_LIST: '/event-locations/',
+  LOCATION_DETAIL: (uuid: string) => `/event-locations/${uuid}/`,
 };

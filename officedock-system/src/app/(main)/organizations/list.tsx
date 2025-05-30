@@ -313,7 +313,7 @@ const ListOrganizations = () => {
             PermissionsSystem.ORGANIZATION_ADD,
           ) && (
             <Button
-              className="w-[100px] !p-0"
+              className="w-[100px] !p-0 "
               onClick={() => {
                 const hasEmptyOrganization = dataOrganizations.some(
                   (org) => org.name.trim() === '',

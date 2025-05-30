@@ -582,7 +582,6 @@ const StatisticBoard = () => {
           />
         </>
       )}
-
       {/* Task list */}
       <TaskListStatistic
         startDate={startDate}
