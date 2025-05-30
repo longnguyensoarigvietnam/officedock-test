@@ -15,6 +15,7 @@ from calendars.constants import (
     CalendarTypes,
 )
 from calendars.models import Schedule
+from calendars.serializers import EventLocationSerializer
 from chat.constants import WebSocketEventType
 from skills.models import StatisticCategory, Skill, SkillMapSkillLevel
 from organizations.serializers import (
@@ -327,19 +328,20 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         Get creation data for Schedule
         """
         users = request.user.company.users.order_by("created_at").all()
-        organizations = request.user.company.organizations.order_by(
-            "-created_at"
-        )
-
+        calendar_org = request.user.company.get_calendar_organization()
+        event_locations = request.user.company.event_locations.order_by(
+            "created_at"
+        ).all()
         tags = (
             request.user.company.tags.filter(
                 is_hidden=False,
-                organizations__in=organizations,
+                organizations=calendar_org,
             )
             .order_by("created_at")
             .all()
             .distinct()
         )
+        # FIXME: Get list calendar category here
 
         data = {
             "members": CreationDataUserWithOrganizationSerializer(
@@ -347,9 +349,10 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             ).data,
             "tags": BaseTagSerializer(tags, many=True).data,
             "types": [item.value for item in ScheduleTypes],
-            "organizations": CreationDataOrganizationWithTagSerializer(
-                organizations, many=True
+            "event_locations": EventLocationSerializer(
+                event_locations, many=True
             ).data,
+            "categories": [],
         }
 
         return self.response_ok(data)
