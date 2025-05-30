@@ -26,7 +26,13 @@ class Schedule(BaseModel):
         through="TagsSchedules",
         related_name="schedules",
     )
-    address = models.CharField(max_length=255, null=True, blank=True)
+    location = models.ForeignKey(
+        "calendars.EventLocation",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="schedules",
+    )
     memo = models.TextField(null=True, blank=True)
     participants = models.ManyToManyField(
         "users.User",

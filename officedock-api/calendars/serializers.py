@@ -1,11 +1,8 @@
-from datetime import datetime
-
 from django.db.models import Q
 from rest_framework import serializers
 
 from base.messages import ERROR_MESSAGES
 from calendars.models import EventLocation, Schedule, RepeatSchedule
-from common.constants import BASE_DATETIME_FORMAT
 from common.serializers import CreationDataUserSerializer
 from common.utils import get_common_categories
 from organizations.models import Organization
@@ -50,6 +47,43 @@ class RepeatScheduleSerializer(serializers.ModelSerializer):
         ]
 
 
+class EventLocationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for event location
+    """
+
+    uuid = serializers.UUIDField(required=False, allow_null=True)
+
+    class Meta:
+        model = EventLocation
+        fields = [
+            "id",
+            "uuid",
+            "name",
+        ]
+
+    def validate(self, attrs):
+        """
+        Handle validate unique name in company
+        """
+        instance = self.instance
+        request = self.context.get("request")
+        company = request.user.company if not instance else instance.company
+        name = attrs.get("name")
+
+        queryset = EventLocation.objects.filter(company=company, name=name)
+
+        if instance:
+            queryset = queryset.exclude(id=instance.id)
+
+        if queryset.exists():
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["unique_event_location_name"]}
+            )
+
+        return attrs
+
+
 class ScheduleSerializer(serializers.ModelSerializer):
     """
     Serializer for Schedule model
@@ -84,6 +118,12 @@ class ScheduleSerializer(serializers.ModelSerializer):
         queryset=Organization.objects.all(),
         write_only=True,
     )
+    location_id = serializers.PrimaryKeyRelatedField(
+        source="location",
+        queryset=EventLocation.objects.all(),
+        write_only=True,
+    )
+    location = EventLocationSerializer(read_only=True)
     start_date = serializers.DateTimeField(allow_null=True, required=False)
     end_date = serializers.DateTimeField(allow_null=True, required=False)
     repeat_type = serializers.ChoiceField(
@@ -120,7 +160,8 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "tag_ids",
             "participants",
             "participant_ids",
-            "address",
+            "location",
+            "location_id",
             "memo",
             "type",
             "send_to_chat",
@@ -191,15 +232,9 @@ class ScheduleSerializer(serializers.ModelSerializer):
         ):
             start_date = request.query_params.get("start_date")
             end_date = request.query_params.get("end_date")
-            start_date = datetime.strptime(
-                start_date, BASE_DATETIME_FORMAT
-            ).date()
-            end_date = datetime.strptime(end_date, BASE_DATETIME_FORMAT).date()
             repeat_schedules = obj.repeat_schedules.filter(
-                Q(
-                    Q(plan_start_date__date__gte=start_date)
-                    & Q(plan_end_date__date__lte=end_date)
-                )
+                Q(plan_start_date__lte=end_date)
+                & Q(plan_end_date__gte=start_date)
             ).all()
         else:
             repeat_schedules = obj.repeat_schedules.all()
@@ -216,7 +251,6 @@ class BaseScheduleSerializer(ScheduleSerializer):
     event_type = serializers.SerializerMethodField()
     is_my_schedule = serializers.SerializerMethodField()
     categories = serializers.SerializerMethodField()
-    repeat_schedules = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Schedule
@@ -226,7 +260,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "start_date",
             "end_date",
             "is_all_day",
-            "address",
+            "location",
             "type",
             "is_my_schedule",
             "participants",
@@ -430,7 +464,7 @@ class ScheduleDetailSerializer(ScheduleSerializer):
             "start_date",
             "end_date",
             "is_all_day",
-            "address",
+            "location",
             "type",
             "participants",
             "is_start",
@@ -470,40 +504,3 @@ class ScheduleDetailSerializer(ScheduleSerializer):
             repeat_schedule = obj.repeat_schedules.filter(id=repeat_id).first()
             return RepeatScheduleSerializer(repeat_schedule).data
         return None
-
-
-class EventLocationSerializer(serializers.ModelSerializer):
-    """
-    Serializer for event location
-    """
-
-    uuid = serializers.UUIDField(required=False, allow_null=True)
-
-    class Meta:
-        model = EventLocation
-        fields = [
-            "id",
-            "uuid",
-            "name",
-        ]
-
-    def validate(self, attrs):
-        """
-        Handle validate unique name in company
-        """
-        instance = self.instance
-        request = self.context.get("request")
-        company = request.user.company if not instance else instance.company
-        name = attrs.get("name")
-
-        queryset = EventLocation.objects.filter(company=company, name=name)
-
-        if instance:
-            queryset = queryset.exclude(id=instance.id)
-
-        if queryset.exists():
-            raise serializers.ValidationError(
-                {"detail": ERROR_MESSAGES["unique_event_location_name"]}
-            )
-
-        return attrs

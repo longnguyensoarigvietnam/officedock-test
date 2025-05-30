@@ -5,22 +5,38 @@ import uuid
 from django.db import migrations, models
 
 
-class Migration(migrations.Migration):
+def seed_data_repeat_schedules(apps, schema_editor):
+    """
+    Move start date and end date from schedule to repeat schedule
+    """
+    Schedule = apps.get_model("calendars", "Schedule")
+    RepeatSchedule = apps.get_model("calendars", "RepeatSchedule")
+    for schedule in Schedule.objects.all():
+        schedule.recurring = {
+            "month": None,
+            "week_day": None,
+            "month_day": None,
+            "repeat_type": "ONCE",
+            "plan_end_date": schedule.end_date.isoformat(),
+            "plan_start_date": schedule.start_date.isoformat(),
+            "repeat_interval": None,
+        }
+        schedule.save()
+        RepeatSchedule.objects.create(
+            schedule=schedule,
+            company=schedule.company,
+            plan_start_date=schedule.start_date,
+            plan_end_date=schedule.end_date,
+        )
 
+
+class Migration(migrations.Migration):
     dependencies = [
         ("calendars", "0005_schedule_select_organizations"),
         ("companies", "0001_initial"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name="schedule",
-            name="end_date",
-        ),
-        migrations.RemoveField(
-            model_name="schedule",
-            name="start_date",
-        ),
         migrations.AddField(
             model_name="schedule",
             name="recurring",
@@ -64,5 +80,16 @@ class Migration(migrations.Migration):
             options={
                 "abstract": False,
             },
+        ),
+        migrations.RunPython(
+            seed_data_repeat_schedules, migrations.RunPython.noop
+        ),
+        migrations.RemoveField(
+            model_name="schedule",
+            name="end_date",
+        ),
+        migrations.RemoveField(
+            model_name="schedule",
+            name="start_date",
         ),
     ]
