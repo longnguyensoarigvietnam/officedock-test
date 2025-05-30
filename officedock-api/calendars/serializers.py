@@ -5,7 +5,6 @@ from base.messages import ERROR_MESSAGES
 from calendars.models import EventLocation, Schedule, RepeatSchedule
 from common.serializers import CreationDataUserSerializer
 from common.utils import get_common_categories
-from organizations.models import Organization
 from organizations.serializers import OrganizationSerializer
 from skills.models import StatisticCategory
 from tags.models import Tag
@@ -113,11 +112,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
         write_only=True, required=False, allow_blank=True
     )
     organization = OrganizationSerializer(read_only=True)
-    organization_id = serializers.PrimaryKeyRelatedField(
-        source="organization",
-        queryset=Organization.objects.all(),
-        write_only=True,
-    )
     location_id = serializers.PrimaryKeyRelatedField(
         source="location",
         queryset=EventLocation.objects.all(),
@@ -150,7 +144,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "organization",
-            "organization_id",
             "start_date",
             "end_date",
             "is_all_day",

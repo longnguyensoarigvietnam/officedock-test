@@ -122,7 +122,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 "month_day": month_day,
                 "month": month,
             }
-
+        # Set default calendar organization
+        serializer_data["organization"] = company.get_calendar_organization()
         schedule = serializer.save(company=company, creator_id=user.id)
 
         if participants is not None:
