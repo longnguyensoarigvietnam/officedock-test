@@ -181,7 +181,7 @@ const EventInfoModal = memo(
           <div className="flex items-center gap-3 mt-3">
             <p className="flex-none text-[14px]">場所</p>
             <p className="bg-[#EBF1F7] rounded-[4px] px-[5px] py-[6px] truncate max-w-[305px] text-[14px]">
-              {dataEvent?.address || `${NO_SETTING}`}
+              {dataEvent?.location?.value || `${NO_SETTING}`}
             </p>
           </div>
           {dataEvent &&

@@ -189,7 +189,8 @@ export const EventListModal = ({
                     {checkShowUserAvatar(event.type, event.participants) &&
                       showUserAvatars(event.participants || [])}
                     <div className="mb-2">
-                      <div className={`font-semibold max-w-[200px] min-h-4 truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>
+                      <div
+                        className={`font-semibold max-w-[200px] min-h-4 truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>
                         {event.title || ''}
                       </div>
                       <div className="flex gap-1">
@@ -236,7 +237,7 @@ export const EventListModal = ({
                             )}
                         </div>
                         <p className="text-[11px] truncate max-w-[100px]">
-                          {event.address}
+                          {event.location?.name}
                         </p>
                       </div>
                     </div>

@@ -349,15 +349,12 @@ const BookmarkList = ({
       isAllDay: data.isAllDay || false,
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
-      address: data.address || '',
+      locationId: data.location ? String(data.location?.value) : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
       message: actionsEventMessage,
       categoryIds: newWorkCategories,
-      organizationId: data.organization
-        ? Number((data.organization as OptionDropdownType).value)
-        : null,
     });
   };
 
