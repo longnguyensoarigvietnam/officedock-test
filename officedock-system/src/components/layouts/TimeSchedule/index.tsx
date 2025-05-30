@@ -2658,7 +2658,7 @@ const TimeSchedule = memo(
         isAllDay: data.isAllDay || false,
         tagIds: newTagIds,
         participantIds: data.participantIds || [],
-        locationId: data.location ? String(data.location?.value) : '',
+        locationId: data.location ? String((data.location as OptionDropdownType)?.value) : '',
         memo: data.memo || '',
         type: newType,
         sendToChat,

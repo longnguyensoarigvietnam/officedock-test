@@ -963,7 +963,8 @@ const EventCalendar = () => {
               ) {
                 if (event.allDay) {
                   filterEvents.push({
-                    id: `${event.id}`,
+                    eventId: `${event.eventId}`,
+                    repeatScheduleId: `${event.id}`,
                     title: event.title,
                     start: event.start,
                     end: adjustedEndISOString,
@@ -974,7 +975,8 @@ const EventCalendar = () => {
                 }
               } else {
                 filterEvents.push({
-                  id: `${event.id}`,
+                  eventId: `${event.eventId}`,
+                  repeatScheduleId: `${event.id}`,
                   title: event.title,
                   start: event.start,
                   end: adjustedEndISOString,
@@ -1064,6 +1066,7 @@ const EventCalendar = () => {
             participants: event.participants || [],
             address: event.address || '',
             allDay: event.allDay,
+            location: event.location || '',
           });
         }
       }
@@ -1854,7 +1857,7 @@ const EventCalendar = () => {
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
       selectOrganizations: data.selectOrganizations || [],
-      locationId: data.location ? String(data.location.value) : '',
+      locationId: data.location ? String((data.location as OptionDropdownType)?.value) : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
@@ -2063,7 +2066,7 @@ const EventCalendar = () => {
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
       selectOrganizations: data.selectOrganizations || [],
-      locationId: data.location ? String(data.location.value) : '',
+      locationId: data.location ? String((data.location as OptionDropdownType).value) : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
@@ -3072,6 +3075,16 @@ const EventCalendar = () => {
               action: ActionsEvent.EDIT,
             });
             setActionEventClick(ActionsEvent.EDIT);
+            setOpenCreateEventModal(true);
+            setOpenEventInfoModal(false);
+            setOpenConfirmEditEventModal(false);
+          }}
+          onCopy={(data) => {
+            handleSetEventParam({
+              id: `${data.id}`,
+              action: ActionsEvent.COPY,
+            });
+            setActionEventClick(ActionsEvent.COPY);
             setOpenCreateEventModal(true);
             setOpenEventInfoModal(false);
             setOpenConfirmEditEventModal(false);

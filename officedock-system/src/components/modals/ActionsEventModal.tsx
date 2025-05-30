@@ -13,7 +13,6 @@ import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import TextArea from '@components/common/TextArea';
 import ImageRound from '@components/common/ImageRound';
 import ErrorMessage from '@components/common/ErrorMessage';
-import InputSearch from '@components/common/InputSearch';
 import Checkbox from '@components/common/Checkbox';
 import Drawer from '@components/common/Drawers';
 
@@ -24,6 +23,7 @@ import {
   EventFormData,
   EventParticipant,
 } from '@interfaces/calendar';
+import { LocationEventType } from '@interfaces/location';
 import { User } from '@interfaces/user';
 
 import {
@@ -66,6 +66,7 @@ import {
 } from '@utils';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
 export type ActionsEventModalProps = {
@@ -86,7 +87,7 @@ export type ActionsEventModalProps = {
 const ActionsEventModal = ({
   open,
   dataEvent,
-  action = 'CREATE',
+  action = ActionsEvent.CREATE,
   authenticatedUser,
   onClose,
   onEdit,
@@ -112,9 +113,9 @@ const ActionsEventModal = ({
   const [dataOptionsCategoryLarge, _setDataOptionsCategoryLarge] = useState<
     OptionDropdownType[]
   >([]);
-  const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
-    OptionDropdownType[]
-  >([]);
+  const [dataOptionsTags, setDataOptionsTags] = useState<OptionDropdownType[]>(
+    [],
+  );
   const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
     EventParticipant[]
   >([]);
@@ -129,7 +130,6 @@ const ActionsEventModal = ({
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
   const currentDate = new Date();
   const optionTimeInput = generateTimeOptionsAsObjects();
-
   const {
     register,
     control,
@@ -145,6 +145,21 @@ const ActionsEventModal = ({
     defaultValues: {
       startDate: defaultStartDate,
       endDate: defaultStartDate,
+    },
+  });
+
+  const { isFetchedCreationDataStatistic } = useCreationDataStatistic({
+    is_calendar_page: true,
+
+    onSuccess: (data) => {
+      setDataOptionsOrganizations([
+        ...data.organizations.map((org) => ({
+          value: org.id || '',
+          label: org.name,
+          userIds: org.users ? org.users.map((user) => user.id) : [],
+          iconColor: org.iconColor || '#0068B6',
+        })),
+      ]);
     },
   });
 
@@ -165,7 +180,7 @@ const ActionsEventModal = ({
         value: '',
       },
       memo: '',
-      location: undefined,
+      location: { label: '', value: '' },
       isAllDay: false,
       tagIds: dataEvent ? [] : [{ label: '', value: '' }],
       repeatType: {
@@ -254,6 +269,14 @@ const ActionsEventModal = ({
           : newSmallCategory),
         (value.memo = dataEvent.memo),
         (value.isAllDay = dataEvent.isAllDay),
+        (value.location = dataEvent.location
+          ? backToEditing
+            ? dataEvent.location
+            : {
+                label: (dataEvent.location as LocationEventType).name,
+                value: (dataEvent.location as LocationEventType).id as number,
+              }
+          : { label: '', value: '' }),
         (value.type = {
           label: backToEditing
             ? ((dataEvent.type as OptionDropdownType).label as string)
@@ -416,6 +439,12 @@ const ActionsEventModal = ({
           value: org,
         })),
       );
+      setDataOptionsTags(
+        creationDataEventCalendar.tags.map((org) => ({
+          label: org.name as string,
+          value: org.id || '',
+        })),
+      );
       setDataOptionsEventLocation(
         creationDataEventCalendar.eventLocations.map((org) => ({
           label: org.name,
@@ -427,10 +456,25 @@ const ActionsEventModal = ({
         fullName: org.fullName,
         type: EventParticipantType.USER,
       }));
-      setDataOptionsParticipants([...eventMembers]);
+      if (isFetchedCreationDataStatistic) {
+        const eventOrganizations = dataOptionsOrganizations
+          ? dataOptionsOrganizations.map((org) => ({
+              id: org.value,
+              fullName: org.label,
+              type: EventParticipantType.ORGANIZATION,
+              userIds: org.userIds,
+              color: org.iconColor,
+            }))
+          : [];
+        setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [creationDataEventCalendar]);
+  }, [
+    creationDataEventCalendar,
+    dataOptionsOrganizations,
+    isFetchedCreationDataStatistic,
+  ]);
 
   const [isCall, setIsCall] = useState<boolean>(false);
 
@@ -439,7 +483,7 @@ const ActionsEventModal = ({
   ) => {
     if (isCall) return;
     setIsCall(true);
-    if (action === ActionsEvent.CREATE) {
+    if (action === ActionsEvent.CREATE || action === ActionsEvent.COPY) {
       onSubmit && onSubmit(data as EventFormData);
     }
     if (action === ActionsEvent.EDIT) {
@@ -465,7 +509,7 @@ const ActionsEventModal = ({
   };
 
   const handleCloseModal = () => {
-    setDataOptionsTagIds([]);
+    setDataOptionsTags([]);
     setIsCall(false);
     onClose();
   };
@@ -668,20 +712,28 @@ const ActionsEventModal = ({
           </div>
           <div className="flex gap-2 items-center">
             {session?.user.permissions &&
-              ((action === ActionsEvent.EDIT &&
-                hasPermissionInArray(
-                  session?.user.permissions,
-                  PermissionsSystem.CALENDAR_UPDATE,
-                )) ||
-                (action === ActionsEvent.CREATE &&
-                  hasPermissionInArray(
-                    session?.user.permissions,
-                    PermissionsSystem.CALENDAR_ADD,
-                  ))) && (
+              action === ActionsEvent.EDIT &&
+              hasPermissionInArray(
+                session?.user.permissions,
+                PermissionsSystem.CALENDAR_UPDATE,
+              ) && (
                 <Button
                   type="submit"
                   className="w-[82px] h-[36px] !text-[12px] !px-2">
-                  {action === ActionsEvent.EDIT ? '予定を編集' : '予定を作成'}
+                  予定を編集
+                </Button>
+              )}
+            {session?.user.permissions &&
+              (action === ActionsEvent.CREATE ||
+                action === ActionsEvent.COPY) &&
+              hasPermissionInArray(
+                session?.user.permissions,
+                PermissionsSystem.CALENDAR_ADD,
+              ) && (
+                <Button
+                  type="submit"
+                  className="w-[82px] h-[36px] !text-[12px] !px-2">
+                  {action == ActionsEvent.CREATE ? '予定を作成' : '予定を複製'}
                 </Button>
               )}
             <Button
@@ -959,7 +1011,7 @@ const ActionsEventModal = ({
                   </div>
                 )}
 
-              <div className="flex gap-2 items-center !w-full">
+              <div className="flex gap-2 items-center !w-full mt-2">
                 {watch('repeatType') &&
                   (watch('repeatType') as OptionDropdownType)?.label ==
                     TaskRepetitiveType.ONCE && (
@@ -1335,7 +1387,7 @@ const ActionsEventModal = ({
                 (watch('repeatType') as OptionDropdownType)?.label ==
                   TaskRepetitiveType.ONCE
               ) && (
-                <div className="!w-full flex justify-between">
+                <div className="!w-full flex justify-between mt-2">
                   <div className="flex gap-2">
                     <div className="w-[72px] z-[20] relative">
                       <Input
@@ -1594,7 +1646,7 @@ const ActionsEventModal = ({
                     className="!h-[34px]"
                     disabled={isDisabled}
                     valueClassName="!border-[1px] !border-[#77858F]"
-                    options={dataOptionsTagIds}
+                    options={dataOptionsTags}
                     optionClassName="!border-[1px] !border-[#77858F] max-w-[513px]"
                     customLabel={
                       (watch('tagIds') ?? []).filter((tag) => tag.value)
@@ -1680,7 +1732,7 @@ const ActionsEventModal = ({
                 name={'location'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-8 !py-1 text-xs max-w-[513px] !border-[1px] !border-[#77858F] rounded-md"
+                    className="h-8 !py-1 text-xs max-w-[513px] !border-[1px] !border-[#77858F] !rounded-md"
                     classNameTextData="!text-xs"
                     classNameOption="!text-xs w-[513px]"
                     classNameError="!text-xs"
@@ -1711,16 +1763,23 @@ const ActionsEventModal = ({
                 メンバーを追加
               </p>
               <div>
-                <InputSearch
-                  placeholder="名前を検索"
-                  className="!w-[513px]"
-                  inputClassName="!py-2 !border-[1px] !border-[#77858F]"
-                  onChange={(e) => setSearchName(e.target.value)}
-                  disabled={isDisabled}
-                />
+                <div className="relative">
+                  <Input
+                    placeholder="名前を検索"
+                    className={`!w-[513px] h-[34px] pl-9 focus:!shadow-none !border-[1px] !border-[#77858F] !rounded-md`}
+                    onChange={(e) => setSearchName(e.target.value)}
+                    disabled={isDisabled}
+                  />
+                  <ImageRound
+                    src="/icons/search.svg"
+                    name="Search input icon"
+                    className={`absolute w-4 h-4 ml-3 top-[11px]`}
+                  />
+                </div>
+
                 <div className="flex justify-between items-center my-3">
                   <p
-                    className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
+                    className="text-[#77858F] font-medium text-[11px] hover:cursor-pointer"
                     onClick={() => {
                       const updatedParticipantList =
                         dataOptionsParticipants?.filter((member) =>

@@ -72,6 +72,7 @@ import {
   isMoreThanThirtyMinutes,
   isTodaySchedule,
 } from '@utils/date';
+import { OptionDropdownType } from '@interfaces/common';
 
 const ScheduleTeamBoard = () => {
   // Context
@@ -592,7 +593,7 @@ const ScheduleTeamBoard = () => {
                 isStart: event.isStart,
                 type: event.type,
                 participants: event.participants || [],
-                locationId: data.location ? String(data.location?.value) : '',
+                locationId: data.location ? String((data.location as OptionDropdownType)?.value) : '',
 
                 largeColor: largeColor,
                 planStartDate: `${event.startDate}`,
@@ -685,7 +686,7 @@ const ScheduleTeamBoard = () => {
                 id: `${event.id}`,
                 type: event.type,
                 participants: event.participants || [],
-                locationId: data.location ? String(data.location?.value) : '',
+                locationId: data.location ? String((data.location as OptionDropdownType)?.value) : '',
                 largeColor: largeColor,
                 resourceIds: [
                   ...(event.participants?.map(

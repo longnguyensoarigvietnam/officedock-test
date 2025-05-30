@@ -481,7 +481,7 @@ export const MessageDetail = ({
                       ) : (
                         <div>
                           {messageDetail.type === MessageType.MESSAGE && (
-                            <div className="break-words">
+                            <div className="break-all">
                               {processMessage(
                                 messageDetail.message,
                                 messageDetail.mentions || [],
@@ -526,7 +526,7 @@ export const MessageDetail = ({
                                                 </div>
                                               )}
                                               <p
-                                                className={`text-[#0068B6] font-medium text-[14px] break-words break-all max-w-full ${
+                                                className={`text-[#0068B6] font-medium text-[14px] break-all max-w-full ${
                                                   file.fileType.includes(
                                                     'image',
                                                   )

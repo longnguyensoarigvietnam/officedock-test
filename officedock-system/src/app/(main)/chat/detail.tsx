@@ -407,14 +407,12 @@ const ChatDetail = ({
           }
         }
         setIsLoadingOlder(false);
+        setInitialLoad(false);
       },
       onError: ({ response }: AxiosError) => {
         if (response?.status === ServerStatusCode.NOT_FOUND) {
           handleRemoveChatRoomParam();
         }
-      },
-      onSettled: () => {
-        setInitialLoad(false);
       },
     },
   );
@@ -693,6 +691,20 @@ const ChatDetail = ({
     content: message,
     onUpdate: ({ editor }: { editor: Editor }) => {
       setMessage(editor.getHTML());
+    },
+    editorProps: {
+      handlePaste(_view, event) {
+        const clipboardData = event.clipboardData;
+        const text = clipboardData?.getData('text/plain');
+
+        if (text) {
+          // Insert only plain text, no formatting
+          editor && editor.commands.insertContent(text);
+          return true; // prevent default paste
+        }
+
+        return false; // let Tiptap handle it if no plain text
+      },
     },
   });
 
@@ -1555,7 +1567,9 @@ const ChatDetail = ({
       isAllDay: data.isAllDay || false,
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
-      locationId: data.location ? String(data.location?.value) : '',
+      locationId: data.location
+        ? String((data.location as OptionDropdownType)?.value)
+        : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,

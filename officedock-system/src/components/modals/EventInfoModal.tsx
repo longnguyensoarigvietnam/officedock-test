@@ -11,6 +11,7 @@ import { NO_SETTING } from '@constants';
 import { EventCalendarType, PermissionsSystem } from '@constants/enums';
 
 import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
+import { LocationEventType } from '@interfaces/location';
 
 import {
   formatHoursAndMinutesForDateTime,
@@ -30,6 +31,7 @@ export type EventInfoModalProps = {
   ) => boolean;
   onClose: () => void;
   onEdit?: (values: EventEditFormData) => void;
+  onCopy?: (values: EventEditFormData) => void;
   onDelete?: (values: EventEditFormData) => void;
   selectedScheduleUserIds: string;
 };
@@ -41,6 +43,7 @@ const EventInfoModal = memo(
     dataEvent,
     checkShowUserAvatar,
     onEdit,
+    onCopy,
     onDelete,
     onClose,
     selectedScheduleUserIds,
@@ -97,13 +100,32 @@ const EventInfoModal = memo(
                 ) && (
                   <DynamicTooltip content={'予定を編集'} placement="top">
                     <div
-                      className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer"
+                      className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer opacity-25 hover:opacity-100"
                       onClick={() => {
                         onEdit && onEdit(dataEvent as EventEditFormData);
                       }}>
                       <ImageRound
                         name="Edit"
                         src={'/icons/edit-task.svg'}
+                        className="w-[15px] h-[15px] hover:cursor-pointer"
+                      />
+                    </div>
+                  </DynamicTooltip>
+                )}
+              {session?.user.permissions &&
+                hasPermissionInArray(
+                  session?.user.permissions,
+                  PermissionsSystem.CALENDAR_ADD,
+                ) && (
+                  <DynamicTooltip content={'予定を複製'} placement="top">
+                    <div
+                      className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer opacity-25 hover:opacity-100"
+                      onClick={() => {
+                        onCopy && onCopy(dataEvent as EventEditFormData);
+                      }}>
+                      <ImageRound
+                        name="Copy"
+                        src={'/icons/copy-event.svg'}
                         className="w-[16px] h-[16px] hover:cursor-pointer"
                       />
                     </div>
@@ -116,7 +138,7 @@ const EventInfoModal = memo(
                 ) && (
                   <DynamicTooltip content={'予定を削除'} placement="top">
                     <div
-                      className="hover:bg-[#EBF1F4] px-2 py-1.5 hover:rounded-full hover:cursor-pointer"
+                      className="hover:bg-[#EBF1F4] px-2 py-1.5 hover:rounded-full hover:cursor-pointer opacity-25 hover:opacity-100"
                       onClick={() => {
                         onDelete && onDelete(dataEvent as EventEditFormData);
                       }}>
@@ -181,7 +203,7 @@ const EventInfoModal = memo(
           <div className="flex items-center gap-3 mt-3">
             <p className="flex-none text-[14px]">場所</p>
             <p className="bg-[#EBF1F7] rounded-[4px] px-[5px] py-[6px] truncate max-w-[305px] text-[14px]">
-              {dataEvent?.location?.value || `${NO_SETTING}`}
+              {(dataEvent?.location as LocationEventType)?.name || `${NO_SETTING}`}
             </p>
           </div>
           {dataEvent &&

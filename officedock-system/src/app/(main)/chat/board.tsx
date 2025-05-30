@@ -398,6 +398,7 @@ const BoardChat = () => {
           searchChatMsg={searchChatMsg}
           dashboardMembers={dashboardMembers}
           dashboardMemberList={dashboardMemberList}
+          creationDataTaskData={creationDataTaskData}
           setSearchChatMsg={setSearchChatMsg}
         />
       )}
