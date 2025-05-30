@@ -933,18 +933,11 @@ const Header = ({ className }: HeaderProps) => {
                       className={`flex w-full px-3 py-2 items-center rounded-full focus:outline-none
                 ${open ? 'text-primary ' : ''}
                 `}>
-                      {authenticatedUser ? (
+                      {authenticatedUser && (
                         <CustomUserAvatar
                           avatarUrl={authenticatedUser?.avatar || ''}
                           avatarColor={authenticatedUser?.avatarColor || ''}
                           size={40}
-                        />
-                      ) : (
-                        <ImageRound
-                          className="w-10 h-10 hover:opacity-70"
-                          src="/images/avatar-default.svg"
-                          border="full"
-                          name="Avatar user"
                         />
                       )}
                     </PopoverButton>
@@ -967,6 +960,7 @@ const Header = ({ className }: HeaderProps) => {
                                 key={item.name}
                                 className={`flex px-4 py-2 hover:bg-[#7D8A94] ${pathname == item.href && 'bg-[#7D8A94]'}`}
                                 onClick={() => {
+                                  if (item.disable) return;
                                   if (isChatFilesUploading) {
                                     setPendingPageChange(item.href as string);
                                     setShowWarningChatUploadingModal(true);

@@ -1546,3 +1546,25 @@ export const convertDurationToTotalMinutes = (duration: string) => {
   const [hours, minutes, seconds] = duration.split(':').map(Number);
   return hours * 60 + minutes + seconds / 60; // Convert to total minutes
 };
+
+// Check whether current time within event
+export const isCurrentTimeWithinEvent = (event: { start: Date | null; end: Date | null }): boolean => {
+  const now = new Date();
+
+  const eventStart = event.start;
+  const eventEnd = event.end;
+
+  if (!(eventStart instanceof Date) || isNaN(eventStart.getTime())) {
+    return false;
+  }
+
+  const startTime = eventStart.getTime();
+  const endTime =
+    eventEnd instanceof Date && !isNaN(eventEnd.getTime())
+      ? eventEnd.getTime()
+      : startTime; // fallback to startTime if end is invalid
+
+  const nowTime = now.getTime();
+
+  return nowTime >= startTime && nowTime <= endTime;
+}

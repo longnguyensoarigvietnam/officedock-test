@@ -485,6 +485,11 @@
   position: relative;
   top: -9px;
 }
+.calendar-custom.week .event-has-now-indicator, .calendar-custom.day .event-has-now-indicator {
+  border: 1px solid #0068B6 !important;
+  height: 100% !important;
+  border-radius: 6px;
+}
 /* RESOURCE */
 .calendar-custom
   .fc-resourceTimeGridDay-view

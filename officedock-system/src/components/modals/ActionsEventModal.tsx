@@ -33,6 +33,7 @@ import {
   EventParticipantType,
   EventWorkCategory,
   PermissionsSystem,
+  TaskRepetitiveType,
   ViewOptions,
 } from '@constants/enums';
 import {
@@ -41,7 +42,16 @@ import {
   ORGANIZATION_REQUIRED_MESSAGE,
   START_DATE_WRONG_SELECTED,
 } from '@constants/message';
-import { NO_OPTION_CATEGORY, NO_OPTIONS, UNREGISTERED } from '@constants';
+import {
+  DAY_OPTIONS,
+  MONTH_OPTIONS,
+  NO_OPTION_CATEGORY,
+  NO_OPTIONS,
+  REPEAT_INTERVAL_OPTIONS,
+  TASK_REPETITIVE_OPTIONS,
+  UNREGISTERED,
+  WEEKDAY_OPTIONS,
+} from '@constants';
 
 import {
   addHoursToDate,
@@ -58,6 +68,7 @@ import {
 } from '@utils';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
@@ -265,6 +276,18 @@ const ActionsEventModal = ({
               )?.id || '',
           }
         : undefined,
+      repeatType: {
+        label: TaskRepetitiveType.ONCE,
+        value: String(
+          TASK_REPETITIVE_OPTIONS.find(
+            (option) => option.label == TaskRepetitiveType.ONCE,
+          )?.value,
+        ),
+      },
+      repeatInterval: undefined,
+      month: undefined,
+      monthDay: undefined,
+      weekDay: undefined,
     };
     if (authenticatedUser) {
       value.organization = authenticatedUser?.organizations.find(
@@ -404,6 +427,77 @@ const ActionsEventModal = ({
           : dataEvent.endDate
             ? convertToTimeString(`${dataEvent.endDate}`)
             : null);
+      value.repeatInterval = dataEvent.repeatInterval
+        ? typeof dataEvent.repeatInterval == 'object'
+          ? {
+              label: `${dataEvent.repeatInterval.label}`,
+              value: dataEvent.repeatInterval.value,
+            }
+          : {
+              label: `${dataEvent.repeatInterval}`,
+              value: dataEvent.repeatInterval as string,
+            }
+        : undefined;
+      value.repeatType = dataEvent.repeatType
+        ? typeof dataEvent.repeatType == 'object'
+          ? {
+              label:
+                TASK_REPETITIVE_OPTIONS.find(
+                  (option) =>
+                    option.value ==
+                    (dataEvent.repeatType as OptionDropdownType).value,
+                )?.label || '',
+              value: dataEvent.repeatType.value,
+            }
+          : {
+              label:
+                TASK_REPETITIVE_OPTIONS.find(
+                  (option) =>
+                    option.value == (dataEvent.repeatType as unknown as string),
+                )?.label || '',
+              value: dataEvent.repeatType,
+            }
+        : undefined;
+      value.month = dataEvent.month
+        ? typeof dataEvent.month == 'object'
+          ? {
+              label: `${dataEvent.month.label}`,
+              value: dataEvent.month.value,
+            }
+          : {
+              label: `${dataEvent.month}`,
+              value: dataEvent.month,
+            }
+        : undefined;
+
+      value.monthDay = dataEvent.monthDay
+        ? typeof dataEvent.monthDay == 'object'
+          ? {
+              label: `${dataEvent.monthDay.label}`,
+              value: dataEvent.monthDay.value,
+            }
+          : {
+              label: `${dataEvent.monthDay}`,
+              value: dataEvent.monthDay,
+            }
+        : undefined;
+      value.weekDay = dataEvent.weekDay
+        ? typeof dataEvent.weekDay == 'object'
+          ? dataEvent.weekDay.value != undefined &&
+            dataEvent.weekDay.value != null
+            ? {
+                label: `${dataEvent.weekDay.label}`,
+                value: dataEvent.weekDay.value,
+              }
+            : undefined
+          : dataEvent.weekDay != undefined && dataEvent.weekDay != null
+            ? {
+                label: `${dataEvent.weekDay}`,
+                value: dataEvent.weekDay,
+              }
+            : undefined
+        : undefined;
+
       if (dataEvent.startDate) {
         setMinDatePlan(new Date(dataEvent.startDate));
       }
@@ -803,261 +897,722 @@ const ActionsEventModal = ({
             <div className="w-full max-w-[116px] font-medium text-[14px] mt-2">
               実施予定日時
             </div>
-            <div className="flex flex-col">
-              <div className="w-full max-w-[424px] flex gap-1 items-start">
-                <div
-                  className={`${watch('isAllDay') ? 'w-[140px]' : 'max-w-[220px]'}`}>
-                  <div className="flex gap-1">
-                    <div className="w-[140px]">
-                      <Controller
-                        control={control}
-                        name="startDate"
-                        rules={{
-                          required: START_DATE_WRONG_SELECTED,
-                        }}
-                        render={({ field: { value, onChange } }) => (
-                          <DatePickerCustom
-                            className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
-                            selected={value ? new Date(value) : null}
-                            disabled={isDisabled}
-                            onChange={(e) => {
-                              onChange(e);
-                              if (e !== null) {
-                                const newDate = new Date(e.getTime());
-                                setMinDatePlan(newDate);
-                              } else {
-                                setMinDatePlan(null);
-                              }
-                              if (!getValues('startTime')) {
-                                setValue(
-                                  'startTime',
-                                  convertToTimeString(`${currentDate}`),
-                                );
-                              }
-                              setValue('endDate', null);
-                              setValue('endTime', '');
-                            }}
-                          />
-                        )}
+            <div className="flex flex-col w-full">
+              {watch('repeatType') &&
+                (watch('repeatType') as OptionDropdownType)?.label ==
+                  TaskRepetitiveType.ONCE && (
+                  <div className="flex">
+                    <div className="w-full max-w-[424px] flex gap-1 items-start">
+                      <div
+                        className={`${watch('isAllDay') ? 'w-[140px]' : 'max-w-[220px]'}`}>
+                        <div className="flex gap-1">
+                          <div className="w-[140px]">
+                            <Controller
+                              control={control}
+                              name="startDate"
+                              rules={{
+                                required: START_DATE_WRONG_SELECTED,
+                              }}
+                              render={({ field: { value, onChange } }) => (
+                                <DatePickerCustom
+                                  className="h-[34px] !px-2 !pl-[30px] !border-[1px] !border-[#77858F] rounded-md !text-xs !pt-2 text-center"
+                                  selected={value ? new Date(value) : null}
+                                  disabled={isDisabled}
+                                  onChange={(e) => {
+                                    onChange(e);
+                                    if (e !== null) {
+                                      const newDate = new Date(e.getTime());
+                                      setMinDatePlan(newDate);
+                                    } else {
+                                      setMinDatePlan(null);
+                                    }
+                                    if (!getValues('startTime')) {
+                                      setValue(
+                                        'startTime',
+                                        convertToTimeString(`${currentDate}`),
+                                      );
+                                    }
+                                    setValue('endDate', null);
+                                    setValue('endTime', '');
+                                  }}
+                                />
+                              )}
+                            />
+                          </div>
+                          {watch('isAllDay') === false && (
+                            <div className="w-[72px] z-40">
+                              <Input
+                                isShowClockIcon={true}
+                                register={register('startTime', {
+                                  required:
+                                    watch('startDate') !== null ? true : false,
+                                  onChange: (e) => {
+                                    handleChange(e, 'startTime');
+                                    if (getValues('startDate') === null) {
+                                      setValue(
+                                        'startDate',
+                                        (() => {
+                                          const today: Date = new Date();
+                                          today.setHours(0, 0, 0, 0);
+                                          return today;
+                                        })(),
+                                      );
+                                      setValue('endDate', null);
+                                      setValue('endTime', '');
+                                      setMinDatePlan(new Date());
+                                    }
+                                  },
+                                  onBlur: () => {
+                                    if (time) {
+                                      setValue(
+                                        'startTime',
+                                        formatTimeInput(time),
+                                      );
+                                    }
+                                    setTime('');
+                                  },
+                                })}
+                                autoComplete="off"
+                                type="text"
+                                className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                                disabled={isDisabled}
+                                options={optionTimeInput}
+                                onChangeDropdown={(e) => {
+                                  setValue('startTime', e.label);
+                                  if (getValues('startDate') === null) {
+                                    setValue(
+                                      'startDate',
+                                      (() => {
+                                        const today: Date = new Date();
+                                        today.setHours(0, 0, 0, 0);
+                                        return today;
+                                      })(),
+                                    );
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <ErrorMessage
+                          error={errors.startDate?.message}
+                          className="mt-[5px] mb-[5px] text-xs"
+                        />
+                      </div>
+
+                      <div className="h-8 flex items-center">〜</div>
+                      <div
+                        className={`${watch('isAllDay') ? 'min-w-[140px]' : 'max-w-[220px]'}`}>
+                        <div className="flex gap-1">
+                          <div className="w-[140px]">
+                            <Controller
+                              control={control}
+                              name="endDate"
+                              rules={{
+                                required: watch('startDate')
+                                  ? END_DATE_REQUIRED_SELECTED
+                                  : false,
+                              }}
+                              render={({ field: { value, onChange } }) => (
+                                <DatePickerCustom
+                                  className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
+                                  selected={value ? new Date(value) : null}
+                                  disabled={isDisabled}
+                                  minDate={minDatePlan}
+                                  onChange={(e) => {
+                                    onChange(e);
+                                    if (!getValues('endTime')) {
+                                      setValue(
+                                        'endTime',
+                                        convertToTimeString(`${currentDate}`),
+                                      );
+                                    }
+                                  }}
+                                />
+                              )}
+                            />
+                          </div>
+                          {watch('isAllDay') === false && (
+                            <div className="w-[72px] z-40">
+                              <Input
+                                isShowClockIcon={true}
+                                register={register('endTime', {
+                                  required:
+                                    watch('endDate') !== null ? true : false,
+                                  validate: (value) => {
+                                    if (
+                                      watch('endDate')?.getTime() ===
+                                        watch('startDate')?.getTime() &&
+                                      watch('endDate') !== null
+                                    ) {
+                                      return (
+                                        (value &&
+                                          convertToMinutes(value) >
+                                            convertToMinutes(
+                                              watch('startTime') as string,
+                                            )) ||
+                                        END_DATE_WRONG_SELECTED
+                                      );
+                                    }
+                                    return true;
+                                  },
+                                  onChange: (e) => {
+                                    handleChange(e, 'endTime');
+                                    if (getValues('endDate') === null) {
+                                      if (getValues('startDate') !== null) {
+                                        setValue(
+                                          'endDate',
+                                          getValues('startDate'),
+                                        );
+                                      } else {
+                                        setValue(
+                                          'endDate',
+                                          (() => {
+                                            const today: Date = new Date();
+                                            today.setHours(0, 0, 0, 0);
+                                            return today;
+                                          })(),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  onBlur: (e) => {
+                                    if (time) {
+                                      setValue(
+                                        'endTime',
+                                        formatTimeInput(time),
+                                      );
+                                    }
+
+                                    if (
+                                      watch('endDate')?.getTime() ===
+                                        watch('startDate')?.getTime() &&
+                                      watch('endDate') !== null
+                                    ) {
+                                      if (
+                                        e.target.value &&
+                                        convertToMinutes(e.target.value) >
+                                          convertToMinutes(
+                                            watch('startTime') as string,
+                                          )
+                                      ) {
+                                        setError('endTime', {
+                                          message: '',
+                                        });
+                                      }
+                                    }
+                                    setTime('');
+                                  },
+                                })}
+                                type="text"
+                                className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                                disabled={isDisabled}
+                                options={optionTimeInput}
+                                onChangeDropdown={(e) => {
+                                  setValue('endTime', e.label);
+                                  if (getValues('endDate') === null) {
+                                    if (getValues('startDate') !== null) {
+                                      setValue(
+                                        'endDate',
+                                        getValues('startDate'),
+                                      );
+                                    } else {
+                                      setValue(
+                                        'endDate',
+                                        (() => {
+                                          const today: Date = new Date();
+                                          today.setHours(0, 0, 0, 0);
+                                          return today;
+                                        })(),
+                                      );
+                                    }
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <ErrorMessage
+                          error={
+                            errors.endDate?.message || errors.endTime?.message
+                          }
+                          className="mt-[5px] mb-[5px] text-xs"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      sz="sm"
+                      variant="outline"
+                      className="w-[48px] h-[34px] ml-auto hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                      type="button"
+                      name="Remove plan"
+                      onClick={() => {
+                        setValue('endDate', null);
+                        setValue('endTime', '');
+                        setValue('startDate', null);
+                        setValue('startTime', '');
+                      }}>
+                      削除
+                    </Button>
+                  </div>
+                )}
+
+              <div className="flex gap-2 items-center !w-full">
+                {watch('repeatType') &&
+                  (watch('repeatType') as OptionDropdownType)?.label ==
+                    TaskRepetitiveType.ONCE && (
+                    <div className="!w-[68px] mr-5">
+                      <Checkbox
+                        label="終日"
+                        onChange={(state) => setValue('isAllDay', state)}
+                        isChecked={defaultValues.isAllDay}
+                        disable={isDisabled}
                       />
                     </div>
-                    {watch('isAllDay') === false && (
-                      <div className="w-[72px] z-20">
-                        <Input
-                          isShowClockIcon={true}
-                          register={register('startTime', {
-                            required:
-                              watch('startDate') !== null ? true : false,
-                            onChange: (e) => {
-                              handleChange(e, 'startTime');
-                              if (getValues('startDate') === null) {
-                                setValue(
-                                  'startDate',
-                                  (() => {
-                                    const today: Date = new Date();
-                                    today.setHours(0, 0, 0, 0);
-                                    return today;
-                                  })(),
-                                );
-                                setValue('endDate', null);
-                                setValue('endTime', '');
-                                setMinDatePlan(new Date());
-                              }
-                            },
-                            onBlur: () => {
-                              if (time) {
-                                setValue('startTime', formatTimeInput(time));
-                              }
-                              setTime('');
-                            },
-                          })}
-                          autoComplete="off"
-                          type="text"
-                          className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                          disabled={isDisabled}
-                          options={optionTimeInput}
-                          onChangeDropdown={(e) => {
-                            setValue('startTime', e.label);
-                            if (getValues('startDate') === null) {
-                              setValue(
-                                'startDate',
-                                (() => {
-                                  const today: Date = new Date();
-                                  today.setHours(0, 0, 0, 0);
-                                  return today;
-                                })(),
-                              );
-                            }
+                  )}
+
+                <div className="w-full flex flex-col gap-3 items-start mb-[2.5px]">
+                  <div className="!w-full flex justify-between">
+                    <div className="flex gap-3">
+                      <div className="w-[140px] z-[30]">
+                        <Controller
+                          control={control}
+                          name={'repeatType'}
+                          render={({ field: { onChange } }) => {
+                            return (
+                              <Dropdown
+                                className="h-[34px] !py-1 text-xs !border-[#77858F]"
+                                classNameTextData="!text-xs"
+                                classNameOption="!text-xs"
+                                classNameError="!text-xs"
+                                labelOptionClass="!pr-0"
+                                disabled={isDisabled}
+                                options={TASK_REPETITIVE_OPTIONS}
+                                selectedOption={TASK_REPETITIVE_OPTIONS.find(
+                                  (element) =>
+                                    element.value ===
+                                    (watch('repeatType') as OptionDropdownType)
+                                      ?.value,
+                                )}
+                                onChange={(e) => {
+                                  onChange(e);
+                                  setValue('repeatInterval', undefined);
+                                  setValue('weekDay', undefined);
+                                  setValue('monthDay', undefined);
+                                  setValue('month', undefined);
+                                }}
+                              />
+                            );
                           }}
                         />
                       </div>
-                    )}
+                      {watch('repeatType') &&
+                        (watch('repeatType') as OptionDropdownType)?.label ==
+                          TaskRepetitiveType.DAILY && (
+                          <div className="flex gap-2 z-[30] items-center">
+                            <Controller
+                              control={control}
+                              name={'repeatInterval'}
+                              rules={{
+                                required: true,
+                              }}
+                              render={({ field: { onChange } }) => (
+                                <Dropdown
+                                  className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
+                                  classNameTextData="!text-xs"
+                                  classNameOption="!text-xs"
+                                  classNameError="!text-xs"
+                                  labelOptionClass="!pr-0"
+                                  disabled={isDisabled}
+                                  options={REPEAT_INTERVAL_OPTIONS}
+                                  selectedOption={REPEAT_INTERVAL_OPTIONS.find(
+                                    (element) =>
+                                      element.value ===
+                                      (
+                                        watch(
+                                          'repeatInterval',
+                                        ) as OptionDropdownType
+                                      )?.value,
+                                  )}
+                                  onChange={(e) => {
+                                    onChange(e);
+                                  }}
+                                />
+                              )}
+                            />
+                            <p className="text-sm font-normal whitespace-nowrap">
+                              日ごと
+                            </p>
+                            <ErrorMessage
+                              error={errors?.repeatInterval?.message}
+                              className="mt-[-10px] text-xs"
+                            />
+                          </div>
+                        )}
+                      {watch('repeatType') &&
+                        (watch('repeatType') as OptionDropdownType)?.label ==
+                          TaskRepetitiveType.WEEKLY && (
+                          <div className="flex gap-2 z-[30] items-center">
+                            <Controller
+                              control={control}
+                              name={'weekDay'}
+                              rules={{
+                                required: true,
+                              }}
+                              render={({ field: { onChange } }) => (
+                                <Dropdown
+                                  className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.weekDay ? '!border-[#77858F]' : '!border-error'}`}
+                                  classNameTextData="!text-xs"
+                                  classNameOption="!text-xs"
+                                  classNameError="!text-xs"
+                                  labelOptionClass="!pr-0"
+                                  disabled={isDisabled}
+                                  options={WEEKDAY_OPTIONS}
+                                  selectedOption={
+                                    (watch('weekDay') as OptionDropdownType)
+                                      ?.value != null &&
+                                    (watch('weekDay') as OptionDropdownType)
+                                      ?.value != undefined
+                                      ? WEEKDAY_OPTIONS.find(
+                                          (element) =>
+                                            element.value ===
+                                            (
+                                              watch(
+                                                'weekDay',
+                                              ) as OptionDropdownType
+                                            )?.value,
+                                        )
+                                      : undefined
+                                  }
+                                  onChange={(e) => {
+                                    onChange(e);
+                                  }}
+                                />
+                              )}
+                            />
+                            <p className="text-sm font-normal whitespace-nowrap">
+                              曜日
+                            </p>
+                            <Controller
+                              control={control}
+                              name={'repeatInterval'}
+                              rules={{
+                                required: true,
+                              }}
+                              render={({ field: { onChange } }) => (
+                                <Dropdown
+                                  className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
+                                  classNameTextData="!text-xs"
+                                  classNameOption="!text-xs"
+                                  classNameError="!text-xs"
+                                  labelOptionClass="!pr-0"
+                                  disabled={isDisabled}
+                                  options={REPEAT_INTERVAL_OPTIONS}
+                                  selectedOption={REPEAT_INTERVAL_OPTIONS.find(
+                                    (element) =>
+                                      element.value ===
+                                      (
+                                        watch(
+                                          'repeatInterval',
+                                        ) as OptionDropdownType
+                                      )?.value,
+                                  )}
+                                  onChange={(e) => {
+                                    onChange(e);
+                                  }}
+                                />
+                              )}
+                            />
+                            <p className="text-sm font-normal whitespace-nowrap">
+                              週間ごと
+                            </p>
+                          </div>
+                        )}
+                      {watch('repeatType') &&
+                        (watch('repeatType') as OptionDropdownType)?.label ==
+                          TaskRepetitiveType.MONTHLY && (
+                          <div className="flex gap-2 z-[30] items-center">
+                            <Controller
+                              control={control}
+                              name={'monthDay'}
+                              rules={{
+                                required: true,
+                              }}
+                              render={({ field: { onChange } }) => (
+                                <Dropdown
+                                  className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.monthDay ? '!border-[#77858F]' : '!border-error'}`}
+                                  classNameTextData="!text-xs"
+                                  classNameOption="!text-xs"
+                                  classNameError="!text-xs"
+                                  labelOptionClass="!pr-0"
+                                  disabled={isDisabled}
+                                  options={DAY_OPTIONS}
+                                  selectedOption={DAY_OPTIONS.find(
+                                    (element) =>
+                                      element.value ===
+                                      (watch('monthDay') as OptionDropdownType)
+                                        ?.value,
+                                  )}
+                                  onChange={(e) => {
+                                    onChange(e);
+                                  }}
+                                />
+                              )}
+                            />
+                            <p className="text-sm font-normal whitespace-nowrap">
+                              日
+                            </p>
+                            <Controller
+                              control={control}
+                              name={'repeatInterval'}
+                              rules={{
+                                required: true,
+                              }}
+                              render={({ field: { onChange } }) => (
+                                <Dropdown
+                                  className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
+                                  classNameTextData="!text-xs"
+                                  classNameOption="!text-xs"
+                                  classNameError="!text-xs"
+                                  labelOptionClass="!pr-0"
+                                  disabled={isDisabled}
+                                  options={REPEAT_INTERVAL_OPTIONS}
+                                  selectedOption={REPEAT_INTERVAL_OPTIONS.find(
+                                    (element) =>
+                                      element.value ===
+                                      (
+                                        watch(
+                                          'repeatInterval',
+                                        ) as OptionDropdownType
+                                      )?.value,
+                                  )}
+                                  onChange={(e) => {
+                                    onChange(e);
+                                  }}
+                                />
+                              )}
+                            />
+                            <p className="text-sm font-normal whitespace-nowrap">
+                              ヶ月ごと
+                            </p>
+                          </div>
+                        )}
+                      {watch('repeatType') &&
+                        (watch('repeatType') as OptionDropdownType)?.label ==
+                          TaskRepetitiveType.YEARLY && (
+                          <div className="flex gap-2 z-[30] items-center">
+                            <Controller
+                              control={control}
+                              name={'month'}
+                              rules={{
+                                required: true,
+                              }}
+                              render={({ field: { onChange } }) => (
+                                <Dropdown
+                                  className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.month ? '!border-[#77858F]' : '!border-error'}`}
+                                  classNameTextData="!text-xs"
+                                  classNameOption="!text-xs"
+                                  classNameError="!text-xs"
+                                  labelOptionClass="!pr-0"
+                                  disabled={isDisabled}
+                                  options={MONTH_OPTIONS}
+                                  selectedOption={MONTH_OPTIONS.find(
+                                    (element) =>
+                                      element.value ===
+                                      (watch('month') as OptionDropdownType)
+                                        ?.value,
+                                  )}
+                                  onChange={(e) => {
+                                    onChange(e);
+                                  }}
+                                />
+                              )}
+                            />
+                            <p className="text-sm font-normal whitespace-nowrap">
+                              月
+                            </p>
+                            <Controller
+                              control={control}
+                              name={'monthDay'}
+                              rules={{
+                                required: true,
+                              }}
+                              render={({ field: { onChange } }) => (
+                                <Dropdown
+                                  className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.monthDay ? '!border-[#77858F]' : '!border-error'}`}
+                                  classNameTextData="!text-xs"
+                                  classNameOption="!text-xs"
+                                  classNameError="!text-xs"
+                                  labelOptionClass="!pr-0"
+                                  disabled={isDisabled}
+                                  options={DAY_OPTIONS}
+                                  selectedOption={DAY_OPTIONS.find(
+                                    (element) =>
+                                      element.value ===
+                                      (watch('monthDay') as OptionDropdownType)
+                                        ?.value,
+                                  )}
+                                  onChange={(e) => {
+                                    onChange(e);
+                                  }}
+                                />
+                              )}
+                            />
+                            <p className="text-sm font-normal whitespace-nowrap">
+                              日
+                            </p>
+                            <Controller
+                              control={control}
+                              name={'repeatInterval'}
+                              rules={{
+                                required: true,
+                              }}
+                              render={({ field: { onChange } }) => (
+                                <Dropdown
+                                  className={`h-[34px] !w-[56px] !py-1 !pr-0 text-xs ${!errors?.repeatInterval ? '!border-[#77858F]' : '!border-error'}`}
+                                  classNameTextData="!text-xs"
+                                  classNameOption="!text-xs"
+                                  classNameError="!text-xs"
+                                  labelOptionClass="!pr-0"
+                                  disabled={isDisabled}
+                                  options={REPEAT_INTERVAL_OPTIONS}
+                                  selectedOption={REPEAT_INTERVAL_OPTIONS.find(
+                                    (element) =>
+                                      element.value ===
+                                      (
+                                        watch(
+                                          'repeatInterval',
+                                        ) as OptionDropdownType
+                                      )?.value,
+                                  )}
+                                  onChange={(e) => {
+                                    onChange(e);
+                                  }}
+                                />
+                              )}
+                            />
+                            <p className="text-sm font-normal whitespace-nowrap">
+                              年ごと
+                            </p>
+                          </div>
+                        )}
+                    </div>
+
+                    <div className="w-12">
+                      {!isDisabled &&
+                        watch('repeatType') &&
+                        (watch('repeatType') as OptionDropdownType)?.label !=
+                          TaskRepetitiveType.ONCE && (
+                          <Button
+                            sz="sm"
+                            variant="outline"
+                            className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                            type="button"
+                            name="Remove TagId"
+                            onClick={() => {
+                              setValue('repeatType', undefined);
+                              setValue('repeatInterval', undefined);
+                              setValue('weekDay', undefined);
+                              setValue('monthDay', undefined);
+                              setValue('month', undefined);
+                            }}>
+                            削除
+                          </Button>
+                        )}
+                    </div>
                   </div>
+
                   <ErrorMessage
-                    error={errors.startDate?.message}
-                    className="mt-[5px] mb-[5px] text-xs"
+                    error={errors?.endTime?.message}
+                    className="mt-[-10px] text-xs"
                   />
                 </div>
-
-                <div className="h-8 flex items-center">〜</div>
-                <div
-                  className={`${watch('isAllDay') ? 'min-w-[140px]' : 'max-w-[220px]'}`}>
-                  <div className="flex gap-1">
-                    <div className="w-[140px]">
-                      <Controller
-                        control={control}
-                        name="endDate"
-                        rules={{
-                          required: watch('startDate')
-                            ? END_DATE_REQUIRED_SELECTED
-                            : false,
+              </div>
+              {!(
+                watch('repeatType') &&
+                (watch('repeatType') as OptionDropdownType)?.label ==
+                  TaskRepetitiveType.ONCE
+              ) && (
+                <div className="!w-full flex justify-between">
+                  <div className="flex gap-2">
+                    <div className="w-[72px] z-[20] relative">
+                      <Input
+                        isShowClockIcon={true}
+                        autoFocus={false}
+                        disabled={isDisabled}
+                        type="text"
+                        options={optionTimeInput}
+                        register={register('startTime', {
+                          onChange: (e) => {
+                            handleChange(e, 'startTime');
+                          },
+                          onBlur: () => {
+                            if (time) {
+                              setValue('startTime', formatTimeInput(time));
+                            }
+                            setTime('');
+                          },
+                        })}
+                        className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                        onChangeDropdown={(e) => {
+                          setValue('startTime', e.label);
                         }}
-                        render={({ field: { value, onChange } }) => (
-                          <DatePickerCustom
-                            className="h-[34px] !border-[1px] !border-[#77858F] rounded-md !px-2  !pl-[30px] !text-xs !pt-2 text-center"
-                            selected={value ? new Date(value) : null}
-                            disabled={isDisabled}
-                            minDate={minDatePlan}
-                            onChange={(e) => {
-                              onChange(e);
-                              if (!getValues('endTime')) {
-                                setValue(
-                                  'endTime',
-                                  convertToTimeString(`${currentDate}`),
-                                );
-                              }
-                            }}
-                          />
-                        )}
                       />
                     </div>
-                    {watch('isAllDay') === false && (
-                      <div className="w-[72px] z-20">
-                        <Input
-                          isShowClockIcon={true}
-                          register={register('endTime', {
-                            required: watch('endDate') !== null ? true : false,
-                            validate: (value) => {
-                              if (
-                                watch('endDate')?.getTime() ===
-                                  watch('startDate')?.getTime() &&
-                                watch('endDate') !== null
-                              ) {
-                                return (
-                                  (value &&
-                                    convertToMinutes(value) >
-                                      convertToMinutes(
-                                        watch('startTime') as string,
-                                      )) ||
-                                  END_DATE_WRONG_SELECTED
-                                );
-                              }
-                              return true;
-                            },
-                            onChange: (e) => {
-                              handleChange(e, 'endTime');
-                              if (getValues('endDate') === null) {
-                                if (getValues('startDate') !== null) {
-                                  setValue('endDate', getValues('startDate'));
-                                } else {
-                                  setValue(
-                                    'endDate',
-                                    (() => {
-                                      const today: Date = new Date();
-                                      today.setHours(0, 0, 0, 0);
-                                      return today;
-                                    })(),
-                                  );
-                                }
-                              }
-                            },
-                            onBlur: (e) => {
-                              if (time) {
-                                setValue('endTime', formatTimeInput(time));
-                              }
-
-                              if (
-                                watch('endDate')?.getTime() ===
-                                  watch('startDate')?.getTime() &&
-                                watch('endDate') !== null
-                              ) {
-                                if (
-                                  e.target.value &&
-                                  convertToMinutes(e.target.value) >
-                                    convertToMinutes(
-                                      watch('startTime') as string,
-                                    )
-                                ) {
-                                  setError('endTime', {
-                                    message: '',
-                                  });
-                                }
-                              }
-                              setTime('');
-                            },
-                          })}
-                          type="text"
-                          className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                          disabled={isDisabled}
-                          options={optionTimeInput}
-                          onChangeDropdown={(e) => {
-                            setValue('endTime', e.label);
-                            if (getValues('endDate') === null) {
-                              if (getValues('startDate') !== null) {
-                                setValue('endDate', getValues('startDate'));
-                              } else {
-                                setValue(
-                                  'endDate',
-                                  (() => {
-                                    const today: Date = new Date();
-                                    today.setHours(0, 0, 0, 0);
-                                    return today;
-                                  })(),
-                                );
-                              }
+                    <div className="h-[34px] flex items-center">〜</div>
+                    <div className="w-[72px] z-[20] relative">
+                      <Input
+                        isShowClockIcon={true}
+                        autoFocus={false}
+                        disabled={isDisabled}
+                        type="text"
+                        options={optionTimeInput}
+                        register={register('endTime', {
+                          onChange: (e) => {
+                            handleChange(e, 'endTime');
+                          },
+                          onBlur: () => {
+                            if (time) {
+                              setValue('endTime', formatTimeInput(time));
                             }
-                          }}
-                        />
-                      </div>
+                            setTime('');
+                          },
+                          validate: (value) => {
+                            if (!watch('repeatType')) return true;
+                            return (
+                              convertToMinutes(String(value)) >
+                                convertToMinutes(`${watch('startTime')}`) ||
+                              END_DATE_WRONG_SELECTED
+                            );
+                          },
+                        })}
+                        className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
+                        onChangeDropdown={(e) => {
+                          setValue('endTime', e.label);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-[2.5px] w-12">
+                    {!isDisabled && (
+                      <Button
+                        sz="sm"
+                        variant="outline"
+                        className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                        type="button"
+                        name="Remove TagId"
+                        onClick={() => {
+                          setValue('startTime', '');
+                          setValue('endTime', '');
+                        }}>
+                        削除
+                      </Button>
                     )}
                   </div>
-                  <ErrorMessage
-                    error={errors.endDate?.message || errors.endTime?.message}
-                    className="mt-[5px] mb-[5px] text-xs"
-                  />
                 </div>
-              </div>
-              <div className="flex w-[150px]">
-                <Checkbox
-                  label="終日"
-                  onChange={(state) => setValue('isAllDay', state)}
-                  isChecked={defaultValues.isAllDay}
-                  disable={isDisabled}
-                />
-                <Button
-                  sz="sm"
-                  variant="outline"
-                  className="w-32 h-6 text-xs !px-1 !py-0"
-                  disabled={isDisabled}
-                  type="button">
-                  繰り返す
-                </Button>
-              </div>
+              )}
             </div>
-            <Button
-              sz="sm"
-              variant="outline"
-              className="w-[48px] h-[34px] ml-auto hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-              type="button"
-              name="Remove plan"
-              onClick={() => {
-                setValue('endDate', null);
-                setValue('endTime', '');
-                setValue('startDate', null);
-                setValue('startTime', '');
-              }}>
-              削除
-            </Button>
           </div>
           {/* Event type */}
           <div className="flex justify-between items-center">

@@ -2,11 +2,13 @@ import { UseMutateAsyncFunction } from 'react-query';
 import { useSession } from 'next-auth/react';
 import {
   Dispatch,
+  MutableRefObject,
   SetStateAction,
   useContext,
   useEffect,
   useState,
 } from 'react';
+import FullCalendar from '@fullcalendar/react';
 
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
@@ -22,8 +24,13 @@ import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
 
 import { EventParticipantType } from '@constants/enums';
 import { NO_DATA_AVAILABLE } from '@constants';
+import {
+  formatQueryEndDateForCalendar,
+  formatQueryStartDateForCalendar,
+} from '@utils/date';
 
 export type CalendarSidebarProps = {
+  calendarRef: MutableRefObject<FullCalendar | null>;
   selectedScheduleUserIds: string;
   selectedScheduleOrgIds: string;
   removeMyselfOption: boolean;
@@ -31,7 +38,7 @@ export type CalendarSidebarProps = {
   setShowSidebar: Dispatch<SetStateAction<boolean>>;
   setSearchName: Dispatch<SetStateAction<string>>;
   setSelectedScheduleUserIds: Dispatch<SetStateAction<string>>;
-  setSelectedScheduleOrgIds: Dispatch<SetStateAction<string>>
+  setSelectedScheduleOrgIds: Dispatch<SetStateAction<string>>;
   setRemoveMyselfOption: Dispatch<SetStateAction<boolean>>;
   setCurrentResources: Dispatch<
     SetStateAction<
@@ -57,8 +64,8 @@ export type CalendarSidebarProps = {
     {
       userId: string;
       keySearch: string;
-      startDate?: string;
-      endDate?: string;
+      startDate: string;
+      endDate: string;
       filterMyTask?: boolean;
       isYearView?: boolean;
       date?: Date;
@@ -71,6 +78,7 @@ export type CalendarSidebarProps = {
 };
 
 export const CalendarSidebar = ({
+  calendarRef,
   removeMyselfOption,
   selectedScheduleUserIds,
   selectedScheduleOrgIds,
@@ -383,14 +391,25 @@ export const CalendarSidebar = ({
             }
             setSelectedScheduleOrgIds(updatedOrgIds.join(','));
             setSelectedScheduleUserIds(updatedUserIds.join(','));
-            getEventCalendarByUsers({
-              userId:
-                `${updatedUserIds.join(',')}`.length > 0
-                  ? `${updatedUserIds.join(',')}`
-                  : ``,
-              keySearch: keySearch,
-            });
+            if (calendarRef.current) {
+              const calendarApi = calendarRef.current.getApi();
+              const startDateISOString = formatQueryStartDateForCalendar(
+                calendarApi.view.activeStart,
+              );
+              const endDateISOString = formatQueryEndDateForCalendar(
+                calendarApi.view.activeEnd,
+              );
 
+              getEventCalendarByUsers({
+                userId:
+                  `${updatedUserIds.join(',')}`.length > 0
+                    ? `${updatedUserIds.join(',')}`
+                    : ``,
+                startDate: startDateISOString,
+                endDate: endDateISOString,
+                keySearch: keySearch,
+              });
+            }
             setCurrentResources(() => {
               return updatedUserIds.map((userId) => {
                 return {

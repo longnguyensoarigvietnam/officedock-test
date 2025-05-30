@@ -20,6 +20,7 @@ export interface EventCalendarDetail {
   planEndDate?: string;
   scheduleId?: number | null;
   taskId?: number | null;
+  eventId?: string;
 }
 
 export interface EventCalendarDayRange {
@@ -44,6 +45,11 @@ export interface EventFormData {
   mediumCategory?: OptionDropdownType;
   smallCategory?: OptionDropdownType;
   organization?: OptionDropdownType;
+  repeatType?: OptionDropdownType | null;
+  repeatInterval?: OptionDropdownType | null;
+  weekDay?: OptionDropdownType | null;
+  monthDay?: OptionDropdownType | null;
+  month?: OptionDropdownType | null;
 }
 
 export interface EventEditFormData {
@@ -68,6 +74,11 @@ export interface EventEditFormData {
   categories?: { id: string; name: string; type: string }[];
   organization?: OptionDropdownType | Organizations;
   createdAt?: Date;
+  repeatType?: OptionDropdownType;
+  repeatInterval?: OptionDropdownType;
+  weekDay?: OptionDropdownType;
+  monthDay?: OptionDropdownType;
+  month?: OptionDropdownType;
 }
 
 export interface EventRequest {
@@ -92,6 +103,11 @@ export interface EventRequest {
     | null;
   organizationId?: number | null;
   selectOrganizations?: number[];
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
 }
 
 export interface CreationDataEventCalendar {
@@ -151,6 +167,13 @@ export interface EventCalendarProps {
   }[];
   taskId: number | null;
   scheduleId: number | null;
+  repeatSchedules?: {
+    id: number;
+    planEndDate: Date | null;
+    planStartDate: Date | null;
+    schedule: number;
+    uuid: string;
+  }[];
 }
 
 export interface TaskCalendarProps {
@@ -177,13 +200,13 @@ export interface EventWorkCategoryOption {
 export interface CalendarPopoverInfo {
   date: Date;
   events: Array<{
-    id: string;
+    eventId: string;
+    repeatScheduleId: string
     title: string;
     start?: Date;
     end?: Date;
     type?: EventCalendarType;
     participants?: EventParticipant[];
-    taskId?: string;
     address?: string;
     allDay?: boolean;
   }>;
