@@ -947,7 +947,7 @@ const DailyReportBoard = () => {
           <div
             className={`daily-custom text-left custom-statistic mt-[12px] ${isHasChild && '!mt-[19px] mb-[18px]'}`}>
             <div className="flex justify-between h-full relative  rounded-md gap-1">
-              <div className="">
+              <div className="w-full">
                 <SingleSelect
                   className="border-none h-6 text-xs min-w-[162px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
                   defaultValue={optionMedium.find(
@@ -1984,6 +1984,7 @@ const DailyReportBoard = () => {
                             .map((cell, cellIndex) => (
                               <td
                                 key={cell.id}
+                                style={{ width: '20%' }}
                                 className={`!pt-0 !pb-1 !pl-0 ${cellIndex !== 2 ? '!pr-0' : '!pr-[14px]'}`}>
                                 {flexRender(
                                   cell.column.columnDef.cell,

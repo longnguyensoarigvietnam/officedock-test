@@ -1,7 +1,8 @@
+import React, { MutableRefObject, useEffect, useState } from 'react';
+
 import ImageRound from '@components/common/ImageRound';
 import { DataActualDetail } from '@interfaces/statistic';
 import { formatTime24h } from '@utils/date';
-import React, { MutableRefObject, useState } from 'react';
 
 type Props = {
   popoverInfo: DataActualDetail | null;
@@ -17,6 +18,22 @@ const DetailActualItemDailyModal = ({
   deleteActualTask,
 }: Props) => {
   const [isShowAction, setIsShowAction] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [popoverRef, onClose]);
 
   return (
     <>

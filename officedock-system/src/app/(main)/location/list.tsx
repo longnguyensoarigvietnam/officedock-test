@@ -21,6 +21,7 @@ import { apiRouters } from '@constants/routers';
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_DUPLICATE_LOCATION,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -131,11 +132,11 @@ const ListLocation = () => {
         setDataLocation((prev) =>
           prev.filter((item) => item.uuid !== selectedLocationToDelete?.uuid),
         );
-        setOpenConfirmDeleteModal(false);
-
         showToast({
           description: SUCCESS_DELETE_MESSAGE,
         });
+        setOpenConfirmDeleteModal(false);
+
         setSelectedLocationToDelete(null);
       },
       onError: () => {
@@ -163,31 +164,47 @@ const ListLocation = () => {
   };
 
   // Handle blur Input
-
   const handleBlur = (uuid: string) => {
-    if (editText.trim() === '') {
+    const trimmedText = editText.trim();
+    if (trimmedText === '') {
       setErrors((prev) => ({ ...prev, [uuid]: true }));
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
       return;
+    }
+
+    // Check for duplicate names, skip the item being edited
+    const isDuplicate = dataLocation.some(
+      (item) => item.uuid !== uuid && item.name === trimmedText,
+    );
+
+    if (isDuplicate) {
+      showToast({
+        variant: 'error',
+        description: ERROR_DUPLICATE_LOCATION,
+      });
+      setErrors((prev) => ({ ...prev, [uuid]: true }));
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+      return;
+    }
+    setDataLocation((prevItems) =>
+      prevItems.map((item) =>
+        item.uuid === uuid ? { ...item, name: editText } : item,
+      ),
+    );
+    if (isCreating) {
+      createEventLocation({
+        name: editText,
+        uuid: editingId || '',
+      });
     } else {
-      setDataLocation((prevItems) =>
-        prevItems.map((item) =>
-          item.uuid === uuid ? { ...item, name: editText } : item,
-        ),
-      );
-      if (isCreating) {
-        createEventLocation({
-          name: editText,
-          uuid: editingId || '',
-        });
-      } else {
-        editEventLocation({
-          name: editText,
-          uuid: editingId || '',
-        });
-      }
+      editEventLocation({
+        name: editText,
+        uuid: editingId || '',
+      });
     }
     setEditingId(null);
     setEditText('');
@@ -198,7 +215,6 @@ const ListLocation = () => {
   };
 
   // Handle click edit item
-
   const handleEditClick = (uuid: string, currentText: string) => {
     if (isCreating || isEditing) return;
     setEditingId(uuid);
@@ -261,7 +277,7 @@ const ListLocation = () => {
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
                             onBlur={() => handleBlur(item?.uuid as string)}
-                            placeholder="チーム名を入力"
+                            placeholder="場所名を入力"
                             className={`w-full px-3.5 ${errors[item.uuid] && '!border-red-500'} py-2.5 leading-5.5 placeholder-gray-300  rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 !border-[1px] !border-[#77858F] !text-sm !h-[34px]`}
                           />
                         </div>
@@ -288,7 +304,6 @@ const ListLocation = () => {
                             className={`w-3.5 h-3.5 hover:cursor-pointer`}
                             onClick={() => {
                               setIsEditing(true);
-
                               handleEditClick(item?.uuid as string, item.name);
                             }}
                           />
@@ -305,8 +320,27 @@ const ListLocation = () => {
                           name="Delete"
                           src={'/icons/delete-gray.svg'}
                           className="w-[13px] h-[15px] hover:cursor-pointer"
+                          onMouseDown={(e) => {
+                            if (isCreating) {
+                              e.preventDefault();
+                            }
+                          }}
                           onClick={() => {
-                            if (isCreating || isEditing) return;
+                            if (isCreating && editingId === item.uuid) {
+                              setDataLocation((prev) =>
+                                prev.filter((data) => data.uuid !== item.uuid),
+                              );
+                              setEditingId(null);
+                              setEditText('');
+                              setIsCreating(false);
+                              setIsEditing(false);
+                              return;
+                            }
+                            if (
+                              (isCreating && editingId !== item.uuid) ||
+                              isEditing
+                            )
+                              return;
                             setSelectedLocationToDelete(item);
                             setOpenConfirmDeleteModal(true);
                           }}

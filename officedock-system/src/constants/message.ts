@@ -88,6 +88,7 @@ export const ERROR_NOT_FOUND_EVENT = '予定が見つかりません。';
 
 export const ERROR_SAVE_ZOOM = '拡大縮小のエラーが出ました。';
 export const ERROR_EXTEND_COLUMN = 'タブの拡大縮小のエラーが出ました。';
+export const ERROR_DUPLICATE_LOCATION = 'この場所名はすでに存在しています';
 
 // Toast message
 export const SUCCESS_TITLE_MESSAGE = '成功';
