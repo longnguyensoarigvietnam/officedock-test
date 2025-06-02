@@ -814,3 +814,31 @@ export function timeStringToHours(timeStr: string): number {
 
   return hours;
 }
+// Convert time to second
+export function timeStringToSeconds(time: string): number {
+  const [hh, mm, ss] = time.split(':').map(Number);
+  return hh * 3600 + mm * 60 + ss;
+}
+// Convert second to string
+export function secondsToTimeString(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds]
+    .map((v) => String(v).padStart(2, '0'))
+    .join(':');
+}
+
+// Calculate total
+export function calculateTotalMinutes(
+  startedAt: string,
+  pausedAt: string,
+): number {
+  const startDate = new Date(startedAt);
+  const pauseDate = new Date(pausedAt);
+
+  const diffMs = pauseDate.getTime() - startDate.getTime(); // milliseconds
+  const diffMinutes = Math.floor(diffMs / (1000 * 60)); // convert to minutes
+
+  return diffMinutes;
+}

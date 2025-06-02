@@ -18,7 +18,7 @@ export interface UserListStatisticType {
     id: number;
     fullName: string;
     avatarColor: string;
-    avatar: string
+    avatar: string;
   };
 }
 
@@ -68,12 +68,53 @@ export interface dataStatisticResponse {
   totalDuration: string;
   organizationCategories: OrganizationCategories;
 }
+export interface dataStatisticResponsePDF {
+  categories: {
+    categoryName: string;
+    duration: string;
+    percent: number;
+    categoryColor: string;
+    id?: string;
+  }[];
+  remark: {
+    date: string | null;
+    remark: string;
+    isSubmit: boolean;
+    isConfirmed: boolean;
+    user: {
+      avatar: string | null;
+      avatarColor: string;
+      fullName: string;
+      id: number;
+      organizations: {
+        icon: string | null;
+        iconColor: string;
+        id: number;
+        name: string;
+        uuid: string;
+      };
+    };
+    organizationName: string;
+  };
+  totalDuration: string;
+  subOrganization: {
+    duration: string;
+    percent: number;
+  };
+  taskDurations: {
+    id: number;
+    pausedAt: string;
+    startedAt: string;
+    title: string;
+  }[];
+}
 
 export interface dataTotalCategory {
   color: string;
   categoryName: string;
   duration: string;
   percent: number;
+  id?: string;
 }
 export interface dataTaskDaily {
   id: string;
@@ -231,11 +272,11 @@ export interface CreationStatisticType {
   isMain: boolean;
   statisticCategories: LargeCategory[];
   users?: {
-    id: number,
-    fullName: string,
-    avatarColor: string
-  }[],
-  iconColor?: string
+    id: number;
+    fullName: string;
+    avatarColor: string;
+  }[];
+  iconColor?: string;
 }
 export interface DataResponseStatisticCreationType {
   organizations: CreationStatisticType[];
@@ -248,7 +289,7 @@ export interface DataResponseStatisticCreationTeamType {
     id: number;
     fullName: string;
     avatarColor: string;
-    avatar: string
+    avatar: string;
   }[];
 }
 export interface DataTaskModalStatisticType {

@@ -12,6 +12,7 @@ import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 interface PieChartProps {
+  id?: string;
   data: number[];
   labels: string[];
   colors?: string[];
@@ -22,6 +23,7 @@ interface PieChartProps {
 }
 
 const PieChart = ({
+  id,
   data,
   labels,
   colors,
@@ -123,7 +125,7 @@ const PieChart = ({
   };
 
   return (
-    <div className={`w-96 h-96 my-0 mx-auto ${className}`}>
+    <div id={id} className={`w-96 h-96 my-0 mx-auto ${className}`}>
       <Pie data={chartData} options={options} />
     </div>
   );

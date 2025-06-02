@@ -472,6 +472,7 @@ export const apiRouters = {
   // DAILY REPORT
   DATA_DAILY_STATISTIC: '/stat-data/daily-report/',
   DATA_REMARK_DAILY: '/users/daily-report/',
+  DATA_DAILY_STATISTIC_PDF: '/stat-data/daily-report-pdf/',
 
   // SKILL
   SKILL_LIST: '/skills/',
