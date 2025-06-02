@@ -11,11 +11,15 @@ import { createPortal } from 'react-dom';
 
 import ImageRound from '@components/common/ImageRound';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import { apiRouters } from '@constants/routers';
 import { REACTION_LIST_SMALL } from '@constants';
+
 import { ChatMessageResponse } from '@interfaces/chat';
+
 import api from '@base/api';
 
 type Props = {
@@ -157,29 +161,33 @@ const DetailReactionChat = ({
         {reactionSummary.map((reaction) => {
           const iconSrc = getReactionSrc(reaction.icon);
           return (
-            <div
+            <DynamicTooltip
+              content={reaction.hasReacted ? 'リアクションを外す' : '同じリアクションをする'}
               key={reaction.icon}
-              onClick={() => {
-                if (reaction.hasReacted) {
-                  handleRemoveReactionClick(reaction.icon);
+              placement="top">
+              <div
+                onClick={() => {
+                  if (reaction.hasReacted) {
+                    handleRemoveReactionClick(reaction.icon);
 
-                  moveReactionIcon(reaction.icon);
-                } else {
-                  handleReactionClick(reaction.icon);
+                    moveReactionIcon(reaction.icon);
+                  } else {
+                    handleReactionClick(reaction.icon);
 
-                  reactionIcon(reaction.icon);
-                }
-              }}
-              className={`flex cursor-pointer gap-[6px] pl-2 pr-[11px] h-8 items-center bg-white rounded border border-[#D2DBE1] ${reaction.hasReacted && '!border-[#0068B6] !bg-[#EBF1F7]'}`}>
-              <ImageRound
-                name={reaction.icon}
-                src={iconSrc}
-                className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
-              />
-              <span className="text-[13px] font-medium text-[#77858F]">
-                {reaction.count}
-              </span>
-            </div>
+                    reactionIcon(reaction.icon);
+                  }
+                }}
+                className={`flex cursor-pointer gap-[6px] pl-2 pr-[11px] h-8 items-center bg-white rounded border border-[#D2DBE1] ${reaction.hasReacted && '!border-[#0068B6] !bg-[#EBF1F7]'}`}>
+                <ImageRound
+                  name={reaction.icon}
+                  src={iconSrc}
+                  className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                />
+                <span className="text-[13px] font-medium text-[#77858F]">
+                  {reaction.count}
+                </span>
+              </div>
+            </DynamicTooltip>
           );
         })}
       </div>
@@ -189,11 +197,17 @@ const DetailReactionChat = ({
             ref={imageRef}
             onClick={handleShowModal}
             className="h-8 w-8 relative flex items-center justify-center rounded-full  hover:bg-[#EBF1F7]">
-            <ImageRound
-              name={'user'}
-              src="/icons/user-default.svg"
-              className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
-            />
+            <DynamicTooltip
+              content={'リアクションしている人を確認'}
+              placement="top"
+              customOffset={{ top: -8 }}>
+              <ImageRound
+                name={'user'}
+                src="/icons/user-default.svg"
+                className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+              />
+            </DynamicTooltip>
+
             {isShowModalDetail &&
               createPortal(
                 <div
@@ -248,7 +262,7 @@ const DetailReactionChat = ({
                               avatarColor={memberInfo?.avatarColor || ''}
                               size={29}
                             />
-                            <span className="text-sm font-medium text-black relative top-[-1px]">
+                            <span className="text-sm font-medium text-black relative top-[-1px] max-w-[170px] break-all line-clamp-3">
                               {name}
                             </span>
                           </div>

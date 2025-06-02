@@ -2689,16 +2689,20 @@ const ChatDetail = ({
                                 className="w-[190px] h-[44px] absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white rounded-lg top-[-54px] bg-white flex items-center gap-3 justify-center left-[-81px]">
                                 {REACTION_LIST.map((icon) => {
                                   return (
-                                    <div
-                                      onClick={() => insertReaction(icon)}
+                                    <DynamicTooltip
+                                      content={icon.tooltipContent}
                                       key={icon.name}
-                                      className={` rounded-ful`}>
-                                      <ImageRound
-                                        name={icon.name}
-                                        src={icon.src}
-                                        className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
-                                      />
-                                    </div>
+                                      placement="top">
+                                      <div
+                                        onClick={() => insertReaction(icon)}
+                                        className={` rounded-ful`}>
+                                        <ImageRound
+                                          name={icon.name}
+                                          src={icon.src}
+                                          className="w-fit h-fit hover:cursor-pointer hover:opacity-60"
+                                        />
+                                      </div>
+                                    </DynamicTooltip>
                                   );
                                 })}
                               </div>

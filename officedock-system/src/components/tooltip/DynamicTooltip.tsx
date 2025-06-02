@@ -16,7 +16,7 @@ export const DynamicTooltip = ({
   children,
   disabled = false,
   placement = 'right',
-  customOffset
+  customOffset,
 }: Props) => {
   const { getDelay, recordHover } = useContext(GlobalStateContext);
   const [visible, setVisible] = useState(false);
@@ -87,7 +87,7 @@ export const DynamicTooltip = ({
               top: coords.top,
               left: coords.left,
             }}>
-            {content}
+            <p className="max-w-[300px] truncate">{content}</p>
           </div>,
           document.body,
         )

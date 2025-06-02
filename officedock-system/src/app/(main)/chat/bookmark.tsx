@@ -41,7 +41,7 @@ import {
 } from '@constants/message';
 
 import { useErrorToast } from '@hooks/useErrorToast';
-import useBookMarkList from '@hooks/usBookMarkList';
+import useBookMarkList from '@hooks/useBookMarkList';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 
@@ -91,7 +91,7 @@ const BookmarkList = ({
 
   const [page, setPage] = useState<number>(1);
 
-  const [initialLoad, _setInitialLoad] = useState<boolean>(false);
+  const [initialLoad, setInitialLoad] = useState<boolean>(false);
 
   const [hasMoreDetail, setHasMoreDetail] = useState(false);
 
@@ -150,6 +150,9 @@ const BookmarkList = ({
 
   useBookMarkList({
     page: page,
+    setLoadingState: () => {
+      setInitialLoad(true);
+    },
     onSuccess: (bookmark) => {
       setHasMoreDetail(bookmark.hasNext as boolean);
       setDataMessageDetail((prev) => {
@@ -159,6 +162,7 @@ const BookmarkList = ({
         );
         return [...(prev || []), ...newMessages];
       });
+      setInitialLoad(false);
     },
   });
 
@@ -386,7 +390,9 @@ const BookmarkList = ({
       isAllDay: data.isAllDay || false,
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
-      locationId: data.location ? String((data.location as OptionDropdownType)?.value) : '',
+      locationId: data.location
+        ? String((data.location as OptionDropdownType)?.value)
+        : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
@@ -727,6 +733,8 @@ const BookmarkList = ({
             <div>
               {initialLoad ? (
                 <div className="flex flex-col items-start ml-3">
+                  <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
+                  <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
                   <RowSkeleton className="!h-[100px] w-[500px] mb-2" />
                   <RowSkeleton className="!h-[200px] w-[600px] mb-2" />
                   <RowSkeleton
