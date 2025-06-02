@@ -461,9 +461,11 @@ export const apiRouters = {
   // SCHEDULE
   SCHEDULES: '/schedules/',
   SCHEDULE_DETAIL: (id: string) => `/schedules/${id}/`,
-  DELETE_REPEAT_SCHEDULE: (id: string) => `/schedules/${id}/delete_repeat_schedule/`,
+  DELETE_REPEAT_SCHEDULE: (id: string) =>
+    `/schedules/${id}/delete-repeat-schedule/`,
   TASK_CALENDAR: '/calendars/',
   USER_SETTING: '/users/setting/',
+  EVENT_KANBAN_SCHEDULE: '/dashboard/kanban-schedules/',
 
   // TERM
   READ_TERM: (id: string) => `/terms/${id}/read/`,
@@ -526,7 +528,7 @@ export const apiRouters = {
   STATISTICS_CATEGORIES: '/statistics/categories/',
   STATISTICS_TASKS: '/statistics/tasks/',
   STATISTICS_TAGS: '/statistics/tags/',
-  STATISTICS_TASK_DURATIONS: '/statistics/task_durations/',
+  STATISTICS_TASK_DURATIONS: '/statistics/task-durations/',
 
   // STATISTICS TEAM
   STATISTICS_CATEGORIES_TEAM: (id: number) =>

@@ -397,16 +397,14 @@ const TimeSchedule = memo(
       }
     };
     const handleGetEventCalendarByUsers = async ({
-      userId,
       startDate,
       endDate,
     }: {
-      userId: string;
       startDate?: string;
       endDate?: string;
     }) => {
       setIsLoadingSchedule(true);
-      const apiUrl = `${apiRouters.SCHEDULES}?${userId ? `&user_ids=${userId}` : ''}${startDate && `&start_date=${startDate}`}${endDate && `&end_date=${endDate}`}&current_screen=${ScreenName.MY_TASK}`;
+      const apiUrl = `${apiRouters.EVENT_KANBAN_SCHEDULE}?${startDate && `start_date=${startDate}`}${endDate && `&end_date=${endDate}`}&current_screen=${ScreenName.MY_TASK}`;
       const { data } = await api.get<EventCalendarProps[]>(apiUrl);
       return data;
     };
@@ -418,29 +416,24 @@ const TimeSchedule = memo(
         onSuccess: (data) => {
           if (data) {
             const splitMultiDayEvent = (event: TaskTimeSchedule) => {
-              const startDate = parseISO(String(event.startDate));
-              let endDate = parseISO(String(event.endDate));
-
+              const startDate = parseISO(String(event.planStartDate));
+              let endDate = parseISO(String(event.planEndDate));
               if (getHours(endDate) === 0 && getMinutes(endDate) === 0) {
                 endDate = subSeconds(endDate, 1);
               }
-
               if (isSameDay(startDate, endDate)) {
                 return [{ ...event }];
               }
               if (event.isAllDay) {
                 return [{ ...event, uuid: uuidv4() }];
               }
-
               const days = eachDayOfInterval({
                 start: startDate,
                 end: endDate,
               });
-
               return days.map((day, index) => {
                 const start = index === 0 ? startDate : startOfDay(day);
                 const end = index === days.length - 1 ? endDate : endOfDay(day);
-
                 return {
                   ...event,
                   start,
@@ -450,43 +443,55 @@ const TimeSchedule = memo(
                 };
               });
             };
+            const eventsTimeSchedule = data.flatMap((event) => {
+              // Check validity of recurring schedules
+              if (!event.repeatSchedules || event.repeatSchedules.length === 0)
+                return [];
 
-            const eventsTimeSchedule = data
-              .filter((event) => event.startDate && event.endDate)
-              .flatMap((event) => {
-                const startDate = parseISO(`${event.startDate}`);
-                const endDate = parseISO(`${event.endDate}`);
+              return event.repeatSchedules.flatMap((schedule, index) => {
+                const startDate = schedule.planStartDate
+                  ? parseISO(String(schedule.planStartDate))
+                  : null;
+                const endDate = schedule.planEndDate
+                  ? parseISO(String(schedule.planEndDate))
+                  : null;
+
+                // Skip if no valid time
+                if (!startDate || !endDate) return [];
+
                 const adjustedEndDate =
                   isSameDay(startDate, endDate) || isMidnight(endDate)
                     ? endDate
                     : addDays(endDate, 1);
-                const largeColor =
-                  event.categories &&
-                  event.categories.find(
-                    (item) => item.type === EventWorkCategory.LARGE,
-                  )?.color;
+
+                const largeColor = event.categories?.find(
+                  (item) => item.type === EventWorkCategory.LARGE,
+                )?.color;
 
                 const newEvent = {
                   ...event,
                   start: startDate,
-                  // Fake show data allday
                   end: event.isAllDay
                     ? new Date(
-                        new Date(String(event.endDate)).setHours(24, 0, 0, 0),
+                        new Date(String(schedule.planEndDate)).setHours(
+                          24,
+                          0,
+                          0,
+                          0,
+                        ),
                       )
                     : adjustedEndDate,
-
-                  id: `${event.id}event`,
+                  id: `${event.id}-${schedule.id}-${index}`,
                   peopleInCharge: [],
                   status: {
                     name: '',
                     id: null,
                   },
                   taskId: event.taskId as number,
-                  scheduleId: parseInt(`${event.id}`),
+                  scheduleId: event.scheduleId || schedule.schedule,
                   uuid: uuidv4(),
-                  planStartDate: `${event.startDate}`,
-                  planEndDate: `${event.endDate}`,
+                  planStartDate: String(schedule.planStartDate),
+                  planEndDate: String(schedule.planEndDate),
                   isStart: event.isStart,
                   isMyTask: event.isMySchedule,
                   type: `${event.type}`,
@@ -501,13 +506,13 @@ const TimeSchedule = memo(
 
                 return splitMultiDayEvent(newEvent);
               });
+            });
 
             setTaskTimeScheduleList((prevEvents) => {
               const updatedEvents = [...prevEvents];
               const myTasks = updatedEvents.filter(
                 (event) => event.type == EventCalendarType.TASK,
               );
-
               return [...myTasks, ...eventsTimeSchedule];
             });
           }
@@ -952,7 +957,6 @@ const TimeSchedule = memo(
       endDateISOString: string,
     ) => {
       await getEventCalendarByUsers({
-        userId: String(session?.user.id),
         startDate: startDateISOString,
         endDate: endDateISOString,
       }),
@@ -2658,7 +2662,9 @@ const TimeSchedule = memo(
         isAllDay: data.isAllDay || false,
         tagIds: newTagIds,
         participantIds: data.participantIds || [],
-        locationId: data.location ? String((data.location as OptionDropdownType)?.value) : '',
+        locationId: data.location
+          ? String((data.location as OptionDropdownType)?.value)
+          : '',
         memo: data.memo || '',
         type: newType,
         sendToChat,
