@@ -101,6 +101,9 @@ _ERROR_MESSAGES = {
         "cannot_select_category_other_team": _(
             "Cannot select categories from other team."
         ),
+        "password_not_same": _(
+            "New password must not be the same as the old password."
+        ),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -174,6 +177,7 @@ _ERROR_MESSAGES = {
         "organization_team_not_hierarchy": _("プロジェクトチームの階層を作成できません。"),
         "schedule_not_in_the_past": _("実施予定日時は未来の日時を選択してください。"),
         "cannot_select_category_other_team": _("他のチームのカテゴリーを選択できません。"),
+        "password_not_same": _("現在のパスワードと同じパスワードは使用できません。"),
     },
 }
 
