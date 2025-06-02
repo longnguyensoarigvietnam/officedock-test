@@ -16,6 +16,7 @@ import { hasPermissionInArray } from '@utils';
 import { OptionDropdownType } from '@interfaces/common';
 import {
   OrganizationCategoryHierarchyDetail,
+  OrganizationCategoryRow,
   StatisticCategory,
 } from '@interfaces/hierarchy';
 
@@ -25,31 +26,10 @@ import HierarchyTable from './table';
 
 import api from '@base/api';
 
-interface rowDataType {
-  id: number | string;
-  large: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  medium: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  small: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  skills: OptionDropdownType[];
-  color: string;
-}
-
 interface HierarchyDetail {
   id: number | string;
   name: string;
-  statisticCategories: rowDataType[];
+  statisticCategories: OrganizationCategoryRow[];
 }
 
 const ListHierarchy = () => {
@@ -214,7 +194,7 @@ const ListHierarchy = () => {
 
   return (
     <Fragment>
-      <div className="sticky z-[21] top-[0px] px-8 pt-8 pb-3 bg-[#EBF1F7]">
+      <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#EBF1F7]">
         <div className="flex gap-4 items-center mb-5">
           <p className="text-black font-medium text-[26px]">
             業務カテゴリー設定
@@ -223,18 +203,30 @@ const ListHierarchy = () => {
             <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
               <Button
                 variant="outline"
-                className={`w-[152px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                className={`w-[128px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
                 社内共通カテゴリー
               </Button>
             </Link>
 
-            <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
-              <Button
-                variant="primary"
-                className={`w-[152px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
-                チームカテゴリー
-              </Button>
-            </Link>
+            <Button
+              variant="primary"
+              className={`w-[128px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+              チームカテゴリー
+            </Button>
+
+            {session?.user.permissions &&
+              hasPermissionInArray(
+                session?.user.permissions,
+                PermissionsSystem.CATEGORY_HIERARCHY_VIEW,
+              ) && (
+                <Link href={pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href}>
+                  <Button
+                    variant="outline"
+                    className={`w-[140px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                    カレンダーカテゴリー
+                  </Button>
+                </Link>
+              )}
           </div>
         </div>
         <div className="flex justify-between">
@@ -269,14 +261,14 @@ const ListHierarchy = () => {
                 session?.user.permissions,
                 PermissionsSystem.CATEGORY_HIERARCHY_UPDATE,
               ) && (
-                <Link href={pageRouters.EDIT_HIERARCHY.href}>
+                <Link href={pageRouters.EDIT_TEAM_CATEGORY.href}>
                   <Button className="w-[100px] h-[34px]">編集</Button>
                 </Link>
               )}
           </div>
         </div>
       </div>
-      <div className="px-8 mt-5">
+      <div className="px-10 mt-5">
         {selectedOrganizationOption.value === '' ? (
           <div className="flex flex-col gap-5">
             {hierarchyList.map((data) => (

@@ -8,8 +8,9 @@ import Button from '@components/common/Button';
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
 
-import ListCategory from './list';
 import { hasPermissionInArray } from '@utils';
+
+import ListCategory from './list';
 
 const CategoryPage = () => {
   const { data: session } = useSession();
@@ -18,28 +19,39 @@ const CategoryPage = () => {
     <MainLayout
       title={pageRouters.CATEGORY_MANAGEMENT.name}
       permission={PermissionsSystem.CATEGORY_VIEW}
-      className="px-10 !overflow-x-auto !bg-[#EBF1F7]"
+      className="px-10 pt-8 !overflow-x-auto !bg-[#EBF1F7]"
       showFooter={false}>
       <div className="flex gap-4 items-center mb-5">
         <p className="text-black font-medium text-[26px]">業務カテゴリー設定</p>
         <div className="flex gap-2">
-          <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
-            <Button
-              variant="primary"
-              className={`w-[152px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
-              社内共通カテゴリー
-            </Button>
-          </Link>
+          <Button
+            variant="primary"
+            className={`w-[128px] !p-0 text-xs h-[28px] !border-transparent text-white !rounded-[20px]`}>
+            社内共通カテゴリー
+          </Button>
           {session?.user.permissions &&
             hasPermissionInArray(
               session?.user.permissions,
               PermissionsSystem.CATEGORY_HIERARCHY_VIEW,
             ) && (
-              <Link href={pageRouters.HIERARCHY_MANAGEMENT.href}>
+              <Link href={pageRouters.TEAM_CATEGORY_MANAGEMENT.href}>
                 <Button
                   variant="outline"
-                  className={`w-[152px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                  className={`w-[128px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
                   チームカテゴリー
+                </Button>
+              </Link>
+            )}
+          {session?.user.permissions &&
+            hasPermissionInArray(
+              session?.user.permissions,
+              PermissionsSystem.CATEGORY_HIERARCHY_VIEW,
+            ) && (
+              <Link href={pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href}>
+                <Button
+                  variant="outline"
+                  className={`w-[140px] !p-0 text-xs h-[28px] !text-[#77858F] !bg-transparent !border-[#77858F] border-[1px] !rounded-[20px]`}>
+                  カレンダーカテゴリー
                 </Button>
               </Link>
             )}

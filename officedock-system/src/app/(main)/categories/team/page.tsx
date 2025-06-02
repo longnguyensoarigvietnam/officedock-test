@@ -5,10 +5,10 @@ import { PermissionsSystem } from '@constants/enums';
 
 import ListHierarchy from './list';
 
-const HierarchyPage = () => {
+const TeamCategoryPage = () => {
   return (
     <MainLayout
-      title={pageRouters.HIERARCHY_MANAGEMENT.name}
+      title={pageRouters.TEAM_CATEGORY_MANAGEMENT.name}
       permission={PermissionsSystem.CATEGORY_HIERARCHY_VIEW}
       className="px-0 !pt-0 !overflow-x-auto !bg-[#EBF1F7]"
       showFooter={false}>
@@ -17,4 +17,4 @@ const HierarchyPage = () => {
   );
 };
 
-export default HierarchyPage;
+export default TeamCategoryPage;

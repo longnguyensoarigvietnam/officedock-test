@@ -27,32 +27,12 @@ import {
 import { OptionDropdownType } from '@interfaces/common';
 
 import api from '@base/api';
-
-interface rowDataType {
-  id: number | string;
-  large: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  medium: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  small: {
-    value: string | number;
-    label: string;
-    showBy: string;
-  };
-  skills: OptionDropdownType[];
-  color: string;
-}
+import { OrganizationCategoryRow } from '@interfaces/hierarchy';
 
 interface HierarchyDetail {
   id: number | string;
   name: string;
-  statisticCategories: rowDataType[];
+  statisticCategories: OrganizationCategoryRow[];
 }
 
 const TableComponent = ({
@@ -132,7 +112,7 @@ const TableComponent = ({
     }
   }, [categoryList, hierarchyList.id]);
 
-  const findLastUniqueMediumIndexes = (data: rowDataType[]): number[] => {
+  const findLastUniqueMediumIndexes = (data: OrganizationCategoryRow[]): number[] => {
     const lastIndexes: number[] = [];
     let currentLargeValue: number | string | null = null;
     let mediumIndexes: Record<number | string, number> = {}; // Tracks first occurrence of each medium value
@@ -162,7 +142,7 @@ const TableComponent = ({
     return lastIndexes;
   };
 
-  const findLastUniqueSmallIndexes = (data: rowDataType[]): number[] => {
+  const findLastUniqueSmallIndexes = (data: OrganizationCategoryRow[]): number[] => {
     const lastIndexes: number[] = [];
     let currentLargeValue: number | string | null = null;
     let currentMediumValue: number | string | null = null;
@@ -270,7 +250,7 @@ const TableComponent = ({
   });
 
   const processRowspan = (
-    data: rowDataType[],
+    data: OrganizationCategoryRow[],
     key: HierarchyType.LARGE | HierarchyType.MEDIUM,
   ): Record<number, number> => {
     const rowspanMap: Record<number, number> = {};
@@ -310,7 +290,7 @@ const TableComponent = ({
     HierarchyType.MEDIUM,
   );
 
-  const handleAddSmallCategory = (option: string, rowInfo: rowDataType) => {
+  const handleAddSmallCategory = (option: string, rowInfo: OrganizationCategoryRow) => {
     const newUuid = uuidv4();
     const newRow = {
       id: newUuid,
@@ -375,7 +355,7 @@ const TableComponent = ({
     });
   };
 
-  const handleAddMediumCategory = (option: string, rowInfo: rowDataType) => {
+  const handleAddMediumCategory = (option: string, rowInfo: OrganizationCategoryRow) => {
     const newUuid = uuidv4();
     const newRow = {
       id: newUuid,
@@ -493,7 +473,7 @@ const TableComponent = ({
     name: string;
     uuid: string;
     type: string;
-    rowInfo: rowDataType;
+    rowInfo: OrganizationCategoryRow;
   }) => {
     setSelectedHierarchiesToUpdate((prev) => {
       const updatedHierarchiesToUpdate = [...prev];
@@ -622,7 +602,7 @@ const TableComponent = ({
         (hierarchy) => hierarchy.id == hierarchyList.id,
       );
       if (foundOrganizationHierarchyIndex !== -1) {
-        let updatedCategories: rowDataType[] = [];
+        let updatedCategories: OrganizationCategoryRow[] = [];
         if (variables.type == HierarchyType.LARGE) {
           updatedCategories = updatedHierarchyList[
             foundOrganizationHierarchyIndex
@@ -685,7 +665,7 @@ const TableComponent = ({
     setIsTyping(false);
   };
 
-  const getExcludedSmalls = (currentRow: rowDataType) => {
+  const getExcludedSmalls = (currentRow: OrganizationCategoryRow) => {
     return hierarchyList.statisticCategories
       .filter(
         (row) =>

@@ -301,21 +301,37 @@ export const pageRouters = {
   },
 
   // HIERARCHY
-  HIERARCHY_MANAGEMENT: {
-    name: '集計カテゴリー階層',
-    href: '/categories/hierarchies',
+  TEAM_CATEGORY_MANAGEMENT: {
+    name: 'チームカテゴリー階層',
+    href: '/categories/team',
   },
-  EDIT_HIERARCHY: {
-    name: '集計カテゴリー階層編集',
-    href: '/categories/hierarchies/edit',
+  EDIT_TEAM_CATEGORY: {
+    name: 'チームカテゴリー階層編集',
+    href: '/categories/team/edit',
   },
-  CREATE_HIERARCHY: {
-    name: '集計カテゴリー階層作成',
-    href: (id: string) => `/categories/hierarchies/${id}/create`,
+  CREATE_TEAM_CATEGORY: {
+    name: 'チームカテゴリー階層作成',
+    href: (id: string) => `/categories/team/${id}/create`,
   },
-  DETAIL_HIERARCHY: {
-    name: '集計カテゴリー階層詳細',
-    href: (id: string) => `/categories/hierarchies/${id}`,
+  DETAIL_TEAM_CATEGORY: {
+    name: 'チームカテゴリー階層詳細',
+    href: (id: string) => `/categories/team/${id}`,
+  },
+  CALENDAR_CATEGORY_MANAGEMENT: {
+    name: 'カレンダーカテゴリー階層',
+    href: '/categories/calendar',
+  },
+  EDIT_CALENDAR_CATEGORY: {
+    name: 'カレンダーカテゴリー階層編集',
+    href: '/categories/calendar/edit',
+  },
+  CREATE_CALENDAR_CATEGORY: {
+    name: 'カレンダーカテゴリー階層作成',
+    href: (id: string) => `/categories/calendar/${id}/create`,
+  },
+  DETAIL_CALENDAR_CATEGORY: {
+    name: 'カレンダーカテゴリー階層詳細',
+    href: (id: string) => `/categories/calendar/${id}`,
   },
 
   // ACTUAL_DURATIONS MANAGEMENT
