@@ -648,7 +648,7 @@ class OrganizationCategoryHierarchyViewSet(
     API endpoint for Organization Category.
     """
 
-    queryset = Organization.objects.all()
+    queryset = Organization.all_objects.all()
     serializer_class = OrganizationCategoryHierarchySerializer
     permission_classes = [ActionPermission]
     filter_backends = [
@@ -665,8 +665,17 @@ class OrganizationCategoryHierarchyViewSet(
 
         user = self.request.user
         company = user.company
+        queryset = super().get_queryset()
 
-        return super().get_queryset().filter(company=company).order_by("-id")
+        if (
+            self.request.query_params.get("is_only_calendar", "").lower()
+            == "true"
+        ):
+            queryset = queryset.filter(type=OrganizationTypes.CALENDAR.value)
+        else:
+            queryset = queryset.exclude(type=OrganizationTypes.CALENDAR.value)
+
+        return queryset.filter(company=company).order_by("-id")
 
     def get_serializer_class(self):
         """Custom serializer class"""
@@ -682,6 +691,14 @@ class OrganizationCategoryHierarchyViewSet(
         context = super().get_serializer_context()
         context["request"] = self.request
         return context
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("is_only_calendar", type=bool, required=False),
+        ],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     @action(
         methods=["POST"],

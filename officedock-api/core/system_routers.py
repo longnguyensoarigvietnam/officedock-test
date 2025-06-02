@@ -6,6 +6,7 @@ from calendars.apis import (
     ScheduleViewSet,
     ScheduleTeamdockViewSet,
 )
+from companies.apis import SystemCompanyViewSet
 from skills.apis import (
     StatisticCategoryViewSet,
     ManageSkillMapViewSet,
@@ -53,6 +54,9 @@ api_router = routers.DefaultRouter()
 
 # Register router view set
 api_router.register("auth", SystemAuthViewSet, basename="system_auth")
+api_router.register(
+    "companies", SystemCompanyViewSet, basename="system_company"
+)
 api_router.register(
     "organizations", OrganizationViewSet, basename="organizations_by_uuid"
 )

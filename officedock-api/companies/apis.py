@@ -1,8 +1,9 @@
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 
 from base.permissions import IsOperationAdminOnly
@@ -15,7 +16,11 @@ from users.models import Role, User, Profile
 from utils.mail import MailService
 from .filters import CompanyFilter
 from .models import Company, Contract
-from .serializers import CompanySerializer, ContractSerializer
+from .serializers import (
+    CompanySerializer,
+    CompanySettingSerializer,
+    ContractSerializer,
+)
 
 
 @extend_schema(tags=["Admin > Company"])
@@ -95,3 +100,47 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 user.avatar.delete()
 
         instance.delete()
+
+
+@extend_schema(tags=["System > Company"])
+class SystemCompanyViewSet(BaseAPIViewSet, mixins.RetrieveModelMixin):
+    """
+    API endpoint for system company operations.
+
+    This viewset handles company-level system settings and configurations.
+    It provides endpoints for authenticated users to manage their company settings.
+    Inherits from BaseAPIViewSet for common API functionality.
+    """
+
+    queryset = Company.objects.all()
+    serializer_class = CompanySettingSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="settings",
+    )
+    def settings(self, request):
+        """
+        Update company settings endpoint.
+
+        This endpoint allows authenticated users to update their company's system settings.
+        Currently supports updating the holidays calendar visibility setting.
+        """
+        # Get the company associated with the authenticated user
+        company = request.user.company
+
+        # Validate the incoming request data using the serializer
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+
+        # Update company settings
+        # Currently only handles the holidays calendar visibility setting
+        company.is_show_holidays_calendar = validated_data.pop(
+            "is_show_holidays_calendar", False
+        )
+        company.save()
+
+        return self.response_ok()
