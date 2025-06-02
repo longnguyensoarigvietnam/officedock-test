@@ -14,7 +14,7 @@ import {
   DATE_TIME_FORMAT,
   DATE_TIME_LOCAL,
 } from '@constants';
-import { OptionDropdownType } from '@interfaces/common';
+import { DateInfo, OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
 import {
   ItemStartType,
@@ -1548,7 +1548,10 @@ export const convertDurationToTotalMinutes = (duration: string) => {
 };
 
 // Check whether current time within event
-export const isCurrentTimeWithinEvent = (event: { start: Date | null; end: Date | null }): boolean => {
+export const isCurrentTimeWithinEvent = (event: {
+  start: Date | null;
+  end: Date | null;
+}): boolean => {
   const now = new Date();
 
   const eventStart = event.start;
@@ -1567,4 +1570,21 @@ export const isCurrentTimeWithinEvent = (event: { start: Date | null; end: Date 
   const nowTime = now.getTime();
 
   return nowTime >= startTime && nowTime <= endTime;
+};
+
+// Get date info with detail
+export function getDateInfoFull(date: Date): DateInfo {
+  const year: number = date.getFullYear();
+  const month: number = date.getMonth() + 1;
+  const day: number = date.getDate();
+
+  const weekdaysJapanese: string[] = ['日', '月', '火', '水', '木', '金', '土'];
+  const weekday: string = weekdaysJapanese[date.getDay()];
+
+  return {
+    year,
+    month,
+    day,
+    weekday,
+  };
 }

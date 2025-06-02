@@ -52,7 +52,14 @@ export interface DataPercentCompareType {
     label: string;
     percent?: number;
     avatarColor?: string;
-    avatarUrl?: string
+    avatarUrl?: string;
   }[];
   mergedItems: StatisticCategoryInfo[];
+}
+
+export interface DateInfo {
+  year: number;
+  month: number;
+  day: number;
+  weekday: string;
 }
