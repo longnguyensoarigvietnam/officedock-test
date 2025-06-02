@@ -798,7 +798,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     @action(
         methods=["DELETE"],
         detail=True,
-        url_path="delete_repeat_schedule",
+        url_path="delete-repeat-schedule",
     )
     def delete_repeat_schedule(self, request, pk, *args, **kwargs):
         """
