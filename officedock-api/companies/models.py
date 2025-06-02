@@ -17,6 +17,9 @@ class Company(BaseModel):
 
     name = models.CharField()
 
+    # Settings for company
+    is_show_holidays_calendar = models.BooleanField(default=False)
+
     def __str__(self):
         return self.name
 

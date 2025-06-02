@@ -41,7 +41,15 @@ class CompanySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ["id", "name", "contract", "fullname", "email"]
+        fields = [
+            "id",
+            "name",
+            "contract",
+            "fullname",
+            "email",
+            "is_show_holidays_calendar",
+        ]
+        read_only_fields = ["is_show_holidays_calendar"]
 
     def validate_email(self, value):
         """
@@ -71,3 +79,11 @@ class CompanySerializer(serializers.ModelSerializer):
                 contract_serializer.save(company=instance)
 
         return super().update(instance, validated_data)
+
+
+class CompanySettingSerializer(serializers.Serializer):
+    """
+    Serializer for company settings
+    """
+
+    is_show_holidays_calendar = serializers.BooleanField(default=False)

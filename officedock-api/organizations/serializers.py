@@ -617,7 +617,7 @@ class OrgCategoryHierarchySerializer(serializers.ModelSerializer):
     )
     organization_id = serializers.PrimaryKeyRelatedField(
         source="organization",
-        queryset=Organization.objects.all(),
+        queryset=Organization.all_objects.all(),
         write_only=True,
     )
     large_statistic_category = StatisticCategoryFieldSerializer(
