@@ -17,8 +17,8 @@ def seed_data_repeat_schedules(apps, schema_editor):
             "week_day": None,
             "month_day": None,
             "repeat_type": "ONCE",
-            "plan_end_date": schedule.end_date.isoformat(),
-            "plan_start_date": schedule.start_date.isoformat(),
+            "end_date": schedule.end_date.isoformat(),
+            "start_date": schedule.start_date.isoformat(),
             "repeat_interval": None,
         }
         schedule.save()

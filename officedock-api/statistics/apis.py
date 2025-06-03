@@ -1007,6 +1007,7 @@ class StatisticViewSet(BaseAPIViewSet):
                     "tag_id": None,
                     "tag_name": NONE_CATEGORY,
                     "duration": "00:00:00",
+                    "percent": 0,
                 }
             percent = 100
             len_of_list = len(tag_list)
@@ -1066,6 +1067,7 @@ class StatisticViewSet(BaseAPIViewSet):
                             "category_name": NONE_CATEGORY,
                             "category_color": CategoryColors.GRAY.value,
                             "duration": "00:00:00",
+                            "percent": 0,
                         }
                     )
                 else:
@@ -1490,7 +1492,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="small_category_id", type=str),
             OpenApiParameter(name="user_ids", type=str),
             OpenApiParameter(name="tag_ids", type=str),
-            OpenApiParameter(name="total_duration", type=str),
             OpenApiParameter(name="is_tag_page", type=bool),
             OpenApiParameter(
                 name="statistic_by",

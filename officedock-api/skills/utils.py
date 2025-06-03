@@ -21,10 +21,10 @@ def get_lookback_time(
     """
     if not lookback_type and not lookback_interval:
         return None, now()
-    if user_organization:
-        start_lookback_at = (
-            user_organization.created_at if user_organization else now()
-        )
+
+    start_lookback_at = (
+        user_organization.created_at if user_organization else now()
+    )
 
     match lookback_type:
         case LookBackTypes.DAY.value:

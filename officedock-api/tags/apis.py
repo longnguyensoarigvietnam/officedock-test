@@ -108,6 +108,7 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             not calendar_organization_check and tag.get_calendar_organization()
         ):
             tag.get_calendar_organization().delete()
+            tag.schedules.clear()
 
     @extend_schema(
         parameters=[
