@@ -46,6 +46,7 @@ export type ActionsUserModalProps = {
   roleUserOptions: OptionDropdownType[];
   emailErrorMessage: string;
   usernameErrorMessage: string;
+  passwordErrorMessage: string;
   onDelete?: (userToDelete: User) => void;
   onClose: () => void;
   onCreate?: (values: CreateUserFormData, isOptionEmail: boolean) => void;
@@ -60,6 +61,7 @@ const ActionsUserModal = ({
   originalOrganizationOptions,
   emailErrorMessage,
   usernameErrorMessage,
+  passwordErrorMessage,
   onClose,
   onDelete,
   onCreate,
@@ -549,10 +551,10 @@ const ActionsUserModal = ({
                         register={register('password', {
                           ...passwordRegisterRules(false),
                         })}
-                        className="h-[34px] w-full leading-[34px] !text-sm !border-[#77858F] rounded-md px-2 custom-password-mask"
+                        className={`h-[34px] w-full leading-[34px] !text-sm ${!passwordErrorMessage ? '!border-[#77858F]' : '!border-error'} rounded-md px-2 custom-password-mask`}
                       />
                       <ErrorMessage
-                        error={errors?.password?.message}
+                        error={passwordErrorMessage}
                         className="mt-[5px] mb-[5px] text-xs"
                       />
                     </div>
@@ -719,7 +721,7 @@ const ActionsUserModal = ({
                   </div>
                 </div>
               </div>
-              {/*role */}
+              {/* Role */}
               <div className="flex gap-[10px] items-start">
                 <div className="w-full max-w-[110px] mt-2 text-[14px] font-medium">
                   権限 <span className="text-error font-bold">{`*`}</span>

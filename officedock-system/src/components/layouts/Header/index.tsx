@@ -192,6 +192,7 @@ const Header = ({ className }: HeaderProps) => {
   const [openRewardModal, setOpenRewardModal] = useState(false);
   const [dataRewardSkill, setDataRewardSkill] =
     useState<WebSocketMessageData>();
+  const [editPasswordErrorMessage, setEditPasswordErrorMessage] = useState<string>('')
 
   const { showToast } = useToast();
   const { authenticatedUser } = useAuthenticatedUser({});
@@ -873,6 +874,10 @@ const Header = ({ className }: HeaderProps) => {
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
+        if(error.response){
+          const errorDetail = error.response.data;
+          setEditPasswordErrorMessage(errorDetail?.password[0])
+        }
       },
       onSettled: () => {
         setIsLoading(false);
@@ -1087,6 +1092,7 @@ const Header = ({ className }: HeaderProps) => {
           }}
           onEdit={handleConfirmEditProfile}
           setOpenErrorUploadFileModal={setOpenErrorUploadFileModal}
+          editPasswordErrorMessage={editPasswordErrorMessage}
           authenticatedUser={authenticatedUser}
         />
       )}

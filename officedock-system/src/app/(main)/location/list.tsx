@@ -30,9 +30,11 @@ import {
 import { NO_DATA_AVAILABLE } from '@constants';
 
 import useEventLocationList from '@hooks/useEventLocationList';
+import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+
 import { LocationEventType } from '@interfaces/location';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
@@ -47,12 +49,21 @@ const ListLocation = () => {
   const [editText, setEditText] = useState<string>('');
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [showHolidaysInCalendar, setShowHolidaysInCalendar] =
+    useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
   const [selectedLocationToDelete, setSelectedLocationToDelete] =
     useState<LocationEventType | null>(null);
+
+  // Get authenticated user
+  useAuthenticatedUser({
+    onSuccess: (data) => {
+      setShowHolidaysInCalendar(data.company.isShowHolidaysCalendar);
+    },
+  });
 
   useEventLocationList({
     onSuccess: (data) => {
@@ -227,6 +238,37 @@ const ListLocation = () => {
     deleteEventLocation(selectedLocationToDelete?.uuid || '');
   };
 
+  // Change setting holidays in calendar
+  const handleChangeHolidaysSettingInCalendar = async (
+    isShowHolidaysCalendar: boolean,
+  ) => {
+    setIsLoading(true);
+    const { data: response } = await api.post(apiRouters.COMPANY_SETTINGS, {
+      isShowHolidaysCalendar,
+    });
+    return response;
+  };
+
+  const { mutate: changeHolidaysSettingInCalendar } = useMutation(
+    handleChangeHolidaysSettingInCalendar,
+    {
+      onSuccess: async () => {
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
+      },
+      onError: () => {
+        showToast({
+          description: ERROR_UPDATE_MESSAGE,
+          variant: 'error',
+        });
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
   return (
     <div className="mb-5">
       <div className="flex justify-between items-center pb-[30px]">
@@ -235,6 +277,10 @@ const ListLocation = () => {
           <Checkbox
             label="カレンダーに祝日を表示"
             classLabel="text-sm font-medium text-black relative top-[3px]"
+            isChecked={showHolidaysInCalendar}
+            onChange={(state: boolean) => {
+              changeHolidaysSettingInCalendar(state);
+            }}
           />
         </div>
       </div>

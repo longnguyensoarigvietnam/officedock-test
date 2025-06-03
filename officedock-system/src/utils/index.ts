@@ -371,44 +371,6 @@ export function getRandomColor() {
     .padStart(6, '0')}`;
 }
 // Adjust position for view port
-export const adjustPositionForViewport = (
-  position: { top: number; left: number },
-  numberOfEvents: number,
-) => {
-  let { top, left } = position;
-  const popupWidth = 320;
-  let popupHeight = 300;
-  switch (true) {
-    case numberOfEvents >= 10:
-      popupHeight = 600;
-      break;
-    case numberOfEvents > 5:
-      popupHeight = 500;
-      break;
-    case numberOfEvents > 3:
-      popupHeight = 400;
-      break;
-    default:
-      popupHeight = 300;
-      break;
-  }
-  const padding = 10;
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  if (left + popupWidth + padding > viewportWidth) {
-    left = viewportWidth - popupWidth - padding;
-  }
-  if (top + popupHeight + padding > viewportHeight) {
-    top = viewportHeight - popupHeight - padding;
-  }
-  if (left < padding) {
-    left = padding;
-  }
-  if (top < padding) {
-    top = padding;
-  }
-  return { top, left };
-};
 export const adjustPositionForViewportSchedule = (position: {
   top: number;
   left: number;
@@ -842,3 +804,40 @@ export function calculateTotalMinutes(
 
   return diffMinutes;
 }
+
+// Calculate popup position
+export const calculatePopupPosition = (
+  popupRect: DOMRect,
+  currentPosition: {
+    top: number;
+    left: number;
+  },
+  padding = 20,
+): {
+  top: number;
+  left: number;
+} => {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  let newTop = currentPosition.top;
+  let newLeft = currentPosition.left;
+
+  // Flip upward if bottom overflows
+  if (popupRect.bottom + padding > viewportHeight) {
+    newTop = currentPosition.top - popupRect.height - padding;
+  }
+
+  // Push left if right overflows
+  if (popupRect.right + padding > viewportWidth) {
+    newLeft =
+      currentPosition.left - (popupRect.right + padding - viewportWidth);
+  }
+
+  // Push right if left overflows
+  if (popupRect.left - padding < 0) {
+    newLeft = currentPosition.left + (padding - popupRect.left);
+  }
+
+  return { top: newTop, left: newLeft };
+};

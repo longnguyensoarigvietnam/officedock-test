@@ -41,7 +41,8 @@ import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDashboardMemberList from '@hooks/useDashBoardMemberList';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
-import { adjustPositionForViewport, hasPermissionInArray } from '@utils';
+
+import { hasPermissionInArray } from '@utils';
 import {
   addTimeToDate,
   convertToTimeString,
@@ -56,6 +57,7 @@ import {
   removeTimeAndCompareDates,
   subtractOneDay,
 } from '@utils/date';
+
 import {
   CalendarPopoverInfo,
   EventCalendarDetail,
@@ -102,7 +104,6 @@ import api from '@base/api';
 const EventCalendar = () => {
   // Refs
   const calendarRef = useRef<FullCalendar | null>(null);
-  const popoverRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef(null);
 
   // Session
@@ -121,6 +122,7 @@ const EventCalendar = () => {
 
   // Event list
   const [events, setEvents] = useState<EventCalendarDetail[]>([]);
+  const [showHolidayEvents, setShowHolidayEvents] = useState<boolean>(false);
 
   // Event actions (edit, delete, click, filter)
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
@@ -164,7 +166,8 @@ const EventCalendar = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const [calendarLoading, setIsCalendarLoading] = useState(false);
   const [isEventRendering, setIsEventRendering] = useState(false);
-  const [popoverInfoLoading, setPopoverInfoLoading] = useState<boolean>(false);
+  const [popoverInfoLoading, setEventListModalInfoLoading] =
+    useState<boolean>(false);
 
   // Params
   const searchParams = useSearchParams();
@@ -176,9 +179,8 @@ const EventCalendar = () => {
   const eventDetailId = eventIdURL?.replace('event', '');
 
   // Popup
-  const [popoverInfo, setPopoverInfo] = useState<CalendarPopoverInfo | null>(
-    null,
-  );
+  const [eventListModalInfo, setEventListModalInfo] =
+    useState<CalendarPopoverInfo | null>(null);
   const [infoModalPosition, setInfoModalPosition] = useState<{
     top: number;
     left: number;
@@ -214,6 +216,7 @@ const EventCalendar = () => {
   // Get authenticated user
   const { authenticatedUser } = useAuthenticatedUser({
     onSuccess: (data) => {
+      setShowHolidayEvents(data.company.isShowHolidaysCalendar);
       setCurrentResources((prevCurrentResources) => {
         const existedResource = prevCurrentResources.find(
           (resource) => resource.id == String(data.id),
@@ -264,8 +267,8 @@ const EventCalendar = () => {
         keySearch,
         selectedScheduleUserIds,
         date,
-        clientX,
-        clientY,
+        pageX,
+        pageY,
         isYearView,
       }: {
         startDate: string;
@@ -273,8 +276,8 @@ const EventCalendar = () => {
         keySearch: string;
         selectedScheduleUserIds: any;
         date?: Date;
-        clientX?: number;
-        clientY?: number;
+        pageX?: number;
+        pageY?: number;
         isYearView?: boolean;
       }) => {
         const updatedUserIds: string[] = selectedScheduleUserIds
@@ -287,12 +290,12 @@ const EventCalendar = () => {
           endDate,
           isYearView,
           date,
-          clientX,
-          clientY,
+          pageX,
+          pageY,
           keySearch,
         });
 
-        setPopoverInfoLoading(false);
+        setEventListModalInfoLoading(false);
         setIsEventRendering(false);
       },
       1000,
@@ -400,49 +403,25 @@ const EventCalendar = () => {
   // Show events in year view
   const handleShowEventsInYearView = (
     date: Date,
-    clientX: number,
-    clientY: number,
+    pageX: number,
+    pageY: number,
   ) => {
     if (calendarRef.current) {
       const startDateISOString = formatQueryStartDateForCalendar(date);
       const nextDay = new Date(date);
       nextDay.setDate(nextDay.getDate() + 1);
       const endDateISOString = formatQueryEndDateForCalendar(nextDay);
-      setPopoverInfoLoading(true);
-      setPopoverInfo({
+      setEventListModalInfoLoading(true);
+      setEventListModalInfo({
         date: date as Date,
         events: [],
-        left: adjustPositionForViewport(
-          {
-            top: Number(clientY),
-            left: Number(clientX),
-          },
-          0,
-        ).left,
-        top: adjustPositionForViewport(
-          {
-            top: Number(clientY),
-            left: Number(clientX),
-          },
-          0,
-        ).top,
+        left: pageX,
+        top: pageY,
       });
       setInfoModalPosition({
-        left: adjustPositionForViewport(
-          {
-            top: Number(clientY),
-            left: Number(clientX),
-          },
-          3,
-        ).left,
-        top: adjustPositionForViewport(
-          {
-            top: Number(clientY),
-            left: Number(clientX),
-          },
-          3,
-        ).top,
-      });
+        left: pageX,
+        top: pageY,
+      })
 
       debouncedFetchCalendarData({
         startDate: startDateISOString,
@@ -450,8 +429,8 @@ const EventCalendar = () => {
         selectedScheduleUserIds: selectedScheduleUserIds,
         keySearch: keySearch,
         date: date,
-        clientX: clientX,
-        clientY: clientY,
+        pageX: pageX,
+        pageY: pageY,
         isYearView: true,
       });
     }
@@ -749,8 +728,12 @@ const EventCalendar = () => {
               </p>
             </div>
             <div className={` text-black text-[12px] font-normal px-1`}>
-              {new Date(eventContent.event.start).getDate() !=
-              new Date(eventContent.event.end).getDate() ? (
+              {new Date(
+                new Date(eventContent.event.start).setHours(0, 0, 0, 0),
+              ).getTime() !==
+              new Date(
+                new Date(eventContent.event.end).setHours(0, 0, 0, 0),
+              ).getTime() ? (
                 <>
                   <p className="whitespace-nowrap">
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
@@ -828,8 +811,12 @@ const EventCalendar = () => {
               </p>
             </div>{' '}
             <div className={` text-black text-[12px] font-normal px-1`}>
-              {new Date(eventContent.event.start).getDate() !=
-              new Date(eventContent.event.end).getDate() ? (
+              {new Date(
+                new Date(eventContent.event.start).setHours(0, 0, 0, 0),
+              ).getTime() !==
+              new Date(
+                new Date(eventContent.event.end).setHours(0, 0, 0, 0),
+              ).getTime() ? (
                 <>
                   <p className="whitespace-nowrap">
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.start))}`}{' '}
@@ -854,8 +841,12 @@ const EventCalendar = () => {
       } else if (currentView === CalendarViewOptions.VIEW_BY_MONTH) {
         if (
           eventContent.event.allDay ||
-          new Date(eventContent.event.start).getDate() !=
-            new Date(eventContent.event.end).getDate()
+          new Date(
+            new Date(eventContent.event.start).setHours(0, 0, 0, 0),
+          ).getTime() !==
+            new Date(
+              new Date(eventContent.event.end).setHours(0, 0, 0, 0),
+            ).getTime()
         ) {
           if (
             eventContent.event.extendedProps.type == EventCalendarType.HOLIDAY
@@ -988,55 +979,26 @@ const EventCalendar = () => {
             }
           }
         });
-      setPopoverInfo({
+      setEventListModalInfo({
         date: clickInfo.date,
         events: filterEvents,
-        left: adjustPositionForViewport(
-          {
-            top: clickInfo.jsEvent.clientY,
-            left: clickInfo.jsEvent.clientX,
-          },
-          filterEvents.length,
-        ).left,
-        top: adjustPositionForViewport(
-          {
-            top: clickInfo.jsEvent.clientY,
-            left: clickInfo.jsEvent.clientX,
-          },
-          filterEvents.length,
-        ).top,
+        left: clickInfo.jsEvent.pageX,
+        top: clickInfo.jsEvent.pageY,
       });
       setInfoModalPosition({
-        left: adjustPositionForViewport(
-          {
-            top: clickInfo.jsEvent.clientY,
-            left: clickInfo.jsEvent.clientX,
-          },
-          3,
-        ).left,
-        top: adjustPositionForViewport(
-          {
-            top: clickInfo.jsEvent.clientY,
-            left: clickInfo.jsEvent.clientX,
-          },
-          3,
-        ).top,
-      });
+        left: clickInfo.jsEvent.pageX,
+        top: clickInfo.jsEvent.pageY,
+      })
     }
     clickInfo.jsEvent.preventDefault();
-  };
-
-  // Handle close popup
-  const handlePopoverClose = () => {
-    setPopoverInfo(null);
   };
 
   // Show events in modal
   const handleShowEventsInModal = (
     eventList: any[],
     date: Date,
-    clientX: number,
-    clientY: number,
+    pageX: number,
+    pageY: number,
   ) => {
     const filterEvents: any[] = [];
     eventList.forEach((event) => {
@@ -1071,45 +1033,21 @@ const EventCalendar = () => {
         }
       }
     });
-    setPopoverInfo({
+    setEventListModalInfo({
       date: date as Date,
       events: filterEvents,
-      left: adjustPositionForViewport(
-        {
-          top: Number(clientY),
-          left: Number(clientX),
-        },
-        filterEvents.length,
-      ).left,
-      top: adjustPositionForViewport(
-        {
-          top: Number(clientY),
-          left: Number(clientX),
-        },
-        filterEvents.length,
-      ).top,
+      left: pageX,
+      top: pageY,
     });
     setInfoModalPosition({
-      left: adjustPositionForViewport(
-        {
-          top: Number(clientY),
-          left: Number(clientX),
-        },
-        5,
-      ).left,
-      top: adjustPositionForViewport(
-        {
-          top: Number(clientY),
-          left: Number(clientX),
-        },
-        6,
-      ).top,
-    });
+      left: pageX,
+      top: pageY,
+    })
   };
 
   // Get holiday events
   const getHolidayEvents = (startDate: string, endDate: string) => {
-    if (calendarRef.current) {
+    if (showHolidayEvents && calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
       const currentYear = calendarApi.view.currentStart.getFullYear();
       const holidayList = getHolidaysOf(Number(currentYear));
@@ -1168,8 +1106,8 @@ const EventCalendar = () => {
     endDate: string;
     isYearView?: boolean;
     date?: Date;
-    clientX?: number;
-    clientY?: number;
+    pageX?: number;
+    pageY?: number;
     keySearch: string;
   }) => {
     const apiUrl = `${apiRouters.SCHEDULES}?${userId ? `&user_ids=${userId}` : ''}${startDate && `&start_date=${startDate}`}${endDate && `&end_date=${endDate}`}${keySearch ? `&search=${keySearch}` : ''}`;
@@ -1241,8 +1179,8 @@ const EventCalendar = () => {
               handleShowEventsInModal(
                 [...newEvents],
                 variables.date as Date,
-                Number(variables.clientX),
-                Number(variables.clientY),
+                Number(variables.pageX),
+                Number(variables.pageY),
               );
             }
             return [...newEvents, ...holidayList];
@@ -1622,23 +1560,11 @@ const EventCalendar = () => {
         handleConfirmGetDataEventInfo(eventId, repeatScheduleId);
       }
       setInfoModalPosition({
-        left: adjustPositionForViewport(
-          {
-            top: Number(clickInfo.jsEvent.clientY),
-            left: Number(clickInfo.jsEvent.clientX),
-          },
-          5,
-        ).left,
-        top: adjustPositionForViewport(
-          {
-            top: Number(clickInfo.jsEvent.clientY),
-            left: Number(clickInfo.jsEvent.clientX),
-          },
-          6,
-        ).top,
+        left: clickInfo.jsEvent.pageX,
+        top: clickInfo.jsEvent.pageY,
       });
     } else {
-      setPopoverInfo(null);
+      setEventListModalInfo(null);
       if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
         handleSetEventParam({
           id: `${clickInfo.event.id}`,
@@ -1741,8 +1667,8 @@ const EventCalendar = () => {
     if (searchParams.get('view') == ViewOptions.YEAR) {
       handleShowEventsInYearView(
         clickInfo.date,
-        clickInfo.jsEvent.clientX,
-        clickInfo.jsEvent.clientY,
+        clickInfo.jsEvent.pageX,
+        clickInfo.jsEvent.pageY,
       );
       return;
     }
@@ -1750,8 +1676,8 @@ const EventCalendar = () => {
       handleShowEventsInModal(
         events,
         clickInfo.date,
-        clickInfo.jsEvent.clientX,
-        clickInfo.jsEvent.clientY,
+        clickInfo.jsEvent.pageX,
+        clickInfo.jsEvent.pageY,
       );
     } else {
       if (
@@ -1819,15 +1745,6 @@ const EventCalendar = () => {
         type: EventWorkCategory.MEDIUM,
       });
     }
-    if (data.smallCategory?.value) {
-      newWorkCategories.push({
-        categoryId:
-          `${data.smallCategory.value}` == NO_OPTION_CATEGORY
-            ? null
-            : `${data.smallCategory.value}`,
-        type: EventWorkCategory.SMALL,
-      });
-    }
     if (data.startDate) {
       if (data.isAllDay) {
         newStartDate = addTimeToDate(
@@ -1857,7 +1774,9 @@ const EventCalendar = () => {
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
       selectOrganizations: data.selectOrganizations || [],
-      locationId: data.location ? String((data.location as OptionDropdownType)?.value) : '',
+      locationId: data.location
+        ? String((data.location as OptionDropdownType)?.value)
+        : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
@@ -2021,15 +1940,6 @@ const EventCalendar = () => {
         type: EventWorkCategory.MEDIUM,
       });
     }
-    if (data.smallCategory && data.smallCategory?.value !== 'undefined') {
-      newWorkCategories.push({
-        categoryId:
-          `${data.smallCategory.value}` == NO_OPTION_CATEGORY
-            ? null
-            : `${data.smallCategory.value}`,
-        type: EventWorkCategory.SMALL,
-      });
-    }
     if (data.type) {
       newType = (data.type as OptionDropdownType).value as string;
     }
@@ -2066,7 +1976,9 @@ const EventCalendar = () => {
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
       selectOrganizations: data.selectOrganizations || [],
-      locationId: data.location ? String((data.location as OptionDropdownType).value) : '',
+      locationId: data.location
+        ? String((data.location as OptionDropdownType).value)
+        : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
@@ -2350,24 +2262,6 @@ const EventCalendar = () => {
     return defaultView;
   };
 
-  // Handle close popup
-  const handleClosePopover = (event: MouseEvent) => {
-    if (
-      popoverRef.current &&
-      !popoverRef.current.contains(event.target as Node)
-    ) {
-      setPopoverInfo(null);
-      setDefaultCreateStartDate(undefined);
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener('click', handleClosePopover, true);
-    return () => {
-      document.removeEventListener('click', handleClosePopover, true);
-    };
-  }, []);
-
   const showCurrentViewButtonContent = () => {
     switch (searchParams.get('view')) {
       case ViewOptions.DAY:
@@ -2630,7 +2524,7 @@ const EventCalendar = () => {
           </div>
 
           <div
-            className={`w-full ${!isDayOrWeekView() && 'pl-6'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} ${showSidebar ? '' : 'pr-8'}`}
+            className={`w-full ${!isDayOrWeekView() && 'pl-6'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} !overflow-hidden ${showSidebar ? '' : 'pr-8'}`}
             style={{ overflowX: 'auto', width: '100%' }}>
             {calendarLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#ebf1f4] z-10"></div>
@@ -2861,20 +2755,6 @@ const EventCalendar = () => {
               )}
           </div>
         </div>
-        {popoverInfo && (
-          <div className="z-30 flex items-center justify-center">
-            <EventListModal
-              checkShowUserAvatar={checkShowUserAvatar}
-              handleCreateNewEventFromPopup={handleCreateNewEventFromPopup}
-              handleEventClickInPopup={handleEventClickInPopup}
-              handlePopoverClose={handlePopoverClose}
-              popoverInfo={popoverInfo}
-              popoverInfoLoading={popoverInfoLoading}
-              popoverRef={popoverRef}
-              setDefaultCreateStartDate={setDefaultCreateStartDate}
-            />
-          </div>
-        )}
         <div
           className={`${showSidebar ? 'w-[24%] relative py-6 px-4 h-[1000px] shadow-lg shadow-slate-900/20 shadow-l-2 bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
           <CalendarSidebar
@@ -2897,6 +2777,17 @@ const EventCalendar = () => {
           />
         </div>
       </div>
+      {eventListModalInfo && (
+        <EventListModal
+          checkShowUserAvatar={checkShowUserAvatar}
+          handleCreateNewEventFromPopup={handleCreateNewEventFromPopup}
+          handleEventClickInPopup={handleEventClickInPopup}
+          eventListModalInfo={eventListModalInfo}
+          popoverInfoLoading={popoverInfoLoading}
+          setEventListModalInfo={setEventListModalInfo}
+          setDefaultCreateStartDate={setDefaultCreateStartDate}
+        />
+      )}
       {openCreateEventModal && (
         <ActionsEventModal
           open={openCreateEventModal}
@@ -3125,15 +3016,6 @@ const EventCalendar = () => {
                   data.categories &&
                   (data.categories.find(
                     (cat) => cat.type == EventWorkCategory.MEDIUM,
-                  )?.name as string)
-                }`,
-              },
-              smallCategory: {
-                value: `${data.categories && data.categories.find((cat) => cat.type == EventWorkCategory.SMALL)?.id}`,
-                label: `${
-                  data.categories &&
-                  (data.categories.find(
-                    (cat) => cat.type == EventWorkCategory.SMALL,
                   )?.name as string)
                 }`,
               },

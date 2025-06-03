@@ -1,5 +1,12 @@
 import { useSession } from 'next-auth/react';
-import { Dispatch, MutableRefObject, SetStateAction, useContext } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { isSameDay } from 'date-fns';
 
 import ImageRound from '@components/common/ImageRound';
@@ -11,7 +18,7 @@ import { EventCalendarType, PermissionsSystem } from '@constants/enums';
 
 import { CalendarPopoverInfo, EventParticipant } from '@interfaces/calendar';
 
-import { hasPermissionInArray } from '@utils';
+import { calculatePopupPosition, hasPermissionInArray } from '@utils';
 import {
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
@@ -21,11 +28,10 @@ import {
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 interface EventListModalProps {
-  popoverRef: MutableRefObject<HTMLDivElement | null>;
-  popoverInfo: CalendarPopoverInfo | null;
+  eventListModalInfo: CalendarPopoverInfo | null;
   popoverInfoLoading: boolean;
+  setEventListModalInfo: Dispatch<SetStateAction<CalendarPopoverInfo | null>>;
   setDefaultCreateStartDate: Dispatch<SetStateAction<Date | undefined>>;
-  handlePopoverClose: () => void;
   handleCreateNewEventFromPopup: () => void;
   handleEventClickInPopup: (eventId: string, repeatScheduleId: string) => void;
   checkShowUserAvatar: (
@@ -35,17 +41,54 @@ interface EventListModalProps {
 }
 
 export const EventListModal = ({
-  popoverRef,
-  popoverInfo,
+  eventListModalInfo,
   popoverInfoLoading,
+  setEventListModalInfo,
   setDefaultCreateStartDate,
-  handlePopoverClose,
   handleCreateNewEventFromPopup,
   handleEventClickInPopup,
   checkShowUserAvatar,
 }: EventListModalProps) => {
+  const popoverRef = useRef<HTMLDivElement | null>(null);
   const { data: session } = useSession();
   const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+  const [popupPosition, setPopupPosition] = useState<{
+    top: number;
+    left: number;
+  }>({
+    top: eventListModalInfo ? Number(eventListModalInfo.top) : 0,
+    left: eventListModalInfo ? Number(eventListModalInfo.left) : 0,
+  });
+
+  // Handle close popup
+  const closePopover = () => {
+    setEventListModalInfo(null);
+    setDefaultCreateStartDate(undefined);
+  };
+  const handleClosePopover = (event: MouseEvent) => {
+    if (
+      popoverRef.current &&
+      !popoverRef.current.contains(event.target as Node)
+    ) {
+      closePopover();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('click', handleClosePopover, true);
+    return () => {
+      document.removeEventListener('click', handleClosePopover, true);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (popoverRef.current) {
+      const popupRect = popoverRef.current.getBoundingClientRect();
+      const adjustedPosition = calculatePopupPosition(popupRect, popupPosition);
+
+      setPopupPosition(adjustedPosition);
+    }
+  }, []);
 
   const showUserAvatars = (participantList: EventParticipant[]) => {
     if (participantList && participantList.length > 0) {
@@ -130,22 +173,22 @@ export const EventListModal = ({
       }
     }
   };
+
   return (
-    <>
-      {popoverInfo && (
+    <div className="z-50">
+      {eventListModalInfo && (
         <div
           className={`p-4 bg-white border custom-popover w-[330px] border-gray-200 shadow-lg font-primary max-h-[500px] overflow-y-auto !rounded-2xl py-4`}
           ref={popoverRef}
           style={{
             position: 'absolute',
-            top: `${popoverInfo ? popoverInfo.top : 0}px`,
-            left: `${popoverInfo ? popoverInfo.left : 0}px`,
+            top: `${popupPosition.top}px`,
+            left: `${popupPosition.left}px`,
           }}>
           <div
             className="hover:bg-[#EBF1F4] absolute p-1.5 right-2 top-2 hover:rounded-full hover:cursor-pointer"
             onClick={() => {
-              handlePopoverClose();
-              setDefaultCreateStartDate(undefined);
+              closePopover();
             }}>
             <ImageRound
               name="Close"
@@ -154,10 +197,10 @@ export const EventListModal = ({
             />
           </div>
           <h3 className="text-center mb-4">
-            {popoverInfo.date
+            {eventListModalInfo.date
               ? (() => {
                   const { day, dayOfWeek, month } = getDateInfo(
-                    new Date(popoverInfo.date),
+                    new Date(eventListModalInfo.date),
                   );
                   return (
                     <>
@@ -170,15 +213,15 @@ export const EventListModal = ({
                 })()
               : ''}
           </h3>
-          <ul className="list-disc">
-            {popoverInfo.events.map((event) => {
+          <ul className="list-disc max-h-[250px] overflow-y-auto">
+            {eventListModalInfo.events.map((event) => {
               return (
                 <li
                   key={event.eventId}
                   className={`text-xs list-none mb-1 bg-[#EBF1F7] text-[#444546] !rounded-[8px] pl-1.5 pt-1 ${event.repeatScheduleId.includes('holiday') && 'hover:cursor-not-allowed'}`}
                   onClick={() => {
                     if (!event.repeatScheduleId.includes('holiday')) {
-                      handlePopoverClose();
+                      setEventListModalInfo(null);
                       handleEventClickInPopup(
                         event.eventId,
                         event.repeatScheduleId,
@@ -259,7 +302,7 @@ export const EventListModal = ({
                 <div
                   className={`mx-auto mt-3 w-fit hover:cursor-pointer hover:rounded-full p-[6px] hover:bg-gray-200 border-[1px] border-transparent`}
                   onClick={() => {
-                    handlePopoverClose();
+                    setEventListModalInfo(null);
                     handleCreateNewEventFromPopup();
                   }}>
                   <ImageRound
@@ -272,6 +315,6 @@ export const EventListModal = ({
             )}
         </div>
       )}
-    </>
+    </div>
   );
 };
