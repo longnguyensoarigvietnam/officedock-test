@@ -335,21 +335,22 @@ const CategoryStepRaw = ({
                                   },
                                 ];
                               if (selectedMediumCategoryOption) {
-                                selectedMediumCategoryOption.SMALL.map(
-                                  (smallCategory) => {
-                                    if (
-                                      !initialSmallCategory.find(
-                                        (item) =>
-                                          item.value == smallCategory.id,
-                                      )
-                                    ) {
-                                      initialSmallCategory.push({
-                                        label: smallCategory.name,
-                                        value: smallCategory.id,
-                                      });
-                                    }
-                                  },
-                                );
+                                selectedMediumCategoryOption.SMALL &&
+                                  selectedMediumCategoryOption.SMALL.map(
+                                    (smallCategory) => {
+                                      if (
+                                        !initialSmallCategory.find(
+                                          (item) =>
+                                            item.value == smallCategory.id,
+                                        )
+                                      ) {
+                                        initialSmallCategory.push({
+                                          label: smallCategory.name,
+                                          value: smallCategory.id,
+                                        });
+                                      }
+                                    },
+                                  );
                               }
 
                               setDataOptionsCategorySmall((prev) => ({

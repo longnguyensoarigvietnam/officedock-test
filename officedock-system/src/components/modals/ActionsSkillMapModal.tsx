@@ -295,7 +295,7 @@ const ActionsSkillMapModal = ({
 
             if (!selectedMedium) return [];
 
-            return selectedMedium.SMALL.map((small) => ({
+            return selectedMedium.SMALL && selectedMedium.SMALL.map((small) => ({
               label: small.name,
               value: small.id,
             }));
