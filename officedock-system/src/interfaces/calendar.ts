@@ -44,7 +44,6 @@ export interface EventFormData {
   type?: OptionDropdownType;
   largeCategory?: OptionDropdownType;
   mediumCategory?: OptionDropdownType;
-  smallCategory?: OptionDropdownType;
   repeatType?: OptionDropdownType | null;
   repeatInterval?: OptionDropdownType | null;
   weekDay?: OptionDropdownType | null;
@@ -70,7 +69,6 @@ export interface EventEditFormData {
   type?: string | OptionDropdownType;
   largeCategory?: OptionDropdownType;
   mediumCategory?: OptionDropdownType;
-  smallCategory?: OptionDropdownType;
   categories?: { id: string; name: string; type: string }[];
   createdAt?: Date;
   repeatType?: OptionDropdownType;
@@ -125,7 +123,6 @@ export interface CreationDataEventCalendar {
 export interface EventWorkCategory {
   LARGE: string[];
   MEDIUM: string[];
-  SMALL: string[];
 }
 
 export interface EventParticipant {

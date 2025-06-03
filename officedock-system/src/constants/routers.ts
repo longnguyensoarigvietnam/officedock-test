@@ -559,4 +559,7 @@ export const apiRouters = {
   // LOCATION
   LOCATION_LIST: '/event-locations/',
   LOCATION_DETAIL: (uuid: string) => `/event-locations/${uuid}/`,
+
+  // COMPANY
+  COMPANY_SETTINGS: 'companies/settings/'
 };

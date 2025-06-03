@@ -104,9 +104,6 @@ const ActionsEventModal = ({
   const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
     OptionDropdownType[]
   >([]);
-  const [dataOptionsCategorySmall, _setDataOptionsCategorySmall] = useState<
-    OptionDropdownType[]
-  >([]);
   const [dataOptionsCategoryMedium, _setDataOptionsCategoryMedium] = useState<
     OptionDropdownType[]
   >([]);
@@ -169,7 +166,6 @@ const ActionsEventModal = ({
       selectOrganizations: [],
       largeCategory: { label: '', value: '' },
       mediumCategory: { label: '', value: '' },
-      smallCategory: { label: '', value: '' },
       endDate: null,
       startDate: null,
       endTime: '',
@@ -228,7 +224,6 @@ const ActionsEventModal = ({
       }
       let newLargeCategory: OptionDropdownType = { label: '', value: '' };
       let newMediumCategory: OptionDropdownType = { label: '', value: '' };
-      let newSmallCategory: OptionDropdownType = { label: '', value: '' };
 
       if (dataEvent.categories) {
         const largeCat = dataEvent.categories.find(
@@ -245,13 +240,6 @@ const ActionsEventModal = ({
           value: mediumCat ? `${mediumCat?.id}` : NO_OPTION_CATEGORY,
           label: mediumCat ? `${mediumCat?.name}` : NO_OPTION_CATEGORY,
         };
-        const smallCat = dataEvent.categories.find(
-          (category) => category.type === EventWorkCategory.SMALL,
-        );
-        newSmallCategory = {
-          value: smallCat ? `${smallCat?.id}` : NO_OPTION_CATEGORY,
-          label: smallCat ? `${smallCat?.name}` : NO_OPTION_CATEGORY,
-        };
       }
 
       (value.id = `${dataEvent.id}`),
@@ -264,9 +252,6 @@ const ActionsEventModal = ({
         (value.mediumCategory = backToEditing
           ? dataEvent.mediumCategory
           : newMediumCategory),
-        (value.smallCategory = backToEditing
-          ? dataEvent.smallCategory
-          : newSmallCategory),
         (value.memo = dataEvent.memo),
         (value.isAllDay = dataEvent.isAllDay),
         (value.location = dataEvent.location
@@ -1530,7 +1515,6 @@ const ActionsEventModal = ({
                       onChange={(e) => {
                         if (e.value != watch('largeCategory.value')) {
                           setValue('mediumCategory', { label: '', value: '' });
-                          setValue('smallCategory', { label: '', value: '' });
                         }
                         onChange(e);
                       }}
@@ -1576,61 +1560,12 @@ const ActionsEventModal = ({
                           )}
                           placeholder={'中カテゴリ'}
                           onChange={(e) => {
-                            if (e.value != watch('mediumCategory.value')) {
-                              setValue('smallCategory', {
-                                label: '',
-                                value: '',
-                              });
-                            }
                             onChange(e);
                           }}
                           disabled={isDisabled}
                         />
                       );
                     }}
-                  />
-                </div>
-              )}
-
-              {watch('mediumCategory')?.value && (
-                <div className="mb-2">
-                  <Controller
-                    control={control}
-                    name={'smallCategory'}
-                    render={({ field: { value, onChange } }) => (
-                      <Dropdown
-                        className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
-                        classNameTextData="!text-xs"
-                        classNameOption="!text-xs"
-                        options={[
-                          {
-                            label: NO_OPTION_CATEGORY,
-                            value: NO_OPTION_CATEGORY,
-                          },
-                          ...dataOptionsCategorySmall.filter(
-                            (category) => category.label !== NO_OPTION_CATEGORY,
-                          ),
-                        ]}
-                        selectedOption={[
-                          {
-                            label: NO_OPTION_CATEGORY,
-                            value: NO_OPTION_CATEGORY,
-                          },
-                          ...dataOptionsCategorySmall.filter(
-                            (category) => category.label !== NO_OPTION_CATEGORY,
-                          ),
-                        ].find(
-                          (element) =>
-                            element.value ==
-                            (value as OptionDropdownType)?.value,
-                        )}
-                        placeholder={'小カテゴリ'}
-                        onChange={(e) => {
-                          onChange(e);
-                        }}
-                        disabled={isDisabled}
-                      />
-                    )}
                   />
                 </div>
               )}
@@ -1977,7 +1912,7 @@ const ActionsEventModal = ({
               </div>
             </div>
           </div>
-
+          {/* Memo */}
           <div>
             <TextArea
               register={register('memo')}

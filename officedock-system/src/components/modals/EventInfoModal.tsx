@@ -1,4 +1,4 @@
-import { memo, useContext, useEffect, useRef } from 'react';
+import { memo, useContext, useEffect, useRef, useState } from 'react';
 import { isSameDay } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import tinycolor from 'tinycolor2';
@@ -17,7 +17,7 @@ import {
   formatHoursAndMinutesForDateTime,
   formatShowDeadline,
 } from '@utils/date';
-import { hasPermissionInArray } from '@utils';
+import { calculatePopupPosition, hasPermissionInArray } from '@utils';
 
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
@@ -51,6 +51,25 @@ const EventInfoModal = memo(
     const popoverRef = useRef<HTMLDivElement | null>(null);
     const { data: session } = useSession();
     const { dashboardMembersWithAvatars } = useContext(GlobalStateContext);
+    const [popupPosition, setPopupPosition] = useState<{
+      top: number;
+      left: number;
+    }>({
+      top: Number(top),
+      left: Number(left),
+    });
+
+    useEffect(() => {
+      if (popoverRef.current) {
+        const popupRect = popoverRef.current.getBoundingClientRect();
+        const adjustedPosition = calculatePopupPosition(
+          popupRect,
+          popupPosition,
+        );
+
+        setPopupPosition(adjustedPosition);
+      }
+    }, []);
 
     const handleClosePopover = (event: MouseEvent) => {
       if (
@@ -81,14 +100,14 @@ const EventInfoModal = memo(
     };
 
     return (
-      <div className="z-50 flex items-center justify-center">
+      <div className="z-50">
         <div
           className="font-primary shadow-lg bg-white w-[330px] !rounded-2xl z-50 p-4"
           ref={popoverRef}
           style={{
             position: 'absolute',
-            top: `${top}px`,
-            left: `${left}px`,
+            top: `${popupPosition.top}px`,
+            left: `${popupPosition.left}px`,
           }}>
           <div className="flex items-center justify-between">
             <p className="font-medium text-xs text-[#77858F]">予定</p>
@@ -162,7 +181,7 @@ const EventInfoModal = memo(
             </div>
           </div>
 
-          <p className="font-bold text-[16px] mb-3 break-words">
+          <p className="font-bold text-[16px] mb-3 break-all line-clamp-3">
             {dataEvent?.title}
           </p>
           <div className="flex">
@@ -203,7 +222,8 @@ const EventInfoModal = memo(
           <div className="flex items-center gap-3 mt-3">
             <p className="flex-none text-[14px]">場所</p>
             <p className="bg-[#EBF1F7] rounded-[4px] px-[5px] py-[6px] truncate max-w-[305px] text-[14px]">
-              {(dataEvent?.location as LocationEventType)?.name || `${NO_SETTING}`}
+              {(dataEvent?.location as LocationEventType)?.name ||
+                `${NO_SETTING}`}
             </p>
           </div>
           {dataEvent &&
