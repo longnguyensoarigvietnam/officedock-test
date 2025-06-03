@@ -7,14 +7,14 @@ from calendars.apis import (
     ScheduleTeamdockViewSet,
 )
 from companies.apis import SystemCompanyViewSet
+from stat_data.apis import StatDataViewSet
 from skills.apis import (
     StatisticCategoryViewSet,
     ManageSkillMapViewSet,
     SkillViewSet,
     SkillMapViewSet,
 )
-from stat_data.apis import (
-    StatDataViewSet,
+from statistics.apis import (
     StatisticViewSet,
     OrganizationStatisticViewSet,
 )
