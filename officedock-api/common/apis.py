@@ -341,7 +341,11 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             .all()
             .distinct()
         )
-        # FIXME: Get list calendar category here
+
+        organization_categories = OrganizationDetailSerializer(
+            calendar_org
+        ).data["statistic_categories"]
+        categories = transform_statistic_categories(organization_categories)
 
         data = {
             "members": CreationDataUserWithOrganizationSerializer(
@@ -352,7 +356,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             "event_locations": EventLocationSerializer(
                 event_locations, many=True
             ).data,
-            "categories": [],
+            "categories": categories,
         }
 
         return self.response_ok(data)
