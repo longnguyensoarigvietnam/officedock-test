@@ -26,6 +26,24 @@ class ContractSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class BaseCompanySerializer(serializers.ModelSerializer):
+    """
+    Serializer for base company model.
+    """
+
+    contract = ContractSerializer(required=False)
+
+    class Meta:
+        model = Company
+        fields = [
+            "id",
+            "name",
+            "contract",
+            "is_show_holidays_calendar",
+        ]
+        read_only_fields = ["is_show_holidays_calendar"]
+
+
 class CompanySerializer(serializers.ModelSerializer):
     """
     Serializer for Company model.

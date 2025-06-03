@@ -17,6 +17,7 @@ from utils.mail import MailService
 from .filters import CompanyFilter
 from .models import Company, Contract
 from .serializers import (
+    BaseCompanySerializer,
     CompanySerializer,
     CompanySettingSerializer,
     ContractSerializer,
@@ -112,16 +113,23 @@ class SystemCompanyViewSet(BaseAPIViewSet, mixins.RetrieveModelMixin):
     Inherits from BaseAPIViewSet for common API functionality.
     """
 
-    queryset = Company.objects.all()
-    serializer_class = CompanySettingSerializer
+    queryset = Company.objects.order_by("created_at").all()
+    serializer_class = BaseCompanySerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Override the default queryset to only return the company associated with the authenticated user.
+        """
+        return super().get_queryset().filter(id=self.request.user.company.id)
 
     @action(
         methods=["POST"],
         detail=False,
         url_path="settings",
+        serializer_class=CompanySettingSerializer,
     )
-    def settings(self, request):
+    def company_settings(self, request):
         """
         Update company settings endpoint.
 
