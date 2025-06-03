@@ -503,7 +503,7 @@ const EditActualDurationsForm = () => {
       },
     ];
     if (selectedMediumCategoryOption) {
-      selectedMediumCategoryOption.SMALL.map((smallCategory) => {
+      selectedMediumCategoryOption.SMALL && selectedMediumCategoryOption.SMALL.map((smallCategory) => {
         if (
           !initialSmallCategory.find((item) => item.value == smallCategory.id)
         ) {

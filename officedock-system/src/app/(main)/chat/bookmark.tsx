@@ -349,15 +349,6 @@ const BookmarkList = ({
         type: EventWorkCategory.MEDIUM,
       });
     }
-    if (data.smallCategory && data.smallCategory?.value !== 'undefined') {
-      newWorkCategories.push({
-        categoryId:
-          `${data.smallCategory.value}` == NO_OPTION_CATEGORY
-            ? null
-            : `${data.smallCategory.value}`,
-        type: EventWorkCategory.SMALL,
-      });
-    }
     if (data.type) {
       newType = (data.type as OptionDropdownType).value as string;
     }

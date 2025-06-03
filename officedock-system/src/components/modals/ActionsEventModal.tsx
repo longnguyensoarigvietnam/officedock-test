@@ -1,7 +1,7 @@
 'use client';
 import { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
@@ -23,6 +23,7 @@ import {
   EventFormData,
   EventParticipant,
 } from '@interfaces/calendar';
+import { CategoryStructure } from '@interfaces/skills';
 import { LocationEventType } from '@interfaces/location';
 import { User } from '@interfaces/user';
 
@@ -104,10 +105,13 @@ const ActionsEventModal = ({
   const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
     OptionDropdownType[]
   >([]);
-  const [dataOptionsCategoryMedium, _setDataOptionsCategoryMedium] = useState<
+  const [dataOrganizationCategories, setDataOrganizationCategories] = useState<
+    CategoryStructure[]
+  >([]);
+  const [dataOptionsCategoryMedium, setDataOptionsCategoryMedium] = useState<
     OptionDropdownType[]
   >([]);
-  const [dataOptionsCategoryLarge, _setDataOptionsCategoryLarge] = useState<
+  const [dataOptionsCategoryLarge, setDataOptionsCategoryLarge] = useState<
     OptionDropdownType[]
   >([]);
   const [dataOptionsTags, setDataOptionsTags] = useState<OptionDropdownType[]>(
@@ -418,6 +422,52 @@ const ActionsEventModal = ({
 
   useEffect(() => {
     if (creationDataEventCalendar) {
+      const organizationCategories = creationDataEventCalendar.categories.map(
+        (category) => {
+          const largeCategory = category.LARGE || {
+            id: NO_OPTION_CATEGORY,
+            name: NO_OPTION_CATEGORY,
+            uuid: '',
+          };
+
+          const mediumCategories = (category.MEDIUM || []).map(
+            (mediumCategory) => {
+              const mediumCategoryField = mediumCategory.MEDIUM || {
+                id: NO_OPTION_CATEGORY,
+                name: NO_OPTION_CATEGORY,
+                uuid: '',
+              };
+
+              return {
+                MEDIUM: mediumCategoryField,
+              };
+            },
+          );
+
+          return {
+            LARGE: largeCategory,
+            MEDIUM: mediumCategories,
+          };
+        },
+      );
+      setDataOrganizationCategories(organizationCategories);
+      setDataOptionsCategoryLarge(() => {
+        const largeCategories: OptionDropdownType[] = [
+          {
+            label: NO_OPTION_CATEGORY,
+            value: NO_OPTION_CATEGORY,
+          },
+        ];
+        creationDataEventCalendar.categories.map((category) => {
+          if (category.LARGE) {
+            largeCategories.push({
+              label: category.LARGE.name,
+              value: category.LARGE.id,
+            });
+          }
+        });
+        return largeCategories;
+      });
       setDataOptionsEventTypes(
         creationDataEventCalendar.types.map((org) => ({
           label: org,
@@ -460,6 +510,36 @@ const ActionsEventModal = ({
     dataOptionsOrganizations,
     isFetchedCreationDataStatistic,
   ]);
+
+  // Watch the form fields dynamically
+  const largeCategoryValue = useWatch({
+    control,
+    name: 'largeCategory.value',
+  });
+
+  // Dynamically compute dropdown options
+  useMemo(() => {
+    if (!dataOrganizationCategories || !watch('largeCategory.value')) {
+      setDataOptionsCategoryMedium([]);
+      return;
+    }
+
+    const selectedLargeCategory = dataOrganizationCategories.find(
+      (category) => category.LARGE.id == watch('largeCategory.value'),
+    );
+
+    if (!selectedLargeCategory) {
+      setDataOptionsCategoryMedium([]);
+    } else {
+      setDataOptionsCategoryMedium(
+        selectedLargeCategory.MEDIUM.map((mediumCategory) => ({
+          label: mediumCategory.MEDIUM.name,
+          value: mediumCategory.MEDIUM.id,
+        })),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataOrganizationCategories, largeCategoryValue, watch]);
 
   const [isCall, setIsCall] = useState<boolean>(false);
 

@@ -2,6 +2,8 @@ import { Tags } from './tag';
 import { Organizations } from './organization';
 import { OptionDropdownType } from './common';
 import { LocationEventType } from './location';
+import { CategoryStructure } from './skills';
+
 import { EventCalendarType, EventParticipantType } from '@constants/enums';
 
 export interface EventCalendarDetail {
@@ -110,7 +112,7 @@ export interface CreationDataEventCalendar {
   tags: Omit<Tags, 'responsiblePerson'>[];
   types: string[];
   members: EventParticipant[];
-  categories: EventWorkCategory;
+  categories: CategoryStructure[];
   organizations: {
     id: number;
     name: string;
@@ -118,11 +120,6 @@ export interface CreationDataEventCalendar {
     tags: { id: number; name: string }[];
   }[];
   eventLocations: LocationEventType[];
-}
-
-export interface EventWorkCategory {
-  LARGE: string[];
-  MEDIUM: string[];
 }
 
 export interface EventParticipant {
