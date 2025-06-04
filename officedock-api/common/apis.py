@@ -17,6 +17,7 @@ from calendars.constants import (
 from calendars.models import Schedule
 from calendars.serializers import EventLocationSerializer
 from chat.constants import WebSocketEventType
+from organizations.constants import OrganizationTypes
 from skills.models import StatisticCategory, Skill, SkillMapSkillLevel
 from organizations.serializers import (
     BaseStatisticCategorySerializer,
@@ -357,6 +358,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 event_locations, many=True
             ).data,
             "categories": categories,
+            "organization": CreationDataOrganizationSerializer(
+                calendar_org
+            ).data,
         }
 
         return self.response_ok(data)
@@ -452,7 +456,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         organizations = []
         if not organization_id:
             organizations = user.organizations.all()
-        elif organization := Organization.objects.filter(
+        elif organization := Organization.all_objects.filter(
             id=organization_id
         ).first():
             organizations = [organization]
@@ -464,9 +468,14 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 ] = CreationDataOrganizationWithStructCategorySerializer(
                     organizations[0], context={"user": user}
                 ).data
-                data["members"] = CreationDataUserSerializer(
-                    organizations[0].users.order_by("created_at"), many=True
-                ).data
+                # Return organization without list members if is Calendar organization
+                if organizations[0].type != OrganizationTypes.CALENDAR.value:
+                    data["members"] = CreationDataUserSerializer(
+                        organizations[0].users.order_by("created_at"), many=True
+                    ).data
+                else:
+                    return self.response_ok(data)
+
             else:
                 list_org = []
                 for organization in organizations:

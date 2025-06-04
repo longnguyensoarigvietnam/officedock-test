@@ -185,6 +185,11 @@ class ScheduleSerializer(serializers.ModelSerializer):
         """
         request = self.context.get("request")
         participants = data.get("participant_ids")
+        tags = data.get("tag_ids")
+
+        for tag in tags:
+            if not tag.get_calendar_organization():
+                raise serializers.ValidationError()
 
         if participants:
             for participant in participants:

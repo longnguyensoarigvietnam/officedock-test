@@ -32,7 +32,7 @@ class ScheduleFields(EnumChoices):
     DURATION = "実施予定日時"
     TYPE = "予定の種類"
     TAG = "集計タグ"
-    ADDRESS = "場所"
+    LOCATION = "場所"
     PARTICIPANTS = "参加者"
     MEMO = "予定についてのメモ"
     IS_ALL_DAY = "終日"
