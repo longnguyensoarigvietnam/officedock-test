@@ -333,6 +333,7 @@ const DailyReportBoard = () => {
               duration: secondsToTimeString(totalDurationOther),
               percent: totalPercentOther,
               id: 'その他',
+              isOfMainOrganization: false,
             }
           : null;
 
@@ -352,7 +353,13 @@ const DailyReportBoard = () => {
       }));
 
       // Prepare chart data
-      const listColor = mergedCategories.map((item) => item.categoryColor);
+      const listColor = mergedCategories.map((item) =>
+        item.isOfMainOrganization
+          ? 'white'
+          : item.id === 'その他'
+            ? '#D1D7DC'
+            : '#83919E',
+      );
       const listLabelChart = mergedCategories.map(
         (item) => item.categoryName || '未設定',
       );
@@ -1108,14 +1115,21 @@ const DailyReportBoard = () => {
             className={`daily-custom text-left custom-statistic mt-[12px] ${isHasChild && '!mt-[19px]  mb-[18px]'}`}>
             <SingleSelect
               className="border-none h-[30px] text-xs min-w-[162px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
-              defaultValue={optionSmall.find(
-                (element) =>
-                  element.value ===
-                  (info.row.original.SMALL.id
-                    ? info.row.original.SMALL.id
-                    : NO_OPTION_CATEGORY),
-              )}
-              isDisabled={!isPermissionAction}
+              defaultValue={
+                info.row.original.type !== EventCalendarType.TASK
+                  ? undefined
+                  : optionSmall.find(
+                      (element) =>
+                        element.value ===
+                        (info.row.original.SMALL.id
+                          ? info.row.original.SMALL.id
+                          : NO_OPTION_CATEGORY),
+                    )
+              }
+              isDisabled={
+                !isPermissionAction ||
+                info.row.original.type !== EventCalendarType.TASK
+              }
               placeholder=""
               showArrow
               options={optionSmall}
@@ -1415,7 +1429,7 @@ const DailyReportBoard = () => {
   });
 
   const { hoursConvert, minutesConvert } = convertToJapaneseValue(
-    `${dataStatisticPDF?.totalDuration}`,
+    `${dataStatistic?.totalDuration}`,
   );
   const {
     hoursConvert: hoursConvertDifferent,
@@ -1873,7 +1887,7 @@ const DailyReportBoard = () => {
                       data={chartData?.data}
                       labels={chartData?.labels}
                       actualValues={chartData?.actualValue}
-                      className="w-[280px] h-[280px] ml-5"
+                      className="w-[280px] h-[280px] ml-5 "
                     />
                   )}
                 </section>
@@ -2095,11 +2109,11 @@ const DailyReportBoard = () => {
                     <span className="">({detailDateInfo.weekday})</span>
                   </div>
                 </div>
-                <div className="flex text-sm items-center gap-1 h-full -translate-y-[10%] basis-1/2 justify-end">
+                <div className="flex text-sm items-center gap-1 h-full basis-1/2 py-1 justify-end">
                   <span className=" max-w-[100px] w-fit min-h-5 break-all ">
                     {session?.user.profile.fullName}
                   </span>
-                  <p className=" max-w-[100px] flex-shrink-0 w-fit break-all min-h-5">
+                  <p className=" max-w-[100px] flex-shrink-0 w-fit font-medium break-all py-1 min-h-5">
                     {dataStatisticPDF?.remark?.user.organizations.name}
                   </p>
                 </div>
@@ -2115,11 +2129,12 @@ const DailyReportBoard = () => {
                         data={chartDataPDF?.data}
                         labels={chartDataPDF?.labels}
                         actualValues={chartDataPDF?.actualValue}
-                        className="w-[180px] h-[180px]"
+                        colorLabel="black"
+                        className="w-[180px] h-[180px] rounded-full "
                       />
                     )}
                   </section>
-                  <section className="flex-1 flex flex-col  gap-1 pt-1">
+                  <section className="flex-1 flex flex-col  gap-1 pt-1 ml-4">
                     <div className="w-full max-w-[95%]  bg-white h-fit pb-2 font-normal border-b border-black flex gap-1 items-center  text-sm ">
                       <span className="mr-2">合計時間</span>
                       <span className="text-lg font-medium">
@@ -2152,7 +2167,7 @@ const DailyReportBoard = () => {
                             return (
                               <div
                                 key={index}
-                                className="flex items-center gap-[2px] w-full text-xs">
+                                className="flex items-center gap-[6px] mt-1 w-full text-xs">
                                 <div
                                   style={{
                                     backgroundColor: item.color,
@@ -2255,7 +2270,7 @@ const DailyReportBoard = () => {
                       <td
                         colSpan={2}
                         className="border-r border-black text-center text-xs py-2">
-                        <div className="-translate-y-[20%]">
+                        <div className="-translate-y-[25%]">
                           {item.startedAt &&
                             convertToTimeString(item.startedAt)}{' '}
                           ~{' '}
@@ -2264,7 +2279,7 @@ const DailyReportBoard = () => {
                       </td>
 
                       <td className="border-r border-black text-center text-xs">
-                        <div className="-translate-y-[20%]">
+                        <div className="-translate-y-[25%]">
                           {item.startedAt &&
                             item.pausedAt &&
                             calculateTotalMinutes(
@@ -2275,7 +2290,7 @@ const DailyReportBoard = () => {
                         </div>
                       </td>
                       <td className=" text-xs px-1" colSpan={7}>
-                        <div className="flex -translate-y-[20%]">
+                        <div className="break-all -translate-y-[10%] w-full max-w-[450px] py-2">
                           {item.title}
                         </div>
                       </td>

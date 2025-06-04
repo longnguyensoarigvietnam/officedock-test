@@ -75,6 +75,7 @@ export interface dataStatisticResponsePDF {
     percent: number;
     categoryColor: string;
     id?: string;
+    isOfMainOrganization: boolean;
   }[];
   remark: {
     date: string | null;

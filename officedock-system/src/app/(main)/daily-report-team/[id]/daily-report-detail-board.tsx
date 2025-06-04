@@ -373,6 +373,7 @@ const DailyReportDetailBoard = () => {
               duration: secondsToTimeString(totalDurationOther),
               percent: totalPercentOther,
               id: 'その他',
+              isOfMainOrganization: false,
             }
           : null;
 
@@ -392,7 +393,13 @@ const DailyReportDetailBoard = () => {
       }));
 
       // Prepare chart data
-      const listColor = mergedCategories.map((item) => item.categoryColor);
+      const listColor = mergedCategories.map((item) =>
+        item.isOfMainOrganization
+          ? 'white'
+          : item.id === 'その他'
+            ? '#D1D7DC'
+            : '#83919E',
+      );
       const listLabelChart = mergedCategories.map(
         (item) => item.categoryName || '未設定',
       );
@@ -2232,11 +2239,11 @@ const DailyReportDetailBoard = () => {
                     <span className="">({detailDateInfo.weekday})</span>
                   </div>
                 </div>
-                <div className="flex text-sm items-center gap-1 h-full -translate-y-[10%] basis-1/2 justify-end">
+                <div className="flex text-sm items-center gap-1 h-full py-1 basis-1/2 justify-end">
                   <span className=" max-w-[100px] w-fit min-h-5 break-all ">
                     {session?.user.profile.fullName}
                   </span>
-                  <p className=" max-w-[100px] flex-shrink-0 w-fit break-all min-h-5">
+                  <p className=" max-w-[100px] flex-shrink-0 w-fit py-1 font-medium break-all min-h-5">
                     {dataStatisticPDF?.remark?.user.organizations.name}
                   </p>
                 </div>
@@ -2252,6 +2259,7 @@ const DailyReportDetailBoard = () => {
                         data={chartDataPDF?.data}
                         labels={chartDataPDF?.labels}
                         actualValues={chartDataPDF?.actualValue}
+                        colorLabel="black"
                         className="w-[180px] h-[180px]"
                       />
                     )}
@@ -2392,7 +2400,7 @@ const DailyReportDetailBoard = () => {
                       <td
                         colSpan={2}
                         className="border-r border-black text-center text-xs py-2">
-                        <div className="-translate-y-[20%]">
+                        <div className="-translate-y-[25%]">
                           {item.startedAt &&
                             convertToTimeString(item.startedAt)}{' '}
                           ~{' '}
@@ -2401,7 +2409,7 @@ const DailyReportDetailBoard = () => {
                       </td>
 
                       <td className="border-r border-black text-center text-xs">
-                        <div className="-translate-y-[20%]">
+                        <div className="-translate-y-[25%]">
                           {item.startedAt &&
                             item.pausedAt &&
                             calculateTotalMinutes(
@@ -2412,7 +2420,7 @@ const DailyReportDetailBoard = () => {
                         </div>
                       </td>
                       <td className=" text-xs px-1" colSpan={7}>
-                        <div className="flex -translate-y-[20%]">
+                        <div className="break-all -translate-y-[10%] w-full max-w-[450px] py-2">
                           {item.title}
                         </div>
                       </td>

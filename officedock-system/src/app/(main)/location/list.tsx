@@ -27,7 +27,7 @@ import {
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
-import { NO_DATA_AVAILABLE } from '@constants';
+import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 
 import useEventLocationList from '@hooks/useEventLocationList';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
@@ -38,6 +38,8 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { LocationEventType } from '@interfaces/location';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
+import Pagination from '@components/common/Pagination';
+import Dropdown from '@components/common/Dropdown';
 
 const ListLocation = () => {
   const { data: session } = useSession();
@@ -57,6 +59,12 @@ const ListLocation = () => {
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
   const [selectedLocationToDelete, setSelectedLocationToDelete] =
     useState<LocationEventType | null>(null);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [debouncedParams, setDebouncedParams] = useState({
+    search: '',
+    page: 1,
+  });
 
   // Get authenticated user
   useAuthenticatedUser({
@@ -66,8 +74,13 @@ const ListLocation = () => {
   });
 
   useEventLocationList({
+    pagination: {
+      page: debouncedParams.page,
+      pageSize,
+    },
     onSuccess: (data) => {
-      setDataLocation(data);
+      setDataLocation(data.results);
+      setTotalPages(data.numPages);
     },
   });
 
@@ -212,10 +225,13 @@ const ListLocation = () => {
         uuid: editingId || '',
       });
     } else {
-      editEventLocation({
-        name: editText,
-        uuid: editingId || '',
-      });
+      const originalItem = dataLocation.find((item) => item.uuid === uuid);
+      if (originalItem && originalItem.name !== trimmedText) {
+        editEventLocation({
+          name: editText,
+          uuid: editingId || '',
+        });
+      }
     }
     setEditingId(null);
     setEditText('');
@@ -349,6 +365,7 @@ const ListLocation = () => {
                             src={'/icons/edit-gray.svg'}
                             className={`w-3.5 h-3.5 hover:cursor-pointer`}
                             onClick={() => {
+                              if (isEditing || isCreating) return;
                               setIsEditing(true);
                               handleEditClick(item?.uuid as string, item.name);
                             }}
@@ -408,6 +425,45 @@ const ListLocation = () => {
             )}
           </TableBody>
         </Table>
+        <div className="flex justify-center items-center w-full mt-3">
+          <div className="flex justify-center flex-1">
+            {dataLocation && dataLocation.length ? (
+              <Pagination
+                onChange={(pageNumber) => {
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: pageNumber,
+                  }));
+                }}
+                currentPage={debouncedParams.page}
+                totalPages={totalPages}
+              />
+            ) : null}
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-[66px]">
+              <Dropdown
+                options={PAGE_SIZE_OPTIONS}
+                selectedOption={PAGE_SIZE_OPTIONS.find(
+                  (element) => element.value == pageSize,
+                )}
+                className="h-[34px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
+                classNameTextData="!text-xs"
+                classActive="!text-sm"
+                classNameOption="!text-sm !border-[#77858F] !ring-[#77858F] !ring-opacity-100 !bottom-full !mb-1"
+                labelOptionClass="!text-sm font-medium !pl-1.5"
+                onChange={(e) => {
+                  setPageSize(Number(e.value));
+                  setDebouncedParams((prev) => ({
+                    ...prev,
+                    page: 1,
+                  }));
+                }}
+              />
+            </div>
+            <p className="text-sm">人ずつ表示</p>
+          </div>
+        </div>
       </div>
 
       {openConfirmDeleteModal && (

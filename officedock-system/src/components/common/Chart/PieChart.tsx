@@ -20,6 +20,7 @@ interface PieChartProps {
   className?: string;
   showLegend?: boolean;
   showTooltip?: boolean;
+  colorLabel?: string;
 }
 
 const PieChart = ({
@@ -28,6 +29,7 @@ const PieChart = ({
   labels,
   colors,
   className,
+  colorLabel = '#fff',
   actualValues,
   showLegend = false,
   showTooltip = true,
@@ -61,9 +63,12 @@ const PieChart = ({
         backgroundColor: filteredData.map(
           (item) => item.color || defaultColors[0],
         ),
-        borderColor: filteredData.map((item) =>
-          (item.color || defaultColors[0]).replace('1', '1'),
-        ),
+        borderColor:
+          colorLabel !== '#fff'
+            ? colorLabel
+            : filteredData.map((item) =>
+                (item.color || defaultColors[0]).replace('1', '1'),
+              ),
         borderWidth: 1,
         hoverOffset: 0,
       },
@@ -109,7 +114,7 @@ const PieChart = ({
 
           return `${truncatedLabel}\n${value}%`;
         },
-        color: '#fff',
+        color: colorLabel,
         font: {
           weight: 'bold',
           size: 10,
