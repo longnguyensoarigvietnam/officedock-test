@@ -128,8 +128,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if participants is not None:
             data = self._generate_chat_data(
-                start_date.isoformat(),
-                end_date.isoformat(),
+                schedule.recurring,
                 participants,
                 user.id,
             )
@@ -391,8 +390,6 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         month_day = serializer_data.pop("month_day", None)
         month = serializer_data.pop("month", None)
         old_recurring = instance.recurring
-        old_start_date = old_recurring["start_date"] if old_recurring else None
-        old_end_date = old_recurring["end_date"] if old_recurring else None
         recurring = None
         if repeat_type:
             recurring = {
@@ -409,19 +406,15 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if participants and send_to_chat:
             data = self._generate_chat_data(
-                start_date.isoformat(),
-                end_date.isoformat(),
+                recurring,
                 participants,
                 instance.creator_id if instance.creator_id else user.id,
             )
             data["field_changes"] = self._get_field_changes(
                 instance, serializer_data, participants, tags, categories
             )
-            if start_date != old_start_date or end_date != old_end_date:
-                data["old"] = {
-                    "start_date": old_start_date,
-                    "end_date": old_end_date,
-                }
+            if recurring != old_recurring:
+                data["old"] = old_recurring
         schedule = serializer.save()
 
         if participants is not None:
@@ -556,15 +549,12 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return self.response(status_code=status.HTTP_204_NO_CONTENT)
 
-    def _generate_chat_data(self, start_date, end_date, users, creator_id=None):
+    def _generate_chat_data(self, recurring, users, creator_id=None):
         """
         Generate chat data for sending messages on schedule changes.
         """
         return {
-            "new": {
-                "start_date": start_date,
-                "end_date": end_date,
-            },
+            "new": recurring,
             "participants": [
                 {
                     "id": user.id,
@@ -770,7 +760,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter("repeat_schedule_id", type=int),
+            OpenApiParameter("repeat_schedule_id", type=int, required=False),
         ]
     )
     def retrieve(self, request, *args, **kwargs):

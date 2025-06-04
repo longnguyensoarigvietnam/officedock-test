@@ -619,7 +619,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 category_name = cat["category_name"]
                 category_color = cat["category_color"]
                 category_id = cat["category_id"]
-                organization_id = cat["organization_id"]
+                cate_organization_id = cat["organization_id"]
                 percent_per_total_duration = percentage_calculation_of_duration(
                     total_duration.total_seconds(),
                     time_str_to_timedelta(category_duration).total_seconds(),
@@ -639,9 +639,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                         "percent": max(
                             0, min(round(percent_per_total_duration), 100)
                         ),
-                        "is_of_main_organization": organization_id
+                        "is_of_main_organization": cate_organization_id
                         == main_organization["id"]
-                        if organization_id
+                        if cate_organization_id
                         else False,
                     }
                 )
