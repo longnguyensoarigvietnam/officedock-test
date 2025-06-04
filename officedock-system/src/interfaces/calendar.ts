@@ -73,7 +73,7 @@ export interface EventEditFormData {
   mediumCategory?: OptionDropdownType;
   categories?: { id: string; name: string; type: string }[];
   createdAt?: Date;
-  repeatType?: OptionDropdownType;
+  repeatType?: OptionDropdownType | string;
   repeatInterval?: OptionDropdownType;
   weekDay?: OptionDropdownType;
   monthDay?: OptionDropdownType;
@@ -120,6 +120,13 @@ export interface CreationDataEventCalendar {
     tags: { id: number; name: string }[];
   }[];
   eventLocations: LocationEventType[];
+  organization: {
+    id: number,
+    name: string,
+    uuid: string,
+    icon: string | null,
+    iconColor: string
+  }
 }
 
 export interface EventParticipant {

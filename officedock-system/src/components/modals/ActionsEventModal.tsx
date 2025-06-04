@@ -69,6 +69,7 @@ import {
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
 
 export type ActionsEventModalProps = {
   open: boolean;
@@ -105,6 +106,9 @@ const ActionsEventModal = ({
   const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
     OptionDropdownType[]
   >([]);
+  const [calendarOrganizationId, setCalendarOrganizationId] = useState<
+    number | null
+  >(null);
   const [dataOrganizationCategories, setDataOrganizationCategories] = useState<
     CategoryStructure[]
   >([]);
@@ -161,6 +165,68 @@ const ActionsEventModal = ({
           iconColor: org.iconColor || '#0068B6',
         })),
       ]);
+    },
+  });
+
+  useCreationDataStatisticTeam({
+    organization_id: calendarOrganizationId
+      ? String(calendarOrganizationId)
+      : '',
+    isTeam: true,
+    onSuccess: (data) => {
+      if (!data) return;
+
+      const organizationCategories = data.organization.statisticCategories.map(
+        (category) => {
+          const largeCategory = category.LARGE || {
+            id: NO_OPTION_CATEGORY,
+            name: NO_OPTION_CATEGORY,
+            uuid: '',
+          };
+
+          const mediumCategories = (category.MEDIUM || []).map(
+            (mediumCategory) => {
+              const mediumCategoryField = mediumCategory.MEDIUM || {
+                id: NO_OPTION_CATEGORY,
+                name: NO_OPTION_CATEGORY,
+                uuid: '',
+              };
+              const smallCategories = mediumCategory.SMALL || [
+                { id: NO_OPTION_CATEGORY, name: NO_OPTION_CATEGORY, uuid: '' },
+              ];
+
+              return {
+                MEDIUM: mediumCategoryField,
+                SMALL: smallCategories,
+              };
+            },
+          );
+
+          return {
+            LARGE: largeCategory,
+            MEDIUM: mediumCategories,
+          };
+        },
+      );
+
+      setDataOrganizationCategories(organizationCategories);
+      setDataOptionsCategoryLarge(() => {
+        const largeCategories: OptionDropdownType[] = [
+          {
+            label: NO_OPTION_CATEGORY,
+            value: NO_OPTION_CATEGORY,
+          },
+        ];
+        data.organization.statisticCategories.map((category) => {
+          if (category.LARGE) {
+            largeCategories.push({
+              label: category.LARGE.name,
+              value: category.LARGE.id,
+            });
+          }
+        });
+        return largeCategories;
+      });
     },
   });
 
@@ -352,10 +418,10 @@ const ActionsEventModal = ({
               value: dataEvent.monthDay,
             }
         : undefined;
-      value.weekDay = dataEvent.weekDay
-        ? typeof dataEvent.weekDay == 'object'
-          ? dataEvent.weekDay.value != undefined &&
-            dataEvent.weekDay.value != null
+      value.weekDay =
+        typeof dataEvent.weekDay == 'object'
+          ? dataEvent.weekDay?.value != undefined &&
+            dataEvent.weekDay?.value != null
             ? {
                 label: `${dataEvent.weekDay.label}`,
                 value: dataEvent.weekDay.value,
@@ -366,8 +432,7 @@ const ActionsEventModal = ({
                 label: `${dataEvent.weekDay}`,
                 value: dataEvent.weekDay,
               }
-            : undefined
-        : undefined;
+            : undefined;
 
       if (dataEvent.startDate) {
         setMinDatePlan(new Date(dataEvent.startDate));
@@ -422,52 +487,7 @@ const ActionsEventModal = ({
 
   useEffect(() => {
     if (creationDataEventCalendar) {
-      const organizationCategories = creationDataEventCalendar.categories.map(
-        (category) => {
-          const largeCategory = category.LARGE || {
-            id: NO_OPTION_CATEGORY,
-            name: NO_OPTION_CATEGORY,
-            uuid: '',
-          };
-
-          const mediumCategories = (category.MEDIUM || []).map(
-            (mediumCategory) => {
-              const mediumCategoryField = mediumCategory.MEDIUM || {
-                id: NO_OPTION_CATEGORY,
-                name: NO_OPTION_CATEGORY,
-                uuid: '',
-              };
-
-              return {
-                MEDIUM: mediumCategoryField,
-              };
-            },
-          );
-
-          return {
-            LARGE: largeCategory,
-            MEDIUM: mediumCategories,
-          };
-        },
-      );
-      setDataOrganizationCategories(organizationCategories);
-      setDataOptionsCategoryLarge(() => {
-        const largeCategories: OptionDropdownType[] = [
-          {
-            label: NO_OPTION_CATEGORY,
-            value: NO_OPTION_CATEGORY,
-          },
-        ];
-        creationDataEventCalendar.categories.map((category) => {
-          if (category.LARGE) {
-            largeCategories.push({
-              label: category.LARGE.name,
-              value: category.LARGE.id,
-            });
-          }
-        });
-        return largeCategories;
-      });
+      setCalendarOrganizationId(creationDataEventCalendar.organization.id)
       setDataOptionsEventTypes(
         creationDataEventCalendar.types.map((org) => ({
           label: org,
@@ -695,7 +715,6 @@ const ActionsEventModal = ({
       setValue('participantIds', updatedParticipantList);
     }
   };
-
   const renderAvatar = (memberId: number) => {
     const memberInfo = dashboardMembersWithAvatars.find(
       (memberWithAvatar) => memberWithAvatar.id === memberId,

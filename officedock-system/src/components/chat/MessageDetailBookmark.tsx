@@ -24,7 +24,7 @@ import {
   REMOVE_MEMBER_TASK_MESSAGE,
   TASK_DELETED,
 } from '@constants';
-import { ChatRoomType, MessageType, SubmitLevelStatus } from '@constants/enums';
+import { ChatRoomType, MessageType, SubmitLevelStatus, TaskRepetitiveValue } from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 
 import {
@@ -34,7 +34,7 @@ import {
 } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
-import { formatWithParagraphTags, getFileURL } from '@utils';
+import { displayRepetitiveEventTime, formatWithParagraphTags, getFileURL, renderEventDatetimeInChat } from '@utils';
 import {
   convertToCurrentTimezone,
   convertToTimeString,
@@ -509,93 +509,33 @@ export const MessageDetailBookmark = ({
                                 <p className="font-semibold mt-2">日時</p>
                                 <div className={`text-left`}>
                                   <p>
+                                    {' '}
                                     {messageDetail.scheduleChanges?.new &&
-                                      `${format(
-                                        messageDetail.scheduleChanges?.new
-                                          .startDate as string,
-                                        DATE_FORMAT,
-                                      )}(${getJapaneseDayName(
-                                        messageDetail.scheduleChanges?.new
-                                          .startDate as string,
-                                      )})`}{' '}
-                                    {messageDetail.scheduleChanges?.new &&
-                                      convertToTimeString(
-                                        `${messageDetail.scheduleChanges?.new.startDate}`,
-                                      )}{' '}
-                                    ~{' '}
-                                    {messageDetail.scheduleChanges?.new &&
-                                      String(
-                                        format(
-                                          messageDetail.scheduleChanges?.new
-                                            .startDate as string,
-                                          DATE_FORMAT,
-                                        ),
-                                      ) !==
-                                        String(
-                                          format(
-                                            messageDetail.scheduleChanges?.new
-                                              .endDate as string,
-                                            DATE_FORMAT,
-                                          ),
-                                        ) &&
-                                      `${format(
-                                        messageDetail.scheduleChanges?.new
-                                          .endDate as string,
-                                        DATE_FORMAT,
-                                      )}(${getJapaneseDayName(
-                                        messageDetail.scheduleChanges?.new
-                                          .endDate as string,
-                                      )})`}{' '}
-                                    {messageDetail.scheduleChanges?.new &&
-                                      convertToTimeString(
-                                        `${messageDetail.scheduleChanges?.new.endDate}`,
-                                      )}
+                                      (messageDetail.scheduleChanges?.new
+                                        .repeatType == TaskRepetitiveValue.ONCE
+                                        ? renderEventDatetimeInChat(
+                                            messageDetail.scheduleChanges?.new,
+                                          )
+                                        : displayRepetitiveEventTime(
+                                            messageDetail.scheduleChanges?.new,
+                                          ))}
                                   </p>
                                   {messageDetail.scheduleChanges?.old && (
                                     <p>
                                       {'('}
                                       {EVENT_BEFORE_EDITED}
                                       {messageDetail.scheduleChanges?.old &&
-                                        `${format(
-                                          messageDetail.scheduleChanges?.old
-                                            .startDate as string,
-                                          DATE_FORMAT,
-                                        )}(${getJapaneseDayName(
-                                          messageDetail.scheduleChanges?.old
-                                            .startDate as string,
-                                        )})`}{' '}
-                                      {messageDetail.scheduleChanges?.old &&
-                                        convertToTimeString(
-                                          `${messageDetail.scheduleChanges?.old.startDate}`,
-                                        )}{' '}
-                                      ~{' '}
-                                      {messageDetail.scheduleChanges?.old &&
-                                        String(
-                                          format(
-                                            messageDetail.scheduleChanges?.old
-                                              .startDate as string,
-                                            DATE_FORMAT,
-                                          ),
-                                        ) !==
-                                          String(
-                                            format(
-                                              messageDetail.scheduleChanges?.old
-                                                .endDate as string,
-                                              DATE_FORMAT,
-                                            ),
-                                          ) &&
-                                        `${format(
-                                          messageDetail.scheduleChanges?.old
-                                            .endDate as string,
-                                          DATE_FORMAT,
-                                        )}(${getJapaneseDayName(
-                                          messageDetail.scheduleChanges?.old
-                                            .endDate as string,
-                                        )})`}{' '}
-                                      {messageDetail.scheduleChanges?.old &&
-                                        convertToTimeString(
-                                          `${messageDetail.scheduleChanges?.old.endDate}`,
-                                        )}
+                                        (messageDetail.scheduleChanges?.old
+                                          .repeatType ==
+                                        TaskRepetitiveValue.ONCE
+                                          ? renderEventDatetimeInChat(
+                                              messageDetail.scheduleChanges
+                                                ?.old,
+                                            )
+                                          : displayRepetitiveEventTime(
+                                              messageDetail.scheduleChanges
+                                                ?.old,
+                                            ))}
                                       {')'}
                                     </p>
                                   )}

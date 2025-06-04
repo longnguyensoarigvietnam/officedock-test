@@ -18,13 +18,13 @@ const Drawer = ({
   return (
     <div>
       <div
-        className={`fixed inset-0 z-[21] bg-black bg-opacity-50 transition-opacity ${
+        className={`fixed inset-0 z-[22] bg-black bg-opacity-50 transition-opacity ${
           open ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
       <div
-        className={`fixed ${className} top-[76px] z-[21] h-[calc(100vh-76px)] overflow-hidden right-0  w-fit bg-white shadow-lg  transform transition-transform ${
+        className={`fixed ${className} top-[76px] z-[22] h-[calc(100vh-76px)] overflow-hidden right-0  w-fit bg-white shadow-lg  transform transition-transform ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}>
         <div className={`px-4 font-primary ${className}`}>

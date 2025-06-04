@@ -1103,7 +1103,7 @@ const ActionsTaskModal = ({
   return (
     <Drawer
       open={open}
-      className="font-primary  bg-white h-screen w-[700px] !rounded-tl-xl !p-0"
+      className="font-primary bg-white h-screen w-[700px] !rounded-tl-xl !p-0"
       onClose={async () => {
         const isValid = await trigger();
         if (!isFormTouched) {
