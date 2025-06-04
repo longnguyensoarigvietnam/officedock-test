@@ -889,30 +889,39 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         """
         Get list plan of schedules + tasks in teamdock.
         """
+        company = request.user.company
+        calendar_org = company.get_calendar_organization()
         organization_id = request.query_params.get("organization_id")
-        user_ids = request.query_params.get("user_ids")
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")
         search = request.query_params.get("search")
 
         # Query data tasks and schedules
-        schedules = Schedule.objects.filter(organization_id=organization_id)
+        plan_schedules = RepeatSchedule.objects.select_related(
+            "schedule"
+        ).filter(
+            schedule__organization_id=calendar_org.id if calendar_org else None,
+            company=company,
+        )
         task_schedules = (
             TaskSchedule.objects.select_related("task")
-            .filter(task__organization_id=organization_id)
+            .filter(task__organization_id=organization_id, company=company)
             .exclude(task__status__name=TaskStatus.MY_ROUTINE.value)
         )
 
         # Handle filter search
         if search:
-            schedules = schedules.filter(title__icontains=search)
+            plan_schedules = plan_schedules.filter(
+                schedules__title__icontains=search
+            )
             task_schedules = task_schedules.filter(
                 task__title__icontains=search
             )
 
         if start_date:
-            schedules = schedules.filter(
-                Q(start_date__gte=start_date) | Q(end_date__gte=start_date)
+            plan_schedules = plan_schedules.filter(
+                Q(plan_start_date__gte=start_date)
+                | Q(plan_end_date__gte=start_date)
             )
             task_schedules = task_schedules.filter(
                 Q(plan_start_date__gte=start_date)
@@ -920,8 +929,9 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             )
 
         if end_date:
-            schedules = schedules.filter(
-                Q(start_date__lte=end_date) | Q(end_date__lte=end_date)
+            plan_schedules = plan_schedules.filter(
+                Q(plan_start_date__lte=end_date)
+                | Q(plan_end_date__lte=end_date)
             )
             task_schedules = task_schedules.filter(
                 Q(plan_start_date__lte=end_date)
@@ -931,8 +941,8 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         # Handle filter data
         if user_ids := self.request.query_params.get("user_ids"):
             if ids := split_id_from_string(user_ids):
-                schedules = schedules.filter(
-                    participants__id__in=ids
+                plan_schedules = plan_schedules.filter(
+                    schedule__participants__id__in=ids
                 ).distinct()
                 task_schedules = task_schedules.filter(
                     task__people_in_charge__id__in=ids
@@ -940,15 +950,17 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
 
         if tag_ids := request.query_params.get("tag_ids"):
             if ids := split_id_from_string(tag_ids):
-                schedules = schedules.filter(tags__in=ids).distinct()
+                plan_schedules = plan_schedules.filter(
+                    schedule__tags__in=ids
+                ).distinct()
                 task_schedules = task_schedules.filter(
                     task__tags__in=ids
                 ).distinct()
 
         if category_ids := request.query_params.get("category_ids"):
             if ids := split_id_from_string(category_ids):
-                schedules = schedules.filter(
-                    categories__large_statistic_category__in=ids
+                plan_schedules = plan_schedules.filter(
+                    schedule__categories__large_statistic_category__in=ids
                 ).distinct()
                 task_schedules = task_schedules.filter(
                     task__categories__large_statistic_category__in=ids
@@ -956,13 +968,14 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
 
         if organization_ids := request.query_params.get("organization_ids"):
             if ids := split_id_from_string(organization_ids):
-                schedules = schedules.filter(organization__in=ids).distinct()
+                plan_schedules = plan_schedules.filter(
+                    schedule__organization__in=ids
+                ).distinct()
                 task_schedules = task_schedules.filter(
                     task__organization__in=ids
                 ).distinct()
 
         results = []
-        tasks_result = []
         for task_schedule in task_schedules:
             item = {
                 "id": task_schedule.id,
@@ -982,14 +995,28 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                     task_schedule.task.categories.first(), task_schedule.task
                 ),
             }
-            tasks_result.append(item)
+            results.append(item)
 
-        schedules_result = ScheduleTeamdockSerializer(
-            schedules, many=True, context={"request": request}
-        ).data
-
-        # Merge schedules_result and tasks_result lists
-        results = tasks_result + schedules_result
+        for plan in plan_schedules:
+            item = {
+                "id": plan.id,
+                "title": plan.schedule.title,
+                "start_date": plan.plan_start_date,
+                "end_date": plan.plan_end_date,
+                "is_all_day": None,
+                "is_start": plan.schedule.is_start,
+                "type": CalendarTypes.TASK.value,
+                "participants": CreationDataUserSerializer(
+                    plan.schedule.participants.all(), many=True
+                ).data,
+                "event_type": plan.schedule.type,
+                "categories": []
+                if not plan.schedule.categories.exists()
+                else get_common_categories(
+                    plan.schedule.categories.first(), plan.schedule
+                ),
+            }
+            results.append(item)
 
         return self.response_ok(results)
 
@@ -1021,6 +1048,8 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         """
         Get list actual of schedules in teamdock.
         """
+        company = request.user.company
+        calendar_org = company.get_calendar_organization()
         organization_id = request.query_params.get("organization_id")
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")
@@ -1029,7 +1058,11 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         durations = (
             TaskDuration.objects.filter(
                 Q(task__organization_id=organization_id)
-                | Q(schedule__organization_id=organization_id)
+                | Q(
+                    schedule__organization_id=calendar_org.id
+                    if calendar_org
+                    else None
+                )
             )
             .exclude(task__status__name=TaskStatus.MY_ROUTINE.value)
             .all()
