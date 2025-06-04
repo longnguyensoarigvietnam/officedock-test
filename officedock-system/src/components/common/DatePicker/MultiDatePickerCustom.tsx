@@ -251,7 +251,9 @@ const MultiDatePickerCustom = ({
             endDate &&
             !isStartButtonClicked
               ? endDate
-              : null
+              : isEndButtonClicked
+                ? startDate
+                : null
           }
           locale={customLocale}
           dateFormat={dateFormat}

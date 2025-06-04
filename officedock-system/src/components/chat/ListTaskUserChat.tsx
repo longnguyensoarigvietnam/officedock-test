@@ -214,7 +214,7 @@ const ListTaskUserChat = ({
         style={{
           boxShadow: '0px 4px 8px 0px #0000000F',
         }}
-        className={`${!isShowList && '!hidden'} absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white  left-[-158px] p-[10px] top-[-479px] w-[350px] h-[calc(100vh_-_491px)] rounded-lg bg-white`}>
+        className={`${!isShowList && '!hidden'} absolute after:content-[''] after:absolute  after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white  left-[-158px] p-[10px] bottom-10 w-[350px] h-[calc(100vh_-_491px)] rounded-lg bg-white`}>
         <div className="flex justify-center items-center gap-2 py-5">
           <Button
             onClick={() => {

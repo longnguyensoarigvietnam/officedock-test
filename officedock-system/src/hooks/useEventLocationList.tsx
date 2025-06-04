@@ -4,19 +4,27 @@ import { useSession } from 'next-auth/react';
 import { AxiosError } from 'axios';
 import { useContext } from 'react';
 
+import { PAGINATION_PAGE_SIZE_SMALL } from '@constants';
 import { apiRouters } from '@constants/routers';
 
 import api from '@base/api';
 import { LocationEventType } from '@interfaces/location';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { BasePagination } from '@interfaces/common';
 
+interface PaginationProps {
+  page?: number;
+  pageSize?: number;
+}
 interface UseEventLocationListHooksProps {
-  onSuccess?: (success: LocationEventType[]) => void;
+  onSuccess?: (success: BasePagination<LocationEventType[]>) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
+  pagination?: PaginationProps;
 }
 
 const useEventLocationList = ({
+  pagination,
   onSuccess,
   onError,
   onSettled,
@@ -30,9 +38,11 @@ const useEventLocationList = ({
   const getEventLocationList = async () => {
     setIsLoading(true);
 
-    const apiUrl = `${apiRouters.LOCATION_LIST}`;
+    const apiUrl = pagination?.page
+      ? `${apiRouters.LOCATION_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_SMALL}`
+      : `${apiRouters.LOCATION_LIST}`;
 
-    const { data } = await api.get<LocationEventType[]>(apiUrl);
+    const { data } = await api.get<BasePagination<LocationEventType[]>>(apiUrl);
     return data;
   };
 
@@ -42,13 +52,13 @@ const useEventLocationList = ({
     refetch: refetchEventLocationList,
     isFetched: isFetchedEventLocationList,
   } = useQuery({
-    queryKey: ['getEventLocationList'],
+    queryKey: ['getEventLocationList', [pagination]],
     queryFn: getEventLocationList,
     retry: 0,
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: LocationEventType[]) => {
+    onSuccess: (response: BasePagination<LocationEventType[]>) => {
       onSuccess && onSuccess(response);
     },
     onError: (error: AxiosError) => {

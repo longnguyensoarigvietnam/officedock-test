@@ -79,6 +79,22 @@ export const formatQueryEndDateForCalendar = (inputDate: Date) => {
 
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 };
+// Format end date for calendar with isWeek
+export const formatQueryEndDateForCalendarCustom = (
+  inputDate: Date,
+  isWeek: boolean = false,
+) => {
+  const adjustedDate = new Date(inputDate);
+  adjustedDate.setDate(adjustedDate.getDate() + (isWeek ? 6 : 1));
+
+  const year = adjustedDate.getFullYear();
+  const month = (adjustedDate.getMonth() + 1).toString().padStart(2, '0');
+  const day = adjustedDate.getDate().toString().padStart(2, '0');
+  const hours = '00';
+  const minutes = '00';
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
 
 // Get Time to date
 export const convertToTimeString = (date: string): string => {

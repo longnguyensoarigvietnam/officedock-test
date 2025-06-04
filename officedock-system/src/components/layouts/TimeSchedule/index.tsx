@@ -135,6 +135,7 @@ import {
   convertToCurrentTimezone,
   convertToMinutesNumber,
   formatQueryEndDateForCalendar,
+  formatQueryEndDateForCalendarCustom,
   formatQueryStartDateForCalendar,
   formatTimeInput,
   getDateInfo,
@@ -1283,8 +1284,9 @@ const TimeSchedule = memo(
         const startDateISOString = formatQueryStartDateForCalendar(
           calendarApi.view.activeStart,
         );
-        const endDateISOString = formatQueryEndDateForCalendar(
+        const endDateISOString = formatQueryEndDateForCalendarCustom(
           calendarApi.view.activeEnd,
+          calendarView === CalendarViewOptions.VIEW_BY_WEEK,
         );
         setDisplayHeaderDayStart(new Date(startDateISOString));
         setDisplayHeaderDayEnd(new Date(endDateISOString));
