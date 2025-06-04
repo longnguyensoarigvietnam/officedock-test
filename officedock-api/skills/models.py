@@ -220,3 +220,4 @@ class SkillMapSkillLevel(BaseModel):
     next_submit_at = models.DateTimeField(null=True, blank=True)
     is_complete = models.BooleanField(default=False)
     popup = models.BooleanField(default=True)
+    measure_task_ids = models.JSONField(null=True, blank=True)
