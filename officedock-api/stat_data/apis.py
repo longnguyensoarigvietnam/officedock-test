@@ -597,13 +597,16 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             & Q(schedule__categories__large_statistic_category__isnull=True)
         )
         if filter_durations.exists():
-            organization_dict["empty_category"] = {
-                "category_id": None,
-                "category_name": None,
-                "category_color": CategoryColors.GRAY.value,
-                "duration": annotate_duration(
-                    filter_durations, start_of_day, end_of_day
-                )["total_duration"],
+            organization_dict["none_org"] = {
+                "empty_category": {
+                    "category_id": None,
+                    "category_name": None,
+                    "organization_id": None,
+                    "category_color": CategoryColors.GRAY.value,
+                    "duration": annotate_duration(
+                        filter_durations, start_of_day, end_of_day
+                    )["total_duration"],
+                }
             }
 
         total_duration = time_str_to_timedelta(format_duration(total_duration))
@@ -637,7 +640,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                             0, min(round(percent_per_total_duration), 100)
                         ),
                         "is_of_main_organization": organization_id
-                        == main_organization["id"],
+                        == main_organization["id"]
+                        if organization_id
+                        else False,
                     }
                 )
 

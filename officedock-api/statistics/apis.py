@@ -881,7 +881,6 @@ class StatisticViewSet(BaseAPIViewSet):
             )
         else:
             organization_ids = split_id_from_string(organization_ids_param)
-
         (
             large_category_ids,
             medium_category_ids,
@@ -919,10 +918,15 @@ class StatisticViewSet(BaseAPIViewSet):
         )
 
         if is_tag_page:
+            total_duration, tag_list = process_merge_card_per_tag(
+                tag_ids,
+                durations=durations,
+            )
             data = self._handle_get_percent_per_range_time(
                 ranges,
                 durations,
                 data,
+                tag_list,
                 large_category_id,
                 medium_category_id,
                 small_category_id,
@@ -957,7 +961,7 @@ class StatisticViewSet(BaseAPIViewSet):
         ranges,
         durations,
         data,
-        category_list=None,
+        data_list=None,
         large_category_id=None,
         medium_category_id=None,
         small_category_id=None,
@@ -998,23 +1002,31 @@ class StatisticViewSet(BaseAPIViewSet):
 
             return filter_durations
 
-        def _handle_tag_list(tag_list, total_duration):
+        def _handle_tag_list(durations_by_range, total_duration):
             """
             Handle tag list and response data of tag
             """
-            if not tag_list:
-                return {
-                    "tag_id": None,
-                    "tag_name": NONE_CATEGORY,
-                    "duration": "00:00:00",
-                    "percent": 0,
-                }
             percent = 100
-            len_of_list = len(tag_list)
             elements = []
-            for ele in tag_list:
-                total_sec = total_duration.total_seconds()
-                duration = ele["duration"]
+            len_of_list = len(data_list)
+            total_sec = total_duration.total_seconds()
+            # Get list data tag will show from data list,
+            # then take id tag to filter duration get response duration time and percent per total duration of tag within range time.
+            for tag in data_list:
+                filter_duration = get_list_durations_by_users(
+                    durations=durations_by_range, tags=[tag["tag_id"]]
+                )
+                if not filter_duration.exists():
+                    elements.append(
+                        {
+                            "tag_id": tag["tag_id"],
+                            "tag_name": tag["tag_name"],
+                            "duration": "00:00:00",
+                            "percent": 0,
+                        }
+                    )
+                    continue
+                duration = get_total_durations(filter_duration)
                 percent_per_total_duration = percentage_calculation_of_duration(
                     total_sec, duration.total_seconds()
                 )
@@ -1026,9 +1038,9 @@ class StatisticViewSet(BaseAPIViewSet):
                     len_of_list -= 1
                 elements.append(
                     {
-                        "tag_id": ele["tag_id"],
-                        "tag_name": ele["tag_name"],
-                        "duration": format_duration(ele["duration"]),
+                        "tag_id": tag["tag_id"],
+                        "tag_name": tag["tag_name"],
+                        "duration": format_duration(duration),
                         "percent": max(
                             0, min(round(percent_per_total_duration), 100)
                         ),
@@ -1046,7 +1058,21 @@ class StatisticViewSet(BaseAPIViewSet):
             )
             elements = []
             if is_tag_page:
-                total_duration, tag_list = process_merge_card_per_tag(
+                if check_is_not_none_category(
+                    large_category_id, medium_category_id, small_category_id
+                ):
+                    durations_by_range = get_list_durations_by_users(
+                        durations=durations_by_range,
+                        large_id=large_category_id,
+                        medium_id=medium_category_id,
+                        small_id=small_category_id,
+                    )
+                else:
+                    durations_by_range = get_list_durations_by_users(
+                        durations=durations_by_range,
+                        tags=tag_ids,
+                    )
+                total_duration, _ = process_merge_card_per_tag(
                     tag_ids,
                     durations=durations_by_range,
                 )
@@ -1054,12 +1080,14 @@ class StatisticViewSet(BaseAPIViewSet):
                     {
                         "start_date": start_date_min.strftime(BASE_DATE_FORMAT),
                         "end_date": end_date_max.strftime(BASE_DATE_FORMAT),
-                        "tags": _handle_tag_list(tag_list, total_duration),
+                        "tags": _handle_tag_list(
+                            durations_by_range, total_duration
+                        ),
                         "total_duration": format_duration(total_duration),
                     }
                 )
             else:
-                if not category_list:
+                if not data_list:
                     total_duration = timedelta(0)
                     elements.append(
                         {
@@ -1083,9 +1111,9 @@ class StatisticViewSet(BaseAPIViewSet):
                     )
 
                     percent = 100
-                    len_of_list = len(category_list)
+                    len_of_list = len(data_list)
                     # Handle get list duration by ranges
-                    for ele in category_list:
+                    for ele in data_list:
                         id = ele["category_id"]
                         filter_durations = _handle_get_filter_durations(
                             id, filter_duration_by_range
@@ -1565,7 +1593,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             )
             total_duration = get_total_durations(filter_durations)
             user_durations = self._get_durations_by_range(
-                filter_durations, ranges
+                filter_durations, ranges, durations
             )
 
             data.append(
@@ -1578,7 +1606,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
 
         return self.response_ok(data)
 
-    def _get_durations_by_range(self, filter_durations, ranges):
+    def _get_durations_by_range(self, filter_durations, ranges, root_durations):
         """
         Handle get duration by durations filter by category, tag...
         """
@@ -1586,19 +1614,32 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         for start, end in ranges:
             start_date_min = datetime.combine(start, time.min)
             end_date_max = datetime.combine(end, time.max)
-            total_duration = timedelta(0)
+            root_durations_per_range = root_durations.filter(
+                started_at__gte=start_date_min,
+                paused_at__lte=end_date_max,
+            )
+            total_duration = (
+                get_total_durations(root_durations_per_range)
+                if root_durations_per_range
+                else timedelta(0)
+            )
+            duration = timedelta(0)
             if filter_durations:
                 filter_duration_by_range = filter_durations.filter(
                     started_at__gte=start_date_min,
                     paused_at__lte=end_date_max,
                 )
-                total_duration = get_total_durations(filter_duration_by_range)
-
+                duration = get_total_durations(filter_duration_by_range)
+            # Calculate the percentage of a user's duration relative to the total duration within a time range
+            percent_per_range = percentage_calculation_of_duration(
+                total_duration.total_seconds(), duration.total_seconds()
+            )
             durations.append(
                 {
                     "start_date": start_date_min.strftime(BASE_DATE_FORMAT),
                     "end_date": end_date_max.strftime(BASE_DATE_FORMAT),
-                    "duration": format_duration(total_duration),
+                    "duration": format_duration(duration),
+                    "percent_per_range": min(round(percent_per_range), 100),
                 }
             )
 
