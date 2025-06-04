@@ -439,7 +439,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         Response data of daily report for print PDF
         """
         user_id = request.query_params.get("user_id", None)
-        organization_id = request.query_params.get("organization_id")
+        param_organization_id = request.query_params.get("organization_id")
         date = request.query_params.get("date", None)
 
         validate_date_format_using_regex(date)
@@ -664,8 +664,8 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             .first()
         ) or False
         organization_name = (
-            get_object_or_404(Organization, id=organization_id).name
-            if organization_id
+            get_object_or_404(Organization, id=param_organization_id).name
+            if param_organization_id
             else None
         )
 

@@ -509,14 +509,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         client_id = self.request.data.pop("client_id", None)
 
         if send_to_chat:
-            start_date = None
-            end_date = None
-            if instance.recurring:
-                start_date = instance.recurring["start_date"]
-                end_date = instance.recurring["end_date"]
             data = self._generate_chat_data(
-                start_date,
-                end_date,
+                instance.recurring,
                 participants,
                 instance.creator_id if instance.creator_id else user.id,
             )
@@ -803,14 +797,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         client_id = self.request.data.pop("client_id", None)
 
         if send_to_chat:
-            start_date = None
-            end_date = None
-            if instance.recurring:
-                start_date = instance.recurring["start_date"]
-                end_date = instance.recurring["end_date"]
             data = self._generate_chat_data(
-                start_date,
-                end_date,
+                instance.recurring,
                 participants,
                 instance.creator_id if instance.creator_id else user.id,
             )
