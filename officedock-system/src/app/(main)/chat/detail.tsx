@@ -1529,27 +1529,30 @@ const ChatDetail = ({
     if (data.type) {
       newType = (data.type as OptionDropdownType).value as string;
     }
-    if (data.startDate) {
-      if (data.isAllDay) {
+    if (data.isAllDay) {
+      newStartDate = addTimeToDate(
+        (data.startDate as Date) || new Date(),
+        DEFAULT_START_TIME,
+      );
+      newEndDate = addTimeToDate(
+        (data.endDate as Date) || new Date(),
+        DEFAULT_END_TIME,
+      );
+    } else {
+      if (data.startTime) {
         newStartDate = addTimeToDate(
-          data.startDate as Date,
-          DEFAULT_START_TIME,
+          (data.startDate as Date) || new Date(),
+          data.startTime,
         );
-      } else {
-        if (data.startTime) {
-          newStartDate = addTimeToDate(data.startDate as Date, data.startTime);
-        }
+      }
+      if (data.endTime) {
+        newEndDate = addTimeToDate(
+          (data.endDate as Date) || new Date(),
+          data.endTime,
+        );
       }
     }
-    if (data.endDate) {
-      if (data.isAllDay) {
-        newEndDate = addTimeToDate(data.endDate as Date, DEFAULT_END_TIME);
-      } else {
-        if (data.endTime) {
-          newEndDate = addTimeToDate(data.endDate as Date, data.endTime);
-        }
-      }
-    }
+
     editEventCalendar({
       id: data.id,
       title: data.title || '',
@@ -1558,14 +1561,33 @@ const ChatDetail = ({
       isAllDay: data.isAllDay || false,
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
+      selectOrganizations: data.selectOrganizations || [],
       locationId: data.location
-        ? String((data.location as OptionDropdownType)?.value)
+        ? String((data.location as OptionDropdownType).value)
         : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
       message: actionsEventMessage,
       categoryIds: newWorkCategories,
+      repeatType:
+        data.repeatType && (data.repeatType as OptionDropdownType).value
+          ? String((data.repeatType as OptionDropdownType).value)
+          : null,
+      repeatInterval:
+        data.repeatInterval && data.repeatInterval.value
+          ? Number(data.repeatInterval.value)
+          : null,
+      weekDay:
+        data.weekDay && data.weekDay.label != ''
+          ? Number(data.weekDay.value)
+          : null,
+      monthDay:
+        data.monthDay && data.monthDay.value != ''
+          ? Number(data.monthDay.value)
+          : null,
+      month:
+        data.month && data.month.value != '' ? Number(data.month.value) : null,
     });
   };
 

@@ -192,7 +192,8 @@ const Header = ({ className }: HeaderProps) => {
   const [openRewardModal, setOpenRewardModal] = useState(false);
   const [dataRewardSkill, setDataRewardSkill] =
     useState<WebSocketMessageData>();
-  const [editPasswordErrorMessage, setEditPasswordErrorMessage] = useState<string>('')
+  const [editPasswordErrorMessage, setEditPasswordErrorMessage] =
+    useState<string>('');
 
   const { showToast } = useToast();
   const { authenticatedUser } = useAuthenticatedUser({});
@@ -685,25 +686,27 @@ const Header = ({ className }: HeaderProps) => {
     if (data.type) {
       newType = (data.type as OptionDropdownType).value as string;
     }
-    if (data.startDate) {
-      if (data.isAllDay) {
+    if (data.isAllDay) {
+      newStartDate = addTimeToDate(
+        (data.startDate as Date) || new Date(),
+        DEFAULT_START_TIME,
+      );
+      newEndDate = addTimeToDate(
+        (data.endDate as Date) || new Date(),
+        DEFAULT_END_TIME,
+      );
+    } else {
+      if (data.startTime) {
         newStartDate = addTimeToDate(
-          data.startDate as Date,
-          DEFAULT_START_TIME,
+          (data.startDate as Date) || new Date(),
+          data.startTime,
         );
-      } else {
-        if (data.startTime) {
-          newStartDate = addTimeToDate(data.startDate as Date, data.startTime);
-        }
       }
-    }
-    if (data.endDate) {
-      if (data.isAllDay) {
-        newEndDate = addTimeToDate(data.endDate as Date, DEFAULT_END_TIME);
-      } else {
-        if (data.endTime) {
-          newEndDate = addTimeToDate(data.endDate as Date, data.endTime);
-        }
+      if (data.endTime) {
+        newEndDate = addTimeToDate(
+          (data.endDate as Date) || new Date(),
+          data.endTime,
+        );
       }
     }
 
@@ -719,12 +722,33 @@ const Header = ({ className }: HeaderProps) => {
       isAllDay: data.isAllDay || false,
       tagIds: newTagIds,
       participantIds: data.participantIds || [],
-      locationId: data.location ? String((data.location as OptionDropdownType)?.value) : '',
+      selectOrganizations: data.selectOrganizations || [],
+      locationId: data.location
+        ? String((data.location as OptionDropdownType).value)
+        : '',
       memo: data.memo || '',
       type: newType,
       sendToChat,
       message: actionsEventMessage,
       categoryIds: newWorkCategories,
+      repeatType:
+        data.repeatType && (data.repeatType as OptionDropdownType).value
+          ? String((data.repeatType as OptionDropdownType).value)
+          : null,
+      repeatInterval:
+        data.repeatInterval && data.repeatInterval.value
+          ? Number(data.repeatInterval.value)
+          : null,
+      weekDay:
+        data.weekDay && data.weekDay.label != ''
+          ? Number(data.weekDay.value)
+          : null,
+      monthDay:
+        data.monthDay && data.monthDay.value != ''
+          ? Number(data.monthDay.value)
+          : null,
+      month:
+        data.month && data.month.value != '' ? Number(data.month.value) : null,
     });
   };
   const handleEditEventCalendar = async (data: EventRequest) => {
@@ -865,9 +889,9 @@ const Header = ({ className }: HeaderProps) => {
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
-        if(error.response){
+        if (error.response) {
           const errorDetail = error.response.data;
-          setEditPasswordErrorMessage(errorDetail?.password[0])
+          setEditPasswordErrorMessage(errorDetail?.password[0]);
         }
       },
       onSettled: () => {
@@ -906,7 +930,7 @@ const Header = ({ className }: HeaderProps) => {
   return (
     <>
       <header
-        className={`sticky 2xl:fixed top-0 z-[22] bg-white w-full h-[76px]  p-3 flex justify-between item-center ${className}`}
+        className={`sticky 2xl:fixed top-0 z-[50] bg-white w-full h-[76px]  p-3 flex justify-between item-center ${className}`}
         style={{ boxShadow: '0px 4px 8px 0px #1D2D3F0A' }}>
         <div className="flex gap-8 justify-between w-full">
           <div className="flex flex-grow items-center gap-8">

@@ -1,18 +1,11 @@
 import { jwtDecode } from 'jwt-decode';
+import moment from 'moment';
+import { format } from 'date-fns';
 
 import { JwtDecode } from '@interfaces/auth';
 import { Organizations } from '@interfaces/organization';
 import { PASSWORD_REGEX } from '@constants/regex';
 import { dataTaskDaily, dataTaskDailyTable } from '@interfaces/statistic';
-import {
-  EventWorkCategory,
-  PermissionsSystem,
-  PermissionType,
-  ScreenName,
-  StatisticViewOptions,
-  StatusTask,
-} from '@constants/enums';
-import { formatTime24h } from './date';
 import {
   ResultTeam,
   StatusSummary,
@@ -20,10 +13,27 @@ import {
   TransformedUser,
   UserTotalStatus,
 } from '@interfaces/task';
-import { MAX_HEX_COLOR_VALUE, SKILL_MAP_STEPS } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { UserRoleType } from '@interfaces/user';
-import moment from 'moment';
+
+import {
+  EventWorkCategory,
+  PermissionsSystem,
+  PermissionType,
+  ScreenName,
+  StatisticViewOptions,
+  StatusTask,
+  TaskRepetitiveValue,
+} from '@constants/enums';
+import { DATE_FORMAT, MAX_HEX_COLOR_VALUE, SKILL_MAP_STEPS } from '@constants';
+
+import {
+  convertToTimeString,
+  formatHoursAndMinutesForDateTime,
+  formatTime24h,
+  getJapaneseDayName,
+  getJapaneseWeekDay,
+} from './date';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -840,4 +850,90 @@ export const calculatePopupPosition = (
   }
 
   return { top: newTop, left: newLeft };
+};
+
+// Render event datetime in chat
+export const renderEventDatetimeInChat = (
+  eventInfo:
+    | {
+        endDate?: Date | string;
+        startDate?: Date | string;
+        repeatType?: string | null;
+        repeatInterval?: number | null;
+        monthDay?: number | null;
+        month?: number | null;
+        weekDay?: number | null;
+      }
+    | undefined,
+) => {
+  if (!eventInfo || !eventInfo.startDate) return '';
+
+  const startDate = eventInfo.startDate;
+  const endDate = eventInfo?.endDate || null;
+
+  const isSameDay =
+    endDate && format(startDate, DATE_FORMAT) === format(endDate, DATE_FORMAT);
+
+  const startDateStr = `${format(startDate, DATE_FORMAT)}(${getJapaneseDayName(
+    startDate as string,
+  )}) ${convertToTimeString(startDate as string)}`;
+  const endDateStr = endDate
+    ? `${!isSameDay ? `${format(endDate, DATE_FORMAT)}(${getJapaneseDayName(endDate as string)}) ` : ''}${convertToTimeString(endDate as string)}`
+    : '';
+
+  return `${startDateStr} ~ ${endDateStr}`;
+};
+
+// Render repetitive event time in chat
+export const displayRepetitiveEventTime = (eventInfo: {
+  endDate?: Date | string;
+  startDate?: Date | string;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  weekDay?: number | null;
+}) => {
+  let title = '';
+  const repeatStartTime = eventInfo.startDate
+    ? formatHoursAndMinutesForDateTime(new Date(eventInfo.startDate))
+    : '';
+  const repeatEndTime = eventInfo.endDate
+    ? formatHoursAndMinutesForDateTime(new Date(eventInfo.endDate))
+    : '';
+  switch (eventInfo?.repeatType as string) {
+    case TaskRepetitiveValue.DAILY:
+      title = '毎日' + repeatStartTime + '~' + repeatEndTime;
+      break;
+    case TaskRepetitiveValue.WEEKLY:
+      title =
+        '毎週' +
+        getJapaneseWeekDay(Number(eventInfo.weekDay || 0)) +
+        '曜日' +
+        repeatStartTime +
+        '~' +
+        repeatEndTime;
+      break;
+    case TaskRepetitiveValue.MONTHLY:
+      title =
+        '毎月' +
+        eventInfo.monthDay +
+        '日' +
+        repeatStartTime +
+        '~' +
+        repeatEndTime;
+      break;
+    case TaskRepetitiveValue.YEARLY:
+      title =
+        '毎年' +
+        eventInfo.month +
+        '月' +
+        eventInfo.monthDay +
+        '日' +
+        repeatStartTime +
+        '~' +
+        repeatEndTime;
+      break;
+  }
+  return title;
 };

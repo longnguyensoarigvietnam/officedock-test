@@ -538,3 +538,7 @@ export enum SortingType{
   ASC = 'asc',
   DESC = 'desc'
 }
+export enum SelectedEventOpenType { 
+  MODAL = 'MODAL',
+  POPUP = 'POPUP'
+}

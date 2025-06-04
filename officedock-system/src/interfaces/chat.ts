@@ -33,10 +33,20 @@ export interface ChatMessageResponse {
     new?: {
       endDate?: Date | string;
       startDate?: Date | string;
+      repeatType?: string | null
+      repeatInterval?: number | null
+      monthDay?: number | null
+      month?: number | null
+      weekDay?: number | null
     };
     old?: {
       endDate?: Date | string;
       startDate?: Date | string;
+      repeatType?: string | null
+      repeatInterval?: number | null
+      monthDay?: number | null
+      month?: number | null
+      weekDay?: number | null
     };
     participants?: {
       id: number;

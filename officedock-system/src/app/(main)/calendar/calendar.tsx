@@ -90,6 +90,7 @@ import {
   EventParticipantType,
   EventWorkCategory,
   PermissionsSystem,
+  SelectedEventOpenType,
   ServerStatusCode,
   ViewOptions,
 } from '@constants/enums';
@@ -141,9 +142,10 @@ const EventCalendar = () => {
     useState<string>('');
   const [searchName, setSearchName] = useState<string>('');
   const [removeMyselfOption, setRemoveMyselfOption] = useState(false);
-  const [selectedEventId, setSelectedEventId] = useState<{
+  const [selectedEventInfo, setSelectedEventInfo] = useState<{
     eventId: number | string;
     repeatScheduleId: number | string;
+    openType: SelectedEventOpenType;
   } | null>(null);
 
   // Display title
@@ -399,7 +401,6 @@ const EventCalendar = () => {
       if (isDayOrWeekView()) scrollToCurrentTime();
     }
   };
-
   // Show events in year view
   const handleShowEventsInYearView = (
     date: Date,
@@ -421,7 +422,7 @@ const EventCalendar = () => {
       setInfoModalPosition({
         left: pageX,
         top: pageY,
-      })
+      });
 
       debouncedFetchCalendarData({
         startDate: startDateISOString,
@@ -988,7 +989,7 @@ const EventCalendar = () => {
       setInfoModalPosition({
         left: clickInfo.jsEvent.pageX,
         top: clickInfo.jsEvent.pageY,
-      })
+      });
     }
     clickInfo.jsEvent.preventDefault();
   };
@@ -1042,7 +1043,7 @@ const EventCalendar = () => {
     setInfoModalPosition({
       left: pageX,
       top: pageY,
-    })
+    });
   };
 
   // Get holiday events
@@ -1546,9 +1547,10 @@ const EventCalendar = () => {
     const eventId = clickInfo.event?.extendedProps?.eventId || '';
     const repeatScheduleId = clickInfo.event?.id || '';
 
-    setSelectedEventId({
+    setSelectedEventInfo({
       eventId,
       repeatScheduleId,
+      openType: SelectedEventOpenType.POPUP,
     });
 
     if (
@@ -1581,9 +1583,10 @@ const EventCalendar = () => {
     eventId: string,
     repeatScheduleId: string,
   ) => {
-    setSelectedEventId({
+    setSelectedEventInfo({
       eventId,
       repeatScheduleId,
+      openType: SelectedEventOpenType.POPUP,
     });
     handleConfirmGetDataEventInfo(eventId, repeatScheduleId);
   };
@@ -1985,8 +1988,8 @@ const EventCalendar = () => {
       message: actionsEventMessage,
       categoryIds: newWorkCategories,
       repeatType:
-        data.repeatType && data.repeatType.value
-          ? String(data.repeatType.value)
+        data.repeatType && (data.repeatType as OptionDropdownType).value
+          ? String((data.repeatType as OptionDropdownType).value)
           : null,
       repeatInterval:
         data.repeatInterval && data.repeatInterval.value
@@ -2098,7 +2101,7 @@ const EventCalendar = () => {
           setEvents((prevEvents) => {
             const updatedEvents = [...prevEvents];
             const filteredEvents = updatedEvents.filter(
-              (event) => String(event.id) !== String(data.id),
+              (event) => String(event.eventId) !== String(data.id),
             );
             return filteredEvents;
           });
@@ -2114,19 +2117,25 @@ const EventCalendar = () => {
     },
   );
 
-  // Delete event
+  // Delete specific event in popup
   const handleConfirmDeleteEventCalendar = (sendToChat: boolean) => {
-    if (selectedEventId?.eventId && selectedEventId.repeatScheduleId) {
-      deleteEventCalendar({
-        eventId: selectedEventId?.eventId,
-        repeatScheduleId: selectedEventId.repeatScheduleId,
-        sendToChat,
-      });
-      return;
+    if (selectedEventInfo?.eventId && selectedEventInfo.repeatScheduleId) {
+      if (selectedEventInfo.openType == SelectedEventOpenType.MODAL) {
+        deleteEventInModal({
+          eventId: String(selectedEventInfo?.eventId),
+          sendToChat,
+        });
+      } else {
+        deleteSpecificEventInPopup({
+          eventId: String(selectedEventInfo?.eventId),
+          repeatScheduleId: selectedEventInfo.repeatScheduleId,
+          sendToChat,
+        });
+      }
     }
   };
 
-  const handleDeleteEventCalendar = async (data: {
+  const handleDeleteSpecificEventInPopup = async (data: {
     eventId: number | string;
     repeatScheduleId: number | string;
     sendToChat: boolean;
@@ -2136,9 +2145,9 @@ const EventCalendar = () => {
     );
   };
 
-  const { mutate: deleteEventCalendar } = useMutation(
-    'deleteEventCalendar',
-    handleDeleteEventCalendar,
+  const { mutate: deleteSpecificEventInPopup } = useMutation(
+    'deleteSpecificEventInPopup',
+    handleDeleteSpecificEventInPopup,
     {
       onSuccess: () => {
         handleRemoveEventParam();
@@ -2154,15 +2163,58 @@ const EventCalendar = () => {
           const updatedEvents = [...prevEvents];
           const filteredEvents = updatedEvents.filter(
             (event) =>
-              String(event.id) !== String(selectedEventId?.repeatScheduleId),
+              String(event.id) !== String(selectedEventInfo?.repeatScheduleId),
           );
           return filteredEvents;
         });
-        setSelectedEventId(null);
+        setSelectedEventInfo(null);
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);
-        setSelectedEventId(null);
+        setSelectedEventInfo(null);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  const handleDeleteEventInModal = async (data: {
+    eventId: string;
+    sendToChat: boolean;
+  }) => {
+    return await api.delete(
+      `${apiRouters.SCHEDULE_DETAIL(data.eventId)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}`,
+    );
+  };
+
+  const { mutate: deleteEventInModal } = useMutation(
+    'deleteEventInModal',
+    handleDeleteEventInModal,
+    {
+      onSuccess: () => {
+        handleRemoveEventParam();
+        setOpenConfirmDeleteEventModal(false);
+        setConfirmEventDataToEdit(undefined);
+        setBackToEditing(false);
+        setOpenEventInfoModal(false);
+        setActionsEventMessage('');
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+        setEvents((prevEvents) => {
+          const updatedEvents = [...prevEvents];
+          const filteredEvents = updatedEvents.filter(
+            (event) =>
+              String(event.eventId) !== String(selectedEventInfo?.eventId),
+          );
+          return filteredEvents;
+        });
+        setSelectedEventInfo(null);
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
+        setSelectedEventInfo(null);
       },
       onSettled: () => {
         setIsLoading(false);
@@ -2799,7 +2851,7 @@ const EventCalendar = () => {
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEdit(undefined);
-            setSelectedEventId(null);
+            setSelectedEventInfo(null);
             setOpenCreateEventModal(false);
             setBackToEditing(false);
             setDefaultCreateStartDate(undefined);
@@ -2845,7 +2897,7 @@ const EventCalendar = () => {
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEdit(undefined);
-            setSelectedEventId(null);
+            setSelectedEventInfo(null);
             setConfirmEventDataToCreate(undefined);
             setOpenConfirmCreateEventModal(false);
             setBackToEditing(false);
@@ -2890,7 +2942,7 @@ const EventCalendar = () => {
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEdit(undefined);
-            setSelectedEventId(null);
+            setSelectedEventInfo(null);
             setConfirmEventDataToEdit(undefined);
             setOpenConfirmEditEventModal(false);
             setBackToEditing(false);
@@ -2921,7 +2973,7 @@ const EventCalendar = () => {
           onClose={() => {
             handleRemoveEventParam();
             setDataEventEdit(undefined);
-            setSelectedEventId(null);
+            setSelectedEventInfo(null);
             setConfirmEventDataToEdit(undefined);
             setOpenConfirmDeleteEventModal(false);
             setBackToEditing(false);
@@ -2952,7 +3004,7 @@ const EventCalendar = () => {
           selectedScheduleUserIds={selectedScheduleUserIds}
           onClose={() => {
             setDataEventEdit(undefined);
-            setSelectedEventId(null);
+            setSelectedEventInfo(null);
             setOpenEventInfoModal(false);
             setDefaultCreateStartDate(undefined);
             setInfoModalPosition({
@@ -2966,6 +3018,14 @@ const EventCalendar = () => {
               action: ActionsEvent.EDIT,
             });
             setActionEventClick(ActionsEvent.EDIT);
+            setSelectedEventInfo((prev) => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                openType: SelectedEventOpenType.MODAL,
+              };
+            });
+
             setOpenCreateEventModal(true);
             setOpenEventInfoModal(false);
             setOpenConfirmEditEventModal(false);
@@ -2976,6 +3036,13 @@ const EventCalendar = () => {
               action: ActionsEvent.COPY,
             });
             setActionEventClick(ActionsEvent.COPY);
+            setSelectedEventInfo((prev) => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                openType: SelectedEventOpenType.MODAL,
+              };
+            });
             setOpenCreateEventModal(true);
             setOpenEventInfoModal(false);
             setOpenConfirmEditEventModal(false);

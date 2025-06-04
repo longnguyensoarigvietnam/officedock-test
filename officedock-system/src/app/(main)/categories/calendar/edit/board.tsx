@@ -130,7 +130,7 @@ const EditHierarchyBoard = () => {
       selectedHierarchiesToDelete.length == 0 &&
       tempSelectedHierarchiesToUpdate.length == 0
     ) {
-      router.push(pageRouters.TEAM_CATEGORY_MANAGEMENT.href);
+      router.push(pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href);
     } else {
       updateOrganizationCategoryHierarchy({
         ids: selectedHierarchiesToDelete
