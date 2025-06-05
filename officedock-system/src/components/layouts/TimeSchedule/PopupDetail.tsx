@@ -51,6 +51,8 @@ type Props = {
     resourcePlan: boolean,
   ) => void;
   taskId: number;
+  scheduleId: number;
+
   deletePlanTask: (uuid: string, taskId: number) => void;
   deleteActualTask: (uuid: string) => void;
   setIdTaskEditSelected: Dispatch<SetStateAction<string>>;
@@ -64,6 +66,7 @@ const PopupDetail = ({
   planStartDate,
   statusId,
   taskId,
+  scheduleId,
   deadline,
   isImportant,
   uuid,
@@ -188,6 +191,7 @@ const PopupDetail = ({
                     itemCompare: {
                       uuid: uuid,
                       taskId: taskId,
+                      scheduleId: scheduleId,
                       start: new Date(
                         combineDateAndTime(
                           new Date(planStartDate),
@@ -252,6 +256,7 @@ const PopupDetail = ({
                         itemCompare: {
                           uuid: uuid,
                           taskId: taskId,
+                          scheduleId: scheduleId,
                           start: new Date(planStartDate),
                           end: new Date(
                             combineDateAndTime(
@@ -289,6 +294,7 @@ const PopupDetail = ({
                         itemCompare: {
                           uuid: uuid,
                           taskId: taskId,
+                          scheduleId: scheduleId,
                           start: new Date(planStartDate),
                           end: new Date(
                             combineDateAndTime(

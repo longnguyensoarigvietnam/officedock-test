@@ -431,6 +431,7 @@ const TaskCard = ({
                 : 0
             }
             taskId={event.event?.extendedProps.taskId}
+            scheduleId={event.event?.extendedProps.scheduleId}
           />
         )}
       </div>

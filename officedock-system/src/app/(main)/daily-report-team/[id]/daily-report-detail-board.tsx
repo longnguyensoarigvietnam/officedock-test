@@ -1479,6 +1479,15 @@ const DailyReportDetailBoard = () => {
     hoursConvert: hoursConvertDifferent,
     minutesConvert: minutesConvertDifferent,
   } = convertToJapaneseValue(`${dataStatisticPDF?.subOrganization.duration}`);
+
+  let mainHours = hoursConvert - hoursConvertDifferent;
+  let mainMinute = minutesConvert - minutesConvertDifferent;
+
+  if (mainMinute < 0) {
+    mainMinute += 60;
+    mainHours -= 1;
+  }
+
   const statusStyles = [
     {
       value: StatusValueTask.NOT_STARTED,
@@ -2215,11 +2224,11 @@ const DailyReportDetailBoard = () => {
           <div className="w-full overflow-y-auto px-5">
             <div className="pdf-header">
               <div className="flex items-center  py-1 justify-between text-lg border-b border-b-gray-400 border-l-[2px] border-l-black pl-[2px]">
-                <div className="w-full flex items-end gap-2 -translate-y-[20%]">
-                  <span className="text-2xl font-medium -translate-y-[10%]">
+                <div className="w-full flex items-end gap-3 -translate-y-[20%]">
+                  <span className="text-[30px] font-medium -translate-y-[10%]">
                     日報
                   </span>
-                  <div className="flex items-end gap-2 font-medium -translate-y-[20%]  relative top-[2px]">
+                  <div className="flex items-end gap-2 font-medium -translate-y-[10%]  relative top-[2px]">
                     <span>{detailDateInfo.year}</span>
                     <span className="">年</span>
                     <span>{detailDateInfo.month}</span>
@@ -2229,11 +2238,11 @@ const DailyReportDetailBoard = () => {
                     <span className="">({detailDateInfo.weekday})</span>
                   </div>
                 </div>
-                <div className="flex text-sm items-center gap-1 h-full basis-1/2 py-1 justify-end">
-                  <p className=" max-w-[100px] flex-shrink-0 w-fit font-medium break-all py-1 min-h-5">
+                <div className="flex text-lg items-center gap-1 h-full basis-1/2 py-1 justify-end">
+                  <p className=" max-w-[200px] flex-shrink-0 w-fit font-medium break-all py-1 min-h-5">
                     {dataStatisticPDF?.remark?.user.organizations.name}
                   </p>
-                  <span className=" max-w-[100px] w-fit min-h-5 break-all ">
+                  <span className=" max-w-[200px] w-fit min-h-5 break-all ">
                     {session?.user.profile.fullName}
                   </span>
                 </div>
@@ -2256,12 +2265,12 @@ const DailyReportDetailBoard = () => {
                   </section>
                   <section className="flex-1 flex flex-col  gap-1 pt-1 ml-4">
                     <div className="w-full max-w-[95%]  bg-white h-fit pb-2 font-normal border-b border-black flex gap-1 items-center  text-sm ">
-                      <span className="mr-2">合計時間</span>
-                      <span className="text-lg font-medium">
+                      <span className="mr-2 text-base">合計時間</span>
+                      <span className="text-lg font-medium -translate-y-[5%]">
                         {hoursConvert}
                       </span>
                       <span className=" ">時間</span>
-                      <span className="text-lg font-medium">
+                      <span className="text-lg font-medium -translate-y-[5%]">
                         {minutesConvert}
                       </span>
                       <span className="mr-4">分</span>
@@ -2274,15 +2283,10 @@ const DailyReportDetailBoard = () => {
                             %
                           </span>
                           <div className="flex items-center gap-1">
-                            (
-                            <span className="">
-                              {hoursConvert - hoursConvertDifferent}
-                            </span>
+                            (<span className="">{mainHours}</span>
                             <span>時間</span>
-                            <span className="">
-                              {minutesConvert - minutesConvertDifferent}
-                            </span>
-                            <span>時間</span>)
+                            <span className="">{mainMinute}</span>
+                            <span>分</span>)
                           </div>
                         </div>
                         <div className="flex items-center gap-1 text-xs">
@@ -2294,7 +2298,7 @@ const DailyReportDetailBoard = () => {
                             (<span className="">{hoursConvertDifferent}</span>
                             <span>時間</span>
                             <span className="">{minutesConvertDifferent}</span>
-                            <span>時間</span>)
+                            <span>分</span>)
                           </div>
                         </div>
                       </div>
@@ -2312,14 +2316,17 @@ const DailyReportDetailBoard = () => {
                                   style={{
                                     backgroundColor: item.color,
                                   }}
-                                  className={`w-3 h-3 relative top-[5px] `}></div>
+                                  className={`w-3 h-3 border border-black  relative top-[5px] `}></div>
                                 <p className=" break-all h-5 max-w-[150px] w-fit line-clamp-3">
                                   {item.categoryName}
                                 </p>
+                                <p className=" w-fit h-5 mr-1">
+                                  {item.percent}%
+                                </p>
+
                                 <p className=" w-fit h-5">
                                   {convertToJapaneseTime(item.duration)}
                                 </p>
-                                <p className=" w-fit h-5">{item.percent}%</p>
                               </div>
                             );
                           })}
@@ -2336,14 +2343,17 @@ const DailyReportDetailBoard = () => {
                                   style={{
                                     backgroundColor: item.color,
                                   }}
-                                  className={`w-3 h-3 relative top-[5px] `}></div>
+                                  className={`w-3 h-3 border border-black relative top-[5px] `}></div>
                                 <p className=" break-all h-5 max-w-[150px] w-fit line-clamp-3">
                                   {item.categoryName}
                                 </p>
+                                <p className=" w-fit h-5 mr-1">
+                                  {item.percent}%
+                                </p>
+
                                 <p className=" w-fit h-5">
                                   {convertToJapaneseTime(item.duration)}
                                 </p>
-                                <p className=" w-fit h-5">{item.percent}%</p>
                               </div>
                             );
                           })}
@@ -2382,7 +2392,10 @@ const DailyReportDetailBoard = () => {
                     <th
                       className="!py-2 text-xs  !px-2 border-r border-b border-b-black border-r-black"
                       colSpan={1}>
-                      <div className="-translate-y-[30%]">時間</div>
+                      <div className="flex -translate-y-[30%]  text-xs items-center justify-center gap-2 ">
+                        <span>時</span>
+                        <span>間</span>
+                      </div>
                     </th>
                     <th
                       className="!py-2 !px-2 border-b border-b-black"
@@ -2410,13 +2423,18 @@ const DailyReportDetailBoard = () => {
                       <td
                         colSpan={2}
                         className="border-r border-black text-center text-xs py-2">
-                        <div className="-translate-y-[25%]">
-                          {item.startedAt &&
-                            convertToTimeString(item.startedAt)}{' '}
-                          ~{' '}
-                          {item.pausedAt
-                            ? convertToTimeString(item.pausedAt)
-                            : '計測中'}
+                        <div className="-translate-y-[25%] flex gap-2 justify-center">
+                          <span>
+                            {' '}
+                            {item.startedAt &&
+                              convertToTimeString(item.startedAt)}
+                          </span>
+                          ~
+                          <span>
+                            {item.pausedAt
+                              ? convertToTimeString(item.pausedAt)
+                              : '計測中'}
+                          </span>
                         </div>
                       </td>
 
@@ -2441,7 +2459,7 @@ const DailyReportDetailBoard = () => {
                 </tbody>
               </table>
             </div>
-            <div className="mt-5 min-h-[200px] border border-gray-500">
+            <div className="mt-[60px] min-h-[200px] border border-gray-500">
               <p className="text-center py-2 border-b border-gray-500 -translate-y-[25%]">
                 備考
               </p>

@@ -78,7 +78,7 @@ const DetailActualItemDailyModal = ({
               style={{
                 backgroundColor: popoverInfo.largeColor,
               }}
-              className="w-3 h-3 rounded-sm"></div>
+              className="w-3 h-3 flex-shrink-0 rounded-sm"></div>
             <span className="text-black font-bold text-base truncate">
               {popoverInfo.title}
             </span>
