@@ -1873,7 +1873,7 @@ const EventCalendar = () => {
                     allDay: data.isAllDay,
                     type: EventCalendarType.SCHEDULE,
                     isMyEvent: isMyEvent,
-                    address: data.address,
+                    location: data.location,
                     participants: data.participants,
                     resourceIds: [
                       ...(data.participants
@@ -2077,7 +2077,7 @@ const EventCalendar = () => {
                     allDay: data.isAllDay,
                     type: EventCalendarType.SCHEDULE,
                     isMyEvent: true,
-                    address: data.address,
+                    location: data.location,
                     participants: data.participants,
                     resourceIds: [
                       ...(data.participants

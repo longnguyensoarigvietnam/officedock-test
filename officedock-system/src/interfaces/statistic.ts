@@ -281,6 +281,21 @@ export interface CreationStatisticType {
 }
 export interface DataResponseStatisticCreationType {
   organizations: CreationStatisticType[];
+  calendarOrganization: {
+    icon: string | null;
+    iconColor: string;
+    id: number;
+    isMain: boolean;
+    name: string;
+    statisticCategories: LargeCategory[];
+    uuid: string;
+    tags: TagCreationStatisticType[];
+  };
+  locations: {
+    id: number;
+    uuid: string;
+    name: string;
+  }[];
   tags: TagCreationStatisticType[];
 }
 export interface DataResponseStatisticCreationTeamType {

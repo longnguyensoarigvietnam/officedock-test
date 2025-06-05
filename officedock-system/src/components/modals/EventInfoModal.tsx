@@ -112,7 +112,7 @@ const EventInfoModal = memo(
       const repeatEndTime = dataEvent.endDate
         ? formatHoursAndMinutesForDateTime(new Date(dataEvent.endDate))
         : '';
-      switch ((dataEvent?.repeatType as string)) {
+      switch (dataEvent?.repeatType as string) {
         case TaskRepetitiveValue.DAILY:
           title = '毎日' + repeatStartTime + '~' + repeatEndTime;
           break;
@@ -148,7 +148,7 @@ const EventInfoModal = memo(
       }
       return title;
     };
-    
+
     return (
       <div className="z-50">
         <div
@@ -281,10 +281,17 @@ const EventInfoModal = memo(
           {/* Location */}
           <div className="flex items-center gap-3 mt-3">
             <p className="flex-none text-[14px]">場所</p>
-            <p className="bg-[#EBF1F7] rounded-[4px] px-[5px] py-[6px] truncate max-w-[305px] text-[14px]">
+            <p className="bg-[#EBF1F7] rounded-[4px] px-[5px] py-[6px] truncate max-w-[280px] text-[14px]">
               {(dataEvent?.location as LocationEventType)?.name ||
                 `${NO_SETTING}`}
             </p>
+            {dataEvent?.isEventOverlapping && (
+              <ImageRound
+                src={`/icons/overlap-task.svg`}
+                name="icon warning"
+                className="w-3 h-3"
+              />
+            )}
           </div>
           {/* Participants */}
           {dataEvent &&

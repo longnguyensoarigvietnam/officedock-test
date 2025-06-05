@@ -6,6 +6,7 @@ import { useMutation } from 'react-query';
 import Link from 'next/link';
 import { validate as isUUID } from 'uuid';
 import { useSession } from 'next-auth/react';
+import { AxiosError } from 'axios';
 
 import Dropdown from '@components/common/Dropdown';
 import Button from '@components/common/Button';
@@ -13,6 +14,7 @@ import Button from '@components/common/Button';
 import useCreationDataStatisticOrganization from '@hooks/useCreationDataStatisticOrganization';
 import useCreationDataSkill from '@hooks/useCreationDataSkill';
 import useTeamList from '@hooks/useListTeam';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -22,11 +24,20 @@ import {
 } from '@interfaces/hierarchy';
 import { CreationDataSkill, Skill } from '@interfaces/skills';
 
-import { AddCategoryHierarchyType, PermissionsSystem, ScreenName } from '@constants/enums';
+import {
+  AddCategoryHierarchyType,
+  PermissionsSystem,
+  ScreenName,
+} from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ALL_TEAMS_OPTION } from '@constants';
+import {
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_UPDATE_MESSAGE,
+} from '@constants/message';
 
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
 
 import { hasPermissionInArray } from '@utils';
 import TableComponent from './form';
@@ -92,6 +103,8 @@ const EditHierarchyForm = () => {
   });
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
+  const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
   const [isTyping, setIsTyping] = useState<boolean>(false);
 
   useEffect(() => {
@@ -266,7 +279,13 @@ const EditHierarchyForm = () => {
       onSuccess: async () => {
         setSelectedHierarchiesToDelete([]);
         setSelectedHierarchiesToUpdate([]);
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
         router.push(pageRouters.TEAM_CATEGORY_MANAGEMENT.href);
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
       onSettled: () => {
         setIsLoading(false);

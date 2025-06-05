@@ -12,20 +12,27 @@ import { useMutation } from 'react-query';
 import Link from 'next/link';
 import { validate as isUUID } from 'uuid';
 import { useSession } from 'next-auth/react';
+import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
 
 import useCreationDataStatisticOrganization from '@hooks/useCreationDataStatisticOrganization';
+import { useErrorToast } from '@hooks/useErrorToast';
+import useCalendarCategoryHierarchyDetail from '@hooks/useCalendarCategoryDetail';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { CalendarCategoryRow } from '@interfaces/hierarchy';
 
 import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
+import {
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_UPDATE_MESSAGE,
+} from '@constants/message';
 
-import useCalendarCategoryHierarchyDetail from '@hooks/useCalendarCategoryDetail';
 
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
 
 import { hasPermissionInArray } from '@utils';
 
@@ -68,6 +75,8 @@ const EditHierarchyBoard = () => {
   const { setIsLoading } = useContext(LoadingContext);
 
   const router = useRouter();
+  const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
 
   const [isTyping, setIsTyping] = useState<boolean>(false);
 
@@ -113,7 +122,7 @@ const EditHierarchyBoard = () => {
     }
   }, [creationDataCategoryData]);
 
-  const handleConfirmUpdateOrganizationCategoryHierarchy = () => {
+  const handleConfirmUpdateCalendarCategoryHierarchy = () => {
     const tempSelectedHierarchiesToUpdate = selectedHierarchiesToUpdate.map(
       (hierarchy) => {
         return {
@@ -132,7 +141,7 @@ const EditHierarchyBoard = () => {
     ) {
       router.push(pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href);
     } else {
-      updateOrganizationCategoryHierarchy({
+      updateCalendarCategoryHierarchy({
         ids: selectedHierarchiesToDelete
           ? selectedHierarchiesToDelete
               .map((hierarchyId) =>
@@ -145,7 +154,7 @@ const EditHierarchyBoard = () => {
     }
   };
 
-  const handleUpdateOrganizationCategoryHierarchyList = async ({
+  const handleUpdateCalendarCategoryHierarchyList = async ({
     items,
     ids,
   }: {
@@ -179,14 +188,20 @@ const EditHierarchyBoard = () => {
     return data;
   };
 
-  const { mutate: updateOrganizationCategoryHierarchy } = useMutation(
+  const { mutate: updateCalendarCategoryHierarchy } = useMutation(
     'updateOrganizationCategoryHierarchy',
-    handleUpdateOrganizationCategoryHierarchyList,
+    handleUpdateCalendarCategoryHierarchyList,
     {
       onSuccess: async () => {
         setSelectedHierarchiesToDelete([]);
         setSelectedHierarchiesToUpdate([]);
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
         router.push(pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href);
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
       onSettled: () => {
         setIsLoading(false);
@@ -248,7 +263,7 @@ const EditHierarchyBoard = () => {
             variant="primary"
             className="w-[100px] !p-0 !h-[34px]"
             disabled={isTyping}
-            onClick={handleConfirmUpdateOrganizationCategoryHierarchy}>
+            onClick={handleConfirmUpdateCalendarCategoryHierarchy}>
             保存
           </Button>
         </div>

@@ -337,9 +337,14 @@
 }
 .calendar-custom .fc-v-event {
   background-color: #fff;
-  margin-top: 10px;
   height: 100%;
   border-radius: 6px;
+}
+.calendar-custom.day .fc-v-event {
+  margin-top: 4px;
+}
+.calendar-custom.week .fc-v-event {
+  margin-top: 15px;
 }
 .calendar-custom .fc-timegrid-event-harness-inset .fc-timegrid-event,
 .fc-timegrid-event.fc-event-mirror,
