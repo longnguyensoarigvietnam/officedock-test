@@ -22,9 +22,10 @@ import Dropdown from '@components/common/Dropdown';
 
 import useTaskDetail from '@hooks/useTaskDetail';
 import useEventDetail from '@hooks/useEventDetail';
-import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
+import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+import useCreationDataTaskActualDuration from '@hooks/useCreationDataTaskActualDuration';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -109,9 +110,6 @@ const CreateActualDurationsForm = () => {
   );
   const [isSubmit, setIsSubmit] = useState(false);
   const { setIsLoading } = useContext(LoadingContext);
-  const { creationDataTaskData } = useCreationDataTask({
-    condition: [searchParams.get('type') == EventCalendarType.TASK],
-  });
   const { creationDataEventCalendar } = useCreationDataEventCalendar({
     condition: [searchParams.get('type') == EventCalendarType.SCHEDULE],
   });
@@ -131,6 +129,40 @@ const CreateActualDurationsForm = () => {
     searchParams.get('type') !== EventCalendarType.TASK
       ? Number(params.id)
       : undefined;
+
+  useCreationDataStatistic({
+    is_calendar_page: true,
+    condition: [searchParams.get('type') == EventCalendarType.SCHEDULE],
+
+    onSuccess: (data) => {
+      if (!data) return;
+      setDataOptionsTagIds(
+        data?.calendarOrganization?.tags.map((org) => ({
+          label: org.name as string,
+          value: org.id || '',
+        })),
+      );
+    },
+  });
+
+  useCreationDataTaskActualDuration({
+    organization_id: defaultTaskScheduleData?.organization,
+    condition: [
+      searchParams.get('type') != EventCalendarType.SCHEDULE,
+      Boolean(defaultTaskScheduleData?.organization),
+    ],
+
+    onSuccess: (data) => {
+      if (!data) return;
+      setDataOptionsTagIds(
+        data?.tags.map((org) => ({
+          label: org.name as string,
+          value: org.id || '',
+        })),
+      );
+    },
+  });
+
   useTaskDetail({
     taskId: taskId ? String(taskId) : '',
     onSuccess: (data) => {
@@ -283,25 +315,14 @@ const CreateActualDurationsForm = () => {
   });
 
   useEffect(() => {
-    const selectedValues = selectedTagIdsOptions.map((element) =>
+    const selectedValues = selectedTagIdsOptions?.map((element) =>
       String(element.value),
     );
-    const unSelectedOptions = dataOptionsTagIds.filter(
+    const unSelectedOptions = dataOptionsTagIds?.filter(
       (option) => !selectedValues.includes(String(option.value)),
     );
     setUnSelectedTagIdsOptions(unSelectedOptions);
   }, [dataOptionsTagIds, selectedTagIdsOptions]);
-
-  useEffect(() => {
-    if (creationDataTaskData) {
-      setDataOptionsTagIds(
-        creationDataTaskData.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
-        })),
-      );
-    }
-  }, [creationDataTaskData]);
 
   useEffect(() => {
     if (creationDataEventCalendar) {
@@ -509,16 +530,17 @@ const CreateActualDurationsForm = () => {
       },
     ];
     if (selectedMediumCategoryOption) {
-      selectedMediumCategoryOption.SMALL && selectedMediumCategoryOption.SMALL.map((smallCategory) => {
-        if (
-          !initialSmallCategory.find((item) => item.value == smallCategory.id)
-        ) {
-          initialSmallCategory.push({
-            label: smallCategory.name,
-            value: smallCategory.id,
-          });
-        }
-      });
+      selectedMediumCategoryOption.SMALL &&
+        selectedMediumCategoryOption.SMALL.map((smallCategory) => {
+          if (
+            !initialSmallCategory.find((item) => item.value == smallCategory.id)
+          ) {
+            initialSmallCategory.push({
+              label: smallCategory.name,
+              value: smallCategory.id,
+            });
+          }
+        });
     }
 
     setDataOptionsCategorySmall(initialSmallCategory);
@@ -652,9 +674,11 @@ const CreateActualDurationsForm = () => {
       });
     }
     const actualDurationPayload = {
-      tagIds: data.tagIds.filter((tag) => tag.value).map((tag) => {
-        return Number(tag.value);
-      }),
+      tagIds: data.tagIds
+        .filter((tag) => tag.value)
+        .map((tag) => {
+          return Number(tag.value);
+        }),
       categoryIds: categoryList,
       startedAt: addTimeToDate(data.startedAtDate as Date, data.startedAtTime),
       pausedAt: addTimeToDate(data.pausedAtDate as Date, data.pausedAtTime),

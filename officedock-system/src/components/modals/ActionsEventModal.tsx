@@ -1839,7 +1839,7 @@ const ActionsEventModal = ({
                     className="w-3 h-3"
                   />
                   <p className="text-xs font-normal text-error">
-                    同じ時間に場所重なっていいます。
+                    この場所はすでに予約されています。
                   </p>
                 </div>
               )}

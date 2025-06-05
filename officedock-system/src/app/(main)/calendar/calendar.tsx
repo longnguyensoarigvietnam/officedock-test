@@ -706,7 +706,6 @@ const EventCalendar = () => {
             </div>
           );
         }
-
         return (
           <div
             className={`overflow-hidden p-1.5 ${isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
@@ -741,8 +740,8 @@ const EventCalendar = () => {
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p className={` text-black text-[12px] font-normal px-1`}>
-                    {eventContent.event.extendedProps.address}
+                  <p className={` text-black text-[12px] font-normal`}>
+                    {eventContent.event.extendedProps.location.name}
                   </p>
                 </>
               ) : (
@@ -750,8 +749,8 @@ const EventCalendar = () => {
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
                     <>
                       <p>{eventContent.timeText}</p>
-                      <p className={` text-black text-[12px] font-normal px-1`}>
-                        {eventContent.event.extendedProps.address}
+                      <p className={` text-black text-[12px] font-normal`}>
+                        {eventContent.event.extendedProps.location.name}
                       </p>
                     </>
                   )}
@@ -804,14 +803,14 @@ const EventCalendar = () => {
         return (
           <div
             className={`overflow-hidden ${isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
-            <div className={` text-black font-medium px-1 pt-1 text-[14px]`}>
+            <div className={` text-black font-medium px-2 pt-1 text-[14px]`}>
               <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
                 {eventContent.event.title != 'null'
                   ? eventContent.event.title
                   : ''}
               </p>
             </div>{' '}
-            <div className={` text-black text-[12px] font-normal px-1`}>
+            <div className={` text-black text-[12px] font-normal px-2`}>
               {new Date(
                 new Date(eventContent.event.start).setHours(0, 0, 0, 0),
               ).getTime() !==
@@ -824,14 +823,14 @@ const EventCalendar = () => {
                     ~{' '}
                     {`${formatHoursAndMinutesForDateTime(new Date(eventContent.event.end))}`}
                   </p>
-                  <p>{eventContent.event.extendedProps.address}</p>
+                  <p>{eventContent.event.extendedProps.location.name}</p>
                 </>
               ) : (
                 <>
                   {isMoreThanThirtyMinutes(eventContent.timeText) && (
-                    <div className="text-black text-[12px] font-normal px-1">
+                    <div className="text-black text-[12px] font-normal">
                       <p>{eventContent.timeText}</p>
-                      <p>{eventContent.event.extendedProps.address}</p>
+                      <p>{eventContent.event.extendedProps.location.name}</p>
                     </div>
                   )}
                 </>
@@ -2132,6 +2131,11 @@ const EventCalendar = () => {
           sendToChat,
         });
       }
+    } else {
+      deleteEventInModal({
+        eventId: String(eventIdURL),
+        sendToChat,
+      });
     }
   };
 
@@ -2193,7 +2197,6 @@ const EventCalendar = () => {
     handleDeleteEventInModal,
     {
       onSuccess: () => {
-        handleRemoveEventParam();
         setOpenConfirmDeleteEventModal(false);
         setConfirmEventDataToEdit(undefined);
         setBackToEditing(false);
@@ -2206,11 +2209,12 @@ const EventCalendar = () => {
           const updatedEvents = [...prevEvents];
           const filteredEvents = updatedEvents.filter(
             (event) =>
-              String(event.eventId) !== String(selectedEventInfo?.eventId),
+              String(event.eventId) !== String(eventIdURL),
           );
           return filteredEvents;
         });
         setSelectedEventInfo(null);
+        handleRemoveEventParam();
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_DELETE_MESSAGE);

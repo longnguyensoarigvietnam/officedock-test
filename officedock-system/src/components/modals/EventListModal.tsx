@@ -88,7 +88,7 @@ export const EventListModal = ({
 
       setPopupPosition(adjustedPosition);
     }
-  }, []);
+  }, [popupPosition]);
 
   const showUserAvatars = (participantList: EventParticipant[]) => {
     if (participantList && participantList.length > 0) {
@@ -176,26 +176,26 @@ export const EventListModal = ({
 
   return (
     <div className="z-50">
-      {eventListModalInfo && (
+      <div
+        className={`p-4 bg-white border custom-popover w-[330px] border-gray-200 shadow-lg font-primary max-h-[500px] overflow-y-auto !rounded-2xl py-4`}
+        ref={popoverRef}
+        style={{
+          position: 'absolute',
+          top: `${popupPosition.top}px`,
+          left: `${popupPosition.left}px`,
+        }}>
         <div
-          className={`p-4 bg-white border custom-popover w-[330px] border-gray-200 shadow-lg font-primary max-h-[500px] overflow-y-auto !rounded-2xl py-4`}
-          ref={popoverRef}
-          style={{
-            position: 'absolute',
-            top: `${popupPosition.top}px`,
-            left: `${popupPosition.left}px`,
+          className="hover:bg-[#EBF1F4] absolute p-1.5 right-2 top-2 hover:rounded-full hover:cursor-pointer"
+          onClick={() => {
+            closePopover();
           }}>
-          <div
-            className="hover:bg-[#EBF1F4] absolute p-1.5 right-2 top-2 hover:rounded-full hover:cursor-pointer"
-            onClick={() => {
-              closePopover();
-            }}>
-            <ImageRound
-              name="Close"
-              src={'/icons/close.svg'}
-              className="w-[18px] h-[18px] hover:cursor-pointer"
-            />
-          </div>
+          <ImageRound
+            name="Close"
+            src={'/icons/close.svg'}
+            className="w-[18px] h-[18px] hover:cursor-pointer"
+          />
+        </div>
+        {eventListModalInfo && (
           <h3 className="text-center mb-4">
             {eventListModalInfo.date
               ? (() => {
@@ -213,8 +213,11 @@ export const EventListModal = ({
                 })()
               : ''}
           </h3>
-          <ul className="list-disc max-h-[250px] overflow-y-auto">
-            {eventListModalInfo.events.map((event) => {
+        )}
+
+        <ul className="list-disc max-h-[250px] overflow-y-auto">
+          {eventListModalInfo &&
+            eventListModalInfo?.events.map((event) => {
               return (
                 <li
                   key={event.eventId}
@@ -288,33 +291,32 @@ export const EventListModal = ({
                 </li>
               );
             })}
-          </ul>
-          {popoverInfoLoading && (
-            <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
+        </ul>
+        {popoverInfoLoading && (
+          <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
+        )}
+        {!popoverInfoLoading &&
+          session?.user.permissions &&
+          hasPermissionInArray(
+            session?.user.permissions,
+            PermissionsSystem.CALENDAR_ADD,
+          ) && (
+            <DynamicTooltip content={'予定を新規作成'} placement="top">
+              <div
+                className={`mx-auto mt-3 w-fit hover:cursor-pointer hover:rounded-full p-[6px] hover:bg-gray-200 border-[1px] border-transparent`}
+                onClick={() => {
+                  setEventListModalInfo(null);
+                  handleCreateNewEventFromPopup();
+                }}>
+                <ImageRound
+                  src={`/icons/add.svg`}
+                  name="Add"
+                  className="!w-4 !h-4 text-"
+                />
+              </div>
+            </DynamicTooltip>
           )}
-          {!popoverInfoLoading &&
-            session?.user.permissions &&
-            hasPermissionInArray(
-              session?.user.permissions,
-              PermissionsSystem.CALENDAR_ADD,
-            ) && (
-              <DynamicTooltip content={'予定を新規作成'} placement="top">
-                <div
-                  className={`mx-auto mt-3 w-fit hover:cursor-pointer hover:rounded-full p-[6px] hover:bg-gray-200 border-[1px] border-transparent`}
-                  onClick={() => {
-                    setEventListModalInfo(null);
-                    handleCreateNewEventFromPopup();
-                  }}>
-                  <ImageRound
-                    src={`/icons/add.svg`}
-                    name="Add"
-                    className="!w-4 !h-4 text-"
-                  />
-                </div>
-              </DynamicTooltip>
-            )}
-        </div>
-      )}
+      </div>
     </div>
   );
 };
