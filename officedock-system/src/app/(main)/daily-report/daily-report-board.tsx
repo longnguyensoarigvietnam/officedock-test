@@ -63,7 +63,6 @@ import { DATE_TEXT_FORMAT, NO_OPTION_CATEGORY } from '@constants';
 
 import './styles/daily-report.css';
 import useDataStatistic from '@hooks/useDataStatistic';
-import useCreationDataTask from '@hooks/useCreationDataTask';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDataStatisticPDF from '@hooks/useDataStatisticPdf';
 
@@ -146,8 +145,6 @@ const DailyReportBoard = () => {
 
   const [popoverInfo, setPopoverInfo] = useState<DataActualDetail | null>(null);
 
-  const { creationDataTaskData } = useCreationDataTask({});
-
   const [chartData, setChartData] = useState<{
     colors: string[];
     labels: string[];
@@ -156,7 +153,6 @@ const DailyReportBoard = () => {
   }>();
   const [dataCategory, setDataCategory] = useState<dataTotalCategory[]>([]);
 
-  const [dataTagsList, setDataTagsList] = useState<OptionDropdownType[]>([]);
   const [dataTaskDailyList, setDataTaskDailyList] = useState<
     dataTaskDailyTable[]
   >([]);
@@ -240,17 +236,6 @@ const DailyReportBoard = () => {
   };
 
   useEffect(() => {
-    if (creationDataTaskData) {
-      setDataTagsList(
-        creationDataTaskData.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
-        })),
-      );
-    }
-  }, [creationDataTaskData]);
-
-  useEffect(() => {
     if (dataStatistic) {
       // Add color for item
       const dataAddColor = dataStatistic.categories.map((item) => ({
@@ -328,7 +313,7 @@ const DailyReportBoard = () => {
       const otherItem =
         otherItems.length > 0
           ? {
-              categoryColor: '#FF0000',
+              categoryColor: '#D1D7DC',
               categoryName: 'その他',
               duration: secondsToTimeString(totalDurationOther),
               percent: totalPercentOther,
@@ -345,7 +330,7 @@ const DailyReportBoard = () => {
 
       // Prepare colored data
       const dataAddColor = mergedCategories.map((item) => ({
-        color: item.categoryColor,
+        color: item.isOfMainOrganization ? 'white' : '#83919E',
         categoryName: item.categoryName || '未設定',
         duration: item.duration,
         percent: item.percent,
@@ -367,7 +352,6 @@ const DailyReportBoard = () => {
       const listValueActualChart = mergedCategories.map((item) =>
         convertToJapaneseTime(item.duration),
       );
-
       setDataCategoryPDF(dataAddColor);
       setChartDataPDF({
         colors: listColor,
@@ -2054,7 +2038,12 @@ const DailyReportBoard = () => {
                               <div className="text-left !pt-0 !pl-2">
                                 <ActionDetailDaily
                                   row={row}
-                                  dataTagsList={dataTagsList}
+                                  dataTagsList={row.original.tags.map(
+                                    (org) => ({
+                                      label: String(org.name),
+                                      value: String(org.id),
+                                    }),
+                                  )}
                                   setDataTaskDailyList={setDataTaskDailyList}
                                 />
                               </div>
@@ -2099,7 +2088,7 @@ const DailyReportBoard = () => {
                   <span className="text-2xl font-medium -translate-y-[10%]">
                     日報
                   </span>
-                  <div className="flex items-end gap-2 -translate-y-[20%]  relative top-[2px]">
+                  <div className="flex items-end gap-2 font-medium -translate-y-[20%]  relative top-[2px]">
                     <span>{detailDateInfo.year}</span>
                     <span className="">年</span>
                     <span>{detailDateInfo.month}</span>
@@ -2110,12 +2099,12 @@ const DailyReportBoard = () => {
                   </div>
                 </div>
                 <div className="flex text-sm items-center gap-1 h-full basis-1/2 py-1 justify-end">
-                  <span className=" max-w-[100px] w-fit min-h-5 break-all ">
-                    {session?.user.profile.fullName}
-                  </span>
                   <p className=" max-w-[100px] flex-shrink-0 w-fit font-medium break-all py-1 min-h-5">
                     {dataStatisticPDF?.remark?.user.organizations.name}
                   </p>
+                  <span className=" max-w-[100px] w-fit min-h-5 break-all ">
+                    {session?.user.profile.fullName}
+                  </span>
                 </div>
               </div>
 
@@ -2145,17 +2134,37 @@ const DailyReportBoard = () => {
                         {minutesConvert}
                       </span>
                       <span className="mr-4">分</span>
-                      <div className="flex items-center gap-1 text-xs">
-                        <span className="w-3 h-3 bg-red-400 relative top-[5px]"></span>
-                        <span className="">兼務業務</span>
-                        <span className="">
-                          {dataStatisticPDF?.subOrganization?.percent}%
-                        </span>
-                        <div className="flex items-center gap-1">
-                          (<span className="">{hoursConvertDifferent}</span>
-                          <span>時間</span>
-                          <span className="">{minutesConvertDifferent}</span>
-                          <span>時間</span>)
+                      <div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="">メインチーム</span>
+                          <span className="">
+                            {dataStatisticPDF?.subOrganization?.percent &&
+                              100 - dataStatisticPDF?.subOrganization?.percent}
+                            %
+                          </span>
+                          <div className="flex items-center gap-1">
+                            (
+                            <span className="">
+                              {hoursConvert - hoursConvertDifferent}
+                            </span>
+                            <span>時間</span>
+                            <span className="">
+                              {minutesConvert - minutesConvertDifferent}
+                            </span>
+                            <span>時間</span>)
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="">サブチーム</span>
+                          <span className="">
+                            {dataStatisticPDF?.subOrganization?.percent}%
+                          </span>
+                          <div className="flex items-center gap-1">
+                            (<span className="">{hoursConvertDifferent}</span>
+                            <span>時間</span>
+                            <span className="">{minutesConvertDifferent}</span>
+                            <span>時間</span>)
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -2214,7 +2223,7 @@ const DailyReportBoard = () => {
               </div>
             </div>
             <div className="mt-5">
-              <table className="bg-white rounded-none w-full  border border-black">
+              <table className="bg-white rounded-none w-full">
                 <colgroup>
                   <col style={{ width: '10%' }} />
                   <col style={{ width: '10%' }} />
@@ -2228,9 +2237,9 @@ const DailyReportBoard = () => {
                   <col style={{ width: '10%' }} />
                 </colgroup>
                 <thead className="bg-gray-100">
-                  <tr className="[&>th]:font-medium">
+                  <tr className="[&>th]:font-medium border border-black">
                     <th
-                      className="!py-2 !px-2 border-r border-b border-b-gray-500 border-r-black"
+                      className="!py-2 !px-2 border-r border-b border-b-black border-r-black"
                       colSpan={2}>
                       <div className="flex -translate-y-[30%]  text-xs items-center justify-center gap-2 ">
                         <span>実</span>
@@ -2240,12 +2249,12 @@ const DailyReportBoard = () => {
                       </div>
                     </th>
                     <th
-                      className="!py-2 text-xs  !px-2 border-r border-b border-b-gray-500 border-r-black"
+                      className="!py-2 text-xs  !px-2 border-r border-b border-b-black border-r-black"
                       colSpan={1}>
                       <div className="-translate-y-[30%]">時間</div>
                     </th>
                     <th
-                      className="!py-2 !px-2 border-b border-b-gray-500"
+                      className="!py-2 !px-2 border-b border-b-black"
                       colSpan={7}>
                       <div className="flex text-xs -translate-y-[30%] items-center justify-center gap-2">
                         <span>タ</span>
@@ -2265,7 +2274,7 @@ const DailyReportBoard = () => {
                       ref={(el) => {
                         rowRefs.current[index] = el;
                       }}
-                      className="border-b custom-tr border-gray-500"
+                      className={`border-b border-l border-r border-black custom-tr`}
                       key={index}>
                       <td
                         colSpan={2}
@@ -2274,7 +2283,9 @@ const DailyReportBoard = () => {
                           {item.startedAt &&
                             convertToTimeString(item.startedAt)}{' '}
                           ~{' '}
-                          {item.pausedAt && convertToTimeString(item.pausedAt)}
+                          {item.pausedAt
+                            ? convertToTimeString(item.pausedAt)
+                            : '計測中'}
                         </div>
                       </td>
 
@@ -2300,7 +2311,9 @@ const DailyReportBoard = () => {
               </table>
             </div>
             <div className="mt-5 min-h-[200px] border border-gray-500">
-              <p className="text-center py-2 border-b border-gray-500">備考</p>
+              <p className="text-center py-2 border-b border-gray-500 -translate-y-[25%]">
+                備考
+              </p>
               <div className="py-1 pr-3">
                 <div
                   className="rounded-sm break-all p-1"

@@ -78,6 +78,8 @@ export interface EventEditFormData {
   weekDay?: OptionDropdownType;
   monthDay?: OptionDropdownType;
   month?: OptionDropdownType;
+  scheduleId?: string; // id event delete with popup detail event in kanban schedule
+  eventSchedule?: string; // id repeat event delete with popup detail event in kanban schedule
 }
 
 export interface EventRequest {
@@ -121,12 +123,12 @@ export interface CreationDataEventCalendar {
   }[];
   eventLocations: LocationEventType[];
   organization: {
-    id: number,
-    name: string,
-    uuid: string,
-    icon: string | null,
-    iconColor: string
-  }
+    id: number;
+    name: string;
+    uuid: string;
+    icon: string | null;
+    iconColor: string;
+  };
 }
 
 export interface EventParticipant {

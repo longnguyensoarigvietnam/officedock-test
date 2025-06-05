@@ -659,13 +659,14 @@ function StatisticTagCalendar() {
                 isStartButtonClicked={isStartButtonClicked}
                 resetEndClick={() => {
                   setIsDisableCalendar(true);
-                  setIsStartButtonClicked(true);
-
                   setIsEndButtonClicked(false);
                 }}
                 resetStartClick={() => {
                   setIsDisableCalendar(true);
                   setIsStartButtonClicked(false);
+                }}
+                clickStartButton={() => {
+                  setIsStartButtonClicked(true);
                 }}
                 onChange={handleChangeCalendar}
               />
@@ -738,9 +739,10 @@ function StatisticTagCalendar() {
                   isStartButtonClicked={isStartButtonClickedCompare}
                   resetEndClick={() => {
                     setIsDisableCalendarCompare(true);
-                    setIsStartButtonClickedCompare(true);
-
                     setIsEndButtonClickedCompare(false);
+                  }}
+                  clickStartButton={() => {
+                    setIsStartButtonClickedCompare(true);
                   }}
                   resetStartClick={() => {
                     setIsDisableCalendarCompare(true);

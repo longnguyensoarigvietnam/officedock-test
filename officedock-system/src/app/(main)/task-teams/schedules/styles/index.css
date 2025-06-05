@@ -106,11 +106,7 @@
   font-weight: 500;
 }
 .calendar-team-custom .fc-timegrid-event .fc-event-main {
-  padding: 0 !important;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 -2px 4px rgba(0, 0, 0, 0.05),
-    0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0 5px 0 !important;
 }
 .calendar-team-custom .event-type-task.fc-v-event {
   background-color: white !important;
@@ -152,7 +148,7 @@
   max-width: 150px !important;
 }
 .calendar-team-custom .fc-event {
-  border: none !important
+  border: none !important;
 }
 .calendar-team-custom .fc-timegrid-axis-cushion {
   font-size: 12px;
@@ -302,7 +298,8 @@
 .calendar-team-custom .custom-day-view.fc-event {
   min-height: 20px;
 }
-.calendar-team-custom.week .fc-event-main, .calendar-team-custom.day .fc-event-main {
+.calendar-team-custom.week .fc-event-main,
+.calendar-team-custom.day .fc-event-main {
   width: 100% !important;
   border-radius: 6px !important;
   overflow: hidden;

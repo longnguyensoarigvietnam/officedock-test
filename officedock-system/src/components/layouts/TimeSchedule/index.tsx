@@ -311,6 +311,10 @@ const TimeSchedule = memo(
       useState(false);
     const [openConfirmDeleteEventModal, setOpenConfirmDeleteEventModal] =
       useState(false);
+    const [
+      openConfirmDeleteEventRepeatModal,
+      setOpenConfirmDeleteEventRepeatModal,
+    ] = useState(false);
     const [openCreateEventModal, setOpenCreateEventModal] =
       useState<boolean>(false);
     const [confirmEventDataToEdit, setConfirmEventDataToEdit] =
@@ -489,7 +493,8 @@ const TimeSchedule = memo(
                     id: null,
                   },
                   taskId: event.taskId as number,
-                  scheduleId: event.scheduleId || schedule.schedule,
+                  eventSchedule: schedule.id,
+                  scheduleId: schedule.schedule || (event.id as number),
                   uuid: uuidv4(),
                   planStartDate: String(schedule.planStartDate),
                   planEndDate: String(schedule.planEndDate),
@@ -1465,7 +1470,7 @@ const TimeSchedule = memo(
                 setDataEventEditLocal(data);
                 setConfirmEventDataToEdit(data);
                 setOpenCreateEventModal(false);
-                setOpenConfirmDeleteEventModal(true);
+                setOpenConfirmDeleteEventRepeatModal(true);
                 setIdBackToEvent(data.id as string);
               }}
             />
@@ -2404,6 +2409,8 @@ const TimeSchedule = memo(
         isAllDay: data.isAllDay,
         participants: data.participants,
         type: data.type,
+        scheduleId: '',
+        eventSchedule: '',
       });
     };
 
@@ -2799,7 +2806,55 @@ const TimeSchedule = memo(
         },
       },
     );
+    // Delete Event Repeat
+    const handleConfirmDeleteEventRepeatCalendar = (sendToChat: boolean) => {
+      if (dataEventEdit) {
+        deleteEventRepeatCalendar({
+          eventId: `${dataEventEdit.eventSchedule}`,
+          repeatScheduleId: dataEventEdit.scheduleId as string,
+          sendToChat,
+        });
+        return;
+      }
+    };
 
+    const handleDeleteEventRepeatCalendar = async (data: {
+      eventId: number | string;
+      repeatScheduleId: number | string;
+      sendToChat: boolean;
+    }) => {
+      return await api.delete(
+        `${apiRouters.DELETE_REPEAT_SCHEDULE(`${data.repeatScheduleId}`)}?message=${encodeURIComponent(actionsEventMessage)}${data.sendToChat ? '&send_to_chat=true' : ''}${data.eventId ? `&repeat_schedule_id=${data.eventId}` : ''}`,
+      );
+    };
+    const { mutate: deleteEventRepeatCalendar } = useMutation(
+      'deleteEventRepeatCalendar',
+      handleDeleteEventRepeatCalendar,
+      {
+        onSuccess: (data, task) => {
+          handleRemoveEventParam();
+          setOpenConfirmDeleteEventRepeatModal(false);
+          setConfirmEventDataToEdit(undefined);
+          setBackToEditing(false);
+          setActionsEventMessage('');
+          const updatedTaskList = taskTimeScheduleList.filter(
+            (item) => item.eventSchedule !== Number(task.eventId),
+          );
+          setTaskTimeScheduleList(updatedTaskList);
+          showToast({
+            description: SUCCESS_DELETE_MESSAGE,
+          });
+        },
+        onError: (error: AxiosError<any>) => {
+          showErrorToast(error, ERROR_DELETE_MESSAGE);
+        },
+        onSettled: () => {
+          setIsLoading(false);
+          setDataEventEditLocal(undefined);
+        },
+      },
+    );
+    // Delete event
     const handleConfirmDeleteEventCalendar = (sendToChat: boolean) => {
       if (dataEventEdit) {
         deleteEventCalendar({ id: `${dataEventEdit.id}`, sendToChat });
@@ -3605,6 +3660,36 @@ const TimeSchedule = memo(
             onRejectSend={() => {
               setIsLoading(true);
               handleConfirmDeleteEventCalendar(false);
+            }}
+            onClose={() => {
+              handleRemoveEventParam();
+              setDataEventEditLocal(undefined);
+              setConfirmEventDataToEdit(undefined);
+              setOpenConfirmDeleteEventModal(false);
+              setBackToEditing(false);
+              setActionsEventMessage('');
+            }}
+            onBackToEditModal={() => {
+              router.push(
+                `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}`,
+              );
+            }}
+          />
+        )}
+
+        {/* Confirm delete with popup detail */}
+        {openConfirmDeleteEventRepeatModal && (
+          <ConfirmActionsEventModal
+            open={openConfirmDeleteEventRepeatModal}
+            type={ActionsEvent.DELETE}
+            setActionsEventMessage={setActionsEventMessage}
+            onSend={() => {
+              setIsLoading(true);
+              handleConfirmDeleteEventRepeatCalendar(true);
+            }}
+            onRejectSend={() => {
+              setIsLoading(true);
+              handleConfirmDeleteEventRepeatCalendar(false);
             }}
             onClose={() => {
               handleRemoveEventParam();

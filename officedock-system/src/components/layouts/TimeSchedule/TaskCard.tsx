@@ -379,6 +379,8 @@ const TaskCard = ({
             dataEvent={{
               title: event.event?.title,
               id: event.event?.extendedProps.scheduleId,
+              eventSchedule: event.event?.extendedProps.eventSchedule,
+              scheduleId: event.event?.extendedProps.scheduleId,
               start: event.event?.extendedProps.planStartDate,
               end: event.event?.extendedProps.isAllDay
                 ? event.event?.extendedProps.endDate
