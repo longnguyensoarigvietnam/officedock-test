@@ -1134,11 +1134,6 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             if not model:
                 continue
 
-            users = (
-                model.participants.all()
-                if isinstance(model, Schedule)
-                else model.people_in_charge.all()
-            )
             item = {
                 "id": duration.id,
                 "task_id": model.id if isinstance(model, Task) else None,
@@ -1152,7 +1147,7 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                 if isinstance(model, Schedule)
                 else CalendarTypes.TASK.value,
                 "participants": CreationDataUserSerializer(
-                    users, many=True
+                    [duration.user], many=True
                 ).data,
                 "is_start": duration.paused_at is None
                 or not duration.paused_at,
