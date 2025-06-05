@@ -38,6 +38,7 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   onChange?: (startDate: Date, endDate: Date | null) => void;
   resetEndClick?: () => void;
   resetStartClick?: () => void;
+  clickStartButton?: () => void;
 };
 
 const MultiDatePickerCustom = ({
@@ -60,6 +61,7 @@ const MultiDatePickerCustom = ({
   onChange,
   resetEndClick,
   resetStartClick,
+  clickStartButton,
   dateFormat = DATE_FORMAT,
   ...props
 }: DatePickerProps) => {
@@ -130,6 +132,7 @@ const MultiDatePickerCustom = ({
           setEndDate(adjustedEnd);
           onChange && onChange(start, adjustedEnd);
           resetEndClick && resetEndClick();
+          clickStartButton && clickStartButton();
         } else {
           if (initialStartDate && start) {
             const endNew = compareAndSetDate(initialStartDate, start);

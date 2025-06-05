@@ -597,13 +597,14 @@ function StatisticTeamCalendar() {
                 isStartButtonClicked={isStartButtonClicked}
                 resetEndClick={() => {
                   setIsDisableCalendar(true);
-                  setIsStartButtonClicked(true);
-
                   setIsEndButtonClicked(false);
                 }}
                 resetStartClick={() => {
                   setIsDisableCalendar(true);
                   setIsStartButtonClicked(false);
+                }}
+                clickStartButton={() => {
+                  setIsStartButtonClicked(true);
                 }}
                 onChange={handleChangeCalendar}
               />
@@ -673,12 +674,14 @@ function StatisticTeamCalendar() {
                   isStartButtonClicked={isStartButtonClickedCompare}
                   resetEndClick={() => {
                     setIsDisableCalendarCompare(true);
-                    setIsStartButtonClickedCompare(true);
                     setIsEndButtonClickedCompare(false);
                   }}
                   resetStartClick={() => {
                     setIsDisableCalendarCompare(true);
                     setIsStartButtonClickedCompare(false);
+                  }}
+                  clickStartButton={() => {
+                    setIsStartButtonClickedCompare(true);
                   }}
                   onChange={handleChangeCalendarCompare}
                 />

@@ -62,7 +62,7 @@ const PopupDetailEvent = ({ dataEvent, onDelete }: Props) => {
                 <div
                   className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer"
                   onClick={() => {
-                    const newId = dataEvent.id;
+                    const newId = dataEvent.scheduleId;
 
                     router.push(
                       `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${newId}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}`,

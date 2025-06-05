@@ -324,6 +324,7 @@ const ScheduleTeamBoard = () => {
                   : largeColor
                     ? largeColor
                     : '#A7B9C2',
+              boxShadow: '0px 2px 8px 0px #0000001A',
             }}
             className={`h-full mx-1 ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-tr-md rounded-br-md rounded-tl-md rounded-bl-md `}>
             <div className="overflow-hidden">
@@ -593,7 +594,9 @@ const ScheduleTeamBoard = () => {
                 isStart: event.isStart,
                 type: event.type,
                 participants: event.participants || [],
-                locationId: data.location ? String((data.location as OptionDropdownType)?.value) : '',
+                locationId: data.location
+                  ? String((data.location as OptionDropdownType)?.value)
+                  : '',
 
                 largeColor: largeColor,
                 planStartDate: `${event.startDate}`,
@@ -686,7 +689,9 @@ const ScheduleTeamBoard = () => {
                 id: `${event.id}`,
                 type: event.type,
                 participants: event.participants || [],
-                locationId: data.location ? String((data.location as OptionDropdownType)?.value) : '',
+                locationId: data.location
+                  ? String((data.location as OptionDropdownType)?.value)
+                  : '',
                 largeColor: largeColor,
                 resourceIds: [
                   ...(event.participants?.map(
