@@ -45,7 +45,7 @@ const TableComponent = ({
   hierarchyDetail: HierarchyDetail;
   categoryList: OptionDropdownType[];
   setIsTyping: Dispatch<SetStateAction<boolean>>;
-  setHierarchyDetail: Dispatch<SetStateAction<HierarchyDetail>>
+  setHierarchyDetail: Dispatch<SetStateAction<HierarchyDetail>>;
   setSelectedHierarchiesToDelete: Dispatch<SetStateAction<string[]>>;
   setSelectedHierarchiesToUpdate: Dispatch<
     SetStateAction<
@@ -97,7 +97,9 @@ const TableComponent = ({
     }
   }, [categoryList, hierarchyDetail.id]);
 
-  const findLastUniqueMediumIndexes = (data: CalendarCategoryRow[]): number[] => {
+  const findLastUniqueMediumIndexes = (
+    data: CalendarCategoryRow[],
+  ): number[] => {
     const lastIndexes: number[] = [];
     let currentLargeValue: number | string | null = null;
     let mediumIndexes: Record<number | string, number> = {}; // Tracks first occurrence of each medium value
@@ -210,7 +212,10 @@ const TableComponent = ({
     HierarchyType.MEDIUM,
   );
 
-  const handleAddMediumCategory = (option: string, rowInfo: CalendarCategoryRow) => {
+  const handleAddMediumCategory = (
+    option: string,
+    rowInfo: CalendarCategoryRow,
+  ) => {
     const newUuid = uuidv4();
 
     const newRow = {
@@ -228,14 +233,17 @@ const TableComponent = ({
       const updatedHierarchyDetail = { ...prev };
       const targetList = updatedHierarchyDetail?.statisticCategories || [];
 
-      const emptyMediumIndex = targetList.findIndex(
-        (item) =>
-          item.large.value === rowInfo.large.value &&
-          item.medium &&
-          !item.medium.showBy,
+      const sameGroupIndexes = targetList
+        .map((item, index) =>
+          item.large.value === rowInfo.large.value ? index : -1,
+        )
+        .filter((index) => index !== -1); // Remove -1 values
+
+      const emptyMediumIndex = sameGroupIndexes.find((index) =>
+        isUUID(targetList[index].medium?.label),
       );
 
-      if (emptyMediumIndex !== -1) {
+      if (emptyMediumIndex !== undefined) {
         // Replace the first matching "empty" medium row
         targetList[emptyMediumIndex] = {
           ...newRow,
@@ -251,11 +259,6 @@ const TableComponent = ({
         );
 
         if (!alreadyHasEmpty) {
-          const sameGroupIndexes = targetList
-          .map((item, index) =>
-            item.large.value === rowInfo.large.value ? index : -1,
-          )
-          .filter((index) => index !== -1); // Remove -1 values
           // Otherwise, add the new row after the last occurrence
           const lastIndex = sameGroupIndexes.pop();
           if (lastIndex !== undefined) {
@@ -292,11 +295,16 @@ const TableComponent = ({
       };
 
       // Check if there's already an empty medium row to avoid adding duplicates
-      const alreadyHasEmpty = targetList.some(
+      const emptyLargeIndex = targetList.findIndex(
         (item) => isUUID(String(item.large.label)) && item.large.showBy,
       );
-
-      if (!alreadyHasEmpty) {
+      if (emptyLargeIndex != -1) {
+        // Replace the first matching "empty" medium row
+        targetList[emptyLargeIndex] = {
+          ...newRow,
+          id: String(targetList[emptyLargeIndex].id), // retain original row id
+        };
+      } else {
         targetList.push(newRow); // Only add if no empty row exists
       }
 

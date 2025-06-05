@@ -80,6 +80,7 @@ export interface EventEditFormData {
   month?: OptionDropdownType;
   scheduleId?: string; // id event delete with popup detail event in kanban schedule
   eventSchedule?: string; // id repeat event delete with popup detail event in kanban schedule
+  isEventOverlapping?: boolean;
 }
 
 export interface EventRequest {

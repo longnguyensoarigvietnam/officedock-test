@@ -482,6 +482,7 @@ export const apiRouters = {
   TASK_CALENDAR: '/calendars/',
   USER_SETTING: '/users/setting/',
   EVENT_KANBAN_SCHEDULE: '/dashboard/kanban-schedules/',
+  CHECK_OVERLAPPING_LOCATION: '/schedules/check-overlapping/',
 
   // TERM
   READ_TERM: (id: string) => `/terms/${id}/read/`,

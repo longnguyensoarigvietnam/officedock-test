@@ -2,6 +2,7 @@
 import { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
+import { useMutation } from 'react-query';
 
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
@@ -43,6 +44,8 @@ import {
 } from '@constants/message';
 import {
   DAY_OPTIONS,
+  DEFAULT_END_TIME,
+  DEFAULT_START_TIME,
   MONTH_OPTIONS,
   NO_OPTION_CATEGORY,
   NO_OPTIONS,
@@ -51,9 +54,11 @@ import {
   UNREGISTERED,
   WEEKDAY_OPTIONS,
 } from '@constants';
+import { apiRouters } from '@constants/routers';
 
 import {
   addHoursToDate,
+  addTimeToDate,
   convertDateToStartDate,
   convertToMinutes,
   convertToTimeString,
@@ -69,7 +74,8 @@ import {
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
-import useCreationDataStatisticTeam from '@hooks/useCreationDataStatisticTeam';
+
+import api from '@base/api';
 
 export type ActionsEventModalProps = {
   open: boolean;
@@ -106,9 +112,6 @@ const ActionsEventModal = ({
   const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
     OptionDropdownType[]
   >([]);
-  const [calendarOrganizationId, setCalendarOrganizationId] = useState<
-    number | null
-  >(null);
   const [dataOrganizationCategories, setDataOrganizationCategories] = useState<
     CategoryStructure[]
   >([]);
@@ -157,6 +160,7 @@ const ActionsEventModal = ({
     is_calendar_page: true,
 
     onSuccess: (data) => {
+      if (!data) return;
       setDataOptionsOrganizations([
         ...data.organizations.map((org) => ({
           value: org.id || '',
@@ -165,19 +169,23 @@ const ActionsEventModal = ({
           iconColor: org.iconColor || '#0068B6',
         })),
       ]);
-    },
-  });
 
-  useCreationDataStatisticTeam({
-    organization_id: calendarOrganizationId
-      ? String(calendarOrganizationId)
-      : '',
-    isTeam: true,
-    onSuccess: (data) => {
-      if (!data) return;
+      setDataOptionsTags(
+        data.calendarOrganization?.tags.map((org) => ({
+          label: org.name as string,
+          value: org.id || '',
+        })),
+      );
 
-      const organizationCategories = data.organization.statisticCategories.map(
-        (category) => {
+      setDataOptionsEventLocation(
+        data?.locations?.map((org) => ({
+          label: org.name,
+          value: org.id || '',
+        })),
+      );
+
+      const organizationCategories =
+        data.calendarOrganization?.statisticCategories.map((category) => {
           const largeCategory = category.LARGE || {
             id: NO_OPTION_CATEGORY,
             name: NO_OPTION_CATEGORY,
@@ -206,8 +214,7 @@ const ActionsEventModal = ({
             LARGE: largeCategory,
             MEDIUM: mediumCategories,
           };
-        },
-      );
+        });
 
       setDataOrganizationCategories(organizationCategories);
       setDataOptionsCategoryLarge(() => {
@@ -217,7 +224,7 @@ const ActionsEventModal = ({
             value: NO_OPTION_CATEGORY,
           },
         ];
-        data.organization.statisticCategories.map((category) => {
+        data.calendarOrganization.statisticCategories.map((category) => {
           if (category.LARGE) {
             largeCategories.push({
               label: category.LARGE.name,
@@ -261,6 +268,7 @@ const ActionsEventModal = ({
       month: undefined,
       monthDay: undefined,
       weekDay: undefined,
+      isEventOverlapping: false,
     };
     if (dataEvent) {
       let newParticipantIds: number[] = [];
@@ -324,6 +332,7 @@ const ActionsEventModal = ({
           : newMediumCategory),
         (value.memo = dataEvent.memo),
         (value.isAllDay = dataEvent.isAllDay),
+        (value.isEventOverlapping = dataEvent.isEventOverlapping),
         (value.location = dataEvent.location
           ? backToEditing
             ? dataEvent.location
@@ -470,42 +479,15 @@ const ActionsEventModal = ({
     reset(defaultValues);
   }, [defaultValues, reset]);
 
-  useCreationDataStatistic({
-    is_calendar_page: true,
-
-    onSuccess: (data) => {
-      setDataOptionsOrganizations([
-        ...data.organizations.map((org) => ({
-          value: org.id || '',
-          label: org.name,
-          userIds: org.users ? org.users.map((user) => user.id) : [],
-          iconColor: org.iconColor || '#0068B6',
-        })),
-      ]);
-    },
-  });
-
   useEffect(() => {
     if (creationDataEventCalendar) {
-      setCalendarOrganizationId(creationDataEventCalendar.organization.id)
       setDataOptionsEventTypes(
         creationDataEventCalendar.types.map((org) => ({
           label: org,
           value: org,
         })),
       );
-      setDataOptionsTags(
-        creationDataEventCalendar.tags.map((org) => ({
-          label: org.name as string,
-          value: org.id || '',
-        })),
-      );
-      setDataOptionsEventLocation(
-        creationDataEventCalendar.eventLocations.map((org) => ({
-          label: org.name,
-          value: org.id || '',
-        })),
-      );
+
       const eventMembers = creationDataEventCalendar.members.map((org) => ({
         id: org.id,
         fullName: org.fullName,
@@ -530,6 +512,64 @@ const ActionsEventModal = ({
     dataOptionsOrganizations,
     isFetchedCreationDataStatistic,
   ]);
+
+  // Check overlapping location
+  const handleConfirmCheckOverlappingLocation = () => {
+    if (
+      !watch('startTime') ||
+      !watch('endTime') ||
+      !watch('startDate') ||
+      !watch('endDate') ||
+      !watch('location.value')
+    )
+      return;
+    let planStartDate = '';
+    let planEndDate = '';
+    if (watch('isAllDay')) {
+      planStartDate = addTimeToDate(
+        (watch('startDate') as Date) || new Date(),
+        DEFAULT_START_TIME,
+      );
+      planEndDate = addTimeToDate(
+        (watch('endDate') as Date) || new Date(),
+        DEFAULT_END_TIME,
+      );
+    } else {
+      planStartDate = addTimeToDate(
+        (watch('startDate') as Date) || new Date(),
+        watch('startTime') as string,
+      );
+      planEndDate = addTimeToDate(
+        (watch('endDate') as Date) || new Date(),
+        watch('endTime') as string,
+      );
+    }
+    checkDeleteHierarchyCategory({
+      scheduleId: Number(dataEvent?.id),
+      locationId: Number(watch('location.value')),
+      planStartDate,
+      planEndDate,
+    });
+  };
+
+  const handleCheckOverlappingLocation = async (data: {
+    scheduleId: number;
+    locationId: number;
+    planStartDate: string;
+    planEndDate: string;
+  }) => {
+    return await api.post(apiRouters.CHECK_OVERLAPPING_LOCATION, data);
+  };
+
+  const { mutateAsync: checkDeleteHierarchyCategory } = useMutation(
+    'checkDeleteHierarchyCategory',
+    handleCheckOverlappingLocation,
+    {
+      onSuccess: ({ data }) => {
+        setValue('isEventOverlapping', data.isEventOverlapping);
+      },
+    },
+  );
 
   // Watch the form fields dynamically
   const largeCategoryValue = useWatch({
@@ -872,6 +912,7 @@ const ActionsEventModal = ({
                                     }
                                     setValue('endDate', null);
                                     setValue('endTime', '');
+                                    handleConfirmCheckOverlappingLocation();
                                   }}
                                 />
                               )}
@@ -908,6 +949,7 @@ const ActionsEventModal = ({
                                       );
                                     }
                                     setTime('');
+                                    handleConfirmCheckOverlappingLocation();
                                   },
                                 })}
                                 autoComplete="off"
@@ -927,6 +969,7 @@ const ActionsEventModal = ({
                                       })(),
                                     );
                                   }
+                                  handleConfirmCheckOverlappingLocation();
                                 }}
                               />
                             </div>
@@ -965,6 +1008,7 @@ const ActionsEventModal = ({
                                         convertToTimeString(`${currentDate}`),
                                       );
                                     }
+                                    handleConfirmCheckOverlappingLocation();
                                   }}
                                 />
                               )}
@@ -1040,6 +1084,7 @@ const ActionsEventModal = ({
                                       }
                                     }
                                     setTime('');
+                                    handleConfirmCheckOverlappingLocation();
                                   },
                                 })}
                                 type="text"
@@ -1065,6 +1110,7 @@ const ActionsEventModal = ({
                                       );
                                     }
                                   }
+                                  handleConfirmCheckOverlappingLocation();
                                 }}
                               />
                             </div>
@@ -1134,6 +1180,7 @@ const ActionsEventModal = ({
                                 )}
                                 onChange={(e) => {
                                   onChange(e);
+                                  setValue('isAllDay', false);
                                   setValue('repeatInterval', undefined);
                                   setValue('weekDay', undefined);
                                   setValue('monthDay', undefined);
@@ -1459,11 +1506,6 @@ const ActionsEventModal = ({
                         )}
                     </div>
                   </div>
-
-                  <ErrorMessage
-                    error={errors?.endTime?.message}
-                    className="mt-[-10px] text-xs"
-                  />
                 </div>
               </div>
               {!(
@@ -1757,7 +1799,7 @@ const ActionsEventModal = ({
               </div>
             </div>
           </div>
-          {/* Address */}
+          {/* Location */}
           <div className="flex justify-between items-center">
             <p className="w-fit font-medium text-[14px]">場所</p>
             <div className="w-[513px]">
@@ -1779,6 +1821,7 @@ const ActionsEventModal = ({
                     )}
                     onChange={(e) => {
                       onChange(e);
+                      handleConfirmCheckOverlappingLocation();
                     }}
                   />
                 )}
@@ -1788,6 +1831,18 @@ const ActionsEventModal = ({
                 error={errors.location?.message}
                 className="text-xs"
               />
+              {watch('isEventOverlapping') && (
+                <div className="flex gap-1 items-center mt-2">
+                  <ImageRound
+                    src={`/icons/overlap-task.svg`}
+                    name="icon warning"
+                    className="w-3 h-3"
+                  />
+                  <p className="text-xs font-normal text-error">
+                    同じ時間に場所重なっていいます。
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           {/* Participants */}
