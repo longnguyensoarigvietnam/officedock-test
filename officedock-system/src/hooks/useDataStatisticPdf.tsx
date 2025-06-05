@@ -17,6 +17,7 @@ interface useDataStatisticPDFProps {
   organizationId?: string;
   condition?: boolean[];
   onError?: (error: AxiosError) => void;
+  onSettled?: () => void;
 }
 
 const useDataStatisticPDF = ({
@@ -25,6 +26,7 @@ const useDataStatisticPDF = ({
   organizationId,
   condition,
   onError,
+  onSettled,
 }: useDataStatisticPDFProps) => {
   const { data: session } = useSession();
   const { setIsLoading } = useContext(LoadingContext);
@@ -55,6 +57,7 @@ const useDataStatisticPDF = ({
     },
     onSettled: () => {
       setIsLoading(false);
+      onSettled && onSettled();
     },
   });
 
