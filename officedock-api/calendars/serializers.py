@@ -184,25 +184,22 @@ class ScheduleSerializer(serializers.ModelSerializer):
         Validation data
         """
         request = self.context.get("request")
-        participants = data.get("participant_ids")
-        tags = data.get("tag_ids")
+        participants = data.get("participant_ids", [])
+        tags = data.get("tag_ids", [])
 
         for tag in tags:
             if not tag.get_calendar_organization():
                 raise serializers.ValidationError()
 
-        if participants:
-            for participant in participants:
-                if participant.company != request.user.company:
-                    raise serializers.ValidationError(
-                        {
-                            "participant_ids": {
-                                participant.id: ERROR_MESSAGES[
-                                    "company_not_match"
-                                ]
-                            }
+        for participant in participants:
+            if participant.company != request.user.company:
+                raise serializers.ValidationError(
+                    {
+                        "participant_ids": {
+                            participant.id: ERROR_MESSAGES["company_not_match"]
                         }
-                    )
+                    }
+                )
 
         return data
 

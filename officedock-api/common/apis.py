@@ -461,6 +461,15 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         ).first():
             organizations = [organization]
         data = {}
+        tags = (
+            request.user.company.tags.filter(
+                is_hidden=False,
+                organizations__in=organizations,
+            )
+            .order_by("created_at")
+            .all()
+            .distinct()
+        )
         if not is_calendar_page:
             if organization_id:
                 data[
@@ -499,6 +508,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                         ] = add_default_entries_to_categories(
                             org["statistic_categories"]
                         )
+            data["tags"] = BaseTagSerializer(tags, many=True).data
+
         if is_calendar_page and not organization_id:
             list_org = []
             for organization in organizations:
@@ -508,18 +519,14 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                     ).data
                 )
             data["organizations"] = list_org
-
-        tags = (
-            request.user.company.tags.filter(
-                is_hidden=False,
-                organizations__in=organizations,
-            )
-            .order_by("created_at")
-            .all()
-            .distinct()
-        )
-        data["tags"] = BaseTagSerializer(tags, many=True).data
-
+            data[
+                "calendar_organization"
+            ] = CreationDataOrganizationWithStructCategorySerializer(
+                user.company.get_calendar_organization(), context={"user": user}
+            ).data
+            data["locations"] = EventLocationSerializer(
+                user.company.event_locations.all(), many=True
+            ).data
         return self.response_ok(data)
 
 
