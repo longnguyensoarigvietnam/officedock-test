@@ -13,6 +13,7 @@ from tasks.constants import FrequencyMap
 from users.models import User
 from tasks.models import PeopleInChargeTasks, TaskSchedule
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
+from calendars.utils import is_event_overlapping
 
 
 class CategoryForCreationTaskSerializer(serializers.Serializer):
@@ -44,6 +45,27 @@ class RepeatScheduleSerializer(serializers.ModelSerializer):
             "plan_start_date",
             "plan_end_date",
         ]
+
+
+class CheckScheduleOverlapSerializer(serializers.Serializer):
+    """ "
+    Serializer for check overlap time and location with another event
+    """
+
+    schedule_id = serializers.PrimaryKeyRelatedField(
+        source="schedule",
+        queryset=Schedule.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    location_id = serializers.PrimaryKeyRelatedField(
+        source="location",
+        queryset=EventLocation.objects.all(),
+        write_only=True,
+    )
+    plan_start_date = serializers.DateTimeField()
+    plan_end_date = serializers.DateTimeField()
 
 
 class EventLocationSerializer(serializers.ModelSerializer):
@@ -454,6 +476,7 @@ class ScheduleDetailSerializer(ScheduleSerializer):
     """
 
     repeat_schedules = serializers.SerializerMethodField(read_only=True)
+    is_event_overlapping = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Schedule
@@ -472,6 +495,7 @@ class ScheduleDetailSerializer(ScheduleSerializer):
             "select_organizations",
             "memo",
             "repeat_schedules",
+            "is_event_overlapping",
             "tags",
         ]
 
@@ -504,3 +528,29 @@ class ScheduleDetailSerializer(ScheduleSerializer):
             repeat_schedule = obj.repeat_schedules.filter(id=repeat_id).first()
             return RepeatScheduleSerializer(repeat_schedule).data
         return None
+
+    def get_is_event_overlapping(self, obj: Schedule) -> bool:
+        """
+        Check if a schedule overlaps with existing events at a given location and time period.x
+        """
+        if not obj.location:
+            return False
+
+        request = self.context.get("request")
+        if not request:
+            return False
+
+        # Handle recurring event case
+        if repeat_id := request.query_params.get("repeat_schedule_id"):
+            repeat_schedule = obj.repeat_schedules.filter(id=repeat_id).first()
+            if not repeat_schedule:
+                return False
+
+            return is_event_overlapping(
+                instance=obj,
+                location=obj.location,
+                start_date=repeat_schedule.plan_start_date,
+                end_date=repeat_schedule.plan_end_date,
+            )
+
+        return False

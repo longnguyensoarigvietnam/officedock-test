@@ -18,6 +18,7 @@ from calendars.constants import ScheduleFields, CalendarTypes
 from calendars.models import EventLocation, Schedule, RepeatSchedule
 from calendars.filters import TaskScheduleForCalendarFilter
 from calendars.serializers import (
+    CheckScheduleOverlapSerializer,
     EventLocationSerializer,
     ScheduleSerializer,
     BaseScheduleSerializer,
@@ -25,6 +26,7 @@ from calendars.serializers import (
     TaskScheduleForCalendarSerializer,
     ScheduleDetailSerializer,
 )
+from calendars.utils import is_event_overlapping
 from chat.constants import ChatRoomTypes, ChatMessageTypes, WebSocketEventType
 from chat.models import ChatRoom
 from chat.serializers import (
@@ -832,6 +834,35 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return self.response(status_code=status.HTTP_204_NO_CONTENT)
 
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="check-overlapping",
+        serializer_class=CheckScheduleOverlapSerializer,
+    )
+    def check_event_overlapping(self, request):
+        """
+        Check if a schedule overlaps with existing events at a given location and time period.
+        """
+        # Validate and deserialize the incoming request data
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+
+        # Extract validated parameters from the request
+        schedule = validated_data.pop("schedule", None)
+        location = validated_data.pop("location")
+        plan_start_date = validated_data.pop("plan_start_date")
+        plan_end_date = validated_data.pop("plan_end_date")
+
+        return self.response_ok(
+            {
+                "is_event_overlapping": is_event_overlapping(
+                    schedule, location, plan_start_date, plan_end_date
+                )
+            }
+        )
+
 
 @extend_schema(tags=["System > Teamdock > Schedule"])
 class ScheduleTeamdockViewSet(BaseAPIViewSet):
@@ -1177,7 +1208,6 @@ class EventLocationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     permission_classes = [ActionPermission]
     screen_name = Screens.CALENDAR.value
     lookup_field = "uuid"
-    pagination_class = None
 
     def get_queryset(self):
         """
