@@ -1566,13 +1566,14 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             users = User.objects.filter(id__in=users).all()
         else:
             return self.response_ok()
+        org_users = organization.users.all()
 
         tag_ids = split_id_from_string(tag_ids_param)
 
         durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
-            users,
+            org_users,
             [organization.id],
             tags=tag_ids,
         )
@@ -1580,29 +1581,51 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
         )
-
+        tasks, events = get_list_models(durations)
         data = []
+        total_duration, category_list = process_per_user(
+            org_users,
+            tasks,
+            events,
+            start_of_day,
+            end_of_day,
+            durations=durations,
+        )
+        if not durations.exists() or category_list is None:
+            return self.response_ok(data)
+        for category in category_list:
+            cat_percent = percentage_calculation_of_duration(
+                total_duration.total_seconds(),
+                category["duration"].total_seconds(),
+            )
+            cat_data = {
+                "id": category["category_id"],
+                "name": category["category_name"],
+                "total_duration": format_duration(category["duration"]),
+                "percent": min(round(cat_percent), 100),
+                "users": [],
+            }
+            for user in users:
+                filter_durations = get_list_durations_by_users(
+                    durations=durations,
+                    large_id=large_category_id,
+                    medium_id=medium_category_id,
+                    small_id=small_category_id,
+                    users=[user],
+                )
+                user_total_duration = get_total_durations(filter_durations)
+                user_durations = self._get_durations_by_range(
+                    filter_durations, ranges, durations
+                )
+                cat_data["users"].append(
+                    {
+                        "user": CreationDataUserSerializer(user).data,
+                        "total_duration": format_duration(user_total_duration),
+                        "durations": user_durations,
+                    }
+                )
 
-        for user in users:
-            filter_durations = get_list_durations_by_users(
-                durations=durations,
-                large_id=large_category_id,
-                medium_id=medium_category_id,
-                small_id=small_category_id,
-                users=[user],
-            )
-            total_duration = get_total_durations(filter_durations)
-            user_durations = self._get_durations_by_range(
-                filter_durations, ranges, durations
-            )
-
-            data.append(
-                {
-                    "user": CreationDataUserSerializer(user).data,
-                    "total_duration": format_duration(total_duration),
-                    "durations": user_durations,
-                }
-            )
+            data.append(cat_data)
 
         return self.response_ok(data)
 

@@ -522,9 +522,13 @@ def process_users(
     for user in users:
         if not durations.exists():
             continue
+        # Append category data
+        user_serializer = CreationDataUserSerializer(user).data
         filter_durations = get_list_durations_by_users(
             durations=durations, users=[user]
         )
+        duration = timedelta(0)
+        percent_per_total_duration = 0
         if filter_durations:
             duration = get_total_durations(filter_durations)
             # Calculate the percentage of the total duration
@@ -537,15 +541,14 @@ def process_users(
                 percent -= round(percent_per_total_duration)
             else:
                 percent_per_total_duration = percent
-            # Append category data
-            user_serializer = CreationDataUserSerializer(user).data
-            user_data.append(
-                {
-                    "user": user_serializer,
-                    "duration": format_duration(duration),
-                    "percent": min(round(percent_per_total_duration), 100),
-                }
-            )
+
+        user_data.append(
+            {
+                "user": user_serializer,
+                "duration": format_duration(duration),
+                "percent": min(round(percent_per_total_duration), 100),
+            }
+        )
 
     return user_data
 
