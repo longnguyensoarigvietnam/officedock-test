@@ -415,7 +415,8 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
         """
         Handle create hierarchical category statistics to each organization
         """
-
+        company = request.user.company
+        calendar_org = company.get_calendar_organization()
         instance = self.get_object()
         if request.method == "GET":
             categories = OrganizationDetailSerializer(instance).data[
@@ -547,7 +548,7 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
                         )
                         & Q(
                             Q(task__organization=instance)
-                            | Q(schedule__organization=instance)
+                            | Q(schedule__organization=calendar_org)
                         )
                     ).all().delete()
                     organization_statistic_category.delete()
@@ -569,7 +570,7 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
                             )
                             & Q(
                                 Q(task__organization=instance)
-                                | Q(schedule__organization=instance)
+                                | Q(schedule__organization=calendar_org)
                             )
                         ).all()
                         for cat in categories:
@@ -711,6 +712,7 @@ class OrganizationCategoryHierarchyViewSet(
         Check if any TaskDuration exists for given categories and organization.
         """
         company = request.user.company
+        calendar_org = company.get_calendar_organization()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
@@ -761,6 +763,9 @@ class OrganizationCategoryHierarchyViewSet(
             medium_stat = item.medium_statistic_category or None
             small_stat = item.small_statistic_category or None
 
+            if not large_stat and not medium_stat and not small_stat:
+                continue
+
             # Build base Q filter
             category_q = Q(
                 task__categories__large_statistic_category=large_stat,
@@ -798,7 +803,10 @@ class OrganizationCategoryHierarchyViewSet(
 
             combined_q = (
                 Q(company=company)
-                & (Q(task__organization=org) | Q(schedule__organization=org))
+                & (
+                    Q(task__organization=org)
+                    | Q(schedule__organization=calendar_org)
+                )
                 & (category_q | filter_q)
             )
 
@@ -811,6 +819,7 @@ class OrganizationCategoryHierarchyViewSet(
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         company = request.user.company
+        calendar_org = company.get_calendar_organization()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
@@ -854,7 +863,7 @@ class OrganizationCategoryHierarchyViewSet(
                         Q(company=company)
                         & Q(
                             Q(task__organization=organization)
-                            | Q(schedule__organization=organization)
+                            | Q(schedule__organization=calendar_org)
                         )
                     ).all()
 
