@@ -330,21 +330,19 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         return categories_list_sorted == other_list_sorted
 
     def _get_field_changes(
-        self, instance, validated_data, participants, tags, categories
+        self,
+        instance,
+        validated_data,
+        participants,
+        tags,
+        categories,
+        recurring_change=False,
     ):
         """
         Handle get field changes between instance and validated data.
         """
         changes = []
-        new_start_date = validated_data.get("start_date", None)
-        new_end_date = validated_data.get("end_date", None)
-        start_date = (
-            instance.recurring["start_date"] if instance.recurring else None
-        )
-        end_date = (
-            instance.recurring["end_date"] if instance.recurring else None
-        )
-        if new_start_date != start_date or new_end_date != end_date:
+        if recurring_change:
             changes.append(ScheduleFields.DURATION.value)
 
         if not self._compare_objects(participants, instance.participants.all()):
@@ -375,6 +373,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     def perform_update(self, serializer):
         instance = serializer.instance
         user = self.request.user
+        screen = self.request.query_params.get("current_screen")
         company = user.company
         serializer_data = serializer.validated_data
         send_to_chat = serializer_data.pop("send_to_chat", None)
@@ -403,7 +402,8 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 "month_day": month_day,
                 "month": month,
             }
-        if recurring != old_recurring:
+
+        if recurring != old_recurring and screen != Screens.STATISTIC.value:
             serializer_data["recurring"] = recurring
 
         if participants and send_to_chat:
@@ -413,7 +413,12 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 instance.creator_id if instance.creator_id else user.id,
             )
             data["field_changes"] = self._get_field_changes(
-                instance, serializer_data, participants, tags, categories
+                instance,
+                serializer_data,
+                participants,
+                tags,
+                categories,
+                recurring_change=recurring != old_recurring,
             )
             if recurring != old_recurring:
                 data["old"] = old_recurring

@@ -494,6 +494,7 @@ class ScheduleDetailSerializer(ScheduleSerializer):
             "repeat_schedules",
             "is_event_overlapping",
             "tags",
+            "created_at",
         ]
 
     def to_representation(self, instance):

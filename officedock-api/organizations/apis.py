@@ -56,7 +56,7 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     """
 
     queryset = (
-        Organization.objects.annotate(user_count=Count("users"))
+        Organization.all_objects.annotate(user_count=Count("users"))
         .order_by("-created_at")
         .all()
     )
@@ -377,7 +377,7 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
     API endpoint for Organization by ID.
     """
 
-    queryset = Organization.objects.order_by("-created_at")
+    queryset = Organization.all_objects.order_by("-created_at")
     serializer_class = OrganizationSerializer
     permission_classes = [ActionPermission]
     screen_name = Screens.ORGANIZATION.value
