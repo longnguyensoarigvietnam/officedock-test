@@ -17,7 +17,7 @@ interface useCreationDataStatisticHooksProps {
   onSettled?: () => void;
 }
 
-const useCreationDataStatistic = ({
+const useCreationDataTaskActualDuration = ({
   condition,
   is_statistic,
   is_calendar_page,
@@ -30,7 +30,7 @@ const useCreationDataStatistic = ({
   const token = session?.accessToken;
 
   // Handle call API get creation Statistic data
-  const getCreationDataStatistic = async () => {
+  const getCreationDataTaskActualDuration = async () => {
     const apiUrl = `${apiRouters.STATISTIC_CREATION}${is_statistic ? `?is_statistic=true` : ''}${is_calendar_page ? `?is_calendar_page=true` : ''}${organization_id ? `?organization_id=${organization_id}` : ''}`;
 
     const { data } = await api.get<DataResponseStatisticCreationType>(apiUrl);
@@ -39,12 +39,12 @@ const useCreationDataStatistic = ({
 
   // Handle API get creation Statistic data
   const {
-    data: creationDataStatisticData,
-    refetch: refetchCreationDataStatistic,
-    isFetched: isFetchedCreationDataStatistic,
+    data: creationDataTaskActualDuration,
+    refetch: refetchCreationDataTaskActualDuration,
+    isFetched: isFetchedCreationDataTaskActualDuration,
   } = useQuery({
-    queryKey: ['getCreationDataStatistic'],
-    queryFn: getCreationDataStatistic,
+    queryKey: ['getCreationDataTaskActualDuration'],
+    queryFn: getCreationDataTaskActualDuration,
     retry: 0,
     enabled: !!token && condition?.every(Boolean),
     refetchOnMount: true,
@@ -61,10 +61,10 @@ const useCreationDataStatistic = ({
   });
 
   return {
-    creationDataStatisticData,
-    refetchCreationDataStatistic,
-    isFetchedCreationDataStatistic,
+    creationDataTaskActualDuration,
+    refetchCreationDataTaskActualDuration,
+    isFetchedCreationDataTaskActualDuration,
   };
 };
 
-export default useCreationDataStatistic;
+export default useCreationDataTaskActualDuration;

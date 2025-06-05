@@ -20,10 +20,11 @@ import ImageRound from '@components/common/ImageRound';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import Dropdown from '@components/common/Dropdown';
 
-import useCreationDataTask from '@hooks/useCreationDataTask';
 import useCreationDataEventCalendar from '@hooks/useCreationDataEventCalendar';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
 import useActualDurationDetail from '@hooks/useActualDurationDetail';
+import useCreationDataStatistic from '@hooks/useCreationDataStatistic';
+import useCreationDataTaskActualDuration from '@hooks/useCreationDataTaskActualDuration';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { CategoryStructure } from '@interfaces/skills';
@@ -114,9 +115,6 @@ const EditActualDurationsForm = () => {
   );
   const [isSubmit, setIsSubmit] = useState(false);
   const { setIsLoading } = useContext(LoadingContext);
-  const { creationDataTaskData } = useCreationDataTask({
-    condition: [searchParams.get('type') == EventCalendarType.TASK],
-  });
   const { creationDataEventCalendar } = useCreationDataEventCalendar({
     condition: [searchParams.get('type') == EventCalendarType.SCHEDULE],
   });
@@ -126,6 +124,39 @@ const EditActualDurationsForm = () => {
   const [minDatePlan, setMinDatePlan] = useState<Date | null>();
   const currentDate = new Date();
   const optionTimeInput = generateTimeOptionsAsObjects();
+
+  useCreationDataStatistic({
+    is_calendar_page: true,
+    condition: [searchParams.get('type') == EventCalendarType.SCHEDULE],
+
+    onSuccess: (data) => {
+      if (!data) return;
+      setDataOptionsTagIds(
+        data?.calendarOrganization?.tags.map((org) => ({
+          label: org.name as string,
+          value: org.id || '',
+        })),
+      );
+    },
+  });
+
+  useCreationDataTaskActualDuration({
+    organization_id: defaultTaskScheduleData?.organization,
+    condition: [
+      searchParams.get('type') != EventCalendarType.SCHEDULE,
+      Boolean(defaultTaskScheduleData?.organization),
+    ],
+
+    onSuccess: (data) => {
+      if (!data) return;
+      setDataOptionsTagIds(
+        data?.tags.map((org) => ({
+          label: org.name as string,
+          value: org.id || '',
+        })),
+      );
+    },
+  });
 
   const { actualDurationDetail } = useActualDurationDetail({
     actualDurationId: Number(params.id),
@@ -246,17 +277,6 @@ const EditActualDurationsForm = () => {
       );
     }
   };
-
-  useEffect(() => {
-    if (creationDataTaskData) {
-      setDataOptionsTagIds(
-        creationDataTaskData.tags.map((org) => ({
-          label: String(org.name),
-          value: String(org.id),
-        })),
-      );
-    }
-  }, [creationDataTaskData]);
 
   useEffect(() => {
     if (creationDataEventCalendar) {
@@ -503,16 +523,17 @@ const EditActualDurationsForm = () => {
       },
     ];
     if (selectedMediumCategoryOption) {
-      selectedMediumCategoryOption.SMALL && selectedMediumCategoryOption.SMALL.map((smallCategory) => {
-        if (
-          !initialSmallCategory.find((item) => item.value == smallCategory.id)
-        ) {
-          initialSmallCategory.push({
-            label: smallCategory.name,
-            value: smallCategory.id,
-          });
-        }
-      });
+      selectedMediumCategoryOption.SMALL &&
+        selectedMediumCategoryOption.SMALL.map((smallCategory) => {
+          if (
+            !initialSmallCategory.find((item) => item.value == smallCategory.id)
+          ) {
+            initialSmallCategory.push({
+              label: smallCategory.name,
+              value: smallCategory.id,
+            });
+          }
+        });
     }
 
     setDataOptionsCategorySmall(initialSmallCategory);
