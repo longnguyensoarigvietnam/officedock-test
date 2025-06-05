@@ -1537,6 +1537,7 @@ export const isOverlappingWithOthers = ({
   itemCompare: {
     uuid: string;
     taskId: number;
+    scheduleId: number;
     start: Date;
     end: Date;
   };
@@ -1550,6 +1551,13 @@ export const isOverlappingWithOthers = ({
     ) {
       return false;
     }
+    if (
+      item.scheduleId !== itemCompare.scheduleId &&
+      itemCompare.scheduleId !== null
+    ) {
+      return false;
+    }
+
     return (
       itemCompare.start < new Date(item.planEndDate as string) &&
       itemCompare.end > new Date(item.planStartDate as string)
