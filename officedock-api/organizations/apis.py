@@ -721,37 +721,12 @@ class OrganizationCategoryHierarchyViewSet(
         )
 
         # Check data delete is delete_all_large or delete_all_medium
-        org_sta_cates = OrganizationsStatisticCategories.objects.filter(
-            company=company
-        ).exclude(
-            id__in=[item.id for item in organizations_statistic_categories]
+        (
+            delete_all_large,
+            delete_all_medium,
+        ) = self.check_statistic_category_deletion_impact(
+            company, organizations_statistic_categories
         )
-
-        delete_all_large = False
-        delete_all_medium = False
-
-        for item in organizations_statistic_categories:
-            org = item.organization
-            large_stat = item.large_statistic_category
-            medium_stat = item.medium_statistic_category
-
-            has_other_large = org_sta_cates.filter(
-                organization=org, large_statistic_category=large_stat
-            ).exists()
-
-            if not has_other_large:
-                delete_all_large = True
-                delete_all_medium = True
-                break
-
-            if not delete_all_medium:
-                has_other_medium = org_sta_cates.filter(
-                    organization=org,
-                    large_statistic_category=large_stat,
-                    medium_statistic_category=medium_stat,
-                ).exists()
-                if not has_other_medium:
-                    delete_all_medium = True
 
         # Detect data delete has actual duration
         exists_actual_duration = False
@@ -953,10 +928,76 @@ class OrganizationCategoryHierarchyViewSet(
                             skill=skill,
                         )
 
+        # Handle deletion of organization statistic categories and their associated data
         if ids_to_delete:
-            OrganizationsStatisticCategories.objects.filter(
+            # Get all organization statistic categories that need to be deleted
+            org_sta_cates = OrganizationsStatisticCategories.objects.filter(
                 id__in=ids_to_delete
-            ).delete()
+            )
+
+            # Check if deleting these categories would remove all large or medium categories
+            # This is important because it affects how we handle the deletion of associated categories
+            (
+                delete_all_large,
+                delete_all_medium,
+            ) = self.check_statistic_category_deletion_impact(
+                company, org_sta_cates
+            )
+
+            # Process each organization statistic category for deletion
+            for item in org_sta_cates:
+                org = item.organization
+                # Get the statistic category values, defaulting to None if not set
+                large_stat = item.large_statistic_category or None
+                medium_stat = item.medium_statistic_category or None
+                small_stat = item.small_statistic_category or None
+
+                # Skip if no statistic categories are set
+                if not large_stat and not medium_stat and not small_stat:
+                    continue
+
+                # Get all categories in the company that are associated with either:
+                # 1. Tasks in the current organization
+                # 2. Schedules in the calendar organization
+                categories = Category.objects.filter(
+                    Q(company=company)
+                    & Q(
+                        Q(task__organization=org)
+                        | Q(schedule__organization=calendar_org)
+                    )
+                ).all()
+
+                # Delete categories that exactly match the large/medium/small statistic categories
+                # This handles the case where all three levels are specified
+                categories.filter(
+                    large_statistic_category=large_stat,
+                    medium_statistic_category=medium_stat,
+                    small_statistic_category=small_stat,
+                ).delete()
+
+                # Special handling for when deleting all large categories
+                # This also implies deleting all medium categories
+                if delete_all_large and large_stat:
+                    delete_all_medium = True
+                    # Delete categories that only have the large category set
+                    categories.filter(
+                        large_statistic_category=large_stat,
+                        medium_statistic_category=None,
+                        small_statistic_category=None,
+                    ).delete()
+
+                # Special handling for when deleting all medium categories
+                # This only applies when both large and medium categories are specified
+                if delete_all_medium and large_stat and medium_stat:
+                    # Delete categories that have both large and medium categories set
+                    categories.filter(
+                        large_statistic_category=large_stat,
+                        medium_statistic_category=medium_stat,
+                        small_statistic_category=None,
+                    ).delete()
+
+            # Finally, delete the organization statistic categories themselves
+            org_sta_cates.delete()
 
         return self.response_created()
 
@@ -979,6 +1020,54 @@ class OrganizationCategoryHierarchyViewSet(
                 large_statistic_category.save()
 
         return large_statistic_category
+
+    def check_statistic_category_deletion_impact(
+        self, company, organizations_statistic_categories
+    ):
+        """
+        Determines if deleting the specified statistic categories would result in removing all large or medium
+        categories for any organization.
+        """
+        # Get all other statistic categories in the company that are not being deleted
+        org_sta_cates = OrganizationsStatisticCategories.objects.filter(
+            company=company
+        ).exclude(
+            id__in=[item.id for item in organizations_statistic_categories]
+        )
+
+        delete_all_large = False
+        delete_all_medium = False
+
+        # Check each category being deleted to see if it's the last one of its kind
+        for item in organizations_statistic_categories:
+            org = item.organization
+            large_stat = item.large_statistic_category
+            medium_stat = item.medium_statistic_category
+
+            # Check if there are any other large categories for this organization
+            has_other_large = org_sta_cates.filter(
+                organization=org, large_statistic_category=large_stat
+            ).exists()
+
+            # If no other large categories exist, this deletion would remove all large categories
+            # which also means it would remove all medium categories
+            if not has_other_large:
+                delete_all_large = True
+                delete_all_medium = True
+                break
+
+            # If we haven't found a case of deleting all medium categories yet,
+            # check if this would be the last medium category for this large category
+            if not delete_all_medium:
+                has_other_medium = org_sta_cates.filter(
+                    organization=org,
+                    large_statistic_category=large_stat,
+                    medium_statistic_category=medium_stat,
+                ).exists()
+                if not has_other_medium:
+                    delete_all_medium = True
+
+        return delete_all_large, delete_all_medium
 
 
 @extend_schema(tags=["System > Team"])
