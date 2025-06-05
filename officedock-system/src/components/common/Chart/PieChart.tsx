@@ -69,7 +69,7 @@ const PieChart = ({
             : filteredData.map((item) =>
                 (item.color || defaultColors[0]).replace('1', '1'),
               ),
-        borderWidth: 1,
+        borderWidth: 0.5,
         hoverOffset: 0,
       },
     ],

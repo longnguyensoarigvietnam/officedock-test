@@ -156,10 +156,17 @@ const DailyReportDetailBoard = () => {
       router.back();
     },
   });
+  const [isLoadingDownload, setIsLoadingDownload] = useState(false);
+
   const { dataStatisticPDF, refetchDataStatisticPDF } = useDataStatisticPDF({
     date: formatDateServer(dataDatePicker),
     userId: `${userId}`,
     organizationId: `${organization}`,
+    onSettled: () => {
+      setTimeout(() => {
+        setIsLoadingDownload(true);
+      }, 2000);
+    },
   });
 
   const [taskTimeStatisticList, setTaskTimeStatisticList] = useState<
@@ -1953,6 +1960,7 @@ const DailyReportDetailBoard = () => {
                 <Button
                   className="flex gap-2 px-0 py-0 w-[138px] h-[34px]"
                   onClick={() => {
+                    if (!isLoadingDownload) return;
                     handleDownloadPDF();
                   }}>
                   <span className="break-all">PDF書き出し</span>
@@ -2228,7 +2236,7 @@ const DailyReportDetailBoard = () => {
                   <span className="text-[30px] font-medium -translate-y-[10%]">
                     日報
                   </span>
-                  <div className="flex items-end gap-2 font-medium -translate-y-[10%]  relative top-[2px]">
+                  <div className="flex items-end gap-2 font-medium  relative top-[2px]">
                     <span>{detailDateInfo.year}</span>
                     <span className="">年</span>
                     <span>{detailDateInfo.month}</span>
@@ -2341,7 +2349,7 @@ const DailyReportDetailBoard = () => {
                                 className="flex items-center gap-[2px] w-full text-xs">
                                 <div
                                   style={{
-                                    backgroundColor: item.color,
+                                    backgroundColor: '#D1D7DC',
                                   }}
                                   className={`w-3 h-3 border border-black relative top-[5px] `}></div>
                                 <p className=" break-all h-5 max-w-[150px] w-fit line-clamp-3">
